@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.12;
 
-import {ERC20} from './dependencies/openzeppelin/contracts/ERC20.sol';
+import {IERC20} from './dependencies/openzeppelin/contracts/IERC20.sol';
+import {SafeERC20} from './dependencies/openzeppelin/contracts/SafeERC20.sol';
 
 import 'hardhat/console.sol';
 
@@ -10,6 +12,7 @@ import 'hardhat/console.sol';
  * @author Augmented Finance
  */
 contract Subscription {
+  using SafeERC20 for IERC20;
   struct BlockDeposit {
     uint256 blockNumber;
     uint256 amount;
@@ -28,7 +31,7 @@ contract Subscription {
 
   function subscribeForDeposit(uint256 amount) public returns (uint256 amount_) {
     require(amount > 0, 'Non zero amount is required');
-    ERC20 token = ERC20(tokenAddress);
+    IERC20 token = IERC20(tokenAddress);
     if (!token.transferFrom(msg.sender, address(this), amount)) {
       return 0;
     }
@@ -64,7 +67,7 @@ contract Subscription {
       deposits[msg.sender].pop();
     }
 
-    ERC20 token = ERC20(tokenAddress);
+    IERC20 token = IERC20(tokenAddress);
     if (!token.approve(msg.sender, allocate)) {
       revert();
     }
@@ -89,18 +92,17 @@ contract Subscription {
       last--;
       uint256 safeCap = safeLimit - subscribed;
       if (safeCap == 0) {
-        //        deposits[owner].length = last + 1; // TODO: fixme
         completed = false;
         break;
       }
 
       if (deposits[owner][last].amount <= safeCap) {
         subscribed += deposits[owner][last].amount;
+        deposits[owner].pop();
         continue;
       }
 
       deposits[owner][last].amount -= safeCap;
-      //      deposits[owner].length = last + 1; // TODO: fixme
       subscribed = safeLimit;
       completed = false;
       break;
@@ -114,7 +116,7 @@ contract Subscription {
     allocate *= mul;
     allocate += ((subscribed % div) * mul) / div;
 
-    ERC20 token = ERC20(tokenAddress);
+    IERC20 token = IERC20(tokenAddress);
     if (!token.approve(owner, allocate)) {
       revert();
     }
