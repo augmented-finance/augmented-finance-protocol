@@ -20,10 +20,11 @@ contract Subscription {
 
   mapping(address => BlockDeposit[]) private deposits;
 
-  address public tokenAddress;
+  address internal _tokenAddress;
 
-  constructor(address tokenAddress_) public {
-    tokenAddress = tokenAddress_;
+  constructor(address tokenAddress) public {
+    require(tokenAddress != address(0), 'token address required');
+    _tokenAddress = tokenAddress;
   }
 
   event Subscribed(address sender, uint256 amount, uint256 blockNumber);
@@ -31,10 +32,7 @@ contract Subscription {
 
   function subscribeForDeposit(uint256 amount) public returns (uint256 amount_) {
     require(amount > 0, 'Non zero amount is required');
-    IERC20 token = IERC20(tokenAddress);
-    if (!token.transferFrom(msg.sender, address(this), amount)) {
-      return 0;
-    }
+    IERC20(_tokenAddress).safeTransferFrom(msg.sender, address(this), amount);
 
     if (deposits[msg.sender].length > 0) {
       uint256 last = deposits[msg.sender].length - 1;
@@ -67,11 +65,12 @@ contract Subscription {
       deposits[msg.sender].pop();
     }
 
-    IERC20 token = IERC20(tokenAddress);
-    if (!token.approve(msg.sender, allocate)) {
+    // TODO Should be IERC20(_tokenAddress).safeTransfer(msg.sender, allocate);
+    if (!IERC20(_tokenAddress).approve(msg.sender, allocate)) {
       revert();
     }
-    // emit Unsubscribed(msg.sender, allocate);
+
+    emit Unsubscribed(msg.sender, allocate);
     return allocate;
   }
 
@@ -116,8 +115,8 @@ contract Subscription {
     allocate *= mul;
     allocate += ((subscribed % div) * mul) / div;
 
-    IERC20 token = IERC20(tokenAddress);
-    if (!token.approve(owner, allocate)) {
+    // TODO Should be IERC20(_tokenAddress).safeTransfer(owner, allocate);
+    if (!IERC20(_tokenAddress).approve(owner, allocate)) {
       revert();
     }
 
