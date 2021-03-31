@@ -53,6 +53,18 @@ contract AaveMigrator {
     _targetToken = targetToken;
   }
 
+  function ORIGIN_ASSET_ADDRESS() public view returns (address) {
+    return _originToken;
+  }
+
+  function TARGET_ASSET_ADDRESS() public view returns (address) {
+    return _targetToken;
+  }
+
+  function UNDERLYING_ASSET_ADDRESS() public view returns (address) {
+    return _underlyingToken;
+  }
+
   function migrate(uint256 amount, uint16 referralCode) public returns (uint256) {
     // TODO referal code should be uint256
     require(amount > 0, 'Non zero amount is required');
