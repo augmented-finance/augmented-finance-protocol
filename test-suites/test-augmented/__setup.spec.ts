@@ -47,7 +47,7 @@ import {
 } from '../../helpers/oracles-helpers';
 import { DRE, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
-import AaveConfig from '../../markets/aave';
+import AugmentedConfig from '../../markets/augmented';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getLendingPool,
@@ -56,11 +56,11 @@ import {
 } from '../../helpers/contracts-getters';
 import { WETH9Mocked } from '../../types/WETH9Mocked';
 
-const MOCK_USD_PRICE_IN_WEI = AaveConfig.ProtocolGlobalParams.MockUsdPriceInWei;
-const ALL_ASSETS_INITIAL_PRICES = AaveConfig.Mocks.AllAssetsInitialPrices;
-const USD_ADDRESS = AaveConfig.ProtocolGlobalParams.UsdAddress;
-const MOCK_CHAINLINK_AGGREGATORS_PRICES = AaveConfig.Mocks.AllAssetsInitialPrices;
-const LENDING_RATE_ORACLE_RATES_COMMON = AaveConfig.LendingRateOracleRatesCommon;
+const MOCK_USD_PRICE_IN_WEI = AugmentedConfig.ProtocolGlobalParams.MockUsdPriceInWei;
+const ALL_ASSETS_INITIAL_PRICES = AugmentedConfig.Mocks.AllAssetsInitialPrices;
+const USD_ADDRESS = AugmentedConfig.ProtocolGlobalParams.UsdAddress;
+const MOCK_CHAINLINK_AGGREGATORS_PRICES = AugmentedConfig.Mocks.AllAssetsInitialPrices;
+const LENDING_RATE_ORACLE_RATES_COMMON = AugmentedConfig.LendingRateOracleRatesCommon;
 
 const deployAllMockTokens = async (deployer: Signer) => {
   const tokens: { [symbol: string]: MockContract | MintableERC20 | WETH9Mocked } = {};
@@ -98,7 +98,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const mockTokens = await deployAllMockTokens(deployer);
   console.log('Deployed mocks');
-  const addressesProvider = await deployLendingPoolAddressesProvider(AaveConfig.MarketId);
+  const addressesProvider = await deployLendingPoolAddressesProvider(AugmentedConfig.MarketId);
   await waitForTx(await addressesProvider.setPoolAdmin(aaveAdmin));
 
   //setting users[1] as emergency admin, which is in position 2 in the DRE addresses list
