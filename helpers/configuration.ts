@@ -15,12 +15,14 @@ import { DRE, filterMapBy } from './misc-utils';
 import { tEthereumAddress } from './types';
 import { getParamPerNetwork } from './contracts-helpers';
 import { deployWETHMocked } from './contracts-deployments';
+import AugmentedConfig from '../markets/augmented';
 
 export enum ConfigNames {
   Commons = 'Commons',
   Aave = 'Aave',
   Matic = 'Matic',
   Amm = 'Amm',
+  Augmented = 'Augmented',
 }
 
 export const loadPoolConfig = (configName: ConfigNames): PoolConfiguration => {
@@ -30,9 +32,11 @@ export const loadPoolConfig = (configName: ConfigNames): PoolConfiguration => {
     case ConfigNames.Matic:
       return MaticConfig;
     case ConfigNames.Amm:
-        return AmmConfig;
+      return AmmConfig;
     case ConfigNames.Commons:
       return CommonsConfig;
+    case ConfigNames.Augmented:
+      return AugmentedConfig;
     default:
       throw new Error(`Unsupported pool configuration: ${Object.values(ConfigNames)}`);
   }
