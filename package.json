@@ -38,7 +38,7 @@
     "test-weth:amm": "hardhat test test-suites/test-amm/__setup.spec.ts test-suites/test-amm/weth-gateway.spec.ts",
     "test-uniswap": "hardhat test test-suites/test-aave/__setup.spec.ts test-suites/test-aave/uniswapAdapters*.spec.ts",
     "test:main:check-list": "MAINNET_FORK=true TS_NODE_TRANSPILE_ONLY=1 hardhat test  test-suites/test-aave/__setup.spec.ts test-suites/test-aave/mainnet/check-list.spec.ts",
-    "test:main:agf": "MAINNET_FORK=true hardhat test test-suites/test-agf/*.spec.ts",
+    "test:main:augmented:subscription": "MAINNET_FORK=true hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/subscription.spec.ts",
     "dev:coverage": "buidler compile --force && buidler coverage --network coverage",
     "aave:evm:dev:migration": "npm run compile && hardhat aave:dev",
     "aave:docker:full:migration": "npm run compile && npm run hardhat:docker -- aave:mainnet",

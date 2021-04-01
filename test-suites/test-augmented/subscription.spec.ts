@@ -6,6 +6,7 @@ import { JsonRpcSigner } from '@ethersproject/providers/src.ts/json-rpc-provider
 import { BigNumberish } from '@ethersproject/bignumber';
 import { Subscription, SubscriptionFactory } from '../../types';
 import { IERC20 } from '../../types/IERC20';
+import { makeSuite, TestEnv } from '../test-aave/helpers/make-suite';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -18,24 +19,21 @@ const formatBalance = (balance: BigNumberish) => {
   return ethers.utils.formatUnits(balance, DAI_DECIMALS);
 };
 
-describe('Subscription Contract', () => {
+makeSuite('Subscription Contract', (testEnv: TestEnv) => {
   let subscription: Subscription;
-
-  let otherUsers: SignerWithAddress[];
-  let admin: SignerWithAddress;
-  let user: SignerWithAddress;
   let richDonor: JsonRpcSigner;
 
   before(async () => {
-    [admin, user, ...otherUsers] = await ethers.getSigners();
-    console.log(`Admin address: ${admin.address}`);
-    console.log(`User address: ${user.address}`);
+    const { deployer, users } = testEnv;
+
+    console.log(`Admin address: ${deployer}`);
+    console.log(`User address: ${users[0]}`);
 
     console.log('==== Deploy Contract');
     const subscriptionFactory = (await ethers.getContractFactory(
       'Subscription'
     )) as SubscriptionFactory;
-    subscription = await subscriptionFactory.deploy(DAI_CONTRACT);
+    subscription = await subscriptionFactory.connect(deployer.signer).deploy(DAI_CONTRACT);
     await subscription.deployed();
 
     expect(subscription.address).to.properAddress;

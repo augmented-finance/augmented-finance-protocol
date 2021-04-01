@@ -38,7 +38,7 @@ import {
   getTreasuryAddress,
   loadPoolConfig,
 } from '../../helpers/configuration';
-import { initializeMakeSuite } from './helpers/make-suite';
+import { initializeMakeSuite } from '../test-aave/helpers/make-suite';
 
 import {
   setInitialAssetPricesInOracle,
@@ -298,7 +298,7 @@ before(async () => {
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
 
   if (MAINNET_FORK) {
-    await rawBRE.run('aave:mainnet');
+    await rawBRE.run('augmented:mainnet');
   } else {
     console.log('-> Deploying test environment...');
     await buildTestEnv(deployer, secondaryWallet);
