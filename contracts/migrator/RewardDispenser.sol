@@ -25,9 +25,9 @@ contract RewardDispenser is IRewardDispenser, Ownable {
   uint32 _unfreezeBlock;
 
   struct RewardScheduleEntry {
-    /// @dev accumulatedFactor for minting, is nominated in ray
+    // accumulatedFactor for minting, is nominated in ray
     uint256 accumulatedFactor;
-    /// @dev perBlockFactor for minting, is nominated in ray
+    // perBlockFactor for minting, is nominated in ray
     uint256 perBlockFactor;
   }
 

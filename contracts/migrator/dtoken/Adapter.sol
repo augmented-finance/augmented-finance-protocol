@@ -8,6 +8,7 @@ import {WadRayMath} from '../../protocol/libraries/math/WadRayMath.sol';
 
 import {Ownable} from '../../dependencies/openzeppelin/contracts/Ownable.sol';
 import {ISubscriptionAdapter} from '../interfaces/ISubscriptionAdapter.sol';
+import {ILendableToken, ILendablePool} from '../interfaces/ILendableToken.sol';
 import {IMigratorRewardController} from '../interfaces/IRewardDispenser.sol';
 
 import 'hardhat/console.sol';
@@ -17,10 +18,14 @@ abstract contract DeadTokenAdapter is ISubscriptionAdapter, Ownable {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
-  mapping(address => uint256) private _deposits;
   IERC20 private _originAsset;
+  uint256 private _totalDeposited;
+  mapping(address => uint256) private _deposits;
+
   IMigratorRewardController private _rewardController;
   uint256 private _rewardFactor;
+
+  bool private _depositPaused;
 
   constructor(
     address originAsset,
@@ -31,7 +36,6 @@ abstract contract DeadTokenAdapter is ISubscriptionAdapter, Ownable {
     _rewardController = rewardController;
     _rewardFactor = rewardFactor;
 
-    require(address(_originAsset) != address(0), 'unknown asset');
     require(_originAsset.totalSupply() > 0, 'invalid asset');
     require(address(_rewardController) != address(0), 'unknown rewardController');
   }
@@ -56,7 +60,7 @@ abstract contract DeadTokenAdapter is ISubscriptionAdapter, Ownable {
     uint256 amount,
     address holder,
     uint64 referralCode
-  ) external override returns (uint256) {
+  ) external override notMigrated returns (uint256) {
     require(holder != address(0), 'holder is required');
     _originAsset.safeTransferFrom(holder, address(this), amount);
     _deposits[holder] = _deposits[holder].add(amount);
@@ -73,6 +77,7 @@ abstract contract DeadTokenAdapter is ISubscriptionAdapter, Ownable {
     external
     override
     onlyOwner
+    notMigrated
     returns (uint256)
   {
     require(holder != address(0), 'holder is required');
@@ -82,6 +87,33 @@ abstract contract DeadTokenAdapter is ISubscriptionAdapter, Ownable {
   function balanceForMigrate(address holder) external view override returns (uint256) {
     return _balanceForMigrate(holder);
   }
+
+  function totalBalanceForMigrate() external view returns (uint256) {
+    return _totalDeposited;
+  }
+
+  function isClaimable() external view override returns (bool) {
+    _totalDeposited;
+    return true;
+  }
+
+  function claimMigrated(address holder) external override returns (uint256) {
+    return claimMigratedPortion(holder, 1);
+  }
+
+  /// @dev claimMigratedPortion is a backup solution for large deposits
+  function claimMigratedPortion(address, uint256) public claimable returns (uint256) {
+    _totalDeposited += 0;
+    return 0;
+  }
+
+  function admin_setRewardFactor(uint256 rewardFactor) external override onlyOwner {
+    _rewardFactor = rewardFactor;
+  }
+
+  function admin_enableClaims() external override onlyOwner migrated {}
+
+  function admin_migrateAll(ILendableToken) external override onlyOwner notMigrated {}
 
   function _withdrawFromMigrate(uint256 amount, address holder) private returns (uint256) {
     uint256 maxAmount = _balanceForMigrate(holder);
@@ -106,5 +138,17 @@ abstract contract DeadTokenAdapter is ISubscriptionAdapter, Ownable {
 
   function _balanceForMigrate(address holder) private view returns (uint256) {
     return _deposits[holder];
+  }
+
+  modifier notMigrated() {
+    _;
+  }
+
+  modifier migrated() {
+    _;
+  }
+
+  modifier claimable() {
+    _;
   }
 }

@@ -21,15 +21,13 @@ contract AaveAdapter is ISubscriptionAdapter, Ownable {
 
   IRedeemableToken private _originAsset;
   uint256 private _totalScaledDeposited;
-  uint256 private _totalScaledMigrated;
   mapping(address => uint256) private _deposits;
 
   IMigratorRewardController private _rewardController;
   uint256 private _rewardFactor;
 
-  /// @dev _exchangeFactor is nominated in rays
-  uint256 private _exchangeFactor;
   ILendableToken private _targetAsset;
+  uint256 private _totalScaledMigrated;
 
   bool private _depositPaused;
   bool private _claimAllowed;
@@ -74,7 +72,7 @@ contract AaveAdapter is ISubscriptionAdapter, Ownable {
     scaledAmount = scaledAmount.sub(_originAsset.scaledBalanceOf(address(this)));
 
     _deposits[holder] = _deposits[holder].add(scaledAmount);
-    _totalScaledDeposited += scaledAmount;
+    _totalScaledDeposited = _totalScaledDeposited.add(scaledAmount);
 
     _rewardController.depositForMigrateIncreased(amount, holder, _rewardFactor, referralCode);
     return amount;
@@ -82,6 +80,25 @@ contract AaveAdapter is ISubscriptionAdapter, Ownable {
 
   function withdrawFromMigrate(uint256 amount) external override notMigrated returns (uint256) {
     return _withdrawFromMigrate(amount, msg.sender);
+  }
+
+  function withdrawFromMigrateOnBehalf(uint256 amount, address holder)
+    external
+    override
+    onlyOwner
+    notMigrated
+    returns (uint256)
+  {
+    require(holder != address(0), 'holder is required');
+    return _withdrawFromMigrate(amount, holder);
+  }
+
+  function balanceForMigrate(address holder) external view override returns (uint256) {
+    return _balanceForMigrate(holder);
+  }
+
+  function totalBalanceForMigrate() external view returns (uint256) {
+    return _totalScaledDeposited;
   }
 
   function isClaimable() external view override returns (bool) {
@@ -103,6 +120,8 @@ contract AaveAdapter is ISubscriptionAdapter, Ownable {
       return 0;
     }
     _deposits[holder] -= scaledAmount;
+
+    scaledAmount = scaledAmount.mul(_totalScaledMigrated).div(_totalScaledDeposited);
 
     uint256 factor =
       _targetAsset.POOL().getReserveNormalizedIncome(_targetAsset.UNDERLYING_ASSET_ADDRESS());
@@ -126,9 +145,7 @@ contract AaveAdapter is ISubscriptionAdapter, Ownable {
 
     IWithdrawablePool fromPool = _originAsset.POOL();
 
-    // IERC20(_originAsset).approve(pool, _totalScaledDeposited);
     uint256 underlyingAmount = IERC20(underlying).balanceOf(address(this));
-    // IERC20(underlying).approve(pool, _totalScaledDeposited);
     uint256 withdrawnAmount = fromPool.withdraw(underlying, type(uint256).max, address(this));
     underlyingAmount = IERC20(underlying).balanceOf(address(this)).sub(underlyingAmount);
     require(underlyingAmount >= withdrawnAmount, 'withdrawn less than expected');
@@ -145,25 +162,6 @@ contract AaveAdapter is ISubscriptionAdapter, Ownable {
     targetAmount = targetAsset.scaledBalanceOf(address(this)).sub(targetAmount);
     require(targetAmount > 0, 'deposited less than expected');
     _totalScaledMigrated = targetAmount;
-  }
-
-  function withdrawFromMigrateOnBehalf(uint256 amount, address holder)
-    external
-    override
-    onlyOwner
-    notMigrated
-    returns (uint256)
-  {
-    require(holder != address(0), 'holder is required');
-    return _withdrawFromMigrate(amount, holder);
-  }
-
-  function balanceForMigrate(address holder) external view override returns (uint256) {
-    return _balanceForMigrate(holder);
-  }
-
-  function totalBalanceForMigrate() external view returns (uint256) {
-    return _totalScaledDeposited;
   }
 
   function _withdrawFromMigrate(uint256 amount, address holder)
@@ -183,7 +181,7 @@ contract AaveAdapter is ISubscriptionAdapter, Ownable {
     IERC20(_originAsset).safeTransfer(holder, amount);
     scaledAmount = _originAsset.scaledBalanceOf(address(this)).sub(scaledAmount);
 
-    _totalScaledDeposited -= scaledAmount;
+    _totalScaledDeposited = _totalScaledDeposited.sub(scaledAmount);
     if (amount == maxAmount) {
       _rewardController.depositForMigrateRemoved(holder);
       delete (_deposits[holder]);

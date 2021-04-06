@@ -8,68 +8,105 @@ import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../protocol/libraries/math/WadRayMath.sol';
+import {ILendableToken} from './interfaces/ILendableToken.sol';
 
 contract Migrator is Ownable {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
-  //  address internal _underlyingToken;
-  address internal _originToken;
-  //  address internal _targetToken;
-  mapping(address => ISubscriptionAdapter) private _adapters;
-
-  modifier notMigrated() {
-    //    require(_targetAddress == address(0), 'migration completed');
-    _;
-  }
-
-  modifier migrated() {
-    //    require(_targetAddress != address(0), 'migration pending');
-    _;
-  }
+  ISubscriptionAdapter[] private _adaptersList;
+  /* a/c/dToken */
+  mapping(address => uint256) private _adapters;
+  /* underlying */
+  mapping(address => uint256[]) private _underlyings;
 
   function depositToMigrate(
-    uint256 amount,
     address token,
+    uint256 amount,
     uint64 referralCode
-  ) public notMigrated returns (uint256 amount_) {
+  ) public returns (uint256) {
     return getAdapter(token).depositToMigrate(amount, msg.sender, referralCode);
   }
 
-  function withdrawFromMigrate(uint256 maxAmount, address token)
-    public
-    notMigrated
-    returns (uint256)
-  {
-    return getAdapter(token).withdrawFromMigrate(maxAmount);
+  function withdrawFromMigrate(address token, uint256 maxAmount) public returns (uint256) {
+    return getAdapter(token).withdrawFromMigrateOnBehalf(maxAmount, msg.sender);
   }
 
-  function balanceForMigrate(address holder, address token) public view returns (uint256 amount) {
+  function balanceForMigrate(address token, address holder) public view returns (uint256) {
     return getAdapter(token).balanceForMigrate(holder);
   }
 
-  function registerAdapter(ISubscriptionAdapter adapter) public onlyOwner {
-    require(address(adapter) != address(0), 'adapter is required');
-    //      require(adapter.owner() == owner(), 'adapter must belong to the same owner');
+  function getAdapter(address token) public view returns (ISubscriptionAdapter adapter) {
+    uint256 adapterIdx = _adapters[token];
+    require(adapterIdx > 0, 'unknown or unsupported token');
+    return _adaptersList[adapterIdx - 1];
+  }
 
-    require(adapter.UNDERLYING_ASSET_ADDRESS() != address(0), 'underlying is required');
+  function registerAdapter(ISubscriptionAdapter adapter) public onlyOwner {
+    address underlying = adapter.UNDERLYING_ASSET_ADDRESS();
+    require(IERC20(underlying).totalSupply() > 0, 'valid underlying is required');
 
     address origin = adapter.ORIGIN_ASSET_ADDRESS();
-    require(origin != address(0), 'origin is required');
-    //      require(adapter.TARGET_ASSET_ADDRESS() != address(0), 'target is required');
+    require(IERC20(origin).totalSupply() > 0, 'valid origin is required');
+
+    // TODO    adapter.admin_claimOwnership();
 
     require(address(_adapters[origin]) == address(0), 'token is already registered');
-    _adapters[origin] = adapter;
+    _adaptersList.push(adapter);
+    _adapters[origin] = _adaptersList.length;
+    _underlyings[underlying].push(_adaptersList.length);
   }
 
-  function unregisterAdapterForToken(address origin) public onlyOwner {
-    delete _adapters[origin];
+  function unregisterAdapter(ISubscriptionAdapter adapter) public onlyOwner returns (bool) {
+    address origin = adapter.ORIGIN_ASSET_ADDRESS();
+    if (_adapters[origin] == 0) {
+      return false;
+    }
+    uint256 idx = _adapters[origin] - 1;
+    if (_adaptersList[idx] != adapter) {
+      return false;
+    }
+    delete (_adapters[origin]);
+    _adaptersList[idx] = ISubscriptionAdapter(address(0));
+    return true;
   }
 
-  function getAdapter(address token) private view returns (ISubscriptionAdapter adapter) {
-    adapter = _adapters[token];
-    require(address(adapter) != address(0), 'unknown or unsupported token');
-    return adapter;
+  function unregisterAdapterForToken(address origin) public onlyOwner returns (bool) {
+    if (_adapters[origin] == 0) {
+      return false;
+    }
+    uint256 idx = _adapters[origin] - 1;
+    if (address(_adaptersList[idx]) == address(0)) {
+      return false;
+    }
+    _adaptersList[idx] = ISubscriptionAdapter(address(0));
+    delete (_adapters[origin]);
+    return true;
+  }
+
+  function migrateToToken(ILendableToken target)
+    public
+    onlyOwner
+    returns (ISubscriptionAdapter[] memory migrated)
+  {
+    address underlying = target.UNDERLYING_ASSET_ADDRESS();
+    uint256[] storage indices = _underlyings[underlying];
+    if (indices.length == 0) {
+      return migrated;
+    }
+    migrated = new ISubscriptionAdapter[](indices.length);
+    uint256 j = 0;
+
+    for (uint256 i = 0; i < indices.length; i++) {
+      ISubscriptionAdapter adapter = _adaptersList[indices[i]];
+      if (address(adapter) == address(0)) {
+        continue;
+      }
+      adapter.admin_migrateAll(target);
+      migrated[j] = adapter;
+      j++;
+    }
+    return migrated;
   }
 }
