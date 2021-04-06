@@ -24,9 +24,15 @@ interface ISubscriptionAdapter {
 
   function withdrawFromMigrateOnBehalf(uint256 amount, address holder) external returns (uint256); // onlyOwner
 
+  function getController() external returns (address);
+
+  function admin_setController(address controller) external;
+
   function admin_setRewardFactor(uint256 rewardFactor) external;
 
   function admin_migrateAll(ILendableToken targetAsset) external;
 
   function admin_enableClaims() external;
+
+  function admin_setPaused(bool paused) external;
 }

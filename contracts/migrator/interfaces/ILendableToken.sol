@@ -8,7 +8,7 @@ import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 interface ILendableToken is IERC20 {
   function UNDERLYING_ASSET_ADDRESS() external view returns (address);
 
-  function POOL() external returns (ILendablePool);
+  function POOL() external view returns (ILendablePool);
 
   /**
    * @dev Returns the scaled balance of the user. The scaled balance is the sum of all the

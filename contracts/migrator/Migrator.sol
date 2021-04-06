@@ -50,7 +50,7 @@ contract Migrator is Ownable {
     address origin = adapter.ORIGIN_ASSET_ADDRESS();
     require(IERC20(origin).totalSupply() > 0, 'valid origin is required');
 
-    // TODO    adapter.admin_claimOwnership();
+    require(adapter.getController() == address(this), 'adapter is not for this controller');
 
     require(address(_adapters[origin]) == address(0), 'token is already registered');
     _adaptersList.push(adapter);
