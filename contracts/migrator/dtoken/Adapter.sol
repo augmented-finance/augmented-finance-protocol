@@ -4,6 +4,7 @@ pragma solidity ^0.6.12;
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
 
 import {BasicAdapter} from '../interfaces/BasicAdapter.sol';
 import {ILendableToken, ILendablePool} from '../interfaces/ILendableToken.sol';
@@ -26,6 +27,7 @@ contract DeadTokenAdapter is BasicAdapter {
   }
 
   function transferOriginIn(uint256 amount, address holder) internal override returns (uint256) {
+    require(Address.isExternallyOwned(holder), 'only users are allowed, but not contracts');
     IERC20(_originAsset).safeTransferFrom(holder, address(this), amount);
     return amount;
   }
@@ -39,7 +41,7 @@ contract DeadTokenAdapter is BasicAdapter {
     return 0;
   }
 
-  function getOriginBalance(address holder) internal view override returns (uint256 amount) {
+  function getOriginBalance(address holder) internal view override returns (uint256) {
     return _deposits[holder];
   }
 
@@ -47,7 +49,7 @@ contract DeadTokenAdapter is BasicAdapter {
     return _totalDeposited;
   }
 
-  function withdrawUnderlyingFromOrigin(address) internal override returns (uint256 amount) {
+  function withdrawUnderlyingFromOrigin(address) internal override returns (uint256) {
     revert('migrate is not allowed');
   }
 }

@@ -5,6 +5,7 @@ import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {Ownable} from '../../dependencies/openzeppelin/contracts/Ownable.sol';
+import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
 
 import {ISubscriptionAdapter} from './ISubscriptionAdapter.sol';
 import {ILendableToken, ILendablePool} from './ILendableToken.sol';
@@ -138,6 +139,7 @@ abstract contract BasicAdapter is ISubscriptionAdapter, Ownable {
   }
 
   function admin_setController(address controller) external override onlyOwner {
+    require(Address.isContract(controller), 'controller should be a contract');
     _controller = controller;
   }
 
