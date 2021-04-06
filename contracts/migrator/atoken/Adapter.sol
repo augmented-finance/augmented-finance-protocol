@@ -1,0 +1,125 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.6.12;
+
+import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {WadRayMath} from '../../protocol/libraries/math/WadRayMath.sol';
+
+import {Ownable} from '../../dependencies/openzeppelin/contracts/Ownable.sol';
+import {ISubscriptionAdapter} from '../interfaces/ISubscriptionAdapter.sol';
+import {IRedeemableToken, IWithdrawablePool} from './IRedeemableToken.sol';
+import {IMigratorRewardController} from '../interfaces/IRewardDispenser.sol';
+
+import 'hardhat/console.sol';
+
+contract AaveAdapter is ISubscriptionAdapter, Ownable {
+  using SafeERC20 for IERC20;
+  using SafeMath for uint256;
+  using WadRayMath for uint256;
+
+  mapping(address => uint256) private _deposits;
+  IRedeemableToken _originAsset;
+  IMigratorRewardController _rewardController;
+  uint256 _rewardFactor;
+
+  constructor(
+    address originAsset,
+    IMigratorRewardController rewardController,
+    uint256 rewardFactor
+  ) public {
+    _originAsset = IRedeemableToken(originAsset);
+    _rewardController = rewardController;
+    _rewardFactor = rewardFactor;
+
+    require(_originAsset.UNDERLYING_ASSET_ADDRESS() != address(0), 'unknown underlying asset');
+    require(address(_originAsset.POOL()) != address(0), 'unknown asset pool');
+    require(address(_rewardController) != address(0), 'unknown rewardController');
+  }
+
+  function ORIGIN_ASSET_ADDRESS() external view override returns (address) {
+    return address(_originAsset);
+  }
+
+  function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
+    return _originAsset.UNDERLYING_ASSET_ADDRESS();
+  }
+
+  function REWARD_CONTROLLER_ADDRESS() external view returns (address) {
+    return address(_rewardController);
+  }
+
+  function _setRewardFactor(uint256 rewardFactor) external onlyOwner {
+    _rewardFactor = rewardFactor;
+  }
+
+  function depositToMigrate(
+    uint256 amount,
+    address holder,
+    uint64 referralCode
+  ) external override returns (uint256) {
+    require(holder != address(0), 'holder is required');
+    uint256 scaledAmount = _originAsset.scaledBalanceOf(address(this));
+    IERC20(_originAsset).safeTransferFrom(holder, address(this), amount);
+    scaledAmount = scaledAmount.sub(_originAsset.scaledBalanceOf(address(this)));
+
+    _deposits[holder] = _deposits[holder].add(scaledAmount);
+
+    _rewardController.depositForMigrateIncreased(amount, holder, _rewardFactor, referralCode);
+    return amount;
+  }
+
+  function withdrawFromMigrate(uint256 amount) external override returns (uint256) {
+    return _withdrawFromMigrate(amount, msg.sender);
+  }
+
+  function withdrawFromMigrateOnBehalf(uint256 amount, address holder)
+    external
+    override
+    onlyOwner
+    returns (uint256)
+  {
+    require(holder != address(0), 'holder is required');
+    return _withdrawFromMigrate(amount, holder);
+  }
+
+  function balanceForMigrate(address holder) external view override returns (uint256) {
+    return _balanceForMigrate(holder);
+  }
+
+  function _withdrawFromMigrate(uint256 amount, address holder) private returns (uint256) {
+    uint256 maxAmount = _balanceForMigrate(holder);
+    if (maxAmount == 0) {
+      return 0;
+    }
+    if (amount > maxAmount) {
+      amount = maxAmount;
+    }
+
+    uint256 scaledAmount = _originAsset.scaledBalanceOf(address(this));
+    IERC20(_originAsset).safeTransfer(holder, amount);
+    scaledAmount = _originAsset.scaledBalanceOf(address(this)).sub(scaledAmount);
+
+    if (amount == maxAmount) {
+      _rewardController.depositForMigrateRemoved(holder);
+      delete (_deposits[holder]);
+      return amount;
+    }
+
+    _deposits[holder] = _deposits[holder].sub(scaledAmount);
+    _rewardController.depositForMigrateDecreased(amount, holder, _rewardFactor);
+    return amount;
+  }
+
+  function _balanceForMigrate(address holder) private view returns (uint256) {
+    uint256 scaledAmount = _deposits[holder];
+    if (scaledAmount == 0) {
+      return 0;
+    }
+    return scaledAmount.rayMul(getNormalizedIncome());
+  }
+
+  function getNormalizedIncome() private view returns (uint256) {
+    return _originAsset.POOL().getReserveNormalizedIncome(_originAsset.UNDERLYING_ASSET_ADDRESS());
+  }
+}
