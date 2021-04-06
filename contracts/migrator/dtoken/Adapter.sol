@@ -12,15 +12,15 @@ import {IMigratorRewardController} from '../interfaces/IRewardDispenser.sol';
 
 import 'hardhat/console.sol';
 
-contract DeadTokenAdapter is ISubscriptionAdapter, Ownable {
+abstract contract DeadTokenAdapter is ISubscriptionAdapter, Ownable {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
   mapping(address => uint256) private _deposits;
-  IERC20 _originAsset;
-  IMigratorRewardController _rewardController;
-  uint256 _rewardFactor;
+  IERC20 private _originAsset;
+  IMigratorRewardController private _rewardController;
+  uint256 private _rewardFactor;
 
   constructor(
     address originAsset,

@@ -13,15 +13,15 @@ import {IRedeemableToken} from './IRedeemableToken.sol';
 
 import 'hardhat/console.sol';
 
-contract CompAdapter is ISubscriptionAdapter, Ownable {
+abstract contract CompAdapter is ISubscriptionAdapter, Ownable {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
 
   mapping(address => uint256) private _deposits;
-  IRedeemableToken _originAsset;
-  IERC20 _underlyingAsset;
-  IMigratorRewardController _rewardController;
-  uint256 _rewardFactor;
+  IRedeemableToken private _originAsset;
+  IERC20 private _underlyingAsset;
+  IMigratorRewardController private _rewardController;
+  uint256 private _rewardFactor;
 
   constructor(
     address originAsset,
@@ -34,7 +34,6 @@ contract CompAdapter is ISubscriptionAdapter, Ownable {
     _rewardController = rewardController;
     _rewardFactor = rewardFactor;
 
-    require(address(_underlyingAsset) != address(0), 'unknown underlying');
     require(_underlyingAsset.totalSupply() > 0, 'invalid underlying');
     require(address(_originAsset) != address(0), 'unknown asset');
     require(_originAsset.totalSupply() > 0, 'invalid asset');
