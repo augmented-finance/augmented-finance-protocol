@@ -69,10 +69,10 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
   }
 
   /**
-   * @return Abstract function implemented by the child aToken/debtToken. 
+   * @return Abstract function implemented by the child aToken/debtToken.
    * Done this way in order to not break compatibility with previous versions of aTokens/debtTokens
    **/
-  function _getIncentivesController() internal view virtual returns(IAaveIncentivesController);
+  function _getIncentivesController() internal view virtual returns (IAaveIncentivesController);
 
   /**
    * @dev Executes a transfer of tokens from _msgSender() to recipient
@@ -184,9 +184,9 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
 
     if (address(_getIncentivesController()) != address(0)) {
       uint256 currentTotalSupply = _totalSupply;
-      _getIncentivesController().handleAction(sender, currentTotalSupply, oldSenderBalance);
+      _getIncentivesController().handleAction(sender, oldSenderBalance, currentTotalSupply);
       if (sender != recipient) {
-        _getIncentivesController().handleAction(recipient, currentTotalSupply, oldRecipientBalance);
+        _getIncentivesController().handleAction(recipient, oldRecipientBalance, currentTotalSupply);
       }
     }
   }
@@ -203,7 +203,7 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
     _balances[account] = oldAccountBalance.add(amount);
 
     if (address(_getIncentivesController()) != address(0)) {
-      _getIncentivesController().handleAction(account, oldTotalSupply, oldAccountBalance);
+      _getIncentivesController().handleAction(account, oldAccountBalance, oldTotalSupply);
     }
   }
 
@@ -219,7 +219,7 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
     _balances[account] = oldAccountBalance.sub(amount, 'ERC20: burn amount exceeds balance');
 
     if (address(_getIncentivesController()) != address(0)) {
-      _getIncentivesController().handleAction(account, oldTotalSupply, oldAccountBalance);
+      _getIncentivesController().handleAction(account, oldAccountBalance, oldTotalSupply);
     }
   }
 
