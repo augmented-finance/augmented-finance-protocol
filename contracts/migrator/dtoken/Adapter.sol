@@ -8,7 +8,6 @@ import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
 
 import {BasicAdapter} from '../interfaces/BasicAdapter.sol';
 import {ILendableToken, ILendablePool} from '../interfaces/ILendableToken.sol';
-import {IMigratorRewardController} from '../interfaces/IRewardDispenser.sol';
 
 import 'hardhat/console.sol';
 
@@ -16,11 +15,7 @@ contract DeadTokenAdapter is BasicAdapter {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
 
-  constructor(
-    address originAsset,
-    IMigratorRewardController rewardController,
-    uint256 rewardFactor
-  ) public BasicAdapter(originAsset, rewardController, rewardFactor) {}
+  constructor(address originAsset) public BasicAdapter(originAsset) {}
 
   function getUnderlying() internal view override returns (address) {
     return address(_originAsset);

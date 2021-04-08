@@ -9,7 +9,7 @@ import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
 
 import {ISubscriptionAdapter} from './ISubscriptionAdapter.sol';
 import {ILendableToken, ILendablePool} from './ILendableToken.sol';
-import {IMigratorRewardController} from './IRewardDispenser.sol';
+import {IRewardPool} from '../../reward/IRewardPool.sol';
 
 import 'hardhat/console.sol';
 
@@ -21,8 +21,7 @@ abstract contract BasicAdapter is ISubscriptionAdapter, Ownable {
   uint256 internal _totalDeposited;
   mapping(address => uint256) internal _deposits;
 
-  IMigratorRewardController internal _rewardController;
-  uint256 internal _rewardFactor;
+  IRewardPool internal _rewardPool;
 
   ILendableToken internal _targetAsset;
   uint256 internal _totalMigrated;
@@ -32,17 +31,9 @@ abstract contract BasicAdapter is ISubscriptionAdapter, Ownable {
   bool internal _paused;
   bool internal _claimAllowed;
 
-  constructor(
-    address originAsset,
-    IMigratorRewardController rewardController,
-    uint256 rewardFactor
-  ) public {
+  constructor(address originAsset) public {
     _originAsset = originAsset;
-    _rewardController = rewardController;
-    _rewardFactor = rewardFactor;
-
     require(IERC20(_originAsset).totalSupply() > 0, 'invalid origin');
-    require(address(_rewardController) != address(0), 'unknown rewardController');
   }
 
   function ORIGIN_ASSET_ADDRESS() external view override returns (address) {
@@ -54,7 +45,7 @@ abstract contract BasicAdapter is ISubscriptionAdapter, Ownable {
   }
 
   function REWARD_CONTROLLER_ADDRESS() external view returns (address) {
-    return address(_rewardController);
+    return address(_rewardPool);
   }
 
   function depositToMigrate(
@@ -63,12 +54,13 @@ abstract contract BasicAdapter is ISubscriptionAdapter, Ownable {
     uint64 referralCode
   ) external override notMigrated notPaused returns (uint256) {
     require(holder != address(0), 'holder is required');
+    referralCode;
 
     uint256 internalAmount = transferOriginIn(amount, holder);
     _deposits[holder] = _deposits[holder].add(internalAmount);
     _totalDeposited = _totalDeposited.add(internalAmount);
 
-    _rewardController.depositForMigrateIncreased(amount, holder, _rewardFactor, referralCode);
+    _rewardPool.handleAction(holder, _deposits[holder], _totalDeposited);
     return amount;
   }
 
@@ -126,8 +118,9 @@ abstract contract BasicAdapter is ISubscriptionAdapter, Ownable {
     return transferTargetOut(amount, holder);
   }
 
-  function admin_setRewardFactor(uint256 rewardFactor) external override ownerOrController {
-    _rewardFactor = rewardFactor;
+  function admin_setRewardPool(IRewardPool rewardPool) external override ownerOrController {
+    require(address(rewardPool) != address(0), 'rewardPool is required');
+    _rewardPool = rewardPool;
   }
 
   function admin_enableClaims() external override ownerOrController {
@@ -241,13 +234,13 @@ abstract contract BasicAdapter is ISubscriptionAdapter, Ownable {
     _totalDeposited = _totalDeposited.sub(internalAmount);
 
     if (amount == maxAmount) {
-      _rewardController.depositForMigrateRemoved(holder);
+      _rewardPool.handleAction(holder, 0, _totalDeposited);
       delete (_deposits[holder]);
       return amount;
     }
 
     _deposits[holder] = _deposits[holder].sub(internalAmount);
-    _rewardController.depositForMigrateDecreased(amount, holder, _rewardFactor);
+    _rewardPool.handleAction(holder, _deposits[holder], _totalDeposited);
     return amount;
   }
 

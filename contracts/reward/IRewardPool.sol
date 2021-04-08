@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.12;
 
-interface IRewardPool {
-  function updateRewardOnBehalf(address holder, uint256 newRewardBase) external;
+import {IAaveIncentivesController} from '../interfaces/IAaveIncentivesController.sol';
+
+interface IRewardPool is IAaveIncentivesController {
+  function handleBalanceUpdate(
+    address user,
+    uint256 userBalance,
+    uint256 totalSupply
+  ) external;
 }
 
 interface IManagedRewardPool {
-  function setPoolMask(uint256 mask) external;
+  function setRate(uint256 rate) external;
 
-  function setBlockRate(uint256 blockRate) external;
+  function claimRewardOnBehalf(address holder) external returns (uint256);
 
-  function claimRewardOnBehalf(address holder) external;
-
-  function calcRewardOnBehalf(address holder) external view;
+  function calcRewardOnBehalf(address holder) external view returns (uint256);
 
   function addRewardProvider(address provider) external;
 

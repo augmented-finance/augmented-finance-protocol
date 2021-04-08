@@ -8,7 +8,6 @@ import {WadRayMath} from '../../protocol/libraries/math/WadRayMath.sol';
 
 import {BasicAdapter} from '../interfaces/BasicAdapter.sol';
 import {IRedeemableToken, IWithdrawablePool} from './IRedeemableToken.sol';
-import {IMigratorRewardController} from '../interfaces/IRewardDispenser.sol';
 
 import 'hardhat/console.sol';
 
@@ -17,11 +16,7 @@ contract AaveAdapter is BasicAdapter {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
-  constructor(
-    IRedeemableToken originAsset,
-    IMigratorRewardController rewardController,
-    uint256 rewardFactor
-  ) public BasicAdapter(address(originAsset), rewardController, rewardFactor) {
+  constructor(IRedeemableToken originAsset) public BasicAdapter(address(originAsset)) {
     require(IERC20(originAsset.UNDERLYING_ASSET_ADDRESS()).totalSupply() > 0, 'invalid underlying');
     require(address(originAsset.POOL()) != address(0), 'unknown asset pool');
   }

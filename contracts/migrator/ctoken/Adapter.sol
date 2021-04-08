@@ -7,7 +7,6 @@ import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 
 import {BasicAdapter} from '../interfaces/BasicAdapter.sol';
 import {IRedeemableToken} from './IRedeemableToken.sol';
-import {IMigratorRewardController} from '../interfaces/IRewardDispenser.sol';
 
 import 'hardhat/console.sol';
 
@@ -17,12 +16,7 @@ contract CompAdapter is BasicAdapter {
 
   IERC20 private _underlyingAsset;
 
-  constructor(
-    address originAsset,
-    IMigratorRewardController rewardController,
-    uint256 rewardFactor,
-    address underlyingAsset
-  ) public BasicAdapter(originAsset, rewardController, rewardFactor) {
+  constructor(address originAsset, address underlyingAsset) public BasicAdapter(originAsset) {
     _underlyingAsset = IERC20(underlyingAsset);
     require(_underlyingAsset.totalSupply() > 0, 'invalid underlying');
   }
