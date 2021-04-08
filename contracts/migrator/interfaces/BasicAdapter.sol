@@ -32,8 +32,8 @@ abstract contract BasicAdapter is ISubscriptionAdapter, Ownable {
   bool internal _claimAllowed;
 
   constructor(address originAsset) public {
+    require(IERC20(originAsset).totalSupply() > 0, 'invalid origin');
     _originAsset = originAsset;
-    require(IERC20(_originAsset).totalSupply() > 0, 'invalid origin');
   }
 
   function ORIGIN_ASSET_ADDRESS() external view override returns (address) {
