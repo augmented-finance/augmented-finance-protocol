@@ -5,13 +5,16 @@ import {IAaveIncentivesController} from '../interfaces/IAaveIncentivesController
 
 interface IRewardPool is IAaveIncentivesController {
   function handleBalanceUpdate(
-    address user,
-    uint256 userBalance,
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
     uint256 totalSupply
   ) external;
 }
 
 interface IManagedRewardPool {
+  function isLazy() external view returns (bool);
+
   function setRate(uint256 rate) external;
 
   function claimRewardOnBehalf(address holder) external returns (uint256);

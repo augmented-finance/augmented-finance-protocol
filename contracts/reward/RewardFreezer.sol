@@ -32,11 +32,15 @@ contract RewardFreezer is Ownable, IRewardController {
   }
 
   mapping(address => RewardRecord) private _rewards;
-  uint32 _meltdownBlock;
-  uint256 _unfrozenPortion;
+  uint32 private _meltdownBlock;
+  uint256 private _unfrozenPortion;
+  uint256 private _fixedMask;
 
-  constructor(address _rewardToken) public {
-    IERC20(_rewardToken).totalSupply();
+  constructor(address rewardToken) public {
+    _rewardToken = IERC20(rewardToken);
+    if (rewardToken != address(0)) {
+      _rewardToken.totalSupply();
+    }
   }
 
   function admin_setFreezePortion(uint256 freezePortion) external onlyOwner {
@@ -55,6 +59,9 @@ contract RewardFreezer is Ownable, IRewardController {
     require(_poolList.length <= 255, 'too many pools');
 
     _poolMasks[address(pool)] = 1 << _poolList.length;
+    if (!pool.isLazy()) {
+      _fixedMask |= 1 << _poolList.length;
+    }
     _poolList.push(pool);
     if (lookupKey != address(0)) {
       _lookups[lookupKey].push(pool);
@@ -98,7 +105,7 @@ contract RewardFreezer is Ownable, IRewardController {
   }
 
   function internalClaimAndMintReward(address holder) private returns (uint256 amount) {
-    uint256 poolMask = _rewards[holder].activePools;
+    uint256 poolMask = _rewards[holder].activePools & ~_fixedMask;
     uint256 allocated = 0;
     for (uint256 i = 0; poolMask != 0; i++) {
       if (poolMask & 1 != 0) {
@@ -108,12 +115,13 @@ contract RewardFreezer is Ownable, IRewardController {
     }
 
     allocated = internalApplyAllocated(holder, allocated, uint32(block.number));
+
     if (_rewards[holder].claimableReward > 0) {
       allocated = allocated.add(_rewards[holder].claimableReward);
       _rewards[holder].claimableReward = 0;
     }
 
-    if (allocated > 0) {
+    if (allocated > 0 && address(_rewardToken) != address(0)) {
       // TODO mint
       // _rewardToken.mint(holder, allocated);
     }

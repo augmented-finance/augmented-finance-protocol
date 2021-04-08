@@ -57,10 +57,13 @@ abstract contract BasicAdapter is ISubscriptionAdapter, Ownable {
     referralCode;
 
     uint256 internalAmount = transferOriginIn(amount, holder);
-    _deposits[holder] = _deposits[holder].add(internalAmount);
+    uint256 oldBalance = _deposits[holder];
+    _deposits[holder] = oldBalance.add(internalAmount);
     _totalDeposited = _totalDeposited.add(internalAmount);
 
-    _rewardPool.handleAction(holder, _deposits[holder], _totalDeposited);
+    if (address(_rewardPool) != address(0)) {
+      _rewardPool.handleBalanceUpdate(holder, oldBalance, _deposits[holder], _totalDeposited);
+    }
     return amount;
   }
 
@@ -119,7 +122,6 @@ abstract contract BasicAdapter is ISubscriptionAdapter, Ownable {
   }
 
   function admin_setRewardPool(IRewardPool rewardPool) external override ownerOrController {
-    require(address(rewardPool) != address(0), 'rewardPool is required');
     _rewardPool = rewardPool;
   }
 
@@ -234,13 +236,18 @@ abstract contract BasicAdapter is ISubscriptionAdapter, Ownable {
     _totalDeposited = _totalDeposited.sub(internalAmount);
 
     if (amount == maxAmount) {
-      _rewardPool.handleAction(holder, 0, _totalDeposited);
       delete (_deposits[holder]);
+      if (address(_rewardPool) != address(0)) {
+        _rewardPool.handleBalanceUpdate(holder, maxAmount, 0, _totalDeposited);
+      }
       return amount;
     }
 
-    _deposits[holder] = _deposits[holder].sub(internalAmount);
-    _rewardPool.handleAction(holder, _deposits[holder], _totalDeposited);
+    uint256 oldBalance = _deposits[holder];
+    _deposits[holder] = oldBalance.sub(internalAmount);
+    if (address(_rewardPool) != address(0)) {
+      _rewardPool.handleBalanceUpdate(holder, oldBalance, _deposits[holder], _totalDeposited);
+    }
     return amount;
   }
 
