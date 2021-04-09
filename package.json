@@ -38,7 +38,10 @@
     "test-weth:amm": "hardhat test test-suites/test-amm/__setup.spec.ts test-suites/test-amm/weth-gateway.spec.ts",
     "test-uniswap": "hardhat test test-suites/test-aave/__setup.spec.ts test-suites/test-aave/uniswapAdapters*.spec.ts",
     "test:main:check-list": "MAINNET_FORK=true TS_NODE_TRANSPILE_ONLY=1 hardhat test  test-suites/test-aave/__setup.spec.ts test-suites/test-aave/mainnet/check-list.spec.ts",
-    "test:main:augmented:subscription": "MAINNET_FORK=true hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/subscription.spec.ts",
+
+    "test:main:augmented:subscription": "MAINNET_FORK=true TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/subscription.spec.ts",
+    "test:main:augmented:rewards": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/rewards.spec.ts",
+
     "dev:coverage": "buidler compile --force && buidler coverage --network coverage",
     "aave:evm:dev:migration": "npm run compile && hardhat aave:dev",
     "aave:docker:full:migration": "npm run compile && npm run hardhat:docker -- aave:mainnet",
@@ -53,7 +56,7 @@
     "amm:fork:main": "npm run compile && MAINNET_FORK=true hardhat amm:mainnet",
     "amm:fork:main:tenderly": "npm run compile && npm run hardhat:tenderly-main -- amm:mainnet",
     "aave:main:full:migration": "npm run compile && npm run hardhat:main -- aave:mainnet --verify",
-    "aave:main:full:initialize": "npm run compile && MAINNET_FORK=true full:initialize-tokens --pool Aave",
+    "aave:main:full:initialize": "npm run compile && MAINNET_FORK=true hardhat full:initialize-tokens --pool Aave",
     "amm:main:full:migration": "npm run compile && npm run hardhat:main -- amm:mainnet --verify",
     "prettier:check": "npx prettier -c 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-aave/**/*.ts'",
     "prettier:write": "prettier --write 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-aave/**/*.ts'",

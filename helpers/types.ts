@@ -38,6 +38,7 @@ export enum AavePools {
   proto = 'proto',
   matic = 'matic',
   amm = 'amm',
+  augmented = 'augmented',
 }
 
 export enum eContractid {
@@ -87,6 +88,15 @@ export enum eContractid {
   UniswapLiquiditySwapAdapter = 'UniswapLiquiditySwapAdapter',
   UniswapRepayAdapter = 'UniswapRepayAdapter',
   FlashLiquidationAdapter = 'FlashLiquidationAdapter',
+
+  AGFToken = 'AGFToken',
+  RewardFreezer = 'RewardFreezer',
+  FixedRewardPool = 'FixedRewardPool',
+  LinearRewardPool = 'LinearRewardPool',
+  Migrator = 'Migrator',
+  AaveAdapter = 'AaveAdapter',
+  CompAdapter = 'CompAdapter',
+  DeadTokenAdapter = 'DeadTokenAdapter',
 }
 
 /*
@@ -351,7 +361,7 @@ export enum TokenContractId {
   BptBALWETH = 'BptBALWETH',
   WMATIC = 'WMATIC',
   STAKE = 'STAKE',
-  xSUSHI = 'xSUSHI'
+  xSUSHI = 'xSUSHI',
 }
 
 export interface IReserveParams extends IReserveBorrowParams, IReserveCollateralParams {

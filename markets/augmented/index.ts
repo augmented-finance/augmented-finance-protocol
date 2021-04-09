@@ -31,7 +31,7 @@ import {
 
 export const AugmentedConfig: IAaveConfiguration = {
   ...CommonsConfig,
-  MarketId: 'Aave genesis market',
+  MarketId: 'Augmented genesis market',
   ProviderId: 1,
   ReservesConfig: {
     AAVE: strategyAAVE,
