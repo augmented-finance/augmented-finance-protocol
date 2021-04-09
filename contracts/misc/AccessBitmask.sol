@@ -12,10 +12,16 @@ contract AccessBitmask is Context {
   mapping(address => uint256) private _acl;
 
   function _grantAcl(address addr, uint256 flags) internal {
+    if (flags == 0) {
+      return;
+    }
     _acl[addr] = _acl[addr] | flags;
   }
 
   function _revokeAcl(address addr, uint256 flags) internal {
+    if (flags == 0 || _acl[addr] == 0) {
+      return;
+    }
     _acl[addr] = _acl[addr] & (~flags);
   }
 
@@ -41,6 +47,11 @@ contract AccessBitmask is Context {
     _;
   }
 
+  modifier aclNoneOf(uint256 flags) {
+    require((_acl[_msgSender()] & flags) == 0, 'access is restricted');
+    _;
+  }
+
   modifier aclAnyOf(uint256 flags) {
     require((_acl[_msgSender()] & flags) != 0, 'access is restricted');
     _;
@@ -48,6 +59,11 @@ contract AccessBitmask is Context {
 
   modifier aclAny() {
     require(_acl[_msgSender()] != 0, 'access is restricted');
+    _;
+  }
+
+  modifier aclNone() {
+    require(_acl[_msgSender()] == 0, 'access is restricted');
     _;
   }
 }
