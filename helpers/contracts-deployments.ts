@@ -19,6 +19,7 @@ import { ZERO_ADDRESS } from './constants';
 import {
   AaveProtocolDataProviderFactory,
   ATokenFactory,
+  AGFTokenFactory,
   ATokensAndRatesHelperFactory,
   AaveOracleFactory,
   DefaultReserveInterestRateStrategyFactory,
@@ -49,6 +50,9 @@ import {
   WETH9MockedFactory,
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
+  RewardFreezerFactory,
+  FixedRewardPoolFactory,
+  LinearRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -546,7 +550,15 @@ export const deployMockVariableDebtToken = async (
 };
 
 export const deployMockAToken = async (
-  args: [tEthereumAddress, tEthereumAddress, tEthereumAddress, tEthereumAddress, string, string, string],
+  args: [
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    string,
+    string,
+    string
+  ],
   verify?: boolean
 ) => {
   const instance = await withSaveAndVerify(
@@ -606,6 +618,38 @@ export const deployFlashLiquidationAdapter = async (
   withSaveAndVerify(
     await new FlashLiquidationAdapterFactory(await getFirstSigner()).deploy(...args),
     eContractid.FlashLiquidationAdapter,
+    args,
+    verify
+  );
+
+export const deployAGFToken = async (args: [string, string], verify?: boolean) =>
+  withSaveAndVerify(
+    await new AGFTokenFactory(await getFirstSigner()).deploy(...args),
+    eContractid.AGFToken,
+    args,
+    verify
+  );
+
+export const deployRewardFreezer = async (args: [tEthereumAddress], verify?: boolean) =>
+  withSaveAndVerify(
+    await new RewardFreezerFactory(await getFirstSigner()).deploy(...args),
+    eContractid.RewardFreezer,
+    args,
+    verify
+  );
+
+export const deployFixedRewardPool = async (args: [tEthereumAddress], verify?: boolean) =>
+  withSaveAndVerify(
+    await new FixedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.FixedRewardPool,
+    args,
+    verify
+  );
+
+export const deployLinearRewardPool = async (args: [tEthereumAddress], verify?: boolean) =>
+  withSaveAndVerify(
+    await new LinearRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.LinearRewardPool,
     args,
     verify
   );

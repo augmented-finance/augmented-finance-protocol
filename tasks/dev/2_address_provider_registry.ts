@@ -4,7 +4,7 @@ import {
   deployLendingPoolAddressesProviderRegistry,
 } from '../../helpers/contracts-deployments';
 import { waitForTx } from '../../helpers/misc-utils';
-import { AaveConfig } from '../../markets/aave';
+import AugmentedConfig from '../../markets/augmented';
 
 task(
   'dev:deploy-address-provider',
@@ -16,7 +16,10 @@ task(
 
     const admin = await (await localBRE.ethers.getSigners())[0].getAddress();
 
-    const addressesProvider = await deployLendingPoolAddressesProvider(AaveConfig.MarketId, verify);
+    const addressesProvider = await deployLendingPoolAddressesProvider(
+      AugmentedConfig.MarketId,
+      verify
+    );
     await waitForTx(await addressesProvider.setPoolAdmin(admin));
 
     const addressesProviderRegistry = await deployLendingPoolAddressesProviderRegistry(verify);
