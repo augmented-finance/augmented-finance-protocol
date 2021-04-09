@@ -3,13 +3,13 @@ pragma solidity ^0.6.12;
 
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../protocol/libraries/math/WadRayMath.sol';
-import {Aclable} from '../misc/Aclable.sol';
+import {AccessBitmask} from '../misc/AccessBitmask.sol';
 import {IRewardController} from './IRewardController.sol';
 import {IRewardPool, IManagedRewardPool} from './IRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BasicRewardPool is Aclable, IRewardPool, IManagedRewardPool {
+abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 

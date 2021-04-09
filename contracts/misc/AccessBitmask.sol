@@ -8,7 +8,7 @@ import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../protocol/libraries/math/WadRayMath.sol';
 
-contract Aclable is Context {
+contract AccessBitmask is Context {
   mapping(address => uint256) private _acl;
 
   function _grantAcl(address addr, uint256 flags) internal {
