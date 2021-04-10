@@ -78,7 +78,7 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
     adjRate = _accumRate.add(weightedRate.mul(currentBlock - internalGetLastUpdateBlock()));
 
     weightedRate = adjRate.sub(entry.lastAccumRate);
-    if (weightedRate < _totalMax && entry.rewardBase < (1 << _safeBits)) {
+    if (weightedRate < _totalMax && entry.rewardBase < (uint256(1) << _safeBits)) {
       // the easy way - no chance to get an over- or under-flow
       return (adjRate, entry.rewardBase.mul(weightedRate).div(_totalMax));
     }
