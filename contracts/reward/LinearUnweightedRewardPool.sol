@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.6.12;
+
+import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {WadRayMath} from '../protocol/libraries/math/WadRayMath.sol';
+import {IRewardController} from './IRewardController.sol';
+import {AccumulatingRewardPool} from './AccumulatingRewardPool.sol';
+
+import 'hardhat/console.sol';
+
+contract LinearUnweightedRewardPool is AccumulatingRewardPool {
+  using SafeMath for uint256;
+  using WadRayMath for uint256;
+
+  uint256 private _accumRate;
+
+  constructor(IRewardController controller) public AccumulatingRewardPool(controller) {}
+
+  function internalRateUpdated(
+    uint256 lastRate,
+    uint32 lastBlock,
+    uint32 currentBlock
+  ) internal virtual override {
+    _accumRate = _accumRate.add(lastRate.mul(currentBlock - lastBlock));
+    super.internalRateUpdated(lastRate, lastBlock, currentBlock);
+  }
+
+  function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
+    internal
+    view
+    override
+    returns (uint256 rate, uint256 allocated)
+  {
+    uint256 adjRate =
+      _accumRate.add(internalGetRate().mul(currentBlock - internalGetLastUpdateBlock()));
+    return (adjRate, entry.rewardBase.rayMul(adjRate.sub(entry.lastAccumRate)));
+  }
+}

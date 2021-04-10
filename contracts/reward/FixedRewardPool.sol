@@ -12,20 +12,10 @@ contract FixedRewardPool is BasicRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
-  uint256 private _rate;
-
   constructor(IRewardController controller) public BasicRewardPool(controller) {}
 
   function isLazy() external view override returns (bool) {
     return false;
-  }
-
-  function internalSetRate(uint256 rate, uint32) internal override {
-    _rate = rate;
-  }
-
-  function internalGetRate() internal view override returns (uint256) {
-    return _rate;
   }
 
   function internalUpdateReward(
@@ -43,7 +33,7 @@ contract FixedRewardPool is BasicRewardPool {
       return 0;
     }
 
-    return uint256(newBalance - oldBalance).rayMul(_rate);
+    return uint256(newBalance - oldBalance).rayMul(internalGetRate());
   }
 
   function internalGetReward(address, uint32) internal override returns (uint256) {

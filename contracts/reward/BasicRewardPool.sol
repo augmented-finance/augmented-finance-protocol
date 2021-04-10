@@ -17,8 +17,10 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
   uint256 constant aclRewardProvider = 1 << 2;
 
   IRewardController private _controller;
-  uint256 private _rate;
   uint32 private _cutOffBlock;
+  // _lastUpdateBlock must NOT be set past-cutOff
+  uint32 private _lastUpdateBlock;
+  uint256 private _rate;
 
   constructor(IRewardController controller) public {
     require(address(controller) != address(0), 'controller is required');
@@ -30,19 +32,53 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
   function setRate(uint256 rate) external override aclHas(aclConfigure) {
     uint32 currentBlock = uint32(block.number);
     require(!isCutOff(currentBlock), 'rate cant be set after cut off');
-    internalSetRate(rate, currentBlock);
+
+    if (_lastUpdateBlock == 0) {
+      if (rate == 0) {
+        return;
+      }
+      _rate = rate;
+      _lastUpdateBlock = currentBlock;
+      return;
+    }
+    if (_rate == rate) {
+      return;
+    }
+    if (_lastUpdateBlock == currentBlock) {
+      _rate = rate;
+      return;
+    }
+    uint256 prevRate = _rate;
+    uint32 prevBlock = _lastUpdateBlock;
+    _rate = rate;
+    internalRateUpdated(prevRate, prevBlock, currentBlock);
+  }
+
+  function internalRateUpdated(
+    uint256 lastRate,
+    uint32 lastBlock,
+    uint32 currentBlock
+  ) internal virtual {
+    lastRate;
+    lastBlock;
+    require(currentBlock >= _lastUpdateBlock, 'retroactive update');
+    _lastUpdateBlock = currentBlock;
   }
 
   function getRate() external view returns (uint256) {
     if (isCutOff(uint32(block.number))) {
       return 0;
     }
-    return internalGetRate();
+    return _rate;
   }
 
-  function internalSetRate(uint256 rate, uint32 currentBlock) internal virtual;
+  function internalGetRate() internal view returns (uint256) {
+    return _rate;
+  }
 
-  function internalGetRate() internal view virtual returns (uint256);
+  function internalGetLastUpdateBlock() internal view returns (uint32) {
+    return _lastUpdateBlock;
+  }
 
   function setCutOff(uint32 blockNumber) external aclHas(aclConfigure) {
     if (blockNumber > 0) {
