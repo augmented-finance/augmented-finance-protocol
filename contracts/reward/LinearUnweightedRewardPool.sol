@@ -16,6 +16,13 @@ contract LinearUnweightedRewardPool is AccumulatingRewardPool {
 
   constructor(IRewardController controller) public AccumulatingRewardPool(controller) {}
 
+  function internalUpdateTotalSupply(
+    address,
+    uint256,
+    uint256,
+    uint32
+  ) internal override {}
+
   function internalRateUpdated(
     uint256 lastRate,
     uint32 lastBlock,

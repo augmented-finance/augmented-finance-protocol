@@ -31,6 +31,26 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
     _totalSupplyMax = (1 << maxSupplyBits) - 1;
   }
 
+  function internalUpdateTotalSupply(
+    address provider,
+    uint256 providerInfo,
+    uint256 totalSupply,
+    uint32 currentBlock
+  ) internal override {
+    if (providerInfo == totalSupply) {
+      return;
+    }
+    internalSetProviderInfo(provider, totalSupply);
+
+    if (providerInfo > totalSupply) {
+      uint256 delta = providerInfo - totalSupply;
+      internalSetTotalSupply(_totalSupply.sub(delta), currentBlock);
+      return;
+    }
+    uint256 delta = totalSupply - providerInfo;
+    internalSetTotalSupply(_totalSupply.add(delta), currentBlock);
+  }
+
   function internalRateUpdated(
     uint256 lastRate,
     uint32 lastBlock,
@@ -89,18 +109,5 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
       shiftedBits += remainingBits;
     }
     return (adjRate, allocated / WadRayMath.RAY);
-  }
-
-  function internalUpdateReward(
-    address holder,
-    uint256 oldBalance,
-    uint256 newBalance,
-    uint256 totalSupply,
-    uint32 currentBlock
-  ) internal virtual override returns (uint256) {
-    if (_totalSupply != totalSupply) {
-      internalSetTotalSupply(totalSupply, currentBlock);
-    }
-    return super.internalUpdateReward(holder, oldBalance, newBalance, totalSupply, currentBlock);
   }
 }
