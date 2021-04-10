@@ -13,30 +13,22 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
-  uint256 private _totalSupply;
-  uint256 private _totalMax;
-  uint8 private _safeBits;
   uint256 private _accumRate;
+  uint256 private _totalSupply;
+
+  uint256 private _totalSupplyMax;
+  uint256 private constant minBitReserve = 32;
 
   constructor(IRewardController controller, uint256 maxTotalSupply)
     public
     AccumulatingRewardPool(controller)
   {
     require(maxTotalSupply > 0, 'max total supply is unknown');
-    require(maxTotalSupply <= type(uint224).max, 'max total supply is too high');
 
-    _totalMax = WadRayMath.WAD;
-    uint256 safeBits = 256 - 60;
-    for (;;) {
-      uint256 next = _totalMax.mul(WadRayMath.WAD_RAY_RATIO);
-      if (next >= maxTotalSupply) {
-        break;
-      }
-      _totalMax = next;
-      safeBits = safeBits.sub(30);
-    }
-    require(_safeBits >= 32, 'inconsistent safeBits');
-    _safeBits = uint8(safeBits) + 1;
+    uint256 maxSupplyBits = BitUtils.bitLength(maxTotalSupply);
+    require(maxSupplyBits + minBitReserve > 256, 'max total supply is too high');
+
+    _totalSupplyMax = (1 << maxSupplyBits) - 1;
   }
 
   function internalRateUpdated(
@@ -45,7 +37,8 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
     uint32 currentBlock
   ) internal virtual override {
     if (_totalSupply > 0) {
-      lastRate = lastRate.mul(_totalMax.div(_totalSupply));
+      // the rate stays in RAY, but is weighted now vs _totalSupplyMax
+      lastRate = lastRate.mul(_totalSupplyMax.div(_totalSupply));
       _accumRate = _accumRate.add(lastRate.mul(currentBlock - lastBlock));
     } else {
       lastRate = 0;
@@ -74,26 +67,28 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
       return (_accumRate, 0);
     }
 
-    uint256 weightedRate = internalGetRate().mul(_totalMax.div(_totalSupply));
+    uint256 weightedRate = internalGetRate().mul(_totalSupplyMax.div(_totalSupply));
     adjRate = _accumRate.add(weightedRate.mul(currentBlock - internalGetLastUpdateBlock()));
 
     weightedRate = adjRate.sub(entry.lastAccumRate);
-    if (weightedRate < _totalMax && entry.rewardBase < (uint256(1) << _safeBits)) {
-      // the easy way - no chance to get an over- or under-flow
-      return (adjRate, entry.rewardBase.mul(weightedRate).div(_totalMax));
+    // ATTN! TODO Prevent overflow checks here
+    uint256 x = entry.rewardBase * weightedRate;
+    if (x / weightedRate == entry.rewardBase) {
+      // the easy way - no overflow
+      return (adjRate, (x / _totalSupplyMax) / WadRayMath.RAY);
     }
 
-    // the hard way - numbers are too large for one-hit
-    uint256 remainingBits = 256 - BitUtils.bitLength(weightedRate);
+    // the hard way - numbers are too large for one-hit, so do it by chunks
+    uint256 remainingBits =
+      minBitReserve + uint256(256 - minBitReserve).sub(BitUtils.bitLength(weightedRate));
     uint256 baseMask = (1 << remainingBits) - 1;
     uint256 shiftedBits = 0;
-    for (uint256 base = entry.rewardBase; base > 0; base >>= remainingBits) {
-      allocated = allocated.add(
-        ((base & baseMask).mul(weightedRate).div(_totalMax)) << shiftedBits
-      );
+
+    for (x = entry.rewardBase; x > 0; x >>= remainingBits) {
+      allocated = allocated.add((((x & baseMask) * weightedRate) / _totalSupplyMax) << shiftedBits);
       shiftedBits += remainingBits;
     }
-    return (adjRate, allocated);
+    return (adjRate, allocated / WadRayMath.RAY);
   }
 
   function internalUpdateReward(
