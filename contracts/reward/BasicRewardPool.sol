@@ -14,13 +14,14 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
   using WadRayMath for uint256;
 
   uint256 constant aclConfigure = 1 << 1;
-  uint256 constant aclRewardProvider = 1 << 2;
 
   IRewardController private _controller;
   uint32 private _cutOffBlock;
   // _lastUpdateBlock must NOT be set past-cutOff
   uint32 private _lastUpdateBlock;
   uint256 private _rate;
+
+  mapping(address => uint256) private _providers;
 
   constructor(IRewardController controller) public {
     require(address(controller) != address(0), 'controller is required');
@@ -116,22 +117,26 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
   }
 
   function addRewardProvider(address provider) external override aclHas(aclConfigure) {
-    _grantAcl(provider, aclRewardProvider);
+    _providers[provider] = 1;
   }
 
   function removeRewardProvider(address provider) external override aclHas(aclConfigure) {
-    _revokeAcl(provider, aclRewardProvider);
+    delete (_providers[provider]);
   }
 
   function handleAction(
     address holder,
     uint256 newRewardBase,
     uint256 totalSupply
-  ) external override aclHas(aclRewardProvider) {
+  ) external override {
+    uint256 providerInfo = _providers[msg.sender];
+    require(providerInfo > 0, 'unknown reward provider');
+    internalUpdateTotalSupply(msg.sender, providerInfo - 1, totalSupply, uint32(block.number));
+
     totalSupply;
     holder;
     newRewardBase;
-    require(false, 'not implemented: handleAction');
+    revert('not implemented: handleAction');
   }
 
   function handleBalanceUpdate(
@@ -139,7 +144,11 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
     uint256 oldBalance,
     uint256 newBalance,
     uint256 totalSupply
-  ) external override aclHas(aclRewardProvider) {
+  ) external override {
+    uint256 providerInfo = _providers[msg.sender];
+    require(providerInfo > 0, 'unknown reward provider');
+    internalUpdateTotalSupply(msg.sender, providerInfo - 1, totalSupply, uint32(block.number));
+
     uint256 allocated =
       internalUpdateReward(holder, oldBalance, newBalance, totalSupply, uint32(block.number));
     if (allocated > 0) {
@@ -149,6 +158,18 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
       _controller.removedFromPool(holder);
     }
   }
+
+  function internalSetProviderInfo(address provider, uint256 providerInfo) internal {
+    require(_providers[provider] > 0, 'unknown reward provider');
+    _providers[provider] = providerInfo.add(1);
+  }
+
+  function internalUpdateTotalSupply(
+    address provider,
+    uint256 providerInfo,
+    uint256 totalSupply,
+    uint32 currentBlock
+  ) internal virtual;
 
   function internalUpdateReward(
     address holder,

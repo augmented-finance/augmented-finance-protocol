@@ -18,6 +18,13 @@ contract FixedRewardPool is BasicRewardPool {
     return false;
   }
 
+  function internalUpdateTotalSupply(
+    address,
+    uint256,
+    uint256,
+    uint32
+  ) internal override {}
+
   function internalUpdateReward(
     address holder,
     uint256 oldBalance,
