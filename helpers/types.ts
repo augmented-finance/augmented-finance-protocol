@@ -92,7 +92,7 @@ export enum eContractid {
   AGFToken = 'AGFToken',
   RewardFreezer = 'RewardFreezer',
   FixedRewardPool = 'FixedRewardPool',
-  LinearRewardPool = 'LinearRewardPool',
+  LinearWeightedRewardPool = 'LinearWeightedRewardPool',
   Migrator = 'Migrator',
   AaveAdapter = 'AaveAdapter',
   CompAdapter = 'CompAdapter',
