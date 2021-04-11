@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 import {
   deployAGFToken,
   deployFixedRewardPool,
-  deployLinearRewardPool,
+  deployLinearWeightedRewardPool,
   deployRewardFreezer,
 } from '../../helpers/contracts-deployments';
 
@@ -18,5 +18,5 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
     const rewardFreezer = await deployRewardFreezer([agfToken.address], verify);
 
     await deployFixedRewardPool([rewardFreezer.address], verify);
-    await deployLinearRewardPool([rewardFreezer.address], verify);
+    await deployLinearWeightedRewardPool([rewardFreezer.address, 10], verify);
   });
