@@ -6,7 +6,7 @@ import {
 } from '../../helpers/contracts-deployments';
 
 // mainnet addresses
-const ADAI_ADDRESS = '0xfC1E690f61EFd961294b3e1Ce3313fBD8aa4f85d';
+const ADAI_ADDRESS = '0x028171bca77440897b824ca71d1c56cac55b68a3';
 const CDAI_ADDRESS = '0x5d3a536e4d6dbd6114cc1ead35777bab948e3643';
 const DAI_ADDRESS = '0x6b175474e89094c44da98b954eedeac495271d0f';
 
