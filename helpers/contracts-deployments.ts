@@ -57,6 +57,7 @@ import {
   MigratorFactory,
   AaveAdapterFactory,
   CompAdapterFactory,
+  LinearUnweightedRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -658,6 +659,17 @@ export const deployLinearWeightedRewardPool = async (
     await new LinearWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.LinearWeightedRewardPool,
     [], // TODO:
+    verify
+  );
+
+export const deployLinearUnweightedRewardPool = async (
+  args: [tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new LinearUnweightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.LinearUnweightedRewardPool,
+    args,
     verify
   );
 

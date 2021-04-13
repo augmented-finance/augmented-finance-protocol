@@ -35,6 +35,9 @@ task('augmented:dev', 'Deploy development enviroment')
     console.log('4. Deploy AGF token and reward pool');
     await localBRE.run('dev:agf-rewards', { verify, pool: POOL_NAME });
 
+    console.log('5. Deploy Augmented Migrator');
+    await localBRE.run('dev:augmented-migrator', { verify, pool: POOL_NAME });
+
     console.log('\nFinished migration');
     printContracts();
   });

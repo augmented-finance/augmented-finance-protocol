@@ -30,6 +30,10 @@ import {
   WETH9MockedFactory,
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
+  RewardFreezerFactory,
+  LinearUnweightedRewardPoolFactory,
+  AGFToken,
+  AGFTokenFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -360,6 +364,27 @@ export const getFlashLiquidationAdapter = async (address?: tEthereumAddress) =>
   await FlashLiquidationAdapterFactory.connect(
     address ||
       (await getDb().get(`${eContractid.FlashLiquidationAdapter}.${DRE.network.name}`).value())
+        .address,
+    await getFirstSigner()
+  );
+
+export const getAgfToken = async (address?: tEthereumAddress) =>
+  await AGFTokenFactory.connect(
+    address || (await getDb().get(`${eContractid.AGFToken}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
+export const getRewardFreezer = async (address?: tEthereumAddress) =>
+  await RewardFreezerFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.RewardFreezer}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
+export const getLinearUnweightedRewardPool = async (address?: tEthereumAddress) =>
+  await LinearUnweightedRewardPoolFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.LinearUnweightedRewardPool}.${DRE.network.name}`).value())
         .address,
     await getFirstSigner()
   );
