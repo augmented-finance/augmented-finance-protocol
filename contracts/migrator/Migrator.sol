@@ -37,13 +37,28 @@ contract Migrator is Ownable {
     return getAdapter(token).balanceForMigrate(holder);
   }
 
+  function claimMigrated(address token) public returns (uint256) {
+    return getAdapter(token).claimMigrated(msg.sender);
+  }
+
+  function claimAllMigrated() public {
+    for (uint256 i = 0; i < _adaptersList.length; i++) {
+      if (address(_adaptersList[i]) == address(0)) {
+        continue;
+      }
+      if (_adaptersList[i].isClaimable()) {
+        _adaptersList[i].claimMigrated(msg.sender);
+      }
+    }
+  }
+
   function getAdapter(address token) public view returns (ISubscriptionAdapter adapter) {
     uint256 adapterIdx = _adapters[token];
     require(adapterIdx > 0, 'unknown or unsupported token');
     return _adaptersList[adapterIdx - 1];
   }
 
-  function registerAdapter(ISubscriptionAdapter adapter) public onlyOwner {
+  function admin_registerAdapter(ISubscriptionAdapter adapter) public onlyOwner {
     address underlying = adapter.UNDERLYING_ASSET_ADDRESS();
     require(IERC20(underlying).totalSupply() > 0, 'valid underlying is required');
 
@@ -58,7 +73,7 @@ contract Migrator is Ownable {
     _underlyings[underlying].push(_adaptersList.length);
   }
 
-  function unregisterAdapter(ISubscriptionAdapter adapter) public onlyOwner returns (bool) {
+  function admin_unregisterAdapter(ISubscriptionAdapter adapter) public onlyOwner returns (bool) {
     address origin = adapter.ORIGIN_ASSET_ADDRESS();
     if (_adapters[origin] == 0) {
       return false;
@@ -72,7 +87,7 @@ contract Migrator is Ownable {
     return true;
   }
 
-  function unregisterAdapterForToken(address origin) public onlyOwner returns (bool) {
+  function admin_unregisterAdapterForToken(address origin) public onlyOwner returns (bool) {
     if (_adapters[origin] == 0) {
       return false;
     }
@@ -85,18 +100,24 @@ contract Migrator is Ownable {
     return true;
   }
 
-  function migrateToToken(ILendableToken target)
+  function admin_migrateToToken(ILendableToken target)
     public
     onlyOwner
-    returns (ISubscriptionAdapter[] memory migrated)
+    returns (ISubscriptionAdapter[] memory migrated, uint256 count)
+  {
+    return internalMigrateToToken(target);
+  }
+
+  function internalMigrateToToken(ILendableToken target)
+    internal
+    returns (ISubscriptionAdapter[] memory migrated, uint256 count)
   {
     address underlying = target.UNDERLYING_ASSET_ADDRESS();
     uint256[] storage indices = _underlyings[underlying];
     if (indices.length == 0) {
-      return migrated;
+      return (migrated, 0);
     }
     migrated = new ISubscriptionAdapter[](indices.length);
-    uint256 j = 0;
 
     for (uint256 i = 0; i < indices.length; i++) {
       ISubscriptionAdapter adapter = _adaptersList[indices[i]];
@@ -104,9 +125,41 @@ contract Migrator is Ownable {
         continue;
       }
       adapter.admin_migrateAll(target);
-      migrated[j] = adapter;
-      j++;
+      migrated[count] = adapter;
+      count++;
     }
-    return migrated;
+    return (migrated, count);
+  }
+
+  function admin_enableClaims(ISubscriptionAdapter[] memory migrated) public onlyOwner {
+    internalEnableClaims(migrated);
+  }
+
+  function internalEnableClaims(ISubscriptionAdapter[] memory migrated) private {
+    for (uint256 i = 0; i < migrated.length; i++) {
+      if (address(migrated[i]) == address(0)) {
+        continue;
+      }
+      migrated[i].admin_enableClaims();
+    }
+  }
+
+  function admin_migrateAllThenEnableClaims(ILendableToken[] memory targets)
+    public
+    onlyOwner
+    returns (uint256 count)
+  {
+    ISubscriptionAdapter[][] memory migrateds = new ISubscriptionAdapter[][](targets.length);
+    for (uint256 i = 0; i < targets.length; i++) {
+      uint256 migratedCount;
+      (migrateds[i], migratedCount) = internalMigrateToToken(targets[i]);
+      count += migratedCount;
+    }
+
+    for (uint256 i = 0; i < migrateds.length; i++) {
+      internalEnableClaims(migrateds[i]);
+    }
+
+    return count;
   }
 }
