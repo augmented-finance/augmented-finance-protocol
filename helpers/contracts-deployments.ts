@@ -1,4 +1,4 @@
-import { Contract } from 'ethers';
+import { BigNumberish, Contract } from 'ethers';
 import { DRE } from './misc-utils';
 import {
   tEthereumAddress,
@@ -10,6 +10,7 @@ import {
   IReserveParams,
   PoolConfiguration,
   eEthereumNetwork,
+  tStringTokenBigUnits,
 } from './types';
 import { MintableERC20 } from '../types/MintableERC20';
 import { MockContract } from 'ethereum-waffle';
@@ -52,7 +53,10 @@ import {
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
   FixedRewardPoolFactory,
-  LinearRewardPoolFactory,
+  LinearWeightedRewardPoolFactory,
+  MigratorFactory,
+  AaveAdapterFactory,
+  CompAdapterFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -646,10 +650,40 @@ export const deployFixedRewardPool = async (args: [tEthereumAddress], verify?: b
     verify
   );
 
-export const deployLinearRewardPool = async (args: [tEthereumAddress], verify?: boolean) =>
+export const deployLinearWeightedRewardPool = async (
+  args: [tEthereumAddress, BigNumberish],
+  verify?: boolean
+) =>
   withSaveAndVerify(
-    await new LinearRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.LinearRewardPool,
+    await new LinearWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.LinearWeightedRewardPool,
+    [], // TODO:
+    verify
+  );
+
+export const deployAugmentedMigrator = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await new MigratorFactory(await getFirstSigner()).deploy(),
+    eContractid.Migrator,
+    [],
+    verify
+  );
+
+export const deployAaveAdapter = async (args: [tEthereumAddress], verify?: boolean) =>
+  withSaveAndVerify(
+    await new AaveAdapterFactory(await getFirstSigner()).deploy(...args),
+    eContractid.AaveAdapter,
+    args,
+    verify
+  );
+
+export const deployCompAdapter = async (
+  args: [tEthereumAddress, tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new CompAdapterFactory(await getFirstSigner()).deploy(...args),
+    eContractid.CompAdapter,
     args,
     verify
   );
