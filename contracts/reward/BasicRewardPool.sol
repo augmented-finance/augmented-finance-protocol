@@ -121,7 +121,12 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
   }
 
   function removeRewardProvider(address provider) external override aclHas(aclConfigure) {
+    uint256 providerInfo = _providers[provider];
+    if (providerInfo == 0) {
+      return;
+    }
     delete (_providers[provider]);
+    internalUpdateTotalSupply(provider, providerInfo - 1, 0, uint32(block.number));
   }
 
   function handleAction(
