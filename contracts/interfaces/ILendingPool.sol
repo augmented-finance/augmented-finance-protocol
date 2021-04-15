@@ -19,7 +19,7 @@ interface ILendingPool {
     address user,
     address indexed onBehalfOf,
     uint256 amount,
-    uint16 indexed referral
+    uint64 indexed referral
   );
 
   /**
@@ -49,7 +49,7 @@ interface ILendingPool {
     uint256 amount,
     uint256 borrowRateMode,
     uint256 borrowRate,
-    uint16 indexed referral
+    uint64 indexed referral
   );
 
   /**
@@ -110,7 +110,7 @@ interface ILendingPool {
     address indexed asset,
     uint256 amount,
     uint256 premium,
-    uint16 referralCode
+    uint64 referralCode
   );
 
   /**
@@ -182,7 +182,7 @@ interface ILendingPool {
     address asset,
     uint256 amount,
     address onBehalfOf,
-    uint16 referralCode
+    uint64 referralCode
   ) external;
 
   /**
@@ -221,7 +221,7 @@ interface ILendingPool {
     address asset,
     uint256 amount,
     uint256 interestRateMode,
-    uint16 referralCode,
+    uint64 referralCode,
     address onBehalfOf
   ) external;
 
@@ -312,7 +312,7 @@ interface ILendingPool {
     uint256[] calldata modes,
     address onBehalfOf,
     bytes calldata params,
-    uint16 referralCode
+    uint64 referralCode
   ) external;
 
   /**

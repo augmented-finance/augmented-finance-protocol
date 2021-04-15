@@ -105,7 +105,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     address asset,
     uint256 amount,
     address onBehalfOf,
-    uint16 referralCode
+    uint64 referralCode
   ) external override whenNotPaused {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
@@ -202,7 +202,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     address asset,
     uint256 amount,
     uint256 interestRateMode,
-    uint16 referralCode,
+    uint64 referralCode,
     address onBehalfOf
   ) external override whenNotPaused {
     DataTypes.ReserveData storage reserve = _reserves[asset];
@@ -487,7 +487,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     uint256[] calldata modes,
     address onBehalfOf,
     bytes calldata params,
-    uint16 referralCode
+    uint64 referralCode
   ) external override whenNotPaused {
     FlashLoanLocalVars memory vars;
 
@@ -713,7 +713,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   }
 
   /**
-   * @dev Returns the fee on flash loans 
+   * @dev Returns the fee on flash loans
    */
   function FLASHLOAN_PREMIUM_TOTAL() public view returns (uint256) {
     return _flashLoanPremiumTotal;
@@ -848,7 +848,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     uint256 amount;
     uint256 interestRateMode;
     address aTokenAddress;
-    uint16 referralCode;
+    uint64 referralCode;
     bool releaseUnderlying;
   }
 
