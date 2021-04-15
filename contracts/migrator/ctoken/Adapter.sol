@@ -36,7 +36,7 @@ contract CompAdapter is BasicAdapter {
   }
 
   function transferTargetOut(uint256 amount, address holder) internal override returns (uint256) {
-    IERC20(_targetAsset).safeTransfer(holder, amount);
+    IERC20(address(_targetAsset)).safeTransfer(holder, amount);
     return amount;
   }
 

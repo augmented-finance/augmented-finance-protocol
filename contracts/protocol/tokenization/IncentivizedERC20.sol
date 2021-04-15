@@ -5,7 +5,7 @@ import {Context} from '../../dependencies/openzeppelin/contracts/Context.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {IERC20Detailed} from '../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IAaveIncentivesController} from '../../interfaces/IAaveIncentivesController.sol';
+import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 /**
  * @title ERC20
@@ -72,7 +72,7 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
    * @return Abstract function implemented by the child aToken/debtToken.
    * Done this way in order to not break compatibility with previous versions of aTokens/debtTokens
    **/
-  function _getIncentivesController() internal view virtual returns (IAaveIncentivesController);
+  function _getIncentivesController() internal view virtual returns (IBalanceHook);
 
   /**
    * @dev Executes a transfer of tokens from _msgSender() to recipient
@@ -182,11 +182,17 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
     uint256 oldRecipientBalance = _balances[recipient];
     _balances[recipient] = _balances[recipient].add(amount);
 
-    if (address(_getIncentivesController()) != address(0)) {
+    IBalanceHook hook = _getIncentivesController();
+    if (address(hook) != address(0)) {
       uint256 currentTotalSupply = _totalSupply;
-      _getIncentivesController().handleAction(sender, oldSenderBalance, currentTotalSupply);
+      hook.handleBalanceUpdate(sender, oldSenderBalance, _balances[sender], currentTotalSupply);
       if (sender != recipient) {
-        _getIncentivesController().handleAction(recipient, oldRecipientBalance, currentTotalSupply);
+        hook.handleBalanceUpdate(
+          recipient,
+          oldRecipientBalance,
+          _balances[recipient],
+          currentTotalSupply
+        );
       }
     }
   }
@@ -196,14 +202,14 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
 
     _beforeTokenTransfer(address(0), account, amount);
 
-    uint256 oldTotalSupply = _totalSupply;
-    _totalSupply = oldTotalSupply.add(amount);
+    _totalSupply = _totalSupply.add(amount);
 
     uint256 oldAccountBalance = _balances[account];
     _balances[account] = oldAccountBalance.add(amount);
 
-    if (address(_getIncentivesController()) != address(0)) {
-      _getIncentivesController().handleAction(account, oldAccountBalance, oldTotalSupply);
+    IBalanceHook hook = _getIncentivesController();
+    if (address(hook) != address(0)) {
+      hook.handleBalanceUpdate(account, oldAccountBalance, _balances[account], _totalSupply);
     }
   }
 
@@ -212,14 +218,14 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
 
     _beforeTokenTransfer(account, address(0), amount);
 
-    uint256 oldTotalSupply = _totalSupply;
-    _totalSupply = oldTotalSupply.sub(amount);
+    _totalSupply = _totalSupply.sub(amount);
 
     uint256 oldAccountBalance = _balances[account];
     _balances[account] = oldAccountBalance.sub(amount, 'ERC20: burn amount exceeds balance');
 
-    if (address(_getIncentivesController()) != address(0)) {
-      _getIncentivesController().handleAction(account, oldAccountBalance, oldTotalSupply);
+    IBalanceHook hook = _getIncentivesController();
+    if (address(hook) != address(0)) {
+      hook.handleBalanceUpdate(account, oldAccountBalance, _balances[account], _totalSupply);
     }
   }
 

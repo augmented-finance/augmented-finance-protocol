@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 import {IInitializableDebtToken} from './IInitializableDebtToken.sol';
-import {IAaveIncentivesController} from './IAaveIncentivesController.sol';
+import {IBalanceHook} from './IBalanceHook.sol';
 
 /**
  * @title IStableDebtToken
@@ -126,8 +126,8 @@ interface IStableDebtToken is IInitializableDebtToken {
    **/
   function principalBalanceOf(address user) external view returns (uint256);
 
-  /**
-   * @dev Returns the address of the incentives controller contract
-   **/
-  function getIncentivesController() external view returns (IAaveIncentivesController);
+  // /**
+  //  * @dev Returns the address of the incentives controller contract
+  //  **/
+  // function getIncentivesController() external view returns (IBalanceHook);
 }

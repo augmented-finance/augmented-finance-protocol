@@ -1,16 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.12;
 
-import {IAaveIncentivesController} from '../interfaces/IAaveIncentivesController.sol';
+import {IBalanceHook} from '../interfaces/IBalanceHook.sol';
 
-interface IRewardPool is IAaveIncentivesController {
-  function handleBalanceUpdate(
-    address holder,
-    uint256 oldBalance,
-    uint256 newBalance,
-    uint256 totalSupply
-  ) external;
-}
+interface IRewardPool is IBalanceHook {}
 
 interface IManagedRewardPool {
   function isLazy() external view returns (bool);

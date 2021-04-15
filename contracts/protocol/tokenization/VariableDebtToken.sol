@@ -6,7 +6,7 @@ import {WadRayMath} from '../libraries/math/WadRayMath.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {DebtTokenBase} from './base/DebtTokenBase.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
-import {IAaveIncentivesController} from '../../interfaces/IAaveIncentivesController.sol';
+import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 /**
  * @title VariableDebtToken
@@ -21,7 +21,7 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
 
   ILendingPool internal _pool;
   address internal _underlyingAsset;
-  IAaveIncentivesController internal _incentivesController;
+  IBalanceHook internal _incentivesController;
 
   /**
    * @dev Initializes the debt token.
@@ -35,7 +35,7 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
   function initialize(
     ILendingPool pool,
     address underlyingAsset,
-    IAaveIncentivesController incentivesController,
+    IBalanceHook incentivesController,
     uint8 debtTokenDecimals,
     string memory debtTokenName,
     string memory debtTokenSymbol,
@@ -184,7 +184,7 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
   /**
    * @dev Returns the address of the incentives controller contract
    **/
-  function getIncentivesController() external view override returns (IAaveIncentivesController) {
+  function getIncentivesController() external view returns (IBalanceHook) {
     return _getIncentivesController();
   }
 
@@ -195,7 +195,7 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
     return _pool;
   }
 
-  function _getIncentivesController() internal view override returns (IAaveIncentivesController) {
+  function _getIncentivesController() internal view override returns (IBalanceHook) {
     return _incentivesController;
   }
 

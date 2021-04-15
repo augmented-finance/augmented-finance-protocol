@@ -9,7 +9,7 @@ import {WadRayMath} from '../libraries/math/WadRayMath.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IncentivizedERC20} from './IncentivizedERC20.sol';
-import {IAaveIncentivesController} from '../../interfaces/IAaveIncentivesController.sol';
+import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 /**
  * @title Aave ERC20 AToken
@@ -40,7 +40,7 @@ contract AToken is
   ILendingPool internal _pool;
   address internal _treasury;
   address internal _underlyingAsset;
-  IAaveIncentivesController internal _incentivesController;
+  IBalanceHook internal _incentivesController;
 
   modifier onlyLendingPool {
     require(_msgSender() == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
@@ -65,7 +65,7 @@ contract AToken is
     ILendingPool pool,
     address treasury,
     address underlyingAsset,
-    IAaveIncentivesController incentivesController,
+    IBalanceHook incentivesController,
     uint8 aTokenDecimals,
     string calldata aTokenName,
     string calldata aTokenSymbol,
@@ -287,14 +287,14 @@ contract AToken is
   /**
    * @dev For internal usage in the logic of the parent contract IncentivizedERC20
    **/
-  function _getIncentivesController() internal view override returns (IAaveIncentivesController) {
+  function _getIncentivesController() internal view override returns (IBalanceHook) {
     return _incentivesController;
   }
 
   /**
    * @dev Returns the address of the incentives controller contract
    **/
-  function getIncentivesController() external view override returns (IAaveIncentivesController) {
+  function getIncentivesController() external view returns (IBalanceHook) {
     return _getIncentivesController();
   }
 

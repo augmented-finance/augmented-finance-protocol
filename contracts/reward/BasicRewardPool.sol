@@ -129,21 +129,6 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
     internalUpdateTotalSupply(provider, providerInfo - 1, 0, uint32(block.number));
   }
 
-  function handleAction(
-    address holder,
-    uint256 newRewardBase,
-    uint256 totalSupply
-  ) external override {
-    uint256 providerInfo = _providers[msg.sender];
-    require(providerInfo > 0, 'unknown reward provider');
-    internalUpdateTotalSupply(msg.sender, providerInfo - 1, totalSupply, uint32(block.number));
-
-    totalSupply;
-    holder;
-    newRewardBase;
-    revert('not implemented: handleAction');
-  }
-
   function handleBalanceUpdate(
     address holder,
     uint256 oldBalance,
