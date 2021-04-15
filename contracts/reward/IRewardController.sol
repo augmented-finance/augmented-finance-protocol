@@ -8,6 +8,6 @@ interface IRewardController {
 
   function removedFromPool(address holder) external;
 
-  // event RewardsAccrued(address indexed user, uint256 amount);
-  // event RewardsClaimed(address indexed user, address indexed to, uint256 amount);
+  event RewardsAllocated(address user, uint256 amount);
+  event RewardsClaimed(address user, address to, uint256 amount);
 }
