@@ -50,12 +50,17 @@ abstract contract BasicRewardController is Ownable, IRewardController {
   }
 
   function claimReward() external returns (uint256) {
-    return internalClaimAndMintReward(msg.sender);
+    return internalClaimAndMintReward(msg.sender, msg.sender);
+  }
+
+  function claimRewardAndTransferTo(address receiver) external returns (uint256) {
+    require(receiver != address(0), 'receiver is required');
+    return internalClaimAndMintReward(msg.sender, receiver);
   }
 
   function claimRewardOnBehalf(address holder) external returns (uint256) {
     require(holder != address(0), 'holder is required');
-    return internalClaimAndMintReward(holder);
+    return internalClaimAndMintReward(holder, holder);
   }
 
   function allocatedByPool(address holder, uint256 allocated) external override {
@@ -67,6 +72,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     }
 
     internalAllocatedByPool(holder, allocated, uint32(block.number));
+    emit RewardsAllocated(holder, allocated);
   }
 
   function removedFromPool(address holder) external override {
@@ -78,7 +84,10 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     }
   }
 
-  function internalClaimAndMintReward(address holder) private returns (uint256 amount) {
+  function internalClaimAndMintReward(address holder, address receiver)
+    private
+    returns (uint256 amount)
+  {
     uint256 poolMask = _memberOf[holder] & ~_notLazyMask;
     uint256 allocated = 0;
     for (uint256 i = 0; poolMask != 0; i++) {
@@ -91,8 +100,9 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     allocated = internalClaimByCall(holder, allocated, uint32(block.number));
 
     if (allocated > 0 && address(_rewardMinter) != address(0)) {
-      _rewardMinter.mintReward(holder, allocated);
+      _rewardMinter.mintReward(receiver, allocated);
     }
+    emit RewardsClaimed(holder, receiver, allocated);
     return allocated;
   }
 
