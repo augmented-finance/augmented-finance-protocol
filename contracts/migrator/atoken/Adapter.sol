@@ -51,7 +51,7 @@ contract AaveAdapter is BasicAdapter {
     returns (uint256 userAmount)
   {
     userAmount = internalAmount.rayMul(getNormalizeTargetFactor());
-    IERC20(_targetAsset).safeTransfer(holder, userAmount);
+    IERC20(address(_targetAsset)).safeTransfer(holder, userAmount);
     return userAmount;
   }
 

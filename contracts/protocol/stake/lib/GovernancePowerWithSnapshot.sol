@@ -14,21 +14,15 @@ import {GovernancePowerDelegationERC20} from '../../governance/GovernancePowerDe
 abstract contract GovernancePowerWithSnapshot is GovernancePowerDelegationERC20 {
   using SafeMath for uint256;
 
-  /**
-   * @dev The following storage layout points to the prior StakedToken.sol implementation:
-   * _snapshots => _votingSnapshots
-   * _snapshotsCounts =>  _votingSnapshotsCounts
-   * _aaveGovernance => _aaveGovernance
-   */
   mapping(address => mapping(uint256 => Snapshot)) public _votingSnapshots;
   mapping(address => uint256) public _votingSnapshotsCounts;
 
   /// @dev reference to the Aave governance contract to call (if initialized) on _beforeTokenTransfer
   /// !!! IMPORTANT The Aave governance is considered a trustable contract, being its responsibility
   /// to control all potential reentrancies by calling back the this contract
-  ITransferHook public _aaveGovernance;
+  ITransferHook public _governance;
 
-  function _setAaveGovernance(ITransferHook aaveGovernance) internal virtual {
-    _aaveGovernance = aaveGovernance;
+  function _setGovernance(ITransferHook governance) internal virtual {
+    _governance = governance;
   }
 }
