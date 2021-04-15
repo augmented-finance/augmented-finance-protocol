@@ -115,7 +115,17 @@ contract StakedTokenV3 is IStakedAave, GovernancePowerWithSnapshot, VersionedIni
 
     _stakersCooldowns[onBehalfOf] = getNextCooldownTimestamp(0, amount, onBehalfOf, balanceOfUser);
 
+    uint256 oldBalance = balanceOf(onBehalfOf);
     _mint(onBehalfOf, amount);
+
+    if (address(_incentivesController) != address(0)) {
+      _incentivesController.handleBalanceUpdate(
+        onBehalfOf,
+        oldBalance,
+        balanceOf(onBehalfOf),
+        totalSupply()
+      );
+    }
     IERC20(_stakedToken).safeTransferFrom(msg.sender, address(this), amount);
 
     emit Staked(msg.sender, onBehalfOf, amount);
@@ -138,16 +148,25 @@ contract StakedTokenV3 is IStakedAave, GovernancePowerWithSnapshot, VersionedIni
       block.timestamp.sub(cooldownStartTimestamp.add(COOLDOWN_SECONDS)) <= UNSTAKE_WINDOW,
       'UNSTAKE_WINDOW_FINISHED'
     );
-    uint256 balanceOfMessageSender = balanceOf(msg.sender);
-    uint256 amountToRedeem = (amount > balanceOfMessageSender) ? balanceOfMessageSender : amount;
+    uint256 oldBalance = balanceOf(msg.sender);
+    uint256 amountToRedeem = (amount > oldBalance) ? oldBalance : amount;
 
     _burn(msg.sender, amountToRedeem);
 
-    if (balanceOfMessageSender.sub(amountToRedeem) == 0) {
+    if (oldBalance == amountToRedeem) {
       delete (_stakersCooldowns[msg.sender]);
     }
 
+    if (address(_incentivesController) != address(0)) {
+      _incentivesController.handleBalanceUpdate(
+        msg.sender,
+        oldBalance,
+        balanceOf(msg.sender),
+        totalSupply()
+      );
+    }
     IERC20(_stakedToken).safeTransfer(to, amountToRedeem);
+
     emit Redeem(msg.sender, to, amountToRedeem);
   }
 
