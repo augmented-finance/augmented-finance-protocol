@@ -3,9 +3,9 @@ pragma solidity 0.6.12;
 
 import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {IScaledBalanceToken} from './IScaledBalanceToken.sol';
-import {IInitializableAToken} from './IInitializableAToken.sol';
+import {IDerivedToken} from './IDerivedToken.sol';
 
-interface IAToken is IERC20, IScaledBalanceToken, IInitializableAToken {
+interface IAGToken is IERC20, IScaledBalanceToken, IDerivedToken {
   /**
    * @dev Emitted after the mint action
    * @param from The address performing the mint
@@ -93,14 +93,4 @@ interface IAToken is IERC20, IScaledBalanceToken, IInitializableAToken {
    * @param amount The amount getting repaid
    **/
   function handleRepayment(address user, uint256 amount) external;
-
-  // /**
-  //  * @dev Returns the address of the incentives controller contract
-  //  **/
-  // function getIncentivesController() external view returns (IAaveIncentivesController);
-
-  /**
-   * @dev Returns the address of the underlying asset of this aToken (E.g. WETH for aWETH)
-   **/
-  function UNDERLYING_ASSET_ADDRESS() external view returns (address);
 }

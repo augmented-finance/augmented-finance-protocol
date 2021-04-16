@@ -35,7 +35,7 @@ import { DefaultReserveInterestRateStrategy, DelegationAwareAToken } from '../ty
 
 export const chooseATokenDeployment = (id: eContractid) => {
   switch (id) {
-    case eContractid.AToken:
+    case eContractid.AGToken:
       return deployGenericAToken;
     case eContractid.DelegationAwareAToken:
       return deployDelegationAwareAToken;
@@ -140,7 +140,7 @@ export const initReservesByHelper = async (
 
   const reserves = Object.entries(reservesParams).filter(
     ([_, { aTokenImpl }]) =>
-      aTokenImpl === eContractid.DelegationAwareAToken || aTokenImpl === eContractid.AToken
+      aTokenImpl === eContractid.DelegationAwareAToken || aTokenImpl === eContractid.AGToken
   ) as [string, IReserveParams][];
 
   for (let [symbol, params] of reserves) {
@@ -174,7 +174,7 @@ export const initReservesByHelper = async (
     strategyAddressPerAsset[symbol] = strategyAddresses[strategy.name];
     console.log('Strategy address for asset %s: %s', symbol, strategyAddressPerAsset[symbol]);
 
-    if (aTokenImpl === eContractid.AToken) {
+    if (aTokenImpl === eContractid.AGToken) {
       aTokenType[symbol] = 'generic';
     } else if (aTokenImpl === eContractid.DelegationAwareAToken) {
       aTokenType[symbol] = 'delegation aware';
@@ -209,7 +209,7 @@ export const initReservesByHelper = async (
       variableDebtTokenSymbol: `variableDebt${symbolPrefix}${reserveSymbols[i]}`,
       stableDebtTokenName: `${stableDebtTokenNamePrefix} ${reserveSymbols[i]}`,
       stableDebtTokenSymbol: `stableDebt${symbolPrefix}${reserveSymbols[i]}`,
-      params: '0x10'
+      params: '0x10',
     });
   }
 
@@ -443,7 +443,7 @@ export const initTokenReservesByHelper = async (
       string,
       IReserveParams
     ][])[reserveParamIndex];
-    if (aTokenImpl === eContractid.AToken) {
+    if (aTokenImpl === eContractid.AGToken) {
       aTokenImplementation = await getAddressById(`aTokenImpl`, network);
     } else if (aTokenImpl === eContractid.DelegationAwareAToken) {
       aTokenImplementation = await getAddressById(`delegationAwareATokenImpl`, network);
@@ -557,7 +557,7 @@ export const initTokenReservesByHelper = async (
       variableDebtTokenSymbol: `variableDebt${reserveSymbols[i]}`,
       stableDebtTokenName: `Aave stable debt bearing ${reserveSymbols[i]}`,
       stableDebtTokenSymbol: `stableDebt${reserveSymbols[i]}`,
-      params: '0x10'
+      params: '0x10',
     });
   }
 
@@ -580,7 +580,7 @@ export const initTokenReservesByHelper = async (
 
   // Set deployer back as admin
   //await waitForTx(await addressProvider.setPoolAdmin(admin));
-  return gasUsage;  // No longer relevant
+  return gasUsage; // No longer relevant
 };
 
 // Function deprecated

@@ -15,7 +15,7 @@ import {Errors} from '../libraries/helpers/Errors.sol';
 import {PercentageMath} from '../libraries/math/PercentageMath.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {IInitializableDebtToken} from '../../interfaces/IInitializableDebtToken.sol';
-import {IInitializableAToken} from '../../interfaces/IInitializableAToken.sol';
+import {IInitializableAGToken} from '../../interfaces/IInitializableAGToken.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 import {ILendingPoolConfigurator} from '../../interfaces/ILendingPoolConfigurator.sol';
 
@@ -72,7 +72,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
       _initTokenWithProxy(
         input.aTokenImpl,
         abi.encodeWithSelector(
-          IInitializableAToken.initialize.selector,
+          IInitializableAGToken.initialize.selector,
           pool_,
           input.treasury,
           input.underlyingAsset,
@@ -153,7 +153,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
 
     bytes memory encodedCall =
       abi.encodeWithSelector(
-        IInitializableAToken.initialize.selector,
+        IInitializableAGToken.initialize.selector,
         cachedPool,
         input.treasury,
         input.asset,

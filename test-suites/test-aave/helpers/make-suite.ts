@@ -19,7 +19,7 @@ import { eEthereumNetwork, tEthereumAddress } from '../../../helpers/types';
 import { LendingPool } from '../../../types/LendingPool';
 import { AaveProtocolDataProvider } from '../../../types/AaveProtocolDataProvider';
 import { MintableERC20 } from '../../../types/MintableERC20';
-import { AToken } from '../../../types/AToken';
+import { AGToken } from '../../../types/AGToken';
 import { LendingPoolConfigurator } from '../../../types/LendingPoolConfigurator';
 
 import chai from 'chai';
@@ -57,9 +57,9 @@ export interface TestEnv {
   oracle: PriceOracle;
   helpersContract: AaveProtocolDataProvider;
   weth: WETH9Mocked;
-  aWETH: AToken;
+  aWETH: AGToken;
   dai: MintableERC20;
-  aDai: AToken;
+  aDai: AGToken;
   usdc: MintableERC20;
   aave: MintableERC20;
   addressesProvider: LendingPoolAddressesProvider;
@@ -83,9 +83,9 @@ const testEnv: TestEnv = {
   helpersContract: {} as AaveProtocolDataProvider,
   oracle: {} as PriceOracle,
   weth: {} as WETH9Mocked,
-  aWETH: {} as AToken,
+  aWETH: {} as AGToken,
   dai: {} as MintableERC20,
-  aDai: {} as AToken,
+  aDai: {} as AGToken,
   usdc: {} as MintableERC20,
   aave: {} as MintableERC20,
   addressesProvider: {} as LendingPoolAddressesProvider,

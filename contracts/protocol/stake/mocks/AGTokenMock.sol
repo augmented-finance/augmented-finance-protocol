@@ -3,10 +3,9 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
-import {DistributionTypes} from '../lib/DistributionTypes.sol';
 import {IScaledBalanceToken} from '../../../interfaces/IScaledBalanceToken.sol';
 
-contract ATokenMock is IScaledBalanceToken {
+contract AGTokenMock is IScaledBalanceToken {
   IBalanceHook public _aic;
   uint256 internal _userBalance;
   uint256 internal _totalSupply;

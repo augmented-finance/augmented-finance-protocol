@@ -10,7 +10,7 @@ import { _TypedDataEncoder } from 'ethers/lib/utils';
 
 const { parseEther } = ethers.utils;
 
-makeSuite('AToken: Permit', (testEnv: TestEnv) => {
+makeSuite('AGToken: Permit', (testEnv: TestEnv) => {
   it('Checks the domain separator', async () => {
     const { aDai } = testEnv;
     const separator = await aDai.DOMAIN_SEPARATOR();

@@ -5,11 +5,11 @@ import {ILendingPool} from './ILendingPool.sol';
 import {IBalanceHook} from './IBalanceHook.sol';
 
 /**
- * @title IInitializableAToken
- * @notice Interface for the initialize function on AToken
+ * @title IInitializableAGToken
+ * @notice Interface for the initialize function on AGToken
  * @author Aave
  **/
-interface IInitializableAToken {
+interface IInitializableAGToken {
   /**
    * @dev Emitted when an aToken is initialized
    * @param underlyingAsset The address of the underlying asset
