@@ -4,14 +4,14 @@ pragma solidity ^0.6.12;
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
-import {ERC20} from '../dependencies/openzeppelin/contracts/ERC20.sol';
+import {ERC20WithPermit} from '../misc/ERC20WithPermit.sol';
 import {AccessBitmask} from '../misc/AccessBitmask.sol';
 
 import {IRewardMinter} from './IRewardMinter.sol';
 
 import 'hardhat/console.sol';
 
-contract AGFToken is Context, ERC20, AccessBitmask, Ownable, IRewardMinter {
+contract AGFToken is Context, ERC20WithPermit, AccessBitmask, Ownable, IRewardMinter {
   uint256 public constant aclMint = 1 << 0;
   uint256 public constant aclBurn = 1 << 1;
   uint256 public constant aclSuspended = 1 << 2;
@@ -19,7 +19,7 @@ contract AGFToken is Context, ERC20, AccessBitmask, Ownable, IRewardMinter {
 
   address[] private _knownGrantees;
 
-  constructor(string memory name, string memory symbol) public ERC20(name, symbol) {}
+  constructor(string memory name, string memory symbol) public ERC20WithPermit(name, symbol) {}
 
   function admin_grant(address addr, uint256 flags) external onlyOwner {
     require(addr != address(0), 'address is required');
