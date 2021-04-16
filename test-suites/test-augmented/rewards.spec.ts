@@ -6,6 +6,7 @@ import rawBRE, { ethers } from 'hardhat';
 
 import { getLinearUnweightedRewardPool, getRewardFreezer } from '../../helpers/contracts-getters';
 import { RewardFreezer } from '../../types';
+import { increaseTimeAndMine } from '../test-stake/helpers/misc-utils';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -28,20 +29,26 @@ describe('Migrator test suite', () => {
     console.log(`User address: ${user.address}`);
   });
 
-  it('Should do something', async () => {
+  it('Should claim reward > 0', async () => {
     rewardFreezer = await getRewardFreezer();
     expect(rewardFreezer.address).to.properAddress;
 
     const linearUnweightedRewardPool = await getLinearUnweightedRewardPool();
     await linearUnweightedRewardPool.addRewardProvider(deployer.address); // instead token contract
-    await linearUnweightedRewardPool.setRate('1000000000000000000000000000');
+    await linearUnweightedRewardPool.setRate(0x1ffffffffffff0);
 
-    await (await rewardFreezer.admin_setFreezePortion(0)).wait(1);
+    await rewardFreezer.admin_setFreezePortion(0);
 
-    await linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 10, 20, 100);
+    for(let i = 0 ; i< 100; i++) {
+      await ethers.provider.send('evm_mine', []);
+    }
 
+    await linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 0, 2000, 100000);
+    for(let i = 0 ; i< 100; i++) {
+      await ethers.provider.send('evm_mine', []);
+    }
 
     const tx = await rewardFreezer.claimReward();
-    expect(tx.value).to.eq(0);
+    expect(tx.value).to.not.eq(0);
   });
 });
