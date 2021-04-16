@@ -7,10 +7,10 @@ import {VotingToken} from './VotingToken.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 /**
- * @title StakedAgfV2
+ * @title StakedAgfV1
  * @notice VotingToken with AGF token as staked token
  **/
-contract StakedAgfV2 is VotingToken {
+contract StakedAgfV1 is VotingToken {
   string internal constant NAME = 'Staked AGF';
   string internal constant SYMBOL = 'stkAGF';
   uint8 internal constant DECIMALS = 18;
