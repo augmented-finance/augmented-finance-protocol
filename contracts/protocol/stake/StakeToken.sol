@@ -8,23 +8,19 @@ import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {IStakeToken} from './interfaces/IStakeToken.sol';
 import {ITransferHook} from './interfaces/ITransferHook.sol';
 
-import {DistributionTypes} from './lib/DistributionTypes.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 
 import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
-import {GovernancePowerWithSnapshot} from './lib/GovernancePowerWithSnapshot.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 /**
- * @title StakedToken
+ * @title StakeToken
  * @notice Contract to stake a token for a system reserve.
  **/
-contract StakedTokenV3 is IStakeToken, VersionedInitializable, ERC20 {
+abstract contract StakeToken is IStakeToken, VersionedInitializable, ERC20 {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
-
-  uint256 public constant REVISION = 1;
 
   address private immutable _stakedToken;
   IBalanceHook internal _incentivesController;
@@ -90,7 +86,7 @@ contract StakedTokenV3 is IStakeToken, VersionedInitializable, ERC20 {
         address(this)
       )
     );
-    if (REVISION == 1) {
+    if (getRevision() == 1) {
       super._initializeERC20(name, symbol, decimals);
     }
   }
@@ -261,14 +257,6 @@ contract StakedTokenV3 is IStakeToken, VersionedInitializable, ERC20 {
     _stakersCooldowns[toAddress] = toCooldownTimestamp;
 
     return toCooldownTimestamp;
-  }
-
-  /**
-   * @dev returns the revision of the implementation contract
-   * @return The revision
-   */
-  function getRevision() internal pure override returns (uint256) {
-    return REVISION;
   }
 
   /**

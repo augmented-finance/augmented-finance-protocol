@@ -8,22 +8,20 @@ import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 /**
  * @title StakedAgfV2
- * @notice StakedTokenV2 with AAVE token as staked token
- * @author Aave
+ * @notice VotingToken with AGF token as staked token
  **/
 contract StakedAgfV2 is VotingToken {
-  string internal constant NAME = 'Staked Aave';
-  string internal constant SYMBOL = 'stkAAVE';
+  string internal constant NAME = 'Staked AGF';
+  string internal constant SYMBOL = 'stkAGF';
   uint8 internal constant DECIMALS = 18;
+
+  uint256 public constant REVISION = 1;
 
   constructor(
     IERC20 stakedToken,
     IBalanceHook incentivesController,
     uint256 cooldownSeconds,
     uint256 unstakeWindow,
-    address rewardsVault,
-    address emissionManager,
-    uint128 distributionDuration,
     address governance
   )
     public
@@ -38,4 +36,12 @@ contract StakedAgfV2 is VotingToken {
       governance
     )
   {}
+
+  /**
+   * @dev returns the revision of the implementation contract
+   * @return The revision
+   */
+  function getRevision() internal pure override returns (uint256) {
+    return REVISION;
+  }
 }
