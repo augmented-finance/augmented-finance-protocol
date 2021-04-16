@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ERC20} from '../../dependencies/openzeppelin/contracts/ERC20.sol';
+import {ERC20WithPermit} from '../../misc/ERC20WithPermit.sol';
 
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {IStakeToken} from './interfaces/IStakeToken.sol';
@@ -18,7 +18,7 @@ import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
  * @title StakeToken
  * @notice Contract to stake a token for a system reserve.
  **/
-abstract contract StakeToken is IStakeToken, VersionedInitializable, ERC20 {
+abstract contract StakeToken is IStakeToken, VersionedInitializable, ERC20WithPermit {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
@@ -30,16 +30,6 @@ abstract contract StakeToken is IStakeToken, VersionedInitializable, ERC20 {
   uint256 public immutable UNSTAKE_WINDOW;
 
   mapping(address => uint40) private _stakersCooldowns;
-
-  bytes32 public DOMAIN_SEPARATOR;
-  bytes public constant EIP712_REVISION = bytes('1');
-  bytes32 internal constant EIP712_DOMAIN =
-    keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
-  bytes32 public constant PERMIT_TYPEHASH =
-    keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
-
-  /// @dev owner => next valid nonce to submit with permit()
-  mapping(address => uint256) public _nonces;
 
   event Staked(address from, address onBehalfOf, uint256 amount);
   event Redeem(address from, address to, uint256 amount);
@@ -54,12 +44,12 @@ abstract contract StakeToken is IStakeToken, VersionedInitializable, ERC20 {
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public ERC20(name, symbol) {
+  ) public ERC20WithPermit(name, symbol) {
     _stakedToken = address(stakedToken);
     _incentivesController = incentivesController;
     COOLDOWN_SECONDS = cooldownSeconds;
     UNSTAKE_WINDOW = unstakeWindow;
-    ERC20._setupDecimals(decimals);
+    super._setupDecimals(decimals);
   }
 
   /**
@@ -70,22 +60,8 @@ abstract contract StakeToken is IStakeToken, VersionedInitializable, ERC20 {
     string calldata symbol,
     uint8 decimals
   ) external initializer {
-    uint256 chainId;
+    super._initializeDomainSeparator();
 
-    //solium-disable-next-line
-    assembly {
-      chainId := chainid()
-    }
-
-    DOMAIN_SEPARATOR = keccak256(
-      abi.encode(
-        EIP712_DOMAIN,
-        keccak256(bytes(super.name())),
-        keccak256(EIP712_REVISION),
-        chainId,
-        address(this)
-      )
-    );
     if (getRevision() == 1) {
       super._initializeERC20(name, symbol, decimals);
     }
@@ -257,43 +233,5 @@ abstract contract StakeToken is IStakeToken, VersionedInitializable, ERC20 {
     _stakersCooldowns[toAddress] = toCooldownTimestamp;
 
     return toCooldownTimestamp;
-  }
-
-  /**
-   * @dev implements the permit function as for https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
-   * @param owner the owner of the funds
-   * @param spender the spender
-   * @param value the amount
-   * @param deadline the deadline timestamp, type(uint256).max for no deadline
-   * @param v signature param
-   * @param s signature param
-   * @param r signature param
-   */
-
-  function permit(
-    address owner,
-    address spender,
-    uint256 value,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external {
-    require(owner != address(0), 'INVALID_OWNER');
-    //solium-disable-next-line
-    require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
-    uint256 currentValidNonce = _nonces[owner];
-    bytes32 digest =
-      keccak256(
-        abi.encodePacked(
-          '\x19\x01',
-          DOMAIN_SEPARATOR,
-          keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, currentValidNonce, deadline))
-        )
-      );
-
-    require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
-    _nonces[owner] = currentValidNonce.add(1);
-    _approve(owner, spender, value);
   }
 }
