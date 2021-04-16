@@ -9,7 +9,7 @@ import { parseEther } from 'ethers/lib/utils';
 
 chai.use(solidity);
 
-makeSuite('StakedAaveV2. Permit', (testEnv: TestEnv) => {
+makeSuite('StakedAgfV2. Permit', (testEnv: TestEnv) => {
   it('Reverts submitting a permit with 0 expiration', async () => {
     const { deployer, users, stakedAaveV2 } = testEnv;
     const owner = deployer.address;

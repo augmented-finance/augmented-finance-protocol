@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import {ERC20} from '../../dependencies/openzeppelin/contracts/ERC20.sol';
 
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IStakedAave} from './interfaces/IStakedAave.sol';
+import {IStakeToken} from './interfaces/IStakeToken.sol';
 import {ITransferHook} from './interfaces/ITransferHook.sol';
 
 import {DistributionTypes} from './lib/DistributionTypes.sol';
@@ -17,11 +17,10 @@ import {GovernancePowerWithSnapshot} from './lib/GovernancePowerWithSnapshot.sol
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 /**
- * @title StakedToken V3
- * @notice Contract to stake Aave token, tokenize the position and get rewards, inheriting from a distribution manager contract
- * @author Aave
+ * @title VotingToken V3
+ * @notice Contract to provide votes based on a staked token.
  **/
-contract StakedTokenV3 is IStakedAave, GovernancePowerWithSnapshot, VersionedInitializable {
+contract VotingToken is IStakeToken, GovernancePowerWithSnapshot, VersionedInitializable {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 

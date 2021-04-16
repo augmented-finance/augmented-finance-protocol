@@ -9,7 +9,7 @@ import { getUserIndex } from '../../DistributionManager/data-helpers/asset-user-
 import { eventChecker } from '../../helpers/comparator-engine';
 import { waitForTx, increaseTime } from '../../helpers/misc-utils';
 import { SignerWithAddress } from '../../helpers/make-suite';
-import { StakedAaveV2 } from '../../../../types/StakedAaveV2';
+import { StakedAgfV2 } from '../../../../types/StakedAgfV2';
 import { solidity } from 'ethereum-waffle';
 
 chai.use(solidity);
@@ -20,7 +20,7 @@ type AssetConfig = {
 };
 
 export const compareRewardsAtAction = async (
-  stakedAaveV2: StakedAaveV2,
+  stakedAaveV2: StakedAgfV2,
   userAddress: string,
   actions: () => Promise<ContractTransaction>[],
   shouldReward?: boolean,
@@ -90,7 +90,7 @@ export const compareRewardsAtAction = async (
 };
 
 export const compareRewardsAtTransfer = async (
-  stakedAaveV2: StakedAaveV2,
+  stakedAaveV2: StakedAgfV2,
   from: SignerWithAddress,
   to: SignerWithAddress,
   amount: BigNumberish,
