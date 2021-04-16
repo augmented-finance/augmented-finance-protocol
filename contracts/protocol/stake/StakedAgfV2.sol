@@ -3,15 +3,15 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {StakedTokenV3} from './StakedTokenV3.sol';
+import {VotingToken} from './VotingToken.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 /**
- * @title StakedAaveV2
+ * @title StakedAgfV2
  * @notice StakedTokenV2 with AAVE token as staked token
  * @author Aave
  **/
-contract StakedAaveV2 is StakedTokenV3 {
+contract StakedAgfV2 is VotingToken {
   string internal constant NAME = 'Staked Aave';
   string internal constant SYMBOL = 'stkAAVE';
   uint8 internal constant DECIMALS = 18;
@@ -27,7 +27,7 @@ contract StakedAaveV2 is StakedTokenV3 {
     address governance
   )
     public
-    StakedTokenV3(
+    VotingToken(
       stakedToken,
       incentivesController,
       cooldownSeconds,

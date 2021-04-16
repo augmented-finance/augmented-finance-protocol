@@ -1,7 +1,7 @@
 import { deployContract, getContractFactory, getContract } from './contracts-helpers';
 import { eContractid, tEthereumAddress } from './types';
 import { MintableErc20 } from '../../../types/MintableErc20';
-import { StakedAaveV2 } from '../../../types/StakedAaveV2';
+import { StakedAgfV2 } from '../../../types/StakedAgfV2';
 import { ICRPFactory } from '../../../types/ICRPFactory'; // Configurable right pool factory
 import { IConfigurableRightsPool } from '../../../types/IConfigurableRightsPool';
 import { IControllerAaveEcosystemReserve } from '../../../types/IControllerAaveEcosystemReserve';
@@ -41,7 +41,7 @@ export const deployStakedAaveV2 = async (
   ],
   verify?: boolean
 ) => {
-  const id = eContractid.StakedAaveV2;
+  const id = eContractid.StakedAgfV2;
   const args: string[] = [
     stakedToken,
     rewardsToken,
@@ -52,7 +52,7 @@ export const deployStakedAaveV2 = async (
     distributionDuration,
     ZERO_ADDRESS, // gov address
   ];
-  const instance = await deployContract<StakedAaveV2>(id, args);
+  const instance = await deployContract<StakedAgfV2>(id, args);
   if (verify) {
     await verifyContract(instance.address, args);
   }
@@ -228,7 +228,7 @@ export const deployDoubleTransferHelper = async (aaveToken: tEthereumAddress, ve
 
 export const getMintableErc20 = getContractFactory<MintableErc20>(eContractid.MintableErc20);
 
-export const getStakedAaveV2 = getContractFactory<StakedAaveV2>(eContractid.StakedAaveV2);
+export const getStakedAaveV2 = getContractFactory<StakedAgfV2>(eContractid.StakedAgfV2);
 
 export const getStakedTokenV2 = async (address?: tEthereumAddress) => {
   return await getContract<StakedTokenV2>(
