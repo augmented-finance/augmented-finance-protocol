@@ -116,8 +116,11 @@ contract DirectRewardPool is AccessBitmask, IManagedRewardPool {
 
     require(provider == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
     _nonces[spender] = currentValidNonce.add(1);
-    _rewardLimit = _rewardLimit.sub(value);
 
+    if (value == 0) {
+      return;
+    }
+    _rewardLimit = _rewardLimit.sub(value);
     _controller.allocatedByPool(spender, value);
   }
 
