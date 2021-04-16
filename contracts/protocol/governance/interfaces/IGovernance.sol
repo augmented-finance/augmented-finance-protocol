@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 // simplified interface to expose functions added events for tests
-interface IAaveGovernanceV2 {
+interface IGovernance {
   /**
    Added for test purposes
    **/

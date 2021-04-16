@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-interface IControllerAaveEcosystemReserve {
+interface IEcosystemReserveController {
   function approve(
     address token,
     address recipient,
