@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {ERC20} from '../../dependencies/openzeppelin/contracts/ERC20.sol';
+import {ERC20} from '../../../dependencies/openzeppelin/contracts/ERC20.sol';
+import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {
   IGovernancePowerDelegationToken
-} from '../../interfaces/IGovernancePowerDelegationToken.sol';
+} from '../../../interfaces/IGovernancePowerDelegationToken.sol';
 
 /**
- * @notice implementation of the AAVE token contract
- * @author Aave
+ * @notice implementation of the delegatable voting token
  */
-abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDelegationToken {
+abstract contract VoteDelegator is IGovernancePowerDelegationToken {
   using SafeMath for uint256;
   /// @notice The EIP-712 typehash for the delegation struct used by the contract
   bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
@@ -98,17 +97,6 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
   }
 
   /**
-   * @dev returns the total supply at a certain block number
-   * used by the voting strategy contracts to calculate the total votes needed for threshold/quorum
-   * In this initial implementation with no AAVE minting, simply returns the current supply
-   * A snapshots mapping will need to be added in case a mint function is added to the AAVE token in the future
-   **/
-  function totalSupplyAt(uint256 blockNumber) external view override returns (uint256) {
-    blockNumber;
-    return super.totalSupply();
-  }
-
-  /**
    * @dev delegates the specific power to a delegatee
    * @param delegatee the user which delegated power has changed
    * @param delegationType the type of delegation (VOTING_POWER, PROPOSITION_POWER)
@@ -122,7 +110,7 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
 
     (, , mapping(address => address) storage delegates) = _getDelegationDataByType(delegationType);
 
-    uint256 delegatorBalance = balanceOf(delegator);
+    uint256 delegatorBalance = getDelegationBalance(delegator);
 
     address previousDelegatee = _getDelegatee(delegator, delegates);
 
@@ -162,7 +150,7 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
       if (fromSnapshotsCount != 0) {
         previous = snapshots[from][fromSnapshotsCount - 1].value;
       } else {
-        previous = balanceOf(from);
+        previous = getDelegationBalance(from);
       }
 
       _writeSnapshot(
@@ -181,7 +169,7 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
       if (toSnapshotsCount != 0) {
         previous = snapshots[to][toSnapshotsCount - 1].value;
       } else {
-        previous = balanceOf(to);
+        previous = getDelegationBalance(to);
       }
 
       _writeSnapshot(
@@ -214,7 +202,7 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
     uint256 snapshotsCount = snapshotsCounts[user];
 
     if (snapshotsCount == 0) {
-      return balanceOf(user);
+      return getDelegationBalance(user);
     }
 
     // First check most recent balance
@@ -242,6 +230,8 @@ abstract contract GovernancePowerDelegationERC20 is ERC20, IGovernancePowerDeleg
     }
     return snapshots[user][lower].value;
   }
+
+  function getDelegationBalance(address) internal view virtual returns (uint256);
 
   /**
    * @dev returns the delegation data (snapshot, snapshotsCount, list of delegates) by delegation type

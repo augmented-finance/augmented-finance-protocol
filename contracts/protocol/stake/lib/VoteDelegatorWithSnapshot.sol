@@ -4,14 +4,13 @@ pragma solidity 0.6.12;
 import {ERC20} from '../../../dependencies/openzeppelin/contracts/ERC20.sol';
 import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {ITransferHook} from '../interfaces/ITransferHook.sol';
-import {GovernancePowerDelegationERC20} from '../../governance/GovernancePowerDelegationERC20.sol';
+import {VoteDelegator} from './VoteDelegator.sol';
 
 /**
- * @title ERC20WithSnapshot
- * @notice ERC20 including snapshots of balances on transfer-related actions
- * @author Aave
+ * @title VoteDelegatorWithSnapshot
+ * @notice VoteDelegator including snapshots of balances on transfer-related actions
  **/
-abstract contract GovernancePowerWithSnapshot is GovernancePowerDelegationERC20 {
+abstract contract VoteDelegatorWithSnapshot is VoteDelegator {
   using SafeMath for uint256;
 
   mapping(address => mapping(uint256 => Snapshot)) public _votingSnapshots;
