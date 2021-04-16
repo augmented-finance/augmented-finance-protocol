@@ -24,7 +24,7 @@ import AaveConfig from '../../markets/aave';
 
 const { parseEther } = ethers.utils;
 
-makeSuite('AToken: underlying delegation', (testEnv: TestEnv) => {
+makeSuite('AGToken: underlying delegation', (testEnv: TestEnv) => {
   const poolConfig = loadPoolConfig(ConfigNames.Commons);
   let delegationAToken = <DelegationAwareAToken>{};
   let delegationERC20 = <MintableDelegationERC20>{};

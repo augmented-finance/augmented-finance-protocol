@@ -7,7 +7,7 @@ import {
   LendingPoolAddressesProvider
 } from '../protocol/configuration/LendingPoolAddressesProvider.sol';
 import {LendingPoolConfigurator} from '../protocol/lendingpool/LendingPoolConfigurator.sol';
-import {AToken} from '../protocol/tokenization/AToken.sol';
+import {AGToken} from '../protocol/tokenization/AGToken.sol';
 import {
   DefaultReserveInterestRateStrategy
 } from '../protocol/lendingpool/DefaultReserveInterestRateStrategy.sol';
@@ -47,7 +47,7 @@ contract ATokensAndRatesHelper is Ownable {
   function initDeployment(InitDeploymentInput[] calldata inputParams) external onlyOwner {
     for (uint256 i = 0; i < inputParams.length; i++) {
       emit deployedContracts(
-        address(new AToken()),
+        address(new AGToken()),
         address(
           new DefaultReserveInterestRateStrategy(
             LendingPoolAddressesProvider(addressesProvider),

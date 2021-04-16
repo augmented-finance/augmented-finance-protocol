@@ -4,22 +4,23 @@ pragma solidity 0.6.12;
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
-import {IAToken} from '../../interfaces/IAToken.sol';
+import {IAGToken} from '../../interfaces/IAGToken.sol';
 import {WadRayMath} from '../libraries/math/WadRayMath.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IncentivizedERC20} from './IncentivizedERC20.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
+import {IInitializableAGToken} from '../../interfaces/IInitializableAGToken.sol';
 
 /**
- * @title Aave ERC20 AToken
- * @dev Implementation of the interest bearing token for the Aave protocol
- * @author Aave
+ * @title Augmented Finance ERC20 agToken
+ * @dev Implementation of the interest bearing token for the Augmented Finance protocol
  */
-contract AToken is
+contract AGToken is
   VersionedInitializable,
-  IncentivizedERC20('ATOKEN_IMPL', 'ATOKEN_IMPL', 0),
-  IAToken
+  IncentivizedERC20('AGTOKEN_IMPL', 'AGTOKEN_IMPL', 0),
+  IAGToken,
+  IInitializableAGToken
 {
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;

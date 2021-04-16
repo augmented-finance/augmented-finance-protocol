@@ -31,7 +31,7 @@ import { advanceTimeAndBlock, DRE, timeLatest, waitForTx } from '../../../helper
 import chai from 'chai';
 import { ReserveData, UserReserveData } from './utils/interfaces';
 import { ContractReceipt } from 'ethers';
-import { AToken } from '../../../types/AToken';
+import { AGToken } from '../../../types/AGToken';
 import { RateMode, tEthereumAddress } from '../../../helpers/types';
 
 const { expect } = chai;
@@ -714,7 +714,7 @@ interface ActionData {
   reserve: string;
   reserveData: ReserveData;
   userData: UserReserveData;
-  aTokenInstance: AToken;
+  aTokenInstance: AGToken;
 }
 
 const getDataBeforeAction = async (

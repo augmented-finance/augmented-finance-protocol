@@ -4,14 +4,14 @@ pragma solidity 0.6.12;
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
 import {IDelegationToken} from '../../interfaces/IDelegationToken.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
-import {AToken} from './AToken.sol';
+import {AGToken} from './AGToken.sol';
 
 /**
- * @title Aave AToken enabled to delegate voting power of the underlying asset to a different address
+ * @title Aave AGToken enabled to delegate voting power of the underlying asset to a different address
  * @dev The underlying asset needs to be compatible with the COMP delegation interface
  * @author Aave
  */
-contract DelegationAwareAToken is AToken {
+contract DelegationAwareAToken is AGToken {
   modifier onlyPoolAdmin {
     require(
       _msgSender() == ILendingPool(_pool).getAddressesProvider().getPoolAdmin(),

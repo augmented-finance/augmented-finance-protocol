@@ -369,7 +369,7 @@ export const deployGenericAToken = async (
 ) => {
   const instance = await withSaveAndVerify(
     await new ATokenFactory(await getFirstSigner()).deploy(),
-    eContractid.AToken,
+    eContractid.AGToken,
     [],
     verify
   );
@@ -391,7 +391,7 @@ export const deployGenericAToken = async (
 export const deployGenericATokenImpl = async (verify: boolean) =>
   withSaveAndVerify(
     await new ATokenFactory(await getFirstSigner()).deploy(),
-    eContractid.AToken,
+    eContractid.AGToken,
     [],
     verify
   );

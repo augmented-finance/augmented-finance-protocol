@@ -8,7 +8,6 @@ import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {IStakeToken} from './interfaces/IStakeToken.sol';
 import {ITransferHook} from './interfaces/ITransferHook.sol';
 
-import {DistributionTypes} from './lib/DistributionTypes.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 
