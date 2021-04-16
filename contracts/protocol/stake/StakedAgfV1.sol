@@ -4,13 +4,16 @@ pragma experimental ABIEncoderV2;
 
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {VotingToken} from './VotingToken.sol';
+import {StakeToken} from './StakeToken.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 /**
  * @title StakedAgfV1
- * @notice VotingToken with AGF token as staked token
+ * @notice Staked AGF token
  **/
-contract StakedAgfV1 is VotingToken {
+contract StakedAgfV1 is
+  StakeToken /* VotingToken */
+{
   string internal constant NAME = 'Staked AGF';
   string internal constant SYMBOL = 'stkAGF';
   uint8 internal constant DECIMALS = 18;
@@ -25,15 +28,16 @@ contract StakedAgfV1 is VotingToken {
     address governance
   )
     public
-    VotingToken(
+    StakeToken(
+      //    VotingToken(
       stakedToken,
       incentivesController,
       cooldownSeconds,
       unstakeWindow,
       NAME,
       SYMBOL,
-      DECIMALS,
-      governance
+      DECIMALS
+      //      governance
     )
   {}
 
