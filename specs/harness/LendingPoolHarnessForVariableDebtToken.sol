@@ -19,7 +19,7 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
     address asset,
     uint256 amount,
     address onBehalfOf,
-    uint16 referralCode
+    uint64 referralCode
   ) external override {
     originalPool.deposit(asset, amount, onBehalfOf, referralCode);
   }
@@ -36,7 +36,7 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
     address asset,
     uint256 amount,
     uint256 interestRateMode,
-    uint16 referralCode,
+    uint64 referralCode,
     address onBehalfOf
   ) external override {
     originalPool.borrow(asset, amount, interestRateMode, referralCode, onBehalfOf);
@@ -149,14 +149,14 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
 
   mapping(uint256 => uint256) private reserveNormalizedIncome;
 
-  function getReserveNormalizedIncome(address asset) external view override returns (uint256) {
+  function getReserveNormalizedIncome(address) external view override returns (uint256) {
     require(reserveNormalizedIncome[block.timestamp] == 1e27);
     return reserveNormalizedIncome[block.timestamp];
   }
 
   mapping(uint256 => uint256) private reserveNormalizedVariableDebt;
 
-  function getReserveNormalizedVariableDebt(address asset)
+  function getReserveNormalizedVariableDebt(address)
     external
     view
     override
@@ -181,7 +181,7 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
     uint256[] calldata modes,
     address onBehalfOf,
     bytes calldata params,
-    uint16 referralCode
+    uint64 referralCode
   ) external override {
     originalPool.flashLoan(receiver, assets, amounts, modes, onBehalfOf, params, referralCode);
   }
