@@ -103,7 +103,7 @@ export const testDeployAaveStakeV2 = async (
     .connect(restWallets[0])
     .upgradeToAndCall(stakedAaveImpl.address, stakedAaveEncodedInitialize);
 
-  await insertContractAddressInDb(eContractid.StakedAgfV2, stakedAaveProxy.address);
+  await insertContractAddressInDb(eContractid.StakedAgfV1, stakedAaveProxy.address);
 
   return {
     stakedAaveProxy,

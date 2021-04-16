@@ -19,7 +19,7 @@ export enum eContractid {
   LendingPoolMock = 'LendingPoolMock',
   MockTransferHook = 'MockTransferHook',
   ATokenMock = 'ATokenMock',
-  StakedAgfV2 = 'StakedAgfV2',
+  StakedAgfV1 = 'StakedAgfV1',
   DoubleTransferHelper = 'DoubleTransferHelper',
   ICRPFactory = 'ICRPFactory',
   StakedTokenV2 = 'StakedTokenV2',

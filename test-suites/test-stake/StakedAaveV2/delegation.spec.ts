@@ -15,7 +15,7 @@ import { deployDoubleTransferHelper } from '../helpers/contracts-accessors';
 
 chai.use(solidity);
 
-makeSuite('StakedAgfV2. Power Delegations', (testEnv: TestEnv) => {
+makeSuite('StakedAgfV1. Power Delegations', (testEnv: TestEnv) => {
   let firstActionBlockNumber = 0;
   let secondActionBlockNumber = 0;
 

@@ -15,7 +15,7 @@ import {
 import { AaveIncentivesController } from '../../../types/AaveIncentivesController';
 import { MintableErc20 } from '../../../types/MintableErc20';
 import { ATokenMock } from '../../../types/ATokenMock';
-import { StakedAgfV2 } from '../../../types/StakedAgfV2';
+import { StakedAgfV1 } from '../../../types/StakedAgfV1';
 
 chai.use(bignumberChai());
 
@@ -29,7 +29,7 @@ export interface SignerWithAddress {
   address: tEthereumAddress;
 }
 export interface TestEnv {
-  stakedAaveV2: StakedAgfV2;
+  stakedAaveV2: StakedAgfV1;
   rewardsVault: SignerWithAddress;
   deployer: SignerWithAddress;
   users: SignerWithAddress[];
@@ -50,7 +50,7 @@ const testEnv: TestEnv = {
   deployer: {} as SignerWithAddress,
   users: [] as SignerWithAddress[],
   aaveToken: {} as MintableErc20,
-  stakedAaveV2: {} as StakedAgfV2,
+  stakedAaveV2: {} as StakedAgfV1,
   aaveIncentivesController: {} as AaveIncentivesController,
   aDaiMock: {} as ATokenMock,
   aWethMock: {} as ATokenMock,
