@@ -39,8 +39,8 @@ import { MintableErc20 } from '../../../types/MintableErc20';
 import { IBPool } from '../../../types/IBPool';
 import { IConfigurableRightsPool } from '../../../types/IConfigurableRightsPool';
 import { StakedTokenV3 } from '../../../types/StakedTokenV3';
-import { IAaveGovernanceV2 } from '../../../types/IAaveGovernanceV2';
-import { IControllerAaveEcosystemReserve } from '../../../types/IControllerAaveEcosystemReserve';
+import { IGovernance } from '../../../types/IGovernance';
+import { IEcosystemReserveController } from '../../../types/IEcosystemReserveController';
 
 const { expect } = require('chai');
 
@@ -82,8 +82,8 @@ rawBRE.run('set-dre').then(async () => {
     let aave: MintableErc20;
     let weth: MintableErc20;
     let BPool: IBPool; // BPool
-    let gov: IAaveGovernanceV2;
-    let ReserveController: IControllerAaveEcosystemReserve;
+    let gov: IGovernance;
+    let ReserveController: IEcosystemReserveController;
     let stakedBPS: StakedTokenV3; // bptshare
     let deployerSigner: ethers.providers.JsonRpcSigner;
     let holderSigner: ethers.providers.JsonRpcSigner;
@@ -99,9 +99,9 @@ rawBRE.run('set-dre').then(async () => {
       aave = await getERC20Contract(AAVE_TOKEN);
       weth = await getERC20Contract(WETH);
       gov = (await rawBRE.ethers.getContractAt(
-        'IAaveGovernanceV2',
+        'IGovernance',
         AAVE_GOVERNANCE_V2
-      )) as IAaveGovernanceV2;
+      )) as IGovernance;
       ReserveController = await getController(RESERVE_CONTROLER);
       CRPFactory = await getCRPFactoryContract(UPGRADABLE_CRP_FACTORY);
       holderSigner = DRE.ethers.provider.getSigner(MULTI_SIG);
