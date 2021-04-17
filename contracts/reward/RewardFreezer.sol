@@ -13,13 +13,13 @@ contract RewardFreezer is BasicRewardController {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
-  struct RewardRecord {
-    uint256 claimableReward;
+  struct FrozenReward {
     uint256 frozenReward;
     uint32 lastUpdateBlock;
   }
 
-  mapping(address => RewardRecord) private _rewards;
+  mapping(address => FrozenReward) private _frozenRewards;
+  mapping(address => uint256) private _claimableRewards;
   uint32 private _meltdownBlock;
   uint256 private _unfrozenPortion;
 
@@ -42,7 +42,7 @@ contract RewardFreezer is BasicRewardController {
   ) internal override {
     allocated = internalApplyAllocated(holder, allocated, currentBlock);
     if (allocated > 0) {
-      _rewards[holder].claimableReward = _rewards[holder].claimableReward.add(allocated);
+      _claimableRewards[holder] = _claimableRewards[holder].add(allocated);
     }
   }
 
@@ -53,9 +53,10 @@ contract RewardFreezer is BasicRewardController {
   ) internal override returns (uint256 amount) {
     amount = internalApplyAllocated(holder, allocated, currentBlock);
 
-    if (_rewards[holder].claimableReward > 0) {
-      amount = amount.add(_rewards[holder].claimableReward);
-      _rewards[holder].claimableReward = 0;
+    uint256 claimableReward = _claimableRewards[holder];
+    if (claimableReward > 0) {
+      amount = amount.add(claimableReward);
+      delete (_claimableRewards[holder]);
     }
 
     return amount;
@@ -67,34 +68,40 @@ contract RewardFreezer is BasicRewardController {
     uint32 currentBlock
   ) private returns (uint256 amount) {
     if (_meltdownBlock > 0 && _meltdownBlock <= currentBlock) {
-      if (_rewards[holder].frozenReward > 0) {
-        allocated = allocated.add(_rewards[holder].frozenReward);
-        _rewards[holder].frozenReward = 0;
+      uint256 frozenReward = _frozenRewards[holder].frozenReward;
+      if (frozenReward > 0) {
+        allocated = allocated.add(frozenReward);
+        delete (_frozenRewards[holder]);
       }
       return allocated;
     }
 
-    if (_unfrozenPortion > 0) {
+    if (_unfrozenPortion < WadRayMath.RAY) {
       amount = allocated.rayMul(_unfrozenPortion);
       allocated -= amount;
+    } else {
+      amount = allocated;
+      allocated = 0;
     }
 
     if (_meltdownBlock > 0) {
-      uint256 frozenReward = _rewards[holder].frozenReward;
-      uint256 unfrozen =
-        frozenReward.div(_meltdownBlock - _rewards[holder].lastUpdateBlock).mul(
-          currentBlock - _rewards[holder].lastUpdateBlock
-        );
+      uint256 frozenReward = _frozenRewards[holder].frozenReward;
+      if (frozenReward > 0) {
+        uint256 unfrozen =
+          frozenReward.div(_meltdownBlock - _frozenRewards[holder].lastUpdateBlock).mul(
+            currentBlock - _frozenRewards[holder].lastUpdateBlock
+          );
 
-      if (unfrozen > 0) {
-        amount = amount.add(unfrozen);
-        _rewards[holder].frozenReward = frozenReward.sub(unfrozen);
-        _rewards[holder].lastUpdateBlock = currentBlock;
+        if (unfrozen > 0) {
+          amount = amount.add(unfrozen);
+          _frozenRewards[holder].frozenReward = frozenReward.sub(unfrozen);
+          _frozenRewards[holder].lastUpdateBlock = currentBlock;
+        }
       }
     }
 
     if (allocated > 0) {
-      _rewards[holder].frozenReward = _rewards[holder].frozenReward.add(allocated);
+      _frozenRewards[holder].frozenReward = _frozenRewards[holder].frozenReward.add(allocated);
     }
     return amount;
   }
