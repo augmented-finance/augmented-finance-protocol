@@ -51,6 +51,6 @@ describe('Migrator test suite', () => {
     const agf = await getAgfToken();
     const balance = await agf.balanceOf(deployer.address);
 
-    expect(balance).to.not.eq(0);
+    expect(balance).to.eq(200);
   });
 });
