@@ -4,7 +4,11 @@ import { makeSuite, TestEnv } from '../test-aave/helpers/make-suite';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import rawBRE, { ethers } from 'hardhat';
 
-import { getLinearUnweightedRewardPool, getRewardFreezer } from '../../helpers/contracts-getters';
+import {
+  getAgfToken,
+  getLinearUnweightedRewardPool,
+  getRewardFreezer,
+} from '../../helpers/contracts-getters';
 import { RewardFreezer } from '../../types';
 import { increaseTimeAndMine } from '../test-stake/helpers/misc-utils';
 import { BigNumber } from '@ethersproject/bignumber/lib/bignumber';
@@ -36,14 +40,17 @@ describe('Migrator test suite', () => {
 
     const linearUnweightedRewardPool = await getLinearUnweightedRewardPool();
     await linearUnweightedRewardPool.addRewardProvider(deployer.address); // instead of token contract
-    await linearUnweightedRewardPool.setRate(BigNumber.from(BigInt(10)**BigInt(26)));
+    await linearUnweightedRewardPool.setRate(BigNumber.from(BigInt(10) ** BigInt(26)));
 
     await rewardFreezer.admin_setFreezePortion(0);
 
     var tx = await linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 0, 2000, 100000);
-    await tx.wait(1)
+    await tx.wait(1);
 
     await rewardFreezer.claimRewardOnBehalf(deployer.address);
-//    expect(tx.value).to.not.eq(0);
+    const agf = await getAgfToken();
+    const balance = await agf.balanceOf(deployer.address);
+
+    expect(balance).to.not.eq(0);
   });
 });
