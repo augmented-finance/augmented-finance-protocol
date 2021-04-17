@@ -26,5 +26,4 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
     await waitForTx(
       await rewardFreezer.admin_addRewardPool(linearUnweightedRewardPool.address, ZERO_ADDRESS)
     );
-    await waitForTx(await linearUnweightedRewardPool.addRewardProvider(rewardFreezer.address)); // TODO address ?
   });
