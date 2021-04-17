@@ -141,7 +141,8 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
 
     uint256 allocated =
       internalUpdateReward(holder, oldBalance, newBalance, totalSupply, uint32(block.number));
-    if (allocated > 0) {
+    if (allocated > 0 || newBalance > 0) {
+      console.log('_controller.allocatedByPool');
       _controller.allocatedByPool(holder, allocated);
     }
     if (newBalance == 0) {

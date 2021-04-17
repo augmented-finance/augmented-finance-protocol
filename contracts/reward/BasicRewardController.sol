@@ -65,14 +65,15 @@ abstract contract BasicRewardController is Ownable, IRewardController {
 
   function allocatedByPool(address holder, uint256 allocated) external override {
     uint256 poolMask = _poolMask[msg.sender];
-    require(poolMask == 0, 'unregistered pool');
+    require(poolMask != 0, 'unregistered pool');
 
-    if (_memberOf[holder] & poolMask == 0) {
+    if (_memberOf[holder] & poolMask != poolMask) {
       _memberOf[holder] = _memberOf[holder] | poolMask;
     }
-
-    internalAllocatedByPool(holder, allocated, uint32(block.number));
-    emit RewardsAllocated(holder, allocated);
+    if (allocated > 0) {
+      internalAllocatedByPool(holder, allocated, uint32(block.number));
+      emit RewardsAllocated(holder, allocated);
+    }
   }
 
   function removedFromPool(address holder) external override {
@@ -102,6 +103,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     if (allocated > 0 && address(_rewardMinter) != address(0)) {
       _rewardMinter.mintReward(receiver, allocated);
     }
+    console.log('reward claimed', allocated);
     emit RewardsClaimed(holder, receiver, allocated);
     return allocated;
   }
