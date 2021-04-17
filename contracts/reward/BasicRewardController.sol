@@ -13,7 +13,7 @@ import 'hardhat/console.sol';
 abstract contract BasicRewardController is Ownable, IRewardController {
   using SafeMath for uint256;
 
-  IRewardMinter private _rewardMinter; // TODO mint-able
+  IRewardMinter private _rewardMinter;
 
   IManagedRewardPool[] private _poolList;
   /* IManagedRewardPool */

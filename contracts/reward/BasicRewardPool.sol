@@ -139,16 +139,18 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
     require(providerInfo > 0, 'unknown reward provider');
     internalUpdateTotalSupply(msg.sender, providerInfo - 1, totalSupply, uint32(block.number));
 
-    uint256 allocated =
+    (uint256 allocated, bool newcomer) =
       internalUpdateReward(holder, oldBalance, newBalance, totalSupply, uint32(block.number));
-    if (allocated > 0 || newBalance > 0) {
+    if (allocated > 0 || (newcomer && !isLazy())) {
       console.log('_controller.allocatedByPool');
       _controller.allocatedByPool(holder, allocated);
     }
-    if (newBalance == 0) {
+    if (newBalance == 0 && !newcomer) {
       _controller.removedFromPool(holder);
     }
   }
+
+  function isLazy() public view virtual override returns (bool);
 
   function internalSetProviderInfo(address provider, uint256 providerInfo) internal {
     require(_providers[provider] > 0, 'unknown reward provider');
@@ -168,7 +170,7 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
     uint256 newBalance,
     uint256 totalSupply,
     uint32 currentBlock
-  ) internal virtual returns (uint256);
+  ) internal virtual returns (uint256 allocated, bool newcomer);
 
   function internalGetReward(address holder, uint32 currentBlock)
     internal

@@ -16,7 +16,7 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
 
   constructor(IRewardController controller) public BasicRewardPool(controller) {}
 
-  function isLazy() external view override returns (bool) {
+  function isLazy() public view override returns (bool) {
     return true;
   }
 
@@ -37,7 +37,7 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
     uint256 newBalance,
     uint256 totalSupply,
     uint32 currentBlock
-  ) internal virtual override returns (uint256) {
+  ) internal virtual override returns (uint256 allocated, bool newcomer) {
     oldBalance;
     totalSupply;
 
@@ -45,13 +45,18 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
       currentBlock = internalGetCutOff();
     }
 
-    (uint256 adjRate, uint256 allocated) =
-      internalCalcRateAndReward(_rewards[holder], currentBlock);
+    RewardEntry memory entry = _rewards[holder];
+    if (entry.lastAccumRate == 0 && entry.rewardBase == 0) {
+      newcomer = true;
+    }
+
+    uint256 adjRate;
+    (adjRate, allocated) = internalCalcRateAndReward(_rewards[holder], currentBlock);
     console.log('internalUpdateReward: ', adjRate, allocated);
 
     _rewards[holder].lastAccumRate = adjRate;
     _rewards[holder].rewardBase = newBalance;
-    return allocated;
+    return (allocated, newcomer);
   }
 
   function internalGetReward(address holder, uint32 currentBlock)

@@ -42,12 +42,21 @@ describe('Migrator test suite', () => {
     await linearUnweightedRewardPool.addRewardProvider(deployer.address); // instead of token contract
     await linearUnweightedRewardPool.setRate(BigNumber.from(BigInt(10) ** BigInt(26)));
 
-    await rewardFreezer.admin_setFreezePortion(0);
+    await rewardFreezer.admin_setFreezePortion(1);
 
     var tx = await linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 0, 2000, 100000);
     await tx.wait(1);
+    linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 2000, 2000, 100000);
+    linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 2000, 2000, 100000);
+    linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 2000, 2000, 100000);
+    linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 2000, 2000, 100000);
 
     await rewardFreezer.claimRewardOnBehalf(deployer.address);
+    await rewardFreezer.claimRewardOnBehalf(deployer.address);
+    await rewardFreezer.claimRewardOnBehalf(deployer.address);
+    await rewardFreezer.claimRewardOnBehalf(deployer.address);
+    await rewardFreezer.claimRewardOnBehalf(deployer.address);
+
     const agf = await getAgfToken();
     const balance = await agf.balanceOf(deployer.address);
 
