@@ -47,6 +47,8 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
 
     (uint256 adjRate, uint256 allocated) =
       internalCalcRateAndReward(_rewards[holder], currentBlock);
+    console.log('internalUpdateReward: ', adjRate, allocated);
+
     _rewards[holder].lastAccumRate = adjRate;
     _rewards[holder].rewardBase = newBalance;
     return allocated;
