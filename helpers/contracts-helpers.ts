@@ -98,7 +98,7 @@ export const withSaveAndVerify = async <ContractType extends Contract>(
   if (usingTenderly()) {
     console.log();
     console.log('Doing Tenderly contract verification of', id);
-    await (DRE as any).tenderlyRPC.verify({
+    await (DRE as any).tenderlyNetwork.verify({
       name: id,
       address: instance.address,
     });
