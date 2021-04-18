@@ -19,7 +19,6 @@ import {
 } from './types';
 import { MintableERC20 } from '../types/MintableERC20';
 import { Artifact } from 'hardhat/types';
-import { Artifact as BuidlerArtifact } from '@nomiclabs/buidler/types';
 import { verifyContract } from './etherscan-verification';
 import { getIErc20Detailed } from './contracts-getters';
 import { usingTenderly } from './tenderly-utils';
@@ -117,7 +116,7 @@ export const getContract = async <ContractType extends Contract>(
   address: string
 ): Promise<ContractType> => (await DRE.ethers.getContractAt(contractName, address)) as ContractType;
 
-export const linkBytecode = (artifact: BuidlerArtifact | Artifact, libraries: any) => {
+export const linkBytecode = (artifact: Artifact, libraries: any) => {
   let bytecode = artifact.bytecode;
 
   for (const [fileName, fileReferences] of Object.entries(artifact.linkReferences)) {
@@ -145,8 +144,8 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNet
     main,
     ropsten,
     kovan,
+    hardhat,
     coverage,
-    buidlerevm,
     tenderlyMain,
   } = param as iEthereumParamsPerNetwork<T>;
   const { matic, mumbai } = param as iPolygonParamsPerNetwork<T>;
@@ -158,10 +157,8 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNet
   switch (network) {
     case eEthereumNetwork.coverage:
       return coverage;
-    case eEthereumNetwork.buidlerevm:
-      return buidlerevm;
     case eEthereumNetwork.hardhat:
-      return buidlerevm;
+      return hardhat;
     case eEthereumNetwork.kovan:
       return kovan;
     case eEthereumNetwork.ropsten:
