@@ -57,7 +57,6 @@ export const AugmentedConfig: IAaveConfiguration = {
     xSUSHI: strategyXSUSHI,
   },
   ReserveAssets: {
-    [eEthereumNetwork.buidlerevm]: {},
     [eEthereumNetwork.hardhat]: {},
     [eEthereumNetwork.coverage]: {},
     [eEthereumNetwork.kovan]: {
