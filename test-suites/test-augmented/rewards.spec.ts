@@ -12,6 +12,7 @@ import {
 import { RewardFreezer } from '../../types';
 import { increaseTimeAndMine } from '../test-stake/helpers/misc-utils';
 import { BigNumber } from '@ethersproject/bignumber/lib/bignumber';
+import { RAY } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -40,7 +41,7 @@ describe('Migrator test suite', () => {
 
     const linearUnweightedRewardPool = await getLinearUnweightedRewardPool();
     await linearUnweightedRewardPool.addRewardProvider(deployer.address); // instead of token contract
-    await linearUnweightedRewardPool.setRate(BigNumber.from(BigInt(10) ** BigInt(26)));
+    await linearUnweightedRewardPool.setRate(RAY);
 
     await rewardFreezer.admin_setFreezePortion(1);
 
@@ -60,6 +61,6 @@ describe('Migrator test suite', () => {
     const agf = await getAgfToken();
     const balance = await agf.balanceOf(deployer.address);
 
-    expect(balance).to.eq(200);
+    expect(balance).to.eq(2000);
   });
 });
