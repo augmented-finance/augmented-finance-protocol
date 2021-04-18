@@ -24,6 +24,7 @@ const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || '';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
 const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+const COINMARKETCAP_KEY = process.env.COINMARKETCAP_KEY || '';
 
 // Prevent to load scripts before compilation and typechain
 if (!SKIP_LOAD) {
@@ -64,6 +65,11 @@ const mainnetFork = MAINNET_FORK
   : undefined;
 
 const buidlerConfig: HardhatUserConfig = {
+  gasReporter: {
+    currency: 'USD',
+    gasPrice: 120,
+    coinmarketcap: COINMARKETCAP_KEY,
+  },
   solidity: {
     compilers: [
       { version: '0.5.16' },
