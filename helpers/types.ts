@@ -4,7 +4,7 @@ export interface SymbolMap<T> {
   [symbol: string]: T;
 }
 
-export type eNetwork = eEthereumNetwork | ePolygonNetwork | eXDaiNetwork;
+export type eNetwork = eEthereumNetwork | ePolygonNetwork;
 
 export enum eEthereumNetwork {
   buidlerevm = 'buidlerevm',
@@ -21,23 +21,17 @@ export enum ePolygonNetwork {
   mumbai = 'mumbai',
 }
 
-export enum eXDaiNetwork {
-  xdai = 'xdai',
-}
-
 export enum EthereumNetworkNames {
   kovan = 'kovan',
   ropsten = 'ropsten',
   main = 'main',
   matic = 'matic',
   mumbai = 'mumbai',
-  xdai = 'xdai',
 }
 
 export enum AavePools {
   proto = 'proto',
   matic = 'matic',
-  amm = 'amm',
   augmented = 'augmented',
 }
 
@@ -311,11 +305,6 @@ export type iMaticPoolAssets<T> = Pick<
   'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH' | 'WMATIC'
 >;
 
-export type iXDAIPoolAssets<T> = Pick<
-  iAssetsWithoutUSD<T>,
-  'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH' | 'STAKE'
->;
-
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iAavePoolAssets<T>;
 
 export type iAavePoolTokens<T> = Omit<iAavePoolAssets<T>, 'ETH'>;
@@ -402,15 +391,11 @@ export interface IMarketRates {
   borrowRate: string;
 }
 
-export type iParamsPerNetwork<T> =
-  | iEthereumParamsPerNetwork<T>
-  | iPolygonParamsPerNetwork<T>
-  | iXDaiParamsPerNetwork<T>;
+export type iParamsPerNetwork<T> = iEthereumParamsPerNetwork<T> | iPolygonParamsPerNetwork<T>;
 
 export interface iParamsPerNetworkAll<T>
   extends iEthereumParamsPerNetwork<T>,
-    iPolygonParamsPerNetwork<T>,
-    iXDaiParamsPerNetwork<T> {}
+    iPolygonParamsPerNetwork<T> {}
 
 export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.coverage]: T;
@@ -427,14 +412,9 @@ export interface iPolygonParamsPerNetwork<T> {
   [ePolygonNetwork.mumbai]: T;
 }
 
-export interface iXDaiParamsPerNetwork<T> {
-  [eXDaiNetwork.xdai]: T;
-}
-
 export interface iParamsPerPool<T> {
   [AavePools.proto]: T;
   [AavePools.matic]: T;
-  [AavePools.amm]: T;
 }
 
 export interface iBasicDistributionParams {
@@ -509,16 +489,8 @@ export interface IAaveConfiguration extends ICommonConfiguration {
   ReservesConfig: iAavePoolAssets<IReserveParams>;
 }
 
-export interface IAmmConfiguration extends ICommonConfiguration {
-  ReservesConfig: iLpPoolAssets<IReserveParams>;
-}
-
 export interface IMaticConfiguration extends ICommonConfiguration {
   ReservesConfig: iMaticPoolAssets<IReserveParams>;
-}
-
-export interface IXDAIConfiguration extends ICommonConfiguration {
-  ReservesConfig: iXDAIPoolAssets<IReserveParams>;
 }
 
 export interface ITokenAddress {

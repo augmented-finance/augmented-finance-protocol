@@ -1,6 +1,6 @@
 import {
   AaveProtocolDataProviderFactory,
-  ATokenFactory,
+  AGTokenFactory,
   ATokensAndRatesHelperFactory,
   AaveOracleFactory,
   DefaultReserveInterestRateStrategyFactory,
@@ -74,7 +74,7 @@ export const getPriceOracle = async (address?: tEthereumAddress) =>
   );
 
 export const getAToken = async (address?: tEthereumAddress) =>
-  await ATokenFactory.connect(
+  await AGTokenFactory.connect(
     address || (await getDb().get(`${eContractid.AGToken}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
