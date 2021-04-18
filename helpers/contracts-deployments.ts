@@ -19,7 +19,7 @@ import { getFirstSigner } from './contracts-getters';
 import { ZERO_ADDRESS } from './constants';
 import {
   AaveProtocolDataProviderFactory,
-  ATokenFactory,
+  AGTokenFactory,
   AGFTokenFactory,
   ATokensAndRatesHelperFactory,
   AaveOracleFactory,
@@ -368,7 +368,7 @@ export const deployGenericAToken = async (
   verify: boolean
 ) => {
   const instance = await withSaveAndVerify(
-    await new ATokenFactory(await getFirstSigner()).deploy(),
+    await new AGTokenFactory(await getFirstSigner()).deploy(),
     eContractid.AGToken,
     [],
     verify
@@ -390,7 +390,7 @@ export const deployGenericAToken = async (
 
 export const deployGenericATokenImpl = async (verify: boolean) =>
   withSaveAndVerify(
-    await new ATokenFactory(await getFirstSigner()).deploy(),
+    await new AGTokenFactory(await getFirstSigner()).deploy(),
     eContractid.AGToken,
     [],
     verify
