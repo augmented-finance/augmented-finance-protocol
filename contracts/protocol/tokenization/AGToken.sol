@@ -48,6 +48,14 @@ contract AGToken is
     _;
   }
 
+  modifier onlyRewardAdmin {
+    require(
+      _pool.getAddressesProvider().isRewardAdmin(_msgSender()),
+      Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
+    );
+    _;
+  }
+
   function getRevision() internal pure virtual override returns (uint256) {
     return ATOKEN_REVISION;
   }
@@ -302,7 +310,7 @@ contract AGToken is
   /**
    * @dev Updates the address of the incentives controller contract
    **/
-  function setIncentivesController(address hook) external override onlyLendingPool {
+  function setIncentivesController(address hook) external override onlyRewardAdmin {
     _incentivesController = IBalanceHook(hook);
   }
 
