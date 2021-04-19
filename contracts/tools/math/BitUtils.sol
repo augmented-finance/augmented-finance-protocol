@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.6.12;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from './WadRayMath.sol';
-
 library BitUtils {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
+  function hasAnyOf(uint256 v, uint256 flags) internal pure returns (bool) {
+    return v & flags != 0;
+  }
+
+  function hasAllOf(uint256 v, uint256 flags) internal pure returns (bool) {
+    return v & flags == flags;
+  }
+
+  function isBit(uint256 v, uint8 index) internal pure returns (bool) {
+    return v & (uint256(1) << index) != 0;
+  }
+
+  function hasNoneOf(uint256 v, uint256 flags) internal pure returns (bool) {
+    return v & flags == 0;
+  }
 
   function nextPowerOf2(uint256 v) internal pure returns (uint256) {
     if (v == 0) {
