@@ -19,7 +19,7 @@ import { getFirstSigner } from './contracts-getters';
 import { ZERO_ADDRESS } from './constants';
 import {
   AaveProtocolDataProviderFactory,
-  ATokenFactory,
+  AGTokenFactory,
   AGFTokenFactory,
   ATokensAndRatesHelperFactory,
   AaveOracleFactory,
@@ -67,14 +67,10 @@ import {
 } from './contracts-helpers';
 import { StableAndVariableTokensHelperFactory } from '../types/StableAndVariableTokensHelperFactory';
 import { MintableDelegationERC20 } from '../types/MintableDelegationERC20';
-import { readArtifact as buidlerReadArtifact } from '@nomiclabs/buidler/plugins';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { LendingPoolLibraryAddresses } from '../types/LendingPoolFactory';
 
 const readArtifact = async (id: string) => {
-  if (DRE.network.name === eEthereumNetwork.buidlerevm) {
-    return buidlerReadArtifact(DRE.config.paths.artifacts, id);
-  }
   return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
 };
 
@@ -368,7 +364,7 @@ export const deployGenericAToken = async (
   verify: boolean
 ) => {
   const instance = await withSaveAndVerify(
-    await new ATokenFactory(await getFirstSigner()).deploy(),
+    await new AGTokenFactory(await getFirstSigner()).deploy(),
     eContractid.AGToken,
     [],
     verify
@@ -390,7 +386,7 @@ export const deployGenericAToken = async (
 
 export const deployGenericATokenImpl = async (verify: boolean) =>
   withSaveAndVerify(
-    await new ATokenFactory(await getFirstSigner()).deploy(),
+    await new AGTokenFactory(await getFirstSigner()).deploy(),
     eContractid.AGToken,
     [],
     verify

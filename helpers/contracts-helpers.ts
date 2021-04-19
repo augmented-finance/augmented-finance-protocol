@@ -12,16 +12,13 @@ import {
   iParamsPerNetwork,
   iParamsPerPool,
   ePolygonNetwork,
-  eXDaiNetwork,
   eNetwork,
   iParamsPerNetworkAll,
   iEthereumParamsPerNetwork,
   iPolygonParamsPerNetwork,
-  iXDaiParamsPerNetwork,
 } from './types';
 import { MintableERC20 } from '../types/MintableERC20';
 import { Artifact } from 'hardhat/types';
-import { Artifact as BuidlerArtifact } from '@nomiclabs/buidler/types';
 import { verifyContract } from './etherscan-verification';
 import { getIErc20Detailed } from './contracts-getters';
 import { usingTenderly } from './tenderly-utils';
@@ -101,7 +98,7 @@ export const withSaveAndVerify = async <ContractType extends Contract>(
   if (usingTenderly()) {
     console.log();
     console.log('Doing Tenderly contract verification of', id);
-    await (DRE as any).tenderlyRPC.verify({
+    await (DRE as any).tenderlyNetwork.verify({
       name: id,
       address: instance.address,
     });
@@ -119,7 +116,7 @@ export const getContract = async <ContractType extends Contract>(
   address: string
 ): Promise<ContractType> => (await DRE.ethers.getContractAt(contractName, address)) as ContractType;
 
-export const linkBytecode = (artifact: BuidlerArtifact | Artifact, libraries: any) => {
+export const linkBytecode = (artifact: Artifact, libraries: any) => {
   let bytecode = artifact.bytecode;
 
   for (const [fileName, fileReferences] of Object.entries(artifact.linkReferences)) {
@@ -147,12 +144,11 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNet
     main,
     ropsten,
     kovan,
+    hardhat,
     coverage,
-    buidlerevm,
     tenderlyMain,
   } = param as iEthereumParamsPerNetwork<T>;
   const { matic, mumbai } = param as iPolygonParamsPerNetwork<T>;
-  const { xdai } = param as iXDaiParamsPerNetwork<T>;
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
   if (MAINNET_FORK) {
     return main;
@@ -161,10 +157,8 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNet
   switch (network) {
     case eEthereumNetwork.coverage:
       return coverage;
-    case eEthereumNetwork.buidlerevm:
-      return buidlerevm;
     case eEthereumNetwork.hardhat:
-      return buidlerevm;
+      return hardhat;
     case eEthereumNetwork.kovan:
       return kovan;
     case eEthereumNetwork.ropsten:
@@ -177,17 +171,13 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNet
       return matic;
     case ePolygonNetwork.mumbai:
       return mumbai;
-    case eXDaiNetwork.xdai:
-      return xdai;
   }
 };
 
-export const getParamPerPool = <T>({ proto, amm, matic }: iParamsPerPool<T>, pool: AavePools) => {
+export const getParamPerPool = <T>({ proto, matic }: iParamsPerPool<T>, pool: AavePools) => {
   switch (pool) {
     case AavePools.proto:
       return proto;
-    case AavePools.amm:
-      return amm;
     case AavePools.matic:
       return matic;
     default:

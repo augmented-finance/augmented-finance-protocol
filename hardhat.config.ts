@@ -3,7 +3,7 @@ import fs from 'fs';
 import { HardhatUserConfig } from 'hardhat/types';
 // @ts-ignore
 import { accounts } from './test-wallets.js';
-import { eEthereumNetwork, eNetwork, ePolygonNetwork, eXDaiNetwork } from './helpers/types';
+import { eEthereumNetwork, eNetwork, ePolygonNetwork } from './helpers/types';
 import { BUIDLEREVM_CHAINID, COVERAGE_CHAINID } from './helpers/buidler-constants';
 import { NETWORKS_RPC_URL, NETWORKS_DEFAULT_GAS } from './helper-hardhat-config';
 
@@ -24,6 +24,7 @@ const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || '';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
 const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+const COINMARKETCAP_KEY = process.env.COINMARKETCAP_KEY || '';
 
 // Prevent to load scripts before compilation and typechain
 if (!SKIP_LOAD) {
@@ -64,6 +65,11 @@ const mainnetFork = MAINNET_FORK
   : undefined;
 
 const buidlerConfig: HardhatUserConfig = {
+  gasReporter: {
+    currency: 'USD',
+    gasPrice: 120,
+    coinmarketcap: COINMARKETCAP_KEY,
+  },
   solidity: {
     compilers: [
       { version: '0.5.16' },
@@ -102,7 +108,6 @@ const buidlerConfig: HardhatUserConfig = {
     tenderlyMain: getCommonNetworkConfig(eEthereumNetwork.tenderlyMain, 3030),
     matic: getCommonNetworkConfig(ePolygonNetwork.matic, 137),
     mumbai: getCommonNetworkConfig(ePolygonNetwork.mumbai, 80001),
-    xdai: getCommonNetworkConfig(eXDaiNetwork.xdai, 100),
     hardhat: {
       hardfork: 'istanbul',
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
