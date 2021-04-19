@@ -701,8 +701,12 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   /**
    * @dev Returns the cached LendingPoolAddressesProvider connected to this contract
    **/
-  function getAddressesProvider() external view override returns (ILendingPoolAddressesProvider) {
+  function getAddressesProvider() external view returns (ILendingPoolAddressesProvider) {
     return _addressesProvider;
+  }
+
+  function isPoolAdmin(address addr) external view override returns (bool) {
+    return _addressesProvider.isPoolAdmin(addr);
   }
 
   /**

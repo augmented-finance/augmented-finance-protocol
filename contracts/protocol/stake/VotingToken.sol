@@ -15,6 +15,7 @@ import {VersionedInitializable} from '../libraries/aave-upgradeability/Versioned
 import {VoteDelegatorWithSnapshot} from './lib/VoteDelegatorWithSnapshot.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 import {StakeToken} from './StakeToken.sol';
+import {IStakeAccessController} from './interfaces/IStakeAccessController.sol';
 
 /**
  * @title VotingToken
@@ -30,6 +31,7 @@ abstract contract VotingToken is StakeToken, VoteDelegatorWithSnapshot {
   mapping(address => address) internal _propositionPowerDelegates;
 
   constructor(
+    IStakeAccessController stakeController,
     IERC20 stakedToken,
     IBalanceHook incentivesController,
     uint256 cooldownSeconds,
@@ -41,6 +43,7 @@ abstract contract VotingToken is StakeToken, VoteDelegatorWithSnapshot {
   )
     public
     StakeToken(
+      stakeController,
       stakedToken,
       incentivesController,
       cooldownSeconds,
@@ -101,10 +104,9 @@ abstract contract VotingToken is StakeToken, VoteDelegatorWithSnapshot {
       DelegationType.PROPOSITION_POWER
     );
 
-    // caching the aave governance address to avoid multiple state loads
-    ITransferHook aaveGovernance = _governance;
-    if (aaveGovernance != ITransferHook(0)) {
-      aaveGovernance.onTransfer(from, to, amount);
+    ITransferHook governance = _governance;
+    if (governance != ITransferHook(0)) {
+      governance.onTransfer(from, to, amount);
     }
   }
 

@@ -3,7 +3,7 @@ pragma solidity ^0.6.12;
 
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../tools/math/WadRayMath.sol';
-import {AccessBitmask} from '../misc/AccessBitmask.sol';
+import {AccessBitmask} from '../access/AccessBitmask.sol';
 import {IRewardController} from './IRewardController.sol';
 import {IManagedRewardPool} from './IRewardPool.sol';
 

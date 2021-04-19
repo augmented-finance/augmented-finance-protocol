@@ -14,6 +14,10 @@ contract RemoteAccessBitmask is Context {
   using RemoteAccessBitmaskHelper for IRemoteAccessBitmask;
   IRemoteAccessBitmask internal _remoteAcl;
 
+  constructor(IRemoteAccessBitmask remoteAcl) public {
+    _remoteAcl = remoteAcl;
+  }
+
   function _getRemoteAcl(address addr) internal view returns (uint256) {
     return _remoteAcl.getAcl(addr);
   }

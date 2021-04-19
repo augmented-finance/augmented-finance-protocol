@@ -182,7 +182,7 @@
       }
     }
   },
-  "contracts/configuration/LendingPoolAddressesProviderRegistry.sol": {
+  "contracts/configuration/AddressesProviderRegistry.sol": {
     "l": {
       "31": 1,
       "39": 3,
@@ -202,7 +202,7 @@
       "79": 0,
       "83": 2
     },
-    "path": "/src/contracts/configuration/LendingPoolAddressesProviderRegistry.sol",
+    "path": "/src/contracts/configuration/AddressesProviderRegistry.sol",
     "s": {
       "1": 1,
       "2": 3,

@@ -101,7 +101,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     allocated = internalClaimByCall(holder, allocated, uint32(block.number));
 
     if (allocated > 0 && address(_rewardMinter) != address(0)) {
-      _rewardMinter.mintReward(receiver, allocated);
+      _rewardMinter.mint(receiver, allocated);
     }
     console.log('reward claimed', allocated);
     emit RewardsClaimed(holder, receiver, allocated);
