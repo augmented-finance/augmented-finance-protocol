@@ -6,7 +6,7 @@ import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../protocol/libraries/math/WadRayMath.sol';
+import {WadRayMath} from '../tools/math/WadRayMath.sol';
 
 contract AccessBitmask is Context {
   mapping(address => uint256) private _acl;

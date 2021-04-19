@@ -7,7 +7,7 @@ import {ISubscriptionAdapter} from './interfaces/ISubscriptionAdapter.sol';
 import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../protocol/libraries/math/WadRayMath.sol';
+import {WadRayMath} from '../tools/math/WadRayMath.sol';
 import {ILendableToken} from './interfaces/ILendableToken.sol';
 
 contract Migrator is Ownable {

@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
-import {WadRayMath} from '../libraries/math/WadRayMath.sol';
+import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {DebtTokenBase} from './base/DebtTokenBase.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';

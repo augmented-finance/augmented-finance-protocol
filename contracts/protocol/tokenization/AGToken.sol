@@ -5,7 +5,7 @@ import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
 import {IAGToken} from '../../interfaces/IAGToken.sol';
-import {WadRayMath} from '../libraries/math/WadRayMath.sol';
+import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IncentivizedERC20} from './IncentivizedERC20.sol';
@@ -297,6 +297,13 @@ contract AGToken is
    **/
   function getIncentivesController() external view returns (IBalanceHook) {
     return _getIncentivesController();
+  }
+
+  /**
+   * @dev Updates the address of the incentives controller contract
+   **/
+  function setIncentivesController(address hook) external override onlyLendingPool {
+    _incentivesController = IBalanceHook(hook);
   }
 
   /**

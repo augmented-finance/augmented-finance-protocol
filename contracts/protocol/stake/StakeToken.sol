@@ -10,7 +10,7 @@ import {ITransferHook} from './interfaces/ITransferHook.sol';
 
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {PercentageMath} from '../libraries/math/PercentageMath.sol';
+import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 
 import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
