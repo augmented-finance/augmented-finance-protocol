@@ -5,8 +5,6 @@ import 'hardhat/console.sol';
 import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
-import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../tools/math/WadRayMath.sol';
 
 contract AccessBitmask is Context {
   mapping(address => uint256) private _acl;
@@ -66,4 +64,34 @@ contract AccessBitmask is Context {
     require(_acl[_msgSender()] == 0, 'access is restricted');
     _;
   }
+
+  // modifier aclHas_(uint256 flags, string memory m) {
+  //   require((_acl[_msgSender()] & flags) == flags, m);
+  //   _;
+  // }
+
+  // modifier aclAllOf_(uint256 flags, string memory m) {
+  //   require((_acl[_msgSender()] & flags) == flags, m);
+  //   _;
+  // }
+
+  // modifier aclNoneOf_(uint256 flags, string memory m) {
+  //   require((_acl[_msgSender()] & flags) == 0, m);
+  //   _;
+  // }
+
+  // modifier aclAnyOf_(uint256 flags, string memory m) {
+  //   require((_acl[_msgSender()] & flags) != 0, m);
+  //   _;
+  // }
+
+  // modifier aclAny_(string memory m) {
+  //   require(_acl[_msgSender()] != 0, m);
+  //   _;
+  // }
+
+  // modifier aclNone_(string memory m) {
+  //   require(_acl[_msgSender()] == 0, m);
+  //   _;
+  // }
 }
