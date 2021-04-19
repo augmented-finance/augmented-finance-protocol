@@ -22,6 +22,8 @@ interface ILendingPoolAddressesProvider is IAccessController {
   function getPriceOracle() external view returns (address);
 
   function getLendingRateOracle() external view returns (address);
+
+  function isRewardAdmin(address) external view returns (bool);
 }
 
 interface IManagedLendingPoolAddressesProvider is ILendingPoolAddressesProvider {

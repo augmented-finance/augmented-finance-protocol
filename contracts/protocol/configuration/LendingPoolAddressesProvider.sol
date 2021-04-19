@@ -104,6 +104,10 @@ contract LendingPoolAddressesProvider is AccessController, IManagedLendingPoolAd
     return isAddress(AccessFlags.POOL_ADMIN, addr);
   }
 
+  function isRewardAdmin(address addr) external view override returns (bool) {
+    return isAddress(AccessFlags.POOL_ADMIN, addr);
+  }
+
   function setPoolAdmin(address admin) external override onlyOwner {
     internalSetAddress(AccessFlags.POOL_ADMIN, admin);
     emit ConfigurationAdminUpdated(admin);
