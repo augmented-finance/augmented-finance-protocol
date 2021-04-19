@@ -2,58 +2,37 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ERC20} from '../../dependencies/openzeppelin/contracts/ERC20.sol';
-
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IStakeToken} from './interfaces/IStakeToken.sol';
-import {ITransferHook} from './interfaces/ITransferHook.sol';
-
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-
-import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
 import {VoteDelegatorWithSnapshot} from './lib/VoteDelegatorWithSnapshot.sol';
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 import {StakeToken} from './StakeToken.sol';
-import {IStakeAccessController} from './interfaces/IStakeAccessController.sol';
+import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
 
 /**
  * @title VotingToken
  * @notice Contract to provide votes based on a staked token.
  **/
 abstract contract VotingToken is StakeToken, VoteDelegatorWithSnapshot {
-  using SafeMath for uint256;
-  using SafeERC20 for IERC20;
-
   mapping(address => address) internal _votingDelegates;
   mapping(address => mapping(uint256 => Snapshot)) internal _propositionPowerSnapshots;
   mapping(address => uint256) internal _propositionPowerSnapshotsCounts;
   mapping(address => address) internal _propositionPowerDelegates;
 
   constructor(
-    IStakeAccessController stakeController,
-    IERC20 stakedToken,
-    IBalanceHook incentivesController,
-    uint256 cooldownSeconds,
-    uint256 unstakeWindow,
+    StakeTokenConfig memory params,
     string memory name,
     string memory symbol,
-    uint8 decimals,
-    address governance
-  )
-    public
-    StakeToken(
-      stakeController,
-      stakedToken,
-      incentivesController,
-      cooldownSeconds,
-      unstakeWindow,
-      name,
-      symbol,
-      decimals
-    )
-  {
-    _setGovernance(ITransferHook(governance));
+    uint8 decimals
+  ) public StakeToken(params, name, symbol, decimals) {
+    _setGovernance(params.governance);
+  }
+
+  function _initialize(
+    StakeTokenConfig calldata params,
+    string calldata name,
+    string calldata symbol,
+    uint8 decimals
+  ) internal virtual override initializer {
+    super._initialize(params, name, symbol, decimals);
+    _setGovernance(params.governance);
   }
 
   /**
@@ -104,9 +83,8 @@ abstract contract VotingToken is StakeToken, VoteDelegatorWithSnapshot {
       DelegationType.PROPOSITION_POWER
     );
 
-    ITransferHook governance = _governance;
-    if (governance != ITransferHook(0)) {
-      governance.onTransfer(from, to, amount);
+    if (address(_governance) != address(0)) {
+      _governance.onTransfer(from, to, amount);
     }
   }
 

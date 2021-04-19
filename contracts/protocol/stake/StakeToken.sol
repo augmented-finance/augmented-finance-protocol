@@ -6,7 +6,6 @@ import {ERC20WithPermit} from '../../misc/ERC20WithPermit.sol';
 
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {IManagedStakeToken} from './interfaces/IStakeToken.sol';
-import {ITransferHook} from './interfaces/ITransferHook.sol';
 
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
@@ -15,11 +14,13 @@ import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
-import {AccessFlags} from '../../access/AccessFlags.sol';
+// import {AccessFlags} from '../../access/AccessFlags.sol';
 import {RemoteAccessBitmask} from '../../access/RemoteAccessBitmask.sol';
 import {IStakeAccessController} from './interfaces/IStakeAccessController.sol';
 
 import {Errors} from '../../tools/Errors.sol';
+import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
+import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.sol';
 
 /**
  * @title StakeToken
@@ -29,23 +30,21 @@ abstract contract StakeToken is
   IManagedStakeToken,
   VersionedInitializable,
   ERC20WithPermit,
-  RemoteAccessBitmask
+  RemoteAccessBitmask,
+  IInitializableStakeToken
 {
   using SafeMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
-  IStakeAccessController private _stakeController;
-  IERC20 private immutable _stakedToken;
+  IERC20 private _stakedToken;
   IBalanceHook internal _incentivesController;
-
-  uint256 public immutable COOLDOWN_SECONDS;
-  /// @notice Seconds available to redeem once the cooldown period is fullfilled
-  uint256 public immutable UNSTAKE_WINDOW;
 
   mapping(address => uint40) private _stakersCooldowns;
 
   uint256 private _maxSlashablePercentage;
+  uint256 private _cooldownSeconds;
+  uint256 private _unstakeSeconds;
   bool private _redeemPaused;
 
   event Staked(address from, address to, uint256 amount);
@@ -55,38 +54,37 @@ abstract contract StakeToken is
   event Slashed(address to, uint256 amount);
 
   constructor(
-    IStakeAccessController stakeController,
-    IERC20 stakedToken,
-    IBalanceHook incentivesController,
-    uint256 cooldownSeconds,
-    uint256 unstakeWindow,
+    StakeTokenConfig memory params,
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public ERC20WithPermit(name, symbol) RemoteAccessBitmask(stakeController) {
-    _stakeController = stakeController;
-    _stakedToken = stakedToken;
-    _incentivesController = incentivesController;
-    _maxSlashablePercentage = 30 * PercentageMath.PCT;
-    COOLDOWN_SECONDS = cooldownSeconds;
-    UNSTAKE_WINDOW = unstakeWindow;
+  ) public ERC20WithPermit(name, symbol) RemoteAccessBitmask(params.stakeController) {
     super._setupDecimals(decimals);
+    _stakedToken = params.stakedToken;
+    _incentivesController = params.incentivesController;
+    _maxSlashablePercentage = 30 * PercentageMath.PCT;
+    _cooldownSeconds = params.cooldownSeconds;
+    _unstakeSeconds = params.unstakeWindow;
   }
 
-  /**
-   * @dev Called by the proxy contract
-   **/
-  function initialize(
+  function _initialize(
+    StakeTokenConfig calldata params,
     string calldata name,
     string calldata symbol,
     uint8 decimals
-  ) external initializer {
+  ) internal virtual initializer {
+    super._initializeERC20(name, symbol, decimals);
     super._initializeDomainSeparator();
+    _remoteAcl = params.stakeController;
+    _stakedToken = params.stakedToken;
+    _incentivesController = params.incentivesController;
+    _maxSlashablePercentage = 30 * PercentageMath.PCT;
+    _cooldownSeconds = params.cooldownSeconds;
+    _unstakeSeconds = params.unstakeWindow;
+  }
 
-    if (getRevision() == 1) {
-      _maxSlashablePercentage = 30 * PercentageMath.PCT;
-      super._initializeERC20(name, symbol, decimals);
-    }
+  function internalStakeController() internal view returns (IStakeAccessController) {
+    return IStakeAccessController(address(_remoteAcl));
   }
 
   function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
@@ -164,11 +162,11 @@ abstract contract StakeToken is
 
     uint256 cooldownStartTimestamp = _stakersCooldowns[from];
     require(
-      block.timestamp > cooldownStartTimestamp.add(COOLDOWN_SECONDS),
+      block.timestamp > cooldownStartTimestamp.add(_cooldownSeconds),
       'STK_INSUFFICIENT_COOLDOWN'
     );
     require(
-      block.timestamp.sub(cooldownStartTimestamp.add(COOLDOWN_SECONDS)) <= UNSTAKE_WINDOW,
+      block.timestamp.sub(cooldownStartTimestamp.add(_cooldownSeconds)) <= _unstakeSeconds,
       'STK_UNSTAKE_WINDOW_FINISHED'
     );
 
@@ -235,7 +233,7 @@ abstract contract StakeToken is
     uint256 minAmount,
     uint256 maxAmount
   ) external override onlyLiquidityController returns (uint256 amount) {
-    require(_stakeController.isSlashDestination(destination), 'STK_BAD_SLASH_DESTINATION');
+    require(internalStakeController().isSlashDestination(destination), 'STK_BAD_SLASH_DESTINATION');
 
     uint256 balance = _stakedToken.balanceOf(address(this));
     uint256 maxSlashable = balance.percentMul(_maxSlashablePercentage);
@@ -337,7 +335,7 @@ abstract contract StakeToken is
     }
 
     uint256 minimalValidCooldownTimestamp =
-      block.timestamp.sub(COOLDOWN_SECONDS).sub(UNSTAKE_WINDOW);
+      block.timestamp.sub(_cooldownSeconds).sub(_unstakeSeconds);
 
     if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
       toCooldownTimestamp = 0;
@@ -361,13 +359,25 @@ abstract contract StakeToken is
     return toCooldownTimestamp;
   }
 
+  function COOLDOWN_SECONDS() external view returns (uint256) {
+    return _cooldownSeconds;
+  }
+
+  /// @notice Seconds available to redeem once the cooldown period is fullfilled
+  function UNSTAKE_WINDOW() external view returns (uint256) {
+    return _unstakeSeconds;
+  }
+
   modifier onlyAdmin() {
-    require(_stakeController.isStakeAdmin(msg.sender), 'admin access only');
+    require(internalStakeController().isStakeAdmin(msg.sender), 'admin access only');
     _;
   }
 
   modifier onlyLiquidityController() {
-    require(_stakeController.isLiquidityController(msg.sender), 'LiquidityController only');
+    require(
+      internalStakeController().isLiquidityController(msg.sender),
+      'LiquidityController only'
+    );
     _;
   }
 }

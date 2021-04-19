@@ -2,11 +2,10 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {VotingToken} from './VotingToken.sol';
 import {StakeToken} from './StakeToken.sol';
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
-import {IStakeAccessController} from './interfaces/IStakeAccessController.sol';
+
+import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
 
 /**
  * @title StakedAgfV1
@@ -21,28 +20,25 @@ contract StakedAgfV1 is
 
   uint256 public constant REVISION = 1;
 
-  constructor(
-    IStakeAccessController stakeController,
-    IERC20 stakedToken,
-    IBalanceHook incentivesController,
-    uint256 cooldownSeconds,
-    uint256 unstakeWindow,
-    address governance
-  )
+  constructor(StakeTokenConfig memory params, address governance)
     public
-    StakeToken(
-      //    VotingToken(
-      stakeController,
-      stakedToken,
-      incentivesController,
-      cooldownSeconds,
-      unstakeWindow,
-      NAME,
-      SYMBOL,
-      DECIMALS
-      //      governance
-    )
-  {}
+    StakeToken(params, NAME, SYMBOL, DECIMALS)
+  //    VotingToken(params, NAME, SYMBOL, DECIMALS)
+  {
+    governance;
+  }
+
+  function initialize(
+    StakeTokenConfig calldata params,
+    string calldata name,
+    string calldata symbol,
+    uint8 decimals
+  ) external override initializer {
+    if (getRevision() > 1) {
+      return;
+    }
+    super._initialize(params, name, symbol, decimals);
+  }
 
   /**
    * @dev returns the revision of the implementation contract
