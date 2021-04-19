@@ -2,8 +2,8 @@
 pragma solidity ^0.6.12;
 
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../protocol/libraries/math/WadRayMath.sol';
-import {BitUtils} from '../protocol/libraries/math/BitUtils.sol';
+import {WadRayMath} from '../tools/math/WadRayMath.sol';
+import {BitUtils} from '../tools/math/BitUtils.sol';
 import {IRewardController} from './IRewardController.sol';
 import {AccumulatingRewardPool} from './AccumulatingRewardPool.sol';
 

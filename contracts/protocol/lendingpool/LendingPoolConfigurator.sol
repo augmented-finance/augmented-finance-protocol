@@ -12,7 +12,7 @@ import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddres
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
 import {IERC20Detailed} from '../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
-import {PercentageMath} from '../libraries/math/PercentageMath.sol';
+import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {IInitializableDebtToken} from '../../interfaces/IInitializableDebtToken.sol';
 import {IInitializableAGToken} from '../../interfaces/IInitializableAGToken.sol';

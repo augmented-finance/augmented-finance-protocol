@@ -11,8 +11,8 @@ import {ILendingPoolCollateralManager} from '../../interfaces/ILendingPoolCollat
 import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
 import {GenericLogic} from '../libraries/logic/GenericLogic.sol';
 import {Helpers} from '../libraries/helpers/Helpers.sol';
-import {WadRayMath} from '../libraries/math/WadRayMath.sol';
-import {PercentageMath} from '../libraries/math/PercentageMath.sol';
+import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';

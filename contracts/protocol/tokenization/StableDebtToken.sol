@@ -2,8 +2,8 @@
 pragma solidity 0.6.12;
 
 import {DebtTokenBase} from './base/DebtTokenBase.sol';
-import {MathUtils} from '../libraries/math/MathUtils.sol';
-import {WadRayMath} from '../libraries/math/WadRayMath.sol';
+import {MathUtils} from '../../tools/math/MathUtils.sol';
+import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';

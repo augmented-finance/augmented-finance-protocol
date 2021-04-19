@@ -93,4 +93,6 @@ interface IAGToken is IERC20, IScaledBalanceToken, IDerivedToken {
    * @param amount The amount getting repaid
    **/
   function handleRepayment(address user, uint256 amount) external;
+
+  function setIncentivesController(address hook) external;
 }

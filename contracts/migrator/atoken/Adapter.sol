@@ -4,7 +4,7 @@ pragma solidity ^0.6.12;
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../protocol/libraries/math/WadRayMath.sol';
+import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 
 import {BasicAdapter} from '../interfaces/BasicAdapter.sol';
 import {IRedeemableToken, IWithdrawablePool} from './IRedeemableToken.sol';

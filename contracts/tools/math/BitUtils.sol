@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.6.12;
 
-import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from './WadRayMath.sol';
 
 library BitUtils {
