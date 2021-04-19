@@ -29,16 +29,13 @@ makeSuite('LendingPoolAddressesProvider', (testEnv: TestEnv) => {
       await expect(contractFunction(mockAddress)).to.be.revertedWith(INVALID_OWNER_REVERT_MSG);
     }
 
-    await expect(
-      addressesProvider.setAddress(utils.keccak256(utils.toUtf8Bytes('RANDOM_ID')), mockAddress)
-    ).to.be.revertedWith(INVALID_OWNER_REVERT_MSG);
+    await expect(addressesProvider.setAddress(1 << 62, mockAddress)).to.be.revertedWith(
+      INVALID_OWNER_REVERT_MSG
+    );
 
-    await expect(
-      addressesProvider.setAddressAsProxy(
-        utils.keccak256(utils.toUtf8Bytes('RANDOM_ID')),
-        mockAddress
-      )
-    ).to.be.revertedWith(INVALID_OWNER_REVERT_MSG);
+    await expect(addressesProvider.setAddressAsProxy(1 << 62, mockAddress)).to.be.revertedWith(
+      INVALID_OWNER_REVERT_MSG
+    );
   });
 
   it('Tests adding  a proxied address with `setAddressAsProxy()`', async () => {
@@ -48,7 +45,7 @@ makeSuite('LendingPoolAddressesProvider', (testEnv: TestEnv) => {
     const currentAddressesProviderOwner = users[1];
 
     const mockLendingPool = await deployLendingPool();
-    const proxiedAddressId = utils.keccak256(utils.toUtf8Bytes('RANDOM_PROXIED'));
+    const proxiedAddressId = 1 << 62;
 
     const proxiedAddressSetReceipt = await waitForTx(
       await addressesProvider
@@ -75,7 +72,7 @@ makeSuite('LendingPoolAddressesProvider', (testEnv: TestEnv) => {
 
     const currentAddressesProviderOwner = users[1];
     const mockNonProxiedAddress = createRandomAddress();
-    const nonProxiedAddressId = utils.keccak256(utils.toUtf8Bytes('RANDOM_NON_PROXIED'));
+    const nonProxiedAddressId = 1 << 62;
 
     const nonProxiedAddressSetReceipt = await waitForTx(
       await addressesProvider

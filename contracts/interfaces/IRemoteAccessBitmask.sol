@@ -5,6 +5,8 @@ import {BitUtils} from '../tools/math/BitUtils.sol';
 
 interface IRemoteAccessBitmask {
   function getAccessControlMask(address) external view returns (uint256);
+
+  function queryAccessControlMask(address addr, uint256 filterMask) external view returns (uint256);
 }
 
 /**
@@ -18,12 +20,20 @@ library RemoteAccessBitmaskHelper {
     return remote.getAccessControlMask(subject);
   }
 
+  function queryAcl(
+    IRemoteAccessBitmask remote,
+    address subject,
+    uint256 filterMask
+  ) internal view returns (uint256) {
+    return remote.queryAccessControlMask(subject, filterMask);
+  }
+
   function hasAnyOf(
     IRemoteAccessBitmask remote,
     address subject,
     uint256 flags
   ) internal view returns (bool) {
-    return remote.getAccessControlMask(subject).hasAnyOf(flags);
+    return queryAcl(remote, subject, flags).hasAnyOf(flags);
   }
 
   function hasAllOf(
@@ -31,7 +41,7 @@ library RemoteAccessBitmaskHelper {
     address subject,
     uint256 flags
   ) internal view returns (bool) {
-    return remote.getAccessControlMask(subject).hasAllOf(flags);
+    return queryAcl(remote, subject, flags).hasAllOf(flags);
   }
 
   function hasNoneOf(
@@ -39,7 +49,7 @@ library RemoteAccessBitmaskHelper {
     address subject,
     uint256 flags
   ) internal view returns (bool) {
-    return remote.getAccessControlMask(subject).hasNoneOf(flags);
+    return queryAcl(remote, subject, flags).hasNoneOf(flags);
   }
 
   function hasAny(IRemoteAccessBitmask remote, address subject) internal view returns (bool) {
