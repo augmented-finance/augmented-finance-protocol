@@ -38,6 +38,13 @@ library BitUtils {
     return (v & (v - 1)) == 0;
   }
 
+  function isPowerOf2nz(uint256 v) internal pure returns (bool) {
+    if (v == 0) {
+      return false;
+    }
+    return (v & (v - 1)) == 0;
+  }
+
   function bitLength(uint256 v) internal pure returns (uint256 len) {
     if (v == 0) {
       return 0;

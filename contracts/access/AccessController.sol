@@ -7,6 +7,8 @@ import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 
+import {BitUtils} from '../tools/math/BitUtils.sol';
+
 // Prettier ignore to prevent buidler flatter bug
 // prettier-ignore
 import {InitializableImmutableAdminUpgradeabilityProxy} from '../protocol/libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
@@ -15,16 +17,32 @@ import {IManagedAccessController} from '../interfaces/IAccessController.sol';
 import {AccessFlags} from './AccessFlags.sol';
 
 contract AccessController is Ownable, IManagedAccessController {
-  mapping(bytes32 => address) private _addresses;
+  using BitUtils for uint256;
+
+  mapping(uint256 => address) private _addresses;
   mapping(address => uint256) private _masks;
+  uint256 private _singletons;
+  uint256 private _nonSingletons;
 
   function getAccessControlMask(address addr) external view override returns (uint256) {
     return _masks[addr];
   }
 
+  function queryAccessControlMask(address addr, uint256 filter)
+    external
+    view
+    override
+    returns (uint256)
+  {
+    return _masks[addr] & filter;
+  }
+
   function grantRoles(address addr, uint256 flags) external onlyOwner returns (uint256) {
+    require(_singletons & flags == 0, 'singleton should use setAddress');
+
     uint256 m = _masks[addr];
     if (m & flags != flags) {
+      _nonSingletons |= flags;
       m |= flags;
       _masks[addr] = m;
     }
@@ -32,6 +50,8 @@ contract AccessController is Ownable, IManagedAccessController {
   }
 
   function revokeRoles(address addr, uint256 flags) external onlyOwner returns (uint256) {
+    require(_singletons & flags == 0, 'singleton should use setAddress');
+
     uint256 m = _masks[addr];
     if (m & flags != 0) {
       m &= ~flags;
@@ -41,30 +61,50 @@ contract AccessController is Ownable, IManagedAccessController {
   }
 
   /**
-   * @dev Sets an address for an id replacing the address saved in the addresses map
-   * IMPORTANT Use this function carefully, as it will do a hard replacement
+   * @dev Sets a sigleton address, replaces previous value
+   * IMPORTANT Use this function carefully, as it does a hard replacement
    * @param id The id
    * @param newAddress The address to set
    */
-  function setAddress(bytes32 id, address newAddress) external override onlyOwner {
-    _addresses[id] = newAddress;
+  function setAddress(uint256 id, address newAddress) external override onlyOwner {
+    internalSetAddress(id, newAddress);
     emit AddressSet(id, newAddress, false);
   }
 
-  function internalSetAddress(bytes32 id, address newAddress) internal onlyOwner {
+  function internalSetAddress(uint256 id, address newAddress) internal onlyOwner {
+    require(id.isPowerOf2nz(), 'invalid singleton id');
+    if (_singletons & id == 0) {
+      require(_nonSingletons & id == 0, 'id is not a singleton');
+      _singletons |= id;
+    }
+
+    address prev = _addresses[id];
+    if (prev != address(0)) {
+      _masks[prev] = _masks[prev] & ~id;
+    }
+    if (newAddress != address(0)) {
+      _masks[newAddress] = _masks[newAddress] | id;
+    }
     _addresses[id] = newAddress;
   }
 
   /**
-   * @dev Returns an address by id
-   * @return The address
+   * @dev Returns a singleton address by id
+   * @return addr The address
    */
-  function getAddress(bytes32 id) public view override returns (address) {
-    return _addresses[id];
+  function getAddress(uint256 id) public view override returns (address addr) {
+    addr = _addresses[id];
+
+    if (addr == address(0)) {
+      require(id.isPowerOf2nz(), 'invalid singleton id');
+      require((_singletons & id != 0) || (_nonSingletons & id == 0), 'id is not a singleton');
+    }
+    return addr;
   }
 
-  function isAddress(bytes32 id, address addr) public view returns (bool) {
-    return addr != address(0) && addr == _addresses[id];
+  function isAddress(uint256 id, address addr) public view returns (bool) {
+    require(id.isPowerOf2nz(), 'only one access type is accepted');
+    return _masks[addr] & id != 0;
   }
 
   function isEmergencyAdmin(address addr) external view override returns (bool) {
@@ -76,7 +116,7 @@ contract AccessController is Ownable, IManagedAccessController {
   }
 
   function setEmergencyAdmin(address emergencyAdmin) external override onlyOwner {
-    _addresses[AccessFlags.EMERGENCY_ADMIN] = emergencyAdmin;
+    internalSetAddress(AccessFlags.EMERGENCY_ADMIN, emergencyAdmin);
     emit EmergencyAdminUpdated(emergencyAdmin);
   }
 
@@ -89,7 +129,7 @@ contract AccessController is Ownable, IManagedAccessController {
    * @param id The id
    * @param implementationAddress The address of the new implementation
    */
-  function setAddressAsProxy(bytes32 id, address implementationAddress)
+  function setAddressAsProxy(uint256 id, address implementationAddress)
     external
     override
     onlyOwner
@@ -107,7 +147,7 @@ contract AccessController is Ownable, IManagedAccessController {
    * @param id The id of the proxy to be updated
    * @param newAddress The address of the new implementation
    **/
-  function _updateImpl(bytes32 id, address newAddress) internal {
+  function _updateImpl(uint256 id, address newAddress) internal {
     address payable proxyAddress = payable(getAddress(id));
 
     InitializableImmutableAdminUpgradeabilityProxy proxy =
