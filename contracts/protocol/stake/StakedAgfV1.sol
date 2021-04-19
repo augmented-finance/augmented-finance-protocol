@@ -6,6 +6,7 @@ import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {VotingToken} from './VotingToken.sol';
 import {StakeToken} from './StakeToken.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
+import {IStakeAccessController} from './interfaces/IStakeAccessController.sol';
 
 /**
  * @title StakedAgfV1
@@ -21,6 +22,7 @@ contract StakedAgfV1 is
   uint256 public constant REVISION = 1;
 
   constructor(
+    IStakeAccessController stakeController,
     IERC20 stakedToken,
     IBalanceHook incentivesController,
     uint256 cooldownSeconds,
@@ -30,6 +32,7 @@ contract StakedAgfV1 is
     public
     StakeToken(
       //    VotingToken(
+      stakeController,
       stakedToken,
       incentivesController,
       cooldownSeconds,

@@ -34,15 +34,12 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
   ILendingPool internal pool;
 
   modifier onlyPoolAdmin {
-    require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
+    require(addressesProvider.isPoolAdmin(msg.sender), Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
 
   modifier onlyEmergencyAdmin {
-    require(
-      addressesProvider.getEmergencyAdmin() == msg.sender,
-      Errors.LPC_CALLER_NOT_EMERGENCY_ADMIN
-    );
+    require(addressesProvider.isEmergencyAdmin(msg.sender), Errors.LPC_CALLER_NOT_EMERGENCY_ADMIN);
     _;
   }
 

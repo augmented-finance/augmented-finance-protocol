@@ -28,7 +28,7 @@ import bignumberChai from 'chai-bignumber';
 import { almostEqual } from './almost-equal';
 import { PriceOracle } from '../../../types/PriceOracle';
 import { LendingPoolAddressesProvider } from '../../../types/LendingPoolAddressesProvider';
-import { LendingPoolAddressesProviderRegistry } from '../../../types/LendingPoolAddressesProviderRegistry';
+import { AddressesProviderRegistry } from '../../../types/AddressesProviderRegistry';
 import { getEthersSigners } from '../../../helpers/contracts-helpers';
 import { UniswapLiquiditySwapAdapter } from '../../../types/UniswapLiquiditySwapAdapter';
 import { UniswapRepayAdapter } from '../../../types/UniswapRepayAdapter';
@@ -65,7 +65,7 @@ export interface TestEnv {
   addressesProvider: LendingPoolAddressesProvider;
   uniswapLiquiditySwapAdapter: UniswapLiquiditySwapAdapter;
   uniswapRepayAdapter: UniswapRepayAdapter;
-  registry: LendingPoolAddressesProviderRegistry;
+  registry: AddressesProviderRegistry;
   wethGateway: WETHGateway;
   flashLiquidationAdapter: FlashLiquidationAdapter;
 }
@@ -92,7 +92,7 @@ const testEnv: TestEnv = {
   uniswapLiquiditySwapAdapter: {} as UniswapLiquiditySwapAdapter,
   uniswapRepayAdapter: {} as UniswapRepayAdapter,
   flashLiquidationAdapter: {} as FlashLiquidationAdapter,
-  registry: {} as LendingPoolAddressesProviderRegistry,
+  registry: {} as AddressesProviderRegistry,
   wethGateway: {} as WETHGateway,
 } as TestEnv;
 

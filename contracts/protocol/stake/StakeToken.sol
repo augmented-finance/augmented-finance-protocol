@@ -15,15 +15,27 @@ import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
+import {AccessFlags} from '../../access/AccessFlags.sol';
+import {RemoteAccessBitmask} from '../../access/RemoteAccessBitmask.sol';
+import {IStakeAccessController} from './interfaces/IStakeAccessController.sol';
+
+import {Errors} from '../../tools/Errors.sol';
+
 /**
  * @title StakeToken
  * @notice Contract to stake a token for a system reserve.
  **/
-abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC20WithPermit {
+abstract contract StakeToken is
+  IManagedStakeToken,
+  VersionedInitializable,
+  ERC20WithPermit,
+  RemoteAccessBitmask
+{
   using SafeMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
+  IStakeAccessController private _stakeController;
   IERC20 private immutable _stakedToken;
   IBalanceHook internal _incentivesController;
 
@@ -43,6 +55,7 @@ abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC2
   event Slashed(address to, uint256 amount);
 
   constructor(
+    IStakeAccessController stakeController,
     IERC20 stakedToken,
     IBalanceHook incentivesController,
     uint256 cooldownSeconds,
@@ -50,9 +63,11 @@ abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC2
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public ERC20WithPermit(name, symbol) {
+  ) public ERC20WithPermit(name, symbol) RemoteAccessBitmask(stakeController) {
+    _stakeController = stakeController;
     _stakedToken = stakedToken;
     _incentivesController = incentivesController;
+    _maxSlashablePercentage = 30 * PercentageMath.PCT;
     COOLDOWN_SECONDS = cooldownSeconds;
     UNSTAKE_WINDOW = unstakeWindow;
     super._setupDecimals(decimals);
@@ -69,6 +84,7 @@ abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC2
     super._initializeDomainSeparator();
 
     if (getRevision() == 1) {
+      _maxSlashablePercentage = 30 * PercentageMath.PCT;
       super._initializeERC20(name, symbol, decimals);
     }
   }
@@ -86,7 +102,7 @@ abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC2
     address to,
     uint256 underlyingAmount
   ) internal returns (uint256 stakeAmount) {
-    require(underlyingAmount != 0, 'INVALID_ZERO_AMOUNT');
+    require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
     uint256 oldReceiverBalance = balanceOf(to);
     stakeAmount = underlyingAmount.percentDiv(exchangeRate());
 
@@ -118,7 +134,7 @@ abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC2
     override
     returns (uint256 stakeAmount_)
   {
-    require(stakeAmount != 0, 'INVALID_ZERO_AMOUNT');
+    require(stakeAmount > 0, Errors.VL_INVALID_AMOUNT);
     (stakeAmount_, ) = internalRedeem(msg.sender, to, stakeAmount, 0);
     return stakeAmount_;
   }
@@ -133,7 +149,7 @@ abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC2
     override
     returns (uint256 underlyingAmount_)
   {
-    require(underlyingAmount != 0, 'INVALID_ZERO_AMOUNT');
+    require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
     (, underlyingAmount_) = internalRedeem(msg.sender, to, 0, underlyingAmount);
     return underlyingAmount_;
   }
@@ -144,16 +160,16 @@ abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC2
     uint256 stakeAmount,
     uint256 underlyingAmount
   ) internal returns (uint256, uint256) {
-    require(!_redeemPaused, 'redeem paused');
+    require(!_redeemPaused, 'STK_REDEEM_PAUSED');
 
     uint256 cooldownStartTimestamp = _stakersCooldowns[from];
     require(
       block.timestamp > cooldownStartTimestamp.add(COOLDOWN_SECONDS),
-      'INSUFFICIENT_COOLDOWN'
+      'STK_INSUFFICIENT_COOLDOWN'
     );
     require(
       block.timestamp.sub(cooldownStartTimestamp.add(COOLDOWN_SECONDS)) <= UNSTAKE_WINDOW,
-      'UNSTAKE_WINDOW_FINISHED'
+      'STK_UNSTAKE_WINDOW_FINISHED'
     );
 
     uint256 oldBalance = balanceOf(from);
@@ -192,7 +208,7 @@ abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC2
    * - It can't be called if the user is not staking
    **/
   function cooldown() external override {
-    require(balanceOf(msg.sender) != 0, 'INVALID_BALANCE_ON_COOLDOWN');
+    require(balanceOf(msg.sender) != 0, 'STK_INVALID_BALANCE_ON_COOLDOWN');
 
     _stakersCooldowns[msg.sender] = uint40(block.timestamp);
     emit Cooldown(msg.sender, uint40(block.timestamp));
@@ -218,8 +234,8 @@ abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC2
     address destination,
     uint256 minAmount,
     uint256 maxAmount
-  ) external override adminOnly returns (uint256 amount) {
-    require(destination != address(0), 'destination is required');
+  ) external override onlyLiquidityController returns (uint256 amount) {
+    require(_stakeController.isSlashDestination(destination), 'STK_BAD_SLASH_DESTINATION');
 
     uint256 balance = _stakedToken.balanceOf(address(this));
     uint256 maxSlashable = balance.percentMul(_maxSlashablePercentage);
@@ -248,8 +264,8 @@ abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC2
     return _maxSlashablePercentage;
   }
 
-  function setMaxSlashablePercentage(uint256 percentageInRay) external override adminOnly {
-    require(percentageInRay <= PercentageMath.ONE, 'slashing must not exceed 100%');
+  function setMaxSlashablePercentage(uint256 percentageInRay) external override onlyAdmin {
+    require(percentageInRay <= PercentageMath.ONE, 'STK_EXCESSIVE_SLASH_PCT');
     _maxSlashablePercentage = percentageInRay;
   }
 
@@ -257,7 +273,7 @@ abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC2
     return !_redeemPaused;
   }
 
-  function setRedeemable(bool redeemable) external override adminOnly {
+  function setRedeemable(bool redeemable) external override onlyLiquidityController {
     _redeemPaused = !redeemable;
   }
 
@@ -345,8 +361,13 @@ abstract contract StakeToken is IManagedStakeToken, VersionedInitializable, ERC2
     return toCooldownTimestamp;
   }
 
-  modifier adminOnly() {
-    //    revert('not implemented');
+  modifier onlyAdmin() {
+    require(_stakeController.isStakeAdmin(msg.sender), 'admin access only');
+    _;
+  }
+
+  modifier onlyLiquidityController() {
+    require(_stakeController.isLiquidityController(msg.sender), 'LiquidityController only');
     _;
   }
 }

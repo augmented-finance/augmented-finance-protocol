@@ -27,7 +27,7 @@ import {
   DelegationAwareATokenFactory,
   InitializableAdminUpgradeabilityProxyFactory,
   LendingPoolAddressesProviderFactory,
-  LendingPoolAddressesProviderRegistryFactory,
+  AddressesProviderRegistryFactory,
   LendingPoolCollateralManagerFactory,
   LendingPoolConfiguratorFactory,
   LendingPoolFactory,
@@ -84,8 +84,8 @@ export const deployLendingPoolAddressesProvider = async (marketId: string, verif
 
 export const deployLendingPoolAddressesProviderRegistry = async (verify?: boolean) =>
   withSaveAndVerify(
-    await new LendingPoolAddressesProviderRegistryFactory(await getFirstSigner()).deploy(),
-    eContractid.LendingPoolAddressesProviderRegistry,
+    await new AddressesProviderRegistryFactory(await getFirstSigner()).deploy(),
+    eContractid.AddressesProviderRegistry,
     [],
     verify
   );

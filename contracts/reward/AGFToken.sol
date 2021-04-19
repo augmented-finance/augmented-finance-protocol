@@ -5,58 +5,33 @@ import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
 import {ERC20WithPermit} from '../misc/ERC20WithPermit.sol';
-import {AccessBitmask} from '../misc/AccessBitmask.sol';
+import {BitUtils} from '../tools/math/BitUtils.sol';
+import {AccessFlags} from '../access/AccessFlags.sol';
+import {RemoteAccessBitmask} from '../access/RemoteAccessBitmask.sol';
+import {IRemoteAccessBitmask} from '../interfaces/IRemoteAccessBitmask.sol';
 
 import {IRewardMinter} from './IRewardMinter.sol';
 
 import 'hardhat/console.sol';
 
-contract AGFToken is Context, ERC20WithPermit, AccessBitmask, Ownable, IRewardMinter {
-  uint256 public constant aclMint = 1 << 0;
-  uint256 public constant aclBurn = 1 << 1;
-  uint256 public constant aclSuspended = 1 << 2;
-  uint256 internal immutable aclPermanentMask = aclSuspended;
+contract AGFToken is ERC20WithPermit, RemoteAccessBitmask, IRewardMinter {
+  using BitUtils for uint256;
 
-  address[] private _knownGrantees;
+  constructor(
+    IRemoteAccessBitmask remoteAcl,
+    string memory name,
+    string memory symbol
+  ) public ERC20WithPermit(name, symbol) RemoteAccessBitmask(remoteAcl) {}
 
-  constructor(string memory name, string memory symbol) public ERC20WithPermit(name, symbol) {}
-
-  function admin_grant(address addr, uint256 flags) external onlyOwner {
-    require(addr != address(0), 'address is required');
-    if ((_getAcl(addr) & ~aclPermanentMask == 0) && (flags & ~aclPermanentMask != 0)) {
-      _knownGrantees.push(addr);
-    }
-    _grantAcl(addr, flags);
-  }
-
-  function admin_revoke(address addr, uint256 flags) external onlyOwner {
-    require(addr != address(0), 'address is required');
-    _revokeAcl(addr, flags);
-  }
-
-  function admin_revokeAllBenefits() external onlyOwner {
-    if (_knownGrantees.length == 0) {
-      return;
-    }
-    for (uint256 i = _knownGrantees.length; i > 0; ) {
-      i--;
-      _revokeAcl(_knownGrantees[i], ~aclPermanentMask);
-    }
-  }
-
-  function granted(address addr) external view returns (uint256) {
-    return _getAcl(addr);
-  }
-
-  function granteesWithBenefits() external view returns (address[] memory) {
-    return _knownGrantees;
-  }
-
-  function mintReward(address account, uint256 amount) external override aclHas(aclMint) {
+  function mint(address account, uint256 amount)
+    external
+    override
+    aclHas(AccessFlags.ACL_AGF_MINT)
+  {
     _mint(account, amount);
   }
 
-  function burnReward(address account, uint256 amount) external aclHas(aclBurn) {
+  function burn(address account, uint256 amount) external aclHas(AccessFlags.ACL_AGF_BURN) {
     _burn(account, amount);
   }
 
@@ -65,7 +40,13 @@ contract AGFToken is Context, ERC20WithPermit, AccessBitmask, Ownable, IRewardMi
     address to,
     uint256
   ) internal virtual override {
-    require(_getAcl(from) & aclSuspended == 0, 'sender is suspended');
-    require(_getAcl(to) & aclSuspended == 0, 'receiver is suspended');
+    require(
+      _getRemoteAcl(from).hasNoneOf(AccessFlags.ACL_AGF_SUSPEND_ADDRESS),
+      'sender is suspended'
+    );
+    require(
+      _getRemoteAcl(to).hasNoneOf(AccessFlags.ACL_AGF_SUSPEND_ADDRESS),
+      'receiver is suspended'
+    );
   }
 }

@@ -13,7 +13,7 @@ pragma solidity 0.6.12;
  *  - SDT = StableDebtToken
  *  - VDT = VariableDebtToken
  *  - LP = LendingPool
- *  - LPAPR = LendingPoolAddressesProviderRegistry
+ *  - LPAPR = AddressesProviderRegistry
  *  - LPC = LendingPoolConfiguration
  *  - RL = ReserveLogic
  *  - LPCM = LendingPoolCollateralManager

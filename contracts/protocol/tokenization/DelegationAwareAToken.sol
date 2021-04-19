@@ -13,10 +13,7 @@ import {AGToken} from './AGToken.sol';
  */
 contract DelegationAwareAToken is AGToken {
   modifier onlyPoolAdmin {
-    require(
-      _msgSender() == ILendingPool(_pool).getAddressesProvider().getPoolAdmin(),
-      Errors.CALLER_NOT_POOL_ADMIN
-    );
+    require(ILendingPool(_pool).isPoolAdmin(_msgSender()), Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
 

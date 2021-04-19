@@ -39,7 +39,7 @@ export enum eContractid {
   LendingPoolAddressesProvider = 'LendingPoolAddressesProvider',
   MintableERC20 = 'MintableERC20',
   MintableDelegationERC20 = 'MintableDelegationERC20',
-  LendingPoolAddressesProviderRegistry = 'LendingPoolAddressesProviderRegistry',
+  AddressesProviderRegistry = 'AddressesProviderRegistry',
   LendingPoolParametersProvider = 'LendingPoolParametersProvider',
   LendingPoolConfigurator = 'LendingPoolConfigurator',
   ValidationLogic = 'ValidationLogic',
@@ -99,7 +99,7 @@ export enum eContractid {
  *  - MATH = Math libraries
  *  - AT = aToken or DebtTokens
  *  - LP = LendingPool
- *  - LPAPR = LendingPoolAddressesProviderRegistry
+ *  - LPAPR = AddressesProviderRegistry
  *  - LPC = LendingPoolConfiguration
  *  - RL = ReserveLogic
  *  - LPCM = LendingPoolCollateralManager
