@@ -60,14 +60,10 @@ contract ERC20 is Context, IERC20 {
     _decimals = 18;
   }
 
-  function _initializeERC20(
-    string calldata name,
-    string calldata symbol,
-    uint8 decimals
-  ) internal {
+  function _initializeERC20(string memory name, string memory symbol) internal {
     _name = name;
     _symbol = symbol;
-    _setupDecimals(decimals);
+    _setupDecimals(18);
   }
 
   /**

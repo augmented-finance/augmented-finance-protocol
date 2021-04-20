@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IInitializableDebtToken} from './IInitializableDebtToken.sol';
 import {IBalanceHook} from './IBalanceHook.sol';
 
 /**
@@ -11,7 +10,7 @@ import {IBalanceHook} from './IBalanceHook.sol';
  * @author Aave
  **/
 
-interface IStableDebtToken is IInitializableDebtToken {
+interface IStableDebtToken {
   /**
    * @dev Emitted when new stable debt is minted
    * @param user The address of the user who triggered the minting

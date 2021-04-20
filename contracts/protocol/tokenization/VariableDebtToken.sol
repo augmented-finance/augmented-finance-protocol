@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
@@ -7,6 +8,8 @@ import {Errors} from '../libraries/helpers/Errors.sol';
 import {DebtTokenBase} from './base/DebtTokenBase.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
+import {IInitializablePoolToken} from './interfaces/IInitializablePoolToken.sol';
+import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
 
 /**
  * @title VariableDebtToken
@@ -14,10 +17,10 @@ import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
  * at variable rate mode
  * @author Aave
  **/
-contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
+contract VariableDebtToken is DebtTokenBase, IVariableDebtToken, IInitializablePoolToken {
   using WadRayMath for uint256;
 
-  uint256 public constant DEBT_TOKEN_REVISION = 0x1;
+  uint256 private constant DEBT_TOKEN_REVISION = 0x1;
 
   ILendingPool internal _pool;
   address internal _underlyingAsset;
@@ -25,37 +28,34 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
 
   /**
    * @dev Initializes the debt token.
-   * @param pool The address of the lending pool where this aToken will be used
-   * @param underlyingAsset The address of the underlying asset of this aToken (E.g. WETH for aWETH)
-   * @param incentivesController The smart contract managing potential incentives distribution
-   * @param debtTokenDecimals The decimals of the debtToken, same as the underlying asset's
+   * @param config The data about lending pool where this token will be used
    * @param debtTokenName The name of the token
    * @param debtTokenSymbol The symbol of the token
+   * @param debtTokenDecimals The decimals of the debtToken, same as the underlying asset's
    */
   function initialize(
-    ILendingPool pool,
-    address underlyingAsset,
-    IBalanceHook incentivesController,
-    uint8 debtTokenDecimals,
+    PoolTokenConfig calldata config,
     string memory debtTokenName,
     string memory debtTokenSymbol,
+    uint8 debtTokenDecimals,
     bytes calldata params
-  ) public override initializer {
+  ) public override initializerRunAlways(DEBT_TOKEN_REVISION) {
     _setName(debtTokenName);
     _setSymbol(debtTokenSymbol);
     _setDecimals(debtTokenDecimals);
 
-    _pool = pool;
-    _underlyingAsset = underlyingAsset;
-    _incentivesController = incentivesController;
+    _pool = config.pool;
+    _underlyingAsset = config.underlyingAsset;
+    _incentivesController = config.incentivesController;
 
     emit Initialized(
-      underlyingAsset,
-      address(pool),
-      address(incentivesController),
-      debtTokenDecimals,
+      config.underlyingAsset,
+      address(config.pool),
+      address(0),
+      address(config.incentivesController),
       debtTokenName,
       debtTokenSymbol,
+      debtTokenDecimals,
       params
     );
   }

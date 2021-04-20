@@ -14,8 +14,8 @@ import {IERC20Detailed} from '../../dependencies/openzeppelin/contracts/IERC20De
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
-import {IInitializableDebtToken} from '../../interfaces/IInitializableDebtToken.sol';
-import {IInitializableAGToken} from '../../interfaces/IInitializableAGToken.sol';
+import {IInitializablePoolToken} from '../tokenization/interfaces/IInitializablePoolToken.sol';
+import {PoolTokenConfig} from '../tokenization/interfaces/PoolTokenConfig.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 import {ILendingPoolConfigurator} from '../../interfaces/ILendingPoolConfigurator.sol';
 
@@ -43,13 +43,16 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
     _;
   }
 
-  uint256 internal constant CONFIGURATOR_REVISION = 0x1;
+  uint256 private constant CONFIGURATOR_REVISION = 0x1;
 
-  function getRevision() internal pure override returns (uint256) {
+  function getRevision() internal pure virtual override returns (uint256) {
     return CONFIGURATOR_REVISION;
   }
 
-  function initialize(ILendingPoolAddressesProvider provider) public initializer {
+  function initialize(ILendingPoolAddressesProvider provider)
+    public
+    initializer(CONFIGURATOR_REVISION)
+  {
     addressesProvider = provider;
     pool = ILendingPool(addressesProvider.getLendingPool());
   }
@@ -65,18 +68,23 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
   }
 
   function _initReserve(ILendingPool pool_, InitReserveInput calldata input) internal {
+    PoolTokenConfig memory config =
+      PoolTokenConfig({
+        pool: pool_,
+        treasury: input.treasury,
+        underlyingAsset: input.underlyingAsset,
+        incentivesController: IBalanceHook(input.incentivesController)
+      });
+
     address aTokenProxyAddress =
       _initTokenWithProxy(
         input.aTokenImpl,
         abi.encodeWithSelector(
-          IInitializableAGToken.initialize.selector,
-          pool_,
-          input.treasury,
-          input.underlyingAsset,
-          IBalanceHook(input.incentivesController),
-          input.underlyingAssetDecimals,
+          IInitializablePoolToken.initialize.selector,
+          config,
           input.aTokenName,
           input.aTokenSymbol,
+          input.underlyingAssetDecimals,
           input.params
         )
       );
@@ -85,13 +93,11 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
       _initTokenWithProxy(
         input.stableDebtTokenImpl,
         abi.encodeWithSelector(
-          IInitializableDebtToken.initialize.selector,
-          pool_,
-          input.underlyingAsset,
-          IBalanceHook(input.incentivesController),
-          input.underlyingAssetDecimals,
+          IInitializablePoolToken.initialize.selector,
+          config,
           input.stableDebtTokenName,
           input.stableDebtTokenSymbol,
+          input.underlyingAssetDecimals,
           input.params
         )
       );
@@ -100,13 +106,11 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
       _initTokenWithProxy(
         input.variableDebtTokenImpl,
         abi.encodeWithSelector(
-          IInitializableDebtToken.initialize.selector,
-          pool_,
-          input.underlyingAsset,
-          IBalanceHook(input.incentivesController),
-          input.underlyingAssetDecimals,
+          IInitializablePoolToken.initialize.selector,
+          config,
           input.variableDebtTokenName,
           input.variableDebtTokenSymbol,
+          input.underlyingAssetDecimals,
           input.params
         )
       );
@@ -148,16 +152,21 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
 
     (, , , uint256 decimals, ) = cachedPool.getConfiguration(input.asset).getParamsMemory();
 
+    PoolTokenConfig memory config =
+      PoolTokenConfig({
+        pool: cachedPool,
+        treasury: input.treasury,
+        underlyingAsset: input.asset,
+        incentivesController: IBalanceHook(input.incentivesController)
+      });
+
     bytes memory encodedCall =
       abi.encodeWithSelector(
-        IInitializableAGToken.initialize.selector,
-        cachedPool,
-        input.treasury,
-        input.asset,
-        input.incentivesController,
-        decimals,
+        IInitializablePoolToken.initialize.selector,
+        config,
         input.name,
         input.symbol,
+        decimals,
         input.params
       );
 
@@ -176,15 +185,21 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
 
     (, , , uint256 decimals, ) = cachedPool.getConfiguration(input.asset).getParamsMemory();
 
+    PoolTokenConfig memory config =
+      PoolTokenConfig({
+        pool: cachedPool,
+        treasury: address(0),
+        underlyingAsset: input.asset,
+        incentivesController: IBalanceHook(input.incentivesController)
+      });
+
     bytes memory encodedCall =
       abi.encodeWithSelector(
-        IInitializableDebtToken.initialize.selector,
-        cachedPool,
-        input.asset,
-        input.incentivesController,
-        decimals,
+        IInitializablePoolToken.initialize.selector,
+        config,
         input.name,
         input.symbol,
+        decimals,
         input.params
       );
 
@@ -211,15 +226,21 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
 
     (, , , uint256 decimals, ) = cachedPool.getConfiguration(input.asset).getParamsMemory();
 
+    PoolTokenConfig memory config =
+      PoolTokenConfig({
+        pool: cachedPool,
+        treasury: address(0),
+        underlyingAsset: input.asset,
+        incentivesController: IBalanceHook(input.incentivesController)
+      });
+
     bytes memory encodedCall =
       abi.encodeWithSelector(
-        IInitializableDebtToken.initialize.selector,
-        cachedPool,
-        input.asset,
-        input.incentivesController,
-        decimals,
+        IInitializablePoolToken.initialize.selector,
+        config,
         input.name,
         input.symbol,
+        decimals,
         input.params
       );
 

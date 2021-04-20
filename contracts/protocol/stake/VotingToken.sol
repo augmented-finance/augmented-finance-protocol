@@ -19,19 +19,13 @@ abstract contract VotingToken is StakeToken, VoteDelegatorWithSnapshot {
   constructor(
     StakeTokenConfig memory params,
     string memory name,
-    string memory symbol,
-    uint8 decimals
-  ) public StakeToken(params, name, symbol, decimals) {
+    string memory symbol
+  ) public StakeToken(params, name, symbol) {
     _setGovernance(params.governance);
   }
 
-  function _initialize(
-    StakeTokenConfig calldata params,
-    string calldata name,
-    string calldata symbol,
-    uint8 decimals
-  ) internal virtual override initializer {
-    super._initialize(params, name, symbol, decimals);
+  function _initializeToken(StakeTokenConfig calldata params) internal virtual override {
+    super._initializeToken(params);
     _setGovernance(params.governance);
   }
 

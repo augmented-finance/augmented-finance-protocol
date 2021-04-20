@@ -13,7 +13,7 @@ library AccessFlags {
   uint256 public constant LENDING_RATE_ORACLE = 1 << 6;
   //  uint256 public constant REWARD_ADMIN = 1<<7;
 
-  uint256 public constant ACL_AGF_MINT = 1 << 10;
-  uint256 public constant ACL_AGF_BURN = 1 << 11;
-  uint256 public constant ACL_AGF_SUSPEND_ADDRESS = 1 << 12;
+  uint256 public constant REWARD_MINT = 1 << 10;
+  uint256 public constant REWARD_BURN = 1 << 11;
+  uint256 public constant REWARD_SUSPEND_ADDRESS = 1 << 12;
 }

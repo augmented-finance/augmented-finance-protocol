@@ -22,6 +22,8 @@ abstract contract DebtTokenBase is
 {
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
 
+  uint8 internal constant DECIMALS = 18;
+
   /**
    * @dev Only lending pool can call functions marked by this modifier
    **/

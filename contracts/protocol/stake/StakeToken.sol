@@ -11,7 +11,6 @@ import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 
-import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 // import {AccessFlags} from '../../access/AccessFlags.sol';
@@ -28,7 +27,6 @@ import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.so
  **/
 abstract contract StakeToken is
   IManagedStakeToken,
-  VersionedInitializable,
   ERC20WithPermit,
   RemoteAccessBitmask,
   IInitializableStakeToken
@@ -56,31 +54,26 @@ abstract contract StakeToken is
   constructor(
     StakeTokenConfig memory params,
     string memory name,
-    string memory symbol,
-    uint8 decimals
+    string memory symbol
   ) public ERC20WithPermit(name, symbol) RemoteAccessBitmask(params.stakeController) {
-    super._setupDecimals(decimals);
     _stakedToken = params.stakedToken;
     _incentivesController = params.incentivesController;
-    _maxSlashablePercentage = 30 * PercentageMath.PCT;
     _cooldownSeconds = params.cooldownSeconds;
     _unstakeSeconds = params.unstakeWindow;
+
+    _maxSlashablePercentage = 30 * PercentageMath.PCT;
   }
 
-  function _initialize(
-    StakeTokenConfig calldata params,
-    string calldata name,
-    string calldata symbol,
-    uint8 decimals
-  ) internal virtual initializer {
-    super._initializeERC20(name, symbol, decimals);
-    super._initializeDomainSeparator();
+  function _initializeToken(StakeTokenConfig calldata params) internal virtual {
     _remoteAcl = params.stakeController;
     _stakedToken = params.stakedToken;
     _incentivesController = params.incentivesController;
-    _maxSlashablePercentage = 30 * PercentageMath.PCT;
     _cooldownSeconds = params.cooldownSeconds;
     _unstakeSeconds = params.unstakeWindow;
+
+    if (_maxSlashablePercentage == 0) {
+      _maxSlashablePercentage = 30 * PercentageMath.PCT;
+    }
   }
 
   function internalStakeController() internal view returns (IStakeAccessController) {

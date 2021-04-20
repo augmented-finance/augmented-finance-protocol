@@ -1,52 +1,37 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.12;
 
-import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
-import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
-import {ERC20WithPermit} from '../misc/ERC20WithPermit.sol';
-import {BitUtils} from '../tools/math/BitUtils.sol';
-import {AccessFlags} from '../access/AccessFlags.sol';
-import {RemoteAccessBitmask} from '../access/RemoteAccessBitmask.sol';
 import {IRemoteAccessBitmask} from '../interfaces/IRemoteAccessBitmask.sol';
 
-import {IRewardMinter} from './IRewardMinter.sol';
+import {RewardToken} from './RewardToken.sol';
+import {
+  VersionedInitializable
+} from '../protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
 
 import 'hardhat/console.sol';
 
-contract AGFToken is ERC20WithPermit, RemoteAccessBitmask, IRewardMinter {
-  using BitUtils for uint256;
+contract AGFToken is RewardToken, VersionedInitializable, IInitializableRewardToken {
+  string internal constant NAME = 'Augmented Finance Reward Token';
+  string internal constant SYMBOL = 'AGF';
 
-  constructor(
+  uint256 private constant TOKEN_REVISION = 1;
+
+  constructor() public RewardToken(IRemoteAccessBitmask(0), NAME, SYMBOL) {}
+
+  function getRevision() internal pure virtual override returns (uint256) {
+    return TOKEN_REVISION;
+  }
+
+  function initialize(
     IRemoteAccessBitmask remoteAcl,
-    string memory name,
-    string memory symbol
-  ) public ERC20WithPermit(name, symbol) RemoteAccessBitmask(remoteAcl) {}
-
-  function mint(address account, uint256 amount)
-    external
-    override
-    aclHas(AccessFlags.ACL_AGF_MINT)
-  {
-    _mint(account, amount);
-  }
-
-  function burn(address account, uint256 amount) external aclHas(AccessFlags.ACL_AGF_BURN) {
-    _burn(account, amount);
-  }
-
-  function _beforeTokenTransfer(
-    address from,
-    address to,
-    uint256
-  ) internal virtual override {
-    require(
-      _getRemoteAcl(from).hasNoneOf(AccessFlags.ACL_AGF_SUSPEND_ADDRESS),
-      'sender is suspended'
-    );
-    require(
-      _getRemoteAcl(to).hasNoneOf(AccessFlags.ACL_AGF_SUSPEND_ADDRESS),
-      'receiver is suspended'
-    );
+    string calldata name,
+    string calldata symbol
+  ) external virtual override initializerRunAlways(TOKEN_REVISION) {
+    super._initializeERC20(name, symbol);
+    super._initializeToken(remoteAcl);
+    if (!isRevisionInitialized(TOKEN_REVISION)) {
+      super._initializeDomainSeparator();
+    }
   }
 }

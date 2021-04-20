@@ -2,17 +2,17 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {StakeTokenConfig} from './StakeTokenConfig.sol';
+import {IRemoteAccessBitmask} from '../../interfaces/IRemoteAccessBitmask.sol';
 
 /**
  * @title IInitializableStakeToken
  * @notice Interface for the initialize function on StakeToken and VotingToken
  **/
-interface IInitializableStakeToken {
-  event Initialized(StakeTokenConfig params, string tokenName, string tokenSymbol);
+interface IInitializableRewardToken {
+  event Initialized(IRemoteAccessBitmask remoteAcl, string tokenName, string tokenSymbol);
 
   function initialize(
-    StakeTokenConfig calldata params,
+    IRemoteAccessBitmask remoteAcl,
     string calldata name,
     string calldata symbol
   ) external;

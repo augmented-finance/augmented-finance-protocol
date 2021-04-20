@@ -315,7 +315,18 @@ export const deployStableDebtToken = async (
     verify
   );
 
-  await instance.initialize(args[0], args[1], args[2], '18', args[3], args[4], '0x10');
+  await instance.initialize(
+    {
+      pool: args[0],
+      treasury: ZERO_ADDRESS,
+      underlyingAsset: args[1],
+      incentivesController: args[2],
+    },
+    args[3],
+    args[4],
+    '18',
+    '0x10'
+  );
 
   return instance;
 };
@@ -331,7 +342,18 @@ export const deployVariableDebtToken = async (
     verify
   );
 
-  await instance.initialize(args[0], args[1], args[2], '18', args[3], args[4], '0x10');
+  await instance.initialize(
+    {
+      pool: args[0],
+      treasury: ZERO_ADDRESS,
+      underlyingAsset: args[1],
+      incentivesController: args[2],
+    },
+    args[3],
+    args[4],
+    '18',
+    '0x10'
+  );
 
   return instance;
 };
@@ -371,13 +393,15 @@ export const deployGenericAToken = async (
   );
 
   await instance.initialize(
-    poolAddress,
-    treasuryAddress,
-    underlyingAssetAddress,
-    incentivesController,
-    '18',
+    {
+      pool: poolAddress,
+      treasury: treasuryAddress,
+      underlyingAsset: underlyingAssetAddress,
+      incentivesController,
+    },
     name,
     symbol,
+    '18',
     '0x10'
   );
 
@@ -411,13 +435,15 @@ export const deployDelegationAwareAToken = async (
   );
 
   await instance.initialize(
-    pool,
-    treasuryAddress,
-    underlyingAssetAddress,
-    incentivesController,
-    '18',
+    {
+      pool,
+      treasury: treasuryAddress,
+      underlyingAsset: underlyingAssetAddress,
+      incentivesController,
+    },
     name,
     symbol,
+    '18',
     '0x10'
   );
 
@@ -521,7 +547,18 @@ export const deployMockStableDebtToken = async (
     verify
   );
 
-  await instance.initialize(args[0], args[1], args[2], '18', args[3], args[4], args[5]);
+  await instance.initialize(
+    {
+      pool: args[0],
+      treasury: ZERO_ADDRESS,
+      underlyingAsset: args[1],
+      incentivesController: args[2],
+    },
+    args[3],
+    args[4],
+    '18',
+    args[5]
+  );
 
   return instance;
 };
@@ -545,7 +582,18 @@ export const deployMockVariableDebtToken = async (
     verify
   );
 
-  await instance.initialize(args[0], args[1], args[2], '18', args[3], args[4], args[5]);
+  await instance.initialize(
+    {
+      pool: args[0],
+      treasury: ZERO_ADDRESS,
+      underlyingAsset: args[1],
+      incentivesController: args[2],
+    },
+    args[3],
+    args[4],
+    '18',
+    args[5]
+  );
 
   return instance;
 };
@@ -569,7 +617,13 @@ export const deployMockAToken = async (
     verify
   );
 
-  await instance.initialize(args[0], args[2], args[1], args[3], '18', args[4], args[5], args[6]);
+  await instance.initialize(
+    { pool: args[0], treasury: args[2], underlyingAsset: args[1], incentivesController: args[3] },
+    args[4],
+    args[5],
+    '18',
+    args[6]
+  );
 
   return instance;
 };
@@ -625,7 +679,7 @@ export const deployFlashLiquidationAdapter = async (
 
 export const deployAGFToken = async (args: [string, string], verify?: boolean) =>
   withSaveAndVerify(
-    await new AGFTokenFactory(await getFirstSigner()).deploy(...args),
+    await new AGFTokenFactory(await getFirstSigner()).deploy(),
     eContractid.AGFToken,
     args,
     verify

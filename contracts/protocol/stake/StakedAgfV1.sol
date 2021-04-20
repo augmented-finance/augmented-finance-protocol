@@ -6,38 +6,43 @@ import {VotingToken} from './VotingToken.sol';
 import {StakeToken} from './StakeToken.sol';
 
 import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
+import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
 
 /**
  * @title StakedAgfV1
  * @notice Staked AGF token
  **/
 contract StakedAgfV1 is
-  StakeToken /* VotingToken */
+  StakeToken,
+  // VotingToken,
+  VersionedInitializable
 {
   string internal constant NAME = 'Staked AGF';
   string internal constant SYMBOL = 'stkAGF';
-  uint8 internal constant DECIMALS = 18;
 
-  uint256 public constant REVISION = 1;
+  uint256 private constant TOKEN_REVISION = 1;
 
-  constructor(StakeTokenConfig memory params, address governance)
+  constructor()
     public
-    StakeToken(params, NAME, SYMBOL, DECIMALS)
-  //    VotingToken(params, NAME, SYMBOL, DECIMALS)
+    StakeToken(zeroConfig(), NAME, SYMBOL)
+  //    VotingToken(zeroConfig(), NAME, SYMBOL)
   {
-    governance;
+
   }
+
+  function zeroConfig() private pure returns (StakeTokenConfig memory) {}
 
   function initialize(
     StakeTokenConfig calldata params,
     string calldata name,
-    string calldata symbol,
-    uint8 decimals
-  ) external override initializer {
-    if (getRevision() > 1) {
-      return;
+    string calldata symbol
+  ) external override initializerRunAlways(TOKEN_REVISION) {
+    super._initializeERC20(name, symbol);
+    super._initializeToken(params);
+
+    if (!isRevisionInitialized(TOKEN_REVISION)) {
+      super._initializeDomainSeparator();
     }
-    super._initialize(params, name, symbol, decimals);
   }
 
   /**
@@ -45,6 +50,6 @@ contract StakedAgfV1 is
    * @return The revision
    */
   function getRevision() internal pure override returns (uint256) {
-    return REVISION;
+    return TOKEN_REVISION;
   }
 }

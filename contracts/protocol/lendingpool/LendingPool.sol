@@ -49,7 +49,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
-  uint256 public constant LENDINGPOOL_REVISION = 0x2;
+  uint256 private constant POOL_REVISION = 0x1;
 
   modifier whenNotPaused() {
     _whenNotPaused();
@@ -72,8 +72,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     );
   }
 
-  function getRevision() internal pure override returns (uint256) {
-    return LENDINGPOOL_REVISION;
+  function getRevision() internal pure virtual override returns (uint256) {
+    return POOL_REVISION;
   }
 
   /**
@@ -83,7 +83,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    *   on subsequent operations
    * @param provider The address of the LendingPoolAddressesProvider
    **/
-  function initialize(ILendingPoolAddressesProvider provider) public initializer {
+  function initialize(ILendingPoolAddressesProvider provider) public initializer(POOL_REVISION) {
     _addressesProvider = provider;
     _maxStableRateBorrowSizePercent = 2500;
     _flashLoanPremiumTotal = 9;
