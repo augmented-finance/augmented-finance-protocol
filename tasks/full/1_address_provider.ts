@@ -1,9 +1,6 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import {
-  deployLendingPoolAddressesProvider,
-  deployLendingPoolAddressesProviderRegistry,
-} from '../../helpers/contracts-deployments';
+import { deployLendingPoolAddressesProvider } from '../../helpers/contracts-deployments';
 import { notFalsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import {
   ConfigNames,
@@ -12,10 +9,7 @@ import {
   getEmergencyAdmin,
 } from '../../helpers/configuration';
 import { eNetwork } from '../../helpers/types';
-import {
-  getFirstSigner,
-  getLendingPoolAddressesProviderRegistry,
-} from '../../helpers/contracts-getters';
+import { getFirstSigner, getAddressesProviderRegistry } from '../../helpers/contracts-getters';
 import { formatEther, isAddress, parseEther } from 'ethers/lib/utils';
 import { isZeroAddress } from 'ethereumjs-util';
 import { Signer, BigNumber } from 'ethers';
@@ -68,7 +62,7 @@ task(
     }
     // 1. Address Provider Registry instance
     const addressesProviderRegistry = (
-      await getLendingPoolAddressesProviderRegistry(providerRegistryAddress)
+      await getAddressesProviderRegistry(providerRegistryAddress)
     ).connect(signer);
 
     console.log('Registry Address', addressesProviderRegistry.address);
