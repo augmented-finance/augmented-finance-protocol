@@ -7,13 +7,13 @@ import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {Ownable} from '../../dependencies/openzeppelin/contracts/Ownable.sol';
 import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
 
-import {ISubscriptionAdapter} from './ISubscriptionAdapter.sol';
+import {IMigrationAdapter} from './IMigrationAdapter.sol';
 import {ILendableToken, ILendablePool} from './ILendableToken.sol';
-import {IRewardPool} from '../../reward/IRewardPool.sol';
+import {IRewardPool} from '../../reward/interfaces/IRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BasicAdapter is ISubscriptionAdapter, Ownable {
+abstract contract BasicAdapter is IMigrationAdapter, Ownable {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
 

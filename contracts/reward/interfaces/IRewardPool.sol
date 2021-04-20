@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.12;
 
-import {IBalanceHook} from '../interfaces/IBalanceHook.sol';
+import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 interface IRewardPool is IBalanceHook {}
 

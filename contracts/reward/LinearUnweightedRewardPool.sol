@@ -3,7 +3,7 @@ pragma solidity ^0.6.12;
 
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../tools/math/WadRayMath.sol';
-import {IRewardController} from './IRewardController.sol';
+import {IRewardController} from './interfaces/IRewardController.sol';
 import {AccumulatingRewardPool} from './AccumulatingRewardPool.sol';
 
 import 'hardhat/console.sol';

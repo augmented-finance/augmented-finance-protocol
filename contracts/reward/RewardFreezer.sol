@@ -5,7 +5,7 @@ import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../tools/math/WadRayMath.sol';
 
 import {BasicRewardController} from './BasicRewardController.sol';
-import {IRewardMinter} from './IRewardMinter.sol';
+import {IRewardMinter} from './interfaces/IRewardMinter.sol';
 
 import 'hardhat/console.sol';
 
