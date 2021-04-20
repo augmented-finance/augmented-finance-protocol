@@ -8,7 +8,7 @@ import { exit } from 'process';
 import {
   getFirstSigner,
   getLendingPoolAddressesProvider,
-  getLendingPoolAddressesProviderRegistry,
+  getAddressesProviderRegistry,
 } from '../../helpers/contracts-getters';
 import { Signer } from 'ethers';
 import { formatEther, parseEther } from 'ethers/lib/utils';
@@ -33,9 +33,7 @@ task('full:initialize-tokens', 'Initialize lending pool configuration.')
       const providerRegistryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
       const providerRegistryOwner = getParamPerNetwork(poolConfig.ProviderRegistryOwner, network);
 
-      const providerRegistry = await getLendingPoolAddressesProviderRegistry(
-        providerRegistryAddress
-      );
+      const providerRegistry = await getAddressesProviderRegistry(providerRegistryAddress);
 
       const providers = await providerRegistry.getAddressesProvidersList();
 

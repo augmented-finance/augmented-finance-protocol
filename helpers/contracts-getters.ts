@@ -34,6 +34,7 @@ import {
   LinearUnweightedRewardPoolFactory,
   AGFToken,
   AGFTokenFactory,
+  MigratorFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -197,7 +198,7 @@ export const getPairsTokenAggregator = (
   return [mappedPairs, mappedAggregators];
 };
 
-export const getLendingPoolAddressesProviderRegistry = async (address?: tEthereumAddress) =>
+export const getAddressesProviderRegistry = async (address?: tEthereumAddress) =>
   await AddressesProviderRegistryFactory.connect(
     address ||
       (await getDb().get(`${eContractid.AddressesProviderRegistry}.${DRE.network.name}`).value())
@@ -383,5 +384,18 @@ export const getLinearUnweightedRewardPool = async (address?: tEthereumAddress) 
     address ||
       (await getDb().get(`${eContractid.LinearUnweightedRewardPool}.${DRE.network.name}`).value())
         .address,
+    await getFirstSigner()
+  );
+
+export const getAccessController = async (address?: tEthereumAddress) =>
+  await MigratorFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.AccessController}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
+export const getMigrator = async (address?: tEthereumAddress) =>
+  await MigratorFactory.connect(
+    address || (await getDb().get(`${eContractid.Migrator}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
