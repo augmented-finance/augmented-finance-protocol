@@ -10,8 +10,6 @@ import {
   getRewardFreezer,
 } from '../../helpers/contracts-getters';
 import { RewardFreezer } from '../../types';
-import { increaseTimeAndMine } from '../test-stake/helpers/misc-utils';
-import { BigNumber } from '@ethersproject/bignumber/lib/bignumber';
 import { RAY } from '../../helpers/constants';
 
 chai.use(solidity);
@@ -28,6 +26,7 @@ describe('Migrator test suite', () => {
 
   before(async () => {
     await rawBRE.run('set-DRE');
+    await rawBRE.run('dev:augmented-access');
     await rawBRE.run('dev:agf-rewards');
 
     [deployer, user, ...otherUsers] = await ethers.getSigners();
@@ -40,17 +39,18 @@ describe('Migrator test suite', () => {
     expect(rewardFreezer.address).to.properAddress;
 
     const linearUnweightedRewardPool = await getLinearUnweightedRewardPool();
-    await linearUnweightedRewardPool.addRewardProvider(deployer.address); // instead of token contract
+    // in test deployer.address is used instead of token contract
+    await linearUnweightedRewardPool.addRewardProvider(deployer.address);
     await linearUnweightedRewardPool.setRate(RAY);
 
     await rewardFreezer.admin_setFreezePortion(1);
 
-    var tx = await linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 0, 2000, 100000);
+    const tx = await linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 0, 2000, 100000);
     await tx.wait(1);
-    linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 2000, 2000, 100000);
-    linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 2000, 2000, 100000);
-    linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 2000, 2000, 100000);
-    linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 2000, 2000, 100000);
+    await linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 2000, 2000, 100000);
+    await linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 2000, 2000, 100000);
+    await linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 2000, 2000, 100000);
+    await linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 2000, 2000, 100000);
 
     await rewardFreezer.claimRewardOnBehalf(deployer.address);
     await rewardFreezer.claimRewardOnBehalf(deployer.address);

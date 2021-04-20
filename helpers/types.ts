@@ -35,7 +35,6 @@ export enum AavePools {
 }
 
 export enum eContractid {
-  Example = 'Example',
   LendingPoolAddressesProvider = 'LendingPoolAddressesProvider',
   MintableERC20 = 'MintableERC20',
   MintableDelegationERC20 = 'MintableDelegationERC20',
@@ -91,6 +90,7 @@ export enum eContractid {
   AaveAdapter = 'AaveAdapter',
   CompAdapter = 'CompAdapter',
   DeadTokenAdapter = 'DeadTokenAdapter',
+  AccessController = 'AccessController',
 }
 
 /*

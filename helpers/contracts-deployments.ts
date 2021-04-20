@@ -58,6 +58,7 @@ import {
   AaveAdapterFactory,
   CompAdapterFactory,
   LinearUnweightedRewardPoolFactory,
+  AccessControllerFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -623,7 +624,7 @@ export const deployFlashLiquidationAdapter = async (
     verify
   );
 
-export const deployAGFToken = async (args: [string, string], verify?: boolean) =>
+export const deployAGFToken = async (args: [string, string, string], verify?: boolean) =>
   withSaveAndVerify(
     await new AGFTokenFactory(await getFirstSigner()).deploy(...args),
     eContractid.AGFToken,
@@ -693,5 +694,13 @@ export const deployCompAdapter = async (
     await new CompAdapterFactory(await getFirstSigner()).deploy(...args),
     eContractid.CompAdapter,
     args,
+    verify
+  );
+
+export const deployAccessController = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await new AccessControllerFactory(await getFirstSigner()).deploy(),
+    eContractid.AccessController,
+    [],
     verify
   );
