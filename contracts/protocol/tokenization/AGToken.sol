@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
@@ -10,7 +11,8 @@ import {Errors} from '../libraries/helpers/Errors.sol';
 import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IncentivizedERC20} from './IncentivizedERC20.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
-import {IInitializableAGToken} from '../../interfaces/IInitializableAGToken.sol';
+import {IInitializablePoolToken} from './interfaces/IInitializablePoolToken.sol';
+import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
 
 /**
  * @title Augmented Finance ERC20 agToken
@@ -20,7 +22,7 @@ contract AGToken is
   VersionedInitializable,
   IncentivizedERC20('AGTOKEN_IMPL', 'AGTOKEN_IMPL', 0),
   IAGToken,
-  IInitializableAGToken
+  IInitializablePoolToken
 {
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
@@ -31,7 +33,7 @@ contract AGToken is
   bytes32 public constant PERMIT_TYPEHASH =
     keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
 
-  uint256 public constant ATOKEN_REVISION = 0x1;
+  uint256 private constant TOKEN_REVISION = 0x1;
 
   /// @dev owner => next valid nonce to submit with permit()
   mapping(address => uint256) public _nonces;
@@ -57,29 +59,49 @@ contract AGToken is
   }
 
   function getRevision() internal pure virtual override returns (uint256) {
-    return ATOKEN_REVISION;
+    return TOKEN_REVISION;
   }
 
   /**
    * @dev Initializes the aToken
-   * @param pool The address of the lending pool where this aToken will be used
-   * @param treasury The address of the Aave treasury, receiving the fees on this aToken
-   * @param underlyingAsset The address of the underlying asset of this aToken (E.g. WETH for aWETH)
-   * @param incentivesController The smart contract managing potential incentives distribution
-   * @param aTokenDecimals The decimals of the aToken, same as the underlying asset's
+   * @param config The data about lending pool where this token will be used
    * @param aTokenName The name of the aToken
    * @param aTokenSymbol The symbol of the aToken
+   * @param aTokenDecimals The decimals of the aToken, same as the underlying asset's
    */
   function initialize(
-    ILendingPool pool,
-    address treasury,
-    address underlyingAsset,
-    IBalanceHook incentivesController,
-    uint8 aTokenDecimals,
+    PoolTokenConfig calldata config,
     string calldata aTokenName,
     string calldata aTokenSymbol,
+    uint8 aTokenDecimals,
     bytes calldata params
-  ) external override initializer {
+  ) external override initializerRunAlways(TOKEN_REVISION) {
+    _setName(aTokenName);
+    _setSymbol(aTokenSymbol);
+    _setDecimals(aTokenDecimals);
+
+    if (!isRevisionInitialized(TOKEN_REVISION)) {
+      _initializeDomainSeparator(bytes(aTokenName));
+    }
+
+    _pool = config.pool;
+    _treasury = config.treasury;
+    _underlyingAsset = config.underlyingAsset;
+    _incentivesController = config.incentivesController;
+
+    emit Initialized(
+      config.underlyingAsset,
+      address(config.pool),
+      config.treasury,
+      address(config.incentivesController),
+      aTokenName,
+      aTokenSymbol,
+      aTokenDecimals,
+      params
+    );
+  }
+
+  function _initializeDomainSeparator(bytes memory aTokenName) private {
     uint256 chainId;
 
     //solium-disable-next-line
@@ -90,31 +112,11 @@ contract AGToken is
     DOMAIN_SEPARATOR = keccak256(
       abi.encode(
         EIP712_DOMAIN,
-        keccak256(bytes(aTokenName)),
+        keccak256(aTokenName),
         keccak256(EIP712_REVISION),
         chainId,
         address(this)
       )
-    );
-
-    _setName(aTokenName);
-    _setSymbol(aTokenSymbol);
-    _setDecimals(aTokenDecimals);
-
-    _pool = pool;
-    _treasury = treasury;
-    _underlyingAsset = underlyingAsset;
-    _incentivesController = incentivesController;
-
-    emit Initialized(
-      underlyingAsset,
-      address(pool),
-      treasury,
-      address(incentivesController),
-      aTokenDecimals,
-      aTokenName,
-      aTokenSymbol,
-      params
     );
   }
 

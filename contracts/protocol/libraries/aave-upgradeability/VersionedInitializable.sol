@@ -4,16 +4,19 @@ pragma solidity 0.6.12;
 /**
  * @title VersionedInitializable
  *
- * @dev Helper contract to implement initializer functions. To use it, replace
- * the constructor with a function that has the `initializer` modifier.
+ * @dev Helper contract to implement versioned initializer functions. To use it, replace
+ * the constructor with a function that has the `initializer` or `initializerRunAlways` modifier.
+ * The revision number should be defined as a private constant, returned by getRevision() and used by initializer() modifier.
+ *
  * WARNING: Unlike constructors, initializer functions must be manually
  * invoked. This applies both to deploying an Initializable contract, as well
  * as extending an Initializable contract via inheritance.
- * WARNING: When used with inheritance, manual care must be taken to not invoke
- * a parent initializer twice, or ensure that all initializers are idempotent,
- * because this is not dealt with automatically as with constructors.
  *
- * @author Aave, inspired by the OpenZeppelin Initializable contract
+ * ATTN: When used with inheritance, parent initializers with `initializer` modifier are prevented by calling twice,
+ * but can only be called in child-to-parent sequence.
+ *
+ * WARNING: When used with inheritance, parent initializers with `initializerRunAlways` modifier
+ * are NOT protected from multiple calls by another initializer.
  */
 abstract contract VersionedInitializable {
   /**
@@ -24,29 +27,81 @@ abstract contract VersionedInitializable {
   /**
    * @dev Indicates that the contract is in the process of being initialized.
    */
-  bool private initializing;
+  uint256 private lastInitializingRevision = 0;
 
   /**
    * @dev Modifier to use in the initializer function of a contract.
    */
-  modifier initializer() {
-    uint256 revision = getRevision();
+  modifier initializer(uint256 localRevision) {
+    uint256 topRevision = getRevision();
+    (bool initializing, bool skip) = _preInitializer(localRevision, topRevision);
+
+    if (!skip) {
+      lastInitializingRevision = localRevision;
+      _;
+      lastInitializedRevision = localRevision;
+    }
+
+    if (!initializing) {
+      lastInitializedRevision = topRevision;
+      lastInitializingRevision = 0;
+    }
+  }
+
+  modifier initializerRunAlways(uint256 localRevision) {
+    uint256 topRevision = getRevision();
+    (bool initializing, bool skip) = _preInitializer(localRevision, topRevision);
+    _;
+
+    if (!skip) {
+      lastInitializingRevision = localRevision;
+    }
+    _;
+    if (!skip) {
+      lastInitializedRevision = localRevision;
+    }
+
+    if (!initializing) {
+      lastInitializedRevision = topRevision;
+      lastInitializingRevision = 0;
+    }
+  }
+
+  function _preInitializer(uint256 localRevision, uint256 topRevision)
+    private
+    returns (bool initializing, bool skip)
+  {
+    require(localRevision > 0, 'incorrect initializer revision');
+    require(localRevision <= topRevision, 'incorrect contract revision');
+
+    initializing = lastInitializingRevision > 0 && lastInitializedRevision < topRevision;
     require(
-      initializing || isConstructor() || revision > lastInitializedRevision,
+      initializing || isConstructor() || topRevision > lastInitializedRevision,
       'Contract instance has already been initialized'
     );
 
-    bool isTopLevelCall = !initializing;
-    if (isTopLevelCall) {
-      initializing = true;
-      lastInitializedRevision = revision;
+    if (initializing) {
+      require(lastInitializingRevision > localRevision, 'incorrect order of calls to initializers');
     }
 
-    _;
-
-    if (isTopLevelCall) {
-      initializing = false;
+    if (localRevision <= lastInitializedRevision) {
+      // prevent calling of parent's initializer when it was called before
+      if (initializing) {
+        // Can't set zero yet, as it is not a top-level call, otherwise "initializing" will become false.
+        // Further calls will fail with the 'incorrect order' assertion above.
+        lastInitializingRevision = 1;
+      }
+      return (initializing, true);
     }
+    return (initializing, false);
+  }
+
+  function isRevisionInitialized(uint256 localRevision) internal view returns (bool) {
+    return lastInitializedRevision >= localRevision;
+  }
+
+  function REVISION() public pure returns (uint256) {
+    return getRevision();
   }
 
   /**
@@ -73,5 +128,5 @@ abstract contract VersionedInitializable {
   }
 
   // Reserved storage space to allow for layout changes in the future.
-  uint256[50] private ______gap;
+  uint256[4] private ______gap;
 }

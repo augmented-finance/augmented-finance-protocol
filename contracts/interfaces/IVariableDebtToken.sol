@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 
 import {IScaledBalanceToken} from './IScaledBalanceToken.sol';
-import {IInitializableDebtToken} from './IInitializableDebtToken.sol';
 import {IBalanceHook} from './IBalanceHook.sol';
 
 /**
@@ -10,7 +9,7 @@ import {IBalanceHook} from './IBalanceHook.sol';
  * @author Aave
  * @notice Defines the basic interface for a variable debt token.
  **/
-interface IVariableDebtToken is IScaledBalanceToken, IInitializableDebtToken {
+interface IVariableDebtToken is IScaledBalanceToken {
   /**
    * @dev Emitted after the mint action
    * @param from The address performing the mint
