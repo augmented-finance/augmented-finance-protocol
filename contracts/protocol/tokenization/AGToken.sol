@@ -8,7 +8,7 @@ import {ILendingPool} from '../../interfaces/ILendingPool.sol';
 import {IAGToken} from '../../interfaces/IAGToken.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
-import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
+import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
 import {IncentivizedERC20} from './IncentivizedERC20.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 import {IInitializablePoolToken} from './interfaces/IInitializablePoolToken.sol';

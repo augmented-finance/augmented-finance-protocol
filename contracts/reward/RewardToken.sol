@@ -10,7 +10,7 @@ import {AccessFlags} from '../access/AccessFlags.sol';
 import {RemoteAccessBitmask} from '../access/RemoteAccessBitmask.sol';
 import {IRemoteAccessBitmask} from '../interfaces/IRemoteAccessBitmask.sol';
 
-import {IRewardMinter} from './IRewardMinter.sol';
+import {IRewardMinter} from './interfaces/IRewardMinter.sol';
 
 import 'hardhat/console.sol';
 

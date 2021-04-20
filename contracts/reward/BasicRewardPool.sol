@@ -4,8 +4,8 @@ pragma solidity ^0.6.12;
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../tools/math/WadRayMath.sol';
 import {AccessBitmask} from '../access/AccessBitmask.sol';
-import {IRewardController} from './IRewardController.sol';
-import {IRewardPool, IManagedRewardPool} from './IRewardPool.sol';
+import {IRewardController} from './interfaces/IRewardController.sol';
+import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
 
 import 'hardhat/console.sol';
 

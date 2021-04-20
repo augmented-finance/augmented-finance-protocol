@@ -6,7 +6,7 @@ import {VotingToken} from './VotingToken.sol';
 import {StakeToken} from './StakeToken.sol';
 
 import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
-import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
+import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
 
 /**
  * @title StakedAgfV1

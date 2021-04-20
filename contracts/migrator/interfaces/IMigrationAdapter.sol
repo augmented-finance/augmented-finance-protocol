@@ -2,9 +2,9 @@
 pragma solidity ^0.6.12;
 
 import {ILendableToken} from './ILendableToken.sol';
-import {IRewardPool} from '../../reward/IRewardPool.sol';
+import {IRewardPool} from '../../reward/interfaces/IRewardPool.sol';
 
-interface ISubscriptionAdapter {
+interface IMigrationAdapter {
   function ORIGIN_ASSET_ADDRESS() external view returns (address);
 
   function UNDERLYING_ASSET_ADDRESS() external view returns (address);

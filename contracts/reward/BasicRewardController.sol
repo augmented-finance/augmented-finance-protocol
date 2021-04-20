@@ -4,9 +4,9 @@ pragma solidity ^0.6.12;
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 
-import {IRewardController} from './IRewardController.sol';
-import {IRewardPool, IManagedRewardPool} from './IRewardPool.sol';
-import {IRewardMinter} from './IRewardMinter.sol';
+import {IRewardController} from './interfaces/IRewardController.sol';
+import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
+import {IRewardMinter} from './interfaces/IRewardMinter.sol';
 
 import 'hardhat/console.sol';
 

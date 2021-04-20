@@ -4,9 +4,7 @@ pragma solidity ^0.6.12;
 import {IRemoteAccessBitmask} from '../interfaces/IRemoteAccessBitmask.sol';
 
 import {RewardToken} from './RewardToken.sol';
-import {
-  VersionedInitializable
-} from '../protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
 import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
 
 import 'hardhat/console.sol';

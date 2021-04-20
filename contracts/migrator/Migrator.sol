@@ -3,7 +3,7 @@ pragma solidity ^0.6.12;
 
 import 'hardhat/console.sol';
 import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {ISubscriptionAdapter} from './interfaces/ISubscriptionAdapter.sol';
+import {IMigrationAdapter} from './interfaces/IMigrationAdapter.sol';
 import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
@@ -15,7 +15,7 @@ contract Migrator is Ownable {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
-  ISubscriptionAdapter[] private _adaptersList;
+  IMigrationAdapter[] private _adaptersList;
   /* a/c/dToken */
   mapping(address => uint256) private _adapters;
   /* underlying */
@@ -52,13 +52,13 @@ contract Migrator is Ownable {
     }
   }
 
-  function getAdapter(address token) public view returns (ISubscriptionAdapter adapter) {
+  function getAdapter(address token) public view returns (IMigrationAdapter adapter) {
     uint256 adapterIdx = _adapters[token];
     require(adapterIdx > 0, 'unknown or unsupported token');
     return _adaptersList[adapterIdx - 1];
   }
 
-  function admin_registerAdapter(ISubscriptionAdapter adapter) public onlyOwner {
+  function admin_registerAdapter(IMigrationAdapter adapter) public onlyOwner {
     address underlying = adapter.UNDERLYING_ASSET_ADDRESS();
     require(IERC20(underlying).totalSupply() > 0, 'valid underlying is required');
 
@@ -73,7 +73,7 @@ contract Migrator is Ownable {
     _underlyings[underlying].push(_adaptersList.length);
   }
 
-  function admin_unregisterAdapter(ISubscriptionAdapter adapter) public onlyOwner returns (bool) {
+  function admin_unregisterAdapter(IMigrationAdapter adapter) public onlyOwner returns (bool) {
     address origin = adapter.ORIGIN_ASSET_ADDRESS();
     if (_adapters[origin] == 0) {
       return false;
@@ -83,7 +83,7 @@ contract Migrator is Ownable {
       return false;
     }
     delete (_adapters[origin]);
-    _adaptersList[idx] = ISubscriptionAdapter(address(0));
+    _adaptersList[idx] = IMigrationAdapter(0);
     return true;
   }
 
@@ -95,7 +95,7 @@ contract Migrator is Ownable {
     if (address(_adaptersList[idx]) == address(0)) {
       return false;
     }
-    _adaptersList[idx] = ISubscriptionAdapter(address(0));
+    _adaptersList[idx] = IMigrationAdapter(address(0));
     delete (_adapters[origin]);
     return true;
   }
@@ -103,24 +103,24 @@ contract Migrator is Ownable {
   function admin_migrateToToken(ILendableToken target)
     public
     onlyOwner
-    returns (ISubscriptionAdapter[] memory migrated, uint256 count)
+    returns (IMigrationAdapter[] memory migrated, uint256 count)
   {
     return internalMigrateToToken(target);
   }
 
   function internalMigrateToToken(ILendableToken target)
     internal
-    returns (ISubscriptionAdapter[] memory migrated, uint256 count)
+    returns (IMigrationAdapter[] memory migrated, uint256 count)
   {
     address underlying = target.UNDERLYING_ASSET_ADDRESS();
     uint256[] storage indices = _underlyings[underlying];
     if (indices.length == 0) {
       return (migrated, 0);
     }
-    migrated = new ISubscriptionAdapter[](indices.length);
+    migrated = new IMigrationAdapter[](indices.length);
 
     for (uint256 i = 0; i < indices.length; i++) {
-      ISubscriptionAdapter adapter = _adaptersList[indices[i]];
+      IMigrationAdapter adapter = _adaptersList[indices[i]];
       if (address(adapter) == address(0)) {
         continue;
       }
@@ -131,11 +131,11 @@ contract Migrator is Ownable {
     return (migrated, count);
   }
 
-  function admin_enableClaims(ISubscriptionAdapter[] memory migrated) public onlyOwner {
+  function admin_enableClaims(IMigrationAdapter[] memory migrated) public onlyOwner {
     internalEnableClaims(migrated);
   }
 
-  function internalEnableClaims(ISubscriptionAdapter[] memory migrated) private {
+  function internalEnableClaims(IMigrationAdapter[] memory migrated) private {
     for (uint256 i = 0; i < migrated.length; i++) {
       if (address(migrated[i]) == address(0)) {
         continue;
@@ -149,7 +149,7 @@ contract Migrator is Ownable {
     onlyOwner
     returns (uint256 count)
   {
-    ISubscriptionAdapter[][] memory migrateds = new ISubscriptionAdapter[][](targets.length);
+    IMigrationAdapter[][] memory migrateds = new IMigrationAdapter[][](targets.length);
     for (uint256 i = 0; i < targets.length; i++) {
       uint256 migratedCount;
       (migrateds[i], migratedCount) = internalMigrateToToken(targets[i]);

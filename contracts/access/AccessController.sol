@@ -11,7 +11,7 @@ import {BitUtils} from '../tools/math/BitUtils.sol';
 
 // Prettier ignore to prevent buidler flatter bug
 // prettier-ignore
-import {InitializableImmutableAdminUpgradeabilityProxy} from '../protocol/libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
+import {InitializableImmutableAdminUpgradeabilityProxy} from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
 
 import {IManagedAccessController} from '../interfaces/IAccessController.sol';
 import {AccessFlags} from './AccessFlags.sol';
