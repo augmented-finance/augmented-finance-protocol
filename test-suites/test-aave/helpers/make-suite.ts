@@ -8,7 +8,7 @@ import {
   getMintableERC20,
   getLendingPoolConfiguratorProxy,
   getPriceOracle,
-  getLendingPoolAddressesProviderRegistry,
+  getAddressesProviderRegistry,
   getWETHMocked,
   getWETHGateway,
   getUniswapLiquiditySwapAdapter,
@@ -117,11 +117,11 @@ export async function initializeMakeSuite() {
   testEnv.addressesProvider = await getLendingPoolAddressesProvider();
 
   if (process.env.MAINNET_FORK === 'true') {
-    testEnv.registry = await getLendingPoolAddressesProviderRegistry(
+    testEnv.registry = await getAddressesProviderRegistry(
       getParamPerNetwork(AaveConfig.ProviderRegistry, eEthereumNetwork.main)
     );
   } else {
-    testEnv.registry = await getLendingPoolAddressesProviderRegistry();
+    testEnv.registry = await getAddressesProviderRegistry();
     testEnv.oracle = await getPriceOracle();
   }
 

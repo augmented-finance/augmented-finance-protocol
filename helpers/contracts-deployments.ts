@@ -82,7 +82,7 @@ export const deployLendingPoolAddressesProvider = async (marketId: string, verif
     verify
   );
 
-export const deployLendingPoolAddressesProviderRegistry = async (verify?: boolean) =>
+export const deployAddressesProviderRegistry = async (verify?: boolean) =>
   withSaveAndVerify(
     await new AddressesProviderRegistryFactory(await getFirstSigner()).deploy(),
     eContractid.AddressesProviderRegistry,

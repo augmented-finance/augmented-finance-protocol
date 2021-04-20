@@ -8,7 +8,7 @@ import {
 import {
   deployLendingPoolAddressesProvider,
   deployMintableERC20,
-  deployLendingPoolAddressesProviderRegistry,
+  deployAddressesProviderRegistry,
   deployLendingPoolConfigurator,
   deployLendingPool,
   deployPriceOracle,
@@ -108,7 +108,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   await waitForTx(await addressesProvider.setEmergencyAdmin(addressList[2]));
 
-  const addressesProviderRegistry = await deployLendingPoolAddressesProviderRegistry();
+  const addressesProviderRegistry = await deployAddressesProviderRegistry();
   await waitForTx(
     await addressesProviderRegistry.registerAddressesProvider(addressesProvider.address, 1)
   );
@@ -191,7 +191,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
       WMATIC: mockTokens.WMATIC.address,
       USD: USD_ADDRESS,
       STAKE: mockTokens.STAKE.address,
-      xSUSHI: mockTokens.xSUSHI.address
+      xSUSHI: mockTokens.xSUSHI.address,
     },
     fallbackOracle
   );

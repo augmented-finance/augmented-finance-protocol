@@ -197,7 +197,7 @@ export const getPairsTokenAggregator = (
   return [mappedPairs, mappedAggregators];
 };
 
-export const getLendingPoolAddressesProviderRegistry = async (address?: tEthereumAddress) =>
+export const getAddressesProviderRegistry = async (address?: tEthereumAddress) =>
   await AddressesProviderRegistryFactory.connect(
     address ||
       (await getDb().get(`${eContractid.AddressesProviderRegistry}.${DRE.network.name}`).value())

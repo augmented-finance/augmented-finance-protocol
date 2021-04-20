@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import {
   deployLendingPoolAddressesProvider,
-  deployLendingPoolAddressesProviderRegistry,
+  deployAddressesProviderRegistry,
 } from '../../helpers/contracts-deployments';
 import { waitForTx } from '../../helpers/misc-utils';
 import AugmentedConfig from '../../markets/augmented';
@@ -22,7 +22,7 @@ task(
     );
     await waitForTx(await addressesProvider.setPoolAdmin(admin));
 
-    const addressesProviderRegistry = await deployLendingPoolAddressesProviderRegistry(verify);
+    const addressesProviderRegistry = await deployAddressesProviderRegistry(verify);
     await waitForTx(
       await addressesProviderRegistry.registerAddressesProvider(addressesProvider.address, 1)
     );
