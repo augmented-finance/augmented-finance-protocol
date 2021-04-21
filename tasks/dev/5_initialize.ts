@@ -3,7 +3,7 @@ import {
   deployLendingPoolCollateralManager,
   deployMockFlashLoanReceiver,
   deployWalletBalancerProvider,
-  deployAaveProtocolDataProvider,
+  deployProtocolDataProvider,
   deployWETHGateway,
   authorizeWETHGateway,
 } from '../../helpers/contracts-deployments';
@@ -51,7 +51,7 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
       filterMapBy(allTokenAddresses, (key: string) => !key.includes('UNI_'))
     );
 
-    const testHelpers = await deployAaveProtocolDataProvider(addressesProvider.address, verify);
+    const testHelpers = await deployProtocolDataProvider(addressesProvider.address, verify);
 
     const reservesParams = getReservesConfigByPool(AavePools.proto);
 
@@ -89,7 +89,7 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
 
     await deployWalletBalancerProvider(verify);
 
-    await insertContractAddressInDb(eContractid.AaveProtocolDataProvider, testHelpers.address);
+    await insertContractAddressInDb(eContractid.ProtocolDataProvider, testHelpers.address);
 
     const lendingPoolAddress = await addressesProvider.getLendingPool();
     const gateWay = await getParamPerNetwork(WethGateway, network);

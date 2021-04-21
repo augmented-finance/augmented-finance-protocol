@@ -18,7 +18,7 @@ import { notFalsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
 import { exit } from 'process';
 import {
-  getAaveProtocolDataProvider,
+  getProtocolDataProvider,
   getLendingPoolAddressesProvider,
 } from '../../helpers/contracts-getters';
 import { ZERO_ADDRESS } from '../../helpers/constants';
@@ -46,7 +46,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
 
       const addressesProvider = await getLendingPoolAddressesProvider();
 
-      const testHelpers = await getAaveProtocolDataProvider();
+      const testHelpers = await getProtocolDataProvider();
 
       const admin = await addressesProvider.getPoolAdmin();
       if (!reserveAssets) {

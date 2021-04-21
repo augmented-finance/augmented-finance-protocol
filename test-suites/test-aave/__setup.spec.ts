@@ -16,7 +16,7 @@ import {
   deployLendingPoolCollateralManager,
   deployMockFlashLoanReceiver,
   deployWalletBalancerProvider,
-  deployAaveProtocolDataProvider,
+  deployProtocolDataProvider,
   deployLendingRateOracle,
   deployStableAndVariableTokensHelper,
   deployATokensAndRatesHelper,
@@ -234,9 +234,9 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const reservesParams = getReservesConfigByPool(AavePools.proto);
 
-  const testHelpers = await deployAaveProtocolDataProvider(addressesProvider.address);
+  const testHelpers = await deployProtocolDataProvider(addressesProvider.address);
 
-  await insertContractAddressInDb(eContractid.AaveProtocolDataProvider, testHelpers.address);
+  await insertContractAddressInDb(eContractid.ProtocolDataProvider, testHelpers.address);
   const admin = await deployer.getAddress();
 
   console.log('Initialize configuration');

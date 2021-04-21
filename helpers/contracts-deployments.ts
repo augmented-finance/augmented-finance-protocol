@@ -18,7 +18,7 @@ import { getReservesConfigByPool } from './configuration';
 import { getFirstSigner } from './contracts-getters';
 import { ZERO_ADDRESS } from './constants';
 import {
-  AaveProtocolDataProviderFactory,
+  ProtocolDataProviderFactory,
   AGTokenFactory,
   AGFTokenFactory,
   ATokensAndRatesHelperFactory,
@@ -264,13 +264,13 @@ export const deployWalletBalancerProvider = async (verify?: boolean) =>
     verify
   );
 
-export const deployAaveProtocolDataProvider = async (
+export const deployProtocolDataProvider = async (
   addressesProvider: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    await new AaveProtocolDataProviderFactory(await getFirstSigner()).deploy(addressesProvider),
-    eContractid.AaveProtocolDataProvider,
+    await new ProtocolDataProviderFactory(await getFirstSigner()).deploy(addressesProvider),
+    eContractid.ProtocolDataProvider,
     [addressesProvider],
     verify
   );

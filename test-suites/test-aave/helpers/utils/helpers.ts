@@ -11,10 +11,10 @@ import {
 import { tEthereumAddress } from '../../../../helpers/types';
 import BigNumber from 'bignumber.js';
 import { getDb, DRE } from '../../../../helpers/misc-utils';
-import { AaveProtocolDataProvider } from '../../../../types/AaveProtocolDataProvider';
+import { ProtocolDataProvider } from '../../../../types/ProtocolDataProvider';
 
 export const getReserveData = async (
-  helper: AaveProtocolDataProvider,
+  helper: ProtocolDataProvider,
   reserve: tEthereumAddress
 ): Promise<ReserveData> => {
   const [reserveData, tokenAddresses, rateOracle, token] = await Promise.all([
@@ -74,7 +74,7 @@ export const getReserveData = async (
 
 export const getUserData = async (
   pool: LendingPool,
-  helper: AaveProtocolDataProvider,
+  helper: ProtocolDataProvider,
   reserve: string,
   user: tEthereumAddress,
   sender?: tEthereumAddress
@@ -116,7 +116,7 @@ export const getReserveAddressFromSymbol = async (symbol: string) => {
 const getATokenUserData = async (
   reserve: string,
   user: string,
-  helpersContract: AaveProtocolDataProvider
+  helpersContract: ProtocolDataProvider
 ) => {
   const aTokenAddress: string = (await helpersContract.getReserveTokensAddresses(reserve))
     .aTokenAddress;
