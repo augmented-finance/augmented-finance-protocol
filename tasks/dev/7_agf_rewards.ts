@@ -15,10 +15,13 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
     await localBRE.run('set-DRE');
 
     const accessController = await getAccessController();
-    const agfToken = await deployAGFToken(
-      [accessController.address, 'Augmented finance governance token', 'AGF'],
-      verify
+    const agfToken = await deployAGFToken(verify);
+    await agfToken.initialize(
+      accessController.address,
+      'Augmented finance governance token',
+      'AGF'
     );
+
     const rewardFreezer = await deployRewardFreezer([agfToken.address], verify);
     // FIXME:
     // await agfToken.admin_grant(rewardFreezer.address, 1); // AGFToken.aclMint
