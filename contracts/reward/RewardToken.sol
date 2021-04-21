@@ -20,8 +20,9 @@ abstract contract RewardToken is ERC20WithPermit, RemoteAccessBitmask, IRewardMi
   constructor(
     IRemoteAccessBitmask remoteAcl,
     string memory name,
-    string memory symbol
-  ) public ERC20WithPermit(name, symbol) RemoteAccessBitmask(remoteAcl) {}
+    string memory symbol,
+    uint8 decimals
+  ) public ERC20WithPermit(name, symbol, decimals) RemoteAccessBitmask(remoteAcl) {}
 
   function _initializeToken(IRemoteAccessBitmask remoteAcl) internal {
     _remoteAcl = remoteAcl;

@@ -19,8 +19,9 @@ abstract contract VotingToken is StakeToken, VoteDelegatorWithSnapshot {
   constructor(
     StakeTokenConfig memory params,
     string memory name,
-    string memory symbol
-  ) public StakeToken(params, name, symbol) {
+    string memory symbol,
+    uint8 decimals
+  ) public StakeToken(params, name, symbol, decimals) {
     _setGovernance(params.governance);
   }
 

@@ -9,11 +9,12 @@ import {StakeTokenConfig} from './StakeTokenConfig.sol';
  * @notice Interface for the initialize function on StakeToken and VotingToken
  **/
 interface IInitializableStakeToken {
-  event Initialized(StakeTokenConfig params, string tokenName, string tokenSymbol);
+  event Initialized(StakeTokenConfig params, string tokenName, string tokenSymbol, uint8 decimals);
 
   function initialize(
     StakeTokenConfig calldata params,
     string calldata name,
-    string calldata symbol
+    string calldata symbol,
+    uint8 decimals
   ) external;
 }

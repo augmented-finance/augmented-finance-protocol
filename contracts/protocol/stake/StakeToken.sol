@@ -54,8 +54,9 @@ abstract contract StakeToken is
   constructor(
     StakeTokenConfig memory params,
     string memory name,
-    string memory symbol
-  ) public ERC20WithPermit(name, symbol) RemoteAccessBitmask(params.stakeController) {
+    string memory symbol,
+    uint8 decimals
+  ) public ERC20WithPermit(name, symbol, decimals) RemoteAccessBitmask(params.stakeController) {
     _stakedToken = params.stakedToken;
     _incentivesController = params.incentivesController;
     _cooldownSeconds = params.cooldownSeconds;

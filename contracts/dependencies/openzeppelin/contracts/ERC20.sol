@@ -46,24 +46,28 @@ contract ERC20 is Context, IERC20 {
   uint8 private _decimals;
 
   /**
-   * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
-   * a default value of 18.
+   * @dev Sets the values for {name}, {symbol} and {decimals}.
    *
-   * To select a different value for {decimals}, use {_setupDecimals}.
-   *
-   * All three of these values are immutable: they can only be set once during
-   * construction.
+   * All three of these values can only be set once during construction or initialization.
    */
-  constructor(string memory name, string memory symbol) public {
+  constructor(
+    string memory name,
+    string memory symbol,
+    uint8 decimals
+  ) public {
     _name = name;
     _symbol = symbol;
-    _decimals = 18;
+    _decimals = decimals;
   }
 
-  function _initializeERC20(string memory name, string memory symbol) internal {
+  function _initializeERC20(
+    string memory name,
+    string memory symbol,
+    uint8 decimals
+  ) internal {
     _name = name;
     _symbol = symbol;
-    _setupDecimals(18);
+    _decimals = decimals;
   }
 
   /**
@@ -87,8 +91,7 @@ contract ERC20 is Context, IERC20 {
    * be displayed to a user as `5,05` (`505 / 10 ** 2`).
    *
    * Tokens usually opt for a value of 18, imitating the relationship between
-   * Ether and Wei. This is the value {ERC20} uses, unless {_setupDecimals} is
-   * called.
+   * Ether and Wei.
    *
    * NOTE: This information is only used for _display_ purposes: it in
    * no way affects any of the arithmetic of the contract, including
@@ -315,17 +318,6 @@ contract ERC20 is Context, IERC20 {
 
     _allowances[owner][spender] = amount;
     emit Approval(owner, spender, amount);
-  }
-
-  /**
-   * @dev Sets {decimals} to a value other than the default one of 18.
-   *
-   * WARNING: This function should only be called from the constructor. Most
-   * applications that interact with token contracts will not expect
-   * {decimals} to ever change, and may work incorrectly if it does.
-   */
-  function _setupDecimals(uint8 decimals_) internal {
-    _decimals = decimals_;
   }
 
   /**

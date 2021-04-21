@@ -15,7 +15,11 @@ abstract contract ERC20WithPermit is ERC20 {
   /// @dev owner => next valid nonce to submit with permit()
   mapping(address => uint256) public _nonces;
 
-  constructor(string memory name, string memory symbol) public ERC20(name, symbol) {
+  constructor(
+    string memory name,
+    string memory symbol,
+    uint8 decimals
+  ) public ERC20(name, symbol, decimals) {
     _initializeDomainSeparator();
   }
 
