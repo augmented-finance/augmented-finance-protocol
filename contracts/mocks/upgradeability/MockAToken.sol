@@ -6,6 +6,6 @@ import {AGToken} from '../../protocol/tokenization/AGToken.sol';
 
 contract MockAToken is AGToken {
   function getRevision() internal pure override returns (uint256) {
-    return 0x2;
+    return super.getRevision() + 1;
   }
 }
