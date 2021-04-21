@@ -1,5 +1,5 @@
 import {
-  AaveProtocolDataProviderFactory,
+  ProtocolDataProviderFactory,
   AGTokenFactory,
   ATokensAndRatesHelperFactory,
   OracleRouterFactory,
@@ -108,10 +108,10 @@ export const getIErc20Detailed = async (address: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getAaveProtocolDataProvider = async (address?: tEthereumAddress) =>
-  await AaveProtocolDataProviderFactory.connect(
+export const getProtocolDataProvider = async (address?: tEthereumAddress) =>
+  await ProtocolDataProviderFactory.connect(
     address ||
-      (await getDb().get(`${eContractid.AaveProtocolDataProvider}.${DRE.network.name}`).value())
+      (await getDb().get(`${eContractid.ProtocolDataProvider}.${DRE.network.name}`).value())
         .address,
     await getFirstSigner()
   );

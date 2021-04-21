@@ -6,10 +6,10 @@ import {
   IReserveParams,
   tEthereumAddress,
 } from './types';
-import { AaveProtocolDataProvider } from '../types/AaveProtocolDataProvider';
+import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, DRE, getDb, waitForTx } from './misc-utils';
 import {
-  getAaveProtocolDataProvider,
+  getProtocolDataProvider,
   getAToken,
   getATokensAndRatesHelper,
   getLendingPoolAddressesProvider,
@@ -264,7 +264,7 @@ export const getPairsTokenAggregator = (
 export const configureReservesByHelper = async (
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
-  helpers: AaveProtocolDataProvider,
+  helpers: ProtocolDataProvider,
   admin: tEthereumAddress
 ) => {
   const addressProvider = await getLendingPoolAddressesProvider();
@@ -382,9 +382,9 @@ export const initTokenReservesByHelper = async (
   const addressProvider = await (
     await getLendingPoolAddressesProvider(addressesProviderAddress)
   ).connect(signer);
-  const protocolDataProvider = await (
-    await getAaveProtocolDataProvider(dataProviderAddress)
-  ).connect(signer);
+  const protocolDataProvider = await (await getProtocolDataProvider(dataProviderAddress)).connect(
+    signer
+  );
   const poolAddress = await addressProvider.getLendingPool();
 
   // Set aTokenAndRatesDeployer as temporal admin
