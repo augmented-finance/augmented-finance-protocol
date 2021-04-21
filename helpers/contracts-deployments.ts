@@ -36,6 +36,8 @@ import {
   MintableERC20Factory,
   MockAggregatorFactory,
   MockATokenFactory,
+  MockAgfTokenFactory,
+  MockStakedAgfTokenFactory,
   MockFlashLoanReceiverFactory,
   MockStableDebtTokenFactory,
   MockVariableDebtTokenFactory,
@@ -624,6 +626,48 @@ export const deployMockAToken = async (
     args[5],
     '18',
     args[6]
+  );
+
+  return instance;
+};
+
+export const deployMockAgfToken = async (
+  args: [tEthereumAddress, string, string],
+  verify?: boolean
+) => {
+  const instance = await withSaveAndVerify(
+    await new MockAgfTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.MockAToken,
+    [],
+    verify
+  );
+  await instance.initialize(...args);
+
+  return instance;
+};
+
+export const deployMockStakedAgfToken = async (
+  args: [tEthereumAddress, tEthereumAddress, tEthereumAddress, string, string],
+  verify?: boolean
+) => {
+  const instance = await withSaveAndVerify(
+    await new MockStakedAgfTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.MockAToken,
+    [],
+    verify
+  );
+  await instance.initialize(
+    {
+      stakeController: args[0],
+      stakedToken: args[1],
+      incentivesController: args[2],
+      cooldownSeconds: 10,
+      unstakeWindow: 10,
+      governance: ZERO_ADDRESS,
+    },
+    args[3],
+    args[4],
+    '18'
   );
 
   return instance;

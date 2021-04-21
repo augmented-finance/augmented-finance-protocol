@@ -51,7 +51,7 @@ contract StakedAgfV1 is
    * @dev returns the revision of the implementation contract
    * @return The revision
    */
-  function getRevision() internal pure override returns (uint256) {
+  function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
   }
 }

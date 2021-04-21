@@ -4,6 +4,7 @@ import { ProtocolErrors, eContractid } from '../../helpers/types';
 import { deployContract, getContract } from '../../helpers/contracts-helpers';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
+  getAgfToken,
   getAToken,
   getMockStableDebtToken,
   getMockVariableDebtToken,
@@ -14,10 +15,13 @@ import {
   deployMockAToken,
   deployMockStableDebtToken,
   deployMockVariableDebtToken,
+  deployMockAgfToken,
+  deployMockStakedAgfToken,
 } from '../../helpers/contracts-deployments';
 
 makeSuite('Upgradeability', (testEnv: TestEnv) => {
   const { CALLER_NOT_POOL_ADMIN } = ProtocolErrors;
+  let newAgfTokenAddress: string;
   let newATokenAddress: string;
   let newStableTokenAddress: string;
   let newVariableTokenAddress: string;
@@ -29,7 +33,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       dai.address,
       ZERO_ADDRESS,
       ZERO_ADDRESS,
-      'Aave Interest bearing DAI updated',
+      'Interest bearing DAI updated',
       'aDAI',
       '0x10',
     ]);
@@ -38,7 +42,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       pool.address,
       dai.address,
       ZERO_ADDRESS,
-      'Aave stable debt bearing DAI updated',
+      'Stable debt bearing DAI updated',
       'stableDebtDAI',
       '0x10',
     ]);
@@ -47,14 +51,21 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       pool.address,
       dai.address,
       ZERO_ADDRESS,
-      'Aave variable debt bearing DAI updated',
+      'Variable debt bearing DAI updated',
       'variableDebtDAI',
       '0x10',
+    ]);
+
+    const agfTokenInstance = await deployMockAgfToken([
+      ZERO_ADDRESS,
+      'Reward token updated',
+      'AGF',
     ]);
 
     newATokenAddress = aTokenInstance.address;
     newVariableTokenAddress = variableDebtTokenInstance.address;
     newStableTokenAddress = stableDebtTokenInstance.address;
+    newAgfTokenAddress = agfTokenInstance.address;
   });
 
   it('Tries to update the DAI Atoken implementation with a different address than the lendingPoolManager', async () => {
@@ -119,10 +130,31 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     };
     await configurator.updateAToken(updateATokenInputParams);
 
-    expect(await aDai.name()).to.be.eq('Aave Interest bearing DAI updated', 'Invalid token name');
+    expect(await aDai.name()).to.be.eq(name, 'Invalid token name');
     expect(await aDai.REVISION()).eq(revision);
     expect(await aDai.DOMAIN_SEPARATOR()).eq(domainSep);
   });
+
+  // it('Upgrades the AGF Atoken implementation ', async () => {
+  //   const { agf } = testEnv;
+
+  //   const newImpl = await getAgfToken(newAgfTokenAddress);
+  //   const name = await newImpl.name();
+  //   const symbol = await newImpl.symbol();
+  //   const revision = await newImpl.REVISION();
+
+  //   const domainSep = await agf.DOMAIN_SEPARATOR();
+
+  //   expect(name).not.eq(await agf.name());
+  //   expect(newImpl.DOMAIN_SEPARATOR()).not.eq(domainSep);
+  //   expect(revision).not.eq(await agf.REVISION());
+
+  //   // todo upgrade token
+
+  //   expect(await agf.name()).to.be.eq(name, 'Invalid token name');
+  //   expect(await agf.REVISION()).eq(revision);
+  //   expect(await agf.DOMAIN_SEPARATOR()).eq(domainSep);
+  // });
 
   it('Tries to update the DAI Stable debt token implementation with a different address than the lendingPoolManager', async () => {
     const { dai, configurator, users } = testEnv;
@@ -180,10 +212,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     const { stableDebtTokenAddress } = await helpersContract.getReserveTokensAddresses(dai.address);
 
     const debtToken = await getMockStableDebtToken(stableDebtTokenAddress);
-
-    const tokenName = await debtToken.name();
-
-    expect(tokenName).to.be.eq('Aave stable debt bearing DAI updated', 'Invalid token name');
+    expect(await debtToken.name()).to.be.eq(name, 'Invalid token name');
   });
 
   it('Tries to update the DAI variable debt token implementation with a different address than the lendingPoolManager', async () => {
@@ -245,9 +274,6 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     );
 
     const debtToken = await getMockVariableDebtToken(variableDebtTokenAddress);
-
-    const tokenName = await debtToken.name();
-
-    expect(tokenName).to.be.eq('Aave variable debt bearing DAI updated', 'Invalid token name');
+    expect(await debtToken.name()).to.be.eq(name, 'Invalid token name');
   });
 });
