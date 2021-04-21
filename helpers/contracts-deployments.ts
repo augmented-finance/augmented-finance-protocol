@@ -678,11 +678,11 @@ export const deployFlashLiquidationAdapter = async (
     verify
   );
 
-export const deployAGFToken = async (args: [string, string, string], verify?: boolean) =>
+export const deployAGFToken = async (verify?: boolean) =>
   withSaveAndVerify(
     await new AGFTokenFactory(await getFirstSigner()).deploy(),
     eContractid.AGFToken,
-    args,
+    [],
     verify
   );
 
