@@ -5,6 +5,7 @@ import {ILendingPool} from '../../../interfaces/ILendingPool.sol';
 import {ICreditDelegationToken} from '../../../interfaces/ICreditDelegationToken.sol';
 import {VersionedInitializable} from '../../../tools/upgradeability/VersionedInitializable.sol';
 import {IncentivizedERC20} from '../IncentivizedERC20.sol';
+import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 
 /**
@@ -19,6 +20,7 @@ abstract contract DebtTokenBase is
   ICreditDelegationToken
 {
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
+  IBalanceHook internal _incentivesController;
 
   uint8 internal constant DECIMALS = 18;
 
@@ -27,6 +29,14 @@ abstract contract DebtTokenBase is
    **/
   modifier onlyLendingPool {
     require(_msgSender() == address(_getLendingPool()), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
+    _;
+  }
+
+  modifier onlyRewardAdmin {
+    require(
+      _getLendingPool().getAccessController().isRewardAdmin(_msgSender()),
+      Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
+    );
     _;
   }
 
@@ -134,4 +144,22 @@ abstract contract DebtTokenBase is
   function _getUnderlyingAssetAddress() internal view virtual returns (address);
 
   function _getLendingPool() internal view virtual returns (ILendingPool);
+
+  /**
+   * @dev Updates the address of the incentives controller contract
+   **/
+  function setIncentivesController(address hook) external onlyRewardAdmin {
+    _incentivesController = IBalanceHook(hook);
+  }
+
+  /**
+   * @dev Returns the address of the incentives controller contract
+   **/
+  function getIncentivesController() external view returns (IBalanceHook) {
+    return _getIncentivesController();
+  }
+
+  function _getIncentivesController() internal view override returns (IBalanceHook) {
+    return _incentivesController;
+  }
 }

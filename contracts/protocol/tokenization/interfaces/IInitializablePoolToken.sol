@@ -16,7 +16,6 @@ interface IInitializablePoolToken {
    * @param underlyingAsset The address of the underlying asset
    * @param pool The address of the associated lending pool
    * @param treasury The address of the treasury
-   * @param incentivesController The address of the incentives controller for this aToken
    * @param aTokenName the name of the aToken
    * @param aTokenSymbol the symbol of the aToken
    * @param aTokenDecimals the decimals of the underlying
@@ -26,7 +25,6 @@ interface IInitializablePoolToken {
     address indexed underlyingAsset,
     address indexed pool,
     address treasury,
-    address incentivesController,
     string aTokenName,
     string aTokenSymbol,
     uint8 aTokenDecimals,

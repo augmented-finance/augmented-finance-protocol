@@ -11,6 +11,4 @@ struct PoolTokenConfig {
   address treasury;
   // The address of the underlying asset
   address underlyingAsset;
-  // The address of the incentives controller for this token
-  IBalanceHook incentivesController;
 }

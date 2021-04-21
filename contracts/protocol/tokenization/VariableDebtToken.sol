@@ -24,7 +24,6 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken, IInitializableP
 
   ILendingPool internal _pool;
   address internal _underlyingAsset;
-  IBalanceHook internal _incentivesController;
 
   /**
    * @dev Initializes the debt token.
@@ -46,13 +45,11 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken, IInitializableP
 
     _pool = config.pool;
     _underlyingAsset = config.underlyingAsset;
-    _incentivesController = config.incentivesController;
 
     emit Initialized(
       config.underlyingAsset,
       address(config.pool),
       address(0),
-      address(config.incentivesController),
       debtTokenName,
       debtTokenSymbol,
       debtTokenDecimals,
@@ -182,21 +179,10 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken, IInitializableP
   }
 
   /**
-   * @dev Returns the address of the incentives controller contract
-   **/
-  function getIncentivesController() external view returns (IBalanceHook) {
-    return _getIncentivesController();
-  }
-
-  /**
    * @dev Returns the address of the lending pool where this aToken is used
    **/
   function POOL() public view returns (ILendingPool) {
     return _pool;
-  }
-
-  function _getIncentivesController() internal view override returns (IBalanceHook) {
-    return _incentivesController;
   }
 
   function _getUnderlyingAssetAddress() internal view override returns (address) {

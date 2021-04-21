@@ -32,7 +32,6 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       pool.address,
       dai.address,
       ZERO_ADDRESS,
-      ZERO_ADDRESS,
       'Interest bearing DAI updated',
       'aDAI',
       '0x10',
@@ -41,7 +40,6 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     const stableDebtTokenInstance = await deployMockStableDebtToken([
       pool.address,
       dai.address,
-      ZERO_ADDRESS,
       'Stable debt bearing DAI updated',
       'stableDebtDAI',
       '0x10',
@@ -50,7 +48,6 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     const variableDebtTokenInstance = await deployMockVariableDebtToken([
       pool.address,
       dai.address,
-      ZERO_ADDRESS,
       'Variable debt bearing DAI updated',
       'variableDebtDAI',
       '0x10',

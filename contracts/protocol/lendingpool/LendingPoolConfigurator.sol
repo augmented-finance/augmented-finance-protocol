@@ -69,8 +69,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
       PoolTokenConfig({
         pool: pool_,
         treasury: input.treasury,
-        underlyingAsset: input.underlyingAsset,
-        incentivesController: IBalanceHook(input.incentivesController)
+        underlyingAsset: input.underlyingAsset
       });
 
     address aTokenProxyAddress =
@@ -142,7 +141,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
   /**
    * @dev Updates the aToken implementation for the reserve
    **/
-  function updateAToken(UpdateATokenInput calldata input) external onlyPoolAdmin {
+  function updateAToken(UpdateDepositTokenInput calldata input) external onlyPoolAdmin {
     ILendingPool cachedPool = pool;
 
     DataTypes.ReserveData memory reserveData = cachedPool.getReserveData(input.asset);
@@ -150,12 +149,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
     (, , , uint256 decimals, ) = cachedPool.getConfiguration(input.asset).getParamsMemory();
 
     PoolTokenConfig memory config =
-      PoolTokenConfig({
-        pool: cachedPool,
-        treasury: input.treasury,
-        underlyingAsset: input.asset,
-        incentivesController: IBalanceHook(input.incentivesController)
-      });
+      PoolTokenConfig({pool: cachedPool, treasury: input.treasury, underlyingAsset: input.asset});
 
     bytes memory encodedCall =
       abi.encodeWithSelector(
@@ -183,12 +177,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
     (, , , uint256 decimals, ) = cachedPool.getConfiguration(input.asset).getParamsMemory();
 
     PoolTokenConfig memory config =
-      PoolTokenConfig({
-        pool: cachedPool,
-        treasury: address(0),
-        underlyingAsset: input.asset,
-        incentivesController: IBalanceHook(input.incentivesController)
-      });
+      PoolTokenConfig({pool: cachedPool, treasury: address(0), underlyingAsset: input.asset});
 
     bytes memory encodedCall =
       abi.encodeWithSelector(
@@ -224,12 +213,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
     (, , , uint256 decimals, ) = cachedPool.getConfiguration(input.asset).getParamsMemory();
 
     PoolTokenConfig memory config =
-      PoolTokenConfig({
-        pool: cachedPool,
-        treasury: address(0),
-        underlyingAsset: input.asset,
-        incentivesController: IBalanceHook(input.incentivesController)
-      });
+      PoolTokenConfig({pool: cachedPool, treasury: address(0), underlyingAsset: input.asset});
 
     bytes memory encodedCall =
       abi.encodeWithSelector(
