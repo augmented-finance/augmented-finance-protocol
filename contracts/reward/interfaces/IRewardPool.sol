@@ -8,6 +8,12 @@ interface IRewardPool is IBalanceHook {}
 interface IManagedRewardPool {
   function isLazy() external view returns (bool);
 
+  function updateBaseline(uint256) external;
+
+  function setBaselinePercentage(uint256) external;
+
+  function disableBaseline() external;
+
   function setRate(uint256 rate) external;
 
   function claimRewardOnBehalf(address holder) external returns (uint256);

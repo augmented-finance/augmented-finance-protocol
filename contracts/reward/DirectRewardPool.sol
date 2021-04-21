@@ -71,6 +71,14 @@ contract DirectRewardPool is AccessBitmask, IManagedRewardPool {
     _rewardLimit = 0;
   }
 
+  function updateBaseline(uint256) external override onlyController {}
+
+  function disableBaseline() external override onlyController {}
+
+  function setBaselinePercentage(uint256) external override {
+    revert('unsupported');
+  }
+
   function setRate(uint256 rate) external override aclHas(aclConfigure) {}
 
   function claimRewardOnBehalf(address) external override onlyController returns (uint256) {

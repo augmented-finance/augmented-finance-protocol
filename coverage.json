@@ -2330,7 +2330,7 @@
         "loc": {"start": {"line": 211, "column": 2}, "end": {"line": 255, "column": 2}}
       },
       "5": {
-        "name": "updateAToken",
+        "name": "updateDepositToken",
         "line": 262,
         "loc": {"start": {"line": 262, "column": 2}, "end": {"line": 268, "column": 2}}
       },

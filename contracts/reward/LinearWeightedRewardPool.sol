@@ -19,10 +19,12 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
   uint256 private _totalSupplyMax;
   uint256 private constant minBitReserve = 32;
 
-  constructor(IRewardController controller, uint256 maxTotalSupply)
-    public
-    AccumulatingRewardPool(controller)
-  {
+  constructor(
+    IRewardController controller,
+    uint256 initialRate,
+    uint256 baselinePercentage,
+    uint256 maxTotalSupply
+  ) public AccumulatingRewardPool(controller, initialRate, baselinePercentage) {
     require(maxTotalSupply > 0, 'max total supply is unknown');
 
     uint256 maxSupplyBits = BitUtils.bitLength(maxTotalSupply);
@@ -67,11 +69,11 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
   }
 
   function internalSetTotalSupply(uint256 totalSupply, uint32 currentBlock) internal {
-    if (internalGetRate() > 0) {
+    if (getRate() > 0) {
       // updates are not needed when the rate is zero, unset or was set within this block
       uint32 lastBlock = internalGetLastUpdateBlock();
       if (lastBlock != 0 && lastBlock != currentBlock) {
-        internalRateUpdated(internalGetRate(), lastBlock, currentBlock);
+        internalRateUpdated(getRate(), lastBlock, currentBlock);
       }
     }
     _totalSupply = totalSupply;
@@ -87,7 +89,7 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
       return (_accumRate, 0);
     }
 
-    uint256 weightedRate = internalGetRate().mul(_totalSupplyMax.div(_totalSupply));
+    uint256 weightedRate = getRate().mul(_totalSupplyMax.div(_totalSupply));
     adjRate = _accumRate.add(weightedRate.mul(currentBlock - internalGetLastUpdateBlock()));
 
     weightedRate = adjRate.sub(entry.lastAccumRate);

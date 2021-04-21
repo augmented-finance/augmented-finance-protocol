@@ -14,7 +14,11 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
 
   mapping(address => RewardEntry) private _rewards;
 
-  constructor(IRewardController controller) public BasicRewardPool(controller) {}
+  constructor(
+    IRewardController controller,
+    uint256 initialRate,
+    uint256 baselinePercentage
+  ) public BasicRewardPool(controller, initialRate, baselinePercentage) {}
 
   function isLazy() public view override returns (bool) {
     return true;
@@ -41,10 +45,6 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
     oldBalance;
     totalSupply;
 
-    if (isCutOff(currentBlock)) {
-      currentBlock = internalGetCutOff();
-    }
-
     RewardEntry memory entry = _rewards[holder];
     if (entry.lastAccumRate == 0 && entry.rewardBase == 0) {
       newcomer = true;
@@ -68,10 +68,6 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
       return 0;
     }
 
-    if (isCutOff(currentBlock)) {
-      currentBlock = internalGetCutOff();
-    }
-
     (uint256 adjRate, uint256 allocated) =
       internalCalcRateAndReward(_rewards[holder], currentBlock);
     _rewards[holder].lastAccumRate = adjRate;
@@ -86,10 +82,6 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
   {
     if (_rewards[holder].rewardBase == 0) {
       return 0;
-    }
-
-    if (isCutOff(currentBlock)) {
-      currentBlock = internalGetCutOff();
     }
 
     (, uint256 allocated) = internalCalcRateAndReward(_rewards[holder], currentBlock);

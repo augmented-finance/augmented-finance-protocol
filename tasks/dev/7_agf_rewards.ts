@@ -27,11 +27,9 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
     // await agfToken.admin_grant(rewardFreezer.address, 1); // AGFToken.aclMint
 
     const linearUnweightedRewardPool = await deployLinearUnweightedRewardPool(
-      [rewardFreezer.address],
+      [rewardFreezer.address, 0, 0],
       verify
     );
 
-    await waitForTx(
-      await rewardFreezer.admin_addRewardPool(linearUnweightedRewardPool.address, ZERO_ADDRESS)
-    );
+    await waitForTx(await rewardFreezer.admin_addRewardPool(linearUnweightedRewardPool.address));
   });
