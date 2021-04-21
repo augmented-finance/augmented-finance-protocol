@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { deployAaveOracle, deployLendingRateOracle } from '../../helpers/contracts-deployments';
+import { deployOracleRouter, deployLendingRateOracle } from '../../helpers/contracts-deployments';
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
 import { ICommonConfiguration, eNetwork, SymbolMap } from '../../helpers/types';
 import { waitForTx, notFalsyOrZeroAddress } from '../../helpers/misc-utils';
@@ -12,12 +12,12 @@ import {
   getLendingRateOracles,
 } from '../../helpers/configuration';
 import {
-  getAaveOracle,
+  getOracleRouter,
   getLendingPoolAddressesProvider,
   getLendingRateOracle,
   getPairsTokenAggregator,
 } from '../../helpers/contracts-getters';
-import { AaveOracle } from '../../types';
+import { OracleRouter } from '../../types';
 
 task('full:deploy-oracles', 'Deploy oracles for dev enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -36,7 +36,7 @@ task('full:deploy-oracles', 'Deploy oracles for dev enviroment')
       const lendingRateOracles = getLendingRateOracles(poolConfig);
       const addressesProvider = await getLendingPoolAddressesProvider();
       const admin = await getGenesisPoolAdmin(poolConfig);
-      const aaveOracleAddress = getParamPerNetwork(poolConfig.AaveOracle, network);
+      const aaveOracleAddress = getParamPerNetwork(poolConfig.OracleRouter, network);
       const lendingRateOracleAddress = getParamPerNetwork(poolConfig.LendingRateOracle, network);
       const fallbackOracleAddress = await getParamPerNetwork(FallbackOracle, network);
       const reserveAssets = await getParamPerNetwork(ReserveAssets, network);
@@ -48,16 +48,16 @@ task('full:deploy-oracles', 'Deploy oracles for dev enviroment')
       };
       const [tokens, aggregators] = getPairsTokenAggregator(tokensToWatch, chainlinkAggregators);
 
-      let aaveOracle: AaveOracle;
+      let aaveOracle: OracleRouter;
       if (notFalsyOrZeroAddress(aaveOracleAddress)) {
-        aaveOracle = await await getAaveOracle(aaveOracleAddress);
+        aaveOracle = await await getOracleRouter(aaveOracleAddress);
         const owner = await aaveOracle.owner();
         const signer = DRE.ethers.provider.getSigner(owner);
 
-        aaveOracle = await (await getAaveOracle(aaveOracleAddress)).connect(signer);
+        aaveOracle = await (await getOracleRouter(aaveOracleAddress)).connect(signer);
         await waitForTx(await aaveOracle.setAssetSources(tokens, aggregators));
       } else {
-        aaveOracle = await deployAaveOracle(
+        aaveOracle = await deployOracleRouter(
           [tokens, aggregators, fallbackOracleAddress, await getWethAddress(poolConfig)],
           verify
         );
