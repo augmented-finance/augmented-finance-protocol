@@ -2,7 +2,7 @@ import {
   AaveProtocolDataProviderFactory,
   AGTokenFactory,
   ATokensAndRatesHelperFactory,
-  AaveOracleFactory,
+  OracleRouterFactory,
   DefaultReserveInterestRateStrategyFactory,
   GenericLogicFactory,
   InitializableAdminUpgradeabilityProxyFactory,
@@ -329,9 +329,10 @@ export const getLendingPoolCollateralManager = async (address?: tEthereumAddress
 export const getAddressById = async (id: string): Promise<tEthereumAddress | undefined> =>
   (await getDb().get(`${id}.${DRE.network.name}`).value())?.address || undefined;
 
-export const getAaveOracle = async (address?: tEthereumAddress) =>
-  await AaveOracleFactory.connect(
-    address || (await getDb().get(`${eContractid.AaveOracle}.${DRE.network.name}`).value()).address,
+export const getOracleRouter = async (address?: tEthereumAddress) =>
+  await OracleRouterFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.OracleRouter}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
 

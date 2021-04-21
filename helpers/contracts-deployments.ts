@@ -22,7 +22,7 @@ import {
   AGTokenFactory,
   AGFTokenFactory,
   ATokensAndRatesHelperFactory,
-  AaveOracleFactory,
+  OracleRouterFactory,
   DefaultReserveInterestRateStrategyFactory,
   DelegationAwareATokenFactory,
   InitializableAdminUpgradeabilityProxyFactory,
@@ -210,13 +210,13 @@ export const deployMockAggregator = async (price: tStringTokenSmallUnits, verify
     verify
   );
 
-export const deployAaveOracle = async (
+export const deployOracleRouter = async (
   args: [tEthereumAddress[], tEthereumAddress[], tEthereumAddress, tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    await new AaveOracleFactory(await getFirstSigner()).deploy(...args),
-    eContractid.AaveOracle,
+    await new OracleRouterFactory(await getFirstSigner()).deploy(...args),
+    eContractid.OracleRouter,
     args,
     verify
   );

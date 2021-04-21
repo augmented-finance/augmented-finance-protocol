@@ -99,7 +99,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [ePolygonNetwork.mumbai]: '',
     [ePolygonNetwork.matic]: '0x15A46f5073789b7D16F6F46632aE50Bae838d938',
   },
-  AaveOracle: {
+  OracleRouter: {
     [ePolygonNetwork.mumbai]: '',
     [ePolygonNetwork.matic]: '0x1B38fa90596F2C25bCf1B193A6c6a718349AFDfC',
   },

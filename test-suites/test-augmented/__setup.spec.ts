@@ -12,7 +12,7 @@ import {
   deployLendingPoolConfigurator,
   deployLendingPool,
   deployPriceOracle,
-  deployAaveOracle,
+  deployOracleRouter,
   deployLendingPoolCollateralManager,
   deployMockFlashLoanReceiver,
   deployWalletBalancerProvider,
@@ -215,7 +215,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const [tokens, aggregators] = getPairsTokenAggregator(allTokenAddresses, allAggregatorsAddresses);
 
-  await deployAaveOracle([tokens, aggregators, fallbackOracle.address, mockTokens.WETH.address]);
+  await deployOracleRouter([tokens, aggregators, fallbackOracle.address, mockTokens.WETH.address]);
   await waitForTx(await addressesProvider.setPriceOracle(fallbackOracle.address));
 
   const lendingRateOracle = await deployLendingRateOracle();

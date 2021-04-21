@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import {
   deployPriceOracle,
-  deployAaveOracle,
+  deployOracleRouter,
   deployLendingRateOracle,
 } from '../../helpers/contracts-deployments';
 import {
@@ -57,7 +57,7 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
       allAggregatorsAddresses
     );
 
-    await deployAaveOracle(
+    await deployOracleRouter(
       [tokens, aggregators, fallbackOracle.address, await getWethAddress(poolConfig)],
       verify
     );
