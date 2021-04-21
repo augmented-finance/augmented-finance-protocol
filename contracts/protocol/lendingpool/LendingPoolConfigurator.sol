@@ -163,7 +163,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
 
     _upgradeTokenImplementation(reserveData.aTokenAddress, input.implementation, encodedCall);
 
-    emit ATokenUpgraded(input.asset, reserveData.aTokenAddress, input.implementation);
+    emit DepositTokenUpgraded(input.asset, reserveData.aTokenAddress, input.implementation);
   }
 
   /**
