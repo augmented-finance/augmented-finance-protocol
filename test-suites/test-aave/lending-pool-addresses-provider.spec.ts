@@ -29,16 +29,18 @@ makeSuite('LendingPoolAddressesProvider', (testEnv: TestEnv) => {
       await expect(contractFunction(mockAddress)).to.be.revertedWith(INVALID_OWNER_REVERT_MSG);
     }
 
-    await expect(addressesProvider.setAddress(1 << 62, mockAddress)).to.be.revertedWith(
+    const addressId = 1 << 62;
+
+    await expect(addressesProvider.setAddress(addressId, mockAddress)).to.be.revertedWith(
       INVALID_OWNER_REVERT_MSG
     );
 
-    await expect(addressesProvider.setAddressAsProxy(1 << 62, mockAddress)).to.be.revertedWith(
+    await expect(addressesProvider.setAddressAsProxy(addressId, mockAddress)).to.be.revertedWith(
       INVALID_OWNER_REVERT_MSG
     );
   });
 
-  it('Tests adding  a proxied address with `setAddressAsProxy()`', async () => {
+  it('Tests adding a proxied address with `setAddressAsProxy()`', async () => {
     const { addressesProvider, users } = testEnv;
     const { INVALID_OWNER_REVERT_MSG } = ProtocolErrors;
 
@@ -66,6 +68,27 @@ makeSuite('LendingPoolAddressesProvider', (testEnv: TestEnv) => {
     expect(proxiedAddressSetReceipt.events[1].args?.hasProxy).to.be.equal(true);
   });
 
+  it('Tests adding an address with `setAddress()` at proxied address id (should revert)', async () => {
+    const { addressesProvider, users } = testEnv;
+    const { INVALID_OWNER_REVERT_MSG } = ProtocolErrors;
+
+    const currentAddressesProviderOwner = users[1];
+    const mockNonProxiedAddress = createRandomAddress();
+    const proxiedAddressId = 1 << 62;
+
+    await waitForTx(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .markProxies(proxiedAddressId)
+    );
+
+    await expect(
+      addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .setAddress(proxiedAddressId, mockNonProxiedAddress)
+    ).to.be.revertedWith('use of setAddressAsProxy is required');
+  });
+
   it('Tests adding a non proxied address with `setAddress()`', async () => {
     const { addressesProvider, users } = testEnv;
     const { INVALID_OWNER_REVERT_MSG } = ProtocolErrors;
@@ -73,6 +96,12 @@ makeSuite('LendingPoolAddressesProvider', (testEnv: TestEnv) => {
     const currentAddressesProviderOwner = users[1];
     const mockNonProxiedAddress = createRandomAddress();
     const nonProxiedAddressId = 1 << 62;
+
+    await waitForTx(
+      await addressesProvider
+        .connect(currentAddressesProviderOwner.signer)
+        .unmarkProxies(nonProxiedAddressId)
+    );
 
     const nonProxiedAddressSetReceipt = await waitForTx(
       await addressesProvider
