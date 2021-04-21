@@ -144,7 +144,7 @@ interface ILendingPoolConfigurator {
    * @param proxy The aToken proxy address
    * @param implementation The new aToken implementation
    **/
-  event ATokenUpgraded(
+  event DepositTokenUpgraded(
     address indexed asset,
     address indexed proxy,
     address indexed implementation
