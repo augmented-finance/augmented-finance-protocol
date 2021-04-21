@@ -7,7 +7,7 @@ import {IPoolAddressProvider} from '../interfaces/IPoolAddressProvider.sol';
 import {IUiPoolDataProvider} from './interfaces/IUiPoolDataProvider.sol';
 import {ILendingPool} from '../interfaces/ILendingPool.sol';
 import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
-import {IAGToken} from '../interfaces/IAGToken.sol';
+import {IDepositToken} from '../interfaces/IDepositToken.sol';
 import {IVariableDebtToken} from '../interfaces/IVariableDebtToken.sol';
 import {IStableDebtToken} from '../interfaces/IStableDebtToken.sol';
 import {WadRayMath} from '../tools/math/WadRayMath.sol';
@@ -125,7 +125,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
       if (user != address(0)) {
         // user reserve data
         userReservesData[i].underlyingAsset = reserveData.underlyingAsset;
-        userReservesData[i].scaledATokenBalance = IAGToken(reserveData.aTokenAddress)
+        userReservesData[i].scaledATokenBalance = IDepositToken(reserveData.aTokenAddress)
           .scaledBalanceOf(user);
         userReservesData[i].usageAsCollateralEnabledOnUser = userConfig.isUsingAsCollateral(i);
 

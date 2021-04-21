@@ -5966,7 +5966,7 @@
       }
     }
   },
-  "contracts/tokenization/AGToken.sol": {
+  "contracts/tokenization/DepositToken.sol": {
     "l": {
       "45": 211,
       "46": 207,
@@ -6017,7 +6017,7 @@
       "320": 4,
       "327": 0
     },
-    "path": "/src/contracts/tokenization/AGToken.sol",
+    "path": "/src/contracts/tokenization/DepositToken.sol",
     "s": {
       "1": 211,
       "2": 54,
@@ -6819,9 +6819,9 @@
       }
     }
   },
-  "contracts/tokenization/interfaces/IAGToken.sol": {
+  "contracts/tokenization/interfaces/IDepositToken.sol": {
     "l": {},
-    "path": "/src/contracts/tokenization/interfaces/IAGToken.sol",
+    "path": "/src/contracts/tokenization/interfaces/IDepositToken.sol",
     "s": {},
     "b": {},
     "f": {},

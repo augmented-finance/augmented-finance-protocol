@@ -12,7 +12,7 @@ import {
   getVariableDebtToken,
 } from '../../helpers/contracts-getters';
 import {
-  deployMockAToken,
+  deployMockDepositToken,
   deployMockStableDebtToken,
   deployMockVariableDebtToken,
   deployMockAgfToken,
@@ -28,7 +28,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
 
   before('deploying instances', async () => {
     const { dai, pool } = testEnv;
-    const aTokenInstance = await deployMockAToken([
+    const aTokenInstance = await deployMockDepositToken([
       pool.address,
       dai.address,
       ZERO_ADDRESS,

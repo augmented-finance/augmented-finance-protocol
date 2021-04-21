@@ -19,7 +19,7 @@ import { getFirstSigner } from './contracts-getters';
 import { ZERO_ADDRESS } from './constants';
 import {
   ProtocolDataProviderFactory,
-  AGTokenFactory,
+  DepositTokenFactory,
   AGFTokenFactory,
   ATokensAndRatesHelperFactory,
   OracleRouterFactory,
@@ -35,7 +35,7 @@ import {
   MintableDelegationERC20Factory,
   MintableERC20Factory,
   MockAggregatorFactory,
-  MockATokenFactory,
+  MockDepositTokenFactory,
   MockAgfTokenFactory,
   MockStakedAgfTokenFactory,
   MockFlashLoanReceiverFactory,
@@ -389,8 +389,8 @@ export const deployGenericAToken = async (
   verify: boolean
 ) => {
   const instance = await withSaveAndVerify(
-    await new AGTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.AGToken,
+    await new DepositTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.DepositToken,
     [],
     verify
   );
@@ -413,8 +413,8 @@ export const deployGenericAToken = async (
 
 export const deployGenericATokenImpl = async (verify: boolean) =>
   withSaveAndVerify(
-    await new AGTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.AGToken,
+    await new DepositTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.DepositToken,
     [],
     verify
   );
@@ -601,7 +601,7 @@ export const deployMockVariableDebtToken = async (
   return instance;
 };
 
-export const deployMockAToken = async (
+export const deployMockDepositToken = async (
   args: [
     tEthereumAddress,
     tEthereumAddress,
@@ -614,8 +614,8 @@ export const deployMockAToken = async (
   verify?: boolean
 ) => {
   const instance = await withSaveAndVerify(
-    await new MockATokenFactory(await getFirstSigner()).deploy(),
-    eContractid.MockAToken,
+    await new MockDepositTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.MockDepositToken,
     [],
     verify
   );
@@ -637,7 +637,7 @@ export const deployMockAgfToken = async (
 ) => {
   const instance = await withSaveAndVerify(
     await new MockAgfTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.MockAToken,
+    eContractid.MockDepositToken,
     [],
     verify
   );
@@ -652,7 +652,7 @@ export const deployMockStakedAgfToken = async (
 ) => {
   const instance = await withSaveAndVerify(
     await new MockStakedAgfTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.MockAToken,
+    eContractid.MockDepositToken,
     [],
     verify
   );

@@ -35,7 +35,7 @@ import { DefaultReserveInterestRateStrategy, DelegationAwareAToken } from '../ty
 
 export const chooseATokenDeployment = (id: eContractid) => {
   switch (id) {
-    case eContractid.AGToken:
+    case eContractid.DepositToken:
       return deployGenericAToken;
     case eContractid.DelegationAwareAToken:
       return deployDelegationAwareAToken;
@@ -140,7 +140,7 @@ export const initReservesByHelper = async (
 
   const reserves = Object.entries(reservesParams).filter(
     ([_, { aTokenImpl }]) =>
-      aTokenImpl === eContractid.DelegationAwareAToken || aTokenImpl === eContractid.AGToken
+      aTokenImpl === eContractid.DelegationAwareAToken || aTokenImpl === eContractid.DepositToken
   ) as [string, IReserveParams][];
 
   for (let [symbol, params] of reserves) {
@@ -174,7 +174,7 @@ export const initReservesByHelper = async (
     strategyAddressPerAsset[symbol] = strategyAddresses[strategy.name];
     console.log('Strategy address for asset %s: %s', symbol, strategyAddressPerAsset[symbol]);
 
-    if (aTokenImpl === eContractid.AGToken) {
+    if (aTokenImpl === eContractid.DepositToken) {
       aTokenType[symbol] = 'generic';
     } else if (aTokenImpl === eContractid.DelegationAwareAToken) {
       aTokenType[symbol] = 'delegation aware';
@@ -443,7 +443,7 @@ export const initTokenReservesByHelper = async (
       string,
       IReserveParams
     ][])[reserveParamIndex];
-    if (aTokenImpl === eContractid.AGToken) {
+    if (aTokenImpl === eContractid.DepositToken) {
       aTokenImplementation = await getAddressById(`aTokenImpl`, network);
     } else if (aTokenImpl === eContractid.DelegationAwareAToken) {
       aTokenImplementation = await getAddressById(`delegationAwareATokenImpl`, network);

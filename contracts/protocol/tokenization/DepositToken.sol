@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
-import {IAGToken} from '../../interfaces/IAGToken.sol';
+import {IDepositToken} from '../../interfaces/IDepositToken.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
@@ -15,13 +15,13 @@ import {IInitializablePoolToken} from './interfaces/IInitializablePoolToken.sol'
 import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
 
 /**
- * @title Augmented Finance ERC20 agToken
+ * @title Augmented Finance ERC20 deposit token (agToken)
  * @dev Implementation of the interest bearing token for the Augmented Finance protocol
  */
-contract AGToken is
+contract DepositToken is
   VersionedInitializable,
   IncentivizedERC20('AGTOKEN_IMPL', 'AGTOKEN_IMPL', 0),
-  IAGToken,
+  IDepositToken,
   IInitializablePoolToken
 {
   using WadRayMath for uint256;

@@ -1,6 +1,6 @@
 import {
   ProtocolDataProviderFactory,
-  AGTokenFactory,
+  DepositTokenFactory,
   ATokensAndRatesHelperFactory,
   OracleRouterFactory,
   DefaultReserveInterestRateStrategyFactory,
@@ -13,7 +13,7 @@ import {
   LendingPoolFactory,
   LendingRateOracleFactory,
   MintableERC20Factory,
-  MockATokenFactory,
+  MockDepositTokenFactory,
   MockFlashLoanReceiverFactory,
   MockStableDebtTokenFactory,
   MockVariableDebtTokenFactory,
@@ -75,8 +75,9 @@ export const getPriceOracle = async (address?: tEthereumAddress) =>
   );
 
 export const getAToken = async (address?: tEthereumAddress) =>
-  await AGTokenFactory.connect(
-    address || (await getDb().get(`${eContractid.AGToken}.${DRE.network.name}`).value()).address,
+  await DepositTokenFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.DepositToken}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
 
@@ -252,9 +253,10 @@ export const getWETHMocked = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getMockAToken = async (address?: tEthereumAddress) =>
-  await MockATokenFactory.connect(
-    address || (await getDb().get(`${eContractid.MockAToken}.${DRE.network.name}`).value()).address,
+export const getMockDepositToken = async (address?: tEthereumAddress) =>
+  await MockDepositTokenFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.MockDepositToken}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
 

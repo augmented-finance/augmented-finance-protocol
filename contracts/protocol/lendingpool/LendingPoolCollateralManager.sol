@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts//SafeMath.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts//IERC20.sol';
-import {IAGToken} from '../../interfaces/IAGToken.sol';
+import {IDepositToken} from '../../interfaces/IDepositToken.sol';
 import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
 import {IPriceOracleGetter} from '../../interfaces/IPriceOracleGetter.sol';
@@ -51,7 +51,7 @@ contract LendingPoolCollateralManager is
     uint256 debtAmountNeeded;
     uint256 healthFactor;
     uint256 liquidatorPreviousATokenBalance;
-    IAGToken collateralAtoken;
+    IDepositToken collateralAtoken;
     bool isCollateralEnabled;
     DataTypes.InterestRateMode borrowRateMode;
     uint256 errorCode;
@@ -115,7 +115,7 @@ contract LendingPoolCollateralManager is
       return (vars.errorCode, vars.errorMsg);
     }
 
-    vars.collateralAtoken = IAGToken(collateralReserve.aTokenAddress);
+    vars.collateralAtoken = IDepositToken(collateralReserve.aTokenAddress);
 
     vars.userCollateralBalance = vars.collateralAtoken.balanceOf(user);
 

@@ -5,13 +5,13 @@ pragma experimental ABIEncoderV2;
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
 import {IDelegationToken} from '../../interfaces/IDelegationToken.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
-import {AGToken} from './AGToken.sol';
+import {DepositToken} from './DepositToken.sol';
 
 /**
  * @title PoolToken enabled to delegate voting power of the underlying asset to a different address
  * @dev The underlying asset needs to be compatible with the COMP delegation interface
  */
-contract DelegationAwareAToken is AGToken {
+contract DelegationAwareAToken is DepositToken {
   modifier onlyPoolAdmin {
     require(ILendingPool(_pool).isPoolAdmin(_msgSender()), Errors.CALLER_NOT_POOL_ADMIN);
     _;
