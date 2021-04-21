@@ -24,8 +24,8 @@ contract StakedAgfV1 is
 
   constructor()
     public
-    StakeToken(zeroConfig(), NAME, SYMBOL)
-  //    VotingToken(zeroConfig(), NAME, SYMBOL)
+    StakeToken(zeroConfig(), NAME, SYMBOL, 18)
+  //    VotingToken(zeroConfig(), NAME, SYMBOL, 18)
   {
 
   }
@@ -35,14 +35,16 @@ contract StakedAgfV1 is
   function initialize(
     StakeTokenConfig calldata params,
     string calldata name,
-    string calldata symbol
-  ) external override initializerRunAlways(TOKEN_REVISION) {
-    super._initializeERC20(name, symbol);
+    string calldata symbol,
+    uint8 decimals
+  ) external virtual override initializerRunAlways(TOKEN_REVISION) {
+    super._initializeERC20(name, symbol, decimals);
     super._initializeToken(params);
 
     if (!isRevisionInitialized(TOKEN_REVISION)) {
       super._initializeDomainSeparator();
     }
+    emit Initialized(params, name, symbol, decimals);
   }
 
   /**
