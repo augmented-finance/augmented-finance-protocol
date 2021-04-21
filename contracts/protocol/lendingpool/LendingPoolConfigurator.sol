@@ -21,8 +21,7 @@ import {ILendingPoolConfigurator} from '../../interfaces/ILendingPoolConfigurato
 
 /**
  * @title LendingPoolConfigurator contract
- * @author Aave
- * @dev Implements the configuration methods for the Aave protocol
+ * @dev Implements the configuration methods for the protocol
  **/
 
 contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigurator {
@@ -138,10 +137,12 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
     );
   }
 
+  //  function updateIncencitiveController() external
+
   /**
-   * @dev Updates the aToken implementation for the reserve
+   * @dev Updates DepositToken implementation for the reserve
    **/
-  function updateAToken(UpdateDepositTokenInput calldata input) external onlyPoolAdmin {
+  function updateDepositToken(UpdateDepositTokenInput calldata input) external onlyPoolAdmin {
     ILendingPool cachedPool = pool;
 
     DataTypes.ReserveData memory reserveData = cachedPool.getReserveData(input.asset);

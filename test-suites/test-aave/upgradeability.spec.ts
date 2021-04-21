@@ -72,7 +72,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     const name = await newImpl.name();
     const symbol = await newImpl.symbol();
 
-    const updateATokenInputParams: {
+    const updateDepositTokenInputParams: {
       asset: string;
       treasury: string;
       incentivesController: string;
@@ -90,7 +90,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       params: '0x10',
     };
     await expect(
-      configurator.connect(users[1].signer).updateAToken(updateATokenInputParams)
+      configurator.connect(users[1].signer).updateDepositToken(updateDepositTokenInputParams)
     ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
   });
 
@@ -108,7 +108,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     expect(newImpl.DOMAIN_SEPARATOR()).not.eq(domainSep);
     expect(revision).not.eq(await aDai.REVISION());
 
-    const updateATokenInputParams: {
+    const updateDepositTokenInputParams: {
       asset: string;
       treasury: string;
       incentivesController: string;
@@ -125,7 +125,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       implementation: newATokenAddress,
       params: '0x10',
     };
-    await configurator.updateAToken(updateATokenInputParams);
+    await configurator.updateDepositToken(updateDepositTokenInputParams);
 
     expect(await aDai.name()).to.be.eq(name, 'Invalid token name');
     expect(await aDai.REVISION()).eq(revision);
