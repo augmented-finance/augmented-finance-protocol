@@ -7,7 +7,7 @@ import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {IWETH} from './interfaces/IWETH.sol';
 import {IWETHGateway} from './interfaces/IWETHGateway.sol';
 import {ILendingPool} from '../interfaces/ILendingPool.sol';
-import {IAGToken} from '../interfaces/IAGToken.sol';
+import {IDepositToken} from '../interfaces/IDepositToken.sol';
 import {ReserveConfiguration} from '../protocol/libraries/configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../protocol/libraries/configuration/UserConfiguration.sol';
 import {Helpers} from '../protocol/libraries/helpers/Helpers.sol';
@@ -58,8 +58,8 @@ contract WETHGateway is IWETHGateway, Ownable {
     uint256 amount,
     address to
   ) external override {
-    IAGToken aWETH =
-      IAGToken(ILendingPool(lendingPool).getReserveData(address(WETH)).aTokenAddress);
+    IDepositToken aWETH =
+      IDepositToken(ILendingPool(lendingPool).getReserveData(address(WETH)).aTokenAddress);
     uint256 userBalance = aWETH.balanceOf(msg.sender);
     uint256 amountToWithdraw = amount;
 

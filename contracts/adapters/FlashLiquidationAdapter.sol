@@ -9,7 +9,7 @@ import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 import {Helpers} from '../protocol/libraries/helpers/Helpers.sol';
 import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
-import {IAGToken} from '../interfaces/IAGToken.sol';
+import {IDepositToken} from '../interfaces/IDepositToken.sol';
 import {ReserveConfiguration} from '../protocol/libraries/configuration/ReserveConfiguration.sol';
 
 /**

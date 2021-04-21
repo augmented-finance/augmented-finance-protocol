@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {LendingPool} from '../protocol/lendingpool/LendingPool.sol';
 import {LendingPoolConfigurator} from '../protocol/lendingpool/LendingPoolConfigurator.sol';
-import {AGToken} from '../protocol/tokenization/AGToken.sol';
+import {DepositToken} from '../protocol/tokenization/DepositToken.sol';
 import {
   DefaultReserveInterestRateStrategy
 } from '../protocol/lendingpool/DefaultReserveInterestRateStrategy.sol';
@@ -46,7 +46,7 @@ contract ATokensAndRatesHelper is Ownable {
   function initDeployment(InitDeploymentInput[] calldata inputParams) external onlyOwner {
     for (uint256 i = 0; i < inputParams.length; i++) {
       emit deployedContracts(
-        address(new AGToken()),
+        address(new DepositToken()),
         address(
           new DefaultReserveInterestRateStrategy(
             IPriceOracleProvider(addressesProvider),

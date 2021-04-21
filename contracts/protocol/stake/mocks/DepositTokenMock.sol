@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
 import {IScaledBalanceToken} from '../../../interfaces/IScaledBalanceToken.sol';
 
-contract AGTokenMock is IScaledBalanceToken {
+contract DepositTokenMock is IScaledBalanceToken {
   IBalanceHook public _aic;
   uint256 internal _userBalance;
   uint256 internal _totalSupply;
