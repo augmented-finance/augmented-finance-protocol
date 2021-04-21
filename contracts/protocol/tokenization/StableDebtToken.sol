@@ -30,7 +30,6 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
 
   ILendingPool internal _pool;
   address internal _underlyingAsset;
-  IBalanceHook internal _incentivesController;
 
   /**
    * @dev Initializes the debt token.
@@ -52,13 +51,11 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
 
     _pool = config.pool;
     _underlyingAsset = config.underlyingAsset;
-    _incentivesController = config.incentivesController;
 
     emit Initialized(
       config.underlyingAsset,
       address(config.pool),
       address(0),
-      address(config.incentivesController),
       debtTokenName,
       debtTokenSymbol,
       debtTokenDecimals,
@@ -347,20 +344,6 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
    **/
   function POOL() public view returns (ILendingPool) {
     return _pool;
-  }
-
-  /**
-   * @dev Returns the address of the incentives controller contract
-   **/
-  function getIncentivesController() external view returns (IBalanceHook) {
-    return _getIncentivesController();
-  }
-
-  /**
-   * @dev For internal usage in the logic of the parent contracts
-   **/
-  function _getIncentivesController() internal view override returns (IBalanceHook) {
-    return _incentivesController;
   }
 
   /**

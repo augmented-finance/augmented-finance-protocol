@@ -11,7 +11,6 @@ interface ILendingPoolConfigurator {
     address interestRateStrategyAddress;
     address underlyingAsset;
     address treasury;
-    address incentivesController;
     string underlyingAssetName;
     string aTokenName;
     string aTokenSymbol;
@@ -22,10 +21,9 @@ interface ILendingPoolConfigurator {
     bytes params;
   }
 
-  struct UpdateATokenInput {
+  struct UpdateDepositTokenInput {
     address asset;
     address treasury;
-    address incentivesController;
     string name;
     string symbol;
     address implementation;
@@ -34,7 +32,6 @@ interface ILendingPoolConfigurator {
 
   struct UpdateDebtTokenInput {
     address asset;
-    address incentivesController;
     string name;
     string symbol;
     address implementation;

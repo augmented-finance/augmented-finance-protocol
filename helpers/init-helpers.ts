@@ -22,8 +22,8 @@ import {
   deployDefaultReserveInterestRateStrategy,
   deployDelegationAwareAToken,
   deployDelegationAwareATokenImpl,
-  deployGenericAToken,
-  deployGenericATokenImpl,
+  deployGenericDepositToken,
+  deployGenericDepositTokenImpl,
   deployGenericStableDebtToken,
   deployGenericVariableDebtToken,
   deployStableDebtToken,
@@ -36,7 +36,7 @@ import { DefaultReserveInterestRateStrategy, DelegationAwareAToken } from '../ty
 export const chooseATokenDeployment = (id: eContractid) => {
   switch (id) {
     case eContractid.DepositToken:
-      return deployGenericAToken;
+      return deployGenericDepositToken;
     case eContractid.DelegationAwareAToken:
       return deployDelegationAwareAToken;
     default:
@@ -121,7 +121,7 @@ export const initReservesByHelper = async (
   stableDebtTokenImplementationAddress = await (await deployGenericStableDebtToken()).address;
   variableDebtTokenImplementationAddress = await (await deployGenericVariableDebtToken()).address;
 
-  const aTokenImplementation = await deployGenericATokenImpl(verify);
+  const aTokenImplementation = await deployGenericDepositTokenImpl(verify);
   aTokenImplementationAddress = aTokenImplementation.address;
   rawInsertContractAddressInDb(`aTokenImpl`, aTokenImplementationAddress);
 
@@ -456,7 +456,6 @@ export const initTokenReservesByHelper = async (
         [
           poolAddress,
           tokenAddresses[symbol],
-          ZERO_ADDRESS, // Incentives controller
           `Aave stable debt bearing ${symbol}`,
           `stableDebt${symbol}`,
         ],
@@ -469,7 +468,6 @@ export const initTokenReservesByHelper = async (
         [
           poolAddress,
           tokenAddresses[symbol],
-          ZERO_ADDRESS, // Incentives Controller
           `Aave variable debt bearing ${symbol}`,
           `variableDebt${symbol}`,
         ],
@@ -487,7 +485,6 @@ export const initTokenReservesByHelper = async (
           poolAddress,
           tokenAddresses[symbol],
           treasuryAddress,
-          ZERO_ADDRESS,
           `Aave interest bearing ${symbol}`,
           `a${symbol}`,
         ],

@@ -87,13 +87,11 @@ contract DepositToken is
     _pool = config.pool;
     _treasury = config.treasury;
     _underlyingAsset = config.underlyingAsset;
-    _incentivesController = config.incentivesController;
 
     emit Initialized(
       config.underlyingAsset,
       address(config.pool),
       config.treasury,
-      address(config.incentivesController),
       aTokenName,
       aTokenSymbol,
       aTokenDecimals,
