@@ -21,8 +21,9 @@ contract AccessController is Ownable, IManagedAccessController {
 
   mapping(uint256 => address) private _addresses;
   mapping(address => uint256) private _masks;
-  uint256 private _singletons;
   uint256 private _nonSingletons;
+  uint256 private _singletons;
+  uint256 private _proxies;
 
   function getAccessControlMask(address addr) external view override returns (uint256) {
     return _masks[addr];
@@ -72,6 +73,11 @@ contract AccessController is Ownable, IManagedAccessController {
   }
 
   function internalSetAddress(uint256 id, address newAddress) internal onlyOwner {
+    require(_proxies & id == 0, 'use of setAddressAsProxy is required');
+    _internalSetAddress(id, newAddress);
+  }
+
+  function _internalSetAddress(uint256 id, address newAddress) private {
     require(id.isPowerOf2nz(), 'invalid singleton id');
     if (_singletons & id == 0) {
       require(_nonSingletons & id == 0, 'id is not a singleton');
@@ -103,7 +109,7 @@ contract AccessController is Ownable, IManagedAccessController {
   }
 
   function isAddress(uint256 id, address addr) public view returns (bool) {
-    require(id.isPowerOf2nz(), 'only one access type is accepted');
+    // require(id.isPowerOf2nz(), 'only singleton id is accepted');
     return _masks[addr] & id != 0;
   }
 
@@ -118,6 +124,14 @@ contract AccessController is Ownable, IManagedAccessController {
   function setEmergencyAdmin(address emergencyAdmin) external override onlyOwner {
     internalSetAddress(AccessFlags.EMERGENCY_ADMIN, emergencyAdmin);
     emit EmergencyAdminUpdated(emergencyAdmin);
+  }
+
+  function markProxies(uint256 id) external onlyOwner {
+    _proxies |= id;
+  }
+
+  function unmarkProxies(uint256 id) external onlyOwner {
+    _proxies &= ~id;
   }
 
   /**
@@ -148,6 +162,7 @@ contract AccessController is Ownable, IManagedAccessController {
    * @param newAddress The address of the new implementation
    **/
   function _updateImpl(uint256 id, address newAddress) internal {
+    require(id.isPowerOf2nz(), 'invalid singleton id');
     address payable proxyAddress = payable(getAddress(id));
 
     InitializableImmutableAdminUpgradeabilityProxy proxy =
@@ -157,7 +172,8 @@ contract AccessController is Ownable, IManagedAccessController {
     if (proxyAddress == address(0)) {
       proxy = new InitializableImmutableAdminUpgradeabilityProxy(address(this));
       proxy.initialize(newAddress, params);
-      internalSetAddress(id, address(proxy));
+      _internalSetAddress(id, address(proxy));
+      _proxies |= id;
       emit ProxyCreated(id, address(proxy));
     } else {
       proxy.upgradeToAndCall(newAddress, params);
