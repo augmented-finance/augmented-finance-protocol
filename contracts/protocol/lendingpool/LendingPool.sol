@@ -6,7 +6,7 @@ import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
-import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';
+import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 import {IAGToken} from '../../interfaces/IAGToken.sol';
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
 import {IFlashLoanReceiver} from '../../flashloan/interfaces/IFlashLoanReceiver.sol';
@@ -38,9 +38,9 @@ import {LendingPoolStorage} from './LendingPoolStorage.sol';
  *   # Enable/disable their deposits as collateral rebalance stable rate borrow positions
  *   # Liquidate positions
  *   # Execute Flash Loans
- * - To be covered by a proxy contract, owned by the LendingPoolAddressesProvider of the specific market
+ * - To be covered by a proxy contract, owned by the AddressesProvider of the specific market
  * - All admin functions are callable by the LendingPoolConfigurator contract defined also in the
- *   LendingPoolAddressesProvider
+ *   AddressesProvider
  * @author Aave
  **/
 contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage {
@@ -78,12 +78,12 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
   /**
    * @dev Function is invoked by the proxy contract when the LendingPool contract is added to the
-   * LendingPoolAddressesProvider of the market.
-   * - Caching the address of the LendingPoolAddressesProvider in order to reduce gas consumption
+   * AddressesProvider of the market.
+   * - Caching the address of the AddressesProvider in order to reduce gas consumption
    *   on subsequent operations
-   * @param provider The address of the LendingPoolAddressesProvider
+   * @param provider The address of the AddressesProvider
    **/
-  function initialize(ILendingPoolAddressesProvider provider) public initializer(POOL_REVISION) {
+  function initialize(IMarketAccessController provider) public initializer(POOL_REVISION) {
     _addressesProvider = provider;
     _maxStableRateBorrowSizePercent = 2500;
     _flashLoanPremiumTotal = 9;
@@ -699,9 +699,13 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   }
 
   /**
-   * @dev Returns the cached LendingPoolAddressesProvider connected to this contract
+   * @dev Returns the cached AddressesProvider connected to this contract
    **/
-  function getAddressesProvider() external view override returns (ILendingPoolAddressesProvider) {
+  function getAddressesProvider() external view override returns (IMarketAccessController) {
+    return _addressesProvider;
+  }
+
+  function getAccessController() external view override returns (IMarketAccessController) {
     return _addressesProvider;
   }
 

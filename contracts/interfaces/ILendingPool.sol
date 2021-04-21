@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ILendingPoolAddressesProvider} from './ILendingPoolAddressesProvider.sol';
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 
 interface ILendingPool {
@@ -402,7 +402,10 @@ interface ILendingPool {
 
   function getReservesList() external view returns (address[] memory);
 
-  function getAddressesProvider() external view returns (ILendingPoolAddressesProvider);
+  /// @dev getAddressesProvider is deprecated, use getAccessController
+  function getAddressesProvider() external view returns (IMarketAccessController);
+
+  function getAccessController() external view returns (IMarketAccessController);
 
   function isPoolAdmin(address) external view returns (bool);
 

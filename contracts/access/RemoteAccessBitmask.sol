@@ -8,7 +8,7 @@ import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
 import {
   IRemoteAccessBitmask,
   RemoteAccessBitmaskHelper
-} from '../interfaces/IRemoteAccessBitmask.sol';
+} from './interfaces/IRemoteAccessBitmask.sol';
 
 contract RemoteAccessBitmask is Context {
   using RemoteAccessBitmaskHelper for IRemoteAccessBitmask;

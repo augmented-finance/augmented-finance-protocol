@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-/**
- * @title AddressesProviderRegistry contract
- * @dev Main registry of LendingPoolAddressesProvider of multiple Aave protocol's markets
- * - Used for indexing purposes of Aave protocol's markets
- * - The id assigned to a LendingPoolAddressesProvider refers to the market it is connected with,
- *   for example with `0` for the Aave main market and `1` for the next created
- * @author Aave
- **/
 interface IAddressesProviderRegistry {
   event AddressesProviderRegistered(address indexed newAddress);
   event AddressesProviderUnregistered(address indexed newAddress);

@@ -13,7 +13,7 @@ import {BitUtils} from '../tools/math/BitUtils.sol';
 // prettier-ignore
 import {InitializableImmutableAdminUpgradeabilityProxy} from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
 
-import {IManagedAccessController} from '../interfaces/IAccessController.sol';
+import {IManagedAccessController} from './interfaces/IAccessController.sol';
 import {AccessFlags} from './AccessFlags.sol';
 
 contract AccessController is Ownable, IManagedAccessController {
@@ -67,14 +67,10 @@ contract AccessController is Ownable, IManagedAccessController {
    * @param id The id
    * @param newAddress The address to set
    */
-  function setAddress(uint256 id, address newAddress) external override onlyOwner {
-    internalSetAddress(id, newAddress);
-    emit AddressSet(id, newAddress, false);
-  }
-
-  function internalSetAddress(uint256 id, address newAddress) internal onlyOwner {
+  function setAddress(uint256 id, address newAddress) public override onlyOwner {
     require(_proxies & id == 0, 'use of setAddressAsProxy is required');
     _internalSetAddress(id, newAddress);
+    emit AddressSet(id, newAddress, false);
   }
 
   function _internalSetAddress(uint256 id, address newAddress) private {
@@ -122,7 +118,7 @@ contract AccessController is Ownable, IManagedAccessController {
   }
 
   function setEmergencyAdmin(address emergencyAdmin) external override onlyOwner {
-    internalSetAddress(AccessFlags.EMERGENCY_ADMIN, emergencyAdmin);
+    _internalSetAddress(AccessFlags.EMERGENCY_ADMIN, emergencyAdmin);
     emit EmergencyAdminUpdated(emergencyAdmin);
   }
 
@@ -143,11 +139,7 @@ contract AccessController is Ownable, IManagedAccessController {
    * @param id The id
    * @param implementationAddress The address of the new implementation
    */
-  function setAddressAsProxy(uint256 id, address implementationAddress)
-    external
-    override
-    onlyOwner
-  {
+  function setAddressAsProxy(uint256 id, address implementationAddress) public override onlyOwner {
     _updateImpl(id, implementationAddress);
     emit AddressSet(id, implementationAddress, true);
   }
@@ -161,7 +153,7 @@ contract AccessController is Ownable, IManagedAccessController {
    * @param id The id of the proxy to be updated
    * @param newAddress The address of the new implementation
    **/
-  function _updateImpl(uint256 id, address newAddress) internal {
+  function _updateImpl(uint256 id, address newAddress) private {
     require(id.isPowerOf2nz(), 'invalid singleton id');
     address payable proxyAddress = payable(getAddress(id));
 

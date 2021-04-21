@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';
+import {IPoolAddressProvider} from '../../interfaces/IPoolAddressProvider.sol';
 
 interface IUiPoolDataProvider {
   struct AggregatedReserveData {
@@ -67,7 +67,7 @@ interface IUiPoolDataProvider {
   //    address aTokenAddress;
   //  }
 
-  function getReservesData(ILendingPoolAddressesProvider provider, address user)
+  function getReservesData(IPoolAddressProvider provider, address user)
     external
     view
     returns (

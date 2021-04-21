@@ -8,7 +8,7 @@ import {ERC20WithPermit} from '../misc/ERC20WithPermit.sol';
 import {BitUtils} from '../tools/math/BitUtils.sol';
 import {AccessFlags} from '../access/AccessFlags.sol';
 import {RemoteAccessBitmask} from '../access/RemoteAccessBitmask.sol';
-import {IRemoteAccessBitmask} from '../interfaces/IRemoteAccessBitmask.sol';
+import {IRemoteAccessBitmask} from '../access/interfaces/IRemoteAccessBitmask.sol';
 
 import {IRewardMinter} from './interfaces/IRewardMinter.sol';
 

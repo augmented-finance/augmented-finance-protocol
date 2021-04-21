@@ -4,7 +4,7 @@ pragma solidity 0.6.12;
 import {UserConfiguration} from '../libraries/configuration/UserConfiguration.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
-import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';
+import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 
 contract LendingPoolStorage {
@@ -12,7 +12,7 @@ contract LendingPoolStorage {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using UserConfiguration for DataTypes.UserConfigurationMap;
 
-  ILendingPoolAddressesProvider internal _addressesProvider;
+  IMarketAccessController internal _addressesProvider;
 
   mapping(address => DataTypes.ReserveData) internal _reserves;
   mapping(address => DataTypes.UserConfigurationMap) internal _usersConfig;
