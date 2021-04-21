@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IAccessController} from '../../../interfaces/IAccessController.sol';
+import {IAccessController} from '../../../access/interfaces/IAccessController.sol';
 
 /**
  * @title IStakeAccessController contract

@@ -52,7 +52,7 @@ contract AGToken is
 
   modifier onlyRewardAdmin {
     require(
-      _pool.getAddressesProvider().isRewardAdmin(_msgSender()),
+      _pool.getAccessController().isRewardAdmin(_msgSender()),
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
     );
     _;

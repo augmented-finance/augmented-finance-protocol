@@ -40,7 +40,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
    * @param debtTokenDecimals The decimals of the debtToken, same as the underlying asset's
    */
   function initialize(
-    PoolTokenConfig calldata config,
+    PoolTokenConfig memory config,
     string memory debtTokenName,
     string memory debtTokenSymbol,
     uint8 debtTokenDecimals,

@@ -5,7 +5,7 @@ import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {IReserveInterestRateStrategy} from '../../interfaces/IReserveInterestRateStrategy.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';
+import {IPriceOracleProvider} from '../../interfaces/IPriceOracleProvider.sol';
 import {ILendingRateOracle} from '../../interfaces/ILendingRateOracle.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import 'hardhat/console.sol';
@@ -15,8 +15,8 @@ import 'hardhat/console.sol';
  * @notice Implements the calculation of the interest rates depending on the reserve state
  * @dev The model of interest rate is based on 2 slopes, one before the `OPTIMAL_UTILIZATION_RATE`
  * point of utilization and another from that one to 100%
- * - An instance of this same contract, can't be used across different Aave markets, due to the caching
- *   of the LendingPoolAddressesProvider
+ * - An instance of this same contract, can't be used across different markets, due to the caching
+ *   of the AddressesProvider
  * @author Aave
  **/
 contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
@@ -38,7 +38,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
 
   uint256 public immutable EXCESS_UTILIZATION_RATE;
 
-  ILendingPoolAddressesProvider public immutable addressesProvider;
+  IPriceOracleProvider public immutable addressesProvider;
 
   // Base variable borrow rate when Utilization rate = 0. Expressed in ray
   uint256 internal immutable _baseVariableBorrowRate;
@@ -56,7 +56,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
   uint256 internal immutable _stableRateSlope2;
 
   constructor(
-    ILendingPoolAddressesProvider provider,
+    IPriceOracleProvider provider,
     uint256 optimalUtilizationRate,
     uint256 baseVariableBorrowRate,
     uint256 variableRateSlope1,

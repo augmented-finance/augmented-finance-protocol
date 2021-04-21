@@ -4,11 +4,11 @@ pragma solidity 0.6.12;
 import {IAccessController} from './IAccessController.sol';
 
 /**
- * @title LendingPoolAddressesProvider contract
+ * @title IMarketAccessController contract
  * @dev Main registry of addresses part of or connected to the protocol, including permissioned roles
  * - Acting also as factory of proxies and admin of those, so with right to change its implementations
  **/
-interface ILendingPoolAddressesProvider is IAccessController {
+interface IMarketAccessController is IAccessController {
   function getMarketId() external view returns (string memory);
 
   function getLendingPool() external view returns (address);
@@ -26,14 +26,8 @@ interface ILendingPoolAddressesProvider is IAccessController {
   function isRewardAdmin(address) external view returns (bool);
 }
 
-interface IManagedLendingPoolAddressesProvider is ILendingPoolAddressesProvider {
+interface IManagedMarketAccessController is IMarketAccessController {
   event MarketIdSet(string newMarketId);
-  event LendingPoolUpdated(address indexed newAddress);
-  event ConfigurationAdminUpdated(address indexed newAddress);
-  event LendingPoolConfiguratorUpdated(address indexed newAddress);
-  event LendingPoolCollateralManagerUpdated(address indexed newAddress);
-  event PriceOracleUpdated(address indexed newAddress);
-  event LendingRateOracleUpdated(address indexed newAddress);
 
   function setMarketId(string calldata marketId) external;
 

@@ -22,7 +22,7 @@ interface IManagedAccessController is IAccessController {
 
   function setEmergencyAdmin(address admin) external;
 
-  event ProxyCreated(uint256 id, address indexed newAddress);
-  event AddressSet(uint256 id, address indexed newAddress, bool hasProxy);
+  event ProxyCreated(uint256 indexed id, address indexed newAddress);
+  event AddressSet(uint256 indexed id, address indexed newAddress, bool hasProxy);
   event EmergencyAdminUpdated(address indexed newAddress);
 }

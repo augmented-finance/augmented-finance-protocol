@@ -1,11 +1,12 @@
+// SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import {ILendingPool} from '../../contracts/interfaces/ILendingPool.sol';
 import {LendingPool} from '../../contracts/protocol/lendingpool/LendingPool.sol';
 import {
-  ILendingPoolAddressesProvider
-} from '../../contracts/interfaces/ILendingPoolAddressesProvider.sol';
+  IMarketAccessController
+} from '../../contracts/access/interfaces/IMarketAccessController.sol';
 import {DataTypes} from '../../contracts/protocol/libraries/types/DataTypes.sol';
 
 /*
@@ -197,7 +198,15 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
     originalPool.finalizeTransfer(asset, from, to, amount, balanceFromAfter, balanceToBefore);
   }
 
-  function getAddressesProvider() external view override returns (ILendingPoolAddressesProvider) {
+  function getAddressesProvider() external view override returns (IMarketAccessController) {
     return originalPool.getAddressesProvider();
+  }
+
+  function getAccessController() external view override returns (IMarketAccessController) {
+    return originalPool.getAccessController();
+  }
+
+  function isPoolAdmin(address addr) external view override returns (bool) {
+    return originalPool.isPoolAdmin(addr);
   }
 }

@@ -3,9 +3,6 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import {LendingPool} from '../protocol/lendingpool/LendingPool.sol';
-import {
-  LendingPoolAddressesProvider
-} from '../protocol/configuration/LendingPoolAddressesProvider.sol';
 import {LendingPoolConfigurator} from '../protocol/lendingpool/LendingPoolConfigurator.sol';
 import {AGToken} from '../protocol/tokenization/AGToken.sol';
 import {
@@ -13,6 +10,8 @@ import {
 } from '../protocol/lendingpool/DefaultReserveInterestRateStrategy.sol';
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {StringLib} from './StringLib.sol';
+
+import {IPriceOracleProvider} from '../interfaces/IPriceOracleProvider.sol';
 
 contract ATokensAndRatesHelper is Ownable {
   address payable private pool;
@@ -50,7 +49,7 @@ contract ATokensAndRatesHelper is Ownable {
         address(new AGToken()),
         address(
           new DefaultReserveInterestRateStrategy(
-            LendingPoolAddressesProvider(addressesProvider),
+            IPriceOracleProvider(addressesProvider),
             inputParams[i].rates[0],
             inputParams[i].rates[1],
             inputParams[i].rates[2],

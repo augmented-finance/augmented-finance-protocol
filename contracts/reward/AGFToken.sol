@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.12;
 
-import {IRemoteAccessBitmask} from '../interfaces/IRemoteAccessBitmask.sol';
+import {IRemoteAccessBitmask} from '../access/interfaces/IRemoteAccessBitmask.sol';
 
 import {RewardToken} from './RewardToken.sol';
 import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';

@@ -1,19 +1,20 @@
+// SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {StableDebtToken} from '../../contracts/protocol/tokenization/StableDebtToken.sol';
 import {IncentivizedERC20} from '../../contracts/protocol/tokenization/IncentivizedERC20.sol';
 import {ILendingPool} from '../../contracts/interfaces/ILendingPool.sol';
 import {IBalanceHook} from '../../contracts/interfaces/IBalanceHook.sol';
+import {PoolTokenConfig} from '../../contracts/protocol/tokenization/interfaces/PoolTokenConfig.sol';
 
 contract StableDebtTokenHarness is StableDebtToken {
   constructor(
-    address pool,
-    address underlyingAsset,
+    PoolTokenConfig memory config,
     string memory name,
-    string memory symbol,
-    address incentivesController
+    string memory symbol
   ) public {
-    StableDebtToken.initialize(ILendingPool(pool), underlyingAsset, IBalanceHook(incentivesController), 18, name, symbol, "");
+    StableDebtToken.initialize(config, name, symbol, 18, "");
   }
 
   /**

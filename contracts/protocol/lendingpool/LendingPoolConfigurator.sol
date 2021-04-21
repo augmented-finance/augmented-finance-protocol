@@ -8,7 +8,7 @@ import {
   InitializableImmutableAdminUpgradeabilityProxy
 } from '../../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
-import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';
+import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
 import {IERC20Detailed} from '../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
@@ -30,7 +30,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-  ILendingPoolAddressesProvider internal addressesProvider;
+  IMarketAccessController internal addressesProvider;
   ILendingPool internal pool;
 
   modifier onlyPoolAdmin {
@@ -49,10 +49,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
     return CONFIGURATOR_REVISION;
   }
 
-  function initialize(ILendingPoolAddressesProvider provider)
-    public
-    initializer(CONFIGURATOR_REVISION)
-  {
+  function initialize(IMarketAccessController provider) public initializer(CONFIGURATOR_REVISION) {
     addressesProvider = provider;
     pool = ILendingPool(addressesProvider.getLendingPool());
   }

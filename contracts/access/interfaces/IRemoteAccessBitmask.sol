@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {BitUtils} from '../tools/math/BitUtils.sol';
+import {BitUtils} from '../../tools/math/BitUtils.sol';
 
 interface IRemoteAccessBitmask {
   function getAccessControlMask(address) external view returns (uint256);
