@@ -16,20 +16,18 @@ abstract contract BasicRewardController is Ownable, IRewardController {
   IRewardMinter private _rewardMinter;
 
   IManagedRewardPool[] private _poolList;
-  /* IManagedRewardPool */
+  /* IManagedRewardPool => mask */
   mapping(address => uint256) private _poolMask;
-  /* lookupKey */
-  mapping(address => IManagedRewardPool[]) private _lookups;
-  /* holder */
+  /* holder => masks of related pools */
   mapping(address => uint256) private _memberOf;
 
-  uint256 private _notLazyMask;
+  uint256 private _ignoreMask;
 
   constructor(IRewardMinter rewardMinter) public {
     _rewardMinter = rewardMinter;
   }
 
-  function admin_addRewardPool(IManagedRewardPool pool, address lookupKey) external onlyOwner {
+  function admin_addRewardPool(IManagedRewardPool pool) external onlyOwner {
     require(address(pool) != address(0), 'reward pool required');
     require(_poolMask[address(pool)] == 0, 'already registered');
     pool.claimRewardOnBehalf(address(this)); // access check
@@ -37,16 +35,25 @@ abstract contract BasicRewardController is Ownable, IRewardController {
 
     _poolMask[address(pool)] = 1 << _poolList.length;
     if (!pool.isLazy()) {
-      _notLazyMask |= 1 << _poolList.length;
+      _ignoreMask |= 1 << _poolList.length;
     }
     _poolList.push(pool);
-    if (lookupKey != address(0)) {
-      _lookups[lookupKey].push(pool);
-    }
   }
 
-  function lookup(address lookupKey) external view returns (IManagedRewardPool[] memory) {
-    return _lookups[lookupKey];
+  function admin_removeRewardPool(IManagedRewardPool pool) external onlyOwner {
+    require(address(pool) != address(0), 'reward pool required');
+    uint256 mask = _poolMask[address(pool)];
+    if (mask == 0) {
+      return;
+    }
+    delete (_poolMask[address(pool)]);
+    _ignoreMask |= mask;
+  }
+
+  function admin_updateBaseline(uint256 baseline) external onlyOwner {
+    for (uint256 i = 0; i < _poolList.length; i++) {
+      _poolList[i].updateBaseline(baseline);
+    }
   }
 
   function claimReward() external returns (uint256) {
@@ -65,10 +72,10 @@ abstract contract BasicRewardController is Ownable, IRewardController {
 
   function allocatedByPool(address holder, uint256 allocated) external override {
     uint256 poolMask = _poolMask[msg.sender];
-    require(poolMask != 0, 'unregistered pool');
+    require(poolMask != 0, 'unknown pool');
 
     if (_memberOf[holder] & poolMask != poolMask) {
-      _memberOf[holder] = _memberOf[holder] | poolMask;
+      _memberOf[holder] |= poolMask;
     }
     if (allocated > 0) {
       internalAllocatedByPool(holder, allocated, uint32(block.number));
@@ -78,18 +85,22 @@ abstract contract BasicRewardController is Ownable, IRewardController {
 
   function removedFromPool(address holder) external override {
     uint256 poolMask = _poolMask[msg.sender];
-    require(poolMask == 0, 'unregistered pool');
+    require(poolMask == 0, 'unknown pool');
 
     if (_memberOf[holder] & poolMask != 0) {
       _memberOf[holder] = _memberOf[holder] & ~poolMask;
     }
   }
 
+  function isRateController(address addr) external override returns (bool) {
+    return addr == address(this);
+  }
+
   function internalClaimAndMintReward(address holder, address receiver)
     private
     returns (uint256 amount)
   {
-    uint256 poolMask = _memberOf[holder] & ~_notLazyMask;
+    uint256 poolMask = _memberOf[holder] & ~_ignoreMask;
     uint256 allocated = 0;
     for (uint256 i = 0; poolMask != 0; i++) {
       if (poolMask & 1 != 0) {
@@ -103,7 +114,6 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     if (allocated > 0 && address(_rewardMinter) != address(0)) {
       _rewardMinter.mint(receiver, allocated);
     }
-    console.log('reward claimed', allocated);
     emit RewardsClaimed(holder, receiver, allocated);
     return allocated;
   }

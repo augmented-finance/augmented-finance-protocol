@@ -14,7 +14,11 @@ contract LinearUnweightedRewardPool is AccumulatingRewardPool {
 
   uint256 private _accumRate;
 
-  constructor(IRewardController controller) public AccumulatingRewardPool(controller) {}
+  constructor(
+    IRewardController controller,
+    uint256 initialRate,
+    uint256 baselinePercentage
+  ) public AccumulatingRewardPool(controller, initialRate, baselinePercentage) {}
 
   function internalUpdateTotalSupply(
     address,
@@ -40,8 +44,7 @@ contract LinearUnweightedRewardPool is AccumulatingRewardPool {
   {
     console.log('internalCalcRateAndReward, blocks ', currentBlock, internalGetLastUpdateBlock());
 
-    uint256 adjRate =
-      _accumRate.add(internalGetRate().mul(currentBlock - internalGetLastUpdateBlock()));
+    uint256 adjRate = _accumRate.add(getRate().mul(currentBlock - internalGetLastUpdateBlock()));
     allocated = entry.rewardBase.rayMul(adjRate.sub(entry.lastAccumRate));
 
     console.log('internalCalcRateAndReward, entry ', entry.rewardBase, entry.lastAccumRate);

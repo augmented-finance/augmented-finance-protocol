@@ -12,7 +12,11 @@ contract FixedRewardPool is BasicRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
-  constructor(IRewardController controller) public BasicRewardPool(controller) {}
+  constructor(
+    IRewardController controller,
+    uint256 initialRate,
+    uint256 baselinePercentage
+  ) public BasicRewardPool(controller, initialRate, baselinePercentage) {}
 
   function isLazy() public view override returns (bool) {
     return false;
@@ -35,12 +39,9 @@ contract FixedRewardPool is BasicRewardPool {
     require(newBalance >= oldBalance, 'balance reduction is not allowed by the award pool');
     holder;
     totalSupply;
+    currentBlock;
 
-    if (isCutOff(currentBlock)) {
-      return (0, false);
-    }
-
-    return (uint256(newBalance - oldBalance).rayMul(internalGetRate()), false);
+    return (uint256(newBalance - oldBalance).rayMul(getRate()), false);
   }
 
   function internalGetReward(address, uint32) internal override returns (uint256) {

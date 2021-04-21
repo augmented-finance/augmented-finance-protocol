@@ -722,16 +722,19 @@ export const deployRewardFreezer = async (args: [tEthereumAddress], verify?: boo
     verify
   );
 
-export const deployFixedRewardPool = async (args: [tEthereumAddress], verify?: boolean) =>
+export const deployFixedRewardPool = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
   withSaveAndVerify(
     await new FixedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.FixedRewardPool,
-    args,
+    [], // TODO:
     verify
   );
 
 export const deployLinearWeightedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -742,13 +745,13 @@ export const deployLinearWeightedRewardPool = async (
   );
 
 export const deployLinearUnweightedRewardPool = async (
-  args: [tEthereumAddress],
+  args: [tEthereumAddress, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await new LinearUnweightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.LinearUnweightedRewardPool,
-    args,
+    [], // TODO:
     verify
   );
 

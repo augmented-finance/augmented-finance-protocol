@@ -3,45 +3,57 @@ pragma solidity ^0.6.12;
 
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../tools/math/WadRayMath.sol';
-import {AccessBitmask} from '../access/AccessBitmask.sol';
+import {PercentageMath} from '../tools/math/PercentageMath.sol';
+// import {AccessBitmask} from '../access/AccessBitmask.sol';
 import {IRewardController} from './interfaces/IRewardController.sol';
 import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardPool {
+abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
+  using PercentageMath for uint256;
 
-  uint256 constant aclConfigure = 1 << 1;
+  uint256 private constant NO_BASELINE = type(uint256).max;
 
   IRewardController private _controller;
-  uint32 private _cutOffBlock;
-  // _lastUpdateBlock must NOT be set past-cutOff
-  uint32 private _lastUpdateBlock;
   uint256 private _rate;
+  uint256 private _baselinePercentage;
+  uint32 private _lastUpdateBlock;
 
   mapping(address => uint256) private _providers;
 
-  constructor(IRewardController controller) public {
+  constructor(
+    IRewardController controller,
+    uint256 initialRate,
+    uint256 baselinePercentage
+  ) public {
     require(address(controller) != address(0), 'controller is required');
     _controller = controller;
-    _grantAcl(msg.sender, aclConfigure);
-    _grantAcl(address(controller), aclConfigure);
+    _rate = initialRate;
+    _baselinePercentage = baselinePercentage;
+    _lastUpdateBlock = uint32(block.number);
   }
 
-  function setRate(uint256 rate) external override aclHas(aclConfigure) {
-    uint32 currentBlock = uint32(block.number);
-    require(!isCutOff(currentBlock), 'rate cant be set after cut off');
-
-    if (_lastUpdateBlock == 0) {
-      if (rate == 0) {
-        return;
-      }
-      _rate = rate;
-      _lastUpdateBlock = currentBlock;
+  function updateBaseline(uint256 baseline) external override onlyController {
+    if (_baselinePercentage == NO_BASELINE) {
       return;
     }
+    setRate(baseline.percentMul(_baselinePercentage));
+  }
+
+  function disableBaseline() external override onlyController {
+    _baselinePercentage = NO_BASELINE;
+  }
+
+  function setBaselinePercentage(uint256 factor) external override onlyRateController {
+    require(factor < NO_BASELINE, 'illegal value');
+    _baselinePercentage = factor;
+  }
+
+  function setRate(uint256 rate) public override onlyRateController {
+    uint32 currentBlock = uint32(block.number);
     if (_rate == rate) {
       return;
     }
@@ -66,40 +78,12 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
     _lastUpdateBlock = currentBlock;
   }
 
-  function getRate() external view returns (uint256) {
-    if (isCutOff(uint32(block.number))) {
-      return 0;
-    }
-    return _rate;
-  }
-
-  function internalGetRate() internal view returns (uint256) {
+  function getRate() public view returns (uint256) {
     return _rate;
   }
 
   function internalGetLastUpdateBlock() internal view returns (uint32) {
     return _lastUpdateBlock;
-  }
-
-  function setCutOff(uint32 blockNumber) external aclHas(aclConfigure) {
-    if (blockNumber > 0) {
-      require(uint256(blockNumber) > block.number, 'cut off must be in future');
-    } else {
-      require(uint256(_cutOffBlock) > block.number, 'past cut off cant be cancelled');
-    }
-    _cutOffBlock = blockNumber;
-  }
-
-  function getCutOff() external view returns (uint32 blockNumber) {
-    return _cutOffBlock;
-  }
-
-  function internalGetCutOff() internal view returns (uint32 blockNumber) {
-    return _cutOffBlock;
-  }
-
-  function isCutOff(uint32 blockNumber) internal view returns (bool) {
-    return _cutOffBlock > 0 && _cutOffBlock < blockNumber;
   }
 
   function claimRewardOnBehalf(address holder) external override onlyController returns (uint256) {
@@ -116,11 +100,11 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
     return internalCalcReward(holder, uint32(block.number));
   }
 
-  function addRewardProvider(address provider) external override aclHas(aclConfigure) {
+  function addRewardProvider(address provider) external override onlyController {
     _providers[provider] = 1;
   }
 
-  function removeRewardProvider(address provider) external override aclHas(aclConfigure) {
+  function removeRewardProvider(address provider) external override onlyController {
     uint256 providerInfo = _providers[provider];
     if (providerInfo == 0) {
       return;
@@ -139,10 +123,18 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
     require(providerInfo > 0, 'unknown reward provider');
     internalUpdateTotalSupply(msg.sender, providerInfo - 1, totalSupply, uint32(block.number));
 
+    internalBalanceUpdate(holder, oldBalance, newBalance, totalSupply);
+  }
+
+  function internalBalanceUpdate(
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256 totalSupply
+  ) internal {
     (uint256 allocated, bool newcomer) =
       internalUpdateReward(holder, oldBalance, newBalance, totalSupply, uint32(block.number));
     if (allocated > 0 || (newcomer && !isLazy())) {
-      console.log('_controller.allocatedByPool');
       _controller.allocatedByPool(holder, allocated);
     }
     if (newBalance == 0 && !newcomer) {
@@ -184,7 +176,12 @@ abstract contract BasicRewardPool is AccessBitmask, IRewardPool, IManagedRewardP
     returns (uint256);
 
   modifier onlyController() {
-    require(msg.sender == address(_controller), 'only controller is allowed');
+    require(address(_controller) == msg.sender, 'only controller is allowed');
+    _;
+  }
+
+  modifier onlyRateController() {
+    require(_controller.isRateController(msg.sender), 'only rate controller is allowed');
     _;
   }
 }

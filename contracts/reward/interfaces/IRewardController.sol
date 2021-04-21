@@ -8,6 +8,8 @@ interface IRewardController {
 
   function removedFromPool(address holder) external;
 
+  function isRateController(address) external returns (bool);
+
   event RewardsAllocated(address user, uint256 amount);
   event RewardsClaimed(address user, address to, uint256 amount);
 }
