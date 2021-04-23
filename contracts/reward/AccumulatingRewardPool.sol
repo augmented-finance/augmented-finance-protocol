@@ -70,6 +70,7 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
 
   function internalGetReward(address holder, uint32 currentBlock)
     internal
+    virtual
     override
     returns (uint256)
   {
@@ -86,6 +87,7 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
   function internalCalcReward(address holder, uint32 currentBlock)
     internal
     view
+    virtual
     override
     returns (uint256)
   {

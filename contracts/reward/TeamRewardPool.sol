@@ -50,6 +50,17 @@ contract TeamRewardPool is AccumulatingRewardPool {
     super.internalRateUpdated(lastRate, lastBlock, currentBlock);
   }
 
+  function internalGetReward(address holder, uint32 currentBlock)
+    internal
+    override
+    returns (uint256)
+  {
+    if (!isUnlocked(currentBlock)) {
+      return 0;
+    }
+    return super.internalGetReward(holder, currentBlock);
+  }
+
   function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
     internal
     view
@@ -74,8 +85,8 @@ contract TeamRewardPool is AccumulatingRewardPool {
     return _totalShare;
   }
 
-  function isUnlocked() public view returns (bool) {
-    return _lockupBlock > 0 && _lockupBlock < block.number;
+  function isUnlocked(uint32 blockNumber) public view returns (bool) {
+    return _lockupBlock > 0 && _lockupBlock < blockNumber;
   }
 
   function updateTeamMember(address member, uint16 memberSharePct)
@@ -91,7 +102,10 @@ contract TeamRewardPool is AccumulatingRewardPool {
 
     (uint256 allocated, bool newcomer) =
       internalUpdateReward(member, 0, memberSharePct, 0, uint32(block.number));
-    require(allocated == 0 || isUnlocked(), 'member share can not be changed during lockup');
+    require(
+      allocated == 0 || isUnlocked(uint32(block.number)),
+      'member share can not be changed during lockup'
+    );
     if (allocated > 0 || newcomer) {
       IRewardController(getRewardController()).allocatedByPool(member, allocated);
     }
