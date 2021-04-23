@@ -17,7 +17,7 @@ contract LinearUnweightedRewardPool is AccumulatingRewardPool {
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint256 baselinePercentage
+    uint16 baselinePercentage
   ) public AccumulatingRewardPool(controller, initialRate, baselinePercentage) {}
 
   function internalUpdateTotalSupply(

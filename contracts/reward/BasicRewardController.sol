@@ -30,7 +30,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
   function admin_addRewardPool(IManagedRewardPool pool) external onlyOwner {
     require(address(pool) != address(0), 'reward pool required');
     require(_poolMask[address(pool)] == 0, 'already registered');
-    pool.claimRewardOnBehalf(address(this)); // access check
+    pool.claimRewardFor(address(this)); // access check
     require(_poolList.length <= 255, 'too many pools');
 
     _poolMask[address(pool)] = 1 << _poolList.length;
@@ -110,7 +110,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
       mask &= _memberOf[holder];
       for (uint256 i = 0; mask != 0; i++) {
         if (mask & 1 != 0) {
-          amount = amount.add(_poolList[i].claimRewardOnBehalf(holder));
+          amount = amount.add(_poolList[i].claimRewardFor(holder));
         }
         mask >>= 1;
       }

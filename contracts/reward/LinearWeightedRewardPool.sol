@@ -22,7 +22,7 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint256 baselinePercentage,
+    uint16 baselinePercentage,
     uint256 maxTotalSupply
   ) public AccumulatingRewardPool(controller, initialRate, baselinePercentage) {
     require(maxTotalSupply > 0, 'max total supply is unknown');

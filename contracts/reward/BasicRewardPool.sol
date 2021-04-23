@@ -15,19 +15,19 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
 
-  uint256 private constant NO_BASELINE = type(uint256).max;
+  uint16 private constant NO_BASELINE = type(uint16).max;
 
   IRewardController private _controller;
   uint256 private _rate;
-  uint256 private _baselinePercentage;
   uint32 private _lastUpdateBlock;
+  uint16 private _baselinePercentage;
 
   mapping(address => uint256) private _providers;
 
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint256 baselinePercentage
+    uint16 baselinePercentage
   ) public {
     require(address(controller) != address(0), 'controller is required');
     _controller = controller;
@@ -47,8 +47,8 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
     _baselinePercentage = NO_BASELINE;
   }
 
-  function setBaselinePercentage(uint256 factor) external override onlyRateController {
-    require(factor < NO_BASELINE, 'illegal value');
+  function setBaselinePercentage(uint16 factor) external override onlyRateController {
+    require(factor <= PercentageMath.ONE, 'illegal value');
     _baselinePercentage = factor;
   }
 
@@ -90,7 +90,7 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
     return internalGetReward(holder, uint32(block.number));
   }
 
-  function calcRewardFor(address holder) external view override onlyController returns (uint256) {
+  function calcRewardFor(address holder) external view override returns (uint256) {
     return internalCalcReward(holder, uint32(block.number));
   }
 

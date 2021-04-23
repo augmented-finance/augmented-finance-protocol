@@ -15,7 +15,7 @@ contract FixedRewardPool is BasicRewardPool {
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint256 baselinePercentage
+    uint16 baselinePercentage
   ) public BasicRewardPool(controller, initialRate, baselinePercentage) {}
 
   function isLazy() public view override returns (bool) {

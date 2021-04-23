@@ -3,6 +3,7 @@ pragma solidity ^0.6.12;
 
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../tools/math/WadRayMath.sol';
+import {PercentageMath} from '../tools/math/PercentageMath.sol';
 
 import {BasicRewardController} from './BasicRewardController.sol';
 import {IRewardMinter} from './interfaces/IRewardMinter.sol';
@@ -12,6 +13,7 @@ import 'hardhat/console.sol';
 contract RewardFreezer is BasicRewardController {
   using SafeMath for uint256;
   using WadRayMath for uint256;
+  using PercentageMath for uint256;
 
   struct FrozenReward {
     uint256 frozenReward;
@@ -21,13 +23,13 @@ contract RewardFreezer is BasicRewardController {
   mapping(address => FrozenReward) private _frozenRewards;
   mapping(address => uint256) private _claimableRewards;
   uint32 private _meltdownBlock;
-  uint256 private _unfrozenPortion;
+  uint32 private _unfrozenPortion;
 
   constructor(IRewardMinter rewardMinter) public BasicRewardController(rewardMinter) {}
 
-  function admin_setFreezePortion(uint256 freezePortion) external onlyOwner {
-    require(freezePortion <= WadRayMath.RAY, 'max = 1 ray = 100%');
-    _unfrozenPortion = WadRayMath.RAY - freezePortion;
+  function admin_setFreezePercentage(uint32 freezePortion) external onlyOwner {
+    require(freezePortion <= PercentageMath.ONE, 'max is 10000 (100%)');
+    _unfrozenPortion = PercentageMath.ONE - freezePortion;
   }
 
   function admin_setMeltDownBlock(uint32 blockNumber) external onlyOwner {
