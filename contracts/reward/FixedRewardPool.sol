@@ -12,14 +12,23 @@ contract FixedRewardPool is BasicRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
+  uint256 _rewardLimit;
+
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint16 baselinePercentage
-  ) public BasicRewardPool(controller, initialRate, baselinePercentage) {}
+    uint16 baselinePercentage,
+    uint256 rewardLimit
+  ) public BasicRewardPool(controller, initialRate, baselinePercentage) {
+    _rewardLimit = rewardLimit;
+  }
 
   function isLazy() public view override returns (bool) {
     return false;
+  }
+
+  function getRemainingRewards() external view returns (uint256) {
+    return _rewardLimit;
   }
 
   function internalUpdateTotalSupply(
@@ -33,15 +42,17 @@ contract FixedRewardPool is BasicRewardPool {
     address holder,
     uint256 oldBalance,
     uint256 newBalance,
-    uint256 totalSupply,
-    uint32 currentBlock
+    uint256,
+    uint32
   ) internal override returns (uint256, bool) {
-    require(newBalance >= oldBalance, 'balance reduction is not allowed by the award pool');
+    require(newBalance >= oldBalance, 'balance reduction is not allowed by the reward pool');
+    require(_rewardLimit > 0, 'reward pool is depleted');
     holder;
-    totalSupply;
-    currentBlock;
 
-    return (uint256(newBalance - oldBalance).rayMul(getRate()), false);
+    uint256 allocated = uint256(newBalance - oldBalance).rayMul(getRate());
+    require(_rewardLimit >= allocated, 'insufficient reward pool balance');
+    _rewardLimit -= allocated;
+    return (allocated, false);
   }
 
   function internalGetReward(address, uint32) internal override returns (uint256) {
