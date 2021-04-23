@@ -86,31 +86,31 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
     return _lastUpdateBlock;
   }
 
-  function claimRewardOnBehalf(address holder) external override onlyController returns (uint256) {
+  function claimRewardFor(address holder) external override onlyController returns (uint256) {
     return internalGetReward(holder, uint32(block.number));
   }
 
-  function calcRewardOnBehalf(address holder)
-    external
-    view
-    override
-    onlyController
-    returns (uint256)
-  {
+  function calcRewardFor(address holder) external view override onlyController returns (uint256) {
     return internalCalcReward(holder, uint32(block.number));
   }
 
   function addRewardProvider(address provider) external override onlyController {
+    require(provider != address(0), 'provider is required');
+    uint256 providerBalance = _providers[provider];
+    if (providerBalance > 0) {
+      return;
+    }
     _providers[provider] = 1;
+    internalUpdateTotalSupply(provider, 0, 1, uint32(block.number));
   }
 
   function removeRewardProvider(address provider) external override onlyController {
-    uint256 providerInfo = _providers[provider];
-    if (providerInfo == 0) {
+    uint256 providerBalance = _providers[provider];
+    if (providerBalance == 0) {
       return;
     }
+    internalUpdateTotalSupply(provider, providerBalance, 0, uint32(block.number));
     delete (_providers[provider]);
-    internalUpdateTotalSupply(provider, providerInfo - 1, 0, uint32(block.number));
   }
 
   function handleBalanceUpdate(
@@ -119,9 +119,12 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
     uint256 newBalance,
     uint256 totalSupply
   ) external override {
-    uint256 providerInfo = _providers[msg.sender];
-    require(providerInfo > 0, 'unknown reward provider');
-    internalUpdateTotalSupply(msg.sender, providerInfo - 1, totalSupply, uint32(block.number));
+    uint256 providerBalance = _providers[msg.sender];
+    require(providerBalance > 0, 'unknown reward provider');
+    if (totalSupply == 0) {
+      totalSupply = 1;
+    }
+    internalUpdateTotalSupply(msg.sender, providerBalance, totalSupply, uint32(block.number));
 
     internalBalanceUpdate(holder, oldBalance, newBalance, totalSupply);
   }
@@ -144,9 +147,12 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
 
   function isLazy() public view virtual override returns (bool);
 
-  function internalSetProviderInfo(address provider, uint256 providerInfo) internal {
-    require(_providers[provider] > 0, 'unknown reward provider');
-    _providers[provider] = providerInfo.add(1);
+  function internalSetProviderBalance(address provider, uint256 providerBalance) internal {
+    // require(_providers[provider] > 0, 'unknown reward provider');
+    if (providerBalance == 0) {
+      providerBalance = 1;
+    }
+    _providers[provider] = providerBalance;
   }
 
   function internalUpdateTotalSupply(

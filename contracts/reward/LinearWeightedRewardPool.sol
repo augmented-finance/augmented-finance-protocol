@@ -35,21 +35,21 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
 
   function internalUpdateTotalSupply(
     address provider,
-    uint256 providerInfo,
+    uint256 providerBalance,
     uint256 totalSupply,
     uint32 currentBlock
   ) internal override {
-    if (providerInfo == totalSupply) {
+    if (providerBalance == totalSupply) {
       return;
     }
-    internalSetProviderInfo(provider, totalSupply);
+    internalSetProviderBalance(provider, totalSupply);
 
-    if (providerInfo > totalSupply) {
-      uint256 delta = providerInfo - totalSupply;
+    if (providerBalance > totalSupply) {
+      uint256 delta = providerBalance - totalSupply;
       internalSetTotalSupply(_totalSupply.sub(delta), currentBlock);
       return;
     }
-    uint256 delta = totalSupply - providerInfo;
+    uint256 delta = totalSupply - providerBalance;
     internalSetTotalSupply(_totalSupply.add(delta), currentBlock);
   }
 
