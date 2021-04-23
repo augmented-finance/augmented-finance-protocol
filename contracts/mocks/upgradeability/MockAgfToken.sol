@@ -8,4 +8,10 @@ contract MockAgfToken is AGFToken {
   function getRevision() internal pure override returns (uint256) {
     return super.getRevision() + 1;
   }
+
+  modifier aclHas(uint256) override {
+    _;
+  }
+
+  function _checkTransfer(address, address) internal view override {}
 }
