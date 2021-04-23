@@ -20,13 +20,13 @@ contract LendingPoolStorage {
   // the list of the available reserves, structured as a mapping for gas savings reasons
   mapping(uint256 => address) internal _reservesList;
 
-  uint256 internal _reservesCount;
+  uint16 internal _maxStableRateBorrowSizePct;
+
+  uint16 internal _flashLoanPremiumPct;
+
+  uint8 internal _reservesCount;
+
+  uint8 internal _maxNumberOfReserves;
 
   bool internal _paused;
-
-  uint256 internal _maxStableRateBorrowSizePercent;
-
-  uint256 internal _flashLoanPremiumTotal;
-
-  uint256 internal _maxNumberOfReserves;
 }

@@ -24,6 +24,8 @@ interface IMarketAccessController is IAccessController {
   function getLendingRateOracle() external view returns (address);
 
   function isRewardAdmin(address) external view returns (bool);
+
+  function isSponsoredLoanUser(address) external view returns (bool);
 }
 
 interface IManagedMarketAccessController is IMarketAccessController {
