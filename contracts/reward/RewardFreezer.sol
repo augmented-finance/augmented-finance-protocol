@@ -2,7 +2,6 @@
 pragma solidity ^0.6.12;
 
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../tools/math/PercentageMath.sol';
 
 import {BasicRewardController} from './BasicRewardController.sol';
@@ -12,7 +11,6 @@ import 'hardhat/console.sol';
 
 contract RewardFreezer is BasicRewardController {
   using SafeMath for uint256;
-  using WadRayMath for uint256;
   using PercentageMath for uint256;
 
   struct FrozenReward {
@@ -69,6 +67,8 @@ contract RewardFreezer is BasicRewardController {
     uint256 allocated,
     uint32 currentBlock
   ) private returns (uint256 amount) {
+    console.log('internalApplyAllocated ', _meltdownBlock, _unfrozenPortion, allocated);
+
     if (_meltdownBlock > 0 && _meltdownBlock <= currentBlock) {
       uint256 frozenReward = _frozenRewards[holder].frozenReward;
       if (frozenReward > 0) {
@@ -78,8 +78,8 @@ contract RewardFreezer is BasicRewardController {
       return allocated;
     }
 
-    if (_unfrozenPortion < WadRayMath.RAY) {
-      amount = allocated.rayMul(_unfrozenPortion);
+    if (_unfrozenPortion < PercentageMath.ONE) {
+      amount = allocated.percentMul(_unfrozenPortion);
       allocated -= amount;
     } else {
       amount = allocated;

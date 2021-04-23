@@ -32,7 +32,11 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
     require(address(controller) != address(0), 'controller is required');
     _controller = controller;
     _rate = initialRate;
-    _baselinePercentage = baselinePercentage;
+    if (_rate != 0 && baselinePercentage == 0) {
+      _baselinePercentage = NO_BASELINE;
+    } else {
+      _baselinePercentage = baselinePercentage;
+    }
     _lastUpdateBlock = uint32(block.number);
   }
 
@@ -137,7 +141,8 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
   ) internal {
     (uint256 allocated, bool newcomer) =
       internalUpdateReward(holder, oldBalance, newBalance, totalSupply, uint32(block.number));
-    if (allocated > 0 || (newcomer && !isLazy())) {
+
+    if (allocated > 0 || (newcomer && isLazy())) {
       _controller.allocatedByPool(holder, allocated);
     }
     if (newBalance == 0 && !newcomer) {
