@@ -57,17 +57,21 @@ abstract contract BasicRewardController is Ownable, IRewardController {
   }
 
   function claimReward() external returns (uint256) {
-    return internalClaimAndMintReward(msg.sender, msg.sender);
+    return internalClaimAndMintReward(msg.sender, ~uint256(0), msg.sender);
   }
 
-  function claimRewardAndTransferTo(address receiver) external returns (uint256) {
+  function claimRewardAndTransferTo(address receiver, uint256 mask) external returns (uint256) {
     require(receiver != address(0), 'receiver is required');
-    return internalClaimAndMintReward(msg.sender, receiver);
+    return internalClaimAndMintReward(msg.sender, mask, receiver);
   }
 
-  function claimRewardOnBehalf(address holder) external returns (uint256) {
+  function claimRewardFor(address holder, uint256 mask) external returns (uint256) {
     require(holder != address(0), 'holder is required');
-    return internalClaimAndMintReward(holder, holder);
+    return internalClaimAndMintReward(holder, mask, holder);
+  }
+
+  function claimablePools(address holder) external view returns (uint256) {
+    return _memberOf[holder] & ~_ignoreMask;
   }
 
   function allocatedByPool(address holder, uint256 allocated) external override {
@@ -96,26 +100,29 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     return addr == address(this);
   }
 
-  function internalClaimAndMintReward(address holder, address receiver)
-    private
-    returns (uint256 amount)
-  {
-    uint256 poolMask = _memberOf[holder] & ~_ignoreMask;
-    uint256 allocated = 0;
-    for (uint256 i = 0; poolMask != 0; i++) {
-      if (poolMask & 1 != 0) {
-        allocated = allocated.add(_poolList[i].claimRewardOnBehalf(holder));
+  function internalClaimAndMintReward(
+    address holder,
+    uint256 mask,
+    address receiver
+  ) private returns (uint256 amount) {
+    mask &= ~_ignoreMask;
+    if (mask != 0) {
+      mask &= _memberOf[holder];
+      for (uint256 i = 0; mask != 0; i++) {
+        if (mask & 1 != 0) {
+          amount = amount.add(_poolList[i].claimRewardOnBehalf(holder));
+        }
+        mask >>= 1;
       }
-      poolMask >>= 1;
     }
 
-    allocated = internalClaimByCall(holder, allocated, uint32(block.number));
+    amount = internalClaimByCall(holder, amount, uint32(block.number));
 
-    if (allocated > 0 && address(_rewardMinter) != address(0)) {
-      _rewardMinter.mint(receiver, allocated);
+    if (amount > 0 && address(_rewardMinter) != address(0)) {
+      _rewardMinter.mint(receiver, amount);
     }
-    emit RewardsClaimed(holder, receiver, allocated);
-    return allocated;
+    emit RewardsClaimed(holder, receiver, amount);
+    return amount;
   }
 
   function internalAllocatedByPool(
