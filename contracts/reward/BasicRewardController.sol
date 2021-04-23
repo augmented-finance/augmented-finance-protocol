@@ -43,10 +43,6 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     _poolList.push(pool);
   }
 
-  function admin_addRewardProvider(address pool, address provider) external onlyOwner {
-    IManagedRewardPool(pool).addRewardProvider(provider);
-  }
-
   function admin_removeRewardPool(IManagedRewardPool pool) external onlyOwner {
     require(address(pool) != address(0), 'reward pool required');
     uint256 mask = _poolMask[address(pool)];
@@ -57,10 +53,22 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     _ignoreMask |= mask;
   }
 
+  function admin_addRewardProvider(address pool, address provider) external onlyOwner {
+    IManagedRewardPool(pool).addRewardProvider(provider);
+  }
+
+  function admin_removeRewardProvider(address pool, address provider) external onlyOwner {
+    IManagedRewardPool(pool).removeRewardProvider(provider);
+  }
+
   function admin_updateBaseline(uint256 baseline) external onlyOwner {
     for (uint256 i = 0; i < _poolList.length; i++) {
       _poolList[i].updateBaseline(baseline);
     }
+  }
+
+  function admin_setPoolRate(address pool, uint256 rate) external onlyOwner {
+    IManagedRewardPool(pool).setRate(rate);
   }
 
   function getRewardMinter() external view returns (address) {
