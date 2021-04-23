@@ -10,7 +10,7 @@ interface IManagedRewardPool {
 
   function updateBaseline(uint256) external;
 
-  function setBaselinePercentage(uint256) external;
+  function setBaselinePercentage(uint16) external;
 
   function disableBaseline() external;
 

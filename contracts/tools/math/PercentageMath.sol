@@ -12,10 +12,10 @@ import {Errors} from '../Errors.sol';
  **/
 
 library PercentageMath {
-  uint256 constant BP = 1; // basis point
-  uint256 constant PCT = 100 * BP; // basis points per percentage point
-  uint256 constant ONE = 100 * PCT; // basis points per 1 (100%)
-  uint256 constant HALF_ONE = ONE / 2;
+  uint16 constant BP = 1; // basis point
+  uint16 constant PCT = 100 * BP; // basis points per percentage point
+  uint16 constant ONE = 100 * PCT; // basis points per 1 (100%)
+  uint16 constant HALF_ONE = ONE / 2;
   // deprecated
   uint256 constant PERCENTAGE_FACTOR = ONE; //percentage plus two decimals
 

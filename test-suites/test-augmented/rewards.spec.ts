@@ -43,7 +43,7 @@ describe('Migrator test suite', () => {
     await linearUnweightedRewardPool.addRewardProvider(deployer.address);
     await linearUnweightedRewardPool.setRate(RAY);
 
-    await rewardFreezer.admin_setFreezePortion(1);
+    await rewardFreezer.admin_setFreezePercentage(1);
 
     const tx = await linearUnweightedRewardPool.handleBalanceUpdate(deployer.address, 0, 2000, 100000);
     await tx.wait(1);
