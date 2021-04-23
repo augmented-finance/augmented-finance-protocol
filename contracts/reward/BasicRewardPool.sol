@@ -86,6 +86,10 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
     return _rate;
   }
 
+  function getRewardController() public view returns (address) {
+    return address(_controller);
+  }
+
   function internalGetLastUpdateBlock() internal view returns (uint32) {
     return _lastUpdateBlock;
   }
@@ -98,7 +102,7 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
     return internalCalcReward(holder, uint32(block.number));
   }
 
-  function addRewardProvider(address provider) external override onlyController {
+  function addRewardProvider(address provider) external virtual override onlyController {
     require(provider != address(0), 'provider is required');
     uint256 providerBalance = _providers[provider];
     if (providerBalance > 0) {
@@ -108,7 +112,7 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
     internalUpdateTotalSupply(provider, 0, 1, uint32(block.number));
   }
 
-  function removeRewardProvider(address provider) external override onlyController {
+  function removeRewardProvider(address provider) external virtual override onlyController {
     uint256 providerBalance = _providers[provider];
     if (providerBalance == 0) {
       return;
@@ -186,8 +190,12 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
     virtual
     returns (uint256);
 
+  function isController(address addr) internal view returns (bool) {
+    return address(_controller) == addr;
+  }
+
   modifier onlyController() {
-    require(address(_controller) == msg.sender, 'only controller is allowed');
+    require(isController(msg.sender), 'only controller is allowed');
     _;
   }
 
