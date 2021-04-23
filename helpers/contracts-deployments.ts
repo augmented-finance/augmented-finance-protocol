@@ -621,11 +621,12 @@ export const deployMockAgfToken = async (
 ) => {
   const instance = await withSaveAndVerify(
     await new MockAgfTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.MockDepositToken,
+    eContractid.MockAgfToken,
     [],
     verify
   );
-  await instance.initialize(...args);
+
+  await instance.initialize(args[0], args[1], args[2]);
 
   return instance;
 };
@@ -636,7 +637,7 @@ export const deployMockStakedAgfToken = async (
 ) => {
   const instance = await withSaveAndVerify(
     await new MockStakedAgfTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.MockDepositToken,
+    eContractid.MockStakedAgfToken,
     [],
     verify
   );

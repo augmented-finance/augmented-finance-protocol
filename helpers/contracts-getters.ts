@@ -32,9 +32,10 @@ import {
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
   LinearUnweightedRewardPoolFactory,
-  AGFToken,
   AGFTokenFactory,
   MigratorFactory,
+  MockAgfTokenFactory,
+  MockStakedAgfTokenFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -272,6 +273,20 @@ export const getMockStableDebtToken = async (address?: tEthereumAddress) =>
   await MockStableDebtTokenFactory.connect(
     address ||
       (await getDb().get(`${eContractid.MockStableDebtToken}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
+export const getMockAgfToken = async (address?: tEthereumAddress) =>
+  await MockAgfTokenFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.MockAgfToken}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
+export const getMockStakedAgfToken = async (address?: tEthereumAddress) =>
+  await MockStakedAgfTokenFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.MockStakedAgfToken}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
 

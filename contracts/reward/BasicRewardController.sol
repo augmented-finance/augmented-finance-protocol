@@ -27,6 +27,9 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     _rewardMinter = rewardMinter;
   }
 
+  event RewardsAllocated(address indexed user, uint256 amount);
+  event RewardsClaimed(address indexed user, address indexed to, uint256 amount);
+
   function admin_addRewardPool(IManagedRewardPool pool) external onlyOwner {
     require(address(pool) != address(0), 'reward pool required');
     require(_poolMask[address(pool)] == 0, 'already registered');
@@ -38,6 +41,10 @@ abstract contract BasicRewardController is Ownable, IRewardController {
       _ignoreMask |= 1 << _poolList.length;
     }
     _poolList.push(pool);
+  }
+
+  function admin_addRewardProvider(address pool, address provider) external onlyOwner {
+    IManagedRewardPool(pool).addRewardProvider(provider);
   }
 
   function admin_removeRewardPool(IManagedRewardPool pool) external onlyOwner {
@@ -56,7 +63,11 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     }
   }
 
-  function claimReward() external returns (uint256) {
+  function getRewardMinter() external view returns (address) {
+    return address(_rewardMinter);
+  }
+
+  function claimReward() external returns (uint256 amount) {
     return internalClaimAndMintReward(msg.sender, ~uint256(0), msg.sender);
   }
 
@@ -108,6 +119,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     mask &= ~_ignoreMask;
     if (mask != 0) {
       mask &= _memberOf[holder];
+      console.log('internalClaimAndMintReward mask', mask);
       for (uint256 i = 0; mask != 0; i++) {
         if (mask & 1 != 0) {
           amount = amount.add(_poolList[i].claimRewardFor(holder));
@@ -116,12 +128,16 @@ abstract contract BasicRewardController is Ownable, IRewardController {
       }
     }
 
+    console.log('RewardsAllocated', amount, block.number);
     amount = internalClaimByCall(holder, amount, uint32(block.number));
 
-    if (amount > 0 && address(_rewardMinter) != address(0)) {
-      _rewardMinter.mint(receiver, amount);
+    if (amount > 0) {
+      if (address(_rewardMinter) != address(0)) {
+        _rewardMinter.mint(receiver, amount);
+      }
+      emit RewardsClaimed(holder, receiver, amount);
     }
-    emit RewardsClaimed(holder, receiver, amount);
+    console.log('RewardsClaimed', amount);
     return amount;
   }
 

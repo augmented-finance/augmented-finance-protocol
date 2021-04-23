@@ -1,33 +1,31 @@
 import { task } from 'hardhat/config';
 import {
-  deployAGFToken,
+  deployMockAgfToken,
   deployLinearUnweightedRewardPool,
   deployRewardFreezer,
 } from '../../helpers/contracts-deployments';
 
 import { getAccessController } from '../../helpers/contracts-getters';
 import { waitForTx } from '../../helpers/misc-utils';
-import { ZERO_ADDRESS } from '../../helpers/constants';
+import { RAY, ZERO_ADDRESS } from '../../helpers/constants';
 
 task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(async ({ verify }, localBRE) => {
     await localBRE.run('set-DRE');
 
-    const accessController = await getAccessController();
-    const agfToken = await deployAGFToken(verify);
-    await agfToken.initialize(
-      accessController.address,
-      'Augmented finance governance token',
-      'AGF'
+    // Mock token doesn't check access
+    const agfToken = await deployMockAgfToken(
+      [ZERO_ADDRESS, 'Reward token updated', 'AGF'],
+      verify
     );
 
-    const rewardFreezer = await deployRewardFreezer([agfToken.address], verify);
     // FIXME:
-    // await agfToken.admin_grant(rewardFreezer.address, 1); // AGFToken.aclMint
+    // use access controller and non-mock token when ready
+    const rewardFreezer = await deployRewardFreezer([agfToken.address], verify);
 
     const linearUnweightedRewardPool = await deployLinearUnweightedRewardPool(
-      [rewardFreezer.address, 0, 0],
+      [rewardFreezer.address, RAY, 0],
       verify
     );
 
