@@ -57,11 +57,11 @@ contract AGFToken is
   }
 
   function _checkTransfer(address from, address to) internal view virtual {
-    require(_getRemoteAcl(from) & AccessFlags.REWARD_SUSPEND_ADDRESS == 0, 'sender is suspended');
+    require(_getRemoteAcl(from) & AccessFlags.REWARD_SUSPEND_USER == 0, 'sender is suspended');
     if (from == to) {
       return;
     }
-    require(_getRemoteAcl(to) & AccessFlags.REWARD_SUSPEND_ADDRESS == 0, 'receiver is suspended');
+    require(_getRemoteAcl(to) & AccessFlags.REWARD_SUSPEND_USER == 0, 'receiver is suspended');
   }
 
   function _beforeTokenTransfer(

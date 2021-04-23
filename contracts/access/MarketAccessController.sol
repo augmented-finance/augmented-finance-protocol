@@ -127,4 +127,8 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
   function setLendingRateOracle(address lendingRateOracle) external override onlyOwner {
     setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle);
   }
+
+  function isSponsoredLoanUser(address addr) external view override returns (bool) {
+    return isAddress(AccessFlags.POOL_SPONSORED_LOAN_USER, addr);
+  }
 }

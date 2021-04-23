@@ -61,6 +61,11 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     _;
   }
 
+  modifier onlySponsoredLoan() {
+    require(_addressesProvider.isSponsoredLoanUser(msg.sender), Errors.LP_IS_NOT_SPONSORED_LOAN);
+    _;
+  }
+
   function _whenNotPaused() internal view {
     require(!_paused, Errors.LP_IS_PAUSED);
   }
@@ -85,8 +90,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    **/
   function initialize(IMarketAccessController provider) public initializer(POOL_REVISION) {
     _addressesProvider = provider;
-    _maxStableRateBorrowSizePercent = 2500;
-    _flashLoanPremiumTotal = 9;
+    _maxStableRateBorrowSizePct = 25 * PercentageMath.PCT;
+    _flashLoanPremiumPct = 9 * PercentageMath.BP;
     _maxNumberOfReserves = 128;
   }
 
@@ -453,14 +458,14 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
   struct FlashLoanLocalVars {
     IFlashLoanReceiver receiver;
-    address oracle;
-    uint256 i;
     address currentAsset;
     address currentATokenAddress;
     uint256 currentAmount;
     uint256 currentPremium;
     uint256 currentAmountPlusPremium;
-    address debtToken;
+    address onBehalfOf;
+    uint64 referralCode;
+    uint8 i;
   }
 
   /**
@@ -490,27 +495,77 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     uint64 referralCode
   ) external override whenNotPaused {
     FlashLoanLocalVars memory vars;
+    vars.receiver = IFlashLoanReceiver(receiverAddress);
+    vars.referralCode = referralCode;
+    vars.onBehalfOf = onBehalfOf;
 
+    _flashLoan(vars, assets, amounts, modes, params, _flashLoanPremiumPct);
+  }
+
+  function sponsoredFlashLoan(
+    address receiverAddress,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint64 referralCode
+  ) external whenNotPaused onlySponsoredLoan {
+    FlashLoanLocalVars memory vars;
+    vars.receiver = IFlashLoanReceiver(receiverAddress);
+    vars.referralCode = referralCode;
+    vars.onBehalfOf = onBehalfOf;
+
+    _flashLoan(vars, assets, amounts, modes, params, 0);
+  }
+
+  function _flashLoan(
+    FlashLoanLocalVars memory vars,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    bytes calldata params,
+    uint16 flashLoanPremium
+  ) private {
     ValidationLogic.validateFlashloan(assets, amounts);
 
-    address[] memory aTokenAddresses = new address[](assets.length);
-    uint256[] memory premiums = new uint256[](assets.length);
-
-    vars.receiver = IFlashLoanReceiver(receiverAddress);
-
-    for (vars.i = 0; vars.i < assets.length; vars.i++) {
-      aTokenAddresses[vars.i] = _reserves[assets[vars.i]].aTokenAddress;
-
-      premiums[vars.i] = amounts[vars.i].mul(_flashLoanPremiumTotal).div(10000);
-
-      IDepositToken(aTokenAddresses[vars.i]).transferUnderlyingTo(receiverAddress, amounts[vars.i]);
-    }
+    (address[] memory aTokenAddresses, uint256[] memory premiums) =
+      _flashLoanPre(address(vars.receiver), assets, amounts, flashLoanPremium);
 
     require(
       vars.receiver.executeOperation(assets, amounts, premiums, msg.sender, params),
       Errors.LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN
     );
 
+    _flashLoanPost(vars, assets, amounts, modes, aTokenAddresses, premiums);
+  }
+
+  function _flashLoanPre(
+    address receiverAddress,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint16 flashLoanPremium
+  ) private returns (address[] memory aTokenAddresses, uint256[] memory premiums) {
+    aTokenAddresses = new address[](assets.length);
+    premiums = new uint256[](assets.length);
+
+    for (uint256 i = 0; i < assets.length; i++) {
+      aTokenAddresses[i] = _reserves[assets[i]].aTokenAddress;
+      premiums[i] = amounts[i].percentMul(flashLoanPremium);
+      IDepositToken(aTokenAddresses[i]).transferUnderlyingTo(receiverAddress, amounts[i]);
+    }
+
+    return (aTokenAddresses, premiums);
+  }
+
+  function _flashLoanPost(
+    FlashLoanLocalVars memory vars,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address[] memory aTokenAddresses,
+    uint256[] memory premiums
+  ) private {
     for (vars.i = 0; vars.i < assets.length; vars.i++) {
       vars.currentAsset = assets[vars.i];
       vars.currentAmount = amounts[vars.i];
@@ -532,7 +587,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
         );
 
         IERC20(vars.currentAsset).safeTransferFrom(
-          receiverAddress,
+          address(vars.receiver),
           vars.currentATokenAddress,
           vars.currentAmountPlusPremium
         );
@@ -543,22 +598,22 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
           ExecuteBorrowParams(
             vars.currentAsset,
             msg.sender,
-            onBehalfOf,
+            vars.onBehalfOf,
             vars.currentAmount,
             modes[vars.i],
             vars.currentATokenAddress,
-            referralCode,
+            vars.referralCode,
             false
           )
         );
       }
       emit FlashLoan(
-        receiverAddress,
+        address(vars.receiver),
         msg.sender,
         vars.currentAsset,
         vars.currentAmount,
         vars.currentPremium,
-        referralCode
+        vars.referralCode
       );
     }
   }
@@ -717,14 +772,14 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    * @dev Returns the percentage of available liquidity that can be borrowed at once at stable rate
    */
   function MAX_STABLE_RATE_BORROW_SIZE_PERCENT() public view returns (uint256) {
-    return _maxStableRateBorrowSizePercent;
+    return _maxStableRateBorrowSizePct;
   }
 
   /**
    * @dev Returns the fee on flash loans
    */
   function FLASHLOAN_PREMIUM_TOTAL() public view returns (uint256) {
-    return _flashLoanPremiumTotal;
+    return _flashLoanPremiumPct;
   }
 
   /**
@@ -849,6 +904,11 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     }
   }
 
+  function setFlashLoanPremium(uint16 premium) external onlyLendingPoolConfigurator {
+    require(premium <= PercentageMath.ONE && premium > 0, Errors.LP_INVALID_PERCENTAGE);
+    _flashLoanPremiumPct = premium;
+  }
+
   struct ExecuteBorrowParams {
     address asset;
     address user;
@@ -878,7 +938,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       vars.amount,
       amountInETH,
       vars.interestRateMode,
-      _maxStableRateBorrowSizePercent,
+      _maxStableRateBorrowSizePct,
       _reserves,
       userConfig,
       _reservesList,
@@ -948,7 +1008,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       _reserves[asset].id = uint8(reservesCount);
       _reservesList[reservesCount] = asset;
 
-      _reservesCount = reservesCount + 1;
+      _reservesCount = uint8(reservesCount) + 1;
     }
   }
 }
