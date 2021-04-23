@@ -137,8 +137,6 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
     );
   }
 
-  //  function updateIncencitiveController() external
-
   /**
    * @dev Updates DepositToken implementation for the reserve
    **/
