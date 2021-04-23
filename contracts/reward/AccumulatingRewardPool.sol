@@ -59,6 +59,15 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
     return (allocated, newcomer);
   }
 
+  function internalRemoveReward(address holder) internal virtual returns (uint256 rewardBase) {
+    rewardBase = _rewards[holder].rewardBase;
+    if (rewardBase == 0 && _rewards[holder].lastAccumRate == 0) {
+      return 0;
+    }
+    delete (_rewards[holder]);
+    return rewardBase;
+  }
+
   function internalGetReward(address holder, uint32 currentBlock)
     internal
     override
