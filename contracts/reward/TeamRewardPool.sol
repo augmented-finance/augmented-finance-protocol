@@ -72,9 +72,11 @@ contract TeamRewardPool is AccumulatingRewardPool {
     )
   {
     uint256 adjRate = _accumRate.add(getRate().mul(currentBlock - internalGetLastUpdateBlock()));
-    allocated = entry.rewardBase.rayMul(adjRate.sub(entry.lastAccumRate)).div(PercentageMath.ONE);
+    allocated = uint256(entry.rewardBase).rayMul(adjRate.sub(entry.lastAccumRate)).div(
+      PercentageMath.ONE
+    );
 
-    return (adjRate, allocated, currentBlock);
+    return (adjRate, allocated, entry.lastUpdateBlock);
   }
 
   function addRewardProvider(address) external override {
