@@ -94,5 +94,7 @@ interface IDepositToken is IERC20, IScaledBalanceToken, IDerivedToken {
    **/
   function handleRepayment(address user, uint256 amount) external;
 
-  function setIncentivesController(address hook) external;
+  function setIncentivesController(address) external;
+
+  function setTreasury(address) external;
 }

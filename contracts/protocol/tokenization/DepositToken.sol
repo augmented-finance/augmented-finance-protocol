@@ -167,6 +167,10 @@ contract DepositToken is
     return previousBalance == 0;
   }
 
+  function setTreasury(address treasury) external override onlyLendingPool {
+    _treasury = treasury;
+  }
+
   /**
    * @dev Mints aTokens to the reserve treasury
    * - Only callable by the LendingPool
