@@ -10,8 +10,8 @@ struct StakeTokenConfig {
   IStakeAccessController stakeController;
   IERC20 stakedToken;
   IBalanceHook incentivesController;
-  uint32 cooldownSeconds;
-  uint32 unstakeWindow;
+  uint32 cooldownBlocks;
+  uint32 unstakeBlocks;
   // For voting token only
   ITransferHook governance;
 }

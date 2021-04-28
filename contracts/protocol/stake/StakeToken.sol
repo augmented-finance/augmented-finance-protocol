@@ -38,16 +38,16 @@ abstract contract StakeToken is
   IERC20 private _stakedToken;
   IBalanceHook internal _incentivesController;
 
-  mapping(address => uint40) private _stakersCooldowns;
+  mapping(address => uint32) private _stakersCooldowns;
 
   uint256 private _maxSlashablePercentage;
-  uint256 private _cooldownSeconds;
-  uint256 private _unstakeSeconds;
+  uint32 private _cooldownBlocks;
+  uint32 private _unstakeBlocks;
   bool private _redeemPaused;
 
   event Staked(address from, address to, uint256 amount);
   event Redeem(address from, address to, uint256 amount, uint256 underlyingAmount);
-  event Cooldown(address user, uint40 timestamp);
+  event Cooldown(address user, uint32 blockNumber);
   event Donated(address from, uint256 amount);
   event Slashed(address to, uint256 amount);
 
@@ -59,8 +59,8 @@ abstract contract StakeToken is
   ) public ERC20WithPermit(name, symbol, decimals) RemoteAccessBitmask(params.stakeController) {
     _stakedToken = params.stakedToken;
     _incentivesController = params.incentivesController;
-    _cooldownSeconds = params.cooldownSeconds;
-    _unstakeSeconds = params.unstakeWindow;
+    _cooldownBlocks = params.cooldownBlocks;
+    _unstakeBlocks = params.unstakeBlocks;
 
     _maxSlashablePercentage = 30 * PercentageMath.PCT;
   }
@@ -69,8 +69,8 @@ abstract contract StakeToken is
     _remoteAcl = params.stakeController;
     _stakedToken = params.stakedToken;
     _incentivesController = params.incentivesController;
-    _cooldownSeconds = params.cooldownSeconds;
-    _unstakeSeconds = params.unstakeWindow;
+    _cooldownBlocks = params.cooldownBlocks;
+    _unstakeBlocks = params.unstakeBlocks;
 
     if (_maxSlashablePercentage == 0) {
       _maxSlashablePercentage = 30 * PercentageMath.PCT;
@@ -98,7 +98,7 @@ abstract contract StakeToken is
     uint256 oldReceiverBalance = balanceOf(to);
     stakeAmount = underlyingAmount.percentDiv(exchangeRate());
 
-    _stakersCooldowns[to] = getNextCooldownTimestamp(0, stakeAmount, to, oldReceiverBalance);
+    _stakersCooldowns[to] = getNextCooldownBlocks(0, stakeAmount, to, oldReceiverBalance);
 
     _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
     _mint(to, stakeAmount);
@@ -154,13 +154,10 @@ abstract contract StakeToken is
   ) internal returns (uint256, uint256) {
     require(!_redeemPaused, 'STK_REDEEM_PAUSED');
 
-    uint256 cooldownStartTimestamp = _stakersCooldowns[from];
+    uint256 cooldownStartBlock = _stakersCooldowns[from];
+    require(block.number > cooldownStartBlock.add(_cooldownBlocks), 'STK_INSUFFICIENT_COOLDOWN');
     require(
-      block.timestamp > cooldownStartTimestamp.add(_cooldownSeconds),
-      'STK_INSUFFICIENT_COOLDOWN'
-    );
-    require(
-      block.timestamp.sub(cooldownStartTimestamp.add(_cooldownSeconds)) <= _unstakeSeconds,
+      block.number.sub(cooldownStartBlock.add(_cooldownBlocks)) <= _unstakeBlocks,
       'STK_UNSTAKE_WINDOW_FINISHED'
     );
 
@@ -202,15 +199,15 @@ abstract contract StakeToken is
   function cooldown() external override {
     require(balanceOf(msg.sender) != 0, 'STK_INVALID_BALANCE_ON_COOLDOWN');
 
-    _stakersCooldowns[msg.sender] = uint40(block.timestamp);
-    emit Cooldown(msg.sender, uint40(block.timestamp));
+    _stakersCooldowns[msg.sender] = uint32(block.number);
+    emit Cooldown(msg.sender, uint32(block.number));
   }
 
   /**
    * @dev Gets end of the cooldown period.
    * - Returns zero for a not staking user.
    **/
-  function getCooldown(address holder) external override returns (uint40) {
+  function getCooldown(address holder) external override returns (uint32) {
     return _stakersCooldowns[holder];
   }
 
@@ -286,8 +283,8 @@ abstract contract StakeToken is
     if (from != to) {
       uint256 balanceOfTo = balanceOf(to);
 
-      uint40 previousSenderCooldown = _stakersCooldowns[from];
-      _stakersCooldowns[to] = getNextCooldownTimestamp(
+      uint32 previousSenderCooldown = _stakersCooldowns[from];
+      _stakersCooldowns[to] = getNextCooldownBlocks(
         previousSenderCooldown,
         amount,
         to,
@@ -304,62 +301,61 @@ abstract contract StakeToken is
   }
 
   /**
-   * @dev Calculates the how is gonna be a new cooldown timestamp depending on the sender/receiver situation
-   *  - If the timestamp of the sender is "better" or the timestamp of the recipient is 0, we take the one of the recipient
-   *  - Weighted average of from/to cooldown timestamps if:
-   *    # The sender doesn't have the cooldown activated (timestamp 0).
-   *    # The sender timestamp is expired
-   *    # The sender has a "worse" timestamp
-   *  - If the receiver's cooldown timestamp expired (too old), the next is 0
-   * @param fromCooldownTimestamp Cooldown timestamp of the sender
+   * @dev Calculates the how is gonna be a new cooldown block depending on the sender/receiver situation
+   *  - If the block of the sender is "better" or the block of the recipient is 0, we take the one of the recipient
+   *  - Weighted average of from/to cooldown blocks if:
+   *    # The sender doesn't have the cooldown activated (block 0).
+   *    # The sender block is passed
+   *    # The sender has a "worse" block
+   *  - If the receiver's cooldown block passed (too old), the next is 0
+   * @param fromCooldownBlock Cooldown block of the sender
    * @param amountToReceive Amount
    * @param toAddress Address of the recipient
    * @param toBalance Current balance of the receiver
-   * @return The new cooldown timestamp
+   * @return The new cooldown block
    **/
-  function getNextCooldownTimestamp(
-    uint40 fromCooldownTimestamp,
+  function getNextCooldownBlocks(
+    uint32 fromCooldownBlock,
     uint256 amountToReceive,
     address toAddress,
     uint256 toBalance
-  ) public returns (uint40) {
-    uint40 toCooldownTimestamp = _stakersCooldowns[toAddress];
-    if (toCooldownTimestamp == 0) {
+  ) public returns (uint32) {
+    uint32 toCooldownBlock = _stakersCooldowns[toAddress];
+    if (toCooldownBlock == 0) {
       return 0;
     }
 
-    uint256 minimalValidCooldownTimestamp =
-      block.timestamp.sub(_cooldownSeconds).sub(_unstakeSeconds);
+    uint256 minimalValidCooldownBlock = block.number.sub(_cooldownBlocks).sub(_unstakeBlocks);
 
-    if (minimalValidCooldownTimestamp > toCooldownTimestamp) {
-      toCooldownTimestamp = 0;
+    if (minimalValidCooldownBlock > toCooldownBlock) {
+      toCooldownBlock = 0;
     } else {
-      if (minimalValidCooldownTimestamp > fromCooldownTimestamp) {
-        fromCooldownTimestamp = uint40(block.timestamp);
+      if (minimalValidCooldownBlock > fromCooldownBlock) {
+        fromCooldownBlock = uint32(block.number);
       }
 
-      if (fromCooldownTimestamp < toCooldownTimestamp) {
-        return toCooldownTimestamp;
+      if (fromCooldownBlock < toCooldownBlock) {
+        return toCooldownBlock;
       } else {
-        toCooldownTimestamp = uint40(
-          (amountToReceive.mul(fromCooldownTimestamp).add(toBalance.mul(toCooldownTimestamp))).div(
+        toCooldownBlock = uint32(
+          (amountToReceive.mul(fromCooldownBlock).add(toBalance.mul(toCooldownBlock))).div(
             amountToReceive.add(toBalance)
           )
         );
       }
     }
-    _stakersCooldowns[toAddress] = toCooldownTimestamp;
+    _stakersCooldowns[toAddress] = toCooldownBlock;
 
-    return toCooldownTimestamp;
+    return toCooldownBlock;
   }
 
-  function COOLDOWN_SECONDS() external view returns (uint256) {
-    return _cooldownSeconds;
+  function COOLDOWN_BLOCKS() external view returns (uint256) {
+    return _cooldownBlocks;
   }
 
   /// @notice Seconds available to redeem once the cooldown period is fullfilled
-  function UNSTAKE_WINDOW() external view returns (uint256) {
-    return _unstakeSeconds;
+  function UNSTAKE_WINDOW_BLOCKS() external view returns (uint256) {
+    return _unstakeBlocks;
   }
 
   modifier onlyAdmin() {
