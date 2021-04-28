@@ -21,15 +21,14 @@ import {LendingPoolStorage} from './LendingPoolStorage.sol';
 
 /**
  * @title LendingPoolCollateralManager contract
- * @author Aave
  * @dev Implements actions involving management of collateral in the protocol, the main one being the liquidations
  * IMPORTANT This contract will run always via DELEGATECALL, through the LendingPool, so the chain of inheritance
  * is the same as the LendingPool, to have compatible storage layouts
  **/
 contract LendingPoolCollateralManager is
-  ILendingPoolCollateralManager,
   VersionedInitializable,
-  LendingPoolStorage
+  LendingPoolStorage,
+  ILendingPoolCollateralManager
 {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -60,11 +59,10 @@ contract LendingPoolCollateralManager is
 
   /**
    * @dev As thIS contract extends the VersionedInitializable contract to match the state
-   * of the LendingPool contract, the getRevision() function is needed, but the value is not
-   * important, as the initialize() function will never be called here
+   * of the LendingPool contract, the getRevision() function is needed, but should never be called
    */
   function getRevision() internal pure override returns (uint256) {
-    return 0;
+    revert('IMPOSSIBLE');
   }
 
   /**

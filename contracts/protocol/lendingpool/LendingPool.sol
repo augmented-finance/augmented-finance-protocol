@@ -28,7 +28,7 @@ import {LendingPoolStorage} from './LendingPoolStorage.sol';
 
 /**
  * @title LendingPool contract
- * @dev Main point of interaction with an Aave protocol's market
+ * @dev Main point of interaction with a protocol's market
  * - Users can:
  *   # Deposit
  *   # Withdraw
@@ -41,9 +41,8 @@ import {LendingPoolStorage} from './LendingPoolStorage.sol';
  * - To be covered by a proxy contract, owned by the AddressesProvider of the specific market
  * - All admin functions are callable by the LendingPoolConfigurator contract defined also in the
  *   AddressesProvider
- * @author Aave
  **/
-contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage {
+contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;

@@ -131,4 +131,12 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
   function isSponsoredLoanUser(address addr) external view override returns (bool) {
     return isAddress(AccessFlags.POOL_SPONSORED_LOAN_USER, addr);
   }
+
+  function getTreasury() external view override returns (address) {
+    return getAddress(AccessFlags.TREASURY);
+  }
+
+  function setTreasuryImpl(address treasury) external override onlyOwner {
+    setAddressAsProxy(AccessFlags.TREASURY, treasury);
+  }
 }
