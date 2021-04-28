@@ -70,7 +70,7 @@ contract RewardFreezer is BasicRewardController {
     uint32 sinceBlock,
     uint32 currentBlock
   ) private returns (uint256 amount) {
-    console.log('internalApplyAllocated ', _meltdownBlock, _unfrozenPortion, allocated);
+    // console.log('internalApplyAllocated ', _meltdownBlock, _unfrozenPortion, allocated);
 
     if (_meltdownBlock > 0 && _meltdownBlock <= currentBlock) {
       uint256 frozenReward = _frozenRewards[holder].frozenReward;

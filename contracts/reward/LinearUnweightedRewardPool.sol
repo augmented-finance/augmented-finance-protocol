@@ -46,13 +46,13 @@ contract LinearUnweightedRewardPool is AccumulatingRewardPool {
       uint32 since
     )
   {
-    console.log('internalCalcRateAndReward, blocks ', currentBlock, internalGetLastUpdateBlock());
+    // console.log('internalCalcRateAndReward, blocks ', currentBlock, internalGetLastUpdateBlock());
 
     uint256 adjRate = _accumRate.add(getRate().mul(currentBlock - internalGetLastUpdateBlock()));
     allocated = uint256(entry.rewardBase).rayMul(adjRate.sub(entry.lastAccumRate));
 
-    console.log('internalCalcRateAndReward, entry ', entry.rewardBase, entry.lastAccumRate);
-    console.log('internalCalcRateAndReward, result ', adjRate, allocated);
+    // console.log('internalCalcRateAndReward, entry ', entry.rewardBase, entry.lastAccumRate);
+    // console.log('internalCalcRateAndReward, result ', adjRate, allocated);
 
     return (adjRate, allocated, entry.lastUpdateBlock);
   }
