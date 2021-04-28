@@ -14,7 +14,7 @@ contract RewardFreezer is BasicRewardController {
   using PercentageMath for uint256;
 
   struct FrozenReward {
-    uint256 frozenReward;
+    uint224 frozenReward;
     uint32 lastUpdateBlock;
   }
 
@@ -89,6 +89,8 @@ contract RewardFreezer is BasicRewardController {
       allocated = 0;
     }
 
+    uint256 frozenReward;
+    uint8 frozenRewardState; // 0 unread, 1 read, 2 updated
     if (_meltdownBlock > 0) {
       if (allocated > 0 && sinceBlock != 0 && sinceBlock < currentBlock) {
         // portion of the allocated was already unfreezed
@@ -99,20 +101,34 @@ contract RewardFreezer is BasicRewardController {
         }
       }
 
-      uint256 frozenReward = _frozenRewards[holder].frozenReward;
+      frozenReward = _frozenRewards[holder].frozenReward;
+      frozenRewardState = 1; // was read
       if (frozenReward > 0) {
         uint256 unfrozen =
           calcUnfrozen(frozenReward, _frozenRewards[holder].lastUpdateBlock, currentBlock);
+
         if (unfrozen > 0) {
           amount = amount.add(unfrozen);
-          _frozenRewards[holder].frozenReward = frozenReward.sub(unfrozen);
-          _frozenRewards[holder].lastUpdateBlock = currentBlock;
+          frozenReward = frozenReward.sub(unfrozen);
+          frozenRewardState = 2; // was updated
         }
       }
     }
 
     if (allocated > 0) {
-      _frozenRewards[holder].frozenReward = _frozenRewards[holder].frozenReward.add(allocated);
+      if (frozenRewardState == 0) {
+        // not read
+        frozenReward = _frozenRewards[holder].frozenReward;
+      }
+      frozenReward = frozenReward.add(allocated);
+      require(frozenReward <= type(uint224).max, 'reward is too high');
+      frozenRewardState = 2; // was updated
+    }
+
+    if (frozenRewardState == 2) {
+      // was updated
+      _frozenRewards[holder].frozenReward = uint224(frozenReward);
+      _frozenRewards[holder].lastUpdateBlock = currentBlock;
     }
     return amount;
   }

@@ -25,8 +25,9 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
   }
 
   struct RewardEntry {
-    uint256 rewardBase;
     uint256 lastAccumRate;
+    uint224 rewardBase;
+    uint32 lastUpdateBlock;
   }
 
   function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
@@ -55,11 +56,12 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
       bool newcomer
     )
   {
+    require(newBalance <= type(uint224).max, 'balance is too high');
     oldBalance;
     totalSupply;
 
     RewardEntry memory entry = _rewards[holder];
-    if (entry.lastAccumRate == 0 && entry.rewardBase == 0) {
+    if (entry.lastUpdateBlock == 0) {
       newcomer = true;
     }
 
@@ -68,13 +70,14 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
     console.log('internalUpdateReward: ', adjRate, allocated);
 
     _rewards[holder].lastAccumRate = adjRate;
-    _rewards[holder].rewardBase = newBalance;
+    _rewards[holder].rewardBase = uint224(newBalance);
+    _rewards[holder].lastUpdateBlock = currentBlock;
     return (allocated, since, newcomer);
   }
 
   function internalRemoveReward(address holder) internal virtual returns (uint256 rewardBase) {
     rewardBase = _rewards[holder].rewardBase;
-    if (rewardBase == 0 && _rewards[holder].lastAccumRate == 0) {
+    if (rewardBase == 0 && _rewards[holder].lastUpdateBlock == 0) {
       return 0;
     }
     delete (_rewards[holder]);
@@ -94,6 +97,7 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
     (uint256 adjRate, uint256 allocated, uint32 since) =
       internalCalcRateAndReward(_rewards[holder], currentBlock);
     _rewards[holder].lastAccumRate = adjRate;
+    _rewards[holder].lastUpdateBlock = currentBlock;
     return (allocated, since);
   }
 
