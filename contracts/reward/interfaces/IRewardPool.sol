@@ -16,9 +16,9 @@ interface IManagedRewardPool {
 
   function setRate(uint256 rate) external;
 
-  function claimRewardFor(address holder) external returns (uint256);
+  function claimRewardFor(address holder) external returns (uint256 amount, uint32 sinceBlock);
 
-  function calcRewardFor(address holder) external view returns (uint256);
+  function calcRewardFor(address holder) external view returns (uint256 amount, uint32 sinceBlock);
 
   function addRewardProvider(address provider) external;
 

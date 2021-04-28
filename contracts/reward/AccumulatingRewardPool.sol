@@ -33,7 +33,11 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
     internal
     view
     virtual
-    returns (uint256 rate, uint256 allocated);
+    returns (
+      uint256 rate,
+      uint256 allocated,
+      uint32 since
+    );
 
   function internalUpdateReward(
     address holder,
@@ -41,7 +45,16 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
     uint256 newBalance,
     uint256 totalSupply,
     uint32 currentBlock
-  ) internal virtual override returns (uint256 allocated, bool newcomer) {
+  )
+    internal
+    virtual
+    override
+    returns (
+      uint256 allocated,
+      uint32 since,
+      bool newcomer
+    )
+  {
     oldBalance;
     totalSupply;
 
@@ -51,12 +64,12 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
     }
 
     uint256 adjRate;
-    (adjRate, allocated) = internalCalcRateAndReward(_rewards[holder], currentBlock);
+    (adjRate, allocated, since) = internalCalcRateAndReward(_rewards[holder], currentBlock);
     console.log('internalUpdateReward: ', adjRate, allocated);
 
     _rewards[holder].lastAccumRate = adjRate;
     _rewards[holder].rewardBase = newBalance;
-    return (allocated, newcomer);
+    return (allocated, since, newcomer);
   }
 
   function internalRemoveReward(address holder) internal virtual returns (uint256 rewardBase) {
@@ -72,16 +85,16 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
     internal
     virtual
     override
-    returns (uint256)
+    returns (uint256, uint32)
   {
     if (_rewards[holder].rewardBase == 0) {
-      return 0;
+      return (0, 0);
     }
 
-    (uint256 adjRate, uint256 allocated) =
+    (uint256 adjRate, uint256 allocated, uint32 since) =
       internalCalcRateAndReward(_rewards[holder], currentBlock);
     _rewards[holder].lastAccumRate = adjRate;
-    return allocated;
+    return (allocated, since);
   }
 
   function internalCalcReward(address holder, uint32 currentBlock)
@@ -89,13 +102,13 @@ abstract contract AccumulatingRewardPool is BasicRewardPool {
     view
     virtual
     override
-    returns (uint256)
+    returns (uint256, uint32)
   {
     if (_rewards[holder].rewardBase == 0) {
-      return 0;
+      return (0, 0);
     }
 
-    (, uint256 allocated) = internalCalcRateAndReward(_rewards[holder], currentBlock);
-    return allocated;
+    (, uint256 allocated, uint32 since) = internalCalcRateAndReward(_rewards[holder], currentBlock);
+    return (allocated, since);
   }
 }

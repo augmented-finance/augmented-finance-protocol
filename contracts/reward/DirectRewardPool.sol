@@ -81,12 +81,12 @@ contract DirectRewardPool is AccessBitmask, IManagedRewardPool {
 
   function setRate(uint256 rate) external override aclHas(aclConfigure) {}
 
-  function claimRewardFor(address) external override onlyController returns (uint256) {
-    return 0;
+  function claimRewardFor(address) external override onlyController returns (uint256, uint32) {
+    return (0, 0);
   }
 
-  function calcRewardFor(address) external view override onlyController returns (uint256) {
-    return 0;
+  function calcRewardFor(address) external view override onlyController returns (uint256, uint32) {
+    return (0, 0);
   }
 
   function addRewardProvider(address provider) external override aclHas(aclConfigure) {
@@ -129,7 +129,7 @@ contract DirectRewardPool is AccessBitmask, IManagedRewardPool {
       return;
     }
     _rewardLimit = _rewardLimit.sub(value);
-    _controller.allocatedByPool(spender, value);
+    _controller.allocatedByPool(spender, value, uint32(block.timestamp));
   }
 
   modifier onlyController() {
