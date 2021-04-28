@@ -94,11 +94,16 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
     return _lastUpdateBlock;
   }
 
-  function claimRewardFor(address holder) external override onlyController returns (uint256) {
+  function claimRewardFor(address holder)
+    external
+    override
+    onlyController
+    returns (uint256, uint32)
+  {
     return internalGetReward(holder, uint32(block.number));
   }
 
-  function calcRewardFor(address holder) external view override returns (uint256) {
+  function calcRewardFor(address holder) external view override returns (uint256, uint32) {
     return internalCalcReward(holder, uint32(block.number));
   }
 
@@ -143,11 +148,11 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
     uint256 newBalance,
     uint256 totalSupply
   ) internal {
-    (uint256 allocated, bool newcomer) =
+    (uint256 allocated, uint32 since, bool newcomer) =
       internalUpdateReward(holder, oldBalance, newBalance, totalSupply, uint32(block.number));
 
     if (allocated > 0 || (newcomer && isLazy())) {
-      _controller.allocatedByPool(holder, allocated);
+      _controller.allocatedByPool(holder, allocated, since);
     }
     if (newBalance == 0 && !newcomer) {
       _controller.removedFromPool(holder);
@@ -177,18 +182,25 @@ abstract contract BasicRewardPool is IRewardPool, IManagedRewardPool {
     uint256 newBalance,
     uint256 totalSupply,
     uint32 currentBlock
-  ) internal virtual returns (uint256 allocated, bool newcomer);
+  )
+    internal
+    virtual
+    returns (
+      uint256 allocated,
+      uint32 since,
+      bool newcomer
+    );
 
   function internalGetReward(address holder, uint32 currentBlock)
     internal
     virtual
-    returns (uint256);
+    returns (uint256, uint32);
 
   function internalCalcReward(address holder, uint32 currentBlock)
     internal
     view
     virtual
-    returns (uint256);
+    returns (uint256, uint32);
 
   function isController(address addr) internal view returns (bool) {
     return address(_controller) == addr;

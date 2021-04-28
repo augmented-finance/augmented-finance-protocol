@@ -53,10 +53,10 @@ contract TeamRewardPool is AccumulatingRewardPool {
   function internalGetReward(address holder, uint32 currentBlock)
     internal
     override
-    returns (uint256)
+    returns (uint256, uint32)
   {
     if (!isUnlocked(currentBlock)) {
-      return 0;
+      return (0, 0);
     }
     return super.internalGetReward(holder, currentBlock);
   }
@@ -65,12 +65,16 @@ contract TeamRewardPool is AccumulatingRewardPool {
     internal
     view
     override
-    returns (uint256 rate, uint256 allocated)
+    returns (
+      uint256 rate,
+      uint256 allocated,
+      uint32 since
+    )
   {
     uint256 adjRate = _accumRate.add(getRate().mul(currentBlock - internalGetLastUpdateBlock()));
     allocated = entry.rewardBase.rayMul(adjRate.sub(entry.lastAccumRate)).div(PercentageMath.ONE);
 
-    return (adjRate, allocated);
+    return (adjRate, allocated, currentBlock);
   }
 
   function addRewardProvider(address) external override {
@@ -100,14 +104,14 @@ contract TeamRewardPool is AccumulatingRewardPool {
     require(newTotalShare <= PercentageMath.ONE, 'team total share exceeds 100%');
     _totalShare = uint16(newTotalShare);
 
-    (uint256 allocated, bool newcomer) =
+    (uint256 allocated, uint32 since, bool newcomer) =
       internalUpdateReward(member, 0, memberSharePct, 0, uint32(block.number));
     require(
       allocated == 0 || isUnlocked(uint32(block.number)),
       'member share can not be changed during lockup'
     );
     if (allocated > 0 || newcomer) {
-      IRewardController(getRewardController()).allocatedByPool(member, allocated);
+      IRewardController(getRewardController()).allocatedByPool(member, allocated, since);
     }
   }
 

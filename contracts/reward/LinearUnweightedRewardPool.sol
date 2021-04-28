@@ -40,7 +40,11 @@ contract LinearUnweightedRewardPool is AccumulatingRewardPool {
     internal
     view
     override
-    returns (uint256 rate, uint256 allocated)
+    returns (
+      uint256 rate,
+      uint256 allocated,
+      uint32 since
+    )
   {
     console.log('internalCalcRateAndReward, blocks ', currentBlock, internalGetLastUpdateBlock());
 
@@ -50,6 +54,6 @@ contract LinearUnweightedRewardPool is AccumulatingRewardPool {
     console.log('internalCalcRateAndReward, entry ', entry.rewardBase, entry.lastAccumRate);
     console.log('internalCalcRateAndReward, result ', adjRate, allocated);
 
-    return (adjRate, allocated);
+    return (adjRate, allocated, currentBlock);
   }
 }

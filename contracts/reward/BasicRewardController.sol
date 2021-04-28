@@ -93,7 +93,11 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     return _memberOf[holder] & ~_ignoreMask;
   }
 
-  function allocatedByPool(address holder, uint256 allocated) external override {
+  function allocatedByPool(
+    address holder,
+    uint256 allocated,
+    uint32 sinceBlock
+  ) external override {
     uint256 poolMask = _poolMask[msg.sender];
     require(poolMask != 0, 'unknown pool');
 
@@ -101,7 +105,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
       _memberOf[holder] |= poolMask;
     }
     if (allocated > 0) {
-      internalAllocatedByPool(holder, allocated, uint32(block.number));
+      internalAllocatedByPool(holder, allocated, sinceBlock, uint32(block.number));
       emit RewardsAllocated(holder, allocated);
     }
   }
@@ -123,41 +127,72 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     address holder,
     uint256 mask,
     address receiver
-  ) private returns (uint256 amount) {
+  ) private returns (uint256 totalAmount) {
     mask &= ~_ignoreMask;
-    if (mask != 0) {
-      mask &= _memberOf[holder];
-      console.log('internalClaimAndMintReward mask', mask);
-      for (uint256 i = 0; mask != 0; i++) {
-        if (mask & 1 != 0) {
-          amount = amount.add(_poolList[i].claimRewardFor(holder));
-        }
-        mask >>= 1;
-      }
+
+    if (mask == 0) {
+      return 0;
+    }
+    mask &= _memberOf[holder];
+    if (mask == 0) {
+      return 0;
     }
 
-    console.log('RewardsAllocated', amount, block.number);
-    amount = internalClaimByCall(holder, amount, uint32(block.number));
+    uint32 sinceBlock = 0;
+    uint256 amountSince = 0;
+    uint32 currentBlock = uint32(block.number);
 
-    if (amount > 0) {
+    for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
+      if (mask & 1 == 0) {
+        continue;
+      }
+
+      (uint256 amount_, uint32 since_) = _poolList[i].claimRewardFor(holder);
+      if (amount_ == 0) {
+        continue;
+      }
+
+      if (sinceBlock == since_) {
+        amountSince = amountSince.add(amount_);
+        continue;
+      }
+
+      if (amountSince > 0) {
+        totalAmount = totalAmount.add(
+          internalClaimByCall(holder, amountSince, sinceBlock, currentBlock)
+        );
+      }
+      amountSince = amount_;
+      sinceBlock = since_;
+    }
+
+    if (amountSince > 0) {
+      totalAmount = totalAmount.add(
+        internalClaimByCall(holder, amountSince, sinceBlock, currentBlock)
+      );
+    }
+
+    if (totalAmount > 0) {
       if (address(_rewardMinter) != address(0)) {
-        _rewardMinter.mint(receiver, amount);
+        _rewardMinter.mint(receiver, totalAmount);
       }
-      emit RewardsClaimed(holder, receiver, amount);
+      emit RewardsClaimed(holder, receiver, totalAmount);
     }
-    console.log('RewardsClaimed', amount);
-    return amount;
+    console.log('RewardsClaimed', totalAmount);
+    return totalAmount;
   }
 
   function internalAllocatedByPool(
     address holder,
     uint256 allocated,
+    uint32 sinceBlock,
     uint32 currentBlock
   ) internal virtual;
 
   function internalClaimByCall(
     address holder,
     uint256 allocated,
+    uint32 sinceBlock,
     uint32 currentBlock
   ) internal virtual returns (uint256 amount);
 }

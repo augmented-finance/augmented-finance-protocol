@@ -4,7 +4,11 @@ pragma solidity ^0.6.12;
 import {IRewardPool} from './IRewardPool.sol';
 
 interface IRewardController {
-  function allocatedByPool(address holder, uint256 allocated) external;
+  function allocatedByPool(
+    address holder,
+    uint256 allocated,
+    uint32 sinceBlock
+  ) external;
 
   function removedFromPool(address holder) external;
 

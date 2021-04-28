@@ -43,8 +43,16 @@ contract FixedRewardPool is BasicRewardPool {
     uint256 oldBalance,
     uint256 newBalance,
     uint256,
-    uint32
-  ) internal override returns (uint256, bool) {
+    uint32 currentBlock
+  )
+    internal
+    override
+    returns (
+      uint256,
+      uint32,
+      bool
+    )
+  {
     require(newBalance >= oldBalance, 'balance reduction is not allowed by the reward pool');
     require(_rewardLimit > 0, 'reward pool is depleted');
     holder;
@@ -52,14 +60,14 @@ contract FixedRewardPool is BasicRewardPool {
     uint256 allocated = uint256(newBalance - oldBalance).rayMul(getRate());
     require(_rewardLimit >= allocated, 'insufficient reward pool balance');
     _rewardLimit -= allocated;
-    return (allocated, false);
+    return (allocated, currentBlock, false);
   }
 
-  function internalGetReward(address, uint32) internal override returns (uint256) {
-    return 0;
+  function internalGetReward(address, uint32) internal override returns (uint256, uint32) {
+    return (0, 0);
   }
 
-  function internalCalcReward(address, uint32) internal view override returns (uint256) {
-    return 0;
+  function internalCalcReward(address, uint32) internal view override returns (uint256, uint32) {
+    return (0, 0);
   }
 }

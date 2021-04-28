@@ -38,9 +38,10 @@ contract RewardFreezer is BasicRewardController {
   function internalAllocatedByPool(
     address holder,
     uint256 allocated,
+    uint32 sinceBlock,
     uint32 currentBlock
   ) internal override {
-    allocated = internalApplyAllocated(holder, allocated, currentBlock);
+    allocated = internalApplyAllocated(holder, allocated, sinceBlock, currentBlock);
     if (allocated > 0) {
       _claimableRewards[holder] = _claimableRewards[holder].add(allocated);
     }
@@ -49,9 +50,10 @@ contract RewardFreezer is BasicRewardController {
   function internalClaimByCall(
     address holder,
     uint256 allocated,
+    uint32 sinceBlock,
     uint32 currentBlock
   ) internal override returns (uint256 amount) {
-    amount = internalApplyAllocated(holder, allocated, currentBlock);
+    amount = internalApplyAllocated(holder, allocated, sinceBlock, currentBlock);
 
     uint256 claimableReward = _claimableRewards[holder];
     if (claimableReward > 0) {
@@ -65,6 +67,7 @@ contract RewardFreezer is BasicRewardController {
   function internalApplyAllocated(
     address holder,
     uint256 allocated,
+    uint32 sinceBlock,
     uint32 currentBlock
   ) private returns (uint256 amount) {
     console.log('internalApplyAllocated ', _meltdownBlock, _unfrozenPortion, allocated);
@@ -87,13 +90,19 @@ contract RewardFreezer is BasicRewardController {
     }
 
     if (_meltdownBlock > 0) {
+      if (allocated > 0 && sinceBlock != 0 && sinceBlock < currentBlock) {
+        // portion of the allocated was already unfreezed
+        uint256 unfrozen = calcUnfrozenByEmmission(allocated, sinceBlock, currentBlock);
+        if (unfrozen > 0) {
+          amount = amount.add(unfrozen);
+          allocated = allocated.sub(unfrozen);
+        }
+      }
+
       uint256 frozenReward = _frozenRewards[holder].frozenReward;
       if (frozenReward > 0) {
         uint256 unfrozen =
-          frozenReward.div(_meltdownBlock - _frozenRewards[holder].lastUpdateBlock).mul(
-            currentBlock - _frozenRewards[holder].lastUpdateBlock
-          );
-
+          calcUnfrozen(frozenReward, _frozenRewards[holder].lastUpdateBlock, currentBlock);
         if (unfrozen > 0) {
           amount = amount.add(unfrozen);
           _frozenRewards[holder].frozenReward = frozenReward.sub(unfrozen);
@@ -106,5 +115,24 @@ contract RewardFreezer is BasicRewardController {
       _frozenRewards[holder].frozenReward = _frozenRewards[holder].frozenReward.add(allocated);
     }
     return amount;
+  }
+
+  function calcUnfrozen(
+    uint256 frozenReward,
+    uint32 lastUpdatedBlock,
+    uint32 currentBlock
+  ) private view returns (uint256) {
+    return frozenReward.div(_meltdownBlock - lastUpdatedBlock).mul(currentBlock - lastUpdatedBlock);
+  }
+
+  function calcUnfrozenByEmmission(
+    uint256 emittedReward,
+    uint32 lastUpdatedBlock,
+    uint32 currentBlock
+  ) private view returns (uint256) {
+    return
+      emittedReward.div(_meltdownBlock - lastUpdatedBlock).mul(
+        (currentBlock - lastUpdatedBlock + 1) >> 1
+      );
   }
 }

@@ -83,10 +83,14 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
     internal
     view
     override
-    returns (uint256 adjRate, uint256 allocated)
+    returns (
+      uint256 adjRate,
+      uint256 allocated,
+      uint32 since
+    )
   {
     if (_totalSupply == 0) {
-      return (_accumRate, 0);
+      return (_accumRate, 0, 0);
     }
 
     uint256 weightedRate = getRate().mul(_totalSupplyMax.div(_totalSupply));
@@ -97,7 +101,7 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
     uint256 x = entry.rewardBase * weightedRate;
     if (x / weightedRate == entry.rewardBase) {
       // the easy way - no overflow
-      return (adjRate, (x / _totalSupplyMax) / WadRayMath.RAY);
+      return (adjRate, (x / _totalSupplyMax) / WadRayMath.RAY, currentBlock);
     }
 
     // the hard way - numbers are too large for one-hit, so do it by chunks
@@ -110,6 +114,6 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
       allocated = allocated.add((((x & baseMask) * weightedRate) / _totalSupplyMax) << shiftedBits);
       shiftedBits += remainingBits;
     }
-    return (adjRate, allocated / WadRayMath.RAY);
+    return (adjRate, allocated / WadRayMath.RAY, currentBlock);
   }
 }
