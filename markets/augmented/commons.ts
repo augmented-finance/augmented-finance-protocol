@@ -189,7 +189,7 @@ export const CommonsConfig: ICommonConfiguration = {
   },
   FallbackOracle: {
     [eEthereumNetwork.coverage]: '',
-    [eEthereumNetwork.hardhat]: '',
+    [eEthereumNetwork.hardhat]: ZERO_ADDRESS,
     [eEthereumNetwork.kovan]: '0x50913E8E1c650E790F8a1E741FF9B1B1bB251dfe',
     [eEthereumNetwork.ropsten]: '0xAD1a978cdbb8175b2eaeC47B01404f8AEC5f4F0d',
     [eEthereumNetwork.main]: ZERO_ADDRESS,
