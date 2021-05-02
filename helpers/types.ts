@@ -506,4 +506,4 @@ export interface ITokenAddress {
   [token: string]: tEthereumAddress;
 }
 
-export type PoolConfiguration = ICommonConfiguration | IAaveConfiguration;
+export type PoolConfiguration = ICommonConfiguration | IAaveConfiguration | IAugmentedConfiguration;

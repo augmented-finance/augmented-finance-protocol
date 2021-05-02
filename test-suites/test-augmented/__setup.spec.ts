@@ -28,7 +28,6 @@ import {
   deployFlashLiquidationAdapter,
   authorizeWETHGateway,
 } from '../../helpers/contracts-deployments';
-import { eEthereumNetwork } from '../../helpers/types';
 import { Signer } from 'ethers';
 import { TokenContractId, eContractid, tEthereumAddress, AavePools } from '../../helpers/types';
 import { MintableERC20 } from '../../types/MintableERC20';
@@ -38,7 +37,7 @@ import {
   getTreasuryAddress,
   loadPoolConfig,
 } from '../../helpers/configuration';
-import { initializeMakeSuite } from '../test-aave/helpers/make-suite';
+import { initializeMakeSuite } from './helpers/make-suite';
 
 import {
   setInitialAssetPricesInOracle,
@@ -191,7 +190,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
       WMATIC: mockTokens.WMATIC.address,
       USD: USD_ADDRESS,
       STAKE: mockTokens.STAKE.address,
-      xSUSHI: mockTokens.xSUSHI.address
+      xSUSHI: mockTokens.xSUSHI.address,
     },
     fallbackOracle
   );
