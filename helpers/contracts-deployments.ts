@@ -646,8 +646,8 @@ export const deployMockStakedAgfToken = async (
       stakeController: args[0],
       stakedToken: args[1],
       incentivesController: args[2],
-      cooldownSeconds: 10,
-      unstakeWindow: 10,
+      cooldownBlocks: 10,
+      unstakeBlocks: 10,
       governance: ZERO_ADDRESS,
     },
     args[3],
@@ -724,7 +724,7 @@ export const deployRewardFreezer = async (args: [tEthereumAddress], verify?: boo
   );
 
 export const deployFixedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
