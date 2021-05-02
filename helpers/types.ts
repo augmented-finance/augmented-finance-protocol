@@ -276,6 +276,11 @@ export type iAavePoolAssets<T> = Pick<
   | 'xSUSHI'
 >;
 
+export type iAugmentedPoolAssets<T> = Pick<
+  iAssetsWithoutUSD<T>,
+  'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH'
+>;
+
 export type iLpPoolAssets<T> = Pick<
   iAssetsWithoutUSD<T>,
   | 'DAI'
@@ -487,6 +492,10 @@ export interface ICommonConfiguration {
 
 export interface IAaveConfiguration extends ICommonConfiguration {
   ReservesConfig: iAavePoolAssets<IReserveParams>;
+}
+
+export interface IAugmentedConfiguration extends ICommonConfiguration {
+  ReservesConfig: iAugmentedPoolAssets<IReserveParams>;
 }
 
 export interface IMaticConfiguration extends ICommonConfiguration {

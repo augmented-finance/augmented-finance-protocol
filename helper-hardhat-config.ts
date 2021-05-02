@@ -32,7 +32,7 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
 
 export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork<number> = {
   [eEthereumNetwork.kovan]: 65 * GWEI,
-  [eEthereumNetwork.ropsten]: 65 * GWEI,
+  [eEthereumNetwork.ropsten]: 15 * GWEI,
   [eEthereumNetwork.main]: 65 * GWEI,
   [eEthereumNetwork.coverage]: 65 * GWEI,
   [eEthereumNetwork.hardhat]: 65 * GWEI,
@@ -40,3 +40,4 @@ export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork<number> = {
   [ePolygonNetwork.mumbai]: 1 * GWEI,
   [ePolygonNetwork.matic]: 2 * GWEI,
 };
+ // 0x1cfDBe61a245e246D81bD51e9661A216f27d43AD AddressesProviderRegistry - ropsten
