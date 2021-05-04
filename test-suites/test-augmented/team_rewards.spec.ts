@@ -60,12 +60,15 @@ describe('Team rewards suite', () => {
     // TODO: check claim
   });
 
-  it('can change member share to zero', async () => {
-    await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC100 / 2);
+  it.only('can change member share to zero', async () => {
+    await waitForTx(
+      await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC100 / 2)
+    );
     const shares = await teamRewardPool.getAllocatedShares();
     expect(shares).to.eq(PERC100 / 2, 'shares are wrong');
-    await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, 0);
-    expect(shares).to.eq(0, 'shares are wrong');
+    await waitForTx(await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, 0));
+    const shares2 = await teamRewardPool.getAllocatedShares();
+    expect(shares2).to.eq(0, 'shares are wrong');
     // TODO: check claim
   });
 
