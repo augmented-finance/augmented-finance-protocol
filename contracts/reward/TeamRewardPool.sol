@@ -24,7 +24,9 @@ contract TeamRewardPool is AccumulatingRewardPool {
     uint256 initialRate,
     uint16 baselinePercentage,
     address teamManager
-  ) public AccumulatingRewardPool(controller, initialRate, baselinePercentage) {}
+  ) public AccumulatingRewardPool(controller, initialRate, baselinePercentage) {
+    _teamManager = teamManager;
+  }
 
   modifier onlyTeamManagerOrController() {
     require(

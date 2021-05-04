@@ -36,6 +36,8 @@ import {
   MigratorFactory,
   MockAgfTokenFactory,
   MockStakedAgfTokenFactory,
+  TeamRewardPoolFactory,
+  AccessControllerFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -390,6 +392,13 @@ export const getAgfToken = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getTeamRewardPool = async (address?: tEthereumAddress) =>
+  await TeamRewardPoolFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.TeamRewardPool}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
 export const getRewardFreezer = async (address?: tEthereumAddress) =>
   await RewardFreezerFactory.connect(
     address ||
@@ -406,7 +415,7 @@ export const getLinearUnweightedRewardPool = async (address?: tEthereumAddress) 
   );
 
 export const getAccessController = async (address?: tEthereumAddress) =>
-  await MigratorFactory.connect(
+  await AccessControllerFactory.connect(
     address ||
       (await getDb().get(`${eContractid.AccessController}.${DRE.network.name}`).value()).address,
     await getFirstSigner()

@@ -178,7 +178,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
       }
       emit RewardsClaimed(holder, receiver, totalAmount);
     }
-    // console.log('RewardsClaimed', totalAmount);
+    console.log('RewardsClaimed', totalAmount);
     return totalAmount;
   }
 
