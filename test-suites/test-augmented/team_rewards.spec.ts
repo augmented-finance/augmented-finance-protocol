@@ -12,7 +12,7 @@ import {
 import { MockAgfToken, RewardFreezer, TeamRewardPool } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { waitForTx } from '../../helpers/misc-utils';
-import { currentBlock, mineBlocks } from './utils';
+import { currentBlock, mineBlocks, mineToBlock } from './utils';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -27,15 +27,19 @@ describe('Team rewards suite', () => {
   let agf: MockAgfToken;
 
   const PERC100 = 10000;
+  const UNLOCK_BLOCK = 20;
+
+  before(async () => {
+    await rawBRE.run('set-DRE');
+    await rawBRE.run('dev:augmented-access');
+  });
 
   beforeEach(async () => {
     [root, teamMember1, teamMember2] = await ethers.getSigners();
-    await rawBRE.run('set-DRE');
-    await rawBRE.run('dev:augmented-access');
     await rawBRE.run('dev:agf-rewards', {
-      teamRewardInitialRate: 1,
-      teamRewardBaselinePercentage: 0,
-      teamRewardUnlockBlock: 1,
+      teamRewardInitialRate: 100,
+      teamRewardBaselinePercentage: 200,
+      teamRewardUnlockBlock: UNLOCK_BLOCK,
       teamRewardsFreezePercentage: PERC100 / 2,
     });
     rewardController = await getRewardFreezer();
@@ -72,16 +76,39 @@ describe('Team rewards suite', () => {
     // TODO: check claim
   });
 
-  it('add team member, claim reward', async () => {
+  it('can be unlocked on time', async () => {
+    expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.false;
+    await mineToBlock(UNLOCK_BLOCK + 1);
+    expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
+  });
+
+  it('can not change block after unlock', async () => {
+    await mineToBlock(UNLOCK_BLOCK + 1);
+    expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
+    await expect(teamRewardPool.setUnlockBlock(await currentBlock())).to.be.revertedWith(
+      'revert lockup is finished'
+    );
+  });
+
+  it('can be locked again, check reward when locked', async () => {
+    await mineBlocks(10);
+    expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
+  });
+
+  it.only('add team member, claim reward', async () => {
     // add new member, check shares, check claim after 100 blocks
-    await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC100 / 2);
+    expect(
+      await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC100 / 2)
+    ).to.emit(rewardController, 'RewardsAllocated');
     await teamRewardPool.connect(root).updateTeamMember(teamMember2.address, PERC100 / 2);
     const shares = await teamRewardPool.getAllocatedShares();
     expect(shares).to.eq(PERC100, 'shares are wrong');
-    await mineBlocks(100);
-    await currentBlock();
+    await mineToBlock(UNLOCK_BLOCK + 1);
+    expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
 
-    await waitForTx(await rewardController.connect(teamMember1).claimReward());
+    expect(await rewardController.connect(teamMember1).claimReward())
+      .to.emit(rewardController, 'RewardsClaimed')
+      .withArgs(rewardController.address, teamMember1.address, 2000);
     expect(await agf.balanceOf(teamMember1.address)).to.eq(2000);
   });
 });
