@@ -60,7 +60,7 @@ describe('Team rewards suite', () => {
     // TODO: check claim
   });
 
-  it.only('can change member share to zero', async () => {
+  it('can change member share to zero', async () => {
     await waitForTx(
       await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC100 / 2)
     );
