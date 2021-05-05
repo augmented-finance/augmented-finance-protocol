@@ -2,11 +2,10 @@
 pragma solidity ^0.6.12;
 
 import {ERC20WithPermit} from '../misc/ERC20WithPermit.sol';
-import {IRewardMinter} from './interfaces/IRewardMinter.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract RewardToken is ERC20WithPermit, IRewardMinter {
+abstract contract RewardToken is ERC20WithPermit {
   constructor(
     string memory name,
     string memory symbol,

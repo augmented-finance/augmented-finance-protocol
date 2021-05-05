@@ -8,6 +8,7 @@ import {
   RemoteAccessBitmaskHelper
 } from '../access/interfaces/IRemoteAccessBitmask.sol';
 
+import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {RewardToken} from './RewardToken.sol';
 import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
 import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
@@ -16,9 +17,10 @@ import 'hardhat/console.sol';
 
 contract AGFToken is
   RewardToken,
+  RemoteAccessBitmask,
   VersionedInitializable,
   IInitializableRewardToken,
-  RemoteAccessBitmask
+  IRewardMinter
 {
   string internal constant NAME = 'Augmented Finance Reward Token';
   string internal constant SYMBOL = 'AGF';
@@ -48,8 +50,14 @@ contract AGFToken is
     }
   }
 
-  function mint(address account, uint256 amount) external override aclHas(AccessFlags.REWARD_MINT) {
+  function mintReward(address account, uint256 amount)
+    external
+    override
+    aclHas(AccessFlags.REWARD_MINT)
+    returns (IRewardMinter, address)
+  {
     _mint(account, amount);
+    return (IRewardMinter(0), address(0));
   }
 
   function burn(address account, uint256 amount) external aclHas(AccessFlags.REWARD_BURN) {

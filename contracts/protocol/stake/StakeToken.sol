@@ -86,13 +86,14 @@ abstract contract StakeToken is
   }
 
   function stake(address to, uint256 underlyingAmount) external override returns (uint256) {
-    internalStake(msg.sender, to, underlyingAmount);
+    internalStake(msg.sender, to, underlyingAmount, true);
   }
 
   function internalStake(
     address from,
     address to,
-    uint256 underlyingAmount
+    uint256 underlyingAmount,
+    bool transferFrom
   ) internal returns (uint256 stakeAmount) {
     require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
     uint256 oldReceiverBalance = balanceOf(to);
@@ -100,12 +101,14 @@ abstract contract StakeToken is
 
     _stakersCooldowns[to] = getNextCooldownBlocks(0, stakeAmount, to, oldReceiverBalance);
 
-    _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
+    if (transferFrom) {
+      _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
+    }
     _mint(to, stakeAmount);
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleBalanceUpdate(
-        address(this), // TODO use underlying & scaled balances?
+        address(this),
         to,
         oldReceiverBalance,
         balanceOf(to),
@@ -185,7 +188,7 @@ abstract contract StakeToken is
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleBalanceUpdate(
-        address(this), // TODO use underlying & scaled balances?
+        address(this),
         from,
         oldBalance,
         balanceOf(from),
@@ -271,6 +274,10 @@ abstract contract StakeToken is
 
   function setRedeemable(bool redeemable) external override onlyLiquidityController {
     _redeemPaused = !redeemable;
+  }
+
+  function getUnderlying() internal view returns (address) {
+    return address(_stakedToken);
   }
 
   /**
