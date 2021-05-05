@@ -6,7 +6,7 @@ import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 
 import {IRewardController} from './interfaces/IRewardController.sol';
 import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
-import {IRewardMinter} from './interfaces/IRewardMinter.sol';
+import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
 import 'hardhat/console.sol';
 
@@ -73,6 +73,10 @@ abstract contract BasicRewardController is Ownable, IRewardController {
 
   function admin_setPoolRate(address pool, uint256 rate) external onlyOwner {
     IManagedRewardPool(pool).setRate(rate);
+  }
+
+  function admin_setRewardMinter(IRewardMinter minter) external onlyOwner {
+    _rewardMinter = minter;
   }
 
   function getRewardMinter() external view returns (address) {
@@ -177,8 +181,9 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     }
 
     if (totalAmount > 0) {
-      if (address(_rewardMinter) != address(0)) {
-        _rewardMinter.mint(receiver, totalAmount);
+      address mintTo = receiver;
+      for (IRewardMinter minter = _rewardMinter; minter != IRewardMinter(0); ) {
+        (minter, mintTo) = minter.mintReward(mintTo, totalAmount);
       }
       emit RewardsClaimed(holder, receiver, totalAmount);
     }
