@@ -1,0 +1,12 @@
+version: 2.1
+orbs:
+  node: circleci/node@4.3.0
+jobs:
+  steps:
+    - checkout
+    - node/install:
+        install-yarn: true
+    - run: |
+        node --version
+        yarn install
+        yarn test:main:augmented:team-rewards
