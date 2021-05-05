@@ -16,7 +16,7 @@ jobs:
       - run: |
           yarn install
           yarn run compile
-          yarn run test:main:augmented:team-rewards
+          yarn run test
       - slack/notify:
           channel: build
           event: fail
