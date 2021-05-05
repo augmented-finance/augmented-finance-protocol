@@ -53,12 +53,12 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
       );
       await waitForTx(await rewardFreezer.admin_addRewardPool(linearUnweightedRewardPool.address));
 
-      // // deploy team pool, register in controller, set unlock at block
-      // const teamRewardPool = await deployTeamRewardPool(
-      //   [rewardFreezer.address, teamRewardInitialRate, teamRewardBaselinePercentage, root.address],
-      //   verify
-      // );
-      // await waitForTx(await rewardFreezer.admin_addRewardPool(teamRewardPool.address));
-      // await waitForTx(await teamRewardPool.setUnlockBlock(teamRewardUnlockBlock));
+      // deploy team pool, register in controller, set unlock at block
+      const teamRewardPool = await deployTeamRewardPool(
+        [rewardFreezer.address, teamRewardInitialRate, teamRewardBaselinePercentage, root.address],
+        verify
+      );
+      await waitForTx(await rewardFreezer.admin_addRewardPool(teamRewardPool.address));
+      await waitForTx(await teamRewardPool.setUnlockBlock(teamRewardUnlockBlock));
     }
   );

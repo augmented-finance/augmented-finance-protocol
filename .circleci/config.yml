@@ -2,7 +2,7 @@ version: 2.1
 orbs:
   node: circleci/node@4.3.0
 jobs:
-  install:
+  test_all:
     docker:
       - image: circleci/node:12
     steps:
@@ -14,9 +14,8 @@ jobs:
           install-yarn: true
       - run: |
           yarn install
-          yarn run compile
-          yarn run test:main:augmented:team-rewards
+          yarn run test
 workflows:
   test:
     jobs:
-      - install
+      - test_all
