@@ -95,7 +95,7 @@ describe('Team rewards suite', () => {
     expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
   });
 
-  it.only('add team member, claim reward', async () => {
+  it('add team member, claim reward', async () => {
     // add new member, check shares, check claim after 100 blocks
     expect(
       await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC100 / 2)
