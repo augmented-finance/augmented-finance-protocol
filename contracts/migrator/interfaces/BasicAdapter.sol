@@ -62,7 +62,13 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
     _totalDeposited = _totalDeposited.add(internalAmount);
 
     if (address(_rewardPool) != address(0)) {
-      _rewardPool.handleBalanceUpdate(holder, oldBalance, _deposits[holder], _totalDeposited);
+      _rewardPool.handleBalanceUpdate(
+        getUnderlying(),
+        holder,
+        oldBalance,
+        _deposits[holder],
+        _totalDeposited
+      );
     }
     return amount;
   }
@@ -238,7 +244,7 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
     if (amount == maxAmount) {
       delete (_deposits[holder]);
       if (address(_rewardPool) != address(0)) {
-        _rewardPool.handleBalanceUpdate(holder, maxAmount, 0, _totalDeposited);
+        _rewardPool.handleBalanceUpdate(getUnderlying(), holder, maxAmount, 0, _totalDeposited);
       }
       return amount;
     }
@@ -246,7 +252,13 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
     uint256 oldBalance = _deposits[holder];
     _deposits[holder] = oldBalance.sub(internalAmount);
     if (address(_rewardPool) != address(0)) {
-      _rewardPool.handleBalanceUpdate(holder, oldBalance, _deposits[holder], _totalDeposited);
+      _rewardPool.handleBalanceUpdate(
+        getUnderlying(),
+        holder,
+        oldBalance,
+        _deposits[holder],
+        _totalDeposited
+      );
     }
     return amount;
   }

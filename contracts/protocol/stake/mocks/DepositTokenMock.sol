@@ -28,7 +28,7 @@ contract DepositTokenMock is IScaledBalanceToken {
     uint256 newBalance,
     uint256 totalSupply
   ) external {
-    _aic.handleBalanceUpdate(user, oldBalance, newBalance, totalSupply);
+    _aic.handleBalanceUpdate(address(this), user, oldBalance, newBalance, totalSupply);
   }
 
   function setUserBalanceAndSupply(uint256 userBalance, uint256 totalSupply) public {

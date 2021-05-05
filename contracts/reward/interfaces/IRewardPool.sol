@@ -20,7 +20,7 @@ interface IManagedRewardPool {
 
   function calcRewardFor(address holder) external view returns (uint256 amount, uint32 sinceBlock);
 
-  function addRewardProvider(address provider) external;
+  function addRewardProvider(address provider, address token) external;
 
   function removeRewardProvider(address provider) external;
 }

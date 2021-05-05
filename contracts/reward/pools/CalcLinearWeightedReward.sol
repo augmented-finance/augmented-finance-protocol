@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../tools/math/WadRayMath.sol';
-import {BitUtils} from '../tools/math/BitUtils.sol';
-import {IRewardController} from './interfaces/IRewardController.sol';
-import {AccumulatingRewardPool} from './AccumulatingRewardPool.sol';
+import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import {BitUtils} from '../../tools/math/BitUtils.sol';
+import {IRewardController} from '../interfaces/IRewardController.sol';
+import {CalcLinearRateReward} from './CalcLinearRateReward.sol';
 
 import 'hardhat/console.sol';
 
-contract LinearWeightedRewardPool is AccumulatingRewardPool {
+abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
@@ -19,12 +19,7 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
   uint256 private _totalSupplyMax;
   uint256 private constant minBitReserve = 32;
 
-  constructor(
-    IRewardController controller,
-    uint256 initialRate,
-    uint16 baselinePercentage,
-    uint256 maxTotalSupply
-  ) public AccumulatingRewardPool(controller, initialRate, baselinePercentage) {
+  constructor(uint256 maxTotalSupply) public {
     require(maxTotalSupply > 0, 'max total supply is unknown');
 
     uint256 maxSupplyBits = BitUtils.bitLength(maxTotalSupply);
@@ -33,50 +28,45 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
     _totalSupplyMax = (1 << maxSupplyBits) - 1;
   }
 
-  function internalUpdateTotalSupply(
-    address provider,
-    uint256 providerBalance,
-    uint256 totalSupply,
+  function doUpdateTotalSupply(
+    uint256 oldSupply,
+    uint256 newSupply,
     uint32 currentBlock
-  ) internal override {
-    if (providerBalance == totalSupply) {
-      return;
+  ) internal returns (bool) {
+    if (oldSupply > newSupply) {
+      return internalSetTotalSupply(_totalSupply.sub(oldSupply - newSupply), currentBlock);
     }
-    internalSetProviderBalance(provider, totalSupply);
-
-    if (providerBalance > totalSupply) {
-      uint256 delta = providerBalance - totalSupply;
-      internalSetTotalSupply(_totalSupply.sub(delta), currentBlock);
-      return;
-    }
-    uint256 delta = totalSupply - providerBalance;
-    internalSetTotalSupply(_totalSupply.add(delta), currentBlock);
+    return internalSetTotalSupply(_totalSupply.add(newSupply - oldSupply), currentBlock);
   }
 
   function internalRateUpdated(
     uint256 lastRate,
     uint32 lastBlock,
     uint32 currentBlock
-  ) internal virtual override {
-    if (_totalSupply > 0) {
-      // the rate stays in RAY, but is weighted now vs _totalSupplyMax
+  ) internal override {
+    if (_totalSupply == 0) {
+      return;
+    }
+
+    // the rate stays in RAY, but is weighted now vs _totalSupplyMax
+    if (currentBlock != lastBlock) {
       lastRate = lastRate.mul(_totalSupplyMax.div(_totalSupply));
       _accumRate = _accumRate.add(lastRate.mul(currentBlock - lastBlock));
-    } else {
-      lastRate = 0;
     }
-    super.internalRateUpdated(lastRate, lastBlock, currentBlock);
   }
 
-  function internalSetTotalSupply(uint256 totalSupply, uint32 currentBlock) internal {
-    if (getRate() > 0) {
-      // updates are not needed when the rate is zero, unset or was set within this block
-      uint32 lastBlock = internalGetLastUpdateBlock();
-      if (lastBlock != 0 && lastBlock != currentBlock) {
-        internalRateUpdated(getRate(), lastBlock, currentBlock);
-      }
+  function internalSetTotalSupply(uint256 totalSupply, uint32 currentBlock)
+    internal
+    returns (bool rateUpdated)
+  {
+    uint256 lastRate = getLinearRate();
+    if (lastRate > 0) {
+      uint32 lastBlock = getRateUpdateBlock();
+      internalRateUpdated(lastRate, lastBlock, currentBlock);
+      rateUpdated = lastBlock != currentBlock;
     }
     _totalSupply = totalSupply;
+    return rateUpdated;
   }
 
   function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
@@ -93,8 +83,8 @@ contract LinearWeightedRewardPool is AccumulatingRewardPool {
       return (_accumRate, 0, 0);
     }
 
-    uint256 weightedRate = getRate().mul(_totalSupplyMax.div(_totalSupply));
-    adjRate = _accumRate.add(weightedRate.mul(currentBlock - internalGetLastUpdateBlock()));
+    uint256 weightedRate = getLinearRate().mul(_totalSupplyMax.div(_totalSupply));
+    adjRate = _accumRate.add(weightedRate.mul(currentBlock - getRateUpdateBlock()));
 
     weightedRate = adjRate.sub(entry.lastAccumRate);
     // ATTN! TODO Prevent overflow checks here

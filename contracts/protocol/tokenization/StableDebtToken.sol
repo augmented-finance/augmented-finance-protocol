@@ -394,6 +394,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleBalanceUpdate(
+        address(this),
         account,
         oldAccountBalance,
         _balances[account],
@@ -418,6 +419,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleBalanceUpdate(
+        address(this),
         account,
         oldAccountBalance,
         _balances[account],
