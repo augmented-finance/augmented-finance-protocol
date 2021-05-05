@@ -4,9 +4,12 @@ orbs:
 jobs:
   install:
     docker:
-      - image: 'cimg/base:stable'
+      - image: circleci/node:12
     steps:
       - checkout
+      - run:
+          name: Clear cache
+          command: rm -rf node_modules/
       - node/install:
           install-yarn: true
       - run: |
