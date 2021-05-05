@@ -36,4 +36,4 @@ workflows:
   test:
     jobs:
       - test_all:
-          context: slack-context
+          context: slack-secret
