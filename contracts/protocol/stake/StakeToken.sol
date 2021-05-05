@@ -105,6 +105,7 @@ abstract contract StakeToken is
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleBalanceUpdate(
+        address(this), // TODO use underlying & scaled balances?
         to,
         oldReceiverBalance,
         balanceOf(to),
@@ -183,7 +184,13 @@ abstract contract StakeToken is
     }
 
     if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(from, oldBalance, balanceOf(from), totalSupply());
+      _incentivesController.handleBalanceUpdate(
+        address(this), // TODO use underlying & scaled balances?
+        from,
+        oldBalance,
+        balanceOf(from),
+        totalSupply()
+      );
     }
 
     IERC20(_stakedToken).safeTransfer(to, underlyingAmount);

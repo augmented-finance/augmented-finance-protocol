@@ -53,8 +53,12 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     _ignoreMask |= mask;
   }
 
-  function admin_addRewardProvider(address pool, address provider) external onlyOwner {
-    IManagedRewardPool(pool).addRewardProvider(provider);
+  function admin_addRewardProvider(
+    address pool,
+    address provider,
+    address token
+  ) external onlyOwner {
+    IManagedRewardPool(pool).addRewardProvider(provider, token);
   }
 
   function admin_removeRewardProvider(address pool, address provider) external onlyOwner {

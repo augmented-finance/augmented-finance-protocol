@@ -14,7 +14,7 @@ import {
 } from '../../helpers/contracts-getters';
 
 import { AGFToken, RewardFreezer } from '../../types';
-import { RAY } from '../../helpers/constants';
+import { ONE_ADDRESS, RAY, ZERO_ADDRESS } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -47,7 +47,8 @@ describe('Migrator test suite', () => {
     // deployer.address is used instead of a token contract
     await rewardFreezer.admin_addRewardProvider(
       linearUnweightedRewardPool.address,
-      deployer.address
+      deployer.address,
+      ONE_ADDRESS
     );
     await rewardFreezer.admin_setFreezePercentage(0);
 
@@ -71,7 +72,13 @@ describe('Migrator test suite', () => {
 
     expect(await agf.balanceOf(user.address)).to.eq(0);
 
-    await linearUnweightedRewardPool.handleBalanceUpdate(user.address, 0, 2000, 100000); // block 10
+    await linearUnweightedRewardPool.handleBalanceUpdate(
+      ONE_ADDRESS,
+      user.address,
+      0,
+      2000,
+      100000
+    ); // block 10
     await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 11
     expect(await agf.balanceOf(user.address)).to.eq(2000);
 

@@ -54,7 +54,6 @@ import {
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
-  FixedRewardPoolFactory,
   LinearWeightedRewardPoolFactory,
   MigratorFactory,
   AaveAdapterFactory,
@@ -754,7 +753,7 @@ export const deployFixedRewardPool = async (
   );
 
 export const deployLinearWeightedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish, tEthereumAddress, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -765,7 +764,7 @@ export const deployLinearWeightedRewardPool = async (
   );
 
 export const deployLinearUnweightedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish, tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(

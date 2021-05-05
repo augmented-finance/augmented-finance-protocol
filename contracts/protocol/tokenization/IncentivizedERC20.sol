@@ -185,9 +185,16 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
     IBalanceHook hook = _getIncentivesController();
     if (address(hook) != address(0)) {
       uint256 currentTotalSupply = _totalSupply;
-      hook.handleBalanceUpdate(sender, oldSenderBalance, _balances[sender], currentTotalSupply);
+      hook.handleBalanceUpdate(
+        address(this),
+        sender,
+        oldSenderBalance,
+        _balances[sender],
+        currentTotalSupply
+      );
       if (sender != recipient) {
         hook.handleBalanceUpdate(
+          address(this),
           recipient,
           oldRecipientBalance,
           _balances[recipient],
@@ -209,7 +216,13 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
 
     IBalanceHook hook = _getIncentivesController();
     if (address(hook) != address(0)) {
-      hook.handleBalanceUpdate(account, oldAccountBalance, _balances[account], _totalSupply);
+      hook.handleBalanceUpdate(
+        address(this),
+        account,
+        oldAccountBalance,
+        _balances[account],
+        _totalSupply
+      );
     }
   }
 
@@ -225,7 +238,13 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
 
     IBalanceHook hook = _getIncentivesController();
     if (address(hook) != address(0)) {
-      hook.handleBalanceUpdate(account, oldAccountBalance, _balances[account], _totalSupply);
+      hook.handleBalanceUpdate(
+        address(this),
+        account,
+        oldAccountBalance,
+        _balances[account],
+        _totalSupply
+      );
     }
   }
 
