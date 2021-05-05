@@ -33,7 +33,7 @@ describe('Team rewards suite', () => {
   let blk;
 
   const PERC100 = 10000;
-  const UNLOCK_BLOCK = 20;
+  const UNLOCK_BLOCK = 300;
 
   before(async () => {
     await rawBRE.run('set-DRE');

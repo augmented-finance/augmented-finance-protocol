@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
   node: circleci/node@4.3.0
+  slack: circleci/slack@4.4.2
 jobs:
   test_all:
     docker:
@@ -16,7 +17,23 @@ jobs:
           yarn install
           yarn run compile
           yarn run test
+      - slack/notify:
+          custom: |
+              {
+              	"blocks": [
+              		{
+              			"type": "section",
+              			"text": {
+              				"type": "mrkdwn",
+              				"text": "Build notification"
+              			}
+              		}
+              	]
+              }
+          channel: dev-only
+          event: fail
 workflows:
   test:
     jobs:
-      - test_all
+      - test_all:
+          context: slack-context
