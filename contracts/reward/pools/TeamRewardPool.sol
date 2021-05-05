@@ -83,16 +83,6 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     return (rate, allocated, since);
   }
 
-  function handleBalanceUpdate(
-    address,
-    address,
-    uint256,
-    uint256,
-    uint256
-  ) external override {
-    revert('unsupported');
-  }
-
   function addRewardProvider(address, address) external override {
     revert('unsupported');
   }

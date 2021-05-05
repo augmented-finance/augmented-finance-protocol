@@ -6,11 +6,11 @@ import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 // import {AccessBitmask} from '../../access/AccessBitmask.sol';
 import {IRewardController} from '../interfaces/IRewardController.sol';
-import {IRewardPool, IManagedRewardPool} from '../interfaces/IRewardPool.sol';
+import {IManagedRewardPool} from '../interfaces/IRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract ControlledRewardPool is IRewardPool, IManagedRewardPool {
+abstract contract ControlledRewardPool is IManagedRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
