@@ -7,9 +7,9 @@ jobs:
       - image: circleci/node:12
     steps:
       - checkout
-      - run:
-          name: Clear cache
-          command: rm -rf node_modules/
+#      - run:
+#          name: Clear cache
+#          command: rm -rf node_modules/
       - node/install:
           install-yarn: true
       - run: |
