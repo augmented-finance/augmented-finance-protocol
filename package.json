@@ -16,7 +16,7 @@
     "hardhat:docker": "hardhat --network hardhatevm_docker",
     "hardhat:mumbai": "hardhat --network mumbai",
     "hardhat:matic": "hardhat --network matic",
-    "compile": "SKIP_LOAD=true hardhat compile",
+    "compile": "SKIP_LOAD=true TS_NODE_TRANSPILE_ONLY=1 hardhat compile",
     "console:fork": "MAINNET_FORK=true hardhat console",
     "test": "TS_NODE_TRANSPILE_ONLY=1 hardhat test ./test-suites/test-augmented/*.spec.ts",
     "test-scenarios": "npx hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/scenario.spec.ts",
