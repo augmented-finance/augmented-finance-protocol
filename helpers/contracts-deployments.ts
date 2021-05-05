@@ -54,7 +54,6 @@ import {
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
-  FixedRewardPoolFactory,
   LinearWeightedRewardPoolFactory,
   MigratorFactory,
   AaveAdapterFactory,
@@ -646,8 +645,8 @@ export const deployMockStakedAgfToken = async (
       stakeController: args[0],
       stakedToken: args[1],
       incentivesController: args[2],
-      cooldownSeconds: 10,
-      unstakeWindow: 10,
+      cooldownBlocks: 10,
+      unstakeBlocks: 10,
       governance: ZERO_ADDRESS,
     },
     args[3],
@@ -723,19 +722,8 @@ export const deployRewardFreezer = async (args: [tEthereumAddress], verify?: boo
     verify
   );
 
-export const deployFixedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new FixedRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.FixedRewardPool,
-    [], // TODO:
-    verify
-  );
-
 export const deployLinearWeightedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish, tEthereumAddress, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -746,7 +734,7 @@ export const deployLinearWeightedRewardPool = async (
   );
 
 export const deployLinearUnweightedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish, tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(

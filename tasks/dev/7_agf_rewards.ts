@@ -25,7 +25,7 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
     const rewardFreezer = await deployRewardFreezer([agfToken.address], verify);
 
     const linearUnweightedRewardPool = await deployLinearUnweightedRewardPool(
-      [rewardFreezer.address, RAY, 0],
+      [rewardFreezer.address, RAY, 0, ZERO_ADDRESS],
       verify
     );
 
