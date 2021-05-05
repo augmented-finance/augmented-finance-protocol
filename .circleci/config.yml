@@ -13,9 +13,9 @@ jobs:
       - node/install:
           install-yarn: true
       - run: |
-          node --version
           yarn install
-          yarn test:main:augmented:team-rewards
+          yarn run compile
+          yarn run test:main:augmented:team-rewards
 workflows:
   test:
     jobs:
