@@ -62,6 +62,10 @@ abstract contract CalcLinearRateReward {
       uint32 since
     );
 
+  function getRewardEntry(address holder) internal view returns (RewardEntry memory) {
+    return _rewards[holder];
+  }
+
   function doUpdateReward(
     address provider,
     address holder,
