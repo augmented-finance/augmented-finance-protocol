@@ -279,7 +279,7 @@ export type iAavePoolAssets<T> = Pick<
 
 export type iAugmentedPoolAssets<T> = Pick<
   iAssetsWithoutUSD<T>,
-  'AAVE' | 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH'
+  'AAVE' | 'LINK' | 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH'
 >;
 
 export type iLpPoolAssets<T> = Pick<
