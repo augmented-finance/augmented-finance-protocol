@@ -5,11 +5,12 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {IRewardController} from '../interfaces/IRewardController.sol';
+import {IRewardPool} from '../interfaces/IRewardPool.sol';
 import {ControlledRewardPool} from './ControlledRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-contract ZombieRewardPool is ControlledRewardPool {
+contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
