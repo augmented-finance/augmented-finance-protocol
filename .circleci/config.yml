@@ -18,20 +18,9 @@ jobs:
           yarn run compile
           yarn run test:main:augmented:team-rewards
       - slack/notify:
-          custom: |
-              {
-              	"blocks": [
-              		{
-              			"type": "section",
-              			"text": {
-              				"type": "mrkdwn",
-              				"text": "Build notification"
-              			}
-              		}
-              	]
-              }
           channel: dev-only
           event: fail
+          template: basic_fail_1
 workflows:
   test:
     jobs:
