@@ -25,6 +25,7 @@ abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
   function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
     internal
     view
+    virtual
     override
     returns (
       uint256 rate,
