@@ -741,17 +741,6 @@ export const deployTeamRewardPool = async (
     verify
   );
 
-export const deployFixedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new FixedRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.FixedRewardPool,
-    [], // TODO:
-    verify
-  );
-
 export const deployLinearWeightedRewardPool = async (
   args: [tEthereumAddress, BigNumberish, BigNumberish, tEthereumAddress, BigNumberish],
   verify?: boolean
