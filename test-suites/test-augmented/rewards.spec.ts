@@ -28,7 +28,7 @@ describe('Migrator test suite', () => {
   let otherUsers: SignerWithAddress[];
 
   let rewardFreezer: RewardFreezer;
-  let agf: AGFToken
+  let agf: AGFToken;
 
   before(async () => {
     await rawBRE.run('set-DRE');
@@ -45,7 +45,11 @@ describe('Migrator test suite', () => {
 
     const linearUnweightedRewardPool = await getLinearUnweightedRewardPool();
     // deployer.address is used instead of a token contract
-    await rewardFreezer.admin_addRewardProvider(linearUnweightedRewardPool.address, deployer.address, ONE_ADDRESS);
+    await rewardFreezer.admin_addRewardProvider(
+      linearUnweightedRewardPool.address,
+      deployer.address,
+      ONE_ADDRESS
+    );
     await rewardFreezer.admin_setFreezePercentage(0);
 
     agf = await getMockAgfToken();
@@ -68,17 +72,26 @@ describe('Migrator test suite', () => {
 
     expect(await agf.balanceOf(user.address)).to.eq(0);
 
-    await linearUnweightedRewardPool.handleBalanceUpdate(ONE_ADDRESS, user.address, 0, 2000, 100000); // block 10
+    await linearUnweightedRewardPool.handleBalanceUpdate(
+      ONE_ADDRESS,
+      user.address,
+      0,
+      2000,
+      100000
+    ); // block 10
     await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 11
     expect(await agf.balanceOf(user.address)).to.eq(2000);
 
-    await expect(rewardFreezer.connect(user).claimReward()).to.emit(rewardFreezer, 'RewardsClaimed').withArgs(user.address, user.address, 2000); // block 12
+    await expect(rewardFreezer.connect(user).claimReward())
+      .to.emit(rewardFreezer, 'RewardsClaimed')
+      .withArgs(user.address, user.address, 2000); // block 12
     expect(await agf.balanceOf(user.address)).to.eq(4000);
 
     await rewardFreezer.admin_setFreezePercentage(5000); // set 50% // block 13
 
     await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 14
-    expect(await agf.balanceOf(user.address)).to.eq(6000); // +50% of 4k for blocks 13-14, ttl frozen 2k
+    // +50% of 4k for blocks 13-14, ttl frozen 2k
+    expect(await agf.balanceOf(user.address)).to.eq(6000);
 
     await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 15
     expect(await agf.balanceOf(user.address)).to.eq(7000); // +50% of 2k for block 14, ttl frozen 3k
@@ -87,7 +100,7 @@ describe('Migrator test suite', () => {
     expect(await agf.balanceOf(user.address)).to.eq(8000); // +50% of 2k for block 15, ttl frozen 4k
 
     // immediate meltdown
-    await (await rewardFreezer.admin_setMeltDownBlock(1)).wait(1);   // block 17
+    await (await rewardFreezer.admin_setMeltDownBlock(1)).wait(1); // block 17
     await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 18
     expect(await agf.balanceOf(user.address)).to.eq(16000); // + 4k for blocks 17-18 and frozen 4k
 

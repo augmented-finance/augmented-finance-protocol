@@ -60,6 +60,7 @@ import {
   CompAdapterFactory,
   LinearUnweightedRewardPoolFactory,
   AccessControllerFactory,
+  TeamRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -67,6 +68,7 @@ import {
   linkBytecode,
   insertContractAddressInDb,
 } from './contracts-helpers';
+// tslint:disable-next-line:max-line-length
 import { StableAndVariableTokensHelperFactory } from '../types/StableAndVariableTokensHelperFactory';
 import { MintableDelegationERC20 } from '../types/MintableDelegationERC20';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
@@ -162,6 +164,7 @@ export const deployAaveLibraries = async (
   const validationLogic = await deployValidationLogic(reserveLogic, genericLogic, verify);
 
   // Hardcoded solidity placeholders, if any library changes path this will fail.
+  // tslint:disable-next-line:max-line-length
   // The '__$PLACEHOLDER$__ can be calculated via solidity keccak, but the LendingPoolLibraryAddresses Type seems to
   // require a hardcoded string.
   //
@@ -719,6 +722,33 @@ export const deployRewardFreezer = async (args: [tEthereumAddress], verify?: boo
     await new RewardFreezerFactory(await getFirstSigner()).deploy(...args),
     eContractid.RewardFreezer,
     args,
+    verify
+  );
+
+export const deployTeamRewardPool = async (
+  args: [
+    controller: string,
+    initialRate: BigNumberish,
+    baselinePercentage: BigNumberish,
+    teamManager: string
+  ],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new TeamRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TeamRewardPool,
+    [], // TODO,
+    verify
+  );
+
+export const deployFixedRewardPool = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new FixedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.FixedRewardPool,
+    [], // TODO:
     verify
   );
 

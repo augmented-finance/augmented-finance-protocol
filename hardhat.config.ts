@@ -83,7 +83,7 @@ const buidlerConfig: HardhatUserConfig = {
     ],
   },
   typechain: {
-    outDir: 'types',
+    outDir: './types',
     target: 'ethers-v5',
   },
   etherscan: {
