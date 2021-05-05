@@ -16,9 +16,9 @@ jobs:
       - run: |
           yarn install
           yarn run compile
-          yarn run test
+          yarn run test:main:augmented:team-rewards
       - slack/notify:
-          channel: dev-only
+          channel: build
           event: fail
           template: basic_fail_1
 workflows:
