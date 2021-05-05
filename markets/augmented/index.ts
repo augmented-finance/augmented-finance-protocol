@@ -1,5 +1,5 @@
 import { oneRay, ZERO_ADDRESS } from '../../helpers/constants';
-import { IAaveConfiguration, eEthereumNetwork } from '../../helpers/types';
+import { IAugmentedConfiguration, eEthereumNetwork } from '../../helpers/types';
 
 import { CommonsConfig } from './commons';
 import {
@@ -29,32 +29,16 @@ import {
 // POOL--SPECIFIC PARAMS
 // ----------------
 
-export const AugmentedConfig: IAaveConfiguration = {
+export const AugmentedConfig: IAugmentedConfiguration = {
   ...CommonsConfig,
   MarketId: 'Augmented genesis market',
   ProviderId: 1,
   ReservesConfig: {
-    AAVE: strategyAAVE,
-    BAT: strategyBAT,
-    BUSD: strategyBUSD,
     DAI: strategyDAI,
-    ENJ: strategyREN,
-    KNC: strategyKNC,
-    LINK: strategyLINK,
-    MANA: strategyMANA,
-    MKR: strategyMKR,
-    REN: strategyREN,
-    SNX: strategySNX,
-    SUSD: strategySUSD,
-    TUSD: strategyTUSD,
-    UNI: strategyUNI,
     USDC: strategyUSDC,
     USDT: strategyUSDT,
     WBTC: strategyWBTC,
     WETH: strategyWETH,
-    YFI: strategyYFI,
-    ZRX: strategyZRX,
-    xSUSHI: strategyXSUSHI,
   },
   ReserveAssets: {
     [eEthereumNetwork.hardhat]: {},

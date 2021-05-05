@@ -98,7 +98,7 @@ export const withSaveAndVerify = async <ContractType extends Contract>(
   if (usingTenderly()) {
     console.log();
     console.log('Doing Tenderly contract verification of', id);
-    await (DRE as any).tenderlyNetwork.verify({
+    await (DRE as any).tenderlyRPC.verify({
       name: id,
       address: instance.address,
     });
@@ -174,12 +174,17 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNet
   }
 };
 
-export const getParamPerPool = <T>({ proto, matic }: iParamsPerPool<T>, pool: AavePools) => {
+export const getParamPerPool = <T>(
+  { proto, matic, augmented }: iParamsPerPool<T>,
+  pool: AavePools
+) => {
   switch (pool) {
     case AavePools.proto:
       return proto;
     case AavePools.matic:
       return matic;
+    case AavePools.augmented:
+      return augmented;
     default:
       return proto;
   }

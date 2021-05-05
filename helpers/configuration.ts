@@ -51,6 +51,9 @@ export const getReservesConfigByPool = (pool: AavePools): iMultiPoolsAssets<IRes
       [AavePools.matic]: {
         ...MaticConfig.ReservesConfig,
       },
+      [AavePools.augmented]: {
+        ...AugmentedConfig.ReservesConfig,
+      },
     },
     pool
   );
