@@ -19,11 +19,12 @@ import {
   revertToSnapshotBlock,
   snapshotBlock,
 } from './utils';
+import { makeSuite } from './helpers/make-suite';
 
 chai.use(solidity);
 const { expect } = chai;
 
-describe('Team rewards suite', () => {
+makeSuite('Team rewards suite', () => {
   let root: SignerWithAddress;
   let teamMember1: SignerWithAddress;
   let teamMember2: SignerWithAddress;
@@ -36,7 +37,6 @@ describe('Team rewards suite', () => {
   const UNLOCK_BLOCK = 300;
 
   before(async () => {
-    await rawBRE.run('set-DRE');
     await rawBRE.run('dev:augmented-access');
   });
 
