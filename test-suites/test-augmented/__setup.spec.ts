@@ -64,7 +64,7 @@ const LENDING_RATE_ORACLE_RATES_COMMON = AugmentedConfig.LendingRateOracleRatesC
 const deployAllMockTokens = async (deployer: Signer) => {
   const tokens: { [symbol: string]: MockContract | MintableERC20 | WETH9Mocked } = {};
 
-  const protoConfigData = getReservesConfigByPool(AavePools.augmented);
+  const protoConfigData = getReservesConfigByPool(AavePools.proto);
 
   for (const tokenSymbol of Object.keys(TokenContractId)) {
     if (tokenSymbol === 'WETH') {
@@ -231,7 +231,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
     aaveAdmin
   );
 
-  const reservesParams = getReservesConfigByPool(AavePools.augmented);
+  const reservesParams = getReservesConfigByPool(AavePools.proto);
 
   const testHelpers = await deployProtocolDataProvider(addressesProvider.address);
 
