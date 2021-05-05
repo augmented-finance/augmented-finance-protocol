@@ -12,12 +12,17 @@ import {
 import { MockAgfToken, RewardFreezer, TeamRewardPool } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { waitForTx } from '../../helpers/misc-utils';
-import { currentBlock, mineBlocks, mineToBlock } from './utils';
+import {
+  currentBlock,
+  mineBlocks,
+  mineToBlock,
+  revertToSnapshotBlock,
+  snapshotBlock,
+} from './utils';
 
 chai.use(solidity);
 const { expect } = chai;
 
-// makeSuite('Rewards test suite', (testEnv: TestEnv) => {
 describe('Team rewards suite', () => {
   let root: SignerWithAddress;
   let teamMember1: SignerWithAddress;
@@ -25,6 +30,7 @@ describe('Team rewards suite', () => {
   let teamRewardPool: TeamRewardPool;
   let rewardController: RewardFreezer;
   let agf: MockAgfToken;
+  let blk;
 
   const PERC100 = 10000;
   const UNLOCK_BLOCK = 20;
@@ -35,6 +41,7 @@ describe('Team rewards suite', () => {
   });
 
   beforeEach(async () => {
+    blk = await snapshotBlock();
     [root, teamMember1, teamMember2] = await ethers.getSigners();
     await rawBRE.run('dev:agf-rewards', {
       teamRewardInitialRate: 100,
@@ -45,6 +52,10 @@ describe('Team rewards suite', () => {
     rewardController = await getRewardFreezer();
     teamRewardPool = await getTeamRewardPool();
     agf = await getMockAgfToken();
+  });
+
+  afterEach(async () => {
+    await revertToSnapshotBlock(blk);
   });
 
   it('share percentage 0 < share <= 10k', async () => {
