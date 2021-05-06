@@ -120,7 +120,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
 
   function removedFromPool(address holder) external override {
     uint256 poolMask = _poolMask[msg.sender];
-    require(poolMask == 0, 'unknown pool');
+    require(poolMask != 0, 'unknown pool');
 
     if (_memberOf[holder] & poolMask != 0) {
       _memberOf[holder] = _memberOf[holder] & ~poolMask;
