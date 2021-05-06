@@ -5,7 +5,7 @@ import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {BitUtils} from '../tools/math/BitUtils.sol';
 
-import {IRewardController} from './interfaces/IRewardController.sol';
+import {IRewardController, AllocationMode} from './interfaces/IRewardController.sol';
 import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
@@ -38,9 +38,6 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     require(_poolList.length <= 255, 'too many pools');
 
     _poolMask[address(pool)] = 1 << _poolList.length;
-    if (!pool.isLazy()) {
-      _ignoreMask |= 1 << _poolList.length;
-    }
     _poolList.push(pool);
   }
 
@@ -109,26 +106,30 @@ abstract contract BasicRewardController is Ownable, IRewardController {
   function allocatedByPool(
     address holder,
     uint256 allocated,
-    uint32 sinceBlock
+    uint32 sinceBlock,
+    AllocationMode mode
   ) external override {
     uint256 poolMask = _poolMask[msg.sender];
     require(poolMask != 0, 'unknown pool');
 
-    if (_memberOf[holder] & poolMask != poolMask) {
-      _memberOf[holder] |= poolMask;
-    }
     if (allocated > 0) {
       internalAllocatedByPool(holder, allocated, sinceBlock, uint32(block.number));
       emit RewardsAllocated(holder, allocated);
     }
-  }
 
-  function removedFromPool(address holder) external override {
-    uint256 poolMask = _poolMask[msg.sender];
-    require(poolMask != 0, 'unknown pool');
+    if (mode == AllocationMode.Push) {
+      return;
+    }
 
-    if (_memberOf[holder] & poolMask != 0) {
-      _memberOf[holder] = _memberOf[holder] & ~poolMask;
+    uint256 pullMask = _memberOf[holder];
+    if (mode == AllocationMode.UnsetPull) {
+      if (pullMask & poolMask != 0) {
+        _memberOf[holder] = pullMask & ~poolMask;
+      }
+    } else {
+      if (pullMask & poolMask != poolMask) {
+        _memberOf[holder] = pullMask | poolMask;
+      }
     }
   }
 

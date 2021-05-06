@@ -4,8 +4,7 @@ pragma solidity ^0.6.12;
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-// import {AccessBitmask} from '../../access/AccessBitmask.sol';
-import {IRewardController} from '../interfaces/IRewardController.sol';
+import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {IManagedRewardPool} from '../interfaces/IRewardPool.sol';
 
 import 'hardhat/console.sol';
@@ -43,18 +42,10 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     address holder,
     uint256 allocated,
     uint32 since,
-    bool newcomer,
-    uint256 newBalance
+    AllocationMode mode
   ) internal {
-    if (allocated > 0 || (newcomer && isLazy())) {
-      _controller.allocatedByPool(holder, allocated, since);
-    }
-    if (newBalance == 0 && !newcomer) {
-      _controller.removedFromPool(holder);
-    }
+    _controller.allocatedByPool(holder, allocated, since, mode);
   }
-
-  function isLazy() public view virtual override returns (bool);
 
   function internalGetReward(address holder, uint32 currentBlock)
     internal
