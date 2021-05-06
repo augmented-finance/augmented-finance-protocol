@@ -9,7 +9,8 @@ library AccessFlags {
   uint256 public constant POOL_ADMIN = 1 << 1;
   uint256 public constant TREASURY_MANAGER = 1 << 2;
   uint256 public constant REWARD_ADMIN = 1 << 3;
-  //  uint256 public constant LIQUIDITY_MANAGER = 1 << ??;
+  uint256 public constant STAKE_ADMIN = 1 << 4;
+  uint256 public constant LIQUIDITY_CONTROLLER = 1 << 5;
 
   // singletons - use range [16..32]
   // these roles can ONLY be assigned to a single address

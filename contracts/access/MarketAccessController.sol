@@ -171,4 +171,12 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
   function setRewardConfiguratorImpl(address addr) external override {
     setAddressAsProxy(AccessFlags.REWARD_CONFIGURATOR, addr);
   }
+
+  function isStakeAdmin(address addr) external view override returns (bool) {
+    return isAddress(AccessFlags.STAKE_ADMIN, addr);
+  }
+
+  function isLiquidityController(address addr) external view override returns (bool) {
+    return isAddress(AccessFlags.LIQUIDITY_CONTROLLER, addr);
+  }
 }

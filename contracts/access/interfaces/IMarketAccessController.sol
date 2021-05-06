@@ -36,6 +36,10 @@ interface IMarketAccessController is IAccessController {
   function getRewardController() external view returns (address);
 
   function getRewardConfigurator() external view returns (address);
+
+  function isStakeAdmin(address) external view returns (bool);
+
+  function isLiquidityController(address) external view returns (bool);
 }
 
 interface IManagedMarketAccessController is IMarketAccessController {
