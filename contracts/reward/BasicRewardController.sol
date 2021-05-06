@@ -23,6 +23,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
   mapping(address => uint256) private _memberOf;
 
   uint256 private _ignoreMask;
+  uint256 private _baselineMask;
 
   constructor(IRewardMinter rewardMinter) public {
     _rewardMinter = rewardMinter;
@@ -37,7 +38,9 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     pool.claimRewardFor(address(this)); // access check
     require(_poolList.length <= 255, 'too many pools');
 
-    _poolMask[address(pool)] = 1 << _poolList.length;
+    uint256 poolMask = 1 << _poolList.length;
+    _poolMask[address(pool)] = poolMask;
+    _baselineMask |= poolMask;
     _poolList.push(pool);
   }
 
@@ -68,9 +71,22 @@ abstract contract BasicRewardController is Ownable, IRewardController {
   }
 
   function admin_updateBaseline(uint256 baseline) external onlyOwner {
-    for (uint256 i = 0; i < _poolList.length; i++) {
-      _poolList[i].updateBaseline(baseline);
+    uint256 baselineMask = _baselineMask & ~_ignoreMask;
+
+    for (uint8 i = 0; i <= 255; i++) {
+      uint256 mask = uint256(1) << i;
+      if (mask & baselineMask == 0) {
+        if (mask > baselineMask) {
+          break;
+        }
+        continue;
+      }
+      if (_poolList[i].updateBaseline(baseline)) {
+        continue;
+      }
+      baselineMask &= ~mask;
     }
+    _baselineMask = baselineMask;
   }
 
   function admin_setRewardMinter(IRewardMinter minter) external onlyOwner {

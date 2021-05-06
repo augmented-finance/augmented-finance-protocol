@@ -31,11 +31,12 @@ abstract contract BaseRateRewardPool is ControlledRewardPool {
     internalSetRate(initialRate, uint32(block.number));
   }
 
-  function updateBaseline(uint256 baseline) external override onlyController {
+  function updateBaseline(uint256 baseline) external override onlyController returns (bool) {
     if (_baselinePercentage == NO_BASELINE) {
-      return;
+      return false;
     }
     internalSetRate(baseline.percentMul(_baselinePercentage), uint32(block.number));
+    return true;
   }
 
   function disableBaseline() external override onlyController {

@@ -6,7 +6,7 @@ import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 interface IRewardPool is IBalanceHook {}
 
 interface IManagedRewardPool {
-  function updateBaseline(uint256) external;
+  function updateBaseline(uint256) external returns (bool);
 
   function setBaselinePercentage(uint16) external;
 
