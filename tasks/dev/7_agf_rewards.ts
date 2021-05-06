@@ -7,10 +7,10 @@ import {
 } from '../../helpers/contracts-deployments';
 
 import { waitForTx } from '../../helpers/misc-utils';
-import { ONE_ADDRESS, RAY, ZERO_ADDRESS } from '../../helpers/constants';
+import { RAY, ZERO_ADDRESS } from '../../helpers/constants';
 
 task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
-  .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', 1, types.string)
+  .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', RAY, types.string)
   .addOptionalParam('teamRewardBaselinePercentage', 'baseline percentage - bigNumber', 0, types.int)
   .addOptionalParam('teamRewardUnlockBlock', 'unlock rewards from block', 1, types.int)
   .addOptionalParam(
