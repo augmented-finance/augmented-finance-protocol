@@ -2,7 +2,7 @@
 pragma solidity ^0.6.12;
 
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-import {IRewardController} from './../interfaces/IRewardController.sol';
+import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {BaseRateRewardPool} from './BaseRateRewardPool.sol';
 import {CalcLinearUnweightedReward} from './CalcLinearUnweightedReward.sol';
 
@@ -31,10 +31,6 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
       'only team manager or controller'
     );
     _;
-  }
-
-  function isLazy() public view override returns (bool) {
-    return true;
   }
 
   function getRate() public view override returns (uint256) {
@@ -111,7 +107,7 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     require(newTotalShare <= PercentageMath.ONE, 'team total share exceeds 100%');
     _totalShare = uint16(newTotalShare);
 
-    (uint256 allocated, uint32 since, bool newcomer) =
+    (uint256 allocated, uint32 since, AllocationMode mode) =
       doUpdateReward(
         _teamManager,
         member,
@@ -126,26 +122,19 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
       'member share can not be changed during lockup'
     );
 
-    if (allocated > 0 || (newcomer && memberSharePct > 0)) {
-      IRewardController(getRewardController()).allocatedByPool(member, allocated, since);
-    }
-    if (memberSharePct == 0) {
-      IRewardController(getRewardController()).removedFromPool(member);
-    }
+    internalAllocateReward(member, allocated, since, mode);
   }
 
   function removeTeamMember(address member) external onlyTeamManagerOrController {
     require(member != address(0), 'member is required');
+
     uint256 lastShare = internalRemoveReward(member);
-    if (lastShare == 0) {
-      return;
-    }
     if (lastShare < _totalShare) {
       _totalShare -= uint16(lastShare);
     } else {
       _totalShare = 0;
     }
-    IRewardController(getRewardController()).removedFromPool(member);
+    internalAllocateReward(member, 0, 0, AllocationMode.UnsetPull);
   }
 
   function setTeamManager(address member) external onlyTeamManagerOrController {

@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {IRewardController} from '../interfaces/IRewardController.sol';
+import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {IRewardPool} from '../interfaces/IRewardPool.sol';
 import {ControlledRewardPool} from './ControlledRewardPool.sol';
 
@@ -93,13 +93,8 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
     TokenReward storage tr = _tokens[token];
 
     uint256 allocated = uint256(newBalance - oldBalance).rayMul(tr.rateRay);
-    require(tr.limit >= allocated, 'insufficient reward pool balance');
-    tr.limit -= allocated;
+    tr.limit = tr.limit.sub(allocated, 'insufficient reward pool balance');
 
-    _controller.allocatedByPool(holder, allocated, uint32(block.number));
-  }
-
-  function isLazy() public view virtual override returns (bool) {
-    return false;
+    _controller.allocatedByPool(holder, allocated, uint32(block.number), AllocationMode.Push);
   }
 }

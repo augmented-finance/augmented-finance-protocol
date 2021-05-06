@@ -5,7 +5,7 @@ import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 // import {AccessBitmask} from '../../access/AccessBitmask.sol';
-import {IRewardController} from '../interfaces/IRewardController.sol';
+import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {IRewardPool} from '../interfaces/IRewardPool.sol';
 import {BaseRateRewardPool} from './BaseRateRewardPool.sol';
 
@@ -37,7 +37,7 @@ abstract contract MonoProviderRewardPool is BaseRateRewardPool, IRewardPool {
       newSupply = 1;
     }
 
-    (uint256 allocated, uint32 since, bool newcomer) =
+    (uint256 allocated, uint32 since, AllocationMode mode) =
       internalUpdateReward(
         msg.sender,
         holder,
@@ -46,7 +46,7 @@ abstract contract MonoProviderRewardPool is BaseRateRewardPool, IRewardPool {
         newSupply,
         uint32(block.number)
       );
-    internalAllocateReward(holder, allocated, since, newcomer, newBalance);
+    internalAllocateReward(holder, allocated, since, mode);
   }
 
   function addRewardProvider(address provider, address) external virtual override onlyController {
@@ -75,6 +75,6 @@ abstract contract MonoProviderRewardPool is BaseRateRewardPool, IRewardPool {
     returns (
       uint256 allocated,
       uint32 since,
-      bool newcomer
+      AllocationMode mode
     );
 }
