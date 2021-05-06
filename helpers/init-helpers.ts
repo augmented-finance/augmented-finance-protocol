@@ -62,7 +62,7 @@ export const initReservesByHelper = async (
   const addressProvider = await getLendingPoolAddressesProvider();
 
   // CHUNK CONFIGURATION
-  const initChunks = 4;
+  const initChunks = 1;
 
   // Initialize variables for future reserves initialization
   let reserveTokens: string[] = [];
@@ -107,19 +107,19 @@ export const initReservesByHelper = async (
   let variableDebtTokenImplementationAddress = '';
 
   // NOT WORKING ON MATIC, DEPLOYING INDIVIDUAL IMPLs INSTEAD
-  // const tx1 = await waitForTx(
-  //   await stableAndVariableDeployer.initDeployment([ZERO_ADDRESS], ["1"])
-  // );
-  // console.log(tx1.events);
-  // tx1.events?.forEach((event, index) => {
-  //   stableDebtTokenImplementationAddress = event?.args?.stableToken;
-  //   variableDebtTokenImplementationAddress = event?.args?.variableToken;
-  //   rawInsertContractAddressInDb(`stableDebtTokenImpl`, stableDebtTokenImplementationAddress);
-  //   rawInsertContractAddressInDb(`variableDebtTokenImpl`, variableDebtTokenImplementationAddress);
-  // });
+  const tx1 = await waitForTx(
+    await stableAndVariableDeployer.initDeployment([ZERO_ADDRESS], ['1'])
+  );
+  console.log(tx1.events);
+  tx1.events?.forEach((event, index) => {
+    stableDebtTokenImplementationAddress = event?.args?.stableToken;
+    variableDebtTokenImplementationAddress = event?.args?.variableToken;
+    rawInsertContractAddressInDb(`stableDebtTokenImpl`, stableDebtTokenImplementationAddress);
+    rawInsertContractAddressInDb(`variableDebtTokenImpl`, variableDebtTokenImplementationAddress);
+  });
   //gasUsage = gasUsage.add(tx1.gasUsed);
-  stableDebtTokenImplementationAddress = await (await deployGenericStableDebtToken()).address;
-  variableDebtTokenImplementationAddress = await (await deployGenericVariableDebtToken()).address;
+  // stableDebtTokenImplementationAddress = await (await deployGenericStableDebtToken()).address;
+  // variableDebtTokenImplementationAddress = await (await deployGenericVariableDebtToken()).address;
 
   const aTokenImplementation = await deployGenericDepositTokenImpl(verify);
   aTokenImplementationAddress = aTokenImplementation.address;
@@ -144,6 +144,8 @@ export const initReservesByHelper = async (
   ) as [string, IReserveParams][];
 
   for (let [symbol, params] of reserves) {
+    if (symbol !== 'DAI') continue;
+
     const { strategy, aTokenImpl, reserveDecimals } = params;
     const {
       optimalUtilizationRate,
@@ -176,8 +178,10 @@ export const initReservesByHelper = async (
 
     if (aTokenImpl === eContractid.DepositToken) {
       aTokenType[symbol] = 'generic';
+      console.log('---- generic:', symbol);
     } else if (aTokenImpl === eContractid.DelegationAwareAToken) {
       aTokenType[symbol] = 'delegation aware';
+      console.log('---- delegation aware:', symbol);
     }
 
     reserveInitDecimals.push(reserveDecimals);
@@ -189,6 +193,7 @@ export const initReservesByHelper = async (
     let aTokenToUse: string;
     if (aTokenType[reserveSymbols[i]] === 'generic') {
       aTokenToUse = aTokenImplementationAddress;
+      console.log('=-= generic:', reserveSymbols[i], aTokenToUse);
     } else {
       aTokenToUse = delegationAwareATokenImplementationAddress;
     }
@@ -222,8 +227,12 @@ export const initReservesByHelper = async (
 
   console.log(`- Reserves initialization in ${chunkedInitInputParams.length} txs`);
   for (let chunkIndex = 0; chunkIndex < chunkedInitInputParams.length; chunkIndex++) {
+    const param = chunkedInitInputParams[chunkIndex];
+    console.log(param);
     const tx3 = await waitForTx(
-      await configurator.batchInitReserve(chunkedInitInputParams[chunkIndex])
+      await configurator.batchInitReserve(param, {
+        gasLimit: 5000000, // TODO: remove ?
+      })
     );
 
     console.log(`  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
@@ -297,6 +306,7 @@ export const configureReservesByHelper = async (
     },
   ] of Object.entries(reservesParams) as [string, IReserveParams][]) {
     if (baseLTVAsCollateral === '-1') continue;
+    if (assetSymbol !== 'DAI') continue;
 
     const assetAddressIndex = Object.keys(tokenAddresses).findIndex(
       (value) => value === assetSymbol
@@ -336,7 +346,7 @@ export const configureReservesByHelper = async (
     await waitForTx(await addressProvider.setPoolAdmin(atokenAndRatesDeployer.address));
 
     // Deploy init per chunks
-    const enableChunks = 20;
+    const enableChunks = 1;
     const chunkedSymbols = chunk(symbols, enableChunks);
     const chunkedInputParams = chunk(inputParams, enableChunks);
 
@@ -344,12 +354,13 @@ export const configureReservesByHelper = async (
     for (let chunkIndex = 0; chunkIndex < chunkedInputParams.length; chunkIndex++) {
       await waitForTx(
         await atokenAndRatesDeployer.configureReserves(chunkedInputParams[chunkIndex], {
-          gasLimit: 12000000,
+          gasLimit: 7000000,
         })
       );
       console.log(`  - Init for: ${chunkedSymbols[chunkIndex].join(', ')}`);
     }
     // Set deployer back as admin
+    console.log('Set deployer back as admin: ', admin);
     await waitForTx(await addressProvider.setPoolAdmin(admin));
   }
 };

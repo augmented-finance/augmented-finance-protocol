@@ -17,6 +17,9 @@ task('augmented:mainnet', 'Deploy development enviroment')
 
     console.log('Migration started\n');
 
+    // console.log('0. Deploy address provider registry');
+    // await DRE.run('full:deploy-address-provider-registry');
+
     console.log('1. Deploy address provider');
     await DRE.run('full:deploy-address-provider', { pool: POOL_NAME });
 
