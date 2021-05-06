@@ -53,6 +53,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
         throw 'Reserve assets is undefined. Check ReserveAssets configuration at config directory';
       }
 
+      console.log('|||||=======||||', reserveAssets);
       const treasuryAddress = await getTreasuryAddress(poolConfig);
 
       await initReservesByHelper(
@@ -68,7 +69,6 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
         verify
       );
       await configureReservesByHelper(ReservesConfig, reserveAssets, testHelpers, admin);
-
       let collateralManagerAddress = await getParamPerNetwork(
         LendingPoolCollateralManager,
         network

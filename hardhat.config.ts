@@ -9,6 +9,7 @@ import { NETWORKS_RPC_URL, NETWORKS_DEFAULT_GAS } from './helper-hardhat-config'
 
 require('dotenv').config();
 
+import 'hardhat-tracer';
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-etherscan';
@@ -17,8 +18,8 @@ import 'hardhat-typechain';
 import '@tenderly/hardhat-tenderly';
 
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
-const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
-const DEFAULT_GAS_MUL = 5;
+const DEFAULT_BLOCK_GAS_LIMIT = 7000000;
+const DEFAULT_GAS_MUL = 1;
 const HARDFORK = 'istanbul';
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || '';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
@@ -104,10 +105,11 @@ const buidlerConfig: HardhatUserConfig = {
     },
     kovan: getCommonNetworkConfig(eEthereumNetwork.kovan, 42),
     ropsten: getCommonNetworkConfig(eEthereumNetwork.ropsten, 3),
+    rinkeby: getCommonNetworkConfig(eEthereumNetwork.rinkeby, 4),
     main: getCommonNetworkConfig(eEthereumNetwork.main, 1),
     tenderlyMain: getCommonNetworkConfig(eEthereumNetwork.tenderlyMain, 3030),
-    matic: getCommonNetworkConfig(ePolygonNetwork.matic, 137),
-    mumbai: getCommonNetworkConfig(ePolygonNetwork.mumbai, 80001),
+    // matic: getCommonNetworkConfig(ePolygonNetwork.matic, 137),
+    // mumbai: getCommonNetworkConfig(ePolygonNetwork.mumbai, 80001),
     hardhat: {
       hardfork: 'istanbul',
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
