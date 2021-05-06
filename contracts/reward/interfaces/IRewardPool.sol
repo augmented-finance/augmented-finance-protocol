@@ -23,4 +23,6 @@ interface IManagedRewardPool {
   function addRewardProvider(address provider, address token) external;
 
   function removeRewardProvider(address provider) external;
+
+  function getRewardController() external view returns (address);
 }

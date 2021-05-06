@@ -1,14 +1,92 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import {Errors} from '../tools/Errors.sol';
+import {
+  InitializableImmutableAdminUpgradeabilityProxy
+} from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
+import {IRewardConfigurator} from './interfaces/IRewardConfigurator.sol';
+import {IRewardController} from './interfaces/IRewardController.sol';
+import {IManagedRewardPool} from './interfaces/IRewardPool.sol';
+import {IMigratorHook} from '../interfaces/IMigratorHook.sol';
 
-contract RewardConfigurator is VersionedInitializable {
+contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMigratorHook {
   uint256 private constant CONFIGURATOR_REVISION = 1;
 
   function getRevision() internal pure virtual override returns (uint256) {
     return CONFIGURATOR_REVISION;
   }
+
+  IMarketAccessController internal _addressesProvider;
+  address internal _migrator;
+
+  modifier onlyRewardAdmin {
+    require(_addressesProvider.isRewardAdmin(msg.sender), Errors.CALLER_NOT_REWARD_ADMIN);
+    _;
+  }
+
+  modifier onlyEmergencyAdmin {
+    require(_addressesProvider.isEmergencyAdmin(msg.sender), Errors.LPC_CALLER_NOT_EMERGENCY_ADMIN);
+    _;
+  }
+
+  function handleTokenMigrated(address token, address[] memory rewardPools) external override {
+    require(msg.sender == _migrator, 'NOT_MIGRATOR');
+
+    token;
+    for (uint256 i = 0; i < rewardPools.length; i++) {
+      address pool = rewardPools[i];
+      if (pool == address(0)) {
+        continue;
+      }
+      IManagedRewardPool(pool).disableBaseline();
+      IManagedRewardPool(pool).setRate(0);
+    }
+  }
+
+  //   function getRewardPool(string memory name) public {
+
+  //   }
+
+  //   function getMigrationRewardPool(string memory name) public {
+
+  //   }
+
+  //     struct InitReserveInput{
+  //         uint256 a;
+  //     }
+
+  //   function batchInitPools(InitReserveInput[] calldata input) external onlyRewardAdmin {
+  //     // for (uint256 i = 0; i < input.length; i++) {
+  //     //   _initReserve(cachedPool, input[i]);
+  //     // }
+  //   }
+
+  //   function _initTokenWithProxy(address implementation, bytes memory initParams)
+  //     internal
+  //     returns (address)
+  //   {
+  //     InitializableImmutableAdminUpgradeabilityProxy proxy =
+  //       new InitializableImmutableAdminUpgradeabilityProxy(address(this));
+
+  //     proxy.initialize(implementation, initParams);
+
+  //     return address(proxy);
+  //   }
+
+  //   function _upgradeTokenImplementation(
+  //     address proxyAddress,
+  //     address implementation,
+  //     bytes memory initParams
+  //   ) internal {
+  //     InitializableImmutableAdminUpgradeabilityProxy proxy =
+  //       InitializableImmutableAdminUpgradeabilityProxy(payable(proxyAddress));
+
+  //     proxy.upgradeToAndCall(implementation, initParams);
+  //   }
 
   //   function addRewardPool(IManagedRewardPool pool) external onlyOwner {
   //     require(address(pool) != address(0), 'reward pool required');

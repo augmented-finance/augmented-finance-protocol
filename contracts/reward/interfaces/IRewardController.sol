@@ -12,5 +12,7 @@ interface IRewardController {
 
   function removedFromPool(address holder) external;
 
-  function isRateController(address) external returns (bool);
+  function isRateController(address) external view returns (bool);
+
+  function isConfigurator(address) external view returns (bool);
 }

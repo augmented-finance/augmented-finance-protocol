@@ -106,6 +106,7 @@ library Errors {
   string public constant CT_CALLER_MUST_BE_REWARD_ADMIN = '81'; // 'The caller of this function must be a reward admin'
   string public constant LP_INVALID_PERCENTAGE = '82'; // 'Percentage can't be more than 100%'
   string public constant LP_IS_NOT_SPONSORED_LOAN = '83';
+  string public constant CALLER_NOT_REWARD_ADMIN = '84';
 
   enum CollateralManagerErrors {
     NO_ERROR,

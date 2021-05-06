@@ -9,6 +9,7 @@ import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../tools/math/WadRayMath.sol';
 import {ILendableToken} from './interfaces/ILendableToken.sol';
+import {IMigratorHook} from '../interfaces/IMigratorHook.sol';
 
 contract Migrator is Ownable {
   using SafeERC20 for IERC20;
@@ -20,6 +21,7 @@ contract Migrator is Ownable {
   mapping(address => uint256) private _adapters;
   /* underlying */
   mapping(address => uint256[]) private _underlyings;
+  IMigratorHook private _migrateHook;
 
   function depositToMigrate(
     address token,
@@ -108,6 +110,10 @@ contract Migrator is Ownable {
     return internalMigrateToToken(target);
   }
 
+  function admin_setHook(IMigratorHook hook) public onlyOwner {
+    _migrateHook = hook;
+  }
+
   function internalMigrateToToken(ILendableToken target)
     internal
     returns (IMigrationAdapter[] memory migrated, uint256 count)
@@ -118,6 +124,7 @@ contract Migrator is Ownable {
       return (migrated, 0);
     }
     migrated = new IMigrationAdapter[](indices.length);
+    address[] memory rewardPools = new address[](indices.length);
 
     for (uint256 i = 0; i < indices.length; i++) {
       IMigrationAdapter adapter = _adaptersList[indices[i]];
@@ -126,8 +133,14 @@ contract Migrator is Ownable {
       }
       adapter.admin_migrateAll(target);
       migrated[count] = adapter;
+      rewardPools[count] = adapter.getRewardPool();
       count++;
     }
+
+    if (_migrateHook != IMigratorHook(0)) {
+      _migrateHook.handleTokenMigrated(underlying, rewardPools);
+    }
+
     return (migrated, count);
   }
 

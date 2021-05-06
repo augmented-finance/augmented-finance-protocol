@@ -141,4 +141,8 @@ contract PermitRewardPool is AccessBitmask, IManagedRewardPool {
     require(msg.sender == address(_controller), 'only controller is allowed');
     _;
   }
+
+  function getRewardController() public view override returns (address) {
+    return address(_controller);
+  }
 }

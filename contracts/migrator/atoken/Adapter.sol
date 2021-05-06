@@ -85,9 +85,6 @@ contract AaveAdapter is BasicAdapter {
   }
 
   function getNormalizeOriginFactor() private view returns (uint256) {
-    return
-      IRedeemableToken(_originAsset).POOL().getReserveNormalizedIncome(
-        IRedeemableToken(_originAsset).UNDERLYING_ASSET_ADDRESS()
-      );
+    return IRedeemableToken(_originAsset).POOL().getReserveNormalizedIncome(getUnderlying());
   }
 }

@@ -48,7 +48,10 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
     return CONFIGURATOR_REVISION;
   }
 
-  function initialize(IMarketAccessController provider) public initializer(CONFIGURATOR_REVISION) {
+  function initialize(IMarketAccessController provider)
+    public
+    initializerRunAlways(CONFIGURATOR_REVISION)
+  {
     addressesProvider = provider;
     pool = ILendingPool(addressesProvider.getLendingPool());
   }

@@ -3,6 +3,7 @@ pragma solidity ^0.6.12;
 
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {BitUtils} from '../tools/math/BitUtils.sol';
 
 import {IRewardController} from './interfaces/IRewardController.sol';
 import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
@@ -49,6 +50,10 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     if (mask == 0) {
       return;
     }
+    uint256 idx = BitUtils.bitLength(mask);
+    require(_poolList[idx] == pool, 'unexpected pool');
+
+    _poolList[idx] = IManagedRewardPool(0);
     delete (_poolMask[address(pool)]);
     _ignoreMask |= mask;
   }
@@ -71,12 +76,12 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     }
   }
 
-  function admin_setPoolRate(address pool, uint256 rate) external onlyOwner {
-    IManagedRewardPool(pool).setRate(rate);
-  }
-
   function admin_setRewardMinter(IRewardMinter minter) external onlyOwner {
     _rewardMinter = minter;
+  }
+
+  function getPools() public view returns (IManagedRewardPool[] memory, uint256 ignoreMask) {
+    return (_poolList, _ignoreMask);
   }
 
   function getRewardMinter() external view returns (address) {
@@ -127,8 +132,12 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     }
   }
 
-  function isRateController(address addr) external override returns (bool) {
+  function isRateController(address addr) external view override returns (bool) {
     return addr == address(this);
+  }
+
+  function isConfigurator(address addr) external view override returns (bool) {
+    return addr == owner();
   }
 
   function internalClaimAndMintReward(
