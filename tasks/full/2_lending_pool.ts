@@ -45,7 +45,8 @@ task('full:deploy-lending-pool', 'Deploy lending pool for dev enviroment')
       await insertContractAddressInDb(eContractid.LendingPool, lendingPoolProxy.address);
 
       // Reuse/deploy lending pool configurator
-      let lendingPoolConfiguratorImplAddress = getParamPerNetwork(LendingPoolConfigurator, network); //await deployLendingPoolConfigurator(verify);
+      let lendingPoolConfiguratorImplAddress = getParamPerNetwork(LendingPoolConfigurator, network);
+
       if (!notFalsyOrZeroAddress(lendingPoolConfiguratorImplAddress)) {
         console.log('\tDeploying new configurator implementation...');
         const lendingPoolConfiguratorImpl = await deployLendingPoolConfigurator(verify);

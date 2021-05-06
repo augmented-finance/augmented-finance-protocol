@@ -9,11 +9,16 @@ import {
   getEmergencyAdmin,
 } from '../../helpers/configuration';
 import { eNetwork } from '../../helpers/types';
-import { getFirstSigner, getAddressesProviderRegistry } from '../../helpers/contracts-getters';
+import {
+  getFirstSigner,
+  getAddressesProviderRegistry,
+  getAddressById,
+} from '../../helpers/contracts-getters';
 import { formatEther, isAddress, parseEther } from 'ethers/lib/utils';
 import { isZeroAddress } from 'ethereumjs-util';
 import { Signer, BigNumber } from 'ethers';
 import { parse } from 'path';
+import { getAaveAdminPerNetwork } from '../../test-suites/test-stake/helpers/constants';
 //import BigNumber from 'bignumber.js';
 
 task(
@@ -29,15 +34,16 @@ task(
     const poolConfig = loadPoolConfig(pool);
     const { ProviderId, MarketId } = poolConfig;
 
-    const providerRegistryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
-    const providerRegistryOwner = getParamPerNetwork(poolConfig.ProviderRegistryOwner, network);
+    let providerRegistryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
+    let providerRegistryOwner = getParamPerNetwork(poolConfig.ProviderRegistryOwner, network);
 
     if (
       !providerRegistryAddress ||
       !isAddress(providerRegistryAddress) ||
       isZeroAddress(providerRegistryAddress)
     ) {
-      throw Error('config.ProviderRegistry is missing or is not an address.');
+      providerRegistryAddress = await getAddressById('AddressesProviderRegistry');
+      // throw Error('config.ProviderRegistry is missing or is not an address.');
     }
 
     if (
@@ -45,7 +51,8 @@ task(
       !isAddress(providerRegistryOwner) ||
       isZeroAddress(providerRegistryOwner)
     ) {
-      throw Error('config.ProviderRegistryOwner is missing or is not an address.');
+      // throw Error('config.ProviderRegistryOwner is missing or is not an address.');
+      providerRegistryOwner = (await getFirstSigner()).address;
     }
 
     // Checks if deployer address is registry owner

@@ -36,7 +36,7 @@ task('full:deploy-oracles', 'Deploy oracles for dev enviroment')
       const lendingRateOracles = getLendingRateOracles(poolConfig);
       const addressesProvider = await getLendingPoolAddressesProvider();
       const admin = await getGenesisPoolAdmin(poolConfig);
-      const aaveOracleAddress = getParamPerNetwork(poolConfig.OracleRouter, network);
+      const oracleRouterAddress = getParamPerNetwork(poolConfig.OracleRouter, network);
       const lendingRateOracleAddress = getParamPerNetwork(poolConfig.LendingRateOracle, network);
       const fallbackOracleAddress = await getParamPerNetwork(FallbackOracle, network);
       const reserveAssets = await getParamPerNetwork(ReserveAssets, network);
@@ -48,16 +48,16 @@ task('full:deploy-oracles', 'Deploy oracles for dev enviroment')
       };
       const [tokens, aggregators] = getPairsTokenAggregator(tokensToWatch, chainlinkAggregators);
 
-      let aaveOracle: OracleRouter;
-      if (notFalsyOrZeroAddress(aaveOracleAddress)) {
-        aaveOracle = await await getOracleRouter(aaveOracleAddress);
-        const owner = await aaveOracle.owner();
+      let oracleRouter: OracleRouter;
+      if (notFalsyOrZeroAddress(oracleRouterAddress)) {
+        oracleRouter = await await getOracleRouter(oracleRouterAddress);
+        const owner = await oracleRouter.owner();
         const signer = DRE.ethers.provider.getSigner(owner);
 
-        aaveOracle = await (await getOracleRouter(aaveOracleAddress)).connect(signer);
-        await waitForTx(await aaveOracle.setAssetSources(tokens, aggregators));
+        oracleRouter = await (await getOracleRouter(oracleRouterAddress)).connect(signer);
+        await waitForTx(await oracleRouter.setAssetSources(tokens, aggregators));
       } else {
-        aaveOracle = await deployOracleRouter(
+        oracleRouter = await deployOracleRouter(
           [tokens, aggregators, fallbackOracleAddress, await getWethAddress(poolConfig)],
           verify
         );
@@ -80,9 +80,9 @@ task('full:deploy-oracles', 'Deploy oracles for dev enviroment')
         admin
       );
       //}
-      console.log('ORACLES: %s and %s', aaveOracle.address, lendingRateOracle.address);
+      console.log('ORACLES: %s and %s', oracleRouter.address, lendingRateOracle.address);
       // Register the proxy price provider on the addressesProvider
-      await waitForTx(await addressesProvider.setPriceOracle(aaveOracle.address));
+      await waitForTx(await addressesProvider.setPriceOracle(oracleRouter.address));
       await waitForTx(await addressesProvider.setLendingRateOracle(lendingRateOracle.address));
     } catch (error) {
       if (DRE.network.name.includes('tenderly')) {
