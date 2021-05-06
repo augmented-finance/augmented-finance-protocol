@@ -4,7 +4,7 @@ pragma solidity ^0.6.12;
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {BitUtils} from '../../tools/math/BitUtils.sol';
-import {IRewardController} from '../interfaces/IRewardController.sol';
+import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {CalcLinearWeightedReward} from './CalcLinearWeightedReward.sol';
 import {MonoTokenRewardPool} from './MonoTokenRewardPool.sol';
 
@@ -25,10 +25,6 @@ contract LinearWeightedRewardPool is MonoTokenRewardPool, CalcLinearWeightedRewa
     MonoTokenRewardPool(controller, initialRate, baselinePercentage, token)
     CalcLinearWeightedReward(maxTotalSupply)
   {}
-
-  function isLazy() public view override returns (bool) {
-    return true;
-  }
 
   function getRate() public view override returns (uint256) {
     return super.getLinearRate();
@@ -81,7 +77,7 @@ contract LinearWeightedRewardPool is MonoTokenRewardPool, CalcLinearWeightedRewa
     returns (
       uint256 allocated,
       uint32 since,
-      bool newcomer
+      AllocationMode mode
     )
   {
     return doUpdateReward(provider, holder, oldBalance, newBalance, totalSupply, currentBlock);

@@ -3,7 +3,7 @@ pragma solidity ^0.6.12;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {IRewardController} from '../interfaces/IRewardController.sol';
+import {AllocationMode} from '../interfaces/IRewardController.sol';
 import {MonoTokenRewardPool} from './MonoTokenRewardPool.sol';
 
 import 'hardhat/console.sol';
@@ -79,7 +79,7 @@ abstract contract CalcLinearRateReward {
     returns (
       uint256 allocated,
       uint32 since,
-      bool newcomer
+      AllocationMode mode
     )
   {
     require(newBalance <= type(uint224).max, 'balance is too high');
@@ -87,8 +87,13 @@ abstract contract CalcLinearRateReward {
     totalSupply;
 
     RewardEntry memory entry = _rewards[holder];
-    if (entry.lastUpdateBlock == 0) {
-      newcomer = true;
+
+    if (newBalance == 0) {
+      mode = AllocationMode.UnsetPull;
+    } else if (entry.rewardBase == 0) {
+      mode = AllocationMode.SetPull;
+    } else {
+      mode = AllocationMode.Push;
     }
 
     newBalance = internalCalcBalance(provider, entry, oldBalance, newBalance);
@@ -101,7 +106,7 @@ abstract contract CalcLinearRateReward {
     _rewards[holder].lastAccumRate = adjRate;
     _rewards[holder].rewardBase = uint224(newBalance);
     _rewards[holder].lastUpdateBlock = currentBlock;
-    return (allocated, since, newcomer);
+    return (allocated, since, mode);
   }
 
   function internalCalcBalance(
