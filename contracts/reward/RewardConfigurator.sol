@@ -23,6 +23,9 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
   IMarketAccessController internal _addressesProvider;
   address internal _migrator;
 
+  mapping(uint256 => address) internal _rewardPools;
+  uint256 internal _rewardPoolCount;
+
   modifier onlyRewardAdmin {
     require(_addressesProvider.isRewardAdmin(msg.sender), Errors.CALLER_NOT_REWARD_ADMIN);
     _;
@@ -31,6 +34,14 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
   modifier onlyEmergencyAdmin {
     require(_addressesProvider.isEmergencyAdmin(msg.sender), Errors.LPC_CALLER_NOT_EMERGENCY_ADMIN);
     _;
+  }
+
+  // This initializer is invoked by AccessController.setAddressAsImpl
+  function initialize(address addressesProvider)
+    external
+    initializerRunAlways(CONFIGURATOR_REVISION)
+  {
+    _addressesProvider = IMarketAccessController(addressesProvider);
   }
 
   function handleTokenMigrated(address token, address[] memory rewardPools) external override {
@@ -46,6 +57,10 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
       IManagedRewardPool(pool).setRate(0);
     }
   }
+
+  //   function updateBaseline(uint256 baseline) external onlyRewardAdmin {
+  //     baseline;
+  //   }
 
   //   function getRewardPool(string memory name) public {
 

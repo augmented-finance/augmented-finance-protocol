@@ -38,11 +38,28 @@ contract AGFToken is
     return TOKEN_REVISION;
   }
 
+  // This initializer is invoked by AccessController.setAddressAsImpl
+  function initialize(IRemoteAccessBitmask remoteAcl)
+    external
+    virtual
+    initializerRunAlways(TOKEN_REVISION)
+  {
+    _initialize(remoteAcl, NAME, SYMBOL);
+  }
+
   function initialize(
     IRemoteAccessBitmask remoteAcl,
     string calldata name,
     string calldata symbol
-  ) external virtual override initializerRunAlways(TOKEN_REVISION) {
+  ) public virtual override initializerRunAlways(TOKEN_REVISION) {
+    _initialize(remoteAcl, name, symbol);
+  }
+
+  function _initialize(
+    IRemoteAccessBitmask remoteAcl,
+    string memory name,
+    string memory symbol
+  ) private {
     super._initializeERC20(name, symbol, DECIMALS);
     _remoteAcl = remoteAcl;
     if (!isRevisionInitialized(TOKEN_REVISION)) {

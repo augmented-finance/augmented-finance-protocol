@@ -2,12 +2,19 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {VotingToken} from './VotingToken.sol';
-import {StakeToken} from './StakeToken.sol';
+import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import {IERC20Detailed} from '../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
+// import {VotingToken} from './VotingToken.sol';
+import {StakeTokenBase} from './StakeTokenBase.sol';
 
 import {AccessFlags} from '../../access/AccessFlags.sol';
 import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
 import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
+import {
+  IRemoteAccessBitmask,
+  RemoteAccessBitmaskHelper
+} from '../../access/interfaces/IRemoteAccessBitmask.sol';
+import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 
 import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
 
@@ -16,24 +23,36 @@ import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
  * @notice Staked AGF token
  **/
 contract StakedAgfV1 is
-  StakeToken, // VotingToken,
+  StakeTokenBase, // VotingToken,
   VersionedInitializable,
   IRewardMinter
 {
   string internal constant NAME = 'Staked AGF';
   string internal constant SYMBOL = 'stkAGF';
+  uint32 internal constant COOLDOWN_BLOCKS = 100;
+  uint32 internal constant UNSTAKE_BLOCKS = 10;
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor()
-    public
-    StakeToken(zeroConfig(), NAME, SYMBOL, 18)
-  //    VotingToken(zeroConfig(), NAME, SYMBOL, 18)
-  {
-
-  }
+  constructor() public StakeTokenBase(zeroConfig(), NAME, SYMBOL, 0) {}
 
   function zeroConfig() private pure returns (StakeTokenConfig memory) {}
+
+  // This initializer is invoked by AccessController.setAddressAsImpl
+  function initialize(IMarketAccessController remoteAcl)
+    external
+    virtual
+    initializerRunAlways(TOKEN_REVISION)
+  {
+    StakeTokenConfig memory params;
+
+    params.stakeController = remoteAcl;
+    params.stakedToken = IERC20(remoteAcl.getRewardToken());
+    params.cooldownBlocks = COOLDOWN_BLOCKS;
+    params.unstakeBlocks = UNSTAKE_BLOCKS;
+
+    _initialize(params, NAME, SYMBOL, IERC20Detailed(address(params.stakedToken)).decimals());
+  }
 
   function initialize(
     StakeTokenConfig calldata params,
@@ -41,6 +60,15 @@ contract StakedAgfV1 is
     string calldata symbol,
     uint8 decimals
   ) external virtual override initializerRunAlways(TOKEN_REVISION) {
+    _initialize(params, name, symbol, decimals);
+  }
+
+  function _initialize(
+    StakeTokenConfig memory params,
+    string memory name,
+    string memory symbol,
+    uint8 decimals
+  ) private {
     super._initializeERC20(name, symbol, decimals);
     super._initializeToken(params);
 
