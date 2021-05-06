@@ -125,8 +125,12 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
       allocated == 0 || isUnlocked(uint32(block.number)),
       'member share can not be changed during lockup'
     );
-    if (allocated > 0 || newcomer) {
+
+    if (allocated > 0 || (newcomer && memberSharePct > 0)) {
       IRewardController(getRewardController()).allocatedByPool(member, allocated, since);
+    }
+    if (memberSharePct == 0) {
+      IRewardController(getRewardController()).removedFromPool(member);
     }
   }
 
