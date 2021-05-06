@@ -628,7 +628,7 @@ export const deployMockAgfToken = async (
     verify
   );
 
-  await instance.initialize(args[0], args[1], args[2]);
+  await instance['initialize(address,string,string)'](args[0], args[1], args[2]);
 
   return instance;
 };
