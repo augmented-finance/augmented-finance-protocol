@@ -13,8 +13,8 @@ import { MockAgfToken, RewardFreezer, TeamRewardPool } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { waitForTx } from '../../helpers/misc-utils';
 import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from './utils';
-import { PERCENTAGE_FACTOR, RAY } from '../../helpers/constants';
-import BigNumber from 'bignumber.js';
+import { PERC_100, RAY } from '../../helpers/constants';
+import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -33,32 +33,12 @@ describe('Team rewards suite', () => {
   let teamRewardsFreezePercentage = 0;
   let rewardPrecision = 1;
 
-  // see contracts/tools/math/PercentageMath.sol
-  const PERC100 = Number(PERCENTAGE_FACTOR);
-
-  const calcReward = (
-    blocksPassed: number,
-    teamRewardInitialRate: string,
-    userShare: number,
-    teamRewardsFreezePercentage: number
-  ): number => {
-    console.log(`blocks passed: ${blocksPassed}`);
-    const rewardForBlock = new BigNumber(teamRewardInitialRate).div(RAY);
-    console.log(`one block gives rewards: ${rewardForBlock.toFixed()}`);
-    // reward consists of
-    // number of blocks passed * reward for block * userShare (PCT) / 10000 (10k = 100%)
-    const reward = (blocksPassed * rewardForBlock.toNumber() * userShare) / PERC100;
-    // minus percentage of freezed reward
-    const minusFreezedPart = (reward * (PERC100 - teamRewardsFreezePercentage)) / PERC100;
-    console.log(`reward: ${minusFreezedPart}`);
-    return minusFreezedPart;
-  };
-
   before(async () => {
     await rawBRE.run('dev:augmented-access');
   });
 
   beforeEach(async () => {
+    blkBeforeDeploy = await takeSnapshot();
     [root, teamMember1, teamMember2] = await ethers.getSigners();
     await rawBRE.run('dev:agf-rewards', {
       teamRewardInitialRate: teamRewardInitialRate,
@@ -76,34 +56,65 @@ describe('Team rewards suite', () => {
     await teamRewardPool.setUnlockBlock(REWARD_UNLOCK_BLOCK);
   });
 
+  afterEach(async () => {
+    await revertSnapshot(blkBeforeDeploy);
+  });
+
   it('share percentage 0 < share <= 10k', async () => {
     await expect(
-      teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC100 + 1)
+      teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC_100 + 1)
     ).to.be.revertedWith('revert invalid share percentage');
     await expect(teamRewardPool.connect(root).updateTeamMember(teamMember1.address, -1)).to.be
       .reverted;
   });
 
-  it('can remove member', async () => {
-    await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC100 / 2);
+  it('can remove member, no reward can be claimed after', async () => {
+    const memberShare = PERC_100 / 2;
+    await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, memberShare);
     const shares = await teamRewardPool.getAllocatedShares();
-    expect(shares).to.eq(PERC100 / 2, 'shares are wrong');
+    expect(shares).to.eq(memberShare, 'shares are wrong');
 
     await teamRewardPool.connect(root).removeTeamMember(teamMember1.address);
     const shares2 = await teamRewardPool.getAllocatedShares();
     expect(shares2).to.eq(0, 'shares are wrong');
-    // TODO: check claim
+
+    await mineToBlock(REWARD_UNLOCK_BLOCK + 1);
+    expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
+
+    console.log(`claim is made at block: ${await currentBlock()}`);
+    await (await rewardController.connect(teamMember1).claimReward()).wait(1);
+    const rewardClaimed = await agf.balanceOf(teamMember1.address);
+    expect(rewardClaimed.toNumber()).to.be.eq(0, 'reward is wrong');
   });
 
-  it('can change member share to zero', async () => {
+  it('can not change member share during lockup period', async () => {
+    const memberShare = PERC_100 / 2;
     await waitForTx(
-      await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC100 / 2)
+      await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC_100 / 2)
     );
     const shares = await teamRewardPool.getAllocatedShares();
-    expect(shares).to.eq(PERC100 / 2, 'shares are wrong');
-    await waitForTx(await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, 0));
-    const shares2 = await teamRewardPool.getAllocatedShares();
-    expect(shares2).to.eq(0, 'shares are wrong');
+    expect(shares).to.eq(memberShare, 'shares are wrong');
+    expect(
+      teamRewardPool.connect(root).updateTeamMember(teamMember1.address, 0)
+    ).to.be.revertedWith('revert member share can not be changed during lockup');
+  });
+
+  it('can change member share to zero after lockup period, no reward', async () => {
+    const memberShare = PERC_100 / 2;
+    await waitForTx(
+      await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC_100 / 2)
+    );
+    const shares = await teamRewardPool.getAllocatedShares();
+    expect(shares).to.eq(memberShare, 'shares are wrong');
+
+    await mineToBlock(REWARD_UNLOCK_BLOCK + 1);
+    expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
+    await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, 0);
+
+    console.log(`claim is made at block: ${await currentBlock()}`);
+    await (await rewardController.connect(teamMember1).claimReward()).wait(1);
+    const rewardClaimed = await agf.balanceOf(teamMember1.address);
+    expect(rewardClaimed.toNumber()).to.be.eq(0, 'reward is wrong');
   });
 
   it('can be unlocked on time', async () => {
@@ -123,7 +134,7 @@ describe('Team rewards suite', () => {
   it('one team member with 100% share (0% frozen) claims all', async () => {
     console.log('-----------');
     console.log(`members added at block: ${await currentBlock()}`);
-    const userShare = PERC100;
+    const userShare = PERC_100;
     await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, userShare);
 
     const blocksPassed = await mineToBlock(REWARD_UNLOCK_BLOCK + 1);
@@ -132,7 +143,12 @@ describe('Team rewards suite', () => {
     expect(shares).to.eq(userShare, 'shares are wrong');
 
     expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
-    const expectedReward = calcReward(blocksPassed, teamRewardInitialRate, userShare, 0);
+    const expectedReward = calcTeamRewardForMember(
+      blocksPassed,
+      teamRewardInitialRate,
+      userShare,
+      0
+    );
     console.log(`claim is made at block: ${await currentBlock()}`);
     await (await rewardController.connect(teamMember1).claimReward()).wait(1);
     const rewardClaimed = await agf.balanceOf(teamMember1.address);
@@ -147,17 +163,22 @@ describe('Team rewards suite', () => {
   it('two team members with 50% share (0% frozen) claim 50% each', async () => {
     console.log('-----------');
     console.log(`members added at block: ${await currentBlock()}`);
-    const userShare = PERC100 / 2; // 50%
+    const userShare = PERC_100 / 2; // 50%
     await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, userShare);
     await teamRewardPool.connect(root).updateTeamMember(teamMember2.address, userShare);
 
     const blocksPassed = await mineToBlock(REWARD_UNLOCK_BLOCK + 1);
 
     const shares = await teamRewardPool.getAllocatedShares();
-    expect(shares).to.eq(PERC100, 'shares are wrong');
+    expect(shares).to.eq(PERC_100, 'shares are wrong');
 
     expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
-    const expectedReward = calcReward(blocksPassed, teamRewardInitialRate, userShare, 0);
+    const expectedReward = calcTeamRewardForMember(
+      blocksPassed,
+      teamRewardInitialRate,
+      userShare,
+      0
+    );
     console.log(`claim is made at block: ${await currentBlock()}`);
     await (await rewardController.connect(teamMember1).claimReward()).wait(1);
     await (await rewardController.connect(teamMember2).claimReward()).wait(1);
@@ -179,8 +200,10 @@ describe('Team rewards suite', () => {
   it('one team member, with 100% share (33.33% frozen)', async () => {
     console.log('-----------');
     console.log(`members added at block: ${await currentBlock()}`);
-    const userShare = PERC100;
-    await rewardController.admin_setFreezePercentage(3333);
+    const userShare = PERC_100;
+    const freezePercent = 3333;
+
+    await rewardController.admin_setFreezePercentage(freezePercent);
     await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, userShare);
 
     const blocksPassed = await mineToBlock(REWARD_UNLOCK_BLOCK + 1);
@@ -189,7 +212,44 @@ describe('Team rewards suite', () => {
     expect(shares).to.eq(userShare, 'shares are wrong');
 
     expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
-    const expectedReward = calcReward(blocksPassed, teamRewardInitialRate, userShare, 3333);
+    const expectedReward = calcTeamRewardForMember(
+      blocksPassed,
+      teamRewardInitialRate,
+      userShare,
+      freezePercent
+    );
+    console.log(`claim is made at block: ${await currentBlock()}`);
+    await (await rewardController.connect(teamMember1).claimReward()).wait(1);
+    const rewardClaimed = await agf.balanceOf(teamMember1.address);
+    expect(rewardClaimed.toNumber()).to.be.approximately(
+      expectedReward,
+      rewardPrecision,
+      'reward is wrong'
+    );
+    console.log('-----------');
+  });
+
+  it('one team member, with 100% share (100% frozen), no reward', async () => {
+    console.log('-----------');
+    console.log(`members added at block: ${await currentBlock()}`);
+    const userShare = PERC_100;
+    const freezePercent = PERC_100;
+
+    await rewardController.admin_setFreezePercentage(freezePercent);
+    await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, userShare);
+
+    const blocksPassed = await mineToBlock(REWARD_UNLOCK_BLOCK + 1);
+
+    const shares = await teamRewardPool.getAllocatedShares();
+    expect(shares).to.eq(userShare, 'shares are wrong');
+
+    expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
+    const expectedReward = calcTeamRewardForMember(
+      blocksPassed,
+      teamRewardInitialRate,
+      userShare,
+      freezePercent
+    );
     console.log(`claim is made at block: ${await currentBlock()}`);
     await (await rewardController.connect(teamMember1).claimReward()).wait(1);
     const rewardClaimed = await agf.balanceOf(teamMember1.address);
