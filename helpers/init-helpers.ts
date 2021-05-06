@@ -144,7 +144,7 @@ export const initReservesByHelper = async (
   ) as [string, IReserveParams][];
 
   for (let [symbol, params] of reserves) {
-    if (symbol !== 'DAI') continue;
+    // if (symbol !== 'DAI') continue;
 
     const { strategy, aTokenImpl, reserveDecimals } = params;
     const {
@@ -306,7 +306,7 @@ export const configureReservesByHelper = async (
     },
   ] of Object.entries(reservesParams) as [string, IReserveParams][]) {
     if (baseLTVAsCollateral === '-1') continue;
-    if (assetSymbol !== 'DAI') continue;
+    // if (assetSymbol !== 'DAI') continue;
 
     const assetAddressIndex = Object.keys(tokenAddresses).findIndex(
       (value) => value === assetSymbol
