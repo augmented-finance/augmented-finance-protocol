@@ -8,7 +8,7 @@ library AccessFlags {
   uint256 public constant EMERGENCY_ADMIN = 1 << 0;
   uint256 public constant POOL_ADMIN = 1 << 1;
   uint256 public constant TREASURY_MANAGER = 1 << 2;
-  //  uint256 public constant REWARD_ADMIN = 1<<3;
+  uint256 public constant REWARD_ADMIN = 1 << 3;
   //  uint256 public constant LIQUIDITY_MANAGER = 1 << ??;
 
   // singletons - use range [16..32]
@@ -24,6 +24,8 @@ library AccessFlags {
 
   uint256 public constant REWARD_TOKEN = 1 << 22; // use proxy
   uint256 public constant REWARD_STAKE_TOKEN = 1 << 23; // use proxy
+  uint256 public constant REWARD_CONTROLLER = 1 << 24;
+  uint256 public constant REWARD_CONFIGURATOR = 1 << 25; // use proxy
 
   // any other roles - use range [32..]
   // these roles can be assigned to multiple addresses
