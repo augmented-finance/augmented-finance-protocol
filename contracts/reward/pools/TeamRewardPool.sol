@@ -75,7 +75,7 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     )
   {
     (rate, allocated, since) = super.internalCalcRateAndReward(entry, currentBlock);
-    allocated /= PercentageMath.ONE;
+    allocated = (allocated + PercentageMath.HALF_ONE) / PercentageMath.ONE;
     return (rate, allocated, since);
   }
 
