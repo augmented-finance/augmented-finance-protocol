@@ -2,24 +2,27 @@ version: 2.1
 orbs:
   node: circleci/node@4.3.0
   slack: circleci/slack@4.4.2
-machine:
-  pre:
-    - mkdir ~/.yarn-cache
-dependencies:
-  cache_directories:
-    - ~/.yarn-cache
 jobs:
   test_all:
     docker:
       - image: cimg/node:12.16
     steps:
       - checkout
-      - node/install-yarn:
-          version: 1.22.0
+      - restore_cache:
+          name: Restore yarn package cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
+      #      - node/install-yarn:
+#          version: 1.22.0
       - run: |
-          yarn install
+          yarn install --immutable
           yarn run compile
 #          yarn run test
+      - save_cache:
+          name: Save yarn package cache
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
 #      - slack/notify:
 #          channel: build
 #          event: fail
