@@ -7,16 +7,26 @@ export const mineToBlock = async (to: number): Promise<number> => {
     return 0;
   }
   let blockMined = 0;
-  const [root, ...otherUsers] = await ethers.getSigners();
+  const wallets = await ethers.getSigners();
   while (blk.number < to) {
     blk.number += 1;
-    const nonce = await root.getTransactionCount();
-    await root.sendTransaction({
-      nonce: ethers.utils.hexlify(nonce),
-      to: otherUsers[3].address,
-      value: 1,
-      chainId: rawBRE.network.config.chainId,
-    });
+    if (blk.number % 2 == 0) {
+      const nonce = await wallets[7].getTransactionCount();
+      await wallets[7].sendTransaction({
+        nonce: ethers.utils.hexlify(nonce),
+        to: wallets[8].address,
+        value: 1,
+        chainId: rawBRE.network.config.chainId,
+      });
+    } else {
+      const nonce = await wallets[8].getTransactionCount();
+      await wallets[8].sendTransaction({
+        nonce: ethers.utils.hexlify(nonce),
+        to: wallets[7].address,
+        value: 1,
+        chainId: rawBRE.network.config.chainId,
+      });
+    }
     blockMined += 1;
   }
   const blkAfter = await ethers.provider.getBlock('latest');
