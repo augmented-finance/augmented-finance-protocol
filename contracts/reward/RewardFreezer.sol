@@ -4,6 +4,7 @@ pragma solidity ^0.6.12;
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {PercentageMath} from '../tools/math/PercentageMath.sol';
 
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 import {BasicRewardController} from './BasicRewardController.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
@@ -23,7 +24,10 @@ contract RewardFreezer is BasicRewardController {
   uint32 private _meltdownBlock;
   uint32 private _unfrozenPortion;
 
-  constructor(IRewardMinter rewardMinter) public BasicRewardController(rewardMinter) {}
+  constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
+    public
+    BasicRewardController(accessController, rewardMinter)
+  {}
 
   function admin_setFreezePercentage(uint32 freezePortion) external onlyOwner {
     require(freezePortion <= PercentageMath.ONE, 'max is 10000 (100%)');

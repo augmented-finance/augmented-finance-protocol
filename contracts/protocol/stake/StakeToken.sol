@@ -22,13 +22,10 @@ contract StakeToken is StakeTokenBase, VersionedInitializable {
     string calldata name,
     string calldata symbol,
     uint8 decimals
-  ) external virtual override initializerRunAlways(TOKEN_REVISION) {
+  ) external virtual override initializer(TOKEN_REVISION) {
     super._initializeERC20(name, symbol, decimals);
     super._initializeToken(params);
-
-    if (!isRevisionInitialized(TOKEN_REVISION)) {
-      super._initializeDomainSeparator();
-    }
+    super._initializeDomainSeparator();
     emit Initialized(params, name, symbol, decimals);
   }
 

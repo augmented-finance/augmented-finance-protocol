@@ -717,7 +717,10 @@ export const deployAGFToken = async (verify?: boolean) =>
     verify
   );
 
-export const deployRewardFreezer = async (args: [tEthereumAddress], verify?: boolean) =>
+export const deployRewardFreezer = async (
+  args: [tEthereumAddress, tEthereumAddress],
+  verify?: boolean
+) =>
   withSaveAndVerify(
     await new RewardFreezerFactory(await getFirstSigner()).deploy(...args),
     eContractid.RewardFreezer,

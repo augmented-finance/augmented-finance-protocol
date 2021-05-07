@@ -2,6 +2,7 @@
 pragma solidity ^0.6.12;
 
 import {IManagedRewardPool} from './IRewardPool.sol';
+import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
 
 enum AllocationMode {Push, SetPull, UnsetPull}
 
@@ -21,7 +22,9 @@ interface IRewardController {
 interface IManagedRewardController is IRewardController {
   function updateBaseline(uint256 baseline) external;
 
-  function admin_addRewardPool(IManagedRewardPool pool) external;
+  function admin_addRewardPool(IManagedRewardPool) external;
 
-  function admin_removeRewardPool(IManagedRewardPool pool) external;
+  function admin_removeRewardPool(IManagedRewardPool) external;
+
+  function admin_setRewardMinter(IRewardMinter) external;
 }

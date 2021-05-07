@@ -260,6 +260,11 @@ abstract contract StakeTokenBase is
     _maxSlashablePercentage = percentageInRay;
   }
 
+  function setCooldown(uint32 cooldownBlocks, uint32 unstakeBlocks) external override onlyAdmin {
+    _cooldownBlocks = cooldownBlocks;
+    _unstakeBlocks = unstakeBlocks;
+  }
+
   function isRedeemable() external view override returns (bool) {
     return !_redeemPaused;
   }

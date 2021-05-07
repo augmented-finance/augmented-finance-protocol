@@ -38,28 +38,28 @@ contract StakedAgfV1 is
 
   function zeroConfig() private pure returns (StakeTokenConfig memory) {}
 
-  // This initializer is invoked by AccessController.setAddressAsImpl
-  function initialize(IMarketAccessController remoteAcl)
-    external
-    virtual
-    initializerRunAlways(TOKEN_REVISION)
-  {
-    StakeTokenConfig memory params;
+  // // This initializer is invoked by AccessController.setAddressAsImpl
+  // function initialize(IMarketAccessController remoteAcl)
+  //   external
+  //   virtual
+  //   initializer(TOKEN_REVISION)
+  // {
+  //   StakeTokenConfig memory params;
 
-    params.stakeController = remoteAcl;
-    params.stakedToken = IERC20(remoteAcl.getRewardToken());
-    params.cooldownBlocks = COOLDOWN_BLOCKS;
-    params.unstakeBlocks = UNSTAKE_BLOCKS;
+  //   params.stakeController = remoteAcl;
+  //   params.stakedToken = IERC20(remoteAcl.getRewardToken());
+  //   params.cooldownBlocks = COOLDOWN_BLOCKS;
+  //   params.unstakeBlocks = UNSTAKE_BLOCKS;
 
-    _initialize(params, NAME, SYMBOL, IERC20Detailed(address(params.stakedToken)).decimals());
-  }
+  //   _initialize(params, NAME, SYMBOL, IERC20Detailed(address(params.stakedToken)).decimals());
+  // }
 
   function initialize(
     StakeTokenConfig calldata params,
     string calldata name,
     string calldata symbol,
     uint8 decimals
-  ) external virtual override initializerRunAlways(TOKEN_REVISION) {
+  ) external virtual override initializer(TOKEN_REVISION) {
     _initialize(params, name, symbol, decimals);
   }
 
@@ -71,10 +71,7 @@ contract StakedAgfV1 is
   ) private {
     super._initializeERC20(name, symbol, decimals);
     super._initializeToken(params);
-
-    if (!isRevisionInitialized(TOKEN_REVISION)) {
-      super._initializeDomainSeparator();
-    }
+    super._initializeDomainSeparator();
     emit Initialized(params, name, symbol, decimals);
   }
 

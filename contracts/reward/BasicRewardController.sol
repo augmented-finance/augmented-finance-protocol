@@ -5,6 +5,7 @@ import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {BitUtils} from '../tools/math/BitUtils.sol';
 
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 import {IManagedRewardController, AllocationMode} from './interfaces/IRewardController.sol';
 import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
@@ -14,6 +15,7 @@ import 'hardhat/console.sol';
 abstract contract BasicRewardController is Ownable, IManagedRewardController {
   using SafeMath for uint256;
 
+  IMarketAccessController private _accessController;
   IRewardMinter private _rewardMinter;
 
   IManagedRewardPool[] private _poolList;
@@ -25,7 +27,8 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
   uint256 private _ignoreMask;
   uint256 private _baselineMask;
 
-  constructor(IRewardMinter rewardMinter) public {
+  constructor(IMarketAccessController accessController, IRewardMinter rewardMinter) public {
+    _accessController = accessController;
     _rewardMinter = rewardMinter;
   }
 
@@ -89,7 +92,7 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
     _baselineMask = baselineMask;
   }
 
-  function admin_setRewardMinter(IRewardMinter minter) external onlyOwner {
+  function admin_setRewardMinter(IRewardMinter minter) external override onlyOwner {
     _rewardMinter = minter;
   }
 
@@ -150,7 +153,10 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
   }
 
   function isRateController(address addr) public view override returns (bool) {
-    return addr == address(this); // TODO delegate to address provider
+    if (_accessController == IMarketAccessController(0)) {
+      return addr == address(this);
+    }
+    return false; // TODO _accessController.isRewardRateAdmin(addr);
   }
 
   function isConfigurator(address addr) public view override returns (bool) {

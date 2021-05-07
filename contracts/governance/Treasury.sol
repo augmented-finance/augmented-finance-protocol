@@ -23,7 +23,7 @@ contract Treasury is VersionedInitializable, RemoteAccessBitmask(IRemoteAccessBi
     address token,
     address recipient,
     uint256 amount
-  ) external aclHas(AccessFlags.TREASURY_MANAGER) {
+  ) external aclHas(AccessFlags.TREASURY_ADMIN) {
     IERC20(token).approve(recipient, amount);
   }
 
@@ -31,7 +31,7 @@ contract Treasury is VersionedInitializable, RemoteAccessBitmask(IRemoteAccessBi
     address token,
     address recipient,
     uint256 amount
-  ) external aclHas(AccessFlags.TREASURY_MANAGER) {
+  ) external aclHas(AccessFlags.TREASURY_ADMIN) {
     IERC20(token).transfer(recipient, amount);
   }
 }
