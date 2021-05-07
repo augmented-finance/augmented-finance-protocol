@@ -5,7 +5,7 @@ orbs:
 jobs:
   test_all:
     docker:
-      - image: circleci/node:14
+      - image: cimg/node:12.16
     steps:
       - checkout
       - run:

@@ -3,9 +3,9 @@ pragma solidity 0.6.12;
 
 import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {IScaledBalanceToken} from './IScaledBalanceToken.sol';
-import {IDerivedToken} from './IDerivedToken.sol';
+import {IPoolToken} from './IPoolToken.sol';
 
-interface IDepositToken is IERC20, IScaledBalanceToken, IDerivedToken {
+interface IDepositToken is IERC20, IScaledBalanceToken, IPoolToken {
   /**
    * @dev Emitted after the mint action
    * @param from The address performing the mint
@@ -93,8 +93,6 @@ interface IDepositToken is IERC20, IScaledBalanceToken, IDerivedToken {
    * @param amount The amount getting repaid
    **/
   function handleRepayment(address user, uint256 amount) external;
-
-  function setIncentivesController(address) external;
 
   function setTreasury(address) external;
 }
