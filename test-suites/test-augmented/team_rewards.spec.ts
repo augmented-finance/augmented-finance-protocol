@@ -130,7 +130,7 @@ describe('Team rewards suite', () => {
     );
   });
 
-  it.only('one team member with 100% share (0% frozen) claims all', async () => {
+  it('one team member with 100% share (0% frozen) claims all', async () => {
     console.log('-----------');
     console.log(`members added at block: ${await currentBlock()}`);
     const userShare = PERC_100;
