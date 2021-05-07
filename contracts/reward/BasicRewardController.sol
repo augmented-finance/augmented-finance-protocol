@@ -32,7 +32,7 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
   event RewardsAllocated(address indexed user, uint256 amount);
   event RewardsClaimed(address indexed user, address indexed to, uint256 amount);
 
-  function admin_addRewardPool(IManagedRewardPool pool) external onlyOwner {
+  function admin_addRewardPool(IManagedRewardPool pool) external override onlyOwner {
     require(address(pool) != address(0), 'reward pool required');
     require(_poolMask[address(pool)] == 0, 'already registered');
     pool.claimRewardFor(address(this)); // access check
@@ -44,7 +44,7 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
     _poolList.push(pool);
   }
 
-  function admin_removeRewardPool(IManagedRewardPool pool) external onlyOwner {
+  function admin_removeRewardPool(IManagedRewardPool pool) external override onlyOwner {
     require(address(pool) != address(0), 'reward pool required');
     uint256 mask = _poolMask[address(pool)];
     if (mask == 0) {
