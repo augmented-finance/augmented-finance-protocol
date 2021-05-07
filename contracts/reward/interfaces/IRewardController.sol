@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {IRewardPool} from './IRewardPool.sol';
+import {IManagedRewardPool} from './IRewardPool.sol';
 
 enum AllocationMode {Push, SetPull, UnsetPull}
 
@@ -16,4 +16,12 @@ interface IRewardController {
   function isRateController(address) external view returns (bool);
 
   function isConfigurator(address) external view returns (bool);
+}
+
+interface IManagedRewardController is IRewardController {
+  function updateBaseline(uint256 baseline) external;
+
+  function admin_addRewardPool(IManagedRewardPool pool) external;
+
+  function admin_removeRewardPool(IManagedRewardPool pool) external;
 }

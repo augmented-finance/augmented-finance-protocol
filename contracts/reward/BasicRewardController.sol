@@ -5,13 +5,13 @@ import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {BitUtils} from '../tools/math/BitUtils.sol';
 
-import {IRewardController, AllocationMode} from './interfaces/IRewardController.sol';
+import {IManagedRewardController, AllocationMode} from './interfaces/IRewardController.sol';
 import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BasicRewardController is Ownable, IRewardController {
+abstract contract BasicRewardController is Ownable, IManagedRewardController {
   using SafeMath for uint256;
 
   IRewardMinter private _rewardMinter;
@@ -70,7 +70,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     IManagedRewardPool(pool).removeRewardProvider(provider);
   }
 
-  function admin_updateBaseline(uint256 baseline) external onlyOwner {
+  function updateBaseline(uint256 baseline) external override onlyOwner {
     uint256 baselineMask = _baselineMask & ~_ignoreMask;
 
     for (uint8 i = 0; i <= 255; i++) {
@@ -149,11 +149,11 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     }
   }
 
-  function isRateController(address addr) external view override returns (bool) {
-    return addr == address(this);
+  function isRateController(address addr) public view override returns (bool) {
+    return addr == address(this); // TODO delegate to address provider
   }
 
-  function isConfigurator(address addr) external view override returns (bool) {
+  function isConfigurator(address addr) public view override returns (bool) {
     return addr == owner();
   }
 
