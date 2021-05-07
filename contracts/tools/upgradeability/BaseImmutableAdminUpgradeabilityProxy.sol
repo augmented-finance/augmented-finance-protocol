@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import '../../dependencies/openzeppelin/upgradeability/BaseUpgradeabilityProxy.sol';
+import './IProxy.sol';
 
 /**
  * @title BaseImmutableAdminUpgradeabilityProxy
@@ -13,7 +14,7 @@ import '../../dependencies/openzeppelin/upgradeability/BaseUpgradeabilityProxy.s
  * `ifAdmin` modifier. See ethereum/solidity#3864 for a Solidity
  * feature proposal that would enable this to be done automatically.
  */
-contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy {
+contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy, IProxy {
   address immutable ADMIN;
 
   constructor(address admin) public {
@@ -31,14 +32,14 @@ contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy {
   /**
    * @return The address of the proxy admin.
    */
-  function admin() external ifAdmin returns (address) {
+  function admin() external override ifAdmin returns (address) {
     return ADMIN;
   }
 
   /**
    * @return The address of the implementation.
    */
-  function implementation() external ifAdmin returns (address) {
+  function implementation() external override ifAdmin returns (address) {
     return _implementation();
   }
 
@@ -47,7 +48,7 @@ contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy {
    * Only the admin can call this function.
    * @param newImplementation Address of the new implementation.
    */
-  function upgradeTo(address newImplementation) external ifAdmin {
+  function upgradeTo(address newImplementation) external override ifAdmin {
     _upgradeTo(newImplementation);
   }
 
@@ -63,6 +64,7 @@ contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy {
   function upgradeToAndCall(address newImplementation, bytes calldata data)
     external
     payable
+    override
     ifAdmin
   {
     _upgradeTo(newImplementation);

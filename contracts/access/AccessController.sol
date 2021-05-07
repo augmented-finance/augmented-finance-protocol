@@ -12,6 +12,7 @@ import {BitUtils} from '../tools/math/BitUtils.sol';
 // Prettier ignore to prevent buidler flatter bug
 // prettier-ignore
 import {InitializableImmutableAdminUpgradeabilityProxy} from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
+import {IProxy} from '../tools/upgradeability/IProxy.sol';
 
 import {IManagedAccessController} from './interfaces/IAccessController.sol';
 import {AccessFlags} from './AccessFlags.sol';
@@ -144,6 +145,15 @@ contract AccessController is Ownable, IManagedAccessController {
     emit AddressSet(id, implementationAddress, true);
   }
 
+  function setAddressAsProxyWithInit(
+    uint256 id,
+    address implementationAddress,
+    bytes calldata params
+  ) public override onlyOwner {
+    _updateCustomImpl(id, implementationAddress, params);
+    emit AddressSet(id, implementationAddress, true);
+  }
+
   /**
    * @dev Internal function to update the implementation of a specific proxied component of the protocol
    * - If there is no proxy registered in the given `id`, it creates the proxy setting `newAdress`
@@ -157,18 +167,63 @@ contract AccessController is Ownable, IManagedAccessController {
     require(id.isPowerOf2nz(), 'invalid singleton id');
     address payable proxyAddress = payable(getAddress(id));
 
-    InitializableImmutableAdminUpgradeabilityProxy proxy =
-      InitializableImmutableAdminUpgradeabilityProxy(proxyAddress);
     bytes memory params = abi.encodeWithSignature('initialize(address)', address(this));
 
-    if (proxyAddress == address(0)) {
-      proxy = new InitializableImmutableAdminUpgradeabilityProxy(address(this));
-      proxy.initialize(newAddress, params);
-      _internalSetAddress(id, address(proxy));
-      _proxies |= id;
-      emit ProxyCreated(id, address(proxy));
-    } else {
-      proxy.upgradeToAndCall(newAddress, params);
+    if (proxyAddress != address(0)) {
+      InitializableImmutableAdminUpgradeabilityProxy(proxyAddress).upgradeToAndCall(
+        newAddress,
+        params
+      );
+      return;
     }
+
+    proxyAddress = payable(_createProxy(address(this), newAddress, params));
+    _internalSetAddress(id, proxyAddress);
+    _proxies |= id;
+    emit ProxyCreated(id, proxyAddress);
+  }
+
+  function _updateCustomImpl(
+    uint256 id,
+    address newAddress,
+    bytes calldata params
+  ) private {
+    require(id.isPowerOf2nz(), 'invalid singleton id');
+    address payable proxyAddress = payable(getAddress(id));
+
+    if (proxyAddress != address(0)) {
+      InitializableImmutableAdminUpgradeabilityProxy(proxyAddress).upgradeToAndCall(
+        newAddress,
+        params
+      );
+      return;
+    }
+
+    proxyAddress = payable(address(createProxy(address(this), newAddress, params)));
+    _internalSetAddress(id, proxyAddress);
+    _proxies |= id;
+    emit ProxyCreated(id, proxyAddress);
+  }
+
+  function _createProxy(
+    address adminAddress,
+    address implAddress,
+    bytes memory params
+  ) private returns (InitializableImmutableAdminUpgradeabilityProxy) {
+    InitializableImmutableAdminUpgradeabilityProxy proxy =
+      new InitializableImmutableAdminUpgradeabilityProxy(adminAddress);
+    proxy.initialize(implAddress, params);
+    return proxy;
+  }
+
+  function createProxy(
+    address adminAddress,
+    address implAddress,
+    bytes calldata params
+  ) public override returns (IProxy) {
+    InitializableImmutableAdminUpgradeabilityProxy proxy =
+      new InitializableImmutableAdminUpgradeabilityProxy(adminAddress);
+    proxy.initialize(implAddress, params);
+    return proxy;
   }
 }
