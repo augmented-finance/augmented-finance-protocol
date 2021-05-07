@@ -12,21 +12,19 @@ jobs:
           name: Restore yarn package cache
           keys:
             - yarn-packages-{{ checksum "yarn.lock" }}
-      #      - node/install-yarn:
-#          version: 1.22.0
       - run: |
           yarn install --immutable
           yarn run compile
-#          yarn run test
+          yarn run test
       - save_cache:
           name: Save yarn package cache
           key: yarn-packages-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
-#      - slack/notify:
-#          channel: build
-#          event: fail
-#          template: basic_fail_1
+      - slack/notify:
+          channel: build
+          event: fail
+          template: basic_fail_1
 workflows:
   test:
     jobs:
