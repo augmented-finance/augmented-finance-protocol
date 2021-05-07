@@ -4,7 +4,7 @@ pragma solidity ^0.6.12;
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {AccessBitmask} from '../../access/AccessBitmask.sol';
-import {IRewardController} from '../interfaces/IRewardController.sol';
+import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {IManagedRewardPool} from '../interfaces/IRewardPool.sol';
 
 import 'hardhat/console.sol';
@@ -61,10 +61,6 @@ contract PermitRewardPool is AccessBitmask, IManagedRewardPool {
         address(this)
       )
     );
-  }
-
-  function isLazy() external view override returns (bool) {
-    return false;
   }
 
   function admin_stopRewards() external aclHas(aclConfigure) {
@@ -133,8 +129,8 @@ contract PermitRewardPool is AccessBitmask, IManagedRewardPool {
     if (value == 0) {
       return;
     }
-    _rewardLimit = _rewardLimit.sub(value);
-    _controller.allocatedByPool(spender, value, uint32(block.timestamp));
+    _rewardLimit = _rewardLimit.sub(value, 'insufficient reward pool balance');
+    _controller.allocatedByPool(spender, value, uint32(block.timestamp), AllocationMode.Push);
   }
 
   modifier onlyController() {
