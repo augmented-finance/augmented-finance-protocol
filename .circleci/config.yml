@@ -8,15 +8,19 @@ jobs:
       - image: cimg/node:12.16
     steps:
       - checkout
-      - run:
-          name: Clear cache
-          command: rm -rf node_modules/
-      - node/install-yarn:
-          version: 1.22.0
+      - restore_cache:
+          name: Restore yarn package cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
       - run: |
-          yarn install
+          yarn install --immutable
           yarn run compile
           yarn run test
+      - save_cache:
+          name: Save yarn package cache
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
       - slack/notify:
           channel: build
           event: fail
