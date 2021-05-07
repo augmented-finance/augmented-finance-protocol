@@ -49,9 +49,8 @@ describe('Team rewards suite', () => {
     rewardController = await getRewardFreezer();
     teamRewardPool = await getTeamRewardPool();
     agf = await getMockAgfToken();
-
     blkAfterDeploy = await currentBlock();
-    REWARD_UNLOCK_BLOCK = blkAfterDeploy + 100;
+    REWARD_UNLOCK_BLOCK = blkAfterDeploy + 10;
     console.log(`unlock block at: ${REWARD_UNLOCK_BLOCK}`);
     await teamRewardPool.setUnlockBlock(REWARD_UNLOCK_BLOCK);
   });
@@ -94,7 +93,7 @@ describe('Team rewards suite', () => {
     );
     const shares = await teamRewardPool.getAllocatedShares();
     expect(shares).to.eq(memberShare, 'shares are wrong');
-    expect(
+    await expect(
       teamRewardPool.connect(root).updateTeamMember(teamMember1.address, 0)
     ).to.be.revertedWith('revert member share can not be changed during lockup');
   });
@@ -257,6 +256,42 @@ describe('Team rewards suite', () => {
       expectedReward,
       rewardPrecision,
       'reward is wrong'
+    );
+    console.log('-----------');
+  });
+
+  it('one team member, with 100% share (33.33% frozen) calc reward', async () => {
+    console.log('-----------');
+    console.log(`members added at block: ${await currentBlock()}`);
+    const userShare = PERC_100;
+    const freezePercent = 3333;
+
+    await rewardController.admin_setFreezePercentage(freezePercent);
+    await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, userShare);
+
+    const blocksPassed = await mineToBlock(REWARD_UNLOCK_BLOCK + 1);
+
+    const shares = await teamRewardPool.getAllocatedShares();
+    expect(shares).to.eq(userShare, 'shares are wrong');
+
+    expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
+    const expectedReward = calcTeamRewardForMember(
+      blocksPassed,
+      teamRewardInitialRate,
+      userShare,
+      freezePercent
+    );
+    console.log(`calc is made at block: ${await currentBlock()}`);
+    const rewardCalc = await rewardController.claimableReward(teamMember1.address, 0);
+    expect(rewardCalc.claimable.toNumber()).to.be.approximately(
+      expectedReward,
+      rewardPrecision,
+      'claimable is wrong'
+    );
+    expect(rewardCalc.delayed.toNumber()).to.be.approximately(
+      expectedReward / 2,
+      rewardPrecision,
+      'delayed is wrong'
     );
     console.log('-----------');
   });
