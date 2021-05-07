@@ -34,5 +34,14 @@ module.exports = {
       secretKey: '0xa2e0097c961c67ec197b6865d7ecea6caffc68ebeb00e6050368c8f67fc9c588',
       balance,
     },
+    // time travel wallets
+    {
+      secretKey: '0x80380115508e9fcafb6894d96d5bfd7eecfb0a0b7d6424c5a7b1d11d78169d9f',
+      balance,
+    },
+    {
+      secretKey: '0x05813f43430038f3f1e31e91796ee8f249a13ca995b4b3a6d722a53b2c965289',
+      balance,
+    },
   ],
 };
