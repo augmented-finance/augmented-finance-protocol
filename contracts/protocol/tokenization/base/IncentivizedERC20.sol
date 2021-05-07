@@ -1,21 +1,17 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {Context} from '../../dependencies/openzeppelin/contracts/Context.sol';
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IERC20Detailed} from '../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
+import {Context} from '../../../dependencies/openzeppelin/contracts/Context.sol';
+import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
+import {IERC20Detailed} from '../../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
+import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
 
-/**
- * @title ERC20
- * @notice Basic ERC20 implementation
- * @author Aave, inspired by the Openzeppelin ERC20 implementation
- **/
 abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
   using SafeMath for uint256;
 
   mapping(address => uint256) internal _balances;
+  IBalanceHook private _incentivesController;
 
   mapping(address => mapping(address => uint256)) private _allowances;
   uint256 internal _totalSupply;
@@ -33,46 +29,49 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
     _decimals = decimals;
   }
 
-  /**
-   * @return The name of the token
-   **/
+  function _initializeERC20(
+    string memory name,
+    string memory symbol,
+    uint8 decimals
+  ) internal {
+    _name = name;
+    _symbol = symbol;
+    _decimals = decimals;
+  }
+
   function name() public view override returns (string memory) {
     return _name;
   }
 
-  /**
-   * @return The symbol of the token
-   **/
   function symbol() public view override returns (string memory) {
     return _symbol;
   }
 
-  /**
-   * @return The decimals of the token
-   **/
   function decimals() public view override returns (uint8) {
     return _decimals;
   }
 
-  /**
-   * @return The total supply of the token
-   **/
   function totalSupply() public view virtual override returns (uint256) {
     return _totalSupply;
   }
 
-  /**
-   * @return The balance of the token
-   **/
   function balanceOf(address account) public view virtual override returns (uint256) {
     return _balances[account];
   }
 
   /**
-   * @return Abstract function implemented by the child aToken/debtToken.
-   * Done this way in order to not break compatibility with previous versions of aTokens/debtTokens
+   * @dev Updates the address of the incentives controller contract
    **/
-  function _getIncentivesController() internal view virtual returns (IBalanceHook);
+  function _setIncentivesController(address hook) internal {
+    _incentivesController = IBalanceHook(hook);
+  }
+
+  /**
+   * @dev Returns the address of the incentives controller contract
+   **/
+  function getIncentivesController() public view returns (IBalanceHook) {
+    return _incentivesController;
+  }
 
   /**
    * @dev Executes a transfer of tokens from _msgSender() to recipient
@@ -167,6 +166,10 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
     return true;
   }
 
+  function getIncentivesToken() internal view virtual returns (address) {
+    return address(this);
+  }
+
   function _transfer(
     address sender,
     address recipient,
@@ -178,26 +181,33 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
     _beforeTokenTransfer(sender, recipient, amount);
 
     uint256 oldSenderBalance = _balances[sender];
-    _balances[sender] = oldSenderBalance.sub(amount, 'ERC20: transfer amount exceeds balance');
-    uint256 oldRecipientBalance = _balances[recipient];
-    _balances[recipient] = _balances[recipient].add(amount);
+    uint256 newSenderBalance =
+      oldSenderBalance.sub(amount, 'ERC20: transfer amount exceeds balance');
+    _balances[sender] = newSenderBalance;
 
-    IBalanceHook hook = _getIncentivesController();
+    uint256 oldRecipientBalance = _balances[recipient];
+    uint256 newRecipientBalance = oldRecipientBalance.add(amount);
+    _balances[recipient] = newRecipientBalance;
+
+    IBalanceHook hook = _incentivesController;
     if (address(hook) != address(0)) {
+      address token = getIncentivesToken();
       uint256 currentTotalSupply = _totalSupply;
+
       hook.handleBalanceUpdate(
-        address(this),
+        token,
         sender,
         oldSenderBalance,
-        _balances[sender],
+        newSenderBalance,
         currentTotalSupply
       );
+
       if (sender != recipient) {
         hook.handleBalanceUpdate(
-          address(this),
+          token,
           recipient,
           oldRecipientBalance,
-          _balances[recipient],
+          newRecipientBalance,
           currentTotalSupply
         );
       }
@@ -212,15 +222,16 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
     _totalSupply = _totalSupply.add(amount);
 
     uint256 oldAccountBalance = _balances[account];
-    _balances[account] = oldAccountBalance.add(amount);
+    uint256 newAccountBalance = oldAccountBalance.add(amount);
+    _balances[account] = newAccountBalance;
 
-    IBalanceHook hook = _getIncentivesController();
+    IBalanceHook hook = _incentivesController;
     if (address(hook) != address(0)) {
       hook.handleBalanceUpdate(
-        address(this),
+        getIncentivesToken(),
         account,
         oldAccountBalance,
-        _balances[account],
+        newAccountBalance,
         _totalSupply
       );
     }
@@ -234,15 +245,16 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
     _totalSupply = _totalSupply.sub(amount);
 
     uint256 oldAccountBalance = _balances[account];
-    _balances[account] = oldAccountBalance.sub(amount, 'ERC20: burn amount exceeds balance');
+    uint256 newAccountBalance = oldAccountBalance.sub(amount, 'ERC20: burn amount exceeds balance');
+    _balances[account] = newAccountBalance;
 
-    IBalanceHook hook = _getIncentivesController();
+    IBalanceHook hook = _incentivesController;
     if (address(hook) != address(0)) {
       hook.handleBalanceUpdate(
-        address(this),
+        getIncentivesToken(),
         account,
         oldAccountBalance,
-        _balances[account],
+        newAccountBalance,
         _totalSupply
       );
     }
@@ -258,18 +270,6 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
 
     _allowances[owner][spender] = amount;
     emit Approval(owner, spender, amount);
-  }
-
-  function _setName(string memory newName) internal {
-    _name = newName;
-  }
-
-  function _setSymbol(string memory newSymbol) internal {
-    _symbol = newSymbol;
-  }
-
-  function _setDecimals(uint8 newDecimals) internal {
-    _decimals = newDecimals;
   }
 
   function _beforeTokenTransfer(

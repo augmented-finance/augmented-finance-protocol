@@ -12,7 +12,7 @@ import {
 import { MockAgfToken, RewardFreezer, TeamRewardPool } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { waitForTx } from '../../helpers/misc-utils';
-import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from './utils';
+import { currentBlock, revertSnapshot, mineToBlock, takeSnapshot } from './utils';
 import { PERC_100, RAY } from '../../helpers/constants';
 import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 

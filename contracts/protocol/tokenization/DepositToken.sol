@@ -9,54 +9,30 @@ import {IDepositToken} from '../../interfaces/IDepositToken.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
-import {IncentivizedERC20} from './IncentivizedERC20.sol';
+import {IncentivizedERC20} from './base/IncentivizedERC20.sol';
+import {PermitForERC20} from '../../misc/PermitForERC20.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 import {IInitializablePoolToken} from './interfaces/IInitializablePoolToken.sol';
 import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
+import {PoolTokenBase} from './base/PoolTokenBase.sol';
 
 /**
  * @title Augmented Finance ERC20 deposit token (agToken)
  * @dev Implementation of the interest bearing token for the Augmented Finance protocol
  */
 contract DepositToken is
+  IncentivizedERC20('DEPOSIT_STUB', 'DEPOSIT_STUB', 0),
+  PermitForERC20,
+  PoolTokenBase,
   VersionedInitializable,
-  IncentivizedERC20('AGTOKEN_IMPL', 'AGTOKEN_IMPL', 0),
-  IDepositToken,
-  IInitializablePoolToken
+  IDepositToken
 {
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
-  bytes public constant EIP712_REVISION = bytes('1');
-  bytes32 internal constant EIP712_DOMAIN =
-    keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
-  bytes32 public constant PERMIT_TYPEHASH =
-    keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
-
   uint256 private constant TOKEN_REVISION = 0x1;
 
-  /// @dev owner => next valid nonce to submit with permit()
-  mapping(address => uint256) public _nonces;
-
-  bytes32 public DOMAIN_SEPARATOR;
-
-  ILendingPool internal _pool;
   address internal _treasury;
-  address internal _underlyingAsset;
-  IBalanceHook internal _incentivesController;
-
-  modifier onlyLendingPool {
-    require(_msgSender() == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
-    _;
-  }
-
-  modifier onlyRewardAdmin {
-    require(
-      _pool.getAccessController().isRewardAdmin(_msgSender()),
-      Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
-    );
-    _;
-  }
 
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
@@ -65,57 +41,23 @@ contract DepositToken is
   /**
    * @dev Initializes the aToken
    * @param config The data about lending pool where this token will be used
-   * @param aTokenName The name of the aToken
-   * @param aTokenSymbol The symbol of the aToken
-   * @param aTokenDecimals The decimals of the aToken, same as the underlying asset's
+   * @param name The name of the aToken
+   * @param symbol The symbol of the aToken
+   * @param decimals The decimals of the aToken, same as the underlying asset's
    */
   function initialize(
     PoolTokenConfig calldata config,
-    string calldata aTokenName,
-    string calldata aTokenSymbol,
-    uint8 aTokenDecimals,
+    string calldata name,
+    string calldata symbol,
+    uint8 decimals,
     bytes calldata params
   ) external override initializerRunAlways(TOKEN_REVISION) {
-    _setName(aTokenName);
-    _setSymbol(aTokenSymbol);
-    _setDecimals(aTokenDecimals);
-
+    _initializeERC20(name, symbol, decimals);
     if (!isRevisionInitialized(TOKEN_REVISION)) {
-      _initializeDomainSeparator(bytes(aTokenName));
+      _initializeDomainSeparator();
     }
-
-    _pool = config.pool;
     _treasury = config.treasury;
-    _underlyingAsset = config.underlyingAsset;
-
-    emit Initialized(
-      config.underlyingAsset,
-      address(config.pool),
-      config.treasury,
-      aTokenName,
-      aTokenSymbol,
-      aTokenDecimals,
-      params
-    );
-  }
-
-  function _initializeDomainSeparator(bytes memory aTokenName) private {
-    uint256 chainId;
-
-    //solium-disable-next-line
-    assembly {
-      chainId := chainid()
-    }
-
-    DOMAIN_SEPARATOR = keccak256(
-      abi.encode(
-        EIP712_DOMAIN,
-        keccak256(aTokenName),
-        keccak256(EIP712_REVISION),
-        chainId,
-        address(this)
-      )
-    );
+    _initializePoolToken(config, name, symbol, decimals, params);
   }
 
   /**
@@ -284,41 +226,6 @@ contract DepositToken is
   }
 
   /**
-   * @dev Returns the address of the underlying asset of this aToken (E.g. WETH for aWETH)
-   **/
-  function UNDERLYING_ASSET_ADDRESS() public view override returns (address) {
-    return _underlyingAsset;
-  }
-
-  /**
-   * @dev Returns the address of the lending pool where this aToken is used
-   **/
-  function POOL() public view returns (ILendingPool) {
-    return _pool;
-  }
-
-  /**
-   * @dev For internal usage in the logic of the parent contract IncentivizedERC20
-   **/
-  function _getIncentivesController() internal view override returns (IBalanceHook) {
-    return _incentivesController;
-  }
-
-  /**
-   * @dev Returns the address of the incentives controller contract
-   **/
-  function getIncentivesController() external view returns (IBalanceHook) {
-    return _getIncentivesController();
-  }
-
-  /**
-   * @dev Updates the address of the incentives controller contract
-   **/
-  function setIncentivesController(address hook) external override onlyRewardAdmin {
-    _incentivesController = IBalanceHook(hook);
-  }
-
-  /**
    * @dev Transfers the underlying asset to `target`. Used by the LendingPool to transfer
    * assets in borrow(), withdraw() and flashLoan()
    * @param target The recipient of the aTokens
@@ -341,43 +248,6 @@ contract DepositToken is
    * @param amount The amount getting repaid
    **/
   function handleRepayment(address user, uint256 amount) external override onlyLendingPool {}
-
-  /**
-   * @dev implements the permit function as for
-   * https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
-   * @param owner The owner of the funds
-   * @param spender The spender
-   * @param value The amount
-   * @param deadline The deadline timestamp, type(uint256).max for max deadline
-   * @param v Signature param
-   * @param s Signature param
-   * @param r Signature param
-   */
-  function permit(
-    address owner,
-    address spender,
-    uint256 value,
-    uint256 deadline,
-    uint8 v,
-    bytes32 r,
-    bytes32 s
-  ) external {
-    require(owner != address(0), 'INVALID_OWNER');
-    //solium-disable-next-line
-    require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
-    uint256 currentValidNonce = _nonces[owner];
-    bytes32 digest =
-      keccak256(
-        abi.encodePacked(
-          '\x19\x01',
-          DOMAIN_SEPARATOR,
-          keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, currentValidNonce, deadline))
-        )
-      );
-    require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
-    _nonces[owner] = currentValidNonce.add(1);
-    _approve(owner, spender, value);
-  }
 
   /**
    * @dev Transfers the aTokens between two users. Validates the transfer
@@ -422,5 +292,24 @@ contract DepositToken is
     uint256 amount
   ) internal override {
     _transfer(from, to, amount, true);
+  }
+
+  function _approveByPermit(
+    address owner,
+    address spender,
+    uint256 amount
+  ) internal override {
+    _approve(owner, spender, amount);
+  }
+
+  function _getPermitDomainName() internal view override returns (bytes memory) {
+    return bytes(super.name());
+  }
+
+  /**
+   * @dev Updates the address of the incentives controller contract
+   **/
+  function setIncentivesController(address hook) external override onlyRewardAdmin {
+    _setIncentivesController(hook);
   }
 }

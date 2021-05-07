@@ -8,7 +8,6 @@ import {Errors} from '../libraries/helpers/Errors.sol';
 import {DebtTokenBase} from './base/DebtTokenBase.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
-import {IInitializablePoolToken} from './interfaces/IInitializablePoolToken.sol';
 import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
 
 /**
@@ -17,44 +16,20 @@ import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
  * at variable rate mode
  * @author Aave
  **/
-contract VariableDebtToken is DebtTokenBase, IVariableDebtToken, IInitializablePoolToken {
+contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
   using WadRayMath for uint256;
 
   uint256 private constant DEBT_TOKEN_REVISION = 0x1;
 
-  ILendingPool internal _pool;
-  address internal _underlyingAsset;
-
-  /**
-   * @dev Initializes the debt token.
-   * @param config The data about lending pool where this token will be used
-   * @param debtTokenName The name of the token
-   * @param debtTokenSymbol The symbol of the token
-   * @param debtTokenDecimals The decimals of the debtToken, same as the underlying asset's
-   */
   function initialize(
     PoolTokenConfig memory config,
-    string memory debtTokenName,
-    string memory debtTokenSymbol,
-    uint8 debtTokenDecimals,
+    string memory name,
+    string memory symbol,
+    uint8 decimals,
     bytes calldata params
   ) public override initializerRunAlways(DEBT_TOKEN_REVISION) {
-    _setName(debtTokenName);
-    _setSymbol(debtTokenSymbol);
-    _setDecimals(debtTokenDecimals);
-
-    _pool = config.pool;
-    _underlyingAsset = config.underlyingAsset;
-
-    emit Initialized(
-      config.underlyingAsset,
-      address(config.pool),
-      address(0),
-      debtTokenName,
-      debtTokenSymbol,
-      debtTokenDecimals,
-      params
-    );
+    _initializeERC20(name, symbol, decimals);
+    _initializePoolToken(config, name, symbol, decimals, params);
   }
 
   /**
@@ -169,27 +144,5 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken, IInitializableP
     returns (uint256, uint256)
   {
     return (super.balanceOf(user), super.totalSupply());
-  }
-
-  /**
-   * @dev Returns the address of the underlying asset of this aToken (E.g. WETH for aWETH)
-   **/
-  function UNDERLYING_ASSET_ADDRESS() public view returns (address) {
-    return _underlyingAsset;
-  }
-
-  /**
-   * @dev Returns the address of the lending pool where this aToken is used
-   **/
-  function POOL() public view returns (ILendingPool) {
-    return _pool;
-  }
-
-  function _getUnderlyingAssetAddress() internal view override returns (address) {
-    return _underlyingAsset;
-  }
-
-  function _getLendingPool() internal view override returns (ILendingPool) {
-    return _pool;
   }
 }
