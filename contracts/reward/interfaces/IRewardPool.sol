@@ -12,6 +12,8 @@ interface IManagedRewardPool {
 
   function disableBaseline() external;
 
+  function disableRewardPool() external;
+
   function setRate(uint256 rate) external;
 
   function claimRewardFor(address holder) external returns (uint256 amount, uint32 sinceBlock);

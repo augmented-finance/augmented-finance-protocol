@@ -44,6 +44,8 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
     return (0, 0);
   }
 
+  function internalDisableRate() internal override {}
+
   function addRewardProvider(address provider, address token)
     external
     virtual

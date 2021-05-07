@@ -66,8 +66,7 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
       if (pool == address(0)) {
         continue;
       }
-      IManagedRewardPool(pool).disableBaseline();
-      IManagedRewardPool(pool).setRate(0);
+      IManagedRewardPool(pool).disableRewardPool();
     }
   }
 

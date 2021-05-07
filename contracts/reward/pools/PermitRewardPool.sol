@@ -65,6 +65,8 @@ contract PermitRewardPool is AccessBitmask, ControlledRewardPool {
     _rewardLimit = 0;
   }
 
+  function internalDisableRate() internal override {}
+
   function internalGetReward(address, uint32) internal override returns (uint256, uint32) {
     return (0, 0);
   }

@@ -25,7 +25,18 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return false;
   }
 
-  function disableBaseline() external virtual override onlyController {}
+  function disableBaseline() external override onlyController {
+    internalDisableBaseline();
+  }
+
+  function disableRewardPool() external override onlyController {
+    internalDisableBaseline();
+    internalDisableRate();
+  }
+
+  function internalDisableBaseline() internal virtual {}
+
+  function internalDisableRate() internal virtual;
 
   function setBaselinePercentage(uint16) external virtual override onlyRateController {
     revert('UNSUPPORTED');
