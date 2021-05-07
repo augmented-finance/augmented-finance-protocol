@@ -94,6 +94,28 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     return internalClaimAndMintReward(holder, mask, holder);
   }
 
+  function claimableReward(address holder, uint32 atBlock)
+    public
+    view
+    returns (uint256 claimable, uint256 delayed)
+  {
+    return claimableRewardFor(holder, ~uint256(0), atBlock);
+  }
+
+  function claimableRewardFor(
+    address holder,
+    uint256 mask,
+    uint32 atBlock
+  ) public view returns (uint256 claimable, uint256 delayed) {
+    require(holder != address(0), 'holder is required');
+    if (atBlock == 0) {
+      atBlock = uint32(block.number);
+    } else {
+      require(atBlock >= uint32(block.number), 'should be zero, current or future block');
+    }
+    return internalCalcClaimableReward(holder, mask, atBlock);
+  }
+
   function claimablePools(address holder) external view returns (uint256) {
     return _memberOf[holder] & ~_ignoreMask;
   }
@@ -136,7 +158,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     address holder,
     uint256 mask,
     address receiver
-  ) private returns (uint256 totalAmount) {
+  ) private returns (uint256 claimableAmount) {
     mask &= ~_ignoreMask;
 
     if (mask == 0) {
@@ -167,7 +189,7 @@ abstract contract BasicRewardController is Ownable, IRewardController {
       }
 
       if (amountSince > 0) {
-        totalAmount = totalAmount.add(
+        claimableAmount = claimableAmount.add(
           internalClaimByCall(holder, amountSince, sinceBlock, currentBlock)
         );
       }
@@ -176,20 +198,71 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     }
 
     if (amountSince > 0) {
-      totalAmount = totalAmount.add(
+      claimableAmount = claimableAmount.add(
         internalClaimByCall(holder, amountSince, sinceBlock, currentBlock)
       );
     }
 
-    if (totalAmount > 0) {
+    if (claimableAmount > 0) {
       address mintTo = receiver;
       for (IRewardMinter minter = _rewardMinter; minter != IRewardMinter(0); ) {
-        (minter, mintTo) = minter.mintReward(mintTo, totalAmount);
+        (minter, mintTo) = minter.mintReward(mintTo, claimableAmount);
       }
-      emit RewardsClaimed(holder, receiver, totalAmount);
+      emit RewardsClaimed(holder, receiver, claimableAmount);
     }
-    console.log('RewardsClaimed', totalAmount);
-    return totalAmount;
+    console.log('RewardsClaimed', claimableAmount);
+    return claimableAmount;
+  }
+
+  function internalCalcClaimableReward(
+    address holder,
+    uint256 mask,
+    uint32 currentBlock
+  ) private view returns (uint256 claimableAmount, uint256 delayedAmount) {
+    mask &= ~_ignoreMask;
+    mask &= _memberOf[holder];
+    if (mask == 0) {
+      return (0, 0);
+    }
+
+    uint32 sinceBlock = 0;
+    uint256 amountSince = 0;
+    bool incremental = false;
+
+    for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
+      if (mask & 1 == 0) {
+        continue;
+      }
+
+      (uint256 amount_, uint32 since_) = _poolList[i].calcRewardFor(holder);
+      if (amount_ == 0) {
+        continue;
+      }
+
+      if (sinceBlock == since_) {
+        amountSince = amountSince.add(amount_);
+        continue;
+      }
+
+      if (amountSince > 0) {
+        (uint256 ca, uint256 da) =
+          internalCalcByCall(holder, amountSince, sinceBlock, currentBlock, incremental);
+        claimableAmount = claimableAmount.add(ca);
+        delayedAmount = delayedAmount.add(da);
+        incremental = true;
+      }
+      amountSince = amount_;
+      sinceBlock = since_;
+    }
+
+    if (amountSince > 0) {
+      (uint256 ca, uint256 da) =
+        internalCalcByCall(holder, amountSince, sinceBlock, currentBlock, incremental);
+      claimableAmount = claimableAmount.add(ca);
+      delayedAmount = delayedAmount.add(da);
+    }
+
+    return (claimableAmount, delayedAmount);
   }
 
   function internalAllocatedByPool(
@@ -205,4 +278,12 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     uint32 sinceBlock,
     uint32 currentBlock
   ) internal virtual returns (uint256 amount);
+
+  function internalCalcByCall(
+    address holder,
+    uint256 allocated,
+    uint32 sinceBlock,
+    uint32 currentBlock,
+    bool incremental
+  ) internal view virtual returns (uint256 claimableAmount, uint256 delayedAmount);
 }
