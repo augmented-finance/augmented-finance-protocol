@@ -51,7 +51,7 @@ describe('Team rewards suite', () => {
     agf = await getMockAgfToken();
 
     blkAfterDeploy = await currentBlock();
-    REWARD_UNLOCK_BLOCK = blkAfterDeploy + 100;
+    REWARD_UNLOCK_BLOCK = blkAfterDeploy + 10;
     console.log(`unlock block at: ${REWARD_UNLOCK_BLOCK}`);
     await teamRewardPool.setUnlockBlock(REWARD_UNLOCK_BLOCK);
   });
@@ -131,7 +131,7 @@ describe('Team rewards suite', () => {
     );
   });
 
-  it('one team member with 100% share (0% frozen) claims all', async () => {
+  it.only('one team member with 100% share (0% frozen) claims all', async () => {
     console.log('-----------');
     console.log(`members added at block: ${await currentBlock()}`);
     const userShare = PERC_100;
