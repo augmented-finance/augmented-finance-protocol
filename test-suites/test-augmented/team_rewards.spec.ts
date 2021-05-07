@@ -50,7 +50,7 @@ describe('Team rewards suite', () => {
     teamRewardPool = await getTeamRewardPool();
     agf = await getMockAgfToken();
     blkAfterDeploy = await currentBlock();
-    REWARD_UNLOCK_BLOCK = blkAfterDeploy + 100;
+    REWARD_UNLOCK_BLOCK = blkAfterDeploy + 10;
     console.log(`unlock block at: ${REWARD_UNLOCK_BLOCK}`);
     await teamRewardPool.setUnlockBlock(REWARD_UNLOCK_BLOCK);
   });
