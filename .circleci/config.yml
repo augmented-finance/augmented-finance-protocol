@@ -5,14 +5,14 @@ orbs:
 jobs:
   test_all:
     docker:
-      - image: circleci/node:12
+      - image: circleci/node:14
     steps:
       - checkout
       - run:
           name: Clear cache
           command: rm -rf node_modules/
-      - node/install:
-          install-yarn: true
+      - node/install-yarn:
+          version: 1.22.0
       - run: |
           yarn install
           yarn run compile

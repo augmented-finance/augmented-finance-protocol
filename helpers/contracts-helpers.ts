@@ -143,6 +143,7 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNet
   const {
     main,
     ropsten,
+    rinkeby,
     kovan,
     hardhat,
     coverage,
@@ -163,6 +164,8 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNet
       return kovan;
     case eEthereumNetwork.ropsten:
       return ropsten;
+    case eEthereumNetwork.rinkeby:
+      return rinkeby;
     case eEthereumNetwork.main:
       return main;
     case eEthereumNetwork.tenderlyMain:

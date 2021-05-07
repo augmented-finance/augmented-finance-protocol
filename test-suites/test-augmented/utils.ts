@@ -1,5 +1,4 @@
-import { ethers } from 'hardhat';
-import BigNumber from 'bignumber.js';
+import rawBRE, { ethers } from 'hardhat';
 
 export const mineToBlock = async (to: number): Promise<number> => {
   const blk = await ethers.provider.getBlock('latest');
@@ -8,25 +7,21 @@ export const mineToBlock = async (to: number): Promise<number> => {
     return 0;
   }
   let blockMined = 0;
+  const [root, ...otherUsers] = await ethers.getSigners();
   while (blk.number < to) {
-    await ethers.provider.send('evm_increaseTime', [10]);
-    await ethers.provider.send('evm_mine', []);
     blk.number += 1;
+    const nonce = await root.getTransactionCount();
+    await root.sendTransaction({
+      nonce: ethers.utils.hexlify(nonce),
+      to: otherUsers[3].address,
+      value: 1,
+      chainId: rawBRE.network.config.chainId,
+    });
     blockMined += 1;
   }
   const blkAfter = await ethers.provider.getBlock('latest');
   console.log(`moved to block: ${blkAfter.number}`);
   return blockMined;
-};
-
-export const mineBlocks = async (to: number) => {
-  const blk = await ethers.provider.getBlock('latest');
-  for (let i = 0; i < to; i++) {
-    await ethers.provider.send('evm_increaseTime', [10]);
-    await ethers.provider.send('evm_mine', []);
-    blk.number += 1;
-  }
-  console.log(`moved to block: ${blk.number}`);
 };
 
 export const currentBlock = async () => await ethers.provider.getBlockNumber();
