@@ -9,7 +9,7 @@ import {
   InitializableImmutableAdminUpgradeabilityProxy
 } from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
 import {IRewardConfigurator} from './interfaces/IRewardConfigurator.sol';
-import {IRewardController} from './interfaces/IRewardController.sol';
+import {IManagedRewardController} from './interfaces/IRewardController.sol';
 import {IManagedRewardPool} from './interfaces/IRewardPool.sol';
 import {IMigratorHook} from '../interfaces/IMigratorHook.sol';
 
@@ -44,6 +44,10 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
     _addressesProvider = IMarketAccessController(addressesProvider);
   }
 
+  function setMigrator(address migrator) external onlyRewardAdmin {
+    _migrator = migrator;
+  }
+
   function handleTokenMigrated(address token, address[] memory rewardPools) external override {
     require(msg.sender == _migrator, 'NOT_MIGRATOR');
 
@@ -58,9 +62,57 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
     }
   }
 
-  //   function updateBaseline(uint256 baseline) external onlyRewardAdmin {
-  //     baseline;
-  //   }
+  function updateBaselineOf(IManagedRewardController ctl, uint256 baseline)
+    external
+    onlyRewardAdmin
+  {
+    ctl.updateBaseline(baseline);
+  }
+
+  function getDefaultController() public view returns (IManagedRewardController) {
+    return IManagedRewardController(_addressesProvider.getRewardController());
+  }
+
+  function updateBaseline(uint256 baseline) external onlyRewardAdmin {
+    getDefaultController().updateBaseline(baseline);
+  }
+
+  function addRewardPoolTo(IManagedRewardController controller, IManagedRewardPool pool)
+    external
+    onlyRewardAdmin
+  {
+    controller.admin_addRewardPool(pool);
+  }
+
+  function removeRewardPoolFrom(IManagedRewardController controller, IManagedRewardPool pool)
+    external
+    onlyRewardAdmin
+  {
+    controller.admin_removeRewardPool(pool);
+  }
+
+  function addRewardPool(IManagedRewardPool pool) external onlyRewardAdmin {
+    getDefaultController().admin_addRewardPool(pool);
+  }
+
+  function removeRewardPool(IManagedRewardPool pool) external onlyRewardAdmin {
+    getDefaultController().admin_removeRewardPool(pool);
+  }
+
+  function addRewardProvider(
+    IManagedRewardPool pool,
+    address provider,
+    address token
+  ) external onlyRewardAdmin {
+    pool.addRewardProvider(provider, token);
+  }
+
+  function removeRewardProvider(IManagedRewardPool pool, address provider)
+    external
+    onlyRewardAdmin
+  {
+    pool.removeRewardProvider(provider);
+  }
 
   //   function getRewardPool(string memory name) public {
 
