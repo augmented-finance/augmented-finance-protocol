@@ -4,9 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
-import {
-  InitializableImmutableAdminUpgradeabilityProxy
-} from '../../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
+import {IProxy} from '../../tools/upgradeability/IProxy.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
@@ -448,16 +446,8 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
     pool.setPause(val);
   }
 
-  function _initTokenWithProxy(address implementation, bytes memory initParams)
-    internal
-    returns (address)
-  {
-    InitializableImmutableAdminUpgradeabilityProxy proxy =
-      new InitializableImmutableAdminUpgradeabilityProxy(address(this));
-
-    proxy.initialize(implementation, initParams);
-
-    return address(proxy);
+  function _initTokenWithProxy(address impl, bytes memory initParams) internal returns (address) {
+    return address(addressesProvider.createProxy(address(this), impl, initParams));
   }
 
   function _upgradeTokenImplementation(
@@ -465,10 +455,7 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
     address implementation,
     bytes memory initParams
   ) internal {
-    InitializableImmutableAdminUpgradeabilityProxy proxy =
-      InitializableImmutableAdminUpgradeabilityProxy(payable(proxyAddress));
-
-    proxy.upgradeToAndCall(implementation, initParams);
+    IProxy(proxyAddress).upgradeToAndCall(implementation, initParams);
   }
 
   function _checkNoLiquidity(address asset) internal view {
