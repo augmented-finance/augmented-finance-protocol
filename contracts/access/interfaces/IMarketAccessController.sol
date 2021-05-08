@@ -28,26 +28,46 @@ interface IMarketAccessController is IAccessController {
   function isSponsoredLoanUser(address) external view returns (bool);
 
   function getTreasury() external view returns (address);
+
+  function getRewardToken() external view returns (address);
+
+  function getRewardStakeToken() external view returns (address);
+
+  function getRewardController() external view returns (address);
+
+  function getRewardConfigurator() external view returns (address);
+
+  function isStakeAdmin(address) external view returns (bool);
+
+  function isLiquidityController(address) external view returns (bool);
 }
 
 interface IManagedMarketAccessController is IMarketAccessController {
   event MarketIdSet(string newMarketId);
 
-  function setMarketId(string calldata marketId) external;
+  function setMarketId(string memory marketId) external;
 
-  function setLendingPoolImpl(address pool) external;
+  function setLendingPoolImpl(address) external;
 
-  function setLendingPoolConfiguratorImpl(address configurator) external;
+  function setLendingPoolConfiguratorImpl(address) external;
 
-  function setLendingPoolCollateralManager(address manager) external;
+  function setLendingPoolCollateralManager(address) external;
 
   function getPoolAdmin() external view returns (address);
 
-  function setPoolAdmin(address admin) external;
+  function setPoolAdmin(address) external;
 
-  function setPriceOracle(address priceOracle) external;
+  function setPriceOracle(address) external;
 
-  function setLendingRateOracle(address lendingRateOracle) external;
+  function setLendingRateOracle(address) external;
 
-  function setTreasuryImpl(address treasury) external;
+  function setTreasuryImpl(address) external;
+
+  function setRewardTokenImpl(address) external;
+
+  function setRewardStakeTokenImpl(address) external;
+
+  function setRewardController(address) external;
+
+  function setRewardConfiguratorImpl(address) external;
 }

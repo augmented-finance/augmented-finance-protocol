@@ -33,4 +33,6 @@ interface IManagedStakeToken is IStakeToken {
   function getMaxSlashablePercentage() external view returns (uint256);
 
   function setMaxSlashablePercentage(uint256 percentage) external;
+
+  function setCooldown(uint32 cooldownBlocks, uint32 unstakeBlocks) external;
 }

@@ -3,16 +3,19 @@ pragma solidity ^0.6.12;
 
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {BitUtils} from '../tools/math/BitUtils.sol';
 
-import {IRewardController, AllocationMode} from './interfaces/IRewardController.sol';
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import {IManagedRewardController, AllocationMode} from './interfaces/IRewardController.sol';
 import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BasicRewardController is Ownable, IRewardController {
+abstract contract BasicRewardController is Ownable, IManagedRewardController {
   using SafeMath for uint256;
 
+  IMarketAccessController private _accessController;
   IRewardMinter private _rewardMinter;
 
   IManagedRewardPool[] private _poolList;
@@ -22,30 +25,38 @@ abstract contract BasicRewardController is Ownable, IRewardController {
   mapping(address => uint256) private _memberOf;
 
   uint256 private _ignoreMask;
+  uint256 private _baselineMask;
 
-  constructor(IRewardMinter rewardMinter) public {
+  constructor(IMarketAccessController accessController, IRewardMinter rewardMinter) public {
+    _accessController = accessController;
     _rewardMinter = rewardMinter;
   }
 
   event RewardsAllocated(address indexed user, uint256 amount);
   event RewardsClaimed(address indexed user, address indexed to, uint256 amount);
 
-  function admin_addRewardPool(IManagedRewardPool pool) external onlyOwner {
+  function admin_addRewardPool(IManagedRewardPool pool) external override onlyOwner {
     require(address(pool) != address(0), 'reward pool required');
     require(_poolMask[address(pool)] == 0, 'already registered');
     pool.claimRewardFor(address(this)); // access check
     require(_poolList.length <= 255, 'too many pools');
 
-    _poolMask[address(pool)] = 1 << _poolList.length;
+    uint256 poolMask = 1 << _poolList.length;
+    _poolMask[address(pool)] = poolMask;
+    _baselineMask |= poolMask;
     _poolList.push(pool);
   }
 
-  function admin_removeRewardPool(IManagedRewardPool pool) external onlyOwner {
+  function admin_removeRewardPool(IManagedRewardPool pool) external override onlyOwner {
     require(address(pool) != address(0), 'reward pool required');
     uint256 mask = _poolMask[address(pool)];
     if (mask == 0) {
       return;
     }
+    uint256 idx = BitUtils.bitLength(mask);
+    require(_poolList[idx] == pool, 'unexpected pool');
+
+    _poolList[idx] = IManagedRewardPool(0);
     delete (_poolMask[address(pool)]);
     _ignoreMask |= mask;
   }
@@ -62,18 +73,31 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     IManagedRewardPool(pool).removeRewardProvider(provider);
   }
 
-  function admin_updateBaseline(uint256 baseline) external onlyOwner {
-    for (uint256 i = 0; i < _poolList.length; i++) {
-      _poolList[i].updateBaseline(baseline);
+  function updateBaseline(uint256 baseline) external override onlyOwner {
+    uint256 baselineMask = _baselineMask & ~_ignoreMask;
+
+    for (uint8 i = 0; i <= 255; i++) {
+      uint256 mask = uint256(1) << i;
+      if (mask & baselineMask == 0) {
+        if (mask > baselineMask) {
+          break;
+        }
+        continue;
+      }
+      if (_poolList[i].updateBaseline(baseline)) {
+        continue;
+      }
+      baselineMask &= ~mask;
     }
+    _baselineMask = baselineMask;
   }
 
-  function admin_setPoolRate(address pool, uint256 rate) external onlyOwner {
-    IManagedRewardPool(pool).setRate(rate);
-  }
-
-  function admin_setRewardMinter(IRewardMinter minter) external onlyOwner {
+  function admin_setRewardMinter(IRewardMinter minter) external override onlyOwner {
     _rewardMinter = minter;
+  }
+
+  function getPools() public view returns (IManagedRewardPool[] memory, uint256 ignoreMask) {
+    return (_poolList, _ignoreMask);
   }
 
   function getRewardMinter() external view returns (address) {
@@ -150,8 +174,15 @@ abstract contract BasicRewardController is Ownable, IRewardController {
     }
   }
 
-  function isRateController(address addr) external override returns (bool) {
-    return addr == address(this);
+  function isRateController(address addr) public view override returns (bool) {
+    if (_accessController == IMarketAccessController(0)) {
+      return addr == address(this);
+    }
+    return false; // TODO _accessController.isRewardRateAdmin(addr);
+  }
+
+  function isConfigurator(address addr) public view override returns (bool) {
+    return addr == owner();
   }
 
   function internalClaimAndMintReward(
