@@ -11,15 +11,14 @@ import {ILendableToken, ILendablePool} from '../interfaces/ILendableToken.sol';
 
 import 'hardhat/console.sol';
 
-contract DeadTokenAdapter is BasicAdapter {
+contract ZombieAdapter is BasicAdapter {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
 
-  constructor(address originAsset) public BasicAdapter(originAsset) {}
-
-  function getUnderlying() internal view override returns (address) {
-    return address(_originAsset);
-  }
+  constructor(address controller, address originAsset)
+    public
+    BasicAdapter(controller, originAsset, originAsset)
+  {}
 
   function transferOriginIn(uint256 amount, address holder) internal override returns (uint256) {
     require(Address.isExternallyOwned(holder), 'only users are allowed, but not contracts');
@@ -44,7 +43,11 @@ contract DeadTokenAdapter is BasicAdapter {
     return _totalDeposited;
   }
 
-  function withdrawUnderlyingFromOrigin(address) internal override returns (uint256) {
+  function withdrawUnderlyingFromOrigin() internal override returns (uint256) {
     revert('migrate is not allowed');
+  }
+
+  function internalMigrateAll(ILendableToken) internal override {
+    revert('not implemented'); // TODO
   }
 }

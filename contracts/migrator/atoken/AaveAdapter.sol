@@ -6,6 +6,7 @@ import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 
+import {ILendableToken, ILendablePool} from '../interfaces/ILendableToken.sol';
 import {BasicAdapter} from '../interfaces/BasicAdapter.sol';
 import {IRedeemableToken, IWithdrawablePool} from './IRedeemableToken.sol';
 
@@ -16,13 +17,14 @@ contract AaveAdapter is BasicAdapter {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
-  constructor(IRedeemableToken originAsset) public BasicAdapter(address(originAsset)) {
-    require(IERC20(originAsset.UNDERLYING_ASSET_ADDRESS()).totalSupply() > 0, 'invalid underlying');
-    require(address(originAsset.POOL()) != address(0), 'unknown asset pool');
-  }
+  IWithdrawablePool private _originPool;
 
-  function getUnderlying() internal view override returns (address) {
-    return IRedeemableToken(_originAsset).UNDERLYING_ASSET_ADDRESS();
+  constructor(address controller, IRedeemableToken originAsset)
+    public
+    BasicAdapter(controller, address(originAsset), originAsset.UNDERLYING_ASSET_ADDRESS())
+  {
+    _originPool = originAsset.POOL();
+    require(address(_originPool) != address(0), 'unknown asset pool');
   }
 
   function transferOriginIn(uint256 amount, address holder)
@@ -70,24 +72,19 @@ contract AaveAdapter is BasicAdapter {
     return _totalDeposited.rayMul(getNormalizeOriginFactor());
   }
 
-  function withdrawUnderlyingFromOrigin(address underlying)
-    internal
-    override
-    returns (uint256 amount)
-  {
-    IWithdrawablePool fromPool = IRedeemableToken(_originAsset).POOL();
+  function withdrawUnderlyingFromOrigin() internal override returns (uint256 amount) {
+    IERC20 underlying = IERC20(_underlying);
 
-    uint256 underlyingAmount = IERC20(underlying).balanceOf(address(this));
-    uint256 withdrawnAmount = fromPool.withdraw(underlying, type(uint256).max, address(this));
-    underlyingAmount = IERC20(underlying).balanceOf(address(this)).sub(underlyingAmount);
+    uint256 underlyingAmount = underlying.balanceOf(address(this));
+    uint256 withdrawnAmount =
+      _originPool.withdraw(address(underlying), type(uint256).max, address(this));
+    underlyingAmount = underlying.balanceOf(address(this)).sub(underlyingAmount);
+    // TODO: limit withdrawl
     require(underlyingAmount >= withdrawnAmount, 'withdrawn less than expected');
     return withdrawnAmount;
   }
 
   function getNormalizeOriginFactor() private view returns (uint256) {
-    return
-      IRedeemableToken(_originAsset).POOL().getReserveNormalizedIncome(
-        IRedeemableToken(_originAsset).UNDERLYING_ASSET_ADDRESS()
-      );
+    return _originPool.getReserveNormalizedIncome(_underlying);
   }
 }

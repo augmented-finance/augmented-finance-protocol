@@ -17,17 +17,21 @@ interface IMigrationAdapter {
 
   function withdrawFromMigrate(uint256 amount) external returns (uint256);
 
-  function balanceForMigrate(address subscriber) external view returns (uint256);
+  function balanceForMigrate(address) external view returns (uint256);
 
   function isClaimable() external view returns (bool);
 
-  function claimMigrated(address holder) external returns (uint256);
+  function claimMigrated(address) external returns (uint256 amount, bool claimable);
+
+  function claimMigratedPortion(address holder, uint256 divisor)
+    external
+    returns (uint256 amount, bool claimable);
+
+  function balanceMigrated(address) external view returns (uint256);
 
   function withdrawFromMigrateOnBehalf(uint256 amount, address holder) external returns (uint256); // onlyOwner
 
   function getController() external returns (address);
-
-  function admin_setController(address controller) external;
 
   function admin_setRewardPool(IRewardPool rewardPool) external;
 

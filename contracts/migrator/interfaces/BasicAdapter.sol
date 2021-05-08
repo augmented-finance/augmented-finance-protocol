@@ -4,7 +4,6 @@ pragma solidity ^0.6.12;
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {Ownable} from '../../dependencies/openzeppelin/contracts/Ownable.sol';
 import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
 
 import {IMigrationAdapter} from './IMigrationAdapter.sol';
@@ -13,12 +12,16 @@ import {IRewardPool} from '../../reward/interfaces/IRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BasicAdapter is IMigrationAdapter, Ownable {
+abstract contract BasicAdapter is IMigrationAdapter {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
 
+  address private _controller;
+
   address internal _originAsset;
+  address internal _underlying;
   uint256 internal _totalDeposited;
+
   mapping(address => uint256) internal _deposits;
 
   IRewardPool internal _rewardPool;
@@ -26,14 +29,18 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
   ILendableToken internal _targetAsset;
   uint256 internal _totalMigrated;
 
-  address _controller;
+  bool private _paused;
+  bool private _claimAllowed;
 
-  bool internal _paused;
-  bool internal _claimAllowed;
-
-  constructor(address originAsset) public {
+  constructor(
+    address controller,
+    address originAsset,
+    address underlying
+  ) public {
     require(IERC20(originAsset).totalSupply() > 0, 'invalid origin');
     _originAsset = originAsset;
+    _controller = controller;
+    _underlying = underlying;
   }
 
   function ORIGIN_ASSET_ADDRESS() external view override returns (address) {
@@ -41,7 +48,7 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
   }
 
   function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
-    return getUnderlying();
+    return _underlying;
   }
 
   function REWARD_CONTROLLER_ADDRESS() external view returns (address) {
@@ -58,31 +65,33 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
 
     uint256 internalAmount = transferOriginIn(amount, holder);
     uint256 oldBalance = _deposits[holder];
-    _deposits[holder] = oldBalance.add(internalAmount);
-    _totalDeposited = _totalDeposited.add(internalAmount);
+    uint256 newBalance = oldBalance.add(internalAmount);
+    _deposits[holder] = newBalance;
+    uint256 newTotalDeposited = _totalDeposited.add(internalAmount);
+    _totalDeposited = newTotalDeposited;
 
     if (address(_rewardPool) != address(0)) {
-      _rewardPool.handleBalanceUpdate(
-        getUnderlying(),
-        holder,
-        oldBalance,
-        _deposits[holder],
-        _totalDeposited
-      );
+      handleBalanceUpdate(holder, oldBalance, newBalance, newTotalDeposited);
     }
     return amount;
   }
 
-  function withdrawFromMigrate(
-    uint256 amount /* notMigrated */
-  ) external override returns (uint256) {
+  function handleBalanceUpdate(
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256 newTotalDeposited
+  ) internal {
+    _rewardPool.handleBalanceUpdate(_underlying, holder, oldBalance, newBalance, newTotalDeposited);
+  }
+
+  function withdrawFromMigrate(uint256 amount) external override returns (uint256) {
     return privateWithdrawFromMigrate(amount, msg.sender);
   }
 
   function withdrawFromMigrateOnBehalf(uint256 amount, address holder)
     external
     override
-    /* notMigrated */
     onlyController
     returns (uint256)
   {
@@ -98,53 +107,70 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
     return internalIsClaimable();
   }
 
-  function claimMigrated(
-    address holder /* claimable */
-  ) external override returns (uint256) {
+  function claimMigrated(address holder)
+    external
+    override
+    notPaused
+    returns (uint256 amount, bool claimable)
+  {
     return privateClaimPortion(holder, 1);
   }
 
   /// @dev claimMigratedPortion is a backup solution for large deposits
-  function claimMigratedPortion(
-    address holder,
-    uint256 divisor /* claimable */
-  ) external returns (uint256 amount) {
+  function claimMigratedPortion(address holder, uint256 divisor)
+    external
+    override
+    notPaused
+    returns (uint256 amount, bool claimable)
+  {
     return privateClaimPortion(holder, divisor);
   }
 
   function privateClaimPortion(address holder, uint256 divisor)
     private
-    claimable
-    returns (uint256 amount)
+    returns (uint256 amount, bool)
   {
-    amount = _deposits[holder] / divisor;
-    if (amount == 0) {
-      return 0;
+    if (!internalIsClaimable()) {
+      return (0, false);
     }
-    _deposits[holder] -= amount;
+
+    amount = _deposits[holder];
+    if (amount == 0) {
+      return (0, true);
+    }
+    if (divisor > 1) {
+      uint256 amountCopy = amount;
+      amount /= divisor;
+      if (amount == 0) {
+        return (0, true);
+      }
+      _deposits[holder] = amountCopy - amount;
+    }
 
     amount = amount.mul(_totalMigrated).div(_totalDeposited);
-    return transferTargetOut(amount, holder);
+    return (transferTargetOut(amount, holder), true);
   }
 
-  function admin_setRewardPool(IRewardPool rewardPool) external override ownerOrController {
+  function balanceMigrated(address holder) external view override returns (uint256) {
+    if (_totalDeposited == 0) {
+      return 0;
+    }
+    return _deposits[holder].mul(_totalMigrated).div(_totalDeposited);
+  }
+
+  function admin_setRewardPool(IRewardPool rewardPool) external override onlyController {
     _rewardPool = rewardPool;
   }
 
-  function admin_enableClaims() external override ownerOrController {
+  function admin_enableClaims() external override onlyController {
     _claimAllowed = true;
   }
 
-  function admin_setPaused(bool paused) external override ownerOrController {
+  function admin_setPaused(bool paused) external override onlyController {
     _paused = paused;
   }
 
-  function admin_setController(address controller) external override onlyOwner {
-    require(Address.isContract(controller), 'controller should be a contract');
-    _controller = controller;
-  }
-
-  function getController() external override returns (address) {
+  function getController() public override returns (address) {
     return _controller;
   }
 
@@ -154,27 +180,30 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
     onlyController
     notMigrated
   {
-    address underlying = getUnderlying();
-    require(targetAsset.UNDERLYING_ASSET_ADDRESS() == underlying, 'mismatched underlying');
+    internalMigrateAll(targetAsset);
+  }
 
-    uint256 withdrawnAmount = withdrawUnderlyingFromOrigin(underlying);
+  function internalMigrateAll(ILendableToken targetAsset) internal virtual {
+    require(targetAsset.UNDERLYING_ASSET_ADDRESS() == _underlying, 'mismatched underlying');
+
+    uint256 withdrawnAmount = withdrawUnderlyingFromOrigin();
 
     if (withdrawnAmount == 0) {
       require(_totalDeposited == 0, 'withdrawn zero when deposited non zero');
       _totalMigrated = 1;
-      // make sure that "migrated" functions can't be invoked before it is done
+      // set last to make sure that "migrated" functions can't be invoked before it is done
       _targetAsset = targetAsset;
       return;
     }
 
     ILendablePool toPool = targetAsset.POOL();
     uint256 targetAmount = targetAsset.scaledBalanceOf(address(this));
-    toPool.deposit(underlying, withdrawnAmount, address(this), 0);
+    toPool.deposit(_underlying, withdrawnAmount, address(this), 0);
     targetAmount = targetAsset.scaledBalanceOf(address(this)).sub(targetAmount);
     require(targetAmount > 0, 'deposited less than expected');
     _totalMigrated = targetAmount;
 
-    // make sure that "migrated" functions can't be invoked before it is done
+    // set last to make sure that "migrated" functions can't be invoked before it is done
     _targetAsset = targetAsset;
   }
 
@@ -182,10 +211,10 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
   /// For safety reasons:
   /// 1. target asset can never be swept as there can be unclaimed funds.
   /// 2. origin and underlying assets can only be swept after migration (residual amounts).
-  function admin_sweepToken(address token) external onlyOwner returns (uint256) {
+  function admin_sweepToken(address token) external onlyController returns (uint256) {
     require(token != address(0), 'unknown token');
     require(token != address(_targetAsset), 'target asset can not be swept');
-    if (token == getUnderlying() || token == _originAsset) {
+    if (token == _underlying || token == _originAsset) {
       require(internalIsMigrated(), 'origin and underlying can only be swept after migration');
     }
     uint256 amount = IERC20(token).balanceOf(address(this));
@@ -194,8 +223,6 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
     }
     return amount;
   }
-
-  function getUnderlying() internal view virtual returns (address);
 
   function transferOriginIn(uint256 amount, address holder)
     internal
@@ -212,10 +239,7 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
     virtual
     returns (uint256 userAmount);
 
-  function withdrawUnderlyingFromOrigin(address underlying)
-    internal
-    virtual
-    returns (uint256 amount);
+  function withdrawUnderlyingFromOrigin() internal virtual returns (uint256 amount);
 
   function getOriginBalance(address holder) internal view virtual returns (uint256 amount);
 
@@ -239,26 +263,23 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
     }
 
     uint256 internalAmount = transferOriginOut(amount, holder);
-    _totalDeposited = _totalDeposited.sub(internalAmount);
+    uint256 newTotalDeposited = _totalDeposited.sub(internalAmount);
+    _totalDeposited = newTotalDeposited;
 
     if (amount == maxAmount) {
       delete (_deposits[holder]);
       if (address(_rewardPool) != address(0)) {
-        _rewardPool.handleBalanceUpdate(getUnderlying(), holder, maxAmount, 0, _totalDeposited);
+        handleBalanceUpdate(holder, maxAmount, 0, newTotalDeposited);
       }
       return amount;
     }
 
     uint256 oldBalance = _deposits[holder];
-    _deposits[holder] = oldBalance.sub(internalAmount);
+    uint256 newBalance = oldBalance.sub(internalAmount);
+    _deposits[holder] = newBalance;
+
     if (address(_rewardPool) != address(0)) {
-      _rewardPool.handleBalanceUpdate(
-        getUnderlying(),
-        holder,
-        oldBalance,
-        _deposits[holder],
-        _totalDeposited
-      );
+      handleBalanceUpdate(holder, oldBalance, newBalance, newTotalDeposited);
     }
     return amount;
   }
@@ -272,15 +293,7 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
   }
 
   modifier onlyController() {
-    require(_controller == _msgSender(), 'caller is not the controller');
-    _;
-  }
-
-  modifier ownerOrController() {
-    require(
-      owner() == _msgSender() || _controller == _msgSender(),
-      'caller is not the owner or controller'
-    );
+    require(_controller == msg.sender, 'caller is not the controller');
     _;
   }
 
@@ -291,11 +304,6 @@ abstract contract BasicAdapter is IMigrationAdapter, Ownable {
 
   modifier migrated() {
     require(internalIsMigrated(), 'not migrated');
-    _;
-  }
-
-  modifier claimable() {
-    require(internalIsClaimable(), 'not claimable');
     _;
   }
 

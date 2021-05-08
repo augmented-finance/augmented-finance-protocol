@@ -37,19 +37,26 @@ contract Migrator is Ownable {
     return getAdapter(token).balanceForMigrate(holder);
   }
 
-  function claimMigrated(address token) public returns (uint256) {
+  function claimMigrated(address token) public returns (uint256, bool) {
     return getAdapter(token).claimMigrated(msg.sender);
   }
 
-  function claimAllMigrated() public {
+  function claimAllMigrated()
+    public
+    returns (uint256 claimedTokenTypes, uint256 notClaimableTokenTypes)
+  {
     for (uint256 i = 0; i < _adaptersList.length; i++) {
       if (address(_adaptersList[i]) == address(0)) {
         continue;
       }
-      if (_adaptersList[i].isClaimable()) {
-        _adaptersList[i].claimMigrated(msg.sender);
+      (uint256 claimedAmount, bool claimed) = _adaptersList[i].claimMigrated(msg.sender);
+      if (!claimed) {
+        notClaimableTokenTypes++;
+      } else if (claimedAmount > 0) {
+        claimedTokenTypes++;
       }
     }
+    return (claimedTokenTypes, notClaimableTokenTypes);
   }
 
   function getAdapter(address token) public view returns (IMigrationAdapter adapter) {

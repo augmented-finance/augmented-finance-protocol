@@ -14,16 +14,11 @@ contract CompAdapter is BasicAdapter {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
 
-  IERC20 private _underlyingAsset;
-
-  constructor(address originAsset, address underlyingAsset) public BasicAdapter(originAsset) {
-    _underlyingAsset = IERC20(underlyingAsset);
-    require(_underlyingAsset.totalSupply() > 0, 'invalid underlying');
-  }
-
-  function getUnderlying() internal view override returns (address) {
-    return address(_underlyingAsset);
-  }
+  constructor(
+    address controller,
+    address originAsset,
+    address underlyingAsset
+  ) public BasicAdapter(controller, originAsset, underlyingAsset) {}
 
   function transferOriginIn(uint256 amount, address holder) internal override returns (uint256) {
     IERC20(_originAsset).safeTransferFrom(holder, address(this), amount);
@@ -48,18 +43,16 @@ contract CompAdapter is BasicAdapter {
     return _totalDeposited;
   }
 
-  function withdrawUnderlyingFromOrigin(address underlying)
-    internal
-    override
-    returns (uint256 amount)
-  {
-    uint256 underlyingAmount = IERC20(underlying).balanceOf(address(this));
+  function withdrawUnderlyingFromOrigin() internal override returns (uint256 amount) {
+    IERC20 underlying = IERC20(_underlying);
+
+    uint256 underlyingAmount = underlying.balanceOf(address(this));
     uint256 withdrawnAmount =
-      IRedeemableToken(_originAsset).redeem(
+      IRedeemableToken(_originAsset).redeem( // _totalDeposited
         IRedeemableToken(_originAsset).balanceOf(address(this))
       );
-    underlyingAmount = IERC20(underlying).balanceOf(address(this)).sub(underlyingAmount);
-    require(underlyingAmount > 0, 'withdrawn less than expected');
+    underlyingAmount = underlying.balanceOf(address(this)).sub(underlyingAmount);
+    require(underlyingAmount >= withdrawnAmount, 'withdrawn less than expected');
     return withdrawnAmount;
   }
 }
