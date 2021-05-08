@@ -3,6 +3,11 @@ orbs:
   node: circleci/node@4.3.0
   slack: circleci/slack@4.4.2
 jobs:
+  cancel_draft_build:
+    docker:
+      - image: vitalinfo/circleci-cancel-draft
+    steps:
+      - run: cancel-draft-build
   test_all:
     docker:
       - image: cimg/node:12.16
@@ -15,7 +20,7 @@ jobs:
       - run: |
           yarn install --immutable
           yarn run compile
-          yarn run test
+#          yarn run test
       - save_cache:
           name: Save yarn package cache
           key: yarn-packages-{{ checksum "yarn.lock" }}
@@ -28,5 +33,6 @@ jobs:
 workflows:
   test:
     jobs:
+      - cancel_draft_build
       - test_all:
           context: slack-secret
