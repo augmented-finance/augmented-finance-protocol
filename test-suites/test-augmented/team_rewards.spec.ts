@@ -49,6 +49,7 @@ describe('Team rewards suite', () => {
     rewardController = await getRewardFreezer();
     teamRewardPool = await getTeamRewardPool();
     agf = await getMockAgfToken();
+
     blkAfterDeploy = await currentBlock();
     REWARD_UNLOCK_BLOCK = blkAfterDeploy + 10;
     console.log(`unlock block at: ${REWARD_UNLOCK_BLOCK}`);
