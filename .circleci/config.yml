@@ -33,6 +33,7 @@ jobs:
 workflows:
   test:
     jobs:
-      - cancel_draft_build
+      - cancel_draft_build:
+          context: cancel-draft
       - test_all:
           context: slack-secret
