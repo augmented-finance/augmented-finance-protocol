@@ -1,6 +1,199 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
+import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import {Errors} from '../tools/Errors.sol';
+import {
+  InitializableImmutableAdminUpgradeabilityProxy
+} from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
+import {IRewardConfigurator} from './interfaces/IRewardConfigurator.sol';
+import {IManagedRewardController} from './interfaces/IRewardController.sol';
+import {IManagedRewardPool} from './interfaces/IRewardPool.sol';
+import {IMigratorHook} from '../interfaces/IMigratorHook.sol';
+import {IInitializableStakeToken} from '../protocol/stake/interfaces/IInitializableStakeToken.sol';
+import {StakeTokenConfig} from '../protocol/stake/interfaces/StakeTokenConfig.sol';
+import {ITransferHook} from '../protocol/stake/interfaces/ITransferHook.sol';
+import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
-abstract contract RewardConfigurator is VersionedInitializable {}
+contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMigratorHook {
+  uint256 private constant CONFIGURATOR_REVISION = 1;
+
+  function getRevision() internal pure virtual override returns (uint256) {
+    return CONFIGURATOR_REVISION;
+  }
+
+  IMarketAccessController internal _addressesProvider;
+  address internal _migrator;
+
+  struct NamedPool {
+    IManagedRewardPool pool;
+    string[] names;
+  }
+
+  mapping(uint256 => NamedPool) internal _rewardPools;
+  mapping(address => uint256) internal _poolToPoolNum;
+  mapping(string => uint256) internal _nameToPoolNum;
+  uint256 internal _rewardPoolCount;
+
+  modifier onlyRewardAdmin {
+    require(_addressesProvider.isRewardAdmin(msg.sender), Errors.CALLER_NOT_REWARD_ADMIN);
+    _;
+  }
+
+  modifier onlyEmergencyAdmin {
+    require(_addressesProvider.isEmergencyAdmin(msg.sender), Errors.LPC_CALLER_NOT_EMERGENCY_ADMIN);
+    _;
+  }
+
+  // This initializer is invoked by AccessController.setAddressAsImpl
+  function initialize(address addressesProvider) external initializer(CONFIGURATOR_REVISION) {
+    _addressesProvider = IMarketAccessController(addressesProvider);
+  }
+
+  function setMigrator(address migrator) external onlyRewardAdmin {
+    _migrator = migrator;
+  }
+
+  function handleTokenMigrated(address token, address[] memory rewardPools) external override {
+    require(msg.sender == _migrator, 'NOT_MIGRATOR');
+
+    token;
+    for (uint256 i = 0; i < rewardPools.length; i++) {
+      address pool = rewardPools[i];
+      if (pool == address(0)) {
+        continue;
+      }
+      IManagedRewardPool(pool).disableRewardPool();
+    }
+  }
+
+  function updateBaselineOf(IManagedRewardController ctl, uint256 baseline)
+    external
+    onlyRewardAdmin
+  {
+    ctl.updateBaseline(baseline);
+  }
+
+  function getDefaultController() public view returns (IManagedRewardController) {
+    address ctl = _addressesProvider.getRewardController();
+    require(ctl != address(0), 'incomplete configuration');
+    return IManagedRewardController(ctl);
+  }
+
+  function updateBaseline(uint256 baseline) external onlyRewardAdmin {
+    getDefaultController().updateBaseline(baseline);
+  }
+
+  function addRewardPool(IManagedRewardPool pool, string memory name) public onlyRewardAdmin {
+    require(pool != IManagedRewardPool(0), 'pool is required');
+    require(_nameToPoolNum[name] == 0, 'duplicate pool name');
+
+    uint256 poolNum = _poolToPoolNum[address(pool)];
+    if (poolNum == 0) {
+      poolNum = _rewardPoolCount + 1;
+      _rewardPoolCount = poolNum;
+      _rewardPools[poolNum].pool = pool;
+      _poolToPoolNum[address(pool)] = poolNum;
+    }
+    _rewardPools[poolNum].names.push(name);
+    _nameToPoolNum[name] = poolNum;
+
+    IManagedRewardController(pool.getRewardController()).admin_addRewardPool(pool);
+  }
+
+  function removeRewardPool(IManagedRewardPool pool) external onlyRewardAdmin returns (bool) {
+    uint256 poolNum = _poolToPoolNum[address(pool)];
+    if (poolNum == 0) {
+      return false;
+    }
+
+    string[] memory names = _rewardPools[poolNum].names;
+    for (uint256 i = 0; i < names.length; i++) {
+      delete (_nameToPoolNum[names[i]]);
+    }
+    delete (_poolToPoolNum[address(pool)]);
+    delete (_rewardPools[poolNum]);
+  }
+
+  function addRewardProvider(
+    IManagedRewardPool pool,
+    address provider,
+    address token
+  ) external onlyRewardAdmin {
+    pool.addRewardProvider(provider, token);
+  }
+
+  function removeRewardProvider(IManagedRewardPool pool, address provider)
+    external
+    onlyRewardAdmin
+  {
+    pool.removeRewardProvider(provider);
+  }
+
+  function findRewardPoolByName(string memory name) public view returns (address) {
+    uint256 poolNum = _nameToPoolNum[name];
+    if (poolNum == 0) {
+      return address(0);
+    }
+    return address(_rewardPools[poolNum].pool);
+  }
+
+  // function overridePoolRate(address pool, uint256 rate) external onlyOwner {
+  //   IManagedRewardPool(pool).setRate(rate);
+  // }
+
+  function setRewardTarget(RewardType rewardType) public {
+    setRewardTargetOf(getDefaultController(), rewardType);
+  }
+
+  function setRewardTargetOf(IManagedRewardController ctl, RewardType rewardType)
+    public
+    onlyRewardAdmin
+  {
+    address minter;
+    if (rewardType == RewardType.NoReward) {
+      minter = address(0);
+    } else {
+      if (rewardType == RewardType.Token) {
+        minter = _addressesProvider.getRewardToken();
+      } else {
+        minter = _addressesProvider.getRewardStakeToken();
+      }
+      require(minter != address(0), 'incomplete configuration');
+    }
+    ctl.admin_setRewardMinter(IRewardMinter(minter));
+  }
+
+  function buildInitStakeData() public onlyRewardAdmin returns (StakeInitData[] memory) {}
+
+  function batchInitStakeTokens(StakeInitData[] memory input) public onlyRewardAdmin {
+    for (uint256 i = 0; i < input.length; i++) {
+      initStakeToken(input[i]);
+    }
+  }
+
+  function initStakeToken(StakeInitData memory input) private returns (address) {
+    StakeTokenConfig memory config =
+      StakeTokenConfig(
+        _addressesProvider,
+        IERC20(input.stakedToken),
+        input.cooldownBlocks,
+        input.unstakeBlocks,
+        ITransferHook(0)
+      );
+
+    bytes memory params =
+      abi.encodeWithSelector(
+        IInitializableStakeToken.initialize.selector,
+        config,
+        input.stkTokenName,
+        input.stkTokenSymbol,
+        input.stkTokenDecimals
+      );
+
+    return address(_addressesProvider.createProxy(address(this), input.stakeTokenImpl, params));
+  }
+}

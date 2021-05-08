@@ -10,7 +10,8 @@ import {AccessFlags} from '../access/AccessFlags.sol';
 contract Treasury is VersionedInitializable, RemoteAccessBitmask(IRemoteAccessBitmask(0)) {
   uint256 private constant TREASURY_REVISION = 1;
 
-  function initialize(address remoteAcl) external virtual initializer(TREASURY_REVISION) {
+  // This initializer is invoked by AccessController.setAddressAsImpl
+  function initialize(address remoteAcl) external virtual initializerRunAlways(TREASURY_REVISION) {
     _remoteAcl = IRemoteAccessBitmask(remoteAcl);
   }
 
@@ -22,7 +23,7 @@ contract Treasury is VersionedInitializable, RemoteAccessBitmask(IRemoteAccessBi
     address token,
     address recipient,
     uint256 amount
-  ) external aclHas(AccessFlags.TREASURY_MANAGER) {
+  ) external aclHas(AccessFlags.TREASURY_ADMIN) {
     IERC20(token).approve(recipient, amount);
   }
 
@@ -30,7 +31,7 @@ contract Treasury is VersionedInitializable, RemoteAccessBitmask(IRemoteAccessBi
     address token,
     address recipient,
     uint256 amount
-  ) external aclHas(AccessFlags.TREASURY_MANAGER) {
+  ) external aclHas(AccessFlags.TREASURY_ADMIN) {
     IERC20(token).transfer(recipient, amount);
   }
 }

@@ -43,7 +43,7 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
       // FIXME:
       // use access controller and non-mock token when ready
       // rewardFreezer is reward controller
-      const rewardFreezer = await deployRewardFreezer([agfToken.address], verify);
+      const rewardFreezer = await deployRewardFreezer([ZERO_ADDRESS, agfToken.address], verify);
       await waitForTx(await rewardFreezer.admin_setFreezePercentage(teamRewardsFreezePercentage));
 
       // deploy linear pool, register in controller

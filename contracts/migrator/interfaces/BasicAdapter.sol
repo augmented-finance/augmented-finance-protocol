@@ -51,7 +51,7 @@ abstract contract BasicAdapter is IMigrationAdapter {
     return _underlying;
   }
 
-  function REWARD_CONTROLLER_ADDRESS() external view returns (address) {
+  function getRewardPool() public view override returns (address) {
     return address(_rewardPool);
   }
 

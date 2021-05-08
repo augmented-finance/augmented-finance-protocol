@@ -9,6 +9,8 @@ interface IMigrationAdapter {
 
   function UNDERLYING_ASSET_ADDRESS() external view returns (address);
 
+  function getRewardPool() external view returns (address);
+
   function depositToMigrate(
     uint256 amount,
     address holder,

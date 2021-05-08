@@ -6,11 +6,13 @@ import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 interface IRewardPool is IBalanceHook {}
 
 interface IManagedRewardPool {
-  function updateBaseline(uint256) external;
+  function updateBaseline(uint256) external returns (bool);
 
   function setBaselinePercentage(uint16) external;
 
   function disableBaseline() external;
+
+  function disableRewardPool() external;
 
   function setRate(uint256 rate) external;
 
@@ -21,4 +23,6 @@ interface IManagedRewardPool {
   function addRewardProvider(address provider, address token) external;
 
   function removeRewardProvider(address provider) external;
+
+  function getRewardController() external view returns (address);
 }
