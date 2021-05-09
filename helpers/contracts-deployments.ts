@@ -54,13 +54,13 @@ import {
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
-  LinearWeightedRewardPoolFactory,
+  TokenWeightedRewardPoolFactory,
+  TokenUnweightedRewardPoolFactory,
+  TeamRewardPoolFactory,
   MigratorFactory,
   AaveAdapterFactory,
   CompAdapterFactory,
-  LinearUnweightedRewardPoolFactory,
   AccessControllerFactory,
-  TeamRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -634,7 +634,7 @@ export const deployMockAgfToken = async (
 };
 
 export const deployMockStakedAgfToken = async (
-  args: [tEthereumAddress, tEthereumAddress, tEthereumAddress, string, string],
+  args: [tEthereumAddress, tEthereumAddress, string, string],
   verify?: boolean
 ) => {
   const instance = await withSaveAndVerify(
@@ -647,13 +647,12 @@ export const deployMockStakedAgfToken = async (
     {
       stakeController: args[0],
       stakedToken: args[1],
-      incentivesController: args[2],
       cooldownBlocks: 10,
       unstakeBlocks: 10,
       governance: ZERO_ADDRESS,
     },
+    args[2],
     args[3],
-    args[4],
     '18'
   );
 
@@ -744,24 +743,24 @@ export const deployTeamRewardPool = async (
     verify
   );
 
-export const deployLinearWeightedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, tEthereumAddress, BigNumberish],
+export const deployTokenWeightedRewardPool = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    await new LinearWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.LinearWeightedRewardPool,
+    await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TokenWeightedRewardPool,
     [], // TODO:
     verify
   );
 
-export const deployLinearUnweightedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, tEthereumAddress],
+export const deployTokenUnweightedRewardPool = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    await new LinearUnweightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.LinearUnweightedRewardPool,
+    await new TokenUnweightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TokenUnweightedRewardPool,
     [], // TODO:
     verify
   );
@@ -774,7 +773,10 @@ export const deployAugmentedMigrator = async (verify?: boolean) =>
     verify
   );
 
-export const deployAaveAdapter = async (args: [tEthereumAddress], verify?: boolean) =>
+export const deployAaveAdapter = async (
+  args: [tEthereumAddress, tEthereumAddress],
+  verify?: boolean
+) =>
   withSaveAndVerify(
     await new AaveAdapterFactory(await getFirstSigner()).deploy(...args),
     eContractid.AaveAdapter,
@@ -783,7 +785,7 @@ export const deployAaveAdapter = async (args: [tEthereumAddress], verify?: boole
   );
 
 export const deployCompAdapter = async (
-  args: [tEthereumAddress, tEthereumAddress],
+  args: [tEthereumAddress, tEthereumAddress, tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(

@@ -11,14 +11,13 @@ import {BaseRateRewardPool} from './BaseRateRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract MonoTokenRewardPool is BaseRateRewardPool, IRewardPool {
+abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
 
   // provider => provider_balance
   mapping(address => uint256) private _providers;
-
   address private _token;
 
   constructor(
@@ -37,27 +36,46 @@ abstract contract MonoTokenRewardPool is BaseRateRewardPool, IRewardPool {
     uint256 newBalance,
     uint256 newSupply
   ) external override {
+    _handleBalanceUpdate(token, holder, oldBalance, newBalance, newSupply);
+  }
+
+  function handleScaledBalanceUpdate(
+    address token,
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256 newSupply,
+    uint256 scaleRay
+  ) external override {
+    _handleBalanceUpdate(
+      token,
+      holder,
+      oldBalance.rayMul(scaleRay),
+      newBalance.rayMul(scaleRay),
+      newSupply.rayMul(scaleRay)
+    );
+  }
+
+  function _handleBalanceUpdate(
+    address token,
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256 newSupply
+  ) private {
     require(token != address(0) && token == _token, 'unsupported token');
 
     uint256 oldSupply = _providers[msg.sender];
-    require(oldSupply > 0, 'unknown reward provider');
+    require(oldSupply != 0, 'unknown reward provider');
 
     if (newSupply == 0) {
       newSupply = 1;
     }
-    if (internalUpdateTotalSupply(msg.sender, oldSupply, newSupply, uint32(block.number))) {
-      _providers[msg.sender] = newSupply;
-    }
+
+    internalUpdateSupplyDiff(oldSupply, newSupply, uint32(block.number));
 
     (uint256 allocated, uint32 since, AllocationMode mode) =
-      internalUpdateReward(
-        msg.sender,
-        holder,
-        oldBalance,
-        newBalance,
-        newSupply,
-        uint32(block.number)
-      );
+      internalUpdateReward(msg.sender, holder, oldBalance, newBalance, uint32(block.number));
 
     internalAllocateReward(holder, allocated, since, mode);
   }
@@ -75,36 +93,27 @@ abstract contract MonoTokenRewardPool is BaseRateRewardPool, IRewardPool {
     } else {
       require(token != _token, 'token is different');
     }
-    uint256 providerBalance = _providers[provider];
-    if (providerBalance > 0) {
+    if (_providers[provider] != 0) {
       return;
     }
     _providers[provider] = 1;
-    internalUpdateTotalSupply(provider, 0, 1, uint32(block.number));
+    internalUpdateSupplyDiff(0, 1, uint32(block.number));
   }
 
   function removeRewardProvider(address provider) external virtual override onlyController {
-    uint256 providerBalance = _providers[provider];
-    if (providerBalance == 0) {
+    uint256 oldSupply = _providers[provider];
+    if (oldSupply == 0) {
       return;
     }
-    internalUpdateTotalSupply(provider, providerBalance, 0, uint32(block.number));
     delete (_providers[provider]);
+    internalUpdateSupplyDiff(oldSupply, 0, uint32(block.number));
   }
-
-  function internalUpdateTotalSupply(
-    address provider,
-    uint256 oldSupply,
-    uint256 newSupply,
-    uint32 currentBlock
-  ) internal virtual returns (bool);
 
   function internalUpdateReward(
     address provider,
     address holder,
     uint256 oldBalance,
     uint256 newBalance,
-    uint256 totalSupply,
     uint32 currentBlock
   )
     internal
@@ -114,4 +123,10 @@ abstract contract MonoTokenRewardPool is BaseRateRewardPool, IRewardPool {
       uint32 since,
       AllocationMode mode
     );
+
+  function internalUpdateSupplyDiff(
+    uint256 oldSupply,
+    uint256 newSupply,
+    uint32 currentBlock
+  ) internal virtual;
 }

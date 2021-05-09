@@ -31,12 +31,12 @@ import {
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
-  LinearUnweightedRewardPoolFactory,
   AGFTokenFactory,
   MigratorFactory,
   MockAgfTokenFactory,
   MockStakedAgfTokenFactory,
   TeamRewardPoolFactory,
+  TokenUnweightedRewardPoolFactory,
   AccessControllerFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
@@ -406,10 +406,10 @@ export const getRewardFreezer = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getLinearUnweightedRewardPool = async (address?: tEthereumAddress) =>
-  await LinearUnweightedRewardPoolFactory.connect(
+export const getTokenUnweightedRewardPool = async (address?: tEthereumAddress) =>
+  await TokenUnweightedRewardPoolFactory.connect(
     address ||
-      (await getDb().get(`${eContractid.LinearUnweightedRewardPool}.${DRE.network.name}`).value())
+      (await getDb().get(`${eContractid.TokenUnweightedRewardPool}.${DRE.network.name}`).value())
         .address,
     await getFirstSigner()
   );
