@@ -74,13 +74,41 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
     uint256 newBalance,
     uint256
   ) external override {
+    allocateReward(
+      token,
+      holder,
+      newBalance.sub(oldBalance, 'balance reduction is not allowed by the reward pool')
+    );
+  }
+
+  function handleScaledBalanceUpdate(
+    address token,
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256,
+    uint256 scaleRay
+  ) external override {
+    allocateReward(
+      token,
+      holder,
+      newBalance.sub(oldBalance, 'balance reduction is not allowed by the reward pool').rayMul(
+        scaleRay
+      )
+    );
+  }
+
+  function allocateReward(
+    address token,
+    address holder,
+    uint256 allocated
+  ) private {
     require(token != address(0), 'unknown token');
     require(_providers[msg.sender] == token, 'unknown provider or restriced token');
-    require(newBalance >= oldBalance, 'balance reduction is not allowed by the reward pool');
 
     TokenReward storage tr = _tokens[token];
 
-    uint256 allocated = uint256(newBalance - oldBalance).rayMul(tr.rateRay);
+    allocated = allocated.rayMul(tr.rateRay);
     tr.limit = tr.limit.sub(allocated, 'insufficient reward pool balance');
 
     _controller.allocatedByPool(holder, allocated, uint32(block.number), AllocationMode.Push);

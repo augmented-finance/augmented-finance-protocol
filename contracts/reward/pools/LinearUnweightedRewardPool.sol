@@ -74,4 +74,15 @@ contract LinearUnweightedRewardPool is MonoTokenRewardPool, CalcLinearUnweighted
   {
     return doUpdateReward(provider, holder, oldBalance, newBalance, totalSupply, currentBlock);
   }
+
+  function handleScaledBalanceUpdate(
+    address,
+    address,
+    uint256,
+    uint256,
+    uint256,
+    uint256
+  ) external override {
+    revert('not implemented');
+  }
 }

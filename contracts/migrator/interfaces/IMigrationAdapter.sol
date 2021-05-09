@@ -2,7 +2,7 @@
 pragma solidity ^0.6.12;
 
 import {ILendableToken} from './ILendableToken.sol';
-import {IRewardPool} from '../../reward/interfaces/IRewardPool.sol';
+import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 interface IMigrationAdapter {
   function ORIGIN_ASSET_ADDRESS() external view returns (address);
@@ -35,7 +35,7 @@ interface IMigrationAdapter {
 
   function getController() external returns (address);
 
-  function admin_setRewardPool(IRewardPool rewardPool) external;
+  function admin_setRewardPool(IBalanceHook rewardPool) external;
 
   function admin_migrateAll(ILendableToken targetAsset) external;
 

@@ -4,15 +4,22 @@ pragma solidity ^0.6.12;
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 
-import {BasicAdapter} from '../interfaces/BasicAdapter.sol';
+import {ILendableToken} from '../interfaces/ILendableToken.sol';
+import {BasicAdapter} from '../BasicAdapter.sol';
 import {IRedeemableToken} from './IRedeemableToken.sol';
+
+import '../../dependencies/compound-protocol/contracts/Exponential.sol';
 
 import 'hardhat/console.sol';
 
-contract CompAdapter is BasicAdapter {
+contract CompAdapter is BasicAdapter, Exponential {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
+  using WadRayMath for uint256;
+
+  uint256 private _originScaleOnMigrate;
 
   constructor(
     address controller,
@@ -30,29 +37,74 @@ contract CompAdapter is BasicAdapter {
     return amount;
   }
 
-  function transferTargetOut(uint256 amount, address holder) internal override returns (uint256) {
-    IERC20(address(_targetAsset)).safeTransfer(holder, amount);
-    return amount;
+  function toOriginInternalBalance(uint256 userAmount) internal view override returns (uint256) {
+    return userAmount;
   }
 
-  function getOriginBalance(address holder) internal view override returns (uint256 amount) {
-    return _deposits[holder];
+  function toOriginUserBalance(uint256 internalAmount) internal view override returns (uint256) {
+    return internalAmount;
   }
 
-  function totalBalanceForMigrate() external view override returns (uint256) {
-    return _totalDeposited;
-  }
-
-  function withdrawUnderlyingFromOrigin() internal override returns (uint256 amount) {
+  function withdrawUnderlyingFromOrigin()
+    internal
+    override
+    returns (uint256 originAmount, uint256 underlyingAmount)
+  {
     IERC20 underlying = IERC20(_underlying);
 
-    uint256 underlyingAmount = underlying.balanceOf(address(this));
-    uint256 withdrawnAmount =
-      IRedeemableToken(_originAsset).redeem( // _totalDeposited
-        IRedeemableToken(_originAsset).balanceOf(address(this))
-      );
+    underlyingAmount = underlying.balanceOf(address(this));
+
+    originAmount = _totalDeposited;
+    // originAmount = IRedeemableToken(_originAsset).balanceOf(address(this));
+    // require(_totalDeposited <= originAmount, 'withdrawn less than deposited');
+
+    if (originAmount == 0) {
+      return (0, 0);
+    }
+
+    require(IRedeemableToken(_originAsset).redeem(originAmount) == 0, 'unexpected Compound error');
     underlyingAmount = underlying.balanceOf(address(this)).sub(underlyingAmount);
-    require(underlyingAmount >= withdrawnAmount, 'withdrawn less than expected');
-    return withdrawnAmount;
+
+    return (originAmount, underlyingAmount);
+  }
+
+  function getNormalizeOriginFactor() private view returns (uint256) {
+    Exp memory exchangeRate = Exp({mantissa: IRedeemableToken(_originAsset).exchangeRateStored()});
+    (MathError mErr, uint256 factor) = mulScalarTruncate(exchangeRate, WadRayMath.RAY);
+    require(mErr == MathError.NO_ERROR, 'origin factor could not be calculated');
+    return factor;
+  }
+
+  function internalMigrateAll(ILendableToken target) internal override {
+    _originScaleOnMigrate = getNormalizeOriginFactor();
+    super.internalMigrateAll(target);
+  }
+
+  function handleBalanceUpdate(
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256 newTotalDeposited
+  ) internal override {
+    if (internalIsMigrated()) {
+      _rewardPool.handleScaledBalanceUpdate(
+        _underlying,
+        holder,
+        oldBalance,
+        newBalance,
+        newTotalDeposited,
+        _originScaleOnMigrate
+      );
+      return;
+    }
+
+    _rewardPool.handleScaledBalanceUpdate(
+      _underlying,
+      holder,
+      oldBalance,
+      newBalance,
+      newTotalDeposited,
+      getNormalizeOriginFactor()
+    );
   }
 }

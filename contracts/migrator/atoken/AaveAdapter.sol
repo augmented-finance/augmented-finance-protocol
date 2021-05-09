@@ -7,7 +7,7 @@ import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 
 import {ILendableToken, ILendablePool} from '../interfaces/ILendableToken.sol';
-import {BasicAdapter} from '../interfaces/BasicAdapter.sol';
+import {BasicAdapter} from '../BasicAdapter.sol';
 import {IRedeemableToken, IWithdrawablePool} from './IRedeemableToken.sol';
 
 import 'hardhat/console.sol';
@@ -18,6 +18,7 @@ contract AaveAdapter is BasicAdapter {
   using WadRayMath for uint256;
 
   IWithdrawablePool private _originPool;
+  uint256 private _originScaleOnMigrate;
 
   constructor(address controller, IRedeemableToken originAsset)
     public
@@ -47,44 +48,66 @@ contract AaveAdapter is BasicAdapter {
     return internalAmount.sub(IRedeemableToken(_originAsset).scaledBalanceOf(address(this)));
   }
 
-  function transferTargetOut(uint256 internalAmount, address holder)
+  function toOriginInternalBalance(uint256 userAmount) internal view override returns (uint256) {
+    return userAmount.rayDiv(getNormalizeOriginFactor());
+  }
+
+  function toOriginUserBalance(uint256 internalAmount) internal view override returns (uint256) {
+    return internalAmount.rayMul(getNormalizeOriginFactor());
+  }
+
+  function withdrawUnderlyingFromOrigin()
     internal
     override
-    returns (uint256 userAmount)
+    returns (uint256 originAmount, uint256 underlyingAmount)
   {
-    userAmount = internalAmount.rayMul(getNormalizeTargetFactor());
-    IERC20(address(_targetAsset)).safeTransfer(holder, userAmount);
-    return userAmount;
-  }
-
-  function getOriginBalance(address holder) internal view override returns (uint256 amount) {
-    uint256 scaledAmount = _deposits[holder];
-    if (scaledAmount == 0) {
-      return 0;
-    }
-    return scaledAmount.rayMul(getNormalizeOriginFactor());
-  }
-
-  function totalBalanceForMigrate() external view override returns (uint256) {
-    if (_totalDeposited == 0) {
-      return 0;
-    }
-    return _totalDeposited.rayMul(getNormalizeOriginFactor());
-  }
-
-  function withdrawUnderlyingFromOrigin() internal override returns (uint256 amount) {
     IERC20 underlying = IERC20(_underlying);
 
-    uint256 underlyingAmount = underlying.balanceOf(address(this));
-    uint256 withdrawnAmount =
-      _originPool.withdraw(address(underlying), type(uint256).max, address(this));
+    underlyingAmount = underlying.balanceOf(address(this));
+
+    originAmount = _originPool.withdraw(address(underlying), type(uint256).max, address(this));
     underlyingAmount = underlying.balanceOf(address(this)).sub(underlyingAmount);
-    // TODO: limit withdrawl
-    require(underlyingAmount >= withdrawnAmount, 'withdrawn less than expected');
-    return withdrawnAmount;
+    require(underlyingAmount == originAmount, 'innconsistent withdraw');
+
+    require(_totalDeposited <= originAmount, 'withdrawn less than deposited');
+
+    return (originAmount, underlyingAmount);
   }
 
   function getNormalizeOriginFactor() private view returns (uint256) {
     return _originPool.getReserveNormalizedIncome(_underlying);
+  }
+
+  function internalMigrateAll(ILendableToken target) internal override {
+    _originScaleOnMigrate = getNormalizeOriginFactor();
+    super.internalMigrateAll(target);
+  }
+
+  function handleBalanceUpdate(
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256 newTotalDeposited
+  ) internal override {
+    if (internalIsMigrated()) {
+      _rewardPool.handleScaledBalanceUpdate(
+        _underlying,
+        holder,
+        oldBalance,
+        newBalance,
+        newTotalDeposited,
+        _originScaleOnMigrate
+      );
+      return;
+    }
+
+    _rewardPool.handleScaledBalanceUpdate(
+      _underlying,
+      holder,
+      oldBalance,
+      newBalance,
+      newTotalDeposited,
+      getNormalizeOriginFactor()
+    );
   }
 }

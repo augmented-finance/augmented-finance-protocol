@@ -6,7 +6,7 @@ import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
 
-import {BasicAdapter} from '../interfaces/BasicAdapter.sol';
+import {BasicAdapter} from '../BasicAdapter.sol';
 import {ILendableToken, ILendablePool} from '../interfaces/ILendableToken.sol';
 
 import 'hardhat/console.sol';
@@ -35,19 +35,28 @@ contract ZombieAdapter is BasicAdapter {
     return 0;
   }
 
-  function getOriginBalance(address holder) internal view override returns (uint256) {
-    return _deposits[holder];
+  function toOriginInternalBalance(uint256 userAmount) internal view override returns (uint256) {
+    return userAmount;
   }
 
-  function totalBalanceForMigrate() external view override returns (uint256) {
-    return _totalDeposited;
+  function toOriginUserBalance(uint256 internalAmount) internal view override returns (uint256) {
+    return internalAmount;
   }
 
-  function withdrawUnderlyingFromOrigin() internal override returns (uint256) {
-    revert('migrate is not allowed');
+  function withdrawUnderlyingFromOrigin() internal override returns (uint256, uint256) {
+    return (_totalDeposited, 0);
   }
 
   function internalMigrateAll(ILendableToken) internal override {
-    revert('not implemented'); // TODO
+    _targetAsset = ILendableToken(address(this)); // mark migration
+  }
+
+  function handleBalanceUpdate(
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256 newTotalDeposited
+  ) internal override {
+    _rewardPool.handleBalanceUpdate(_underlying, holder, oldBalance, newBalance, newTotalDeposited);
   }
 }
