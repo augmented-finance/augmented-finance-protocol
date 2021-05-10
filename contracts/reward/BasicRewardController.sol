@@ -200,19 +200,12 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
     address receiver
   ) private returns (uint256 claimableAmount) {
     mask &= ~_ignoreMask;
-
-    if (mask == 0) {
-      return 0;
-    }
     mask &= _memberOf[holder];
-    if (mask == 0) {
-      console.log('ZERO MASK');
-      return 0;
-    }
 
     uint32 sinceBlock = 0;
     uint256 amountSince = 0;
     uint32 currentBlock = uint32(block.number);
+    bool incremental = false;
 
     for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
       if (mask & 1 == 0) {
@@ -233,12 +226,13 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
         claimableAmount = claimableAmount.add(
           internalClaimByCall(holder, amountSince, sinceBlock, currentBlock)
         );
+        incremental = true;
       }
       amountSince = amount_;
       sinceBlock = since_;
     }
 
-    if (amountSince > 0) {
+    if (amountSince > 0 || !incremental) {
       claimableAmount = claimableAmount.add(
         internalClaimByCall(holder, amountSince, sinceBlock, currentBlock)
       );
@@ -262,9 +256,6 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
   ) private view returns (uint256 claimableAmount, uint256 delayedAmount) {
     mask &= ~_ignoreMask;
     mask &= _memberOf[holder];
-    if (mask == 0) {
-      return (0, 0);
-    }
 
     uint32 sinceBlock = 0;
     uint256 amountSince = 0;
@@ -296,7 +287,7 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
       sinceBlock = since_;
     }
 
-    if (amountSince > 0) {
+    if (amountSince > 0 || !incremental) {
       (uint256 ca, uint256 da) =
         internalCalcByCall(holder, amountSince, sinceBlock, currentBlock, incremental);
       claimableAmount = claimableAmount.add(ca);
