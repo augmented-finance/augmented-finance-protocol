@@ -4,7 +4,7 @@ pragma solidity ^0.6.12;
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {BaseRateRewardPool} from './BaseRateRewardPool.sol';
-import {CalcLinearUnweightedReward} from './CalcLinearUnweightedReward.sol';
+import {CalcLinearUnweightedReward} from '../calcs/CalcLinearUnweightedReward.sol';
 
 import 'hardhat/console.sol';
 
@@ -108,14 +108,7 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     _totalShare = uint16(newTotalShare);
 
     (uint256 allocated, uint32 since, AllocationMode mode) =
-      doUpdateReward(
-        _teamManager,
-        member,
-        oldSharePct,
-        memberSharePct,
-        newTotalShare,
-        uint32(block.number)
-      );
+      doUpdateReward(_teamManager, member, oldSharePct, memberSharePct, uint32(block.number));
 
     require(
       allocated == 0 || isUnlocked(uint32(block.number)),

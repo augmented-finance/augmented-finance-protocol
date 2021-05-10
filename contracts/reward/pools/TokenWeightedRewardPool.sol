@@ -5,12 +5,12 @@ import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {BitUtils} from '../../tools/math/BitUtils.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {CalcLinearWeightedReward} from './CalcLinearWeightedReward.sol';
-import {MonoTokenRewardPool} from './MonoTokenRewardPool.sol';
+import {CalcLinearWeightedReward} from '../calcs/CalcLinearWeightedReward.sol';
+import {BaseTokenAbsRewardPool} from './BaseTokenAbsRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-contract LinearWeightedRewardPool is MonoTokenRewardPool, CalcLinearWeightedReward {
+contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedReward {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
@@ -18,11 +18,10 @@ contract LinearWeightedRewardPool is MonoTokenRewardPool, CalcLinearWeightedRewa
     IRewardController controller,
     uint256 initialRate,
     uint16 baselinePercentage,
-    address token,
     uint256 maxTotalSupply
   )
     public
-    MonoTokenRewardPool(controller, initialRate, baselinePercentage, token)
+    BaseTokenAbsRewardPool(controller, initialRate, baselinePercentage)
     CalcLinearWeightedReward(maxTotalSupply)
   {}
 
@@ -32,19 +31,6 @@ contract LinearWeightedRewardPool is MonoTokenRewardPool, CalcLinearWeightedRewa
 
   function internalSetRate(uint256 newRate, uint32 currentBlock) internal override {
     super.setLinearRate(newRate, currentBlock);
-  }
-
-  function internalUpdateTotalSupply(
-    address,
-    uint256 oldSupply,
-    uint256 newSupply,
-    uint32 currentBlock
-  ) internal override returns (bool) {
-    if (oldSupply == newSupply) {
-      return false;
-    }
-    doUpdateTotalSupply(oldSupply, newSupply, currentBlock);
-    return true;
   }
 
   function internalGetReward(address holder, uint32 currentBlock)
@@ -69,7 +55,6 @@ contract LinearWeightedRewardPool is MonoTokenRewardPool, CalcLinearWeightedRewa
     address holder,
     uint256 oldBalance,
     uint256 newBalance,
-    uint256 totalSupply,
     uint32 currentBlock
   )
     internal
@@ -80,6 +65,10 @@ contract LinearWeightedRewardPool is MonoTokenRewardPool, CalcLinearWeightedRewa
       AllocationMode mode
     )
   {
-    return doUpdateReward(provider, holder, oldBalance, newBalance, totalSupply, currentBlock);
+    return doUpdateReward(provider, holder, oldBalance, newBalance, currentBlock);
+  }
+
+  function internalUpdateTotal(uint256 totalBalance, uint32 currentBlock) internal override {
+    doUpdateTotalSupply(totalBalance, currentBlock);
   }
 }

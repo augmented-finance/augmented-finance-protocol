@@ -25,6 +25,8 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
     return CONFIGURATOR_REVISION;
   }
 
+  // TODO mapping for pool implementations
+
   IMarketAccessController internal _addressesProvider;
   address internal _migrator;
 

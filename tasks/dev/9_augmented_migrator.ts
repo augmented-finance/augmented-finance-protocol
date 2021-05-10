@@ -17,11 +17,12 @@ task('dev:augmented-migrator', 'Deploy Augmented Migrator contracts.')
 
     const migrator = await deployAugmentedMigrator(verify);
 
-    const aDaiMigrator = await deployAaveAdapter([ADAI_ADDRESS], verify);
-    await aDaiMigrator.admin_setController(migrator.address);
+    const aDaiMigrator = await deployAaveAdapter([migrator.address, ADAI_ADDRESS], verify);
     await migrator.registerAdapter(aDaiMigrator.address);
 
-    const cDaiMigrator = await deployCompAdapter([CDAI_ADDRESS, DAI_ADDRESS], verify);
-    await cDaiMigrator.admin_setController(migrator.address);
+    const cDaiMigrator = await deployCompAdapter(
+      [migrator.address, CDAI_ADDRESS, DAI_ADDRESS],
+      verify
+    );
     await migrator.registerAdapter(cDaiMigrator.address);
   });

@@ -1,7 +1,7 @@
 import { task, types } from 'hardhat/config';
 import {
   deployMockAgfToken,
-  deployLinearUnweightedRewardPool,
+  deployTokenUnweightedRewardPool,
   deployRewardFreezer,
   deployTeamRewardPool,
 } from '../../helpers/contracts-deployments';
@@ -47,8 +47,8 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
       await waitForTx(await rewardFreezer.admin_setFreezePercentage(teamRewardsFreezePercentage));
 
       // deploy linear pool, register in controller
-      const linearUnweightedRewardPool = await deployLinearUnweightedRewardPool(
-        [rewardFreezer.address, RAY, 0, ZERO_ADDRESS],
+      const linearUnweightedRewardPool = await deployTokenUnweightedRewardPool(
+        [rewardFreezer.address, RAY, 0],
         verify
       );
       await waitForTx(await rewardFreezer.admin_addRewardPool(linearUnweightedRewardPool.address));

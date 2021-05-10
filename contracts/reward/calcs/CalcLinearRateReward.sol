@@ -4,7 +4,6 @@ pragma solidity ^0.6.12;
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {AllocationMode} from '../interfaces/IRewardController.sol';
-import {MonoTokenRewardPool} from './MonoTokenRewardPool.sol';
 
 import 'hardhat/console.sol';
 
@@ -71,7 +70,6 @@ abstract contract CalcLinearRateReward {
     address holder,
     uint256 oldBalance,
     uint256 newBalance,
-    uint256 totalSupply,
     uint32 currentBlock
   )
     internal
@@ -83,14 +81,12 @@ abstract contract CalcLinearRateReward {
     )
   {
     require(newBalance <= type(uint224).max, 'balance is too high');
-    oldBalance;
-    totalSupply;
 
     RewardEntry memory entry = _rewards[holder];
 
     if (newBalance == 0) {
       mode = AllocationMode.UnsetPull;
-    } else if (entry.rewardBase == 0) {
+    } else if (oldBalance == 0 || entry.rewardBase == 0) {
       mode = AllocationMode.SetPull;
     } else {
       mode = AllocationMode.Push;

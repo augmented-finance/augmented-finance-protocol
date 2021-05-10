@@ -11,7 +11,7 @@ import {BaseRateRewardPool} from './BaseRateRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract MonoProviderRewardPool is BaseRateRewardPool, IRewardPool {
+abstract contract BaseTokenAbsRewardPool is BaseRateRewardPool, IRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -29,23 +29,40 @@ abstract contract MonoProviderRewardPool is BaseRateRewardPool, IRewardPool {
     address holder,
     uint256 oldBalance,
     uint256 newBalance,
-    uint256 newSupply
+    uint256 totalBalance
   ) external override {
+    internalUpdateTotal(totalBalance, uint32(block.number));
+    _handleBalanceUpdate(holder, oldBalance, newBalance, uint32(block.number));
+  }
+
+  function handleScaledBalanceUpdate(
+    address,
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256 totalBalance,
+    uint256
+  ) external virtual override {
+    // NB! as we have only one provider - scaling matters not
+    internalUpdateTotal(totalBalance, uint32(block.number));
+    _handleBalanceUpdate(holder, oldBalance, newBalance, uint32(block.number));
+  }
+
+  function isScaledBalanceUpdateNeeded() external view override returns (bool) {
+    // NB! as we have only one provider - scaling matters not
+    return false;
+  }
+
+  function _handleBalanceUpdate(
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint32 blockNumber
+  ) private {
     require(_provider == msg.sender, 'unknown reward provider');
 
-    if (newSupply == 0) {
-      newSupply = 1;
-    }
-
     (uint256 allocated, uint32 since, AllocationMode mode) =
-      internalUpdateReward(
-        msg.sender,
-        holder,
-        oldBalance,
-        newBalance,
-        newSupply,
-        uint32(block.number)
-      );
+      internalUpdateReward(msg.sender, holder, oldBalance, newBalance, blockNumber);
     internalAllocateReward(holder, allocated, since, mode);
   }
 
@@ -62,12 +79,13 @@ abstract contract MonoProviderRewardPool is BaseRateRewardPool, IRewardPool {
     _provider = address(0);
   }
 
+  function internalUpdateTotal(uint256 totalBalance, uint32 currentBlock) internal virtual;
+
   function internalUpdateReward(
     address provider,
     address holder,
     uint256 oldBalance,
     uint256 newBalance,
-    uint256 totalSupply,
     uint32 currentBlock
   )
     internal

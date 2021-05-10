@@ -140,6 +140,15 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
     return internalCalcClaimableReward(holder, mask, atBlock);
   }
 
+  function balanceOf(address holder) external view returns (uint256) {
+    if (holder == address(0)) {
+      return 0;
+    }
+    (uint256 claimable, uint256 delayed) =
+      internalCalcClaimableReward(holder, ~uint256(0), uint32(block.number));
+    return claimable.add(delayed);
+  }
+
   function claimablePools(address holder) external view returns (uint256) {
     return _memberOf[holder] & ~_ignoreMask;
   }

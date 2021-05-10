@@ -10,6 +10,7 @@ import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../tools/math/WadRayMath.sol';
 import {ILendableToken} from './interfaces/ILendableToken.sol';
 import {IMigratorHook} from '../interfaces/IMigratorHook.sol';
+import {IBalanceHook} from '../interfaces/IBalanceHook.sol';
 
 contract Migrator is Ownable {
   using SafeERC20 for IERC20;
@@ -39,19 +40,26 @@ contract Migrator is Ownable {
     return getAdapter(token).balanceForMigrate(holder);
   }
 
-  function claimMigrated(address token) public returns (uint256) {
+  function claimMigrated(address token) public returns (uint256, bool) {
     return getAdapter(token).claimMigrated(msg.sender);
   }
 
-  function claimAllMigrated() public {
+  function claimAllMigrated()
+    public
+    returns (uint256 claimedTokenTypes, uint256 notClaimableTokenTypes)
+  {
     for (uint256 i = 0; i < _adaptersList.length; i++) {
       if (address(_adaptersList[i]) == address(0)) {
         continue;
       }
-      if (_adaptersList[i].isClaimable()) {
-        _adaptersList[i].claimMigrated(msg.sender);
+      (uint256 claimedAmount, bool claimed) = _adaptersList[i].claimMigrated(msg.sender);
+      if (!claimed) {
+        notClaimableTokenTypes++;
+      } else if (claimedAmount > 0) {
+        claimedTokenTypes++;
       }
     }
+    return (claimedTokenTypes, notClaimableTokenTypes);
   }
 
   function getAdapter(address token) public view returns (IMigrationAdapter adapter) {
@@ -100,6 +108,10 @@ contract Migrator is Ownable {
     _adaptersList[idx] = IMigrationAdapter(address(0));
     delete (_adapters[origin]);
     return true;
+  }
+
+  function admin_setRewardPool(address adapter, IBalanceHook rewardPool) public onlyOwner {
+    IMigrationAdapter(adapter).admin_setRewardPool(rewardPool);
   }
 
   function admin_migrateToToken(ILendableToken target)

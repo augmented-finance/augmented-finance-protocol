@@ -28,15 +28,24 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     _totalSupplyMax = (1 << maxSupplyBits) - 1;
   }
 
-  function doUpdateTotalSupply(
+  function doUpdateTotalSupplyDiff(
     uint256 oldSupply,
     uint256 newSupply,
     uint32 currentBlock
   ) internal returns (bool) {
+    if (newSupply > oldSupply) {
+      return internalSetTotalSupply(_totalSupply.add(newSupply - oldSupply), currentBlock);
+    }
     if (oldSupply > newSupply) {
       return internalSetTotalSupply(_totalSupply.sub(oldSupply - newSupply), currentBlock);
     }
-    return internalSetTotalSupply(_totalSupply.add(newSupply - oldSupply), currentBlock);
+  }
+
+  function doUpdateTotalSupply(uint256 newSupply, uint32 currentBlock) internal returns (bool) {
+    if (newSupply == _totalSupply) {
+      return false;
+    }
+    return internalSetTotalSupply(newSupply, currentBlock);
   }
 
   function internalRateUpdated(
@@ -65,6 +74,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
       internalRateUpdated(lastRate, lastBlock, currentBlock);
       rateUpdated = lastBlock != currentBlock;
     }
+
     _totalSupply = totalSupply;
     return rateUpdated;
   }
