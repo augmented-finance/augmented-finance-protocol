@@ -71,11 +71,6 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     _;
   }
 
-  modifier onlyEmergencyAdmin() {
-    require(_addressesProvider.isEmergencyAdmin(msg.sender), Errors.CALLER_NOT_EMERGENCY_ADMIN);
-    _;
-  }
-
   function _whenNotPaused() internal view {
     require(!_paused, Errors.LP_IS_PAUSED);
   }
@@ -902,10 +897,18 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
 
   /**
    * @dev Set the _pause state of a reserve
-   * - Only callable by the LendingPoolConfigurator contract
+   * - Only callable by AccessFlags.EMERGENCY_ADMIN or AccessFlags.LENDING_POOL_CONFIGURATOR roles.
    * @param val `true` to pause the reserve, `false` to un-pause it
    */
-  function setPaused(bool val) external override onlyEmergencyAdmin {
+  function setPaused(bool val) external override {
+    require(
+      _addressesProvider.hasAnyOf(
+        msg.sender,
+        AccessFlags.EMERGENCY_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR
+      ),
+      Errors.CALLER_NOT_EMERGENCY_ADMIN
+    );
+
     _paused = val;
     if (_paused) {
       emit Paused();
