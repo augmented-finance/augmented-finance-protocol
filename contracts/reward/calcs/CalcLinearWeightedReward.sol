@@ -39,6 +39,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     if (oldSupply > newSupply) {
       return internalSetTotalSupply(_totalSupply.sub(oldSupply - newSupply), currentBlock);
     }
+    return false;
   }
 
   function doUpdateTotalSupply(uint256 newSupply, uint32 currentBlock) internal returns (bool) {
