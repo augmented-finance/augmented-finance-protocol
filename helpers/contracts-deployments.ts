@@ -24,7 +24,7 @@ import {
   ATokensAndRatesHelperFactory,
   OracleRouterFactory,
   DefaultReserveInterestRateStrategyFactory,
-  DelegationAwareATokenFactory,
+  DelegationAwareDepositTokenFactory,
   InitializableAdminUpgradeabilityProxyFactory,
   LendingPoolAddressesProviderFactory,
   AddressesProviderRegistryFactory,
@@ -420,7 +420,7 @@ export const deployGenericDepositTokenImpl = async (verify: boolean) =>
     verify
   );
 
-export const deployDelegationAwareAToken = async (
+export const deployDelegationAwareDepositToken = async (
   [pool, underlyingAssetAddress, treasuryAddress, name, symbol]: [
     tEthereumAddress,
     tEthereumAddress,
@@ -431,8 +431,8 @@ export const deployDelegationAwareAToken = async (
   verify: boolean
 ) => {
   const instance = await withSaveAndVerify(
-    await new DelegationAwareATokenFactory(await getFirstSigner()).deploy(),
-    eContractid.DelegationAwareAToken,
+    await new DelegationAwareDepositTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.DelegationAwareDepositToken,
     [],
     verify
   );
@@ -452,10 +452,10 @@ export const deployDelegationAwareAToken = async (
   return instance;
 };
 
-export const deployDelegationAwareATokenImpl = async (verify: boolean) =>
+export const deployDelegationAwareDepositTokenImpl = async (verify: boolean) =>
   withSaveAndVerify(
-    await new DelegationAwareATokenFactory(await getFirstSigner()).deploy(),
-    eContractid.DelegationAwareAToken,
+    await new DelegationAwareDepositTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.DelegationAwareDepositToken,
     [],
     verify
   );

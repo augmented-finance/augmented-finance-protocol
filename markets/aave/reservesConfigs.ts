@@ -213,7 +213,7 @@ export const strategyUNI: IReserveParams = {
   borrowingEnabled: false,
   stableBorrowRateEnabled: false,
   reserveDecimals: '18',
-  aTokenImpl: eContractid.DelegationAwareAToken,
+  aTokenImpl: eContractid.DelegationAwareDepositToken,
   reserveFactor: '2000'
 };
 
