@@ -9,7 +9,7 @@ import rawBRE, { ethers } from 'hardhat';
 import {
   getAgfToken,
   getMockAgfToken,
-  getLinearUnweightedRewardPool,
+  getTokenUnweightedRewardPool,
   getRewardFreezer,
 } from '../../helpers/contracts-getters';
 
@@ -43,10 +43,10 @@ describe('Migrator test suite', () => {
     rewardFreezer = await getRewardFreezer();
     expect(rewardFreezer.address).to.properAddress;
 
-    const linearUnweightedRewardPool = await getLinearUnweightedRewardPool();
+    const tokenUnweightedRewardPool = await getTokenUnweightedRewardPool();
     // deployer.address is used instead of a token contract
     await rewardFreezer.admin_addRewardProvider(
-      linearUnweightedRewardPool.address,
+      tokenUnweightedRewardPool.address,
       deployer.address,
       ONE_ADDRESS
     );
@@ -68,17 +68,11 @@ describe('Migrator test suite', () => {
   // });
 
   it('Should claim reward', async () => {
-    const linearUnweightedRewardPool = await getLinearUnweightedRewardPool();
+    const tokenUnweightedRewardPool = await getTokenUnweightedRewardPool();
 
     expect(await agf.balanceOf(user.address)).to.eq(0);
 
-    await linearUnweightedRewardPool.handleBalanceUpdate(
-      ONE_ADDRESS,
-      user.address,
-      0,
-      2000,
-      100000
-    ); // block 10
+    await tokenUnweightedRewardPool.handleBalanceUpdate(ONE_ADDRESS, user.address, 0, 2000, 100000); // block 10
     await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 11
     expect(await agf.balanceOf(user.address)).to.eq(2000);
 
