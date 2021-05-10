@@ -21,6 +21,7 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
     5000,
     types.int
   )
+  .addOptionalParam('zombieRewardLimit', 'zombie reward limit', 5000, types.int)
   .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(
     async (
@@ -30,6 +31,7 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
         teamRewardBaselinePercentage,
         teamRewardUnlockBlock,
         teamRewardsFreezePercentage,
+        zombieRewardLimit,
       },
       localBRE
     ) => {
@@ -63,9 +65,9 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
       await waitForTx(await rewardFreezer.admin_addRewardPool(teamRewardPool.address));
       await waitForTx(await teamRewardPool.setUnlockBlock(teamRewardUnlockBlock));
 
-      // zombie reward pool
+      // deploy zombie pool, register in controller, add deployer(root) as provider
       const zombieRewardPool = await deployZombieRewardPool(
-        [rewardFreezer.address, [ONE_ADDRESS], [{ rateRay: RAY, limit: 50000 }]],
+        [rewardFreezer.address, [ONE_ADDRESS], [{ rateRay: RAY, limit: zombieRewardLimit }]],
         verify
       );
       await waitForTx(await rewardFreezer.admin_addRewardPool(zombieRewardPool.address));
