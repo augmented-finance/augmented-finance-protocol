@@ -126,6 +126,28 @@ contract Migrator is Ownable {
     _migrateHook = hook;
   }
 
+  /// @dev admin_sweepToken allows an owner to handle funds accidentially sent to the adapter or migrator contract.
+  /// When an adapter is swept, following limitations apply for safety reasons:
+  /// 1. target asset can not be swept after migration as there will be unclaimed funds.
+  /// 2. origin and underlying assets can only be swept after migration (residuals).
+  /// Migrator itself can be swept at any moment.
+  function admin_sweepToken(
+    address holder,
+    address token,
+    address to
+  ) external onlyOwner returns (uint256) {
+    if (holder != address(this)) {
+      return IMigrationAdapter(holder).admin_sweepToken(token, to);
+    }
+
+    require(to != address(0), 'valid destination is required');
+    uint256 amount = IERC20(token).balanceOf(address(this));
+    if (amount > 0) {
+      IERC20(token).safeTransfer(to, amount);
+    }
+    return amount;
+  }
+
   function internalMigrateToToken(ILendableToken target)
     internal
     returns (IMigrationAdapter[] memory migrated, uint256 count)

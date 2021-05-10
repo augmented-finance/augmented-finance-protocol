@@ -41,4 +41,6 @@ interface IMigrationAdapter is IEmergencyAccess {
   function admin_migrateAll(ILendableToken targetAsset) external;
 
   function admin_enableClaims() external;
+
+  function admin_sweepToken(address token, address to) external returns (uint256);
 }

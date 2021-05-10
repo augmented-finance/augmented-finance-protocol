@@ -266,8 +266,14 @@ abstract contract BasicAdapter is IMigrationAdapter {
   /// For safety reasons:
   /// 1. target asset can not be swept after migration as there will be unclaimed funds.
   /// 2. origin and underlying assets can only be swept after migration (residuals).
-  function admin_sweepToken(address token) external onlyController returns (uint256) {
+  function admin_sweepToken(address token, address to)
+    external
+    override
+    onlyController
+    returns (uint256)
+  {
     require(token != address(0), 'unknown token');
+    require(to != address(0), 'valid destination is required');
 
     if (internalIsMigrated()) {
       require(token != address(_targetAsset), 'target asset can not be swept after migration');
@@ -280,7 +286,7 @@ abstract contract BasicAdapter is IMigrationAdapter {
 
     uint256 amount = IERC20(token).balanceOf(address(this));
     if (amount > 0) {
-      IERC20(token).safeTransfer(msg.sender, amount);
+      IERC20(token).safeTransfer(to, amount);
     }
     return amount;
   }
