@@ -14,7 +14,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from './utils';
 import { ONE_ADDRESS, RAY } from '../../helpers/constants';
 import { createRandomAddress, waitForTx } from '../../helpers/misc-utils';
-import { deployZombieRewardPool } from '../../helpers/contracts-deployments';
 
 chai.use(solidity);
 const { expect } = chai;
