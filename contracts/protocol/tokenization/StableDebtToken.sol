@@ -77,13 +77,14 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
    **/
   function balanceOf(address account) public view virtual override returns (uint256) {
     uint256 accountBalance = super.balanceOf(account);
-    uint256 stableRate = _usersStableRate[account];
     if (accountBalance == 0) {
       return 0;
     }
-    uint256 cumulatedInterest =
-      MathUtils.calculateCompoundedInterest(stableRate, _timestamps[account]);
-    return accountBalance.rayMul(cumulatedInterest);
+    return accountBalance.rayMul(cumulatedInterest(account));
+  }
+
+  function cumulatedInterest(address account) public view virtual returns (uint256) {
+    return MathUtils.calculateCompoundedInterest(_usersStableRate[account], _timestamps[account]);
   }
 
   struct MintLocalVars {
@@ -319,10 +320,10 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
       return 0;
     }
 
-    uint256 cumulatedInterest =
+    uint256 cumInterest =
       MathUtils.calculateCompoundedInterest(avgRate, _totalSupplyTimestamp);
 
-    return principalSupply.rayMul(cumulatedInterest);
+    return principalSupply.rayMul(cumInterest);
   }
 
   /**
@@ -340,16 +341,12 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
     uint256 newAccountBalance = oldAccountBalance.add(amount);
     _balances[account] = newAccountBalance;
 
-    IBalanceHook hook = getIncentivesController();
-    if (address(hook) != address(0)) {
-      hook.handleBalanceUpdate(
-        getIncentivesToken(),
-        account,
-        oldAccountBalance,
-        newAccountBalance,
-        newTotalSupply
-      );
-    }
+    handleBalanceUpdate(
+      account,
+      oldAccountBalance,
+      newAccountBalance,
+      newTotalSupply
+    );
   }
 
   /**
@@ -367,15 +364,25 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
     uint256 newAccountBalance = oldAccountBalance.sub(amount, Errors.SDT_BURN_EXCEEDS_BALANCE);
     _balances[account] = newAccountBalance;
 
-    IBalanceHook hook = getIncentivesController();
-    if (address(hook) != address(0)) {
-      hook.handleBalanceUpdate(
-        getIncentivesToken(),
-        account,
-        oldAccountBalance,
-        newAccountBalance,
-        newTotalSupply
-      );
+    handleBalanceUpdate(
+      account,
+      oldAccountBalance,
+      newAccountBalance,
+      newTotalSupply
+    );
+  }
+
+  function handleBalanceUpdate(
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256 providerSupply
+  ) internal override {
+    if (getIncentivesController() == IBalanceHook(0)) {
+      return;
     }
+
+    uint256 index = cumulatedInterest(holder);
+    super.handleScaledBalanceUpdate(holder, oldBalance, newBalance, providerSupply, index);
   }
 }

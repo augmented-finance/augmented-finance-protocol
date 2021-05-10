@@ -145,4 +145,15 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
   {
     return (super.balanceOf(user), super.totalSupply());
   }
+
+  function handleBalanceUpdate(
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256 providerSupply
+  ) internal override {
+    uint256 index = _pool.getReserveNormalizedVariableDebt(_underlyingAsset);
+    IBalanceHook(getIncentivesController()).handleScaledBalanceUpdate(
+      getIncentivesToken(), holder, oldBalance, newBalance, providerSupply, index);
+  }
 }

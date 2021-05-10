@@ -312,4 +312,14 @@ contract DepositToken is
   function setIncentivesController(address hook) external override onlyRewardAdmin {
     _setIncentivesController(hook);
   }
+
+  function handleBalanceUpdate(
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256 providerSupply
+  ) internal override {
+    uint256 index = _pool.getReserveNormalizedIncome(_underlyingAsset);
+    super.handleScaledBalanceUpdate(holder, oldBalance, newBalance, providerSupply, index);
+  }
 }
