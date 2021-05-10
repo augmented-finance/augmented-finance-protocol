@@ -16,6 +16,7 @@ contract MockAggregator {
   }
 
   function getTokenType() external view returns (uint256) {
+    this;
     return 1;
   }
 

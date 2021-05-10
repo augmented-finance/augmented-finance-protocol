@@ -59,7 +59,7 @@ export enum eContractid {
   WalletBalanceProvider = 'WalletBalanceProvider',
   DepositToken = 'DepositToken',
   MockDepositToken = 'MockDepositToken',
-  DelegationAwareAToken = 'DelegationAwareAToken',
+  DelegationAwareDepositToken = 'DelegationAwareDepositToken',
   MockStableDebtToken = 'MockStableDebtToken',
   MockVariableDebtToken = 'MockVariableDebtToken',
   MockAgfToken = 'MockAgfToken',
