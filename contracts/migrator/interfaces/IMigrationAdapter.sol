@@ -42,4 +42,6 @@ interface IMigrationAdapter {
   function admin_enableClaims() external;
 
   function admin_setPaused(bool paused) external;
+
+  function admin_sweepToken(address token, address to) external returns (uint256);
 }
