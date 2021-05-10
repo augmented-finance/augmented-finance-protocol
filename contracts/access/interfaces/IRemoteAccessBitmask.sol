@@ -4,8 +4,12 @@ pragma solidity 0.6.12;
 import {BitUtils} from '../../tools/math/BitUtils.sol';
 
 interface IRemoteAccessBitmask {
-  function getAccessControlMask(address) external view returns (uint256);
-
+  /// @notice Returns access flags granted to the given address and limited by the filterMask.
+  /// @dev Zero value of filterMask has a special meaning.
+  /// @param addr a parameter just like in doxygen (must be followed by parameter name)
+  /// @param filterMask limits a subset of flags to be checked.
+  ///        When filterMask is zero, the function will return zero if no flags granted, or an unspecified non zero value otherwise.
+  /// @return Access flags currently granted
   function queryAccessControlMask(address addr, uint256 filterMask) external view returns (uint256);
 }
 
@@ -17,7 +21,7 @@ library RemoteAccessBitmaskHelper {
   using BitUtils for uint256;
 
   function getAcl(IRemoteAccessBitmask remote, address subject) internal view returns (uint256) {
-    return remote.getAccessControlMask(subject);
+    return remote.queryAccessControlMask(subject, ~uint256(0));
   }
 
   function queryAcl(
@@ -53,10 +57,10 @@ library RemoteAccessBitmaskHelper {
   }
 
   function hasAny(IRemoteAccessBitmask remote, address subject) internal view returns (bool) {
-    return remote.getAccessControlMask(subject) != 0;
+    return remote.queryAccessControlMask(subject, 0) != 0;
   }
 
   function hasNone(IRemoteAccessBitmask remote, address subject) internal view returns (bool) {
-    return remote.getAccessControlMask(subject) == 0;
+    return remote.queryAccessControlMask(subject, 0) == 0;
   }
 }

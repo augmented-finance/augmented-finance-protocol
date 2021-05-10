@@ -18,10 +18,21 @@ interface IAccessController is IRemoteAccessBitmask {
     address impl,
     bytes calldata params
   ) external returns (IProxy);
+
+  function createProxyByName(
+    address admin,
+    string calldata implName,
+    bytes calldata params
+  ) external returns (IProxy);
+
+  function getImplementation(string calldata id) external view returns (address);
+  //  function getFirstImplementation(string[] calldata ids) external view returns (address);
 }
 
 interface IManagedAccessController is IAccessController {
   function setAddress(uint256 id, address newAddress) external;
+
+  function addImplementation(string calldata id, address addr) external;
 
   function setAddressAsProxy(uint256 id, address impl) external;
 
