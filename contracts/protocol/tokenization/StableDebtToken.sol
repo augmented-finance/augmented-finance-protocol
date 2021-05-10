@@ -2,22 +2,22 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
+import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import {PoolTokenBase} from './base/PoolTokenBase.sol';
 import {DebtTokenBase} from './base/DebtTokenBase.sol';
 import {MathUtils} from '../../tools/math/MathUtils.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
-import {ILendingPool} from '../../interfaces/ILendingPool.sol';
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
+import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
 
 /**
  * @title StableDebtToken
  * @notice Implements a stable debt token to track the borrowing positions of users
  * at stable rate mode
- * @author Aave
  **/
-contract StableDebtToken is IStableDebtToken, DebtTokenBase {
+contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtToken {
   using WadRayMath for uint256;
 
   uint256 private constant DEBT_TOKEN_REVISION = 0x1;
@@ -75,7 +75,13 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
    * @dev Calculates the current user debt balance
    * @return The accumulated debt of the user
    **/
-  function balanceOf(address account) public view virtual override returns (uint256) {
+  function balanceOf(address account)
+    public
+    view
+    virtual
+    override(IERC20, PoolTokenBase)
+    returns (uint256)
+  {
     uint256 accountBalance = super.balanceOf(account);
     if (accountBalance == 0) {
       return 0;
@@ -144,7 +150,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
       .add(rate.rayMul(vars.amountInRay))
       .rayDiv(vars.nextSupply.wadToRay());
 
-    _mint(onBehalfOf, amount.add(balanceIncrease), vars.nextSupply);
+    _mintWithTotal(onBehalfOf, amount.add(balanceIncrease), vars.nextSupply);
 
     emit Transfer(address(0), onBehalfOf, amount);
 
@@ -209,7 +215,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
 
     if (balanceIncrease > amount) {
       uint256 amountToMint = balanceIncrease.sub(amount);
-      _mint(user, amountToMint, nextSupply);
+      _mintWithTotal(user, amountToMint, nextSupply);
       emit Mint(
         user,
         user,
@@ -222,7 +228,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
       );
     } else {
       uint256 amountToBurn = amount.sub(balanceIncrease);
-      _burn(user, amountToBurn, nextSupply);
+      _burnWithTotal(user, amountToBurn, nextSupply);
       emit Burn(user, amountToBurn, currentBalance, balanceIncrease, newAvgStableRate, nextSupply);
     }
 
@@ -288,7 +294,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
   /**
    * @dev Returns the total supply
    **/
-  function totalSupply() public view override returns (uint256) {
+  function totalSupply() public view override(IERC20, PoolTokenBase) returns (uint256) {
     return _calcTotalSupply(_avgStableRate);
   }
 
@@ -320,8 +326,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
       return 0;
     }
 
-    uint256 cumInterest =
-      MathUtils.calculateCompoundedInterest(avgRate, _totalSupplyTimestamp);
+    uint256 cumInterest = MathUtils.calculateCompoundedInterest(avgRate, _totalSupplyTimestamp);
 
     return principalSupply.rayMul(cumInterest);
   }
@@ -332,7 +337,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
    * @param amount The amount being minted
    * @param newTotalSupply the total supply after the minting event
    **/
-  function _mint(
+  function _mintWithTotal(
     address account,
     uint256 amount,
     uint256 newTotalSupply
@@ -341,12 +346,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
     uint256 newAccountBalance = oldAccountBalance.add(amount);
     _balances[account] = newAccountBalance;
 
-    handleBalanceUpdate(
-      account,
-      oldAccountBalance,
-      newAccountBalance,
-      newTotalSupply
-    );
+    handleBalanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
   }
 
   /**
@@ -355,7 +355,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
    * @param amount The amount being burned
    * @param newTotalSupply The total supply after the burning event
    **/
-  function _burn(
+  function _burnWithTotal(
     address account,
     uint256 amount,
     uint256 newTotalSupply
@@ -364,12 +364,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
     uint256 newAccountBalance = oldAccountBalance.sub(amount, Errors.SDT_BURN_EXCEEDS_BALANCE);
     _balances[account] = newAccountBalance;
 
-    handleBalanceUpdate(
-      account,
-      oldAccountBalance,
-      newAccountBalance,
-      newTotalSupply
-    );
+    handleBalanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
   }
 
   function handleBalanceUpdate(
@@ -378,10 +373,9 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
     uint256 newBalance,
     uint256 providerSupply
   ) internal override {
-    if (getIncentivesController() == IBalanceHook(0)) {
+    if (address(getIncentivesController()) == address(0)) {
       return;
     }
-
     uint256 index = cumulatedInterest(holder);
     super.handleScaledBalanceUpdate(holder, oldBalance, newBalance, providerSupply, index);
   }

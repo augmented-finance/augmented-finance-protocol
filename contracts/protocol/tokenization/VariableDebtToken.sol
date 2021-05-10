@@ -2,21 +2,21 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
+import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import {PoolTokenBase} from './base/PoolTokenBase.sol';
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {DebtTokenBase} from './base/DebtTokenBase.sol';
-import {ILendingPool} from '../../interfaces/ILendingPool.sol';
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
+import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
 
 /**
  * @title VariableDebtToken
  * @notice Implements a variable debt token to track the borrowing positions of users
  * at variable rate mode
- * @author Aave
  **/
-contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
+contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDebtToken {
   using WadRayMath for uint256;
 
   uint256 private constant DEBT_TOKEN_REVISION = 0x1;
@@ -44,7 +44,13 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
    * @dev Calculates the accumulated debt balance of the user
    * @return The debt balance of the user
    **/
-  function balanceOf(address user) public view virtual override returns (uint256) {
+  function balanceOf(address user)
+    public
+    view
+    virtual
+    override(IERC20, PoolTokenBase)
+    returns (uint256)
+  {
     uint256 scaledBalance = super.balanceOf(user);
 
     if (scaledBalance == 0) {
@@ -78,7 +84,7 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
-    _mint(onBehalfOf, amountScaled);
+    _mintBalance(onBehalfOf, amountScaled, index);
 
     emit Transfer(address(0), onBehalfOf, amount);
     emit Mint(user, onBehalfOf, amount, index);
@@ -101,7 +107,7 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
 
-    _burn(user, amountScaled);
+    _burnBalance(user, amountScaled, index);
 
     emit Transfer(user, address(0), amount);
     emit Burn(user, amount, index);
@@ -119,7 +125,7 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
    * @dev Returns the total supply of the variable debt token. Represents the total debt accrued by the users
    * @return The total supply
    **/
-  function totalSupply() public view virtual override returns (uint256) {
+  function totalSupply() public view virtual override(IERC20, PoolTokenBase) returns (uint256) {
     return super.totalSupply().rayMul(_pool.getReserveNormalizedVariableDebt(_underlyingAsset));
   }
 
@@ -153,7 +159,6 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
     uint256 providerSupply
   ) internal override {
     uint256 index = _pool.getReserveNormalizedVariableDebt(_underlyingAsset);
-    IBalanceHook(getIncentivesController()).handleScaledBalanceUpdate(
-      getIncentivesToken(), holder, oldBalance, newBalance, providerSupply, index);
+    handleScaledBalanceUpdate(holder, oldBalance, newBalance, providerSupply, index);
   }
 }

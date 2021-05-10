@@ -2,14 +2,11 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ILendingPool} from '../../../interfaces/ILendingPool.sol';
 import {ICreditDelegationToken} from '../../../interfaces/ICreditDelegationToken.sol';
-import {VersionedInitializable} from '../../../tools/upgradeability/VersionedInitializable.sol';
-import {IncentivizedERC20} from './IncentivizedERC20.sol';
-import {PoolTokenConfig} from '../interfaces/PoolTokenConfig.sol';
-import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {PoolTokenBase} from './PoolTokenBase.sol';
+import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {ERC20Events} from '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
 
 /**
  * @title DebtTokenBase
@@ -17,11 +14,12 @@ import {PoolTokenBase} from './PoolTokenBase.sol';
  */
 
 abstract contract DebtTokenBase is
-  IncentivizedERC20('DEBT_STUB', 'DEBT_STUB', 0),
-  PoolTokenBase,
-  VersionedInitializable,
+  PoolTokenBase('DEBT_STUB', 'DEBT_STUB', 0),
+  ERC20Events,
   ICreditDelegationToken
 {
+  using SafeMath for uint256;
+
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
 
   /**
@@ -56,15 +54,18 @@ abstract contract DebtTokenBase is
    * standard ERC20 functions for transfer and allowance.
    **/
   function transfer(address, uint256) public override returns (bool) {
-    revert('TRANSFER_NOT_SUPPORTED');
+    notSupported();
+    _mutable();
   }
 
   function allowance(address, address) public view override returns (uint256) {
-    revert('ALLOWANCE_NOT_SUPPORTED');
+    this;
+    return 0;
   }
 
   function approve(address, uint256) public override returns (bool) {
-    revert('APPROVAL_NOT_SUPPORTED');
+    notSupported();
+    _mutable();
   }
 
   function transferFrom(
@@ -72,15 +73,22 @@ abstract contract DebtTokenBase is
     address,
     uint256
   ) public override returns (bool) {
-    revert('TRANSFER_NOT_SUPPORTED');
+    notSupported();
+    _mutable();
   }
 
+  function notSupported() private pure {
+    revert('NOT_SUPPORTED');
+  }
+
+  function _mutable() private {}
+
   function increaseAllowance(address, uint256) public override returns (bool) {
-    revert('ALLOWANCE_NOT_SUPPORTED');
+    notSupported();
   }
 
   function decreaseAllowance(address, uint256) public override returns (bool) {
-    revert('ALLOWANCE_NOT_SUPPORTED');
+    notSupported();
   }
 
   function _decreaseBorrowAllowance(
@@ -94,12 +102,5 @@ abstract contract DebtTokenBase is
     _borrowAllowances[delegator][delegatee] = newAllowance;
 
     emit BorrowAllowanceDelegated(delegator, delegatee, _underlyingAsset, newAllowance);
-  }
-
-  /**
-   * @dev Updates the address of the incentives controller contract
-   **/
-  function setIncentivesController(address hook) external override onlyRewardAdmin {
-    _setIncentivesController(hook);
   }
 }
