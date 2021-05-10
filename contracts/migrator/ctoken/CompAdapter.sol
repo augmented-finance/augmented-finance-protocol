@@ -48,24 +48,26 @@ contract CompAdapter is BasicAdapter, Exponential {
   function withdrawUnderlyingFromOrigin()
     internal
     override
-    returns (uint256 originAmount, uint256 underlyingAmount)
+    returns (uint256 internalAmount, uint256 underlyingAmount)
   {
     IERC20 underlying = IERC20(_underlying);
+    IRedeemableToken origin = IRedeemableToken(_originAsset);
 
     underlyingAmount = underlying.balanceOf(address(this));
 
-    originAmount = _totalDeposited;
-    // originAmount = IRedeemableToken(_originAsset).balanceOf(address(this));
-    // require(_totalDeposited <= originAmount, 'withdrawn less than deposited');
+    internalAmount = origin.balanceOf(address(this));
+    require(_totalDeposited <= internalAmount, 'available less than deposited');
 
-    if (originAmount == 0) {
+    if (internalAmount == 0) {
       return (0, 0);
     }
 
-    require(IRedeemableToken(_originAsset).redeem(originAmount) == 0, 'unexpected Compound error');
+    require(origin.redeem(internalAmount) == 0, 'unexpected Compound error');
     underlyingAmount = underlying.balanceOf(address(this)).sub(underlyingAmount);
 
-    return (originAmount, underlyingAmount);
+    require(origin.balanceOf(address(this)) == 0, 'incomplete withdrawal');
+
+    return (internalAmount, underlyingAmount);
   }
 
   function getNormalizeOriginFactor() private view returns (uint256) {

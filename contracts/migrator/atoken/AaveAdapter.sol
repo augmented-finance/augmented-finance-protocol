@@ -59,19 +59,24 @@ contract AaveAdapter is BasicAdapter {
   function withdrawUnderlyingFromOrigin()
     internal
     override
-    returns (uint256 originAmount, uint256 underlyingAmount)
+    returns (uint256 internalAmount, uint256 underlyingAmount)
   {
     IERC20 underlying = IERC20(_underlying);
+    IRedeemableToken origin = IRedeemableToken(_originAsset);
+
+    internalAmount = origin.scaledBalanceOf(address(this));
+    require(_totalDeposited <= internalAmount, 'available less than deposited');
 
     underlyingAmount = underlying.balanceOf(address(this));
 
-    originAmount = _originPool.withdraw(address(underlying), type(uint256).max, address(this));
+    uint256 originAmount =
+      _originPool.withdraw(address(underlying), type(uint256).max, address(this));
     underlyingAmount = underlying.balanceOf(address(this)).sub(underlyingAmount);
-    require(underlyingAmount == originAmount, 'innconsistent withdraw');
 
-    require(_totalDeposited <= originAmount, 'withdrawn less than deposited');
+    require(underlyingAmount >> 1 == originAmount >> 1, 'inconsistent withdrawal');
+    require(origin.scaledBalanceOf(address(this)) == 0, 'incomplete withdrawal');
 
-    return (originAmount, underlyingAmount);
+    return (internalAmount, underlyingAmount);
   }
 
   function getNormalizeOriginFactor() private view returns (uint256) {

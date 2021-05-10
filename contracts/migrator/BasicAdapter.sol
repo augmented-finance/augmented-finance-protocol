@@ -219,24 +219,26 @@ abstract contract BasicAdapter is IMigrationAdapter {
   }
 
   function internalMigrateAll(ILendableToken targetAsset) internal virtual {
-    require(targetAsset.UNDERLYING_ASSET_ADDRESS() == _underlying, 'mismatched underlying');
+    IERC20 underlying = IERC20(_underlying);
+    require(targetAsset.UNDERLYING_ASSET_ADDRESS() == address(underlying), 'mismatched underlying');
 
-    (uint256 originAmount, uint256 underlyingAmount) = withdrawUnderlyingFromOrigin();
+    (uint256 internalAmount, uint256 underlyingAmount) = withdrawUnderlyingFromOrigin();
 
     ILendablePool toPool = targetAsset.POOL();
     _targetPool = toPool;
 
-    if (originAmount == 0) {
+    if (internalAmount == 0) {
       _totalMigrated = 0;
-      // set last to make sure that "migrated" functions can't be invoked before it is done here
+      // set at the end to make sure that "migrated" functions can't be invoked before it is done here
       _targetAsset = targetAsset;
       return;
     }
+
     require(underlyingAmount > 0, 'withdrawn no underlying');
-    if (originAmount > _totalDeposited) {
+    if (internalAmount > _totalDeposited) {
       // something was sent directly?
       uint256 extraUnderlying =
-        underlyingAmount.mul(originAmount - _totalDeposited).div(originAmount);
+        underlyingAmount.mul(internalAmount - _totalDeposited).div(internalAmount);
       if (extraUnderlying > 1) {
         // don't convert the excess futher, but keep it for sweep
         underlyingAmount -= extraUnderlying - 1; // -1 to compensate possible rounding error
@@ -244,12 +246,15 @@ abstract contract BasicAdapter is IMigrationAdapter {
     }
 
     uint256 targetAmount = targetAsset.scaledBalanceOf(address(this));
-    toPool.deposit(_underlying, underlyingAmount, address(this), 0);
+
+    underlying.approve(address(toPool), underlyingAmount);
+    toPool.deposit(address(underlying), underlyingAmount, address(this), 0);
+
     targetAmount = targetAsset.scaledBalanceOf(address(this)).sub(targetAmount);
     require(targetAmount > 0, 'deposited less than expected');
     _totalMigrated = targetAmount;
 
-    // set last to make sure that "migrated" functions can't be invoked before it is done here
+    // set at the end to make sure that "migrated" functions can't be invoked before it is done here
     _targetAsset = targetAsset;
   }
 
