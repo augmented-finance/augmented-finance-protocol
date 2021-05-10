@@ -9,7 +9,6 @@ import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 
 import {BitUtils} from '../tools/math/BitUtils.sol';
 
-// Prettier ignore to prevent buidler flatter bug
 // prettier-ignore
 import {InitializableImmutableAdminUpgradeabilityProxy} from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
 import {IProxy} from '../tools/upgradeability/IProxy.sol';
