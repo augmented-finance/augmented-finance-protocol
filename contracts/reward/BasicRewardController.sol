@@ -200,6 +200,7 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
     address receiver
   ) private returns (uint256 claimableAmount) {
     mask &= ~_ignoreMask;
+    console.log('mask ', mask);
 
     if (mask == 0) {
       return 0;

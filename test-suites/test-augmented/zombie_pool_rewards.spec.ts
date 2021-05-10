@@ -13,7 +13,8 @@ import { MockAgfToken, RewardFreezer, ZombieRewardPool } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from './utils';
 import { ONE_ADDRESS, RAY } from '../../helpers/constants';
-import { waitForTx } from '../../helpers/misc-utils';
+import { createRandomAddress, waitForTx } from '../../helpers/misc-utils';
+import { deployZombieRewardPool } from '../../helpers/contracts-deployments';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -23,7 +24,7 @@ describe('Team rewards suite', () => {
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
   let zombieRewardPool: ZombieRewardPool;
-  let rewardController: RewardFreezer;
+  let rc: RewardFreezer;
   let agf: MockAgfToken;
   let blkBeforeDeploy;
   let blkAfterDeploy;
@@ -43,7 +44,7 @@ describe('Team rewards suite', () => {
       teamRewardUnlockBlock: 1000,
       teamRewardsFreezePercentage: teamRewardsFreezePercentage,
     });
-    rewardController = await getRewardFreezer();
+    rc = await getRewardFreezer();
     zombieRewardPool = await getZombieRewardPool();
     agf = await getMockAgfToken();
     blkAfterDeploy = await currentBlock();
@@ -53,20 +54,27 @@ describe('Team rewards suite', () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  it('can claim reward', async () => {
-    const rewardUpdate = 2000;
+  it('can not register provider with unknown token', async () => {
+    const unknownToken = createRandomAddress();
+    await expect(
+      rc.admin_addRewardProvider(zombieRewardPool.address, root.address, unknownToken)
+    ).to.be.revertedWith('revert unknown token');
+  });
+
+  it.only('can claim reward', async () => {
+    const rewardUpdateAmount = 2000;
     expect(await agf.balanceOf(user1.address)).to.eq(0);
     await waitForTx(
       await zombieRewardPool.handleBalanceUpdate(
         ONE_ADDRESS,
         user1.address,
         0,
-        rewardUpdate,
+        rewardUpdateAmount,
         100000
       )
     );
-    // await mineToBlock(20);
-    await waitForTx(await rewardController.connect(user1).claimReward());
-    expect(await agf.balanceOf(user1.address)).to.eq(rewardUpdate);
+    await mineToBlock(20);
+    await rc.connect(user1).claimReward();
+    expect(await agf.balanceOf(user1.address)).to.eq(rewardUpdateAmount);
   });
 });
