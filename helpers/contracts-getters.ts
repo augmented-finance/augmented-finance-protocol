@@ -38,6 +38,8 @@ import {
   TeamRewardPoolFactory,
   TokenUnweightedRewardPoolFactory,
   AccessControllerFactory,
+  ZombieRewardPool,
+  ZombieRewardPoolFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -396,6 +398,13 @@ export const getTeamRewardPool = async (address?: tEthereumAddress) =>
   await TeamRewardPoolFactory.connect(
     address ||
       (await getDb().get(`${eContractid.TeamRewardPool}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
+export const getZombieRewardPool = async (address?: tEthereumAddress) =>
+  await ZombieRewardPoolFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.ZombieRewardPool}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
 
