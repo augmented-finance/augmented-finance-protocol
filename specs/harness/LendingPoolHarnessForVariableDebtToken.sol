@@ -167,12 +167,12 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
     return reserveNormalizedVariableDebt[block.timestamp];
   }
 
-  function setPause(bool val) external override {
-    originalPool.setPause(val);
+  function setPaused(bool val) external override {
+    originalPool.setPaused(val);
   }
 
-  function paused() external view override returns (bool) {
-    return originalPool.paused();
+  function isPaused() external view override returns (bool) {
+    return originalPool.isPaused();
   }
 
   function flashLoan(

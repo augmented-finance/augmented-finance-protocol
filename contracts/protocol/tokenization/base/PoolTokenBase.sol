@@ -12,6 +12,8 @@ import {IPoolToken} from '../../../interfaces/IPoolToken.sol';
 import {PoolTokenConfig} from '../interfaces/PoolTokenConfig.sol';
 import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
+import {AccessHelper} from '../../../access/AccessHelper.sol';
+import {AccessFlags} from '../../../access/AccessFlags.sol';
 
 abstract contract PoolTokenBase is
   IERC20,
@@ -75,7 +77,11 @@ abstract contract PoolTokenBase is
 
   modifier onlyRewardAdmin {
     require(
-      _pool.getAccessController().isRewardAdmin(_msgSender()),
+      AccessHelper.hasAllOf(
+        _pool.getAccessController(),
+        _msgSender(),
+        AccessFlags.REWARD_CONFIG_ADMIN
+      ),
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
     );
     _;

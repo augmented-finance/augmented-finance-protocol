@@ -2,20 +2,10 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IERC20Detailed} from '../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
-// import {VotingToken} from './VotingToken.sol';
 import {StakeTokenBase} from './StakeTokenBase.sol';
-
 import {AccessFlags} from '../../access/AccessFlags.sol';
 import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
 import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
-import {
-  IRemoteAccessBitmask,
-  RemoteAccessBitmaskHelper
-} from '../../access/interfaces/IRemoteAccessBitmask.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-
 import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
 
 /**

@@ -201,8 +201,12 @@ abstract contract BasicAdapter is IMigrationAdapter {
     _claimAllowed = true;
   }
 
-  function admin_setPaused(bool paused) external override onlyController {
+  function setPaused(bool paused) external override onlyController {
     _paused = paused;
+  }
+
+  function isPaused() external view override returns (bool) {
+    return _paused;
   }
 
   function getController() public override returns (address) {
