@@ -4,6 +4,9 @@ orbs:
   slack: circleci/slack@4.4.2
 jobs:
   cancel_draft_build:
+    filters:
+      branches:
+        ignore: /develop/
     docker:
       - image: vitalinfo/circleci-cancel-draft
     steps:
