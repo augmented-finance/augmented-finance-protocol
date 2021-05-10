@@ -11,7 +11,7 @@ import {DepositToken} from './DepositToken.sol';
  * @title PoolToken enabled to delegate voting power of the underlying asset to a different address
  * @dev The underlying asset needs to be compatible with the COMP delegation interface
  */
-contract DelegationAwareAToken is DepositToken {
+contract DelegationAwareDepositToken is DepositToken {
   modifier onlyPoolAdmin {
     require(ILendingPool(_pool).isPoolAdmin(_msgSender()), Errors.CALLER_NOT_POOL_ADMIN);
     _;
