@@ -38,22 +38,6 @@ contract StakedAgfV1 is
 
   function zeroConfig() private pure returns (StakeTokenConfig memory) {}
 
-  // // This initializer is invoked by AccessController.setAddressAsImpl
-  // function initialize(IMarketAccessController remoteAcl)
-  //   external
-  //   virtual
-  //   initializer(TOKEN_REVISION)
-  // {
-  //   StakeTokenConfig memory params;
-
-  //   params.stakeController = remoteAcl;
-  //   params.stakedToken = IERC20(remoteAcl.getRewardToken());
-  //   params.cooldownBlocks = COOLDOWN_BLOCKS;
-  //   params.unstakeBlocks = UNSTAKE_BLOCKS;
-
-  //   _initialize(params, NAME, SYMBOL, IERC20Detailed(address(params.stakedToken)).decimals());
-  // }
-
   function initialize(
     StakeTokenConfig calldata params,
     string calldata name,
