@@ -113,4 +113,9 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
 
     _controller.allocatedByPool(holder, allocated, uint32(block.number), AllocationMode.Push);
   }
+
+  function isScaledBalanceUpdateNeeded() external view override returns (bool) {
+    // scaling is important to match different providers
+    return true;
+  }
 }

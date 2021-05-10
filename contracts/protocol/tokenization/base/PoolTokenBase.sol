@@ -154,7 +154,7 @@ abstract contract PoolTokenBase is
     return address(this);
   }
 
-  function _setIncentivesController(address hook) internal {
+  function _setIncentivesController(address hook) internal virtual {
     _incentivesController = IBalanceHook(hook);
   }
 
@@ -226,7 +226,8 @@ abstract contract PoolTokenBase is
   function _transferBalance(
     address sender,
     address recipient,
-    uint256 amount
+    uint256 amount,
+    uint256 scale
   ) internal {
     require(sender != address(0), 'ERC20: transfer from the zero address');
     require(recipient != address(0), 'ERC20: transfer to the zero address');
@@ -247,21 +248,23 @@ abstract contract PoolTokenBase is
       address token = getIncentivesToken();
       uint256 currentTotalSupply = _totalSupply;
 
-      hook.handleBalanceUpdate(
+      hook.handleScaledBalanceUpdate(
         token,
         sender,
         oldSenderBalance,
         newSenderBalance,
-        currentTotalSupply
+        currentTotalSupply,
+        scale
       );
 
       if (sender != recipient) {
-        hook.handleBalanceUpdate(
+        hook.handleScaledBalanceUpdate(
           token,
           recipient,
           oldRecipientBalance,
           newRecipientBalance,
-          currentTotalSupply
+          currentTotalSupply,
+          scale
         );
       }
     }

@@ -11,6 +11,7 @@ import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
 import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
+import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 /**
  * @title StableDebtToken
@@ -26,6 +27,8 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
   mapping(address => uint40) internal _timestamps;
   mapping(address => uint256) internal _usersStableRate;
   uint40 internal _totalSupplyTimestamp;
+
+  bool private _useScaledBalanceUpdate;
 
   function initialize(
     PoolTokenConfig memory config,
@@ -327,7 +330,6 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     }
 
     uint256 cumInterest = MathUtils.calculateCompoundedInterest(avgRate, _totalSupplyTimestamp);
-
     return principalSupply.rayMul(cumInterest);
   }
 
@@ -346,7 +348,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     uint256 newAccountBalance = oldAccountBalance.add(amount);
     _balances[account] = newAccountBalance;
 
-    handleBalanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
+    balanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
   }
 
   /**
@@ -364,19 +366,30 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     uint256 newAccountBalance = oldAccountBalance.sub(amount, Errors.SDT_BURN_EXCEEDS_BALANCE);
     _balances[account] = newAccountBalance;
 
-    handleBalanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
+    balanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
   }
 
-  function handleBalanceUpdate(
+  function _setIncentivesController(address hook) internal override {
+    super._setIncentivesController(hook);
+    _useScaledBalanceUpdate =
+      (hook != address(0)) &&
+      IBalanceHook(hook).isScaledBalanceUpdateNeeded();
+  }
+
+  function balanceUpdate(
     address holder,
     uint256 oldBalance,
     uint256 newBalance,
     uint256 providerSupply
-  ) internal override {
+  ) internal {
+    if (!_useScaledBalanceUpdate) {
+      super.handleBalanceUpdate(holder, oldBalance, newBalance, providerSupply);
+    }
+
     if (address(getIncentivesController()) == address(0)) {
       return;
     }
-    uint256 index = cumulatedInterest(holder);
-    super.handleScaledBalanceUpdate(holder, oldBalance, newBalance, providerSupply, index);
+    uint256 scale = cumulatedInterest(holder);
+    super.handleScaledBalanceUpdate(holder, oldBalance, newBalance, providerSupply, scale);
   }
 }

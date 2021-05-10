@@ -56,6 +56,11 @@ abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
     );
   }
 
+  function isScaledBalanceUpdateNeeded() external view override returns (bool) {
+    // scaling is important to match different providers
+    return true;
+  }
+
   function _handleBalanceUpdate(
     address token,
     address holder,

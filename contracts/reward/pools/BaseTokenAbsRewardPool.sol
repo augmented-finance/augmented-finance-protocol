@@ -48,6 +48,11 @@ abstract contract BaseTokenAbsRewardPool is BaseRateRewardPool, IRewardPool {
     _handleBalanceUpdate(holder, oldBalance, newBalance, uint32(block.number));
   }
 
+  function isScaledBalanceUpdateNeeded() external view override returns (bool) {
+    // NB! as we have only one provider - scaling matters not
+    return false;
+  }
+
   function _handleBalanceUpdate(
     address holder,
     uint256 oldBalance,

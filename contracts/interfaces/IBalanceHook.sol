@@ -18,4 +18,6 @@ interface IBalanceHook {
     uint256 providerSupply,
     uint256 scaleRay
   ) external;
+
+  function isScaledBalanceUpdateNeeded() external view returns (bool);
 }

@@ -343,7 +343,7 @@ abstract contract DepositTokenBase is
     uint256 fromBalanceBefore = super.balanceOf(from).rayMul(index);
     uint256 toBalanceBefore = super.balanceOf(to).rayMul(index);
 
-    super._transferBalance(from, to, amount.rayDiv(index));
+    super._transferBalance(from, to, amount.rayDiv(index), index);
 
     if (validate) {
       pool.finalizeTransfer(underlyingAsset, from, to, amount, fromBalanceBefore, toBalanceBefore);
@@ -362,16 +362,6 @@ abstract contract DepositTokenBase is
 
   function _getPermitDomainName() internal view override returns (bytes memory) {
     return bytes(super.name());
-  }
-
-  function handleBalanceUpdate(
-    address holder,
-    uint256 oldBalance,
-    uint256 newBalance,
-    uint256 providerSupply
-  ) internal override {
-    uint256 index = _pool.getReserveNormalizedIncome(_underlyingAsset);
-    super.handleScaledBalanceUpdate(holder, oldBalance, newBalance, providerSupply, index);
   }
 
   function _approve(
