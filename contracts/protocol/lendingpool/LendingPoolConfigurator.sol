@@ -7,6 +7,7 @@ import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitia
 import {IProxy} from '../../tools/upgradeability/IProxy.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
+import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
 import {IERC20Detailed} from '../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
@@ -22,23 +23,16 @@ import {ILendingPoolConfigurator} from '../../interfaces/ILendingPoolConfigurato
  * @dev Implements the configuration methods for the protocol
  **/
 
-contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigurator {
+contract LendingPoolConfigurator is
+  VersionedInitializable,
+  MarketAccessBitmask,
+  ILendingPoolConfigurator
+{
   using SafeMath for uint256;
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-  IMarketAccessController internal addressesProvider;
   ILendingPool internal pool;
-
-  modifier onlyPoolAdmin {
-    require(addressesProvider.isPoolAdmin(msg.sender), Errors.CALLER_NOT_POOL_ADMIN);
-    _;
-  }
-
-  modifier onlyEmergencyAdmin {
-    require(addressesProvider.isEmergencyAdmin(msg.sender), Errors.LPC_CALLER_NOT_EMERGENCY_ADMIN);
-    _;
-  }
 
   uint256 private constant CONFIGURATOR_REVISION = 0x1;
 
@@ -50,8 +44,8 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
     public
     initializerRunAlways(CONFIGURATOR_REVISION)
   {
-    addressesProvider = provider;
-    pool = ILendingPool(addressesProvider.getLendingPool());
+    _remoteAcl = provider;
+    pool = ILendingPool(provider.getLendingPool());
   }
 
   /**
@@ -439,15 +433,15 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
   }
 
   /**
-   * @dev pauses or unpauses all the actions of the protocol, including aToken transfers
+   * @dev pauses or unpauses all the actions of the protocol, including aToken transfers. Deprecated, call the pool directly. Used by tests.
    * @param val true if protocol needs to be paused, false otherwise
    **/
   function setPoolPause(bool val) external onlyEmergencyAdmin {
-    pool.setPause(val);
+    pool.setPaused(val);
   }
 
   function _initTokenWithProxy(address impl, bytes memory initParams) internal returns (address) {
-    return address(addressesProvider.createProxy(address(this), impl, initParams));
+    return address(_remoteAcl.createProxy(address(this), impl, initParams));
   }
 
   function _upgradeTokenImplementation(

@@ -13,6 +13,7 @@ interface IMarketAccessController is IAccessController {
 
   function getLendingPool() external view returns (address);
 
+  // Deprecated, for backward compatibility & scritps. By contracts use AccessHelper and AccessFlags instead.
   function getLendingPoolConfigurator() external view returns (address);
 
   function getLendingPoolCollateralManager() external view returns (address);
@@ -23,10 +24,6 @@ interface IMarketAccessController is IAccessController {
 
   function getLendingRateOracle() external view returns (address);
 
-  function isRewardAdmin(address) external view returns (bool);
-
-  function isSponsoredLoanUser(address) external view returns (bool);
-
   function getTreasury() external view returns (address);
 
   function getRewardToken() external view returns (address);
@@ -36,10 +33,6 @@ interface IMarketAccessController is IAccessController {
   function getRewardController() external view returns (address);
 
   function getRewardConfigurator() external view returns (address);
-
-  function isStakeAdmin(address) external view returns (bool);
-
-  function isLiquidityController(address) external view returns (bool);
 }
 
 interface IManagedMarketAccessController is IMarketAccessController {

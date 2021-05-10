@@ -3,10 +3,7 @@ pragma solidity ^0.6.12;
 
 import {AccessFlags} from '../access/AccessFlags.sol';
 import {RemoteAccessBitmask} from '../access/RemoteAccessBitmask.sol';
-import {
-  IRemoteAccessBitmask,
-  RemoteAccessBitmaskHelper
-} from '../access/interfaces/IRemoteAccessBitmask.sol';
+import {IRemoteAccessBitmask} from '../access/interfaces/IRemoteAccessBitmask.sol';
 
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {RewardToken} from './RewardToken.sol';
@@ -28,11 +25,7 @@ contract AGFToken is
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor()
-    public
-    RewardToken(NAME, SYMBOL, DECIMALS)
-    RemoteAccessBitmask(IRemoteAccessBitmask(0))
-  {}
+  constructor() public RewardToken(NAME, SYMBOL, DECIMALS) {}
 
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;

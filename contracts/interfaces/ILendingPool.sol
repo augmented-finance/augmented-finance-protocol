@@ -3,9 +3,10 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import {IEmergencyAccess} from '../interfaces/IEmergencyAccess.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 
-interface ILendingPool {
+interface ILendingPool is IEmergencyAccess {
   /**
    * @dev Emitted on deposit()
    * @param reserve The address of the underlying asset of the reserve
@@ -408,8 +409,4 @@ interface ILendingPool {
   function getAccessController() external view returns (IMarketAccessController);
 
   function isPoolAdmin(address) external view returns (bool);
-
-  function setPause(bool val) external;
-
-  function paused() external view returns (bool);
 }

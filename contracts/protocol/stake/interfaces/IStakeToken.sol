@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import {IDerivedToken} from '../../../interfaces/IDerivedToken.sol';
+import {IEmergencyAccess} from '../../../interfaces/IEmergencyAccess.sol';
 
 interface IStakeToken is IDerivedToken {
   function stake(address to, uint256 underlyingAmount) external returns (uint256 stakeAmount);
@@ -27,7 +28,7 @@ interface IStakeToken is IDerivedToken {
   ) external returns (uint256);
 }
 
-interface IManagedStakeToken is IStakeToken {
+interface IManagedStakeToken is IEmergencyAccess, IStakeToken {
   function setRedeemable(bool redeemable) external;
 
   function getMaxSlashablePercentage() external view returns (uint256);

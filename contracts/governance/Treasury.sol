@@ -7,7 +7,7 @@ import {RemoteAccessBitmask} from '../access/RemoteAccessBitmask.sol';
 import {IRemoteAccessBitmask} from '../access/interfaces/IRemoteAccessBitmask.sol';
 import {AccessFlags} from '../access/AccessFlags.sol';
 
-contract Treasury is VersionedInitializable, RemoteAccessBitmask(IRemoteAccessBitmask(0)) {
+contract Treasury is VersionedInitializable, RemoteAccessBitmask {
   uint256 private constant TREASURY_REVISION = 1;
 
   // This initializer is invoked by AccessController.setAddressAsImpl
