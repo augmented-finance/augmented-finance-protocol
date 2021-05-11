@@ -1,4 +1,4 @@
-import { makeSuite, TestEnv } from './helpers/make-suite';
+import { makeSuite, TestEnv } from '../test-augmented/helpers/make-suite';
 import {
   convertToCurrencyDecimals,
   buildFlashLiquidationAdapterParams,
@@ -11,8 +11,8 @@ import { DRE, evmRevert, evmSnapshot, increaseTime, waitForTx } from '../../help
 import { ethers } from 'ethers';
 import { ProtocolErrors, RateMode } from '../../helpers/types';
 import { APPROVAL_AMOUNT_LENDING_POOL, MAX_UINT_AMOUNT, oneEther } from '../../helpers/constants';
-import { getUserData } from './helpers/utils/helpers';
-import { calcExpectedStableDebtTokenBalance } from './helpers/utils/calculations';
+import { getUserData } from '../test-augmented/helpers/utils/helpers';
+import { calcExpectedStableDebtTokenBalance } from '../test-augmented/helpers/utils/calculations';
 const { expect } = require('chai');
 
 makeSuite('Uniswap adapters', (testEnv: TestEnv) => {

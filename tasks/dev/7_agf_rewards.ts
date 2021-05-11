@@ -4,10 +4,12 @@ import {
   deployTokenUnweightedRewardPool,
   deployRewardFreezer,
   deployTeamRewardPool,
+  deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
 
 import { waitForTx } from '../../helpers/misc-utils';
-import { RAY, ZERO_ADDRESS } from '../../helpers/constants';
+import { ONE_ADDRESS, RAY, ZERO_ADDRESS } from '../../helpers/constants';
+import { BigNumberish } from 'ethers';
 
 task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
   .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', RAY, types.string)
@@ -19,6 +21,7 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
     5000,
     types.int
   )
+  .addOptionalParam('zombieRewardLimit', 'zombie reward limit', 5000, types.int)
   .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(
     async (
@@ -28,6 +31,7 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
         teamRewardBaselinePercentage,
         teamRewardUnlockBlock,
         teamRewardsFreezePercentage,
+        zombieRewardLimit,
       },
       localBRE
     ) => {
@@ -60,5 +64,19 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
       );
       await waitForTx(await rewardFreezer.admin_addRewardPool(teamRewardPool.address));
       await waitForTx(await teamRewardPool.setUnlockBlock(teamRewardUnlockBlock));
+
+      // deploy zombie pool, register in controller, add deployer(root) as provider
+      const zombieRewardPool = await deployZombieRewardPool(
+        [rewardFreezer.address, [ONE_ADDRESS], [{ rateRay: RAY, limit: zombieRewardLimit }]],
+        verify
+      );
+      await waitForTx(await rewardFreezer.admin_addRewardPool(zombieRewardPool.address));
+      await waitForTx(
+        await rewardFreezer.admin_addRewardProvider(
+          zombieRewardPool.address,
+          root.address,
+          ONE_ADDRESS
+        )
+      );
     }
   );
