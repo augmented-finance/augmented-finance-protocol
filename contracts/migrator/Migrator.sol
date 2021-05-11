@@ -154,13 +154,16 @@ contract Migrator is Ownable {
   {
     address underlying = target.UNDERLYING_ASSET_ADDRESS();
     uint256[] storage indices = _underlyings[underlying];
-    if (indices.length == 0) {
+    uint256 nTokens = indices.length;
+    if (nTokens == 0) {
       return (migrated, 0);
     }
-    migrated = new IMigrationAdapter[](indices.length);
-    address[] memory rewardPools = new address[](indices.length);
 
-    for (uint256 i = 0; i < indices.length; i++) {
+    migrated = new IMigrationAdapter[](nTokens);
+    address[] memory rewardPools = new address[](nTokens);
+
+    for (uint256 i = nTokens; i > 0; ) {
+      i--;
       IMigrationAdapter adapter = _adaptersList[indices[i] - 1];
       if (address(adapter) == address(0)) {
         continue;
