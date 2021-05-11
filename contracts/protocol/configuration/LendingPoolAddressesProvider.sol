@@ -9,5 +9,11 @@ import {MarketAccessController} from '../../access/MarketAccessController.sol';
  * - Acting also as factory of proxies and admin of those, so with right to change its implementations
  **/
 contract LendingPoolAddressesProvider is MarketAccessController {
+  address private _foo; // todo: remove this ABI verification workaround
+
+  function getFoo() external view returns (address) {
+    return _foo;
+  }
+
   constructor(string memory marketId) public MarketAccessController(marketId) {}
 }
