@@ -4,11 +4,10 @@ import { makeSuite, TestEnv } from '../test-aave/helpers/make-suite';
 import { AaveAdapter, Migrator } from '../../types';
 import rawBRE, { ethers } from 'hardhat';
 import { getAaveAdapter, getAToken, getMigrator } from '../../helpers/contracts-getters';
-import { ADAI_ADDRESS, LP_ADDRESS } from '../../tasks/dev/9_augmented_migrator';
-import { SignerWithAddress } from './helpers/make-suite';
+import { ADAI_ADDRESS } from '../../tasks/dev/9_augmented_migrator';
+import { SignerWithAddress } from '../test-augmented/helpers/make-suite';
 import { Signer } from 'ethers';
 import { convertToCurrencyDecimals } from '../../helpers/contracts-helpers';
-import { parseEther } from 'ethers/lib/utils';
 import { Provider } from '@ethersproject/providers';
 
 chai.use(solidity);

@@ -17,10 +17,9 @@ jobs:
           name: Restore yarn package cache
           keys:
             - yarn-packages-{{ checksum "yarn.lock" }}
-      - run: |
-          yarn install --immutable
-          yarn run compile
-          yarn run test
+      - run: yarn install --immutable
+      - run: yarn run test
+      - run: yarn run test-fork
       - save_cache:
           name: Save yarn package cache
           key: yarn-packages-{{ checksum "yarn.lock" }}
@@ -39,4 +38,6 @@ workflows:
               ignore: /develop/
           context: cancel-draft
       - test_all:
-          context: slack-secret
+          context:
+            - slack-secret
+            - alchemy-secret
