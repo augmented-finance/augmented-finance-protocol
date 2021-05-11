@@ -25,44 +25,26 @@ task('dev:augmented-migrator', 'Deploy Augmented Migrator contracts.')
     await localBRE.run('set-DRE');
     const [root] = await localBRE.ethers.getSigners();
 
-    const migrator = await deployAugmentedMigrator(verify);
-
-    const aDAIAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
-    await migrator.admin_registerAdapter(aDAIAdapter.address);
-    // const cDAIAdapter = await deployCompAdapter(
-    //   [migrator.address, cDaiAddress, daiAddress],
-    //   verify
-    // );
-    // await migrator.admin_registerAdapter(cDAIAdapter.address);
-
     const agfToken = await deployMockAgfToken(
       [ZERO_ADDRESS, 'Reward token updated', 'AGF'],
       verify
     );
 
     const rewardFreezer = await deployRewardFreezer([ZERO_ADDRESS, agfToken.address], verify);
-    await waitForTx(await rewardFreezer.admin_setFreezePercentage(0));
+    await rewardFreezer.admin_setFreezePercentage(0);
+
+    // migrator
+    const migrator = await deployAugmentedMigrator(verify);
+
+    const aDAIAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
+    await migrator.admin_registerAdapter(aDAIAdapter.address);
 
     // deploy zombie pool, register in controller, add deployer(root) as provider
     const zombieRewardPool = await deployZombieRewardPool(
-      [
-        rewardFreezer.address,
-        [aDaiAddress, cDaiAddress],
-        [
-          { rateRay: RAY, limit: 5000 },
-          { rateRay: RAY, limit: 5000 },
-        ],
-      ],
+      [rewardFreezer.address, [aDaiAddress], [{ rateRay: RAY, limit: 5000 }]],
       verify
     );
-    await waitForTx(await rewardFreezer.admin_addRewardPool(zombieRewardPool.address));
-    await waitForTx(
-      await rewardFreezer.admin_addRewardProvider(
-        zombieRewardPool.address,
-        aDAIAdapter.address,
-        aDaiAddress
-      )
-    );
-    await aDAIAdapter.admin_setRewardPool(zombieRewardPool.address);
-    // await migrator.admin_setRewardPool(aDAIAdapter.address, zombieRewardPool.address);
+    await rewardFreezer.admin_addRewardPool(zombieRewardPool.address);
+    await zombieRewardPool.addRewardProvider(aDAIAdapter.address, aDaiAddress);
+    await migrator.admin_setRewardPool(aDAIAdapter.address, zombieRewardPool.address);
   });
