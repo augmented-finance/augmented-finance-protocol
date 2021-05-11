@@ -120,7 +120,7 @@ export const CommonsConfig: ICommonConfiguration = {
   ProviderRegistry: {
     [eEthereumNetwork.kovan]: '',
     [eEthereumNetwork.rinkeby]: '',
-    [eEthereumNetwork.ropsten]: '0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe',
+    [eEthereumNetwork.ropsten]: '0x22CfbC0e4cCB20044Fe6646Daf642da24B34716d',
     [eEthereumNetwork.main]: '0x52D306e36E3B6B02c153d0266ff0f85d18BCD413',
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: '',

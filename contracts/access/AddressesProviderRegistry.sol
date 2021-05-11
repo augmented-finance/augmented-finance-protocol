@@ -46,6 +46,7 @@ contract AddressesProviderRegistry is Ownable, IAddressesProviderRegistry {
 
     _addressesProviders[provider] = id;
     _addToAddressesProvidersList(provider);
+    // todo: remove from list previous version by id
     emit AddressesProviderRegistered(provider);
   }
 
