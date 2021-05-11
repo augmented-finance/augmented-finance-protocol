@@ -61,7 +61,6 @@ import {
   AaveAdapterFactory,
   CompAdapterFactory,
   AccessControllerFactory,
-  TeamRewardPoolFactory,
   ZombieRewardPoolFactory,
 } from '../types';
 import {
