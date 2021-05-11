@@ -3,11 +3,11 @@ orbs:
   node: circleci/node@4.3.0
   slack: circleci/slack@4.4.2
 jobs:
-#  cancel_draft_build:
-#    docker:
-#      - image: vitalinfo/circleci-cancel-draft
-#    steps:
-#      - run: cancel-draft-build
+  cancel_draft_build:
+    docker:
+      - image: vitalinfo/circleci-cancel-draft
+    steps:
+      - run: cancel-draft-build
   test_all:
     docker:
       - image: cimg/node:12.16
@@ -33,10 +33,10 @@ jobs:
 workflows:
   test:
     jobs:
-#      - cancel_draft_build:
-#          filters:
-#            branches:
-#              ignore: /develop/
-#          context: cancel-draft
+      - cancel_draft_build:
+          filters:
+            branches:
+              ignore: /develop/
+          context: cancel-draft
       - test_all:
           context: slack-secret
