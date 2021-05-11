@@ -1,4 +1,4 @@
-import { makeSuite, TestEnv } from './helpers/make-suite';
+import { makeSuite, TestEnv } from '../test-augmented/helpers/make-suite';
 import {
   convertToCurrencyDecimals,
   getContract,

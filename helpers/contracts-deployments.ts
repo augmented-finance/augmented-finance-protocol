@@ -61,6 +61,8 @@ import {
   AaveAdapterFactory,
   CompAdapterFactory,
   AccessControllerFactory,
+  TeamRewardPoolFactory,
+  ZombieRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -73,6 +75,7 @@ import { StableAndVariableTokensHelperFactory } from '../types/StableAndVariable
 import { MintableDelegationERC20 } from '../types/MintableDelegationERC20';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { LendingPoolLibraryAddresses } from '../types/LendingPoolFactory';
+import { Overrides } from '@ethersproject/contracts';
 
 const readArtifact = async (id: string) => {
   return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
@@ -739,6 +742,21 @@ export const deployTeamRewardPool = async (
   withSaveAndVerify(
     await new TeamRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TeamRewardPool,
+    [], // TODO,
+    verify
+  );
+
+export const deployZombieRewardPool = async (
+  args: [
+    controller: string,
+    tokens: string[],
+    rewards: { rateRay: BigNumberish; limit: BigNumberish }[]
+  ],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new ZombieRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.ZombieRewardPool,
     [], // TODO,
     verify
   );
