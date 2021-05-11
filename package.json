@@ -33,7 +33,7 @@
     "test-stable-and-atokens": "hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/atoken-transfer.spec.ts test-suites/test-augmented/stable-token.spec.ts",
     "test-subgraph:scenarios": "hardhat --network hardhatevm_docker test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/subgraph-scenarios.spec.ts",
     "test-weth:main": "hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/weth-gateway.spec.ts",
-    "test-uniswap": "hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/uniswapAdapters*.spec.ts",
+    "test-uniswap": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented-uniswap/*.spec.ts",
     "test:main:check-list": "MAINNET_FORK=true TS_NODE_TRANSPILE_ONLY=1 hardhat test  test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/mainnet/check-list.spec.ts",
     "test:main:augmented:subscription": "MAINNET_FORK=true TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/subscription.spec.ts",
     "test:main:augmented:rewards": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/rewards.spec.ts --logs",

@@ -31,7 +31,7 @@ describe('Team rewards suite', () => {
   let REWARD_UNLOCK_BLOCK;
   let teamRewardInitialRate: string = RAY;
   let teamRewardsFreezePercentage = 0;
-  let rewardPrecision = 1;
+  let rewardPrecision = 1.5;
 
   before(async () => {
     await rawBRE.run('dev:augmented-access');
