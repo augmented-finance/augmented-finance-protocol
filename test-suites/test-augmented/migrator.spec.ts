@@ -1,19 +1,21 @@
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { makeSuite, TestEnv } from '../test-aave/helpers/make-suite';
-import { Migrator } from '../../types';
+import { AaveAdapter, Migrator } from '../../types';
 import rawBRE, { ethers } from 'hardhat';
-import { getAToken, getMigrator } from '../../helpers/contracts-getters';
-import { ADAI_ADDRESS } from '../../tasks/dev/9_augmented_migrator';
+import { getAaveAdapter, getAToken, getMigrator } from '../../helpers/contracts-getters';
+import { ADAI_ADDRESS, LP_ADDRESS } from '../../tasks/dev/9_augmented_migrator';
 import { SignerWithAddress } from './helpers/make-suite';
 import { Signer } from 'ethers';
 import { convertToCurrencyDecimals } from '../../helpers/contracts-helpers';
+import { parseEther } from 'ethers/lib/utils';
 
 chai.use(solidity);
 const { expect } = chai;
 
 makeSuite('Migrator test suite', (testEnv: TestEnv) => {
   let m: Migrator;
+  let aaveAdapter: AaveAdapter;
   let root: SignerWithAddress;
   let user1: SignerWithAddress;
   let aDaiSigner: Signer;
@@ -27,6 +29,7 @@ makeSuite('Migrator test suite', (testEnv: TestEnv) => {
   beforeEach(async () => {
     await rawBRE.run('dev:augmented-migrator');
     m = await getMigrator();
+    aaveAdapter = await getAaveAdapter();
   });
 
   it('deposit and migrate aDai', async () => {
@@ -38,6 +41,13 @@ makeSuite('Migrator test suite', (testEnv: TestEnv) => {
     const bigHolderSigner = await ethers.getSigner(bigHolder);
     const referral = 101;
     const aDaiAmount = await convertToCurrencyDecimals(ADAI_ADDRESS, '10');
+    await rawBRE.network.provider.request({
+      method: 'hardhat_impersonateAccount',
+      params: [ADAI_ADDRESS],
+    });
+
+    const aDaiContract = await getAToken(ADAI_ADDRESS);
+    await aDaiContract.connect(bigHolderSigner).approve(aaveAdapter.address, aDaiAmount);
     await m.connect(bigHolderSigner).depositToMigrate(ADAI_ADDRESS, aDaiAmount, referral);
   });
 });

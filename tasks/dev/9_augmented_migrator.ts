@@ -5,8 +5,6 @@ import {
   deployCompAdapter,
   deployMockAgfToken,
   deployRewardFreezer,
-  deployTeamRewardPool,
-  deployTokenUnweightedRewardPool,
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
 import { ONE_ADDRESS, RAY, ZERO_ADDRESS } from '../../helpers/constants';
@@ -31,11 +29,11 @@ task('dev:augmented-migrator', 'Deploy Augmented Migrator contracts.')
 
     const aDAIAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
     await migrator.admin_registerAdapter(aDAIAdapter.address);
-    const cDAIAdapter = await deployCompAdapter(
-      [migrator.address, cDaiAddress, daiAddress],
-      verify
-    );
-    await migrator.admin_registerAdapter(cDAIAdapter.address);
+    // const cDAIAdapter = await deployCompAdapter(
+    //   [migrator.address, cDaiAddress, daiAddress],
+    //   verify
+    // );
+    // await migrator.admin_registerAdapter(cDAIAdapter.address);
 
     const agfToken = await deployMockAgfToken(
       [ZERO_ADDRESS, 'Reward token updated', 'AGF'],
@@ -61,9 +59,10 @@ task('dev:augmented-migrator', 'Deploy Augmented Migrator contracts.')
     await waitForTx(
       await rewardFreezer.admin_addRewardProvider(
         zombieRewardPool.address,
-        root.address,
+        aDAIAdapter.address,
         aDaiAddress
       )
     );
-    await migrator.admin_setRewardPool(aDAIAdapter.address, zombieRewardPool.address);
+    await aDAIAdapter.admin_setRewardPool(zombieRewardPool.address);
+    // await migrator.admin_setRewardPool(aDAIAdapter.address, zombieRewardPool.address);
   });
