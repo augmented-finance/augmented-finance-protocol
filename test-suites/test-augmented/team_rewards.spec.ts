@@ -98,22 +98,51 @@ describe('Team rewards suite', () => {
     ).to.be.revertedWith('revert member share can not be changed during lockup');
   });
 
-  it('can change member share to zero after lockup period, no reward', async () => {
-    const memberShare = PERC_100 / 2;
-    await waitForTx(
-      await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, PERC_100 / 2)
-    );
-    const shares = await teamRewardPool.getAllocatedShares();
-    expect(shares).to.eq(memberShare, 'shares are wrong');
+  it('can change member share to zero', async () => {
+    const memberShare = PERC_100;
+    await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, memberShare);
+    let claimedInStepOne;
+    {
+      // rate #1 - 100% - 5 blocks
+      await mineToBlock(REWARD_UNLOCK_BLOCK + 5);
+      expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
+      const rewardCalc = await rewardController.claimableReward(
+        teamMember1.address,
+        await currentBlock()
+      );
+      console.log(`rewards = claimable: ${rewardCalc.claimable}, delayed: ${rewardCalc.delayed}`);
 
-    await mineToBlock(REWARD_UNLOCK_BLOCK + 1);
-    expect(await teamRewardPool.isUnlocked(await currentBlock())).to.be.true;
+      console.log(`claim is made at block: ${await currentBlock()}`);
+      await rewardController.connect(teamMember1).claimReward();
+
+      claimedInStepOne = await agf.balanceOf(teamMember1.address);
+      expect(rewardCalc.delayed).to.eq(0);
+      expect(claimedInStepOne.toNumber()).to.be.approximately(
+        rewardCalc.claimable.toNumber(),
+        rewardPrecision,
+        'reward is wrong'
+      );
+    }
     await teamRewardPool.connect(root).updateTeamMember(teamMember1.address, 0);
+    {
+      // rate #2 - 0% - 5 blocks
+      await mineToBlock(REWARD_UNLOCK_BLOCK + 10);
+      const rewardCalc = await rewardController.claimableReward(
+        teamMember1.address,
+        await currentBlock()
+      );
+      console.log(`rewards = claimable: ${rewardCalc.claimable}, delayed: ${rewardCalc.delayed}`);
 
-    console.log(`claim is made at block: ${await currentBlock()}`);
-    await (await rewardController.connect(teamMember1).claimReward()).wait(1);
-    const rewardClaimed = await agf.balanceOf(teamMember1.address);
-    expect(rewardClaimed.toNumber()).to.be.eq(0, 'reward is wrong');
+      console.log(`claim is made at block: ${await currentBlock()}`);
+      await rewardController.connect(teamMember1).claimReward();
+      expect(rewardCalc.delayed).to.eq(0);
+      const rewardClaimed = await agf.balanceOf(teamMember1.address);
+      expect(rewardClaimed.toNumber()).to.be.approximately(
+        claimedInStepOne.toNumber(),
+        rewardPrecision,
+        'reward is wrong'
+      );
+    }
   });
 
   it('can be unlocked on time', async () => {
