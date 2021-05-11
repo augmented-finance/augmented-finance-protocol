@@ -46,5 +46,5 @@ task('dev:augmented-migrator', 'Deploy Augmented Migrator contracts.')
     );
     await rewardFreezer.admin_addRewardPool(zombieRewardPool.address);
     await zombieRewardPool.addRewardProvider(aDAIAdapter.address, aDaiAddress);
-    await migrator.admin_setRewardPool(aDAIAdapter.address, zombieRewardPool.address);
+    // await migrator.admin_setRewardPool(aDAIAdapter.address, zombieRewardPool.address);
   });

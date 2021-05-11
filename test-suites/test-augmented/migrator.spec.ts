@@ -9,6 +9,7 @@ import { SignerWithAddress } from './helpers/make-suite';
 import { Signer } from 'ethers';
 import { convertToCurrencyDecimals } from '../../helpers/contracts-helpers';
 import { parseEther } from 'ethers/lib/utils';
+import { Provider } from '@ethersproject/providers';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -16,7 +17,7 @@ const { expect } = chai;
 makeSuite('Migrator test suite', (testEnv: TestEnv) => {
   let m: Migrator;
   let aaveAdapter: AaveAdapter;
-  let root: SignerWithAddress;
+  let root: Provider | Signer | string;
   let user1: SignerWithAddress;
   let aDaiSigner: Signer;
 
@@ -33,14 +34,14 @@ makeSuite('Migrator test suite', (testEnv: TestEnv) => {
   });
 
   it('deposit and migrate aDai', async () => {
-    const bigHolder = '0x4deb3edd991cfd2fcdaa6dcfe5f1743f6e7d16a6';
+    const bigaDaiHolder = '0x4deb3edd991cfd2fcdaa6dcfe5f1743f6e7d16a6';
     await rawBRE.network.provider.request({
       method: 'hardhat_impersonateAccount',
-      params: [bigHolder],
+      params: [bigaDaiHolder],
     });
-    const bigHolderSigner = await ethers.getSigner(bigHolder);
+    const bigHolderSigner = await ethers.getSigner(bigaDaiHolder);
     const referral = 101;
-    const aDaiAmount = await convertToCurrencyDecimals(ADAI_ADDRESS, '10');
+    const aDaiAmount = await convertToCurrencyDecimals(ADAI_ADDRESS, '11');
     await rawBRE.network.provider.request({
       method: 'hardhat_impersonateAccount',
       params: [ADAI_ADDRESS],
@@ -49,5 +50,10 @@ makeSuite('Migrator test suite', (testEnv: TestEnv) => {
     const aDaiContract = await getAToken(ADAI_ADDRESS);
     await aDaiContract.connect(bigHolderSigner).approve(aaveAdapter.address, aDaiAmount);
     await m.connect(bigHolderSigner).depositToMigrate(ADAI_ADDRESS, aDaiAmount, referral);
+    const balanceForMigrate = await m
+      .connect(root)
+      .balanceForMigrate(ADAI_ADDRESS, bigHolderSigner.address);
+    expect(balanceForMigrate).to.eq(aDaiAmount);
+    await m.admin_migrateAllThenEnableClaims([ADAI_ADDRESS]);
   });
 });
