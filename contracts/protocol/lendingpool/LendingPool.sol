@@ -7,6 +7,8 @@ import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
+import {AccessHelper} from '../../access/AccessHelper.sol';
+import {AccessFlags} from '../../access/AccessFlags.sol';
 import {IDepositToken} from '../../interfaces/IDepositToken.sol';
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
 import {IFlashLoanReceiver} from '../../flashloan/interfaces/IFlashLoanReceiver.sol';
@@ -47,6 +49,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
+  using AccessHelper for IMarketAccessController;
 
   uint256 private constant POOL_REVISION = 0x1;
 
@@ -61,7 +64,10 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
   }
 
   modifier onlySponsoredLoan() {
-    require(_addressesProvider.isSponsoredLoanUser(msg.sender), Errors.LP_IS_NOT_SPONSORED_LOAN);
+    require(
+      _addressesProvider.hasAllOf(msg.sender, AccessFlags.POOL_SPONSORED_LOAN_USER),
+      Errors.LP_IS_NOT_SPONSORED_LOAN
+    );
     _;
   }
 
@@ -71,7 +77,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
 
   function _onlyLendingPoolConfigurator() internal view {
     require(
-      _addressesProvider.getLendingPoolConfigurator() == msg.sender,
+      _addressesProvider.hasAllOf(msg.sender, AccessFlags.LENDING_POOL_CONFIGURATOR),
       Errors.LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR
     );
   }
@@ -736,7 +742,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
   /**
    * @dev Returns if the LendingPool is paused
    */
-  function paused() external view override returns (bool) {
+  function isPaused() external view override returns (bool) {
     return _paused;
   }
 
@@ -891,10 +897,18 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
 
   /**
    * @dev Set the _pause state of a reserve
-   * - Only callable by the LendingPoolConfigurator contract
+   * - Only callable by AccessFlags.EMERGENCY_ADMIN or AccessFlags.LENDING_POOL_CONFIGURATOR roles.
    * @param val `true` to pause the reserve, `false` to un-pause it
    */
-  function setPause(bool val) external override onlyLendingPoolConfigurator {
+  function setPaused(bool val) external override {
+    require(
+      _addressesProvider.hasAnyOf(
+        msg.sender,
+        AccessFlags.EMERGENCY_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR
+      ),
+      Errors.CALLER_NOT_EMERGENCY_ADMIN
+    );
+
     _paused = val;
     if (_paused) {
       emit Paused();

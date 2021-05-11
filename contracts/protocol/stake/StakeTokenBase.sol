@@ -13,8 +13,8 @@ import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
-// import {AccessFlags} from '../../access/AccessFlags.sol';
-import {RemoteAccessBitmask} from '../../access/RemoteAccessBitmask.sol';
+import {AccessFlags} from '../../access/AccessFlags.sol';
+import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 
 import {Errors} from '../../tools/Errors.sol';
@@ -24,7 +24,7 @@ import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.so
 abstract contract StakeTokenBase is
   IManagedStakeToken,
   ERC20WithPermit,
-  RemoteAccessBitmask,
+  MarketAccessBitmask,
   IInitializableStakeToken
 {
   using SafeMath for uint256;
@@ -52,7 +52,7 @@ abstract contract StakeTokenBase is
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public ERC20WithPermit(name, symbol, decimals) RemoteAccessBitmask(params.stakeController) {
+  ) public ERC20WithPermit(name, symbol, decimals) {
     _initializeToken(params);
   }
 
@@ -69,10 +69,6 @@ abstract contract StakeTokenBase is
     if (_maxSlashablePercentage == 0) {
       _maxSlashablePercentage = 30 * PercentageMath.PCT;
     }
-  }
-
-  function internalStakeController() internal view returns (IMarketAccessController) {
-    return IMarketAccessController(address(_remoteAcl));
   }
 
   function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
@@ -227,7 +223,7 @@ abstract contract StakeTokenBase is
     address destination,
     uint256 minAmount,
     uint256 maxAmount
-  ) external override onlyLiquidityController returns (uint256 amount) {
+  ) external override aclHas(AccessFlags.LIQUIDITY_CONTROLLER) returns (uint256 amount) {
     uint256 balance = _stakedToken.balanceOf(address(this));
     uint256 maxSlashable = balance.percentMul(_maxSlashablePercentage);
 
@@ -255,12 +251,20 @@ abstract contract StakeTokenBase is
     return _maxSlashablePercentage;
   }
 
-  function setMaxSlashablePercentage(uint256 percentageInRay) external override onlyAdmin {
+  function setMaxSlashablePercentage(uint256 percentageInRay)
+    external
+    override
+    aclHas(AccessFlags.STAKE_ADMIN)
+  {
     require(percentageInRay <= PercentageMath.ONE, 'STK_EXCESSIVE_SLASH_PCT');
     _maxSlashablePercentage = percentageInRay;
   }
 
-  function setCooldown(uint32 cooldownBlocks, uint32 unstakeBlocks) external override onlyAdmin {
+  function setCooldown(uint32 cooldownBlocks, uint32 unstakeBlocks)
+    external
+    override
+    aclHas(AccessFlags.STAKE_ADMIN)
+  {
     _cooldownBlocks = cooldownBlocks;
     _unstakeBlocks = unstakeBlocks;
   }
@@ -269,8 +273,20 @@ abstract contract StakeTokenBase is
     return !_redeemPaused;
   }
 
-  function setRedeemable(bool redeemable) external override onlyLiquidityController {
+  function setRedeemable(bool redeemable)
+    external
+    override
+    aclHas(AccessFlags.LIQUIDITY_CONTROLLER)
+  {
     _redeemPaused = !redeemable;
+  }
+
+  function setPaused(bool paused) external override aclHas(AccessFlags.EMERGENCY_ADMIN) {
+    _redeemPaused = paused;
+  }
+
+  function isPaused() external view override returns (bool) {
+    return _redeemPaused;
   }
 
   function getUnderlying() internal view returns (address) {
@@ -367,18 +383,5 @@ abstract contract StakeTokenBase is
   /// @notice Seconds available to redeem once the cooldown period is fullfilled
   function UNSTAKE_WINDOW_BLOCKS() external view returns (uint256) {
     return _unstakeBlocks;
-  }
-
-  modifier onlyAdmin() {
-    require(internalStakeController().isStakeAdmin(msg.sender), 'admin access only');
-    _;
-  }
-
-  modifier onlyLiquidityController() {
-    require(
-      internalStakeController().isLiquidityController(msg.sender),
-      'LiquidityController only'
-    );
-    _;
   }
 }

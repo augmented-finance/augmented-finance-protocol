@@ -6,16 +6,17 @@ import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {BitUtils} from '../tools/math/BitUtils.sol';
 
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
+import {AccessFlags} from '../access/AccessFlags.sol';
 import {IManagedRewardController, AllocationMode} from './interfaces/IRewardController.sol';
 import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BasicRewardController is Ownable, IManagedRewardController {
+abstract contract BasicRewardController is Ownable, MarketAccessBitmask, IManagedRewardController {
   using SafeMath for uint256;
 
-  IMarketAccessController private _accessController;
   IRewardMinter private _rewardMinter;
 
   IManagedRewardPool[] private _poolList;
@@ -28,7 +29,7 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
   uint256 private _baselineMask;
 
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter) public {
-    _accessController = accessController;
+    _remoteAcl = accessController;
     _rewardMinter = rewardMinter;
   }
 
@@ -184,10 +185,10 @@ abstract contract BasicRewardController is Ownable, IManagedRewardController {
   }
 
   function isRateController(address addr) public view override returns (bool) {
-    if (_accessController == IMarketAccessController(0)) {
+    if (!hasRemoteAcl()) {
       return addr == address(this);
     }
-    return false; // TODO _accessController.isRewardRateAdmin(addr);
+    return acl_hasAllOf(_msgSender(), AccessFlags.REWARD_RATE_ADMIN);
   }
 
   function isConfigurator(address addr) public view override returns (bool) {

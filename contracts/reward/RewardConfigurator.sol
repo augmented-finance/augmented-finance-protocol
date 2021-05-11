@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
 import {Errors} from '../tools/Errors.sol';
 import {
   InitializableImmutableAdminUpgradeabilityProxy
@@ -18,7 +19,12 @@ import {StakeTokenConfig} from '../protocol/stake/interfaces/StakeTokenConfig.so
 import {ITransferHook} from '../protocol/stake/interfaces/ITransferHook.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
-contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMigratorHook {
+contract RewardConfigurator is
+  MarketAccessBitmask,
+  VersionedInitializable,
+  IRewardConfigurator,
+  IMigratorHook
+{
   uint256 private constant CONFIGURATOR_REVISION = 1;
 
   function getRevision() internal pure virtual override returns (uint256) {
@@ -27,7 +33,6 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
 
   // TODO mapping for pool implementations
 
-  IMarketAccessController internal _addressesProvider;
   address internal _migrator;
 
   struct NamedPool {
@@ -40,19 +45,9 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
   mapping(string => uint256) internal _nameToPoolNum;
   uint256 internal _rewardPoolCount;
 
-  modifier onlyRewardAdmin {
-    require(_addressesProvider.isRewardAdmin(msg.sender), Errors.CALLER_NOT_REWARD_ADMIN);
-    _;
-  }
-
-  modifier onlyEmergencyAdmin {
-    require(_addressesProvider.isEmergencyAdmin(msg.sender), Errors.LPC_CALLER_NOT_EMERGENCY_ADMIN);
-    _;
-  }
-
   // This initializer is invoked by AccessController.setAddressAsImpl
   function initialize(address addressesProvider) external initializer(CONFIGURATOR_REVISION) {
-    _addressesProvider = IMarketAccessController(addressesProvider);
+    _remoteAcl = IMarketAccessController(addressesProvider);
   }
 
   function setMigrator(address migrator) external onlyRewardAdmin {
@@ -80,7 +75,7 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
   }
 
   function getDefaultController() public view returns (IManagedRewardController) {
-    address ctl = _addressesProvider.getRewardController();
+    address ctl = _remoteAcl.getRewardController();
     require(ctl != address(0), 'incomplete configuration');
     return IManagedRewardController(ctl);
   }
@@ -160,9 +155,9 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
       minter = address(0);
     } else {
       if (rewardType == RewardType.Token) {
-        minter = _addressesProvider.getRewardToken();
+        minter = _remoteAcl.getRewardToken();
       } else {
-        minter = _addressesProvider.getRewardStakeToken();
+        minter = _remoteAcl.getRewardStakeToken();
       }
       require(minter != address(0), 'incomplete configuration');
     }
@@ -180,7 +175,7 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
   function initStakeToken(StakeInitData memory input) private returns (address) {
     StakeTokenConfig memory config =
       StakeTokenConfig(
-        _addressesProvider,
+        _remoteAcl,
         IERC20(input.stakedToken),
         input.cooldownBlocks,
         input.unstakeBlocks,
@@ -196,6 +191,6 @@ contract RewardConfigurator is VersionedInitializable, IRewardConfigurator, IMig
         input.stkTokenDecimals
       );
 
-    return address(_addressesProvider.createProxy(address(this), input.stakeTokenImpl, params));
+    return address(_remoteAcl.createProxy(address(this), input.stakeTokenImpl, params));
   }
 }

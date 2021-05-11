@@ -104,10 +104,6 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
     return isAddress(AccessFlags.POOL_ADMIN, addr);
   }
 
-  function isRewardAdmin(address addr) external view override returns (bool) {
-    return isAddress(AccessFlags.POOL_ADMIN, addr);
-  }
-
   function setPoolAdmin(address admin) external override onlyOwner {
     setAddress(AccessFlags.POOL_ADMIN, admin);
   }
@@ -126,10 +122,6 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
 
   function setLendingRateOracle(address lendingRateOracle) external override onlyOwner {
     setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle);
-  }
-
-  function isSponsoredLoanUser(address addr) external view override returns (bool) {
-    return isAddress(AccessFlags.POOL_SPONSORED_LOAN_USER, addr);
   }
 
   function getTreasury() external view override returns (address) {
@@ -170,13 +162,5 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
 
   function setRewardConfiguratorImpl(address addr) external override {
     setAddressAsProxy(AccessFlags.REWARD_CONFIGURATOR, addr);
-  }
-
-  function isStakeAdmin(address addr) external view override returns (bool) {
-    return isAddress(AccessFlags.STAKE_ADMIN, addr);
-  }
-
-  function isLiquidityController(address addr) external view override returns (bool) {
-    return isAddress(AccessFlags.LIQUIDITY_CONTROLLER, addr);
   }
 }
