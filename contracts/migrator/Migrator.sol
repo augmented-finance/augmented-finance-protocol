@@ -161,7 +161,7 @@ contract Migrator is Ownable {
     address[] memory rewardPools = new address[](indices.length);
 
     for (uint256 i = 0; i < indices.length; i++) {
-      IMigrationAdapter adapter = _adaptersList[indices[i]];
+      IMigrationAdapter adapter = _adaptersList[indices[i] - 1];
       if (address(adapter) == address(0)) {
         continue;
       }
