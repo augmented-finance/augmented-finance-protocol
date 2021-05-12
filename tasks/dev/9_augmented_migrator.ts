@@ -5,10 +5,10 @@ import {
   deployCompAdapter,
   deployMockAgfToken,
   deployRewardFreezer,
+  deployZombieAdapter,
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
-import { ONE_ADDRESS, RAY, ZERO_ADDRESS } from '../../helpers/constants';
-import { waitForTx } from '../../helpers/misc-utils';
+import { RAY, ZERO_ADDRESS } from '../../helpers/constants';
 
 // mainnet addresses
 export const ADAI_ADDRESS = '0x028171bca77440897b824ca71d1c56cac55b68a3';
@@ -19,33 +19,45 @@ export const LP_ADDRESS = '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9';
 task('dev:augmented-migrator', 'Deploy Augmented Migrator contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
   .addOptionalParam('cDaiAddress', 'Compound DAI address', CDAI_ADDRESS, types.string)
+  .addFlag('withZombieAdapter', 'deploy with zombie adapter of aDai')
+  .addFlag('withAAVEAdapter', 'deploy with AAVE adapter of aDai')
   .addFlag('verify', 'Verify contracts at Etherscan')
-  .setAction(async ({ aDaiAddress, cDaiAddress, verify }, localBRE) => {
-    await localBRE.run('set-DRE');
-    const [root] = await localBRE.ethers.getSigners();
+  .setAction(
+    async ({ aDaiAddress, cDaiAddress, withZombieAdapter, withAAVEAdapter, verify }, localBRE) => {
+      await localBRE.run('set-DRE');
+      const [root] = await localBRE.ethers.getSigners();
 
-    const agfToken = await deployMockAgfToken(
-      [ZERO_ADDRESS, 'Reward token updated', 'AGF'],
-      verify
-    );
+      const agfToken = await deployMockAgfToken(
+        [ZERO_ADDRESS, 'Reward token updated', 'AGF'],
+        verify
+      );
 
-    const rewardFreezer = await deployRewardFreezer([ZERO_ADDRESS, agfToken.address], verify);
-    await rewardFreezer.admin_setFreezePercentage(0);
+      const rewardFreezer = await deployRewardFreezer([ZERO_ADDRESS, agfToken.address], verify);
+      await rewardFreezer.admin_setFreezePercentage(0);
 
-    // migrator
-    const migrator = await deployAugmentedMigrator(verify);
+      const migrator = await deployAugmentedMigrator(verify);
 
-    const aDAIAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
-    const daiAddress = await aDAIAdapter.UNDERLYING_ASSET_ADDRESS();
+      let adapter;
+      let tokenAddr: string;
+      if (withZombieAdapter) {
+        adapter = await deployZombieAdapter([migrator.address, aDaiAddress]);
+        tokenAddr = aDaiAddress;
+      } else if (withAAVEAdapter) {
+        adapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
+        tokenAddr = await adapter.UNDERLYING_ASSET_ADDRESS();
+      } else {
+        throw Error('provide deployment flag: withZombieAdapter: true or withAAVEAdapter: true');
+      }
 
-    await migrator.admin_registerAdapter(aDAIAdapter.address);
+      await migrator.admin_registerAdapter(adapter.address);
 
-    // deploy zombie pool, register in controller, add aDAIAdapter as provider
-    const zombieRewardPool = await deployZombieRewardPool(
-      [rewardFreezer.address, [daiAddress], [{ rateRay: RAY, limit: RAY }]],
-      verify
-    );
-    await rewardFreezer.admin_addRewardPool(zombieRewardPool.address);
-    await zombieRewardPool.addRewardProvider(aDAIAdapter.address, daiAddress);
-    await migrator.admin_setRewardPool(aDAIAdapter.address, zombieRewardPool.address);
-  });
+      // deploy zombie pool, register in controller, add aDAIAdapter as provider
+      const zombieRewardPool = await deployZombieRewardPool(
+        [rewardFreezer.address, [tokenAddr], [{ rateRay: RAY, limit: RAY }]],
+        verify
+      );
+      await rewardFreezer.admin_addRewardPool(zombieRewardPool.address);
+      await zombieRewardPool.addRewardProvider(adapter.address, tokenAddr);
+      await migrator.admin_setRewardPool(adapter.address, zombieRewardPool.address);
+    }
+  );

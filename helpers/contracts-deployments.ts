@@ -62,6 +62,7 @@ import {
   CompAdapterFactory,
   AccessControllerFactory,
   ZombieRewardPoolFactory,
+  ZombieAdapterFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -787,6 +788,17 @@ export const deployAugmentedMigrator = async (verify?: boolean) =>
     await new MigratorFactory(await getFirstSigner()).deploy(),
     eContractid.Migrator,
     [],
+    verify
+  );
+
+export const deployZombieAdapter = async (
+  args: [tEthereumAddress, tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new ZombieAdapterFactory(await getFirstSigner()).deploy(...args),
+    eContractid.ZombieAdapter,
+    args,
     verify
   );
 
