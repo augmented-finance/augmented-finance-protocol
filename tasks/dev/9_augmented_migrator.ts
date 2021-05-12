@@ -2,13 +2,13 @@ import { task, types } from 'hardhat/config';
 import {
   deployAaveAdapter,
   deployAugmentedMigrator,
-  deployCompAdapter,
+  deployMigratorWeightedRewardPool,
   deployMockAgfToken,
   deployRewardFreezer,
   deployZombieAdapter,
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
-import { RAY, ZERO_ADDRESS } from '../../helpers/constants';
+import { oneRay, RAY, ZERO_ADDRESS } from '../../helpers/constants';
 
 // mainnet addresses
 export const ADAI_ADDRESS = '0x028171bca77440897b824ca71d1c56cac55b68a3';
@@ -25,7 +25,6 @@ task('dev:augmented-migrator', 'Deploy Augmented Migrator contracts.')
   .setAction(
     async ({ aDaiAddress, cDaiAddress, withZombieAdapter, withAAVEAdapter, verify }, localBRE) => {
       await localBRE.run('set-DRE');
-      const [root] = await localBRE.ethers.getSigners();
 
       const agfToken = await deployMockAgfToken(
         [ZERO_ADDRESS, 'Reward token updated', 'AGF'],
@@ -39,25 +38,27 @@ task('dev:augmented-migrator', 'Deploy Augmented Migrator contracts.')
 
       let adapter;
       let tokenAddr: string;
+      let rp;
       if (withZombieAdapter) {
         adapter = await deployZombieAdapter([migrator.address, aDaiAddress]);
         tokenAddr = aDaiAddress;
+        rp = await deployZombieRewardPool(
+          [rewardFreezer.address, [tokenAddr], [{ rateRay: RAY, limit: RAY }]],
+          verify
+        );
       } else if (withAAVEAdapter) {
         adapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
         tokenAddr = await adapter.UNDERLYING_ASSET_ADDRESS();
+        rp = await deployMigratorWeightedRewardPool(
+          [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed(), tokenAddr],
+          verify
+        );
       } else {
         throw Error('provide deployment flag: withZombieAdapter: true or withAAVEAdapter: true');
       }
-
       await migrator.admin_registerAdapter(adapter.address);
-
-      // deploy zombie pool, register in controller, add aDAIAdapter as provider
-      const zombieRewardPool = await deployZombieRewardPool(
-        [rewardFreezer.address, [tokenAddr], [{ rateRay: RAY, limit: RAY }]],
-        verify
-      );
-      await rewardFreezer.admin_addRewardPool(zombieRewardPool.address);
-      await zombieRewardPool.addRewardProvider(adapter.address, tokenAddr);
-      await migrator.admin_setRewardPool(adapter.address, zombieRewardPool.address);
+      await rewardFreezer.admin_addRewardPool(rp.address);
+      await rp.addRewardProvider(adapter.address, tokenAddr);
+      await migrator.admin_setRewardPool(adapter.address, rp.address);
     }
   );

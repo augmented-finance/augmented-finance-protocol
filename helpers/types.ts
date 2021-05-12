@@ -89,6 +89,7 @@ export enum eContractid {
   RewardFreezer = 'RewardFreezer',
   TeamRewardPool = 'TeamRewardPool',
   ZombieRewardPool = 'ZombieRewardPool',
+  MigratorWeightedRewardPool = 'MigratorWeightedRewardPool',
   TokenWeightedRewardPool = 'TokenWeightedRewardPool',
   TokenUnweightedRewardPool = 'TokenUnweightedRewardPool',
   Migrator = 'Migrator',

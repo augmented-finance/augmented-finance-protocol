@@ -23,7 +23,8 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     require(maxTotalSupply > 0, 'max total supply is unknown');
 
     uint256 maxSupplyBits = BitUtils.bitLength(maxTotalSupply);
-    require(maxSupplyBits + minBitReserve > 256, 'max total supply is too high');
+    console.log('supply bits', maxSupplyBits + minBitReserve);
+    require(maxSupplyBits + minBitReserve < 256, 'max total supply is too high');
 
     _totalSupplyMax = (1 << maxSupplyBits) - 1;
   }

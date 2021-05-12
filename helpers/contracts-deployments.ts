@@ -63,6 +63,7 @@ import {
   AccessControllerFactory,
   ZombieRewardPoolFactory,
   ZombieAdapterFactory,
+  MigratorWeightedRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -758,6 +759,17 @@ export const deployZombieRewardPool = async (
     await new ZombieRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.ZombieRewardPool,
     [], // TODO,
+    verify
+  );
+
+export const deployMigratorWeightedRewardPool = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new MigratorWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.MigratorWeightedRewardPool,
+    [],
     verify
   );
 

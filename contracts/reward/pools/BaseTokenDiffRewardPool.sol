@@ -96,7 +96,7 @@ abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
       require(token != address(0), 'token is required');
       _token = token;
     } else {
-      require(token != _token, 'token is different');
+      require(token == _token, 'token is different');
     }
     if (_providers[provider] != 0) {
       return;
