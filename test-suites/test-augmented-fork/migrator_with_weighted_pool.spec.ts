@@ -7,7 +7,6 @@ import {
   Migrator,
   MockAgfToken,
   RewardFreezer,
-  ZombieAdapter,
 } from '../../types';
 import rawBRE, { ethers } from 'hardhat';
 import {
@@ -16,30 +15,27 @@ import {
   getMigrator,
   getMockAgfToken,
   getRewardFreezer,
-  getZombieAdapter,
 } from '../../helpers/contracts-getters';
-import { ADAI_ADDRESS } from '../../tasks/dev/9_augmented_migrator';
 import { SignerWithAddress } from '../test-augmented/helpers/make-suite';
 import { Signer } from 'ethers';
-import { convertToCurrencyDecimals } from '../../helpers/contracts-helpers';
 import { Provider } from '@ethersproject/providers';
 import {
   defaultMigrationAmount, defaultReferral,
   extBigHolderAddress,
-  extTokenAddress,
+  extTokenAddress, impersonateAndGetContractByFunc,
   impersonateAndGetSigner,
 } from './helper';
-import { revertSnapshot, takeSnapshot } from '../test-augmented/utils';
+import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 
 chai.use(solidity);
 const { expect } = chai;
 
 makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv) => {
   let blkBeforeDeploy;
+  let blkAfterDeploy;
 
   let m: Migrator;
   let aaveAdapter: AaveAdapter;
-  let adapterAddress: string;
   let agf: MockAgfToken;
   let rc: RewardFreezer;
   let root: Provider | Signer | string;
@@ -49,11 +45,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
 
   before(async () => {
     [root, user1] = await ethers.getSigners();
-    await rawBRE.network.provider.request({
-      method: 'hardhat_impersonateAccount',
-      params: [extTokenAddress],
-    });
-    aDaiContract = await getAToken(extTokenAddress);
+    aDaiContract = await impersonateAndGetContractByFunc(extTokenAddress, getAToken);
     extBigHolder = await impersonateAndGetSigner(extBigHolderAddress);
     await rawBRE.run('dev:augmented-access');
   });
@@ -66,35 +58,37 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     };
     await rawBRE.run('dev:augmented-migrator', deployConfig);
     aaveAdapter = await getAaveAdapter();
-    adapterAddress = aaveAdapter.address;
     m = await getMigrator();
     agf = await getMockAgfToken();
     rc = await getRewardFreezer();
+    blkAfterDeploy = await currentBlock();
   });
 
   afterEach(async () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  it('deposit and migrate aDai, claim rewards', async () => {
-    // at block 12419283, see hardhat fork config
-    let whaleBeforeAmount = await aDaiContract.balanceOf(extBigHolderAddress);
-    console.log(`whale before: ${whaleBeforeAmount}`);
+  it('one deposit, multiple blocks', async () => {
+    const depositsPerformed = 1;
+    const blocksPassed = 20;
 
-    await aDaiContract.connect(extBigHolder).approve(adapterAddress, defaultMigrationAmount);
-    await m
+    await aDaiContract
       .connect(extBigHolder)
-      .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral);
+      .approve(aaveAdapter.address, defaultMigrationAmount * depositsPerformed);
+    for (let i = 0; i < depositsPerformed; i++) {
+      await m
+        .connect(extBigHolder)
+        .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral);
+    }
+    const blkAfterDeposit = await currentBlock();
     const balanceForMigrate = await m
       .connect(root)
       .balanceForMigrate(extTokenAddress, extBigHolderAddress);
-    expect(balanceForMigrate).to.eq(defaultMigrationAmount);
+    expect(balanceForMigrate).to.eq(defaultMigrationAmount * depositsPerformed);
 
     await m.admin_migrateAllThenEnableClaims([extTokenAddress]);
+    await mineToBlock(blkAfterDeposit + blocksPassed);
     await rc.connect(extBigHolder).claimReward();
-    expect(await agf.balanceOf(extBigHolderAddress)).to.eq(defaultMigrationAmount / 1000);
-    const whaleBalanceAfter = await aDaiContract.balanceOf(extBigHolderAddress);
-    console.log(`whale after: ${whaleBalanceAfter}`);
-    // TODO: how to check the whale balance correctly?!
+    expect(await agf.balanceOf(extBigHolderAddress)).to.eq(blocksPassed);
   });
 });

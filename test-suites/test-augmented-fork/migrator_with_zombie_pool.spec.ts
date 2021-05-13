@@ -25,7 +25,7 @@ import {
   defaultMigrationAmount,
   defaultReferral,
   extBigHolderAddress,
-  extTokenAddress,
+  extTokenAddress, impersonateAndGetContractByFunc,
   impersonateAndGetSigner,
 } from './helper';
 import { revertSnapshot, takeSnapshot } from '../test-augmented/utils';
@@ -38,7 +38,6 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
 
   let m: Migrator;
   let zAdapter: ZombieAdapter;
-  let adapterAddress: string;
   let agf: MockAgfToken;
   let rc: RewardFreezer;
   let root: Provider | Signer | string;
@@ -48,12 +47,7 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
 
   before(async () => {
     [root, user1] = await ethers.getSigners();
-    await rawBRE.network.provider.request({
-      method: 'hardhat_impersonateAccount',
-      params: [extTokenAddress],
-    });
-
-    aDaiContract = await getAToken(extTokenAddress);
+    aDaiContract = await impersonateAndGetContractByFunc(extTokenAddress, getAToken);
     extBigHolder = await impersonateAndGetSigner(extBigHolderAddress);
     await rawBRE.run('dev:augmented-access');
   });
@@ -68,7 +62,6 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
     };
     await rawBRE.run('dev:augmented-migrator', deployConfig);
     zAdapter = await getZombieAdapter();
-    adapterAddress = zAdapter.address;
     m = await getMigrator();
     agf = await getMockAgfToken();
     rc = await getRewardFreezer();
@@ -81,7 +74,7 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
   // TODO: add bound cases for partial migration
 
   it('withdraw is not allowed with ZombieRewardPool', async () => {
-    await aDaiContract.connect(extBigHolder).approve(adapterAddress, defaultMigrationAmount);
+    await aDaiContract.connect(extBigHolder).approve(zAdapter.address, defaultMigrationAmount);
     await m
       .connect(extBigHolder)
       .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral);
@@ -100,7 +93,9 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
   it('can not deposit to migrate when approved amount is not enough', async () => {
     let whaleBeforeAmount = await aDaiContract.balanceOf(extBigHolderAddress);
     console.log(`whale before: ${whaleBeforeAmount}`);
-    await aDaiContract.connect(extBigHolder).approve(adapterAddress, defaultMigrationAmount - 100);
+    await aDaiContract
+      .connect(extBigHolder)
+      .approve(zAdapter.address, defaultMigrationAmount - 100);
     await expect(
       m
         .connect(extBigHolder)
@@ -113,7 +108,7 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
     let whaleBeforeAmount = await aDaiContract.balanceOf(extBigHolderAddress);
     console.log(`whale before: ${whaleBeforeAmount}`);
 
-    await aDaiContract.connect(extBigHolder).approve(adapterAddress, defaultMigrationAmount);
+    await aDaiContract.connect(extBigHolder).approve(zAdapter.address, defaultMigrationAmount);
     await m
       .connect(extBigHolder)
       .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral);

@@ -16,3 +16,11 @@ export const impersonateAndGetSigner = async (addr: string): Promise<SignerWithA
   });
   return ethers.getSigner(addr);
 };
+
+export const impersonateAndGetContractByFunc = async (addr: string, f: Function): Promise<any> => {
+  await rawBRE.network.provider.request({
+    method: 'hardhat_impersonateAccount',
+    params: [extTokenAddress],
+  });
+  return await f(extTokenAddress);
+};
