@@ -1,7 +1,7 @@
 import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
-import { makeSuite, TestEnv } from '../test-aave/helpers/make-suite';
+import { makeSuite, TestEnv } from '../test-augmented/helpers/make-suite';
 import { waitForTx } from '../../helpers/misc-utils';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import rawBRE, { ethers } from 'hardhat';

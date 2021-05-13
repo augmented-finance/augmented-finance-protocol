@@ -19,7 +19,7 @@ import {
 import { DelegationAwareDepositTokenFactory } from '../../types';
 import { DelegationAwareDepositToken } from '../../types';
 import { MintableDelegationERC20 } from '../../types';
-import AaveConfig from '../../markets/aave';
+import AaveConfig from '../../markets/augmented';
 
 const { parseEther } = ethers.utils;
 

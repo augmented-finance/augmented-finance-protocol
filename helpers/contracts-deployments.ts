@@ -56,7 +56,6 @@ import {
   RewardFreezerFactory,
   TokenWeightedRewardPoolFactory,
   TokenUnweightedRewardPoolFactory,
-  TeamRewardPoolFactory,
   MigratorFactory,
   AaveAdapterFactory,
   CompAdapterFactory,
@@ -463,7 +462,7 @@ export const deployDelegationAwareDepositTokenImpl = async (verify: boolean) =>
 export const deployAllMockTokens = async (verify?: boolean) => {
   const tokens: { [symbol: string]: MockContract | MintableERC20 } = {};
 
-  const protoConfigData = getReservesConfigByPool(AavePools.proto);
+  const protoConfigData = getReservesConfigByPool(AavePools.augmented);
 
   for (const tokenSymbol of Object.keys(TokenContractId)) {
     let decimals = '18';

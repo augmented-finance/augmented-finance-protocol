@@ -1,9 +1,7 @@
 import { task } from 'hardhat/config';
-import { AaveConfig } from '../../markets/aave/index';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
 import { deployWETHGateway } from '../../helpers/contracts-deployments';
-import { DRE } from '../../helpers/misc-utils';
 import { eNetwork } from '../../helpers/types';
 
 const CONTRACT_NAME = 'WETHGateway';

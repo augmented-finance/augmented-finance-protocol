@@ -31,8 +31,8 @@ export enum EthereumNetworkNames {
 }
 
 export enum AavePools {
-  proto = 'proto',
-  matic = 'matic',
+  // proto = 'proto',
+  // matic = 'matic',
   augmented = 'augmented',
 }
 
@@ -301,8 +301,8 @@ export interface iPolygonParamsPerNetwork<T> {
 }
 
 export interface iParamsPerPool<T> {
-  [AavePools.proto]: T;
-  [AavePools.matic]: T;
+  // [AavePools.proto]: T;
+  // [AavePools.matic]: T;
   [AavePools.augmented]: T;
 }
 

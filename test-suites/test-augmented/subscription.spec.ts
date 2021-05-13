@@ -6,7 +6,7 @@ import { JsonRpcSigner } from '@ethersproject/providers/src.ts/json-rpc-provider
 import { BigNumberish } from '@ethersproject/bignumber';
 import { Subscription, SubscriptionFactory } from '../../types';
 import { IERC20 } from '../../types/IERC20';
-import { makeSuite, TestEnv } from '../test-aave/helpers/make-suite';
+import { makeSuite, TestEnv } from '../test-augmented/helpers/make-suite';
 
 chai.use(solidity);
 const { expect } = chai;

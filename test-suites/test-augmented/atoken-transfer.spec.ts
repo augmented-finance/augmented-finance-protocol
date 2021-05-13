@@ -8,7 +8,7 @@ import { expect } from 'chai';
 import { ethers } from 'ethers';
 import { RateMode, ProtocolErrors } from '../../helpers/types';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { CommonsConfig } from '../../markets/aave/commons';
+import { CommonsConfig } from '../../markets/augmented/commons';
 
 const AAVE_REFERRAL = CommonsConfig.ProtocolGlobalParams.AaveReferral;
 
