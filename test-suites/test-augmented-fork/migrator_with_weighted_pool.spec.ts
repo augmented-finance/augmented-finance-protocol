@@ -20,9 +20,11 @@ import { SignerWithAddress } from '../test-augmented/helpers/make-suite';
 import { Signer } from 'ethers';
 import { Provider } from '@ethersproject/providers';
 import {
-  defaultMigrationAmount, defaultReferral,
+  defaultMigrationAmount,
+  defaultReferral,
   extBigHolderAddress,
-  extTokenAddress, impersonateAndGetContractByFunc,
+  extTokenAddress,
+  impersonateAndGetContractByFunc,
   impersonateAndGetSigner,
 } from './helper';
 import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
@@ -61,7 +63,6 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     m = await getMigrator();
     agf = await getMockAgfToken();
     rc = await getRewardFreezer();
-    blkAfterDeploy = await currentBlock();
   });
 
   afterEach(async () => {
