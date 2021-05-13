@@ -118,9 +118,9 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
   it('can not deposit to migrate when approved amount is not enough', async () => {
     let whaleBeforeAmount = await aDaiContract.balanceOf(extBigHolderAddress);
     console.log(`whale before: ${whaleBeforeAmount}`);
-    await (await aDaiContract
+    await aDaiContract
       .connect(extBigHolder)
-      .approve(m.address, 0)).wait(1);
+      .approve(m.address, 1);
 
     await expect(
       m
