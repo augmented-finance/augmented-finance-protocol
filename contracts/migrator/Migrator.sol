@@ -29,7 +29,31 @@ contract Migrator is Ownable {
     uint256 amount,
     uint64 referralCode
   ) public returns (uint256) {
-    return getAdapter(token).depositToMigrate(amount, msg.sender, referralCode);
+    return _depositToMigrate(msg.sender, token, amount, referralCode);
+  }
+
+  function depositToMigrateOnBehalf(
+    address holder,
+    address token,
+    uint256 amount,
+    uint64 referralCode
+  ) public returns (uint256) {
+    require(holder != address(0), 'unknown holder');
+    return _depositToMigrate(holder, token, amount, referralCode);
+  }
+
+  function _depositToMigrate(
+    address holder,
+    address token,
+    uint256 amount,
+    uint64 referralCode
+  ) private returns (uint256) {
+    IMigrationAdapter adapter = getAdapter(token);
+    uint256 preBalance = adapter.preDepositOnBehalf();
+
+    IERC20(token).safeTransferFrom(holder, address(adapter), amount);
+
+    return adapter.postDepositOnBehalf(holder, preBalance, amount, referralCode);
   }
 
   function withdrawFromMigrate(address token, uint256 maxAmount) public returns (uint256) {

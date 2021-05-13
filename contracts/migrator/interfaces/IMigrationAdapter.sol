@@ -34,6 +34,15 @@ interface IMigrationAdapter is IEmergencyAccess {
 
   function withdrawFromMigrateOnBehalf(uint256 amount, address holder) external returns (uint256); // onlyOwner
 
+  function preDepositOnBehalf() external returns (uint256); // onlyOwner
+
+  function postDepositOnBehalf(
+    address holder,
+    uint256 preBalance,
+    uint256 amount,
+    uint64 referralCode
+  ) external returns (uint256); // onlyOwner
+
   function getController() external returns (address);
 
   function admin_setRewardPool(IBalanceHook rewardPool) external;
@@ -43,4 +52,18 @@ interface IMigrationAdapter is IEmergencyAccess {
   function admin_enableClaims() external;
 
   function admin_sweepToken(address token, address to) external returns (uint256);
+
+  event DepositedForMigrate(
+    address indexed token,
+    address indexed holder,
+    uint256 amount,
+    uint256 internalBalance,
+    uint64 indexed referralCode
+  );
+  event WithdrawnFromMigrate(
+    address indexed token,
+    address indexed holder,
+    uint256 amount,
+    uint256 internalBalance
+  );
 }

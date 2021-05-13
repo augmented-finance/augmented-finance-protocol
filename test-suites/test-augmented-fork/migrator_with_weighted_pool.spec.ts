@@ -74,7 +74,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
 
     await aDaiContract
       .connect(extBigHolder)
-      .approve(aaveAdapter.address, defaultMigrationAmount * depositsPerformed);
+      .approve(m.address, defaultMigrationAmount * depositsPerformed);
     for (let i = 0; i < depositsPerformed; i++) {
       await m
         .connect(extBigHolder)

@@ -20,10 +20,18 @@ contract ZombieAdapter is BasicAdapter {
     BasicAdapter(controller, originAsset, originAsset)
   {}
 
-  function transferOriginIn(uint256 amount, address holder) internal override returns (uint256) {
+  function balanceOrigin() internal override returns (uint256 internalAmount) {
+    return IERC20(_originAsset).balanceOf(address(this));
+  }
+
+  function internalDeposit(
+    address holder,
+    uint256 internalAmount,
+    uint256 amount,
+    uint64 referralCode
+  ) internal override returns (uint256) {
     require(Address.isExternallyOwned(holder), 'only users are allowed, but not contracts');
-    IERC20(_originAsset).safeTransferFrom(holder, address(this), amount);
-    return amount;
+    return super.internalDeposit(holder, internalAmount, amount, referralCode);
   }
 
   function transferOriginOut(uint256 amount, address holder) internal override returns (uint256) {

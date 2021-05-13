@@ -74,14 +74,14 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
   // TODO: add bound cases for partial migration
 
   it('withdraw is not allowed with ZombieRewardPool', async () => {
-    await aDaiContract.connect(extBigHolder).approve(zAdapter.address, defaultMigrationAmount);
+    await aDaiContract.connect(extBigHolder).approve(m.address, defaultMigrationAmount);
     await m
       .connect(extBigHolder)
       .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral);
     await rc.connect(extBigHolder).claimReward();
     expect(await agf.balanceOf(extBigHolderAddress)).to.eq(defaultMigrationAmount);
 
-    expect(
+    await expect(
       m.connect(extBigHolder).withdrawFromMigrate(extTokenAddress, defaultMigrationAmount)
     ).to.be.revertedWith('balance reduction is not allowed by the reward pool');
   });
@@ -93,13 +93,14 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
   it('can not deposit to migrate when approved amount is not enough', async () => {
     let whaleBeforeAmount = await aDaiContract.balanceOf(extBigHolderAddress);
     console.log(`whale before: ${whaleBeforeAmount}`);
-    await aDaiContract
+    await (await aDaiContract
       .connect(extBigHolder)
-      .approve(zAdapter.address, defaultMigrationAmount - 100);
+      .approve(m.address, 0)).wait(1);
+
     await expect(
       m
         .connect(extBigHolder)
-        .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral)
+        .depositToMigrate(aDaiContract.address, defaultMigrationAmount, defaultReferral)
     ).to.be.revertedWith('SafeERC20: low-level call failed');
   });
 
@@ -108,7 +109,7 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
     let whaleBeforeAmount = await aDaiContract.balanceOf(extBigHolderAddress);
     console.log(`whale before: ${whaleBeforeAmount}`);
 
-    await aDaiContract.connect(extBigHolder).approve(zAdapter.address, defaultMigrationAmount);
+    await aDaiContract.connect(extBigHolder).approve(m.address, defaultMigrationAmount);
     await m
       .connect(extBigHolder)
       .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral);
