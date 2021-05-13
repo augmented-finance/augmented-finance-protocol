@@ -29,6 +29,7 @@ import {
   impersonateAndGetSigner,
 } from './helper';
 import { revertSnapshot, takeSnapshot } from '../test-augmented/utils';
+import { tEthereumAddress } from '../../helpers/types';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -71,7 +72,31 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
     await revertSnapshot(blkBeforeDeploy);
   });
 
+  const transferExtTokenTo = async (toAddress: tEthereumAddress) => {
+    await aDaiContract.connect(extBigHolder).transfer(toAddress, defaultMigrationAmount);
+    const migratoraDaiBalance = await aDaiContract.connect(extBigHolder).balanceOf(toAddress);
+    expect(migratoraDaiBalance).to.eq(defaultMigrationAmount);
+  };
+
   // TODO: add bound cases for partial migration
+
+  it('can not sweep tokens from adapter before migration', async () => {
+    const toAddress = zAdapter.address;
+    await transferExtTokenTo(toAddress);
+    await expect(
+      m.connect(root).admin_sweepToken(toAddress, aDaiContract.address, extBigHolderAddress)
+    ).to.be.revertedWith('origin and underlying can only be swept after migration');
+  });
+
+  it('can sweep tokens from migrator', async () => {
+    const toAddress = m.address;
+    await transferExtTokenTo(toAddress);
+    await m.connect(root).admin_sweepToken(toAddress, aDaiContract.address, extBigHolderAddress);
+    const migratoraDaiBalanceAfterSweep = await aDaiContract
+      .connect(extBigHolder)
+      .balanceOf(toAddress);
+    expect(migratoraDaiBalanceAfterSweep).to.eq(0);
+  });
 
   it('withdraw is not allowed with ZombieRewardPool', async () => {
     await aDaiContract.connect(extBigHolder).approve(m.address, defaultMigrationAmount);
