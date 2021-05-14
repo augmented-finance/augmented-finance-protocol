@@ -287,6 +287,8 @@ abstract contract BasicAdapter is IMigrationAdapter {
 
     underlying.approve(address(toPool), underlyingAmount);
     toPool.deposit(address(underlying), underlyingAmount, address(this), 0);
+    // not being used as collateral reduces gas cost for further transfers
+    toPool.setUserUseReserveAsCollateral(address(underlying), false);
 
     targetAmount = targetAsset.scaledBalanceOf(address(this)).sub(targetAmount);
     require(targetAmount > 0, 'deposited less than expected');
