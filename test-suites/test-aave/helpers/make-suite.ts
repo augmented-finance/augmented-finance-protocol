@@ -40,6 +40,7 @@ import { AaveConfig } from '../../../markets/aave';
 import { FlashLiquidationAdapter } from '../../../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { usingTenderly } from '../../../helpers/tenderly-utils';
+import rawBRE from 'hardhat';
 
 chai.use(bignumberChai());
 chai.use(almostEqual());

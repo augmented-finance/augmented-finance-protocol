@@ -40,6 +40,8 @@ import {
   AccessControllerFactory,
   ZombieRewardPool,
   ZombieRewardPoolFactory,
+  AaveAdapterFactory,
+  ZombieAdapterFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -391,6 +393,20 @@ export const getFlashLiquidationAdapter = async (address?: tEthereumAddress) =>
 export const getAgfToken = async (address?: tEthereumAddress) =>
   await AGFTokenFactory.connect(
     address || (await getDb().get(`${eContractid.AGFToken}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
+export const getZombieAdapter = async (address?: tEthereumAddress) =>
+  await ZombieAdapterFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.ZombieAdapter}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
+export const getAaveAdapter = async (address?: tEthereumAddress) =>
+  await AaveAdapterFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.AaveAdapter}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
 

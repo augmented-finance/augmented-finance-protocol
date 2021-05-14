@@ -9,7 +9,6 @@ import {
 
 import { waitForTx } from '../../helpers/misc-utils';
 import { ONE_ADDRESS, RAY, ZERO_ADDRESS } from '../../helpers/constants';
-import { BigNumberish } from 'ethers';
 
 task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
   .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', RAY, types.string)
@@ -66,6 +65,7 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
       await waitForTx(await teamRewardPool.setUnlockBlock(teamRewardUnlockBlock));
 
       // deploy zombie pool, register in controller, add deployer(root) as provider
+      // ONE_ADDRESS is just an empty addr, doesn't matter for that scope of tests, not called
       const zombieRewardPool = await deployZombieRewardPool(
         [rewardFreezer.address, [ONE_ADDRESS], [{ rateRay: RAY, limit: zombieRewardLimit }]],
         verify

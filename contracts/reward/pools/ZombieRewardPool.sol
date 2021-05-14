@@ -104,7 +104,7 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
     uint256 allocated
   ) private {
     require(token != address(0), 'unknown token');
-    require(_providers[msg.sender] == token, 'unknown provider or restriced token');
+    require(_providers[msg.sender] == token, 'unknown provider or restricted token');
 
     TokenReward storage tr = _tokens[token];
 

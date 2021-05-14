@@ -196,6 +196,7 @@ export const getParamPerPool = <T>(
 export const convertToCurrencyDecimals = async (tokenAddress: tEthereumAddress, amount: string) => {
   const token = await getIErc20Detailed(tokenAddress);
   let decimals = (await token.decimals()).toString();
+  console.log(`decimals: ${decimals}`);
 
   return ethers.utils.parseUnits(amount, decimals);
 };

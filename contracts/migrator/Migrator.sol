@@ -29,7 +29,31 @@ contract Migrator is Ownable {
     uint256 amount,
     uint64 referralCode
   ) public returns (uint256) {
-    return getAdapter(token).depositToMigrate(amount, msg.sender, referralCode);
+    return _depositToMigrate(msg.sender, token, amount, referralCode);
+  }
+
+  function depositToMigrateOnBehalf(
+    address holder,
+    address token,
+    uint256 amount,
+    uint64 referralCode
+  ) public returns (uint256) {
+    require(holder != address(0), 'unknown holder');
+    return _depositToMigrate(holder, token, amount, referralCode);
+  }
+
+  function _depositToMigrate(
+    address holder,
+    address token,
+    uint256 amount,
+    uint64 referralCode
+  ) private returns (uint256) {
+    IMigrationAdapter adapter = getAdapter(token);
+    uint256 preBalance = adapter.preDepositOnBehalf();
+
+    IERC20(token).safeTransferFrom(holder, address(adapter), amount);
+
+    return adapter.postDepositOnBehalf(holder, preBalance, amount, referralCode);
   }
 
   function withdrawFromMigrate(address token, uint256 maxAmount) public returns (uint256) {
@@ -53,6 +77,7 @@ contract Migrator is Ownable {
         continue;
       }
       (uint256 claimedAmount, bool claimed) = _adaptersList[i].claimMigrated(msg.sender);
+      console.log('claimed AG:', claimedAmount, claimed);
       if (!claimed) {
         notClaimableTokenTypes++;
       } else if (claimedAmount > 0) {
@@ -154,14 +179,17 @@ contract Migrator is Ownable {
   {
     address underlying = target.UNDERLYING_ASSET_ADDRESS();
     uint256[] storage indices = _underlyings[underlying];
-    if (indices.length == 0) {
+    uint256 nTokens = indices.length;
+    if (nTokens == 0) {
       return (migrated, 0);
     }
-    migrated = new IMigrationAdapter[](indices.length);
-    address[] memory rewardPools = new address[](indices.length);
 
-    for (uint256 i = 0; i < indices.length; i++) {
-      IMigrationAdapter adapter = _adaptersList[indices[i]];
+    migrated = new IMigrationAdapter[](nTokens);
+    address[] memory rewardPools = new address[](nTokens);
+
+    for (uint256 i = nTokens; i > 0; ) {
+      i--;
+      IMigrationAdapter adapter = _adaptersList[indices[i] - 1];
       if (address(adapter) == address(0)) {
         continue;
       }

@@ -61,8 +61,9 @@ import {
   AaveAdapterFactory,
   CompAdapterFactory,
   AccessControllerFactory,
-  TeamRewardPoolFactory,
   ZombieRewardPoolFactory,
+  ZombieAdapterFactory,
+  MigratorWeightedRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -761,6 +762,17 @@ export const deployZombieRewardPool = async (
     verify
   );
 
+export const deployMigratorWeightedRewardPool = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new MigratorWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.MigratorWeightedRewardPool,
+    [],
+    verify
+  );
+
 export const deployTokenWeightedRewardPool = async (
   args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
@@ -788,6 +800,17 @@ export const deployAugmentedMigrator = async (verify?: boolean) =>
     await new MigratorFactory(await getFirstSigner()).deploy(),
     eContractid.Migrator,
     [],
+    verify
+  );
+
+export const deployZombieAdapter = async (
+  args: [tEthereumAddress, tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new ZombieAdapterFactory(await getFirstSigner()).deploy(...args),
+    eContractid.ZombieAdapter,
+    args,
     verify
   );
 

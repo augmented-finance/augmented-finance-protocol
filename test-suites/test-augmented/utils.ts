@@ -1,5 +1,23 @@
 import rawBRE, { ethers } from 'hardhat';
 
+export const oneBlock = async (f: Function) => {
+  await ethers.provider.send('evm_setAutomine', [false]);
+  f();
+  await ethers.provider.send('evm_setAutomine', [true]);
+  await oneTx();
+};
+
+const oneTx = async () => {
+  const wallets = await ethers.getSigners();
+  const nonce = await wallets[7].getTransactionCount();
+  await wallets[7].sendTransaction({
+    nonce: ethers.utils.hexlify(nonce),
+    to: wallets[8].address,
+    value: 1,
+    chainId: rawBRE.network.config.chainId,
+  });
+};
+
 export const mineToBlock = async (to: number): Promise<number> => {
   const blk = await ethers.provider.getBlock('latest');
   if (to < blk.number) {
