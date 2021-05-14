@@ -11,5 +11,5 @@ task('dev:augmented-access', 'Augmented protocol admin access permissions.')
     const admin = await getFirstSigner();
     const accessController = await deployAccessController(verify);
     // pool admin flag
-    await accessController.grantRoles(admin.address, (1 << 3) | (1 << 10));
+    await accessController.grantRoles(admin.address, (1 << 0) | (1 << 3) | (1 << 10));
   });
