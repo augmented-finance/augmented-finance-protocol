@@ -77,6 +77,7 @@ contract Migrator is Ownable {
         continue;
       }
       (uint256 claimedAmount, bool claimed) = _adaptersList[i].claimMigrated(msg.sender);
+      console.log('claimed AG:', claimedAmount, claimed);
       if (!claimed) {
         notClaimableTokenTypes++;
       } else if (claimedAmount > 0) {

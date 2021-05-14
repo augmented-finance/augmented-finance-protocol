@@ -17,19 +17,18 @@ import {
   getRewardFreezer,
   getZombieAdapter,
 } from '../../helpers/contracts-getters';
-import { ADAI_ADDRESS } from '../../tasks/dev/9_augmented_migrator';
 import { SignerWithAddress } from '../test-augmented/helpers/make-suite';
 import { Signer } from 'ethers';
 import { Provider } from '@ethersproject/providers';
 import {
   defaultMigrationAmount,
   defaultReferral,
-  extBigHolderAddress,
-  extTokenAddress, impersonateAndGetContractByFunc,
+  extWhaleONE,
+  extTokenAddress,
+  impersonateAndGetContractByFunc,
   impersonateAndGetSigner,
 } from './helper';
-import { revertSnapshot, takeSnapshot } from '../test-augmented/utils';
-import { tEthereumAddress } from '../../helpers/types';
+import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -49,7 +48,7 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
   before(async () => {
     [root, user1] = await ethers.getSigners();
     aDaiContract = await impersonateAndGetContractByFunc(extTokenAddress, getAToken);
-    extBigHolder = await impersonateAndGetSigner(extBigHolderAddress);
+    extBigHolder = await impersonateAndGetSigner(extWhaleONE);
     await rawBRE.run('dev:augmented-access');
   });
 
@@ -72,30 +71,33 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  const transferExtTokenTo = async (toAddress: tEthereumAddress) => {
-    await aDaiContract.connect(extBigHolder).transfer(toAddress, defaultMigrationAmount);
-    const migratoraDaiBalance = await aDaiContract.connect(extBigHolder).balanceOf(toAddress);
-    expect(migratoraDaiBalance).to.eq(defaultMigrationAmount);
-  };
-
   // TODO: add bound cases for partial migration
 
   it('can not sweep tokens from adapter before migration', async () => {
     const toAddress = zAdapter.address;
-    await transferExtTokenTo(toAddress);
+    await aDaiContract.connect(extBigHolder).transfer(toAddress, defaultMigrationAmount);
+    const migratoraDaiBalance = await aDaiContract.connect(extBigHolder).balanceOf(toAddress);
+    expect(migratoraDaiBalance).to.eq(defaultMigrationAmount);
+
     await expect(
-      m.connect(root).admin_sweepToken(toAddress, aDaiContract.address, extBigHolderAddress)
+      m.connect(root).admin_sweepToken(toAddress, aDaiContract.address, extWhaleONE)
     ).to.be.revertedWith('origin and underlying can only be swept after migration');
   });
 
-  it('can sweep tokens from migrator', async () => {
+  it('can sweep tokens from migrator back', async () => {
+    let wb = await aDaiContract.scaledBalanceOf(extWhaleONE);
     const toAddress = m.address;
-    await transferExtTokenTo(toAddress);
-    await m.connect(root).admin_sweepToken(toAddress, aDaiContract.address, extBigHolderAddress);
+    await aDaiContract.connect(extBigHolder).transfer(toAddress, defaultMigrationAmount);
+    const migratoraDaiBalance = await aDaiContract.connect(extBigHolder).balanceOf(toAddress);
+    expect(migratoraDaiBalance).to.eq(defaultMigrationAmount);
+
+    await m.connect(root).admin_sweepToken(toAddress, aDaiContract.address, extWhaleONE);
     const migratoraDaiBalanceAfterSweep = await aDaiContract
       .connect(extBigHolder)
       .balanceOf(toAddress);
     expect(migratoraDaiBalanceAfterSweep).to.eq(0);
+    const wa = await aDaiContract.scaledBalanceOf(extWhaleONE);
+    expect(wb).to.eq(wa);
   });
 
   it('withdraw is not allowed with ZombieRewardPool', async () => {
@@ -104,7 +106,7 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
       .connect(extBigHolder)
       .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral);
     await rc.connect(extBigHolder).claimReward();
-    expect(await agf.balanceOf(extBigHolderAddress)).to.eq(defaultMigrationAmount);
+    expect(await agf.balanceOf(extWhaleONE)).to.eq(defaultMigrationAmount);
 
     await expect(
       m.connect(extBigHolder).withdrawFromMigrate(extTokenAddress, defaultMigrationAmount)
@@ -116,11 +118,9 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
   });
 
   it('can not deposit to migrate when approved amount is not enough', async () => {
-    let whaleBeforeAmount = await aDaiContract.balanceOf(extBigHolderAddress);
+    let whaleBeforeAmount = await aDaiContract.balanceOf(extWhaleONE);
     console.log(`whale before: ${whaleBeforeAmount}`);
-    await aDaiContract
-      .connect(extBigHolder)
-      .approve(m.address, 1);
+    await aDaiContract.connect(extBigHolder).approve(m.address, 1);
 
     await expect(
       m
@@ -129,25 +129,40 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
     ).to.be.revertedWith('SafeERC20: low-level call failed');
   });
 
-  it('deposit and migrate aDai, claim rewards', async () => {
+  // it.only('can not migrate with the same referral twice', async () => {
+  //   await aDaiContract.connect(extBigHolder).approve(m.address, defaultMigrationAmount);
+  //   await m
+  //     .connect(extBigHolder)
+  //     .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral);
+  //   await m.connect(root).admin_migrateToToken(extTokenAddress);
+  //   await aDaiContract.connect(extBigHolder).approve(m.address, defaultMigrationAmount);
+  //   await m
+  //     .connect(extBigHolder)
+  //     .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral);
+  //   // await rc.connect(extBigHolder).claimReward();
+  // });
+
+  it('deposit and migrate aDai, claim both rewards', async () => {
     // at block 12419283, see hardhat fork config
-    let whaleBeforeAmount = await aDaiContract.balanceOf(extBigHolderAddress);
-    console.log(`whale before: ${whaleBeforeAmount}`);
+    let wb = await aDaiContract.scaledBalanceOf(extWhaleONE);
 
     await aDaiContract.connect(extBigHolder).approve(m.address, defaultMigrationAmount);
     await m
       .connect(extBigHolder)
       .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral);
-    const balanceForMigrate = await m
-      .connect(root)
-      .balanceForMigrate(extTokenAddress, extBigHolderAddress);
+    const balanceForMigrate = await m.connect(root).balanceForMigrate(extTokenAddress, extWhaleONE);
     expect(balanceForMigrate).to.eq(defaultMigrationAmount);
 
     await m.admin_migrateAllThenEnableClaims([extTokenAddress]);
+
+    await m.connect(extBigHolder).claimAllMigrated();
+
     await rc.connect(extBigHolder).claimReward();
-    expect(await agf.balanceOf(extBigHolderAddress)).to.eq(defaultMigrationAmount);
-    const whaleBalanceAfter = await aDaiContract.balanceOf(extBigHolderAddress);
-    console.log(`whale after: ${whaleBalanceAfter}`);
-    // TODO: how to check the whale balance correctly?!
+    expect(await agf.balanceOf(extWhaleONE)).to.eq(defaultMigrationAmount);
+
+    const wa = await aDaiContract.scaledBalanceOf(extWhaleONE);
+    // TODO: internalDeposit 962 instead of 1k aDai
+    console.log(`diff: ${wb.sub(wa).toString()}`);
+    // expect(wa).to.eq(wb);
   });
 });
