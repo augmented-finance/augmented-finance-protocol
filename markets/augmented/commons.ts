@@ -39,57 +39,15 @@ export const CommonsConfig: ICommonConfiguration = {
     DAI: {
       borrowRate: oneRay.multipliedBy(0.039).toFixed(),
     },
-    // TUSD: {
-    //   borrowRate: oneRay.multipliedBy(0.035).toFixed(),
-    // },
     USDC: {
       borrowRate: oneRay.multipliedBy(0.039).toFixed(),
     },
-    // SUSD: {
-    //   borrowRate: oneRay.multipliedBy(0.035).toFixed(),
-    // },
     USDT: {
       borrowRate: oneRay.multipliedBy(0.035).toFixed(),
     },
-    // BAT: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // AAVE: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // LINK: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // KNC: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // MKR: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // MANA: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
     WBTC: {
       borrowRate: oneRay.multipliedBy(0.03).toFixed(),
     },
-    // ZRX: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // SNX: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // YFI: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // REN: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // UNI: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // BUSD: {
-    //   borrowRate: oneRay.multipliedBy(0.05).toFixed(),
-    // },
   },
   // ----------------
   // COMMON PROTOCOL ADDRESSES ACROSS POOLS

@@ -57,17 +57,6 @@ export const rateStrategyAAVE: IInterestRateStrategyParams = {
   stableRateSlope2: '0',
 }
 
-// BAT ENJ LINK MANA MKR REN YFI ZRX
-export const rateStrategyVolatileOne: IInterestRateStrategyParams = {
-  name: "rateStrategyVolatileOne",
-  optimalUtilizationRate: new BigNumber(0.45).multipliedBy(oneRay).toFixed(),
-  baseVariableBorrowRate: new BigNumber(0).multipliedBy(oneRay).toFixed(),
-  variableRateSlope1: new BigNumber(0.07).multipliedBy(oneRay).toFixed(),
-  variableRateSlope2: new BigNumber(3).multipliedBy(oneRay).toFixed(),
-  stableRateSlope1: new BigNumber(0.1).multipliedBy(oneRay).toFixed(),
-  stableRateSlope2: new BigNumber(3).multipliedBy(oneRay).toFixed(),
-}
-
 // KNC WBTC
 export const rateStrategyVolatileTwo: IInterestRateStrategyParams = {
   name: "rateStrategyVolatileTwo",
@@ -77,28 +66,6 @@ export const rateStrategyVolatileTwo: IInterestRateStrategyParams = {
   variableRateSlope2: new BigNumber(3).multipliedBy(oneRay).toFixed(),
   stableRateSlope1: new BigNumber(0.1).multipliedBy(oneRay).toFixed(),
   stableRateSlope2: new BigNumber(3).multipliedBy(oneRay).toFixed(),
-}
-
-// SNX
-export const rateStrategyVolatileThree: IInterestRateStrategyParams = {
-  name: "rateStrategyVolatileThree",
-  optimalUtilizationRate: new BigNumber(0.65).multipliedBy(oneRay).toFixed(),
-  baseVariableBorrowRate: new BigNumber(0).multipliedBy(oneRay).toFixed(),
-  variableRateSlope1: new BigNumber(0.08).multipliedBy(oneRay).toFixed(),
-  variableRateSlope2: new BigNumber(3).multipliedBy(oneRay).toFixed(),
-  stableRateSlope1: new BigNumber(0.1).multipliedBy(oneRay).toFixed(),
-  stableRateSlope2: new BigNumber(3).multipliedBy(oneRay).toFixed(),
-}
-
-
-export const rateStrategyVolatileFour: IInterestRateStrategyParams = {
-  name: "rateStrategyVolatileFour",
-  optimalUtilizationRate: new BigNumber(0.45).multipliedBy(oneRay).toFixed(),
-  baseVariableBorrowRate: '0',
-  variableRateSlope1: new BigNumber(0.07).multipliedBy(oneRay).toFixed(),
-  variableRateSlope2: new BigNumber(3).multipliedBy(oneRay).toFixed(),
-  stableRateSlope1: '0',
-  stableRateSlope2: '0',
 }
 
 
