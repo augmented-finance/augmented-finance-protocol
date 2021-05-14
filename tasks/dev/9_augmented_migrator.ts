@@ -1,6 +1,7 @@
 import { task, types } from 'hardhat/config';
 import {
   deployAaveAdapter,
+  deployAccessController,
   deployAugmentedMigrator,
   deployMigratorWeightedRewardPool,
   deployMockAgfToken,
@@ -25,13 +26,17 @@ task('dev:augmented-migrator', 'Deploy Augmented Migrator contracts.')
   .setAction(
     async ({ aDaiAddress, cDaiAddress, withZombieAdapter, withAAVEAdapter, verify }, localBRE) => {
       await localBRE.run('set-DRE');
+      const [root] = await localBRE.ethers.getSigners();
+
+      const ac = await deployAccessController();
+      await ac.setEmergencyAdmin(root.address);
 
       const agfToken = await deployMockAgfToken(
-        [ZERO_ADDRESS, 'Reward token updated', 'AGF'],
+        [ac.address, 'Reward token updated', 'AGF'],
         verify
       );
 
-      const rewardFreezer = await deployRewardFreezer([ZERO_ADDRESS, agfToken.address], verify);
+      const rewardFreezer = await deployRewardFreezer([ac.address, agfToken.address], verify);
       await rewardFreezer.admin_setFreezePercentage(0);
 
       const migrator = await deployAugmentedMigrator(verify);
