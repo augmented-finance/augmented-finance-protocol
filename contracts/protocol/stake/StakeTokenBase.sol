@@ -281,7 +281,7 @@ abstract contract StakeTokenBase is
     _redeemPaused = !redeemable;
   }
 
-  function setPaused(bool paused) external override aclHas(AccessFlags.EMERGENCY_ADMIN) {
+  function setPaused(bool paused) external override onlyEmergencyAdmin {
     _redeemPaused = paused;
   }
 

@@ -17,6 +17,7 @@ abstract contract BaseRateRewardPool is ControlledRewardPool {
 
   uint16 private constant NO_BASELINE = type(uint16).max;
   uint16 private _baselinePercentage;
+  uint256 private _pausedRate;
 
   constructor(
     IRewardController controller,
@@ -35,7 +36,7 @@ abstract contract BaseRateRewardPool is ControlledRewardPool {
     if (_baselinePercentage == NO_BASELINE) {
       return false;
     }
-    internalSetRate(baseline.percentMul(_baselinePercentage), uint32(block.number));
+    setRate(baseline.percentMul(_baselinePercentage));
     return true;
   }
 
@@ -44,6 +45,7 @@ abstract contract BaseRateRewardPool is ControlledRewardPool {
   }
 
   function internalDisableRate() internal override {
+    _pausedRate = 0;
     internalSetRate(0, uint32(block.number));
   }
 
@@ -53,10 +55,23 @@ abstract contract BaseRateRewardPool is ControlledRewardPool {
   }
 
   function setRate(uint256 rate) public override onlyRateController {
+    if (isPaused()) {
+      _pausedRate = rate;
+      return;
+    }
     internalSetRate(rate, uint32(block.number));
   }
 
   function internalSetRate(uint256 rate, uint32 currentBlock) internal virtual;
 
   function getRate() public view virtual returns (uint256);
+
+  function internalPause(bool paused) internal override {
+    if (paused) {
+      _pausedRate = getRate();
+      internalSetRate(0, uint32(block.number));
+      return;
+    }
+    internalSetRate(_pausedRate, uint32(block.number));
+  }
 }

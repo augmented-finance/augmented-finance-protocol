@@ -28,6 +28,8 @@ abstract contract BasicRewardController is Ownable, MarketAccessBitmask, IManage
   uint256 private _ignoreMask;
   uint256 private _baselineMask;
 
+  bool private _paused;
+
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter) public {
     _remoteAcl = accessController;
     _rewardMinter = rewardMinter;
@@ -106,15 +108,18 @@ abstract contract BasicRewardController is Ownable, MarketAccessBitmask, IManage
   }
 
   function claimReward() external returns (uint256 amount) {
+    // notPaused
     return internalClaimAndMintReward(msg.sender, ~uint256(0), msg.sender);
   }
 
   function claimRewardAndTransferTo(address receiver, uint256 mask) external returns (uint256) {
+    // notPaused
     require(receiver != address(0), 'receiver is required');
     return internalClaimAndMintReward(msg.sender, mask, receiver);
   }
 
   function claimRewardFor(address holder, uint256 mask) external returns (uint256) {
+    // notPaused
     require(holder != address(0), 'holder is required');
     return internalClaimAndMintReward(holder, mask, holder);
   }
@@ -195,11 +200,18 @@ abstract contract BasicRewardController is Ownable, MarketAccessBitmask, IManage
     return addr == owner();
   }
 
+  function isEmergencyAdmin(address addr) public view override returns (bool) {
+    if (!hasRemoteAcl()) {
+      return addr == address(this);
+    }
+    return acl_hasAllOf(_msgSender(), AccessFlags.EMERGENCY_ADMIN);
+  }
+
   function internalClaimAndMintReward(
     address holder,
     uint256 mask,
     address receiver
-  ) private returns (uint256 claimableAmount) {
+  ) private notPaused returns (uint256 claimableAmount) {
     mask &= ~_ignoreMask;
     mask &= _memberOf[holder];
 
@@ -319,4 +331,17 @@ abstract contract BasicRewardController is Ownable, MarketAccessBitmask, IManage
     uint32 currentBlock,
     bool incremental
   ) internal view virtual returns (uint256 claimableAmount, uint256 delayedAmount);
+
+  modifier notPaused() {
+    require(!_paused, 'rewards are paused');
+    _;
+  }
+
+  function setPaused(bool paused) public override onlyEmergencyAdmin {
+    _paused = paused;
+  }
+
+  function isPaused() public view override returns (bool) {
+    return _paused;
+  }
 }

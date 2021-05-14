@@ -102,7 +102,7 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
     address token,
     address holder,
     uint256 allocated
-  ) private {
+  ) private notPaused {
     require(token != address(0), 'unknown token');
     require(_providers[msg.sender] == token, 'unknown provider or restricted token');
 
@@ -118,4 +118,6 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
     // scaling is important to match different providers
     return true;
   }
+
+  function internalPause(bool paused) internal override {}
 }
