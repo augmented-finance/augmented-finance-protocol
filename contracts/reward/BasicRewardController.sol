@@ -193,7 +193,7 @@ abstract contract BasicRewardController is Ownable, MarketAccessBitmask, IManage
     if (!hasRemoteAcl()) {
       return addr == address(this);
     }
-    return acl_hasAllOf(_msgSender(), AccessFlags.REWARD_RATE_ADMIN);
+    return acl_hasAllOf(addr, AccessFlags.REWARD_RATE_ADMIN);
   }
 
   function isConfigurator(address addr) public view override returns (bool) {
@@ -204,7 +204,7 @@ abstract contract BasicRewardController is Ownable, MarketAccessBitmask, IManage
     if (!hasRemoteAcl()) {
       return addr == address(this);
     }
-    return acl_hasAllOf(_msgSender(), AccessFlags.EMERGENCY_ADMIN);
+    return acl_hasAllOf(addr, AccessFlags.EMERGENCY_ADMIN);
   }
 
   function internalClaimAndMintReward(
