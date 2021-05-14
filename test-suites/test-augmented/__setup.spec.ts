@@ -29,7 +29,7 @@ import {
   authorizeWETHGateway,
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
-import { TokenContractId, eContractid, tEthereumAddress, AavePools } from '../../helpers/types';
+import { TokenContractId, eContractid, tEthereumAddress, LendingPools } from '../../helpers/types';
 import { MintableERC20 } from '../../types';
 import {
   ConfigNames,
@@ -64,7 +64,7 @@ const LENDING_RATE_ORACLE_RATES_COMMON = AugmentedConfig.LendingRateOracleRatesC
 const deployAllMockTokens = async (deployer: Signer) => {
   const tokens: { [symbol: string]: MockContract | MintableERC20 | WETH9Mocked } = {};
 
-  const protoConfigData = getReservesConfigByPool(AavePools.augmented);
+  const protoConfigData = getReservesConfigByPool(LendingPools.augmented);
 
   for (const tokenSymbol of Object.keys(TokenContractId)) {
     if (tokenSymbol === 'WETH') {
@@ -194,7 +194,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
     aaveAdmin
   );
 
-  const reservesParams = getReservesConfigByPool(AavePools.augmented);
+  const reservesParams = getReservesConfigByPool(LendingPools.augmented);
 
   const testHelpers = await deployProtocolDataProvider(addressesProvider.address);
 

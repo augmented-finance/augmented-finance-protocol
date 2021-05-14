@@ -8,7 +8,7 @@ import {
   eContractid,
   tStringTokenSmallUnits,
   eEthereumNetwork,
-  AavePools,
+  LendingPools,
   iParamsPerNetwork,
   iParamsPerPool,
   ePolygonNetwork,
@@ -177,9 +177,9 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNet
   }
 };
 
-export const getParamPerPool = <T>({ augmented }: iParamsPerPool<T>, pool: AavePools) => {
+export const getParamPerPool = <T>({ augmented }: iParamsPerPool<T>, pool: LendingPools) => {
   switch (pool) {
-    case AavePools.augmented:
+    case LendingPools.augmented:
       return augmented;
     default:
       return augmented;

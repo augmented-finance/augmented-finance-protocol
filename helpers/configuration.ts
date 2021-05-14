@@ -1,5 +1,5 @@
 import {
-  AavePools,
+  LendingPools,
   iMultiPoolsAssets,
   IReserveParams,
   PoolConfiguration,
@@ -36,16 +36,16 @@ export const loadPoolConfig = (configName: ConfigNames): PoolConfiguration => {
 // PROTOCOL PARAMS PER POOL
 // ----------------
 
-export const getReservesConfigByPool = (pool: AavePools): iMultiPoolsAssets<IReserveParams> =>
+export const getReservesConfigByPool = (pool: LendingPools): iMultiPoolsAssets<IReserveParams> =>
   getParamPerPool<iMultiPoolsAssets<IReserveParams>>(
     {
-      // [AavePools.proto]: {
+      // [LendingPools.proto]: {
       //   ...AaveConfig.ReservesConfig,
       // },
-      // [AavePools.matic]: {
+      // [LendingPools.matic]: {
       //   ...MaticConfig.ReservesConfig,
       // },
-      [AavePools.augmented]: {
+      [LendingPools.augmented]: {
         ...AugmentedConfig.ReservesConfig,
       },
     },
