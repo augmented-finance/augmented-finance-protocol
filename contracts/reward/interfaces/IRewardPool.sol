@@ -2,10 +2,11 @@
 pragma solidity ^0.6.12;
 
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
+import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
 
 interface IRewardPool is IBalanceHook {}
 
-interface IManagedRewardPool {
+interface IManagedRewardPool is IEmergencyAccess {
   function updateBaseline(uint256) external returns (bool);
 
   function setBaselinePercentage(uint16) external;

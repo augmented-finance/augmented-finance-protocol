@@ -15,6 +15,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   using PercentageMath for uint256;
 
   IRewardController internal _controller;
+  bool private _paused;
 
   constructor(IRewardController controller) public {
     require(address(controller) != address(0), 'controller is required');
@@ -45,6 +46,20 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   function setRate(uint256) public virtual override onlyRateController {
     revert('UNSUPPORTED');
   }
+
+  function setPaused(bool paused) public override onlyEmergencyAdmin {
+    if (_paused == paused) {
+      return;
+    }
+    _paused = paused;
+    internalPause(paused);
+  }
+
+  function isPaused() public view override returns (bool) {
+    return _paused;
+  }
+
+  function internalPause(bool paused) internal virtual;
 
   function getRewardController() public view override returns (address) {
     return address(_controller);
@@ -94,6 +109,16 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   modifier onlyRateController() {
     require(_controller.isRateController(msg.sender), 'only rate controller is allowed');
+    _;
+  }
+
+  modifier onlyEmergencyAdmin() {
+    require(_controller.isEmergencyAdmin(msg.sender), 'only emergency admin is allowed');
+    _;
+  }
+
+  modifier notPaused() {
+    require(!_paused, 'rewards are paused');
     _;
   }
 }
