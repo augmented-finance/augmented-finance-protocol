@@ -9,7 +9,7 @@ import {
 } from '../../helpers/contracts-deployments';
 
 import { waitForTx } from '../../helpers/misc-utils';
-import { ONE_ADDRESS, RAY, ZERO_ADDRESS } from '../../helpers/constants';
+import { ONE_ADDRESS, RAY } from '../../helpers/constants';
 
 task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
   .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', RAY, types.string)
@@ -42,6 +42,7 @@ task('dev:agf-rewards', 'Deploy AGF token and reward pool.')
 
       const ac = await deployAccessController();
       await ac.setEmergencyAdmin(root.address);
+      // await ac.grantRoles(root.address, (1 << 0) | (1 << 1));
 
       const agfToken = await deployMockAgfToken(
         [ac.address, 'Reward token updated', 'AGF'],

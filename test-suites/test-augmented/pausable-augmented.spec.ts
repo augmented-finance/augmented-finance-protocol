@@ -41,17 +41,10 @@ describe('Augmented pausable suite', () => {
     agf = await getMockAgfToken();
   });
 
-  it.only('can pause/unpause reward controller', async () => {
+  it('can pause/unpause reward controller', async () => {
     await rc.connect(root).setPaused(true);
     await expect(rc.connect(user1).claimReward()).to.be.revertedWith('rewards are paused');
     await rc.connect(root).setPaused(false);
-    await rc.connect(user1).claimReward();
-  });
-
-  it.skip('can pause/unpause pool', async () => {
-    await zrp.connect(root).setPaused(true);
-    await expect(rc.connect(user1).claimReward()).to.be.revertedWith('rewards are paused');
-    await zrp.connect(root).setPaused(true);
     await rc.connect(user1).claimReward();
   });
 });

@@ -107,4 +107,16 @@ describe('Zombie rewards suite', () => {
     await rc.connect(user1).claimReward();
     expect(await agf.balanceOf(user1.address)).to.eq(defaultReward / 2);
   });
+
+  it('can pause/unpause pool', async () => {
+    await zrp.connect(root).setPaused(true);
+    await expect(
+      zrp.handleBalanceUpdate(ONE_ADDRESS, user1.address, 0, defaultReward, overrideStubVar)
+    ).to.be.revertedWith('rewards are paused');
+    await zrp.connect(root).setPaused(false);
+    await zrp.handleBalanceUpdate(ONE_ADDRESS, user1.address, 0, defaultReward, overrideStubVar);
+    await mineToBlock(20);
+    await rc.connect(user1).claimReward();
+    expect(await agf.balanceOf(user1.address)).to.eq(defaultReward);
+  });
 });
