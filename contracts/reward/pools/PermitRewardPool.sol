@@ -96,7 +96,7 @@ contract PermitRewardPool is AccessBitmask, ControlledRewardPool {
     uint8 v,
     bytes32 r,
     bytes32 s
-  ) external {
+  ) external notPaused {
     require(provider != address(0), 'INVALID_PROVIDER');
     require(_getAcl(provider) & aclProvider == aclProvider, 'INVALID_PROVIDER');
     require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
@@ -122,4 +122,6 @@ contract PermitRewardPool is AccessBitmask, ControlledRewardPool {
     _rewardLimit = _rewardLimit.sub(value, 'insufficient reward pool balance');
     internalAllocateReward(spender, value, uint32(block.timestamp), AllocationMode.Push);
   }
+
+  function internalPause(bool paused) internal override {}
 }
