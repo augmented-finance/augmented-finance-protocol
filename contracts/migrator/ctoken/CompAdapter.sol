@@ -27,9 +27,8 @@ contract CompAdapter is BasicAdapter, Exponential {
     address underlyingAsset
   ) public BasicAdapter(controller, originAsset, underlyingAsset) {}
 
-  function transferOriginIn(uint256 amount, address holder) internal override returns (uint256) {
-    IERC20(_originAsset).safeTransferFrom(holder, address(this), amount);
-    return amount;
+  function balanceOrigin() internal override returns (uint256 internalAmount) {
+    return IERC20(_originAsset).balanceOf(address(this));
   }
 
   function transferOriginOut(uint256 amount, address holder) internal override returns (uint256) {

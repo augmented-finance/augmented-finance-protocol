@@ -65,9 +65,40 @@ abstract contract BasicAdapter is IMigrationAdapter {
     uint64 referralCode
   ) external override notMigrated notPaused returns (uint256) {
     require(holder != address(0), 'holder is required');
-    referralCode;
 
-    uint256 internalAmount = transferOriginIn(amount, holder);
+    uint256 preBalance = balanceOrigin();
+    IERC20(_originAsset).safeTransferFrom(holder, address(this), amount);
+    return internalDeposit(holder, preBalance, amount, referralCode);
+  }
+
+  function preDepositOnBehalf() external override returns (uint256) {
+    return balanceOrigin();
+  }
+
+  function postDepositOnBehalf(
+    address holder,
+    uint256 preBalance,
+    uint256 amount,
+    uint64 referralCode
+  ) external override notMigrated notPaused onlyController returns (uint256) {
+    require(holder != address(0), 'holder is required');
+    return internalDeposit(holder, preBalance, amount, referralCode);
+  }
+
+  function balanceOrigin() internal virtual returns (uint256 internalAmount);
+
+  function internalDeposit(
+    address holder,
+    uint256 internalAmount,
+    uint256 amount,
+    uint64 referralCode
+  ) internal virtual returns (uint256) {
+    internalAmount = balanceOrigin().sub(internalAmount);
+    console.log('internalDeposit', holder, internalAmount, amount);
+    if (internalAmount == 0) {
+      return 0;
+    }
+
     uint256 oldBalance = _deposits[holder];
     uint256 newBalance = oldBalance.add(internalAmount);
     _deposits[holder] = newBalance;
@@ -77,6 +108,9 @@ abstract contract BasicAdapter is IMigrationAdapter {
     if (address(_rewardPool) != address(0)) {
       handleBalanceUpdate(holder, oldBalance, newBalance, newTotalDeposited);
     }
+
+    emit DepositedForMigrate(_originAsset, holder, amount, newBalance, referralCode);
+
     return amount;
   }
 
@@ -291,11 +325,6 @@ abstract contract BasicAdapter is IMigrationAdapter {
     return amount;
   }
 
-  function transferOriginIn(uint256 amount, address holder)
-    internal
-    virtual
-    returns (uint256 internalAmount);
-
   function transferOriginOut(uint256 amount, address holder)
     internal
     virtual
@@ -337,6 +366,7 @@ abstract contract BasicAdapter is IMigrationAdapter {
       handleBalanceUpdate(holder, oldBalance, newBalance, newTotalDeposited);
     }
 
+    emit WithdrawnFromMigrate(_originAsset, holder, amount, newBalance);
     return amount;
   }
 

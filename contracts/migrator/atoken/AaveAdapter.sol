@@ -28,14 +28,8 @@ contract AaveAdapter is BasicAdapter {
     require(address(_originPool) != address(0), 'unknown asset pool');
   }
 
-  function transferOriginIn(uint256 amount, address holder)
-    internal
-    override
-    returns (uint256 internalAmount)
-  {
-    internalAmount = IRedeemableToken(_originAsset).scaledBalanceOf(address(this));
-    IERC20(_originAsset).safeTransferFrom(holder, address(this), amount);
-    return IRedeemableToken(_originAsset).scaledBalanceOf(address(this)).sub(internalAmount);
+  function balanceOrigin() internal override returns (uint256 internalAmount) {
+    return IRedeemableToken(_originAsset).scaledBalanceOf(address(this));
   }
 
   function transferOriginOut(uint256 amount, address holder)
