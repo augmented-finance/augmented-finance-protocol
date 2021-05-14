@@ -4,7 +4,7 @@ import {
   tEthereumAddress,
   eContractid,
   tStringTokenSmallUnits,
-  AavePools,
+  LendingPools,
   TokenContractId,
   iMultiPoolsAssets,
   IReserveParams,
@@ -464,7 +464,7 @@ export const deployDelegationAwareDepositTokenImpl = async (verify: boolean) =>
 export const deployAllMockTokens = async (verify?: boolean) => {
   const tokens: { [symbol: string]: MockContract | MintableERC20 } = {};
 
-  const protoConfigData = getReservesConfigByPool(AavePools.proto);
+  const protoConfigData = getReservesConfigByPool(LendingPools.augmented);
 
   for (const tokenSymbol of Object.keys(TokenContractId)) {
     let decimals = '18';

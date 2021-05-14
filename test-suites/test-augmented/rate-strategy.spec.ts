@@ -3,9 +3,9 @@ import { deployDefaultReserveInterestRateStrategy } from '../../helpers/contract
 
 import { APPROVAL_AMOUNT_LENDING_POOL, PERCENTAGE_FACTOR, RAY } from '../../helpers/constants';
 
-import { rateStrategyStableOne } from '../../markets/aave/rateStrategies';
+import { rateStrategyStableOne } from '../../markets/augmented/rateStrategies';
 
-import { strategyDAI } from '../../markets/aave/reservesConfigs';
+import { strategyDAI } from '../../markets/augmented/reservesConfigs';
 import { DepositToken, DefaultReserveInterestRateStrategy, MintableERC20 } from '../../types';
 import BigNumber from 'bignumber.js';
 import './helpers/utils/math';

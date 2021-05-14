@@ -17,10 +17,10 @@ import {
 import { insertContractAddressInDb } from '../helpers/contracts-helpers';
 import { waitForTx } from '../helpers/misc-utils';
 import { eContractid } from '../helpers/types';
-import { MintableErc20 } from '../../../types/MintableErc20';
+import { MintableERC20 } from '../../../types';
 
 export const testDeployAaveStakeV1 = async (
-  aaveToken: MintableErc20,
+  aaveToken: MintableERC20,
   deployer: Signer,
   vaultOfRewards: Signer,
   restWallets: Signer[]
@@ -70,7 +70,7 @@ export const testDeployAaveStakeV1 = async (
 };
 
 export const testDeployAaveStakeV2 = async (
-  aaveToken: MintableErc20,
+  aaveToken: MintableERC20,
   deployer: Signer,
   vaultOfRewards: Signer,
   restWallets: Signer[]

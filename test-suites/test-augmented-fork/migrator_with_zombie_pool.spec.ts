@@ -1,6 +1,6 @@
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { makeSuite, TestEnv } from '../test-aave/helpers/make-suite';
+import { makeSuite, TestEnv } from '../test-augmented/helpers/make-suite';
 import {
   AaveAdapter,
   DepositToken,

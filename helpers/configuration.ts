@@ -1,5 +1,5 @@
 import {
-  AavePools,
+  LendingPools,
   iMultiPoolsAssets,
   IReserveParams,
   PoolConfiguration,
@@ -7,9 +7,7 @@ import {
   eNetwork,
 } from './types';
 import { getParamPerPool } from './contracts-helpers';
-import AaveConfig from '../markets/aave';
-import MaticConfig from '../markets/matic';
-import { CommonsConfig } from '../markets/aave/commons';
+import { CommonsConfig } from '../markets/augmented/commons';
 import { DRE, filterMapBy } from './misc-utils';
 import { tEthereumAddress } from './types';
 import { getParamPerNetwork } from './contracts-helpers';
@@ -25,10 +23,6 @@ export enum ConfigNames {
 
 export const loadPoolConfig = (configName: ConfigNames): PoolConfiguration => {
   switch (configName) {
-    case ConfigNames.Aave:
-      return AaveConfig;
-    case ConfigNames.Matic:
-      return MaticConfig;
     case ConfigNames.Commons:
       return CommonsConfig;
     case ConfigNames.Augmented:
@@ -42,16 +36,16 @@ export const loadPoolConfig = (configName: ConfigNames): PoolConfiguration => {
 // PROTOCOL PARAMS PER POOL
 // ----------------
 
-export const getReservesConfigByPool = (pool: AavePools): iMultiPoolsAssets<IReserveParams> =>
+export const getReservesConfigByPool = (pool: LendingPools): iMultiPoolsAssets<IReserveParams> =>
   getParamPerPool<iMultiPoolsAssets<IReserveParams>>(
     {
-      [AavePools.proto]: {
-        ...AaveConfig.ReservesConfig,
-      },
-      [AavePools.matic]: {
-        ...MaticConfig.ReservesConfig,
-      },
-      [AavePools.augmented]: {
+      // [LendingPools.proto]: {
+      //   ...AaveConfig.ReservesConfig,
+      // },
+      // [LendingPools.matic]: {
+      //   ...MaticConfig.ReservesConfig,
+      // },
+      [LendingPools.augmented]: {
         ...AugmentedConfig.ReservesConfig,
       },
     },
