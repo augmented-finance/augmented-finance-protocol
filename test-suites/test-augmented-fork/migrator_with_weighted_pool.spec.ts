@@ -26,10 +26,10 @@ import {
 import {
   currentBlock,
   mineToBlock,
-  oneBlock,
   revertSnapshot,
   takeSnapshot,
 } from '../test-augmented/utils';
+import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -56,7 +56,6 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     extWhaleONESigner = await impersonateAndGetSigner(extWhaleONE);
     extWhaleTWOSigner = await impersonateAndGetSigner(extWhaleTWO);
     extWhaleTHREESigner = await impersonateAndGetSigner(extWhaleTHREE);
-    await rawBRE.run('dev:augmented-access');
   });
 
   beforeEach(async () => {
@@ -65,7 +64,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
       withZombieAdapter: false,
       withAAVEAdapter: true,
     };
-    await rawBRE.run('dev:augmented-migrator', deployConfig);
+    await rawBRE.run('augmented:test-local', { ...CFG, ...deployConfig });
     aaveAdapter = await getAaveAdapter();
     m = await getMigrator();
     agf = await getMockAgfToken();

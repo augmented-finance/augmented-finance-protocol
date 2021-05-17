@@ -28,7 +28,8 @@ import {
   impersonateAndGetContractByFunc,
   impersonateAndGetSigner,
 } from './helper';
-import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
+import { revertSnapshot, takeSnapshot } from '../test-augmented/utils';
+import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -49,7 +50,6 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
     [root, user1] = await ethers.getSigners();
     aDaiContract = await impersonateAndGetContractByFunc(extTokenAddress, getAToken);
     extBigHolder = await impersonateAndGetSigner(extWhaleONE);
-    await rawBRE.run('dev:augmented-access');
   });
 
   beforeEach(async () => {
@@ -60,7 +60,7 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
       withZombieAdapter: true,
       withAAVEAdapter: false,
     };
-    await rawBRE.run('dev:augmented-migrator', deployConfig);
+    await rawBRE.run('augmented:test-local', { ...CFG, ...deployConfig });
     zAdapter = await getZombieAdapter();
     m = await getMigrator();
     agf = await getMockAgfToken();

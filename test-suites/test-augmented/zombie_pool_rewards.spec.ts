@@ -14,6 +14,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { mineToBlock } from './utils';
 import { HALF_RAY, ONE_ADDRESS, PERC_100, RAY } from '../../helpers/constants';
 import { createRandomAddress } from '../../helpers/misc-utils';
+import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -25,26 +26,14 @@ describe('Zombie rewards suite', () => {
   let zrp: ZombieRewardPool;
   let rc: RewardFreezer;
   let agf: MockAgfToken;
-  let teamRewardInitialRate: string = RAY;
-  let teamRewardsFreezePercentage = 0;
   let zombieRewardLimit = 5000;
   // TODO: needed for override
   let overrideStubVar = 0;
   let defaultReward = 2000;
 
-  before(async () => {
-    await rawBRE.run('dev:augmented-access');
-  });
-
   beforeEach(async () => {
     [root, user1, user2] = await ethers.getSigners();
-    await rawBRE.run('dev:agf-rewards', {
-      teamRewardInitialRate: teamRewardInitialRate,
-      teamRewardBaselinePercentage: 0,
-      teamRewardUnlockBlock: 1000,
-      teamRewardsFreezePercentage: teamRewardsFreezePercentage,
-      zombieRewardLimit: zombieRewardLimit,
-    });
+    await rawBRE.run('augmented:test-local', CFG);
     rc = await getRewardFreezer();
     zrp = await getZombieRewardPool();
     agf = await getMockAgfToken();

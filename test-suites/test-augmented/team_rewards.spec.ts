@@ -15,6 +15,7 @@ import { waitForTx } from '../../helpers/misc-utils';
 import { currentBlock, revertSnapshot, mineToBlock, takeSnapshot } from './utils';
 import { PERC_100, RAY } from '../../helpers/constants';
 import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
+import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -29,23 +30,12 @@ describe('Team rewards suite', () => {
   let blkBeforeDeploy;
   let blkAfterDeploy;
   let REWARD_UNLOCK_BLOCK;
-  let teamRewardInitialRate: string = RAY;
-  let teamRewardsFreezePercentage = 0;
   let rewardPrecision = 1.5;
-
-  before(async () => {
-    await rawBRE.run('dev:augmented-access');
-  });
 
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
     [root, teamMember1, teamMember2] = await ethers.getSigners();
-    await rawBRE.run('dev:agf-rewards', {
-      teamRewardInitialRate: teamRewardInitialRate,
-      teamRewardBaselinePercentage: 0,
-      teamRewardUnlockBlock: 1000,
-      teamRewardsFreezePercentage: teamRewardsFreezePercentage,
-    });
+    await rawBRE.run('augmented:test-local', CFG);
     rewardController = await getRewardFreezer();
     trp = await getTeamRewardPool();
     agf = await getMockAgfToken();

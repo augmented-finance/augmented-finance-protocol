@@ -1,6 +1,6 @@
 import rawBRE, { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { ADAI_ADDRESS } from '../../tasks/dev/9_augmented_migrator';
+import { ADAI_ADDRESS } from '../../tasks/migrations/defaultTestDeployConfig';
 
 // aDAI (mainnet) used here in different deployments as a shitcoin for zombie adapter
 // and as a normal token for aaveAdapter
