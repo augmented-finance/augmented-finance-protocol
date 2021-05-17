@@ -1,11 +1,12 @@
 import rawBRE, { ethers } from 'hardhat';
 
-export const oneBlock = async (f: Function) => {
-  await ethers.provider.send('evm_setAutomine', [false]);
-  f();
-  await ethers.provider.send('evm_setAutomine', [true]);
-  await oneTx();
-};
+// doesn't work
+// export const oneBlock = async (f: Function) => {
+//   await ethers.provider.send('evm_setAutomine', [false]);
+//   f();
+//   await ethers.provider.send('evm_setAutomine', [true]);
+//   await oneTx();
+// };
 
 const oneTx = async () => {
   const wallets = await ethers.getSigners();
@@ -20,8 +21,12 @@ const oneTx = async () => {
 
 export const mineToBlock = async (to: number): Promise<number> => {
   const blk = await ethers.provider.getBlock('latest');
+  if (to == blk.number) {
+    console.log(`exactly at block: ${blk.number}`);
+    return 0;
+  }
   if (to < blk.number) {
-    console.log(`already on block: ${blk.number}`);
+    console.log(`already at block: ${blk.number}`);
     return 0;
   }
   let blockMined = 0;
