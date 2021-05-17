@@ -23,12 +23,7 @@ import {
   extWhaleTWO,
   extWhaleTHREE,
 } from './helper';
-import {
-  currentBlock,
-  mineToBlock,
-  revertSnapshot,
-  takeSnapshot,
-} from '../test-augmented/utils';
+import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 
 chai.use(solidity);
@@ -60,11 +55,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
 
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
-    const deployConfig = {
-      withZombieAdapter: false,
-      withAAVEAdapter: true,
-    };
-    await rawBRE.run('augmented:test-local', { ...CFG, ...deployConfig });
+    await rawBRE.run('augmented:test-local', CFG);
     aaveAdapter = await getAaveAdapter();
     m = await getMigrator();
     agf = await getMockAgfToken();
@@ -124,18 +115,18 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     expect(await agf.balanceOf(extWhaleONE)).to.eq(2);
   });
 
-  it.skip('deposit and migrate, can not claim AG if not enabled', async () => {
-    let wb = await aDaiContract.scaledBalanceOf(extWhaleONE);
-
-    await aDaiContract.connect(extWhaleONESigner).approve(m.address, defaultMigrationAmount);
-    await m
-      .connect(extWhaleONESigner)
-      .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral);
-    const balanceForMigrate = await m.connect(root).balanceForMigrate(extTokenAddress, extWhaleONE);
-    expect(balanceForMigrate).to.eq(defaultMigrationAmount);
-
-    await m.admin_migrateToToken(extTokenAddress);
-    await m.connect(extWhaleONESigner).claimAllMigrated();
-    // TODO: check that ag balance is zero
-  });
+  // it.skip('deposit and migrate, can not claim AG if not enabled', async () => {
+  //   let wb = await aDaiContract.scaledBalanceOf(extWhaleONE);
+  //
+  //   await aDaiContract.connect(extWhaleONESigner).approve(m.address, defaultMigrationAmount);
+  //   await m
+  //     .connect(extWhaleONESigner)
+  //     .depositToMigrate(extTokenAddress, defaultMigrationAmount, defaultReferral);
+  //   const balanceForMigrate = await m.connect(root).balanceForMigrate(extTokenAddress, extWhaleONE);
+  //   expect(balanceForMigrate).to.eq(defaultMigrationAmount);
+  //
+  //   await m.admin_migrateToToken(extTokenAddress);
+  //   await m.connect(extWhaleONESigner).claimAllMigrated();
+  //   // TODO: check that ag balance is zero
+  // });
 });

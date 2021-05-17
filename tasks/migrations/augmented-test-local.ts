@@ -3,6 +3,7 @@ import {
   deployAaveAdapter,
   deployAccessController,
   deployAugmentedMigrator,
+  deployCompAdapter,
   deployMigratorWeightedRewardPool,
   deployMockAgfToken,
   deployRewardFreezer,
@@ -12,8 +13,8 @@ import {
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
 import { ONE_ADDRESS, oneRay, RAY } from '../../helpers/constants';
-import { printContracts, waitForTx } from '../../helpers/misc-utils';
-import { ADAI_ADDRESS, CDAI_ADDRESS } from './defaultTestDeployConfig';
+import { waitForTx } from '../../helpers/misc-utils';
+import { ADAI_ADDRESS, CDAI_ADDRESS, DAI_ADDRESS } from './defaultTestDeployConfig';
 
 task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
@@ -97,31 +98,46 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
         console.log(`#6 deploying: Migrator`);
         const migrator = await deployAugmentedMigrator(verify);
 
-        let adapter;
-        let tokenAddr: string;
-        let rp;
-        if (withZombieAdapter) {
-          adapter = await deployZombieAdapter([migrator.address, aDaiAddress]);
-          tokenAddr = aDaiAddress;
-          rp = await deployZombieRewardPool(
-            [rewardFreezer.address, [tokenAddr], [{ rateRay: RAY, limit: RAY }]],
-            verify
-          );
-        } else if (withAAVEAdapter) {
-          adapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
-          tokenAddr = await adapter.UNDERLYING_ASSET_ADDRESS();
-          rp = await deployMigratorWeightedRewardPool(
-            [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed(), tokenAddr],
-            verify
-          );
-        } else {
-          throw Error('provide deployment flag: withZombieAdapter: true or withAAVEAdapter: true');
-        }
-        await migrator.admin_registerAdapter(adapter.address);
-        await rewardFreezer.admin_addRewardPool(rp.address);
-        await rp.addRewardProvider(adapter.address, tokenAddr);
-        await migrator.admin_setRewardPool(adapter.address, rp.address);
+        // zombie (aDai used as a shitcoin)
+        // const zAdapter = await deployZombieAdapter([migrator.address, aDaiAddress]);
+        // const zrp = await deployZombieRewardPool(
+        //   [rewardFreezer.address, [aDaiAddress], [{ rateRay: RAY, limit: RAY }]],
+        //   verify
+        // );
+        //
+        // await migrator.admin_registerAdapter(zAdapter.address);
+        // await rewardFreezer.admin_addRewardPool(zrp.address);
+        // await zrp.addRewardProvider(zAdapter.address, aDaiAddress);
+        // await migrator.admin_setRewardPool(zAdapter.address, zrp.address);
+
+        // aave
+        const aaveAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
+        const aaveTokenAddr = await aaveAdapter.UNDERLYING_ASSET_ADDRESS();
+        const arp = await deployMigratorWeightedRewardPool(
+          [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed(), aaveTokenAddr],
+          verify
+        );
+
+        await migrator.admin_registerAdapter(aaveAdapter.address);
+        await rewardFreezer.admin_addRewardPool(arp.address);
+        await arp.addRewardProvider(aaveAdapter.address, aaveTokenAddr);
+        await migrator.admin_setRewardPool(aaveAdapter.address, arp.address);
+
+        // comp
+        // const compAdapter = await deployCompAdapter(
+        //   [migrator.address, cDaiAddress, DAI_ADDRESS],
+        //   verify
+        // );
+        // // const compTokenAddr = await compAdapter.UNDERLYING_ASSET_ADDRESS();
+        // const crp = await deployMigratorWeightedRewardPool(
+        //   [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed(), DAI_ADDRESS],
+        //   verify
+        // );
+        //
+        // await migrator.admin_registerAdapter(compAdapter.address);
+        // await rewardFreezer.admin_addRewardPool(crp.address);
+        // await crp.addRewardProvider(compAdapter.address, DAI_ADDRESS);
+        // await migrator.admin_setRewardPool(compAdapter.address, crp.address);
       }
-      printContracts();
     }
   );
