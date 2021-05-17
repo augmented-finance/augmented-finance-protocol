@@ -257,9 +257,8 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 before(async () => {
   await rawBRE.run('set-DRE');
   const [deployer, secondaryWallet] = await getEthersSigners();
-  const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
 
-  if (MAINNET_FORK) {
+  if (process.env.MAINNET_FORK === 'true') {
     await rawBRE.run('augmented:dev'); // TODO: augmented:main ??
   } else {
     console.log('-> Deploying test environment...');

@@ -13,7 +13,7 @@ import { MockAgfToken, RewardFreezer, TeamRewardPool } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { waitForTx } from '../../helpers/misc-utils';
 import { currentBlock, revertSnapshot, mineToBlock, takeSnapshot } from './utils';
-import { PERC_100, RAY } from '../../helpers/constants';
+import { PERC_100 } from '../../helpers/constants';
 import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 
@@ -172,7 +172,7 @@ describe('Team rewards suite', () => {
     expect(await trp.isUnlocked(await currentBlock())).to.be.true;
     const expectedReward = calcTeamRewardForMember(
       blocksPassed,
-      teamRewardInitialRate,
+      CFG.teamRewardInitialRate,
       userShare,
       0
     );
@@ -202,7 +202,7 @@ describe('Team rewards suite', () => {
     expect(await trp.isUnlocked(await currentBlock())).to.be.true;
     const expectedReward = calcTeamRewardForMember(
       blocksPassed,
-      teamRewardInitialRate,
+      CFG.teamRewardInitialRate,
       userShare,
       0
     );
@@ -241,7 +241,7 @@ describe('Team rewards suite', () => {
     expect(await trp.isUnlocked(await currentBlock())).to.be.true;
     const expectedReward = calcTeamRewardForMember(
       blocksPassed,
-      teamRewardInitialRate,
+      CFG.teamRewardInitialRate,
       userShare,
       freezePercent
     );
@@ -273,7 +273,7 @@ describe('Team rewards suite', () => {
     expect(await trp.isUnlocked(await currentBlock())).to.be.true;
     const expectedReward = calcTeamRewardForMember(
       blocksPassed,
-      teamRewardInitialRate,
+      CFG.teamRewardInitialRate,
       userShare,
       freezePercent
     );
@@ -305,7 +305,7 @@ describe('Team rewards suite', () => {
     expect(await trp.isUnlocked(await currentBlock())).to.be.true;
     const expectedReward = calcTeamRewardForMember(
       blocksPassed,
-      teamRewardInitialRate,
+      CFG.teamRewardInitialRate,
       userShare,
       freezePercent
     );
