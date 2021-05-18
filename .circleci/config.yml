@@ -20,7 +20,7 @@ jobs:
       - run: yarn install --immutable
       - run: yarn run compile
       - run: yarn run test
-      - run: yarn run test-fork
+#      - run: yarn run test-fork
       - save_cache:
           name: Save yarn package cache
           key: yarn-packages-{{ checksum "yarn.lock" }}
@@ -30,6 +30,12 @@ jobs:
           channel: build
           event: fail
           template: basic_fail_1
+  npm-publish:
+    docker:
+      - image: cimg/node:12.16
+    steps:
+      - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/repo/.npmrc
+      - run: npm publish
 workflows:
   test:
     jobs:
@@ -42,3 +48,6 @@ workflows:
           context:
             - slack-secret
             - alchemy-secret
+      - npm-publish:
+          context:
+            - npm-secret
