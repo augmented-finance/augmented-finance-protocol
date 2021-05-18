@@ -33,6 +33,7 @@ import {
   aDaiWhaleTWO,
   CFG,
 } from '../../tasks/migrations/defaultTestDeployConfig';
+import { waitForTx } from '../../helpers/misc-utils';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -91,11 +92,12 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(defaultBlocksPassed / 2);
   });
 
-  it.only('one deposit, one whale, 10 blocks', async () => {
+  it('one deposit, one whale, 10 blocks', async () => {
     await depositToMigrate(aDaiWhaleONESigner, defaultMigrationAmount);
     await mineToBlock((await currentBlock()) + defaultBlocksPassed);
     await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
-    await m.connect(aDaiWhaleONESigner).claimAllMigrated();
+    const receipt = await waitForTx(await m.connect(aDaiWhaleONESigner).claimAllMigrated());
+    console.log(`receipt: ${JSON.stringify(receipt.logs)}`)
     await rc.connect(aDaiWhaleONESigner).claimReward();
     // + two blocks for migrate'n'claim txs
     expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(defaultBlocksPassed + 2);
