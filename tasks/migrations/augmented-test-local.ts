@@ -114,15 +114,15 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
 
         console.log(`#8 deploying: Aave Adapter`);
         const aaveAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
-        const aaveTokenAddr = await aaveAdapter.UNDERLYING_ASSET_ADDRESS();
+        const underlyingToken = await aaveAdapter.UNDERLYING_ASSET_ADDRESS();
         const arp = await deployMigratorWeightedRewardPool(
-          [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed(), aaveTokenAddr],
+          [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed(), underlyingToken],
           verify
         );
 
         await migrator.admin_registerAdapter(aaveAdapter.address);
         await rewardFreezer.admin_addRewardPool(arp.address);
-        await arp.addRewardProvider(aaveAdapter.address, aaveTokenAddr);
+        await arp.addRewardProvider(aaveAdapter.address, underlyingToken);
         await migrator.admin_setRewardPool(aaveAdapter.address, arp.address);
 
         console.log(`#9 deploying: Compound Adapter`);

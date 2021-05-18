@@ -47,9 +47,9 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
   let root: Provider | Signer | string;
   let aDaiContract: MintableERC20;
   let agDaiContract: DepositToken;
-  let extWhaleONESigner: Provider | Signer | string;
-  let extWhaleTWOSigner: Provider | Signer | string;
-  let extWhaleTHREESigner: Provider | Signer | string;
+  let aDaiWhaleONESigner: Provider | Signer | string;
+  let aDaiWhaleTWOSigner: Provider | Signer | string;
+  let aDaiWhaleTHREESigner: Provider | Signer | string;
 
   const defaultBlocksPassed = 10;
 
@@ -57,9 +57,9 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     [root] = await ethers.getSigners();
     aDaiContract = await getMintableERC20(ADAI_ADDRESS);
     agDaiContract = await getAGTokenByName('aDAI');
-    extWhaleONESigner = await impersonateAndGetSigner(aDaiWhaleONE);
-    extWhaleTWOSigner = await impersonateAndGetSigner(aDaiWhaleTWO);
-    extWhaleTHREESigner = await impersonateAndGetSigner(aDaiWhaleTHREE);
+    aDaiWhaleONESigner = await impersonateAndGetSigner(aDaiWhaleONE);
+    aDaiWhaleTWOSigner = await impersonateAndGetSigner(aDaiWhaleTWO);
+    aDaiWhaleTHREESigner = await impersonateAndGetSigner(aDaiWhaleTHREE);
   });
 
   beforeEach(async () => {
@@ -81,47 +81,47 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
   };
 
   it('one deposit, one whale, withdraw 50% at block 5, 10 blocks', async () => {
-    await depositToMigrate(extWhaleONESigner, defaultMigrationAmount);
+    await depositToMigrate(aDaiWhaleONESigner, defaultMigrationAmount);
     await mineToBlock((await currentBlock()) + defaultBlocksPassed / 2);
-    await m.connect(extWhaleONESigner).withdrawFromMigrate(ADAI_ADDRESS, defaultMigrationAmount);
+    await m.connect(aDaiWhaleONESigner).withdrawFromMigrate(ADAI_ADDRESS, defaultMigrationAmount);
     console.log(`balance for migrate: ${await m.balanceForMigrate(ADAI_ADDRESS, aDaiWhaleONE)}`);
     await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
-    await rc.connect(extWhaleONESigner).claimReward();
+    await rc.connect(aDaiWhaleONESigner).claimReward();
     // + one for migrateAll tx
     expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(defaultBlocksPassed / 2);
   });
 
-  it('one deposit, one whale, 10 blocks', async () => {
-    await depositToMigrate(extWhaleONESigner, defaultMigrationAmount);
+  it.only('one deposit, one whale, 10 blocks', async () => {
+    await depositToMigrate(aDaiWhaleONESigner, defaultMigrationAmount);
     await mineToBlock((await currentBlock()) + defaultBlocksPassed);
     await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
-    await m.connect(extWhaleONESigner).claimAllMigrated();
-    await rc.connect(extWhaleONESigner).claimReward();
+    await m.connect(aDaiWhaleONESigner).claimAllMigrated();
+    await rc.connect(aDaiWhaleONESigner).claimReward();
     // + two blocks for migrate'n'claim txs
     expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(defaultBlocksPassed + 2);
-    // expect(await agDaiContract.balanceOf(aDaiWhaleONE)).to.eq(defaultBlocksPassed + 2);
+    // expect(await agDaiContract.balanceOf(aDaiWhaleONE)).to.eq(defaultMigrationAmount);
   });
 
   it('two deposits, two whales, 1/2 rewards share, 10 blocks', async () => {
     // prepare
-    await depositToMigrate(extWhaleTWOSigner, defaultMigrationAmount);
+    await depositToMigrate(aDaiWhaleTWOSigner, defaultMigrationAmount);
     //
-    await depositToMigrate(extWhaleONESigner, defaultMigrationAmount);
+    await depositToMigrate(aDaiWhaleONESigner, defaultMigrationAmount);
     await mineToBlock((await currentBlock()) + defaultBlocksPassed);
     await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
-    await rc.connect(extWhaleONESigner).claimReward();
+    await rc.connect(aDaiWhaleONESigner).claimReward();
     // + one for migrateAll tx
     expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(4);
   });
 
   it('two deposits, two whales, 1/3 rewards share, 10 blocks', async () => {
     // prepare
-    await depositToMigrate(extWhaleTWOSigner, defaultMigrationAmount * 2);
+    await depositToMigrate(aDaiWhaleTWOSigner, defaultMigrationAmount * 2);
     //
-    await depositToMigrate(extWhaleONESigner, defaultMigrationAmount);
+    await depositToMigrate(aDaiWhaleONESigner, defaultMigrationAmount);
     await mineToBlock((await currentBlock()) + defaultBlocksPassed);
     await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
-    await rc.connect(extWhaleONESigner).claimReward();
+    await rc.connect(aDaiWhaleONESigner).claimReward();
     // + one for migrateAll tx
     expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(2);
   });
