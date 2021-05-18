@@ -1,12 +1,11 @@
 {
-  "name": "@agf/protocol-v2",
+  "name": "@augmentedfinance/protocol-v1",
   "version": "1.0.0",
   "description": "Augmented Protocol smart contracts",
   "files": [
     "contracts",
     "artifacts"
   ],
-  "private": false,
   "scripts": {
     "run-env": "npm i && tail -f /dev/null",
     "hardhat": "hardhat",
@@ -140,8 +139,7 @@
   },
   "keywords": [
     "agf",
-    "protocol",
-    "protocol-v2",
+    "protocol-v1",
     "ethereum",
     "solidity"
   ]
