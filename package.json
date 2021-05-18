@@ -6,7 +6,7 @@
     "contracts",
     "artifacts"
   ],
-  "private": true,
+  "private": false,
   "scripts": {
     "run-env": "npm i && tail -f /dev/null",
     "hardhat": "hardhat",
