@@ -1,6 +1,6 @@
 {
-  "name": "@aave/protocol-v2",
-  "version": "1.0.1",
+  "name": "@agf/protocol-v2",
+  "version": "1.0.0",
   "description": "Augmented Protocol smart contracts",
   "files": [
     "contracts",
@@ -138,7 +138,7 @@
     "tmp-promise": "^3.0.2"
   },
   "keywords": [
-    "aave",
+    "agf",
     "protocol",
     "protocol-v2",
     "ethereum",

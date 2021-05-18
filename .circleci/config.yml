@@ -2,6 +2,10 @@ version: 2.1
 orbs:
   node: circleci/node@4.3.0
   slack: circleci/slack@4.4.2
+defaults: &defaults
+  working_directory: ~/
+  docker:
+    - image: cimg/node:12.16
 jobs:
   cancel_draft_build:
     docker:
@@ -9,8 +13,7 @@ jobs:
     steps:
       - run: cancel-draft-build
   test_all:
-    docker:
-      - image: cimg/node:12.16
+    <<: *defaults
     steps:
       - checkout
       - restore_cache:
@@ -34,8 +37,7 @@ jobs:
           event: fail
           template: basic_fail_1
   npm-publish:
-    docker:
-      - image: cimg/node:12.16
+    <<: *defaults
     steps:
       - attach_workspace:
           at: ~/
