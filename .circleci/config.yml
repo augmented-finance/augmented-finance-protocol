@@ -49,5 +49,7 @@ workflows:
             - slack-secret
             - alchemy-secret
       - npm-publish:
+          requires:
+            - test_all
           context:
             - npm-secret
