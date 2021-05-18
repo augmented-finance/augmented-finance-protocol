@@ -4,7 +4,8 @@
   "description": "Augmented Protocol smart contracts",
   "files": [
     "contracts",
-    "artifacts"
+    "artifacts",
+    "types"
   ],
   "scripts": {
     "run-env": "npm i && tail -f /dev/null",
