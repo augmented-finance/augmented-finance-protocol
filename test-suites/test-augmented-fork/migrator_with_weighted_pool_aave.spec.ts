@@ -92,16 +92,16 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(defaultBlocksPassed / 2);
   });
 
-  it('one deposit, one whale, 10 blocks', async () => {
+  it.only('one deposit, one whale, 10 blocks', async () => {
     await depositToMigrate(aDaiWhaleONESigner, defaultMigrationAmount);
     await mineToBlock((await currentBlock()) + defaultBlocksPassed);
     await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
-    const receipt = await waitForTx(await m.connect(aDaiWhaleONESigner).claimAllMigrated());
-    console.log(`receipt: ${JSON.stringify(receipt.logs)}`)
+    const resp = await m.connect(aDaiWhaleONESigner).callStatic.claimAllMigrated();
+    console.log(`response: ${resp}`);
     await rc.connect(aDaiWhaleONESigner).claimReward();
     // + two blocks for migrate'n'claim txs
-    expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(defaultBlocksPassed + 2);
-    // expect(await agDaiContract.balanceOf(aDaiWhaleONE)).to.eq(defaultMigrationAmount);
+    expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(defaultBlocksPassed + 1);
+    expect(await agDaiContract.balanceOf(aDaiWhaleONE)).to.eq(defaultMigrationAmount);
   });
 
   it('two deposits, two whales, 1/2 rewards share, 10 blocks', async () => {
