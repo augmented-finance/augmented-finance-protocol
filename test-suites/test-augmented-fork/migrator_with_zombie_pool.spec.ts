@@ -1,7 +1,7 @@
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { makeSuite, TestEnv } from '../test-augmented/helpers/make-suite';
-import { Migrator, MintableERC20, MockAgfToken, RewardFreezer, ZombieAdapter } from '../../types';
+import { DepositToken, Migrator, MintableERC20, MockAgfToken, RewardFreezer, ZombieAdapter } from '../../types';
 import rawBRE, { ethers } from 'hardhat';
 import {
   getMigrator,
