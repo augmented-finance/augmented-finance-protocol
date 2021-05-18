@@ -1,7 +1,14 @@
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { makeSuite, TestEnv } from '../test-augmented/helpers/make-suite';
-import { CompAdapter, DepositToken, Migrator, MintableERC20, MockAgfToken, RewardFreezer } from '../../types';
+import {
+  CompAdapter,
+  DepositToken,
+  Migrator,
+  MintableERC20,
+  MockAgfToken,
+  RewardFreezer,
+} from '../../types';
 import rawBRE, { ethers } from 'hardhat';
 import {
   getAToken,
@@ -13,7 +20,7 @@ import {
 } from '../../helpers/contracts-getters';
 import { Signer } from 'ethers';
 import { Provider } from '@ethersproject/providers';
-import { defaultMigrationAmount, defaultReferral, impersonateAndGetSigner } from './helper';
+import { defaultMigrationAmount, defaultReferral, getAGTokenByName, impersonateAndGetSigner } from './helper';
 import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import {
   CDAI_ADDRESS,
@@ -49,7 +56,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
       params: [CDAI_ADDRESS],
     });
     cDaiContract = await getMintableERC20(CDAI_ADDRESS);
-    agDaiContract = await getAToken();
+    agDaiContract = await getAGTokenByName('aDAI');
     cDaiWhaleONESigner = await impersonateAndGetSigner(cDaiWhaleONE);
     cDaiWhaleTWOSigner = await impersonateAndGetSigner(cDaiWhaleTWO);
     cWhaleTHREESigner = await impersonateAndGetSigner(cDaiWhaleTHREE);
@@ -82,7 +89,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     await rc.connect(cDaiWhaleONESigner).claimReward();
     // + one for migrateAll tx
     // TODO: why such result?!
-    expect(await agf.balanceOf(cDaiWhaleONE)).to.eq(7);
+    expect(await agf.balanceOf(cDaiWhaleONE)).to.eq(defaultBlocksPassed / 2);
   });
 
   it('one deposit, one whale, 10 blocks', async () => {
@@ -92,7 +99,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     await rc.connect(cDaiWhaleONESigner).claimReward();
     // + one for migrateAll tx
     // TODO: why such result?!
-    expect(await agf.balanceOf(cDaiWhaleONE)).to.eq(13);
+    expect(await agf.balanceOf(cDaiWhaleONE)).to.eq(defaultBlocksPassed + 1);
   });
 
   it('two deposits, two whales, 1/2 rewards share, 10 blocks', async () => {

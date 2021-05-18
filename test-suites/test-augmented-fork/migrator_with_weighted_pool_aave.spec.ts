@@ -1,13 +1,20 @@
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { makeSuite, TestEnv } from '../test-augmented/helpers/make-suite';
-import { AaveAdapter, DepositToken, Migrator, MockAgfToken, RewardFreezer } from '../../types';
+import {
+  AaveAdapter,
+  DepositToken,
+  Migrator,
+  MintableERC20,
+  MockAgfToken,
+  RewardFreezer,
+} from '../../types';
 import rawBRE, { ethers } from 'hardhat';
 import {
   getAaveAdapter,
-  getAToken, getLendingPool,
   getMigrator,
-  getMockAgfToken, getProtocolDataProvider,
+  getMintableERC20,
+  getMockAgfToken,
   getRewardFreezer,
 } from '../../helpers/contracts-getters';
 import { Signer } from 'ethers';
@@ -15,7 +22,7 @@ import { Provider } from '@ethersproject/providers';
 import {
   defaultMigrationAmount,
   defaultReferral,
-  impersonateAndGetContractByFunc,
+  getAGTokenByName,
   impersonateAndGetSigner,
 } from './helper';
 import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
@@ -38,7 +45,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
   let agf: MockAgfToken;
   let rc: RewardFreezer;
   let root: Provider | Signer | string;
-  let aDaiContract: DepositToken;
+  let aDaiContract: MintableERC20;
   let agDaiContract: DepositToken;
   let extWhaleONESigner: Provider | Signer | string;
   let extWhaleTWOSigner: Provider | Signer | string;
@@ -48,7 +55,8 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
 
   before(async () => {
     [root] = await ethers.getSigners();
-    aDaiContract = await impersonateAndGetContractByFunc(ADAI_ADDRESS, getAToken);
+    aDaiContract = await getMintableERC20(ADAI_ADDRESS);
+    agDaiContract = await getAGTokenByName('aDAI');
     extWhaleONESigner = await impersonateAndGetSigner(aDaiWhaleONE);
     extWhaleTWOSigner = await impersonateAndGetSigner(aDaiWhaleTWO);
     extWhaleTHREESigner = await impersonateAndGetSigner(aDaiWhaleTHREE);
@@ -77,7 +85,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     await mineToBlock((await currentBlock()) + defaultBlocksPassed / 2);
     await m.connect(extWhaleONESigner).withdrawFromMigrate(ADAI_ADDRESS, defaultMigrationAmount);
     console.log(`balance for migrate: ${await m.balanceForMigrate(ADAI_ADDRESS, aDaiWhaleONE)}`);
-    await m.connect(root).admin_migrateAllThenEnableClaims([ADAI_ADDRESS]);
+    await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
     await rc.connect(extWhaleONESigner).claimReward();
     // + one for migrateAll tx
     expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(defaultBlocksPassed / 2);
@@ -86,10 +94,12 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
   it('one deposit, one whale, 10 blocks', async () => {
     await depositToMigrate(extWhaleONESigner, defaultMigrationAmount);
     await mineToBlock((await currentBlock()) + defaultBlocksPassed);
-    await m.connect(root).admin_migrateAllThenEnableClaims([ADAI_ADDRESS]);
+    await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
+    await m.connect(extWhaleONESigner).claimAllMigrated();
     await rc.connect(extWhaleONESigner).claimReward();
-    // + one for migrateAll tx
-    expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(defaultBlocksPassed + 1);
+    // + two blocks for migrate'n'claim txs
+    expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(defaultBlocksPassed + 2);
+    expect(await agDaiContract.balanceOf(aDaiWhaleONE)).to.eq(defaultBlocksPassed + 2);
   });
 
   it('two deposits, two whales, 1/2 rewards share, 10 blocks', async () => {
@@ -98,7 +108,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     //
     await depositToMigrate(extWhaleONESigner, defaultMigrationAmount);
     await mineToBlock((await currentBlock()) + defaultBlocksPassed);
-    await m.connect(root).admin_migrateAllThenEnableClaims([ADAI_ADDRESS]);
+    await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
     await rc.connect(extWhaleONESigner).claimReward();
     // + one for migrateAll tx
     expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(4);
@@ -110,24 +120,9 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     //
     await depositToMigrate(extWhaleONESigner, defaultMigrationAmount);
     await mineToBlock((await currentBlock()) + defaultBlocksPassed);
-    await m.connect(root).admin_migrateAllThenEnableClaims([ADAI_ADDRESS]);
+    await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
     await rc.connect(extWhaleONESigner).claimReward();
     // + one for migrateAll tx
     expect(await agf.balanceOf(aDaiWhaleONE)).to.eq(2);
   });
-
-  // it.skip('deposit and migrate, can not claim AG if not enabled', async () => {
-  //   let wb = await aDaiContract.scaledBalanceOf(extWhaleONE);
-  //
-  //   await aDaiContract.connect(extWhaleONESigner).approve(m.address, defaultMigrationAmount);
-  //   await m
-  //     .connect(extWhaleONESigner)
-  //     .depositToMigrate(ADAI_ADDRESS, defaultMigrationAmount, defaultReferral);
-  //   const balanceForMigrate = await m.connect(root).balanceForMigrate(ADAI_ADDRESS, extWhaleONE);
-  //   expect(balanceForMigrate).to.eq(defaultMigrationAmount);
-  //
-  //   await m.admin_migrateToToken(ADAI_ADDRESS);
-  //   await m.connect(extWhaleONESigner).claimAllMigrated();
-  //   // TODO: check that ag balance is zero
-  // });
 });
