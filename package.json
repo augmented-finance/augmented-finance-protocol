@@ -1,6 +1,6 @@
 {
   "name": "@augmentedfinance/protocol-v1",
-  "version": "1.0.1-sdfhsdkfjhsv",
+  "version": "1.0.0",
   "description": "Augmented Protocol smart contracts",
   "files": [
     "contracts",

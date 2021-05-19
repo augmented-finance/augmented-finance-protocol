@@ -40,6 +40,7 @@ jobs:
       - attach_workspace:
           at: ~/
       - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+      - run: npm version 1.0.0-$CIRCLE_SHA1
       - run: npm publish
 workflows:
   test:
