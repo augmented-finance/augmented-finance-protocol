@@ -1,10 +1,12 @@
 {
-  "name": "@aave/protocol-v2",
-  "version": "1.0.1",
+  "name": "@augmentedfinance/protocol-v1",
+  "version": "1.0.0",
   "description": "Augmented Protocol smart contracts",
   "files": [
     "contracts",
-    "artifacts"
+    "artifacts",
+    "types",
+    "abi"
   ],
   "scripts": {
     "run-env": "npm i && tail -f /dev/null",
@@ -102,6 +104,7 @@
     "ethers": "^5.1.0",
     "globby": "^11.0.1",
     "hardhat": "^2.2.0",
+    "hardhat-abi-exporter": "^2.2.1",
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-tracer": "^1.0.0-alpha.6",
     "hardhat-typechain": "^0.3.5",
@@ -138,9 +141,8 @@
     "tmp-promise": "^3.0.2"
   },
   "keywords": [
-    "aave",
-    "protocol",
-    "protocol-v2",
+    "agf",
+    "protocol-v1",
     "ethereum",
     "solidity"
   ]
