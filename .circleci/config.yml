@@ -19,8 +19,8 @@ jobs:
             - yarn-packages-{{ checksum "yarn.lock" }}
       - run: yarn install --immutable
       - run: yarn run compile
-#      - run: yarn run test
-      - run: yarn run test-fork
+      - run: yarn run test
+#      - run: yarn run test-fork
       - save_cache:
           name: Save yarn package cache
           key: yarn-packages-{{ checksum "yarn.lock" }}
