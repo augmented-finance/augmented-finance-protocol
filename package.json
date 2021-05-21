@@ -138,7 +138,7 @@
     "Pol Sendra <pol@aave.com>",
     "David Truong <david@aave.com>"
   ],
-  "license": "AGPLv3",
+  "license": "AGPL-3.0",
   "dependencies": {
     "tmp-promise": "^3.0.2"
   },
