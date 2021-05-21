@@ -115,6 +115,7 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
         console.log(`#8 deploying: Aave Adapter`);
         const aaveAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
         const underlyingToken = await aaveAdapter.UNDERLYING_ASSET_ADDRESS();
+        console.log(`underlying deployment: ${underlyingToken}`);
         const arp = await deployMigratorWeightedRewardPool(
           [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed(), underlyingToken],
           verify
