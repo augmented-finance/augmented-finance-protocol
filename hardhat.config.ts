@@ -16,8 +16,8 @@ import '@nomiclabs/hardhat-etherscan';
 import 'hardhat-gas-reporter';
 import 'hardhat-typechain';
 import '@tenderly/hardhat-tenderly';
-import "solidity-coverage"
-
+import 'solidity-coverage';
+import 'hardhat-abi-exporter';
 
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
 const DEFAULT_BLOCK_GAS_LIMIT = 7000000;
@@ -70,6 +70,12 @@ const mainnetFork = MAINNET_FORK
   : undefined;
 
 const buidlerConfig: HardhatUserConfig = {
+  abiExporter: {
+    path: './abi',
+    clear: true,
+    flat: true,
+    spacing: 2,
+  },
   gasReporter: {
     currency: 'USD',
     gasPrice: 120,
