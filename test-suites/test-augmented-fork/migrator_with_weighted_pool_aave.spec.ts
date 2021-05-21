@@ -58,7 +58,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     [root] = await ethers.getSigners();
     aDaiContract = await getMintableERC20(ADAI_ADDRESS);
     console.log(`=== aDAI contract addr: ${aDaiContract.address}`);
-    agDaiContract = await getAGTokenByName('aDAI');
+    agDaiContract = await getAGTokenByName('agDAI');
     console.log(`=== agDAI contract addr: ${agDaiContract.address}`);
     aDaiWhaleONESigner = await impersonateAndGetSigner(aDaiWhaleONE);
     aDaiWhaleTWOSigner = await impersonateAndGetSigner(aDaiWhaleTWO);

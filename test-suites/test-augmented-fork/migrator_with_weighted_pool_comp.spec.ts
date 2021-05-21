@@ -56,7 +56,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
       params: [CDAI_ADDRESS],
     });
     cDaiContract = await getMintableERC20(CDAI_ADDRESS);
-    agDaiContract = await getAGTokenByName('aDAI');
+    agDaiContract = await getAGTokenByName('agDAI');
     cDaiWhaleONESigner = await impersonateAndGetSigner(cDaiWhaleONE);
     cDaiWhaleTWOSigner = await impersonateAndGetSigner(cDaiWhaleTWO);
     cWhaleTHREESigner = await impersonateAndGetSigner(cDaiWhaleTHREE);
