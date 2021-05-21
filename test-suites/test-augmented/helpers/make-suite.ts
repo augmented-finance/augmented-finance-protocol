@@ -128,9 +128,9 @@ export async function initializeMakeSuite() {
   testEnv.helpersContract = await getProtocolDataProvider();
 
   const allTokens = await testEnv.helpersContract.getAllATokens();
-  const aDaiAddress = allTokens.find((aToken) => aToken.symbol === 'aDAI')?.tokenAddress;
+  const aDaiAddress = allTokens.find((aToken) => aToken.symbol === 'agDAI')?.tokenAddress;
 
-  const aWEthAddress = allTokens.find((aToken) => aToken.symbol === 'aWETH')?.tokenAddress;
+  const aWEthAddress = allTokens.find((aToken) => aToken.symbol === 'agWETH')?.tokenAddress;
 
   const reservesTokens = await testEnv.helpersContract.getAllReservesTokens();
 
@@ -163,7 +163,7 @@ export async function initializeMakeSuite() {
 const setSnapshot = async () => {
   const hre = DRE as HardhatRuntimeEnvironment;
   if (usingTenderly()) {
-    setBuidlerevmSnapshotId((await hre.tenderlyRPC.getHead()) || '0x1');
+    setBuidlerevmSnapshotId((await hre.tenderlyNetwork.getHead()) || '0x1');
     return;
   }
   setBuidlerevmSnapshotId(await evmSnapshot());
@@ -172,7 +172,7 @@ const setSnapshot = async () => {
 const revertHead = async () => {
   const hre = DRE as HardhatRuntimeEnvironment;
   if (usingTenderly()) {
-    await hre.tenderlyRPC.setHead(buidlerevmSnapshotId);
+    await hre.tenderlyNetwork.setHead(buidlerevmSnapshotId);
     return;
   }
   await evmRevert(buidlerevmSnapshotId);

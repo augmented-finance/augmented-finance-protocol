@@ -42,6 +42,7 @@ import {
   ZombieRewardPoolFactory,
   AaveAdapterFactory,
   ZombieAdapterFactory,
+  CompAdapterFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -407,6 +408,13 @@ export const getAaveAdapter = async (address?: tEthereumAddress) =>
   await AaveAdapterFactory.connect(
     address ||
       (await getDb().get(`${eContractid.AaveAdapter}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
+export const getCompAdapter = async (address?: tEthereumAddress) =>
+  await CompAdapterFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.CompAdapter}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
 
