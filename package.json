@@ -1,12 +1,12 @@
 {
   "name": "@augmentedfinance/protocol-v1",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "description": "Augmented Protocol smart contracts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
-    "contracts",
-    "artifacts",
-    "types",
-    "abi"
+    "./dist/**/*",
+    "./dist/*"
   ],
   "scripts": {
     "run-env": "npm i && tail -f /dev/null",
@@ -81,7 +81,8 @@
     "main:initialize-tokens": "npm run compile && hardhat --network main full:initialize-tokens --pool Augmented",
     "kovan:initialize-tokens": "npm run compile && hardhat --network kovan full:initialize-tokens --pool Augmented",
     "external:deploy-assets-kovan": "npm run compile && hardhat --network kovan external:deploy-new-asset --symbol ${SYMBOL} --verify",
-    "external:deploy-assets-main": "npm run compile && hardhat --network main external:deploy-new-asset --symbol ${SYMBOL} --verify"
+    "external:deploy-assets-main": "npm run compile && hardhat --network main external:deploy-new-asset --symbol ${SYMBOL} --verify",
+    "build:package": "rm -rf ./dist && tsc && cp types/*.d.ts dist/types && cp -R abi dist && cp -R contracts dist"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.0",
