@@ -25,6 +25,7 @@ jobs:
       - run: yarn run test:main:augmented:migrator-zombie
       - run: yarn run test:main:augmented:migrator-aave
       - run: yarn run test:main:augmented:migrator-comp
+      - run: yarn run test:augmented:stake
       - save_cache:
           name: Save yarn package cache
           key: yarn-packages-{{ checksum "yarn.lock" }}

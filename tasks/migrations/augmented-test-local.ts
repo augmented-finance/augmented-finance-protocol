@@ -6,15 +6,20 @@ import {
   deployCompAdapter,
   deployMigratorWeightedRewardPool,
   deployMockAgfToken,
+  deployMockStakedAgfToken,
+  deployMockStakedAgToken,
   deployRewardFreezer,
   deployTeamRewardPool,
   deployTokenUnweightedRewardPool,
+  deployTokenWeightedRewardPoolAG,
+  deployTokenWeightedRewardPoolAGF,
   deployZombieAdapter,
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
 import { ONE_ADDRESS, oneRay, RAY } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
 import { ADAI_ADDRESS, CDAI_ADDRESS, DAI_ADDRESS, ZTOKEN_ADDRESS } from './defaultTestDeployConfig';
+import { getAGTokenByName } from '../../helpers/contracts-getters';
 
 task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
@@ -141,5 +146,29 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
         await crp.addRewardProvider(compAdapter.address, DAI_ADDRESS);
         await migrator.admin_setRewardPool(compAdapter.address, crp.address);
       }
+      console.log(`#10 Staking`);
+      const agDaiToken = await getAGTokenByName('agDAI');
+      const stkPoolForAG = await deployTokenWeightedRewardPoolAG(
+        [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
+        verify
+      );
+      const stkAGToken = await deployMockStakedAgToken([
+        stkPoolForAG.address,
+        agDaiToken.address,
+        'Staked AG Token',
+        'stkAG',
+      ]);
+
+      const stkPoolForAGF = await deployTokenWeightedRewardPoolAGF(
+        [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
+        verify
+      );
+
+      const stkAGFToken = await deployMockStakedAgfToken([
+        stkPoolForAGF.address,
+        agfToken.address,
+        'Staked AGF Token',
+        'stkAGF',
+      ]);
     }
   );
