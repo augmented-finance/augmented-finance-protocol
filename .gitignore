@@ -19,3 +19,5 @@ coverage
 soljson-v0.6.12+commit.27d51765.js
 contracts/types
 package-lock.json
+abi
+yarn.lock

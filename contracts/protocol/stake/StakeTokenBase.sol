@@ -163,8 +163,12 @@ abstract contract StakeTokenBase is
 
     uint256 oldBalance = balanceOf(from);
     if (stakeAmount == 0) {
-      stakeAmount = stakeAmount.percentDiv(exchangeRate());
+      stakeAmount = underlyingAmount.percentDiv(exchangeRate());
 
+      if (stakeAmount == 0) {
+        // don't allow tiny withdrawals
+        return (0, 0);
+      }
       if (stakeAmount > oldBalance) {
         stakeAmount = oldBalance;
         underlyingAmount = stakeAmount.percentMul(exchangeRate());
@@ -174,6 +178,10 @@ abstract contract StakeTokenBase is
         stakeAmount = oldBalance;
       }
       underlyingAmount = stakeAmount.percentMul(exchangeRate());
+      if (underlyingAmount == 0) {
+        // protect the user - don't waste balance without an outcome
+        return (0, 0);
+      }
     }
 
     _burn(from, stakeAmount);
