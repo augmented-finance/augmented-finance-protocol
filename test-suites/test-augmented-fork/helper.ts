@@ -21,13 +21,3 @@ export const impersonateAndGetContractByFunc = async (addr: string, f: Function)
   });
   return await f(addr);
 };
-
-// TODO: names are still from aave, so aDAI is agDAI, change them!
-export const getAGTokenByName = async (name: string): Promise<DepositToken> => {
-  const dp = await getProtocolDataProvider();
-  const tokens = await dp.getAllATokens();
-  console.log(`all deposit tokens: ${tokens}`);
-  const addrByName = tokens.filter((v) => v.symbol === name)[0].tokenAddress;
-  console.log(`deposit token addr by name ${name}: ${addrByName}`);
-  return await getAToken(addrByName);
-};

@@ -12,6 +12,7 @@ import {
 import rawBRE, { ethers } from 'hardhat';
 import {
   getAaveAdapter,
+  getAGTokenByName,
   getMigrator,
   getMintableERC20,
   getMockAgfToken,
@@ -19,12 +20,7 @@ import {
 } from '../../helpers/contracts-getters';
 import { Signer } from 'ethers';
 import { Provider } from '@ethersproject/providers';
-import {
-  defaultMigrationAmount,
-  defaultReferral,
-  getAGTokenByName,
-  impersonateAndGetSigner,
-} from './helper';
+import { defaultMigrationAmount, defaultReferral, impersonateAndGetSigner } from './helper';
 import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import {
   ADAI_ADDRESS,
@@ -33,7 +29,6 @@ import {
   aDaiWhaleTWO,
   CFG,
 } from '../../tasks/migrations/defaultTestDeployConfig';
-import { waitForTx } from '../../helpers/misc-utils';
 
 chai.use(solidity);
 const { expect } = chai;

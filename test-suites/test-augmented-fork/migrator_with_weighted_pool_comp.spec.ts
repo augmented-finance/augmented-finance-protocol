@@ -11,7 +11,7 @@ import {
 } from '../../types';
 import rawBRE, { ethers } from 'hardhat';
 import {
-  getAToken,
+  getAGTokenByName,
   getCompAdapter,
   getMigrator,
   getMintableERC20,
@@ -20,7 +20,7 @@ import {
 } from '../../helpers/contracts-getters';
 import { Signer } from 'ethers';
 import { Provider } from '@ethersproject/providers';
-import { defaultMigrationAmount, defaultReferral, getAGTokenByName, impersonateAndGetSigner } from './helper';
+import { defaultMigrationAmount, defaultReferral, impersonateAndGetSigner } from './helper';
 import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import {
   CDAI_ADDRESS,

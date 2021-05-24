@@ -38,11 +38,12 @@ import {
   TeamRewardPoolFactory,
   TokenUnweightedRewardPoolFactory,
   AccessControllerFactory,
-  ZombieRewardPool,
   ZombieRewardPoolFactory,
   AaveAdapterFactory,
   ZombieAdapterFactory,
   CompAdapterFactory,
+  DepositToken,
+  TokenWeightedRewardPoolFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -297,6 +298,13 @@ export const getMockStakedAgfToken = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getMockStakedAgToken = async (address?: tEthereumAddress) =>
+  await MockStakedAgfTokenFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.MockStakedAgToken}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
 export const getSelfdestructTransferMock = async (address?: tEthereumAddress) =>
   await SelfdestructTransferFactory.connect(
     address ||
@@ -447,6 +455,22 @@ export const getTokenUnweightedRewardPool = async (address?: tEthereumAddress) =
     await getFirstSigner()
   );
 
+export const getTokenWeightedRewardPoolAGF = async (address?: tEthereumAddress) =>
+  await TokenWeightedRewardPoolFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.TokenWeightedRewardPoolAGF}.${DRE.network.name}`).value())
+        .address,
+    await getFirstSigner()
+  );
+
+export const getTokenWeightedRewardPoolAG = async (address?: tEthereumAddress) =>
+  await TokenWeightedRewardPoolFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.TokenWeightedRewardPoolAG}.${DRE.network.name}`).value())
+        .address,
+    await getFirstSigner()
+  );
+
 export const getAccessController = async (address?: tEthereumAddress) =>
   await AccessControllerFactory.connect(
     address ||
@@ -459,3 +483,13 @@ export const getMigrator = async (address?: tEthereumAddress) =>
     address || (await getDb().get(`${eContractid.Migrator}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
+
+// TODO: names are still from aave, so aDAI is agDAI, change them!
+export const getAGTokenByName = async (name: string): Promise<DepositToken> => {
+  const dp = await getProtocolDataProvider();
+  const tokens = await dp.getAllATokens();
+  console.log(`all deposit tokens: ${tokens}`);
+  const addrByName = tokens.filter((v) => v.symbol === name)[0].tokenAddress;
+  console.log(`deposit token addr by name ${name}: ${addrByName}`);
+  return await getAToken(addrByName);
+};
