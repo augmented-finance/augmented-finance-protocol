@@ -29,7 +29,6 @@ import {
 } from '../../tasks/migrations/defaultTestDeployConfig';
 import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import { BigNumberish } from 'ethers';
-import { tEthereumAddress } from './helpers/types';
 import { VL_INVALID_AMOUNT } from '../../helpers/contract_errors';
 
 chai.use(solidity);
@@ -120,12 +119,18 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
   });
 
   // tslint:disable-next-line:max-line-length
-  it.skip('call from another account can not redeem if not enough balance to be burned', async () => {
+  it('call from another account can not redeem if not enough balance to be burned', async () => {
     await stake(user1, defaultStkAmount);
-    await printBalances(user1);
-    // TODO: revert here?!
-    await xAGF.connect(user2).redeemUnderlying(user1.address, defaultStkAmount);
-    await printBalances(user1);
+    await xAGF.connect(user2).redeem(user1.address, defaultStkAmount);
+    expect(await xAGF.balanceOf(user1.address)).to.eq(defaultStkAmount);
+    expect(await AGF.balanceOf(user1.address)).to.eq(0);
+  });
+
+  it('can burn from another account when redeeming', async () => {
+    await stake(user2, defaultStkAmount);
+    await xAGF.connect(user2).redeem(user1.address, defaultStkAmount);
+    expect(await xAGF.balanceOf(user2.address)).to.eq(0);
+    expect(await AGF.balanceOf(user1.address)).to.eq(defaultStkAmount);
   });
 
   it('error calling cooldown if not staking', async () => {
