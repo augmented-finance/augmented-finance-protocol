@@ -27,27 +27,13 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
     address[] memory tokens,
     TokenReward[] memory rewards
   ) public ControlledRewardPool(controller) {
-    require(address(controller) != address(0), 'controller is required');
     require(tokens.length == rewards.length, 'inconsistent length');
 
-    _controller = controller;
     for (uint256 i = 0; i < tokens.length; i++) {
       require(tokens[i] != address(0), 'unknown token');
       require(rewards[i].rateRay > 0, 'missing rate');
       _tokens[tokens[i]] = rewards[i];
     }
-  }
-
-  function updateBaseline(uint256 baseline) external override onlyController {}
-
-  function disableBaseline() external override onlyController {}
-
-  function setBaselinePercentage(uint16) external override onlyRateController {
-    revert('UNSUPPORTED');
-  }
-
-  function setRate(uint256) public override onlyRateController {
-    revert('UNSUPPORTED');
   }
 
   function internalGetReward(address, uint32) internal override returns (uint256, uint32) {
@@ -57,6 +43,8 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
   function internalCalcReward(address, uint32) internal view override returns (uint256, uint32) {
     return (0, 0);
   }
+
+  function internalDisableRate() internal override {}
 
   function addRewardProvider(address provider, address token)
     external
@@ -86,15 +74,50 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
     uint256 newBalance,
     uint256
   ) external override {
+    allocateReward(
+      token,
+      holder,
+      newBalance.sub(oldBalance, 'balance reduction is not allowed by the reward pool')
+    );
+  }
+
+  function handleScaledBalanceUpdate(
+    address token,
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256,
+    uint256 scaleRay
+  ) external override {
+    allocateReward(
+      token,
+      holder,
+      newBalance.sub(oldBalance, 'balance reduction is not allowed by the reward pool').rayMul(
+        scaleRay
+      )
+    );
+  }
+
+  function allocateReward(
+    address token,
+    address holder,
+    uint256 allocated
+  ) private notPaused {
     require(token != address(0), 'unknown token');
-    require(_providers[msg.sender] == token, 'unknown provider or restriced token');
-    require(newBalance >= oldBalance, 'balance reduction is not allowed by the reward pool');
+    require(_providers[msg.sender] == token, 'unknown provider or restricted token');
 
     TokenReward storage tr = _tokens[token];
 
-    uint256 allocated = uint256(newBalance - oldBalance).rayMul(tr.rateRay);
+    allocated = allocated.rayMul(tr.rateRay);
     tr.limit = tr.limit.sub(allocated, 'insufficient reward pool balance');
 
     _controller.allocatedByPool(holder, allocated, uint32(block.number), AllocationMode.Push);
   }
+
+  function isScaledBalanceUpdateNeeded() external view override returns (bool) {
+    // scaling is important to match different providers
+    return true;
+  }
+
+  function internalPause(bool paused) internal override {}
 }

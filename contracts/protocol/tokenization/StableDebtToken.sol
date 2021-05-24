@@ -2,23 +2,23 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
+import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import {PoolTokenBase} from './base/PoolTokenBase.sol';
 import {DebtTokenBase} from './base/DebtTokenBase.sol';
 import {MathUtils} from '../../tools/math/MathUtils.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
-import {ILendingPool} from '../../interfaces/ILendingPool.sol';
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
-import {IInitializablePoolToken} from './interfaces/IInitializablePoolToken.sol';
 import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
+import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
+import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
 /**
  * @title StableDebtToken
  * @notice Implements a stable debt token to track the borrowing positions of users
  * at stable rate mode
- * @author Aave
  **/
-contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolToken {
+contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtToken {
   using WadRayMath for uint256;
 
   uint256 private constant DEBT_TOKEN_REVISION = 0x1;
@@ -28,39 +28,17 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
   mapping(address => uint256) internal _usersStableRate;
   uint40 internal _totalSupplyTimestamp;
 
-  ILendingPool internal _pool;
-  address internal _underlyingAsset;
+  bool private _useScaledBalanceUpdate;
 
-  /**
-   * @dev Initializes the debt token.
-   * @param config The data about lending pool where this token will be used
-   * @param debtTokenName The name of the token
-   * @param debtTokenSymbol The symbol of the token
-   * @param debtTokenDecimals The decimals of the debtToken, same as the underlying asset's
-   */
   function initialize(
     PoolTokenConfig memory config,
-    string memory debtTokenName,
-    string memory debtTokenSymbol,
-    uint8 debtTokenDecimals,
+    string memory name,
+    string memory symbol,
+    uint8 decimals,
     bytes calldata params
   ) public override initializerRunAlways(DEBT_TOKEN_REVISION) {
-    _setName(debtTokenName);
-    _setSymbol(debtTokenSymbol);
-    _setDecimals(debtTokenDecimals);
-
-    _pool = config.pool;
-    _underlyingAsset = config.underlyingAsset;
-
-    emit Initialized(
-      config.underlyingAsset,
-      address(config.pool),
-      address(0),
-      debtTokenName,
-      debtTokenSymbol,
-      debtTokenDecimals,
-      params
-    );
+    _initializeERC20(name, symbol, decimals);
+    _initializePoolToken(config, name, symbol, decimals, params);
   }
 
   /**
@@ -100,15 +78,22 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
    * @dev Calculates the current user debt balance
    * @return The accumulated debt of the user
    **/
-  function balanceOf(address account) public view virtual override returns (uint256) {
+  function balanceOf(address account)
+    public
+    view
+    virtual
+    override(IERC20, PoolTokenBase)
+    returns (uint256)
+  {
     uint256 accountBalance = super.balanceOf(account);
-    uint256 stableRate = _usersStableRate[account];
     if (accountBalance == 0) {
       return 0;
     }
-    uint256 cumulatedInterest =
-      MathUtils.calculateCompoundedInterest(stableRate, _timestamps[account]);
-    return accountBalance.rayMul(cumulatedInterest);
+    return accountBalance.rayMul(cumulatedInterest(account));
+  }
+
+  function cumulatedInterest(address account) public view virtual returns (uint256) {
+    return MathUtils.calculateCompoundedInterest(_usersStableRate[account], _timestamps[account]);
   }
 
   struct MintLocalVars {
@@ -168,7 +153,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
       .add(rate.rayMul(vars.amountInRay))
       .rayDiv(vars.nextSupply.wadToRay());
 
-    _mint(onBehalfOf, amount.add(balanceIncrease), vars.previousSupply);
+    _mintWithTotal(onBehalfOf, amount.add(balanceIncrease), vars.nextSupply);
 
     emit Transfer(address(0), onBehalfOf, amount);
 
@@ -233,7 +218,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
 
     if (balanceIncrease > amount) {
       uint256 amountToMint = balanceIncrease.sub(amount);
-      _mint(user, amountToMint, previousSupply);
+      _mintWithTotal(user, amountToMint, nextSupply);
       emit Mint(
         user,
         user,
@@ -246,7 +231,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
       );
     } else {
       uint256 amountToBurn = amount.sub(balanceIncrease);
-      _burn(user, amountToBurn, previousSupply);
+      _burnWithTotal(user, amountToBurn, nextSupply);
       emit Burn(user, amountToBurn, currentBalance, balanceIncrease, newAvgStableRate, nextSupply);
     }
 
@@ -312,7 +297,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
   /**
    * @dev Returns the total supply
    **/
-  function totalSupply() public view override returns (uint256) {
+  function totalSupply() public view override(IERC20, PoolTokenBase) returns (uint256) {
     return _calcTotalSupply(_avgStableRate);
   }
 
@@ -333,34 +318,6 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
   }
 
   /**
-   * @dev Returns the address of the underlying asset of this aToken (E.g. WETH for aWETH)
-   **/
-  function UNDERLYING_ASSET_ADDRESS() public view returns (address) {
-    return _underlyingAsset;
-  }
-
-  /**
-   * @dev Returns the address of the lending pool where this aToken is used
-   **/
-  function POOL() public view returns (ILendingPool) {
-    return _pool;
-  }
-
-  /**
-   * @dev For internal usage in the logic of the parent contracts
-   **/
-  function _getUnderlyingAssetAddress() internal view override returns (address) {
-    return _underlyingAsset;
-  }
-
-  /**
-   * @dev For internal usage in the logic of the parent contracts
-   **/
-  function _getLendingPool() internal view override returns (ILendingPool) {
-    return _pool;
-  }
-
-  /**
    * @dev Calculates the total supply
    * @param avgRate The average rate at which the total supply increases
    * @return The debt balance of the user since the last burn/mint action
@@ -372,59 +329,67 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, IInitializablePoolT
       return 0;
     }
 
-    uint256 cumulatedInterest =
-      MathUtils.calculateCompoundedInterest(avgRate, _totalSupplyTimestamp);
-
-    return principalSupply.rayMul(cumulatedInterest);
+    uint256 cumInterest = MathUtils.calculateCompoundedInterest(avgRate, _totalSupplyTimestamp);
+    return principalSupply.rayMul(cumInterest);
   }
 
   /**
    * @dev Mints stable debt tokens to an user
    * @param account The account receiving the debt tokens
    * @param amount The amount being minted
-   * @param oldTotalSupply the total supply before the minting event
+   * @param newTotalSupply the total supply after the minting event
    **/
-  function _mint(
+  function _mintWithTotal(
     address account,
     uint256 amount,
-    uint256 oldTotalSupply
+    uint256 newTotalSupply
   ) internal {
     uint256 oldAccountBalance = _balances[account];
-    _balances[account] = oldAccountBalance.add(amount);
+    uint256 newAccountBalance = oldAccountBalance.add(amount);
+    _balances[account] = newAccountBalance;
 
-    if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(
-        address(this),
-        account,
-        oldAccountBalance,
-        _balances[account],
-        oldTotalSupply.add(amount)
-      );
-    }
+    balanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
   }
 
   /**
    * @dev Burns stable debt tokens of an user
    * @param account The user getting his debt burned
    * @param amount The amount being burned
-   * @param oldTotalSupply The total supply before the burning event
+   * @param newTotalSupply The total supply after the burning event
    **/
-  function _burn(
+  function _burnWithTotal(
     address account,
     uint256 amount,
-    uint256 oldTotalSupply
+    uint256 newTotalSupply
   ) internal {
     uint256 oldAccountBalance = _balances[account];
-    _balances[account] = oldAccountBalance.sub(amount, Errors.SDT_BURN_EXCEEDS_BALANCE);
+    uint256 newAccountBalance = oldAccountBalance.sub(amount, Errors.SDT_BURN_EXCEEDS_BALANCE);
+    _balances[account] = newAccountBalance;
 
-    if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(
-        address(this),
-        account,
-        oldAccountBalance,
-        _balances[account],
-        oldTotalSupply.sub(amount)
-      );
+    balanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
+  }
+
+  function _setIncentivesController(address hook) internal override {
+    super._setIncentivesController(hook);
+    _useScaledBalanceUpdate =
+      (hook != address(0)) &&
+      IBalanceHook(hook).isScaledBalanceUpdateNeeded();
+  }
+
+  function balanceUpdate(
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance,
+    uint256 providerSupply
+  ) internal {
+    if (!_useScaledBalanceUpdate) {
+      super.handleBalanceUpdate(holder, oldBalance, newBalance, providerSupply);
     }
+
+    if (address(getIncentivesController()) == address(0)) {
+      return;
+    }
+    uint256 scale = cumulatedInterest(holder);
+    super.handleScaledBalanceUpdate(holder, oldBalance, newBalance, providerSupply, scale);
   }
 }

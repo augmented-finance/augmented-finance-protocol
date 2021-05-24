@@ -4,12 +4,12 @@ import { getEthersSigners } from './helpers/contracts-helpers';
 import { initializeMakeSuite } from './helpers/make-suite';
 import { deployMintableErc20, deployATokenMock } from './helpers/contracts-accessors';
 import { waitForTx } from './helpers/misc-utils';
-import { MintableErc20 } from '../../types/MintableErc20';
+import { MintableERC20 } from '../../types';
 import { testDeployAaveStakeV2, testDeployAaveStakeV1 } from './helpers/deploy';
 
 const topUpWalletsWithAave = async (
   wallets: Signer[],
-  aaveToken: MintableErc20,
+  aaveToken: MintableERC20,
   amount: string
 ) => {
   for (const wallet of wallets) {

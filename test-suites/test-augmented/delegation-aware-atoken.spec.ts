@@ -13,35 +13,28 @@ import {
 } from '../../helpers/configuration';
 import { waitForTx } from '../../helpers/misc-utils';
 import {
-  deployDelegationAwareAToken,
+  deployDelegationAwareDepositToken,
   deployMintableDelegationERC20,
 } from '../../helpers/contracts-deployments';
-import { DelegationAwareATokenFactory } from '../../types';
-import { DelegationAwareAToken } from '../../types/DelegationAwareAToken';
-import { MintableDelegationERC20 } from '../../types/MintableDelegationERC20';
-import AaveConfig from '../../markets/aave';
+import { DelegationAwareDepositTokenFactory } from '../../types';
+import { DelegationAwareDepositToken } from '../../types';
+import { MintableDelegationERC20 } from '../../types';
+import AaveConfig from '../../markets/augmented';
 
 const { parseEther } = ethers.utils;
 
 makeSuite('DepositToken: underlying delegation', (testEnv: TestEnv) => {
   const poolConfig = loadPoolConfig(ConfigNames.Commons);
-  let delegationAToken = <DelegationAwareAToken>{};
+  let delegationAToken = <DelegationAwareDepositToken>{};
   let delegationERC20 = <MintableDelegationERC20>{};
 
-  it('Deploys a new MintableDelegationERC20 and a DelegationAwareAToken', async () => {
+  it('Deploys a new MintableDelegationERC20 and a DelegationAwareDepositToken', async () => {
     const { pool } = testEnv;
 
     delegationERC20 = await deployMintableDelegationERC20(['DEL', 'DEL', '18']);
 
-    delegationAToken = await deployDelegationAwareAToken(
-      [
-        pool.address,
-        delegationERC20.address,
-        await getTreasuryAddress(AaveConfig),
-        ZERO_ADDRESS,
-        'aDEL',
-        'aDEL',
-      ],
+    delegationAToken = await deployDelegationAwareDepositToken(
+      [pool.address, delegationERC20.address, await getTreasuryAddress(AaveConfig), 'aDEL', 'aDEL'],
       false
     );
 

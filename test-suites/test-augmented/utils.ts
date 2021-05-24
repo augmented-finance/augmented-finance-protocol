@@ -1,32 +1,60 @@
-import { ethers } from 'hardhat';
-import BigNumber from 'bignumber.js';
+import rawBRE, { ethers } from 'hardhat';
+
+// doesn't work
+// export const oneBlock = async (f: Function) => {
+//   await ethers.provider.send('evm_setAutomine', [false]);
+//   f();
+//   await ethers.provider.send('evm_setAutomine', [true]);
+//   await oneTx();
+// };
+
+const oneTx = async () => {
+  const wallets = await ethers.getSigners();
+  const nonce = await wallets[7].getTransactionCount();
+  await wallets[7].sendTransaction({
+    nonce: ethers.utils.hexlify(nonce),
+    to: wallets[8].address,
+    value: 1,
+    chainId: rawBRE.network.config.chainId,
+  });
+};
 
 export const mineToBlock = async (to: number): Promise<number> => {
   const blk = await ethers.provider.getBlock('latest');
+  if (to == blk.number) {
+    console.log(`exactly at block: ${blk.number}`);
+    return 0;
+  }
   if (to < blk.number) {
-    console.log(`already on block: ${blk.number}`);
+    console.log(`already at block: ${blk.number}`);
     return 0;
   }
   let blockMined = 0;
+  const wallets = await ethers.getSigners();
   while (blk.number < to) {
-    await ethers.provider.send('evm_increaseTime', [10]);
-    await ethers.provider.send('evm_mine', []);
     blk.number += 1;
+    if (blk.number % 2 == 0) {
+      const nonce = await wallets[7].getTransactionCount();
+      await wallets[7].sendTransaction({
+        nonce: ethers.utils.hexlify(nonce),
+        to: wallets[8].address,
+        value: 1,
+        chainId: rawBRE.network.config.chainId,
+      });
+    } else {
+      const nonce = await wallets[8].getTransactionCount();
+      await wallets[8].sendTransaction({
+        nonce: ethers.utils.hexlify(nonce),
+        to: wallets[7].address,
+        value: 1,
+        chainId: rawBRE.network.config.chainId,
+      });
+    }
     blockMined += 1;
   }
   const blkAfter = await ethers.provider.getBlock('latest');
   console.log(`moved to block: ${blkAfter.number}`);
   return blockMined;
-};
-
-export const mineBlocks = async (to: number) => {
-  const blk = await ethers.provider.getBlock('latest');
-  for (let i = 0; i < to; i++) {
-    await ethers.provider.send('evm_increaseTime', [10]);
-    await ethers.provider.send('evm_mine', []);
-    blk.number += 1;
-  }
-  console.log(`moved to block: ${blk.number}`);
 };
 
 export const currentBlock = async () => await ethers.provider.getBlockNumber();

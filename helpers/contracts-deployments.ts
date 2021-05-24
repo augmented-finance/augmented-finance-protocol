@@ -4,7 +4,7 @@ import {
   tEthereumAddress,
   eContractid,
   tStringTokenSmallUnits,
-  AavePools,
+  LendingPools,
   TokenContractId,
   iMultiPoolsAssets,
   IReserveParams,
@@ -12,7 +12,7 @@ import {
   eEthereumNetwork,
   tStringTokenBigUnits,
 } from './types';
-import { MintableERC20 } from '../types/MintableERC20';
+import { MintableERC20 } from '../types';
 import { MockContract } from 'ethereum-waffle';
 import { getReservesConfigByPool } from './configuration';
 import { getFirstSigner } from './contracts-getters';
@@ -24,7 +24,7 @@ import {
   ATokensAndRatesHelperFactory,
   OracleRouterFactory,
   DefaultReserveInterestRateStrategyFactory,
-  DelegationAwareATokenFactory,
+  DelegationAwareDepositTokenFactory,
   InitializableAdminUpgradeabilityProxyFactory,
   LendingPoolAddressesProviderFactory,
   AddressesProviderRegistryFactory,
@@ -54,12 +54,16 @@ import {
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
-  LinearWeightedRewardPoolFactory,
+  TokenWeightedRewardPoolFactory,
+  TokenUnweightedRewardPoolFactory,
+  TeamRewardPoolFactory,
   MigratorFactory,
   AaveAdapterFactory,
   CompAdapterFactory,
-  LinearUnweightedRewardPoolFactory,
   AccessControllerFactory,
+  ZombieRewardPoolFactory,
+  ZombieAdapterFactory,
+  MigratorWeightedRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -67,8 +71,8 @@ import {
   linkBytecode,
   insertContractAddressInDb,
 } from './contracts-helpers';
-import { StableAndVariableTokensHelperFactory } from '../types/StableAndVariableTokensHelperFactory';
-import { MintableDelegationERC20 } from '../types/MintableDelegationERC20';
+import { StableAndVariableTokensHelperFactory } from '../types';
+import { MintableDelegationERC20 } from '../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { LendingPoolLibraryAddresses } from '../types/LendingPoolFactory';
 
@@ -162,6 +166,7 @@ export const deployAaveLibraries = async (
   const validationLogic = await deployValidationLogic(reserveLogic, genericLogic, verify);
 
   // Hardcoded solidity placeholders, if any library changes path this will fail.
+  // tslint:disable-next-line:max-line-length
   // The '__$PLACEHOLDER$__ can be calculated via solidity keccak, but the LendingPoolLibraryAddresses Type seems to
   // require a hardcoded string.
   //
@@ -414,7 +419,7 @@ export const deployGenericDepositTokenImpl = async (verify: boolean) =>
     verify
   );
 
-export const deployDelegationAwareAToken = async (
+export const deployDelegationAwareDepositToken = async (
   [pool, underlyingAssetAddress, treasuryAddress, name, symbol]: [
     tEthereumAddress,
     tEthereumAddress,
@@ -425,8 +430,8 @@ export const deployDelegationAwareAToken = async (
   verify: boolean
 ) => {
   const instance = await withSaveAndVerify(
-    await new DelegationAwareATokenFactory(await getFirstSigner()).deploy(),
-    eContractid.DelegationAwareAToken,
+    await new DelegationAwareDepositTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.DelegationAwareDepositToken,
     [],
     verify
   );
@@ -446,10 +451,10 @@ export const deployDelegationAwareAToken = async (
   return instance;
 };
 
-export const deployDelegationAwareATokenImpl = async (verify: boolean) =>
+export const deployDelegationAwareDepositTokenImpl = async (verify: boolean) =>
   withSaveAndVerify(
-    await new DelegationAwareATokenFactory(await getFirstSigner()).deploy(),
-    eContractid.DelegationAwareAToken,
+    await new DelegationAwareDepositTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.DelegationAwareDepositToken,
     [],
     verify
   );
@@ -457,7 +462,7 @@ export const deployDelegationAwareATokenImpl = async (verify: boolean) =>
 export const deployAllMockTokens = async (verify?: boolean) => {
   const tokens: { [symbol: string]: MockContract | MintableERC20 } = {};
 
-  const protoConfigData = getReservesConfigByPool(AavePools.proto);
+  const protoConfigData = getReservesConfigByPool(LendingPools.augmented);
 
   for (const tokenSymbol of Object.keys(TokenContractId)) {
     let decimals = '18';
@@ -625,13 +630,39 @@ export const deployMockAgfToken = async (
     verify
   );
 
-  await instance.initialize(args[0], args[1], args[2]);
+  await instance['initialize(address,string,string)'](args[0], args[1], args[2]);
+
+  return instance;
+};
+
+export const deployMockStakedAgToken = async (
+  args: [tEthereumAddress, tEthereumAddress, string, string],
+  verify?: boolean
+) => {
+  const instance = await withSaveAndVerify(
+    await new MockStakedAgfTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.MockStakedAgToken,
+    [],
+    verify
+  );
+  await instance.initialize(
+    {
+      stakeController: args[0],
+      stakedToken: args[1],
+      cooldownBlocks: 10,
+      unstakeBlocks: 10,
+      governance: ZERO_ADDRESS,
+    },
+    args[2],
+    args[3],
+    '18'
+  );
 
   return instance;
 };
 
 export const deployMockStakedAgfToken = async (
-  args: [tEthereumAddress, tEthereumAddress, tEthereumAddress, string, string],
+  args: [tEthereumAddress, tEthereumAddress, string, string],
   verify?: boolean
 ) => {
   const instance = await withSaveAndVerify(
@@ -644,13 +675,12 @@ export const deployMockStakedAgfToken = async (
     {
       stakeController: args[0],
       stakedToken: args[1],
-      incentivesController: args[2],
       cooldownBlocks: 10,
       unstakeBlocks: 10,
       governance: ZERO_ADDRESS,
     },
+    args[2],
     args[3],
-    args[4],
     '18'
   );
 
@@ -714,7 +744,10 @@ export const deployAGFToken = async (verify?: boolean) =>
     verify
   );
 
-export const deployRewardFreezer = async (args: [tEthereumAddress], verify?: boolean) =>
+export const deployRewardFreezer = async (
+  args: [tEthereumAddress, tEthereumAddress],
+  verify?: boolean
+) =>
   withSaveAndVerify(
     await new RewardFreezerFactory(await getFirstSigner()).deploy(...args),
     eContractid.RewardFreezer,
@@ -722,24 +755,77 @@ export const deployRewardFreezer = async (args: [tEthereumAddress], verify?: boo
     verify
   );
 
-export const deployLinearWeightedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, tEthereumAddress, BigNumberish],
+export const deployTeamRewardPool = async (
+  args: [
+    controller: string,
+    initialRate: BigNumberish,
+    baselinePercentage: BigNumberish,
+    teamManager: string
+  ],
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    await new LinearWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.LinearWeightedRewardPool,
+    await new TeamRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TeamRewardPool,
+    [], // TODO,
+    verify
+  );
+
+export const deployZombieRewardPool = async (
+  args: [
+    controller: string,
+    tokens: string[],
+    rewards: { rateRay: BigNumberish; limit: BigNumberish }[]
+  ],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new ZombieRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.ZombieRewardPool,
+    [], // TODO,
+    verify
+  );
+
+export const deployMigratorWeightedRewardPool = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new MigratorWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.MigratorWeightedRewardPool,
+    [],
+    verify
+  );
+
+export const deployTokenWeightedRewardPoolAGF = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TokenWeightedRewardPoolAGF,
     [], // TODO:
     verify
   );
 
-export const deployLinearUnweightedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, tEthereumAddress],
+export const deployTokenWeightedRewardPoolAG = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    await new LinearUnweightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.LinearUnweightedRewardPool,
+    await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TokenWeightedRewardPoolAG,
+    [], // TODO:
+    verify
+  );
+
+export const deployTokenUnweightedRewardPool = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new TokenUnweightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TokenUnweightedRewardPool,
     [], // TODO:
     verify
   );
@@ -752,7 +838,21 @@ export const deployAugmentedMigrator = async (verify?: boolean) =>
     verify
   );
 
-export const deployAaveAdapter = async (args: [tEthereumAddress], verify?: boolean) =>
+export const deployZombieAdapter = async (
+  args: [tEthereumAddress, tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new ZombieAdapterFactory(await getFirstSigner()).deploy(...args),
+    eContractid.ZombieAdapter,
+    args,
+    verify
+  );
+
+export const deployAaveAdapter = async (
+  args: [tEthereumAddress, tEthereumAddress],
+  verify?: boolean
+) =>
   withSaveAndVerify(
     await new AaveAdapterFactory(await getFirstSigner()).deploy(...args),
     eContractid.AaveAdapter,
@@ -761,7 +861,7 @@ export const deployAaveAdapter = async (args: [tEthereumAddress], verify?: boole
   );
 
 export const deployCompAdapter = async (
-  args: [tEthereumAddress, tEthereumAddress],
+  args: [tEthereumAddress, tEthereumAddress, tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(

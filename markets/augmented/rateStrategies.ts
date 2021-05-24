@@ -4,7 +4,7 @@ import { IInterestRateStrategyParams } from '../../helpers/types';
 
 // BUSD SUSD
 export const rateStrategyStableOne: IInterestRateStrategyParams = {
-  name: "rateStrategyStableOne",
+  name: 'rateStrategyStableOne',
   optimalUtilizationRate: new BigNumber(0.8).multipliedBy(oneRay).toFixed(),
   baseVariableBorrowRate: new BigNumber(0).multipliedBy(oneRay).toFixed(),
   variableRateSlope1: new BigNumber(0.04).multipliedBy(oneRay).toFixed(),
@@ -15,7 +15,7 @@ export const rateStrategyStableOne: IInterestRateStrategyParams = {
 
 // DAI TUSD
 export const rateStrategyStableTwo: IInterestRateStrategyParams = {
-  name: "rateStrategyStableTwo",
+  name: 'rateStrategyStableTwo',
   optimalUtilizationRate: new BigNumber(0.8).multipliedBy(oneRay).toFixed(),
   baseVariableBorrowRate: new BigNumber(0).multipliedBy(oneRay).toFixed(),
   variableRateSlope1: new BigNumber(0.04).multipliedBy(oneRay).toFixed(),
@@ -26,7 +26,7 @@ export const rateStrategyStableTwo: IInterestRateStrategyParams = {
 
 // USDC USDT
 export const rateStrategyStableThree: IInterestRateStrategyParams = {
-  name: "rateStrategyStableThree",
+  name: 'rateStrategyStableThree',
   optimalUtilizationRate: new BigNumber(0.9).multipliedBy(oneRay).toFixed(),
   baseVariableBorrowRate: new BigNumber(0).multipliedBy(oneRay).toFixed(),
   variableRateSlope1: new BigNumber(0.04).multipliedBy(oneRay).toFixed(),
@@ -37,7 +37,7 @@ export const rateStrategyStableThree: IInterestRateStrategyParams = {
 
 // WETH
 export const rateStrategyWETH: IInterestRateStrategyParams = {
-  name: "rateStrategyWETH",
+  name: 'rateStrategyWETH',
   optimalUtilizationRate: new BigNumber(0.65).multipliedBy(oneRay).toFixed(),
   baseVariableBorrowRate: new BigNumber(0).multipliedBy(oneRay).toFixed(),
   variableRateSlope1: new BigNumber(0.08).multipliedBy(oneRay).toFixed(),
@@ -48,7 +48,7 @@ export const rateStrategyWETH: IInterestRateStrategyParams = {
 
 // AAVE
 export const rateStrategyAAVE: IInterestRateStrategyParams = {
-  name: "rateStrategyAAVE",
+  name: 'rateStrategyAAVE',
   optimalUtilizationRate: new BigNumber(0.45).multipliedBy(oneRay).toFixed(),
   baseVariableBorrowRate: '0',
   variableRateSlope1: '0',
@@ -59,7 +59,7 @@ export const rateStrategyAAVE: IInterestRateStrategyParams = {
 
 // BAT ENJ LINK MANA MKR REN YFI ZRX
 export const rateStrategyVolatileOne: IInterestRateStrategyParams = {
-  name: "rateStrategyVolatileOne",
+  name: 'rateStrategyVolatileOne',
   optimalUtilizationRate: new BigNumber(0.45).multipliedBy(oneRay).toFixed(),
   baseVariableBorrowRate: new BigNumber(0).multipliedBy(oneRay).toFixed(),
   variableRateSlope1: new BigNumber(0.07).multipliedBy(oneRay).toFixed(),
@@ -70,7 +70,7 @@ export const rateStrategyVolatileOne: IInterestRateStrategyParams = {
 
 // KNC WBTC
 export const rateStrategyVolatileTwo: IInterestRateStrategyParams = {
-  name: "rateStrategyVolatileTwo",
+  name: 'rateStrategyVolatileTwo',
   optimalUtilizationRate: new BigNumber(0.65).multipliedBy(oneRay).toFixed(),
   baseVariableBorrowRate: new BigNumber(0).multipliedBy(oneRay).toFixed(),
   variableRateSlope1: new BigNumber(0.08).multipliedBy(oneRay).toFixed(),
@@ -81,7 +81,7 @@ export const rateStrategyVolatileTwo: IInterestRateStrategyParams = {
 
 // SNX
 export const rateStrategyVolatileThree: IInterestRateStrategyParams = {
-  name: "rateStrategyVolatileThree",
+  name: 'rateStrategyVolatileThree',
   optimalUtilizationRate: new BigNumber(0.65).multipliedBy(oneRay).toFixed(),
   baseVariableBorrowRate: new BigNumber(0).multipliedBy(oneRay).toFixed(),
   variableRateSlope1: new BigNumber(0.08).multipliedBy(oneRay).toFixed(),
@@ -90,9 +90,8 @@ export const rateStrategyVolatileThree: IInterestRateStrategyParams = {
   stableRateSlope2: new BigNumber(3).multipliedBy(oneRay).toFixed(),
 }
 
-
 export const rateStrategyVolatileFour: IInterestRateStrategyParams = {
-  name: "rateStrategyVolatileFour",
+  name: 'rateStrategyVolatileFour',
   optimalUtilizationRate: new BigNumber(0.45).multipliedBy(oneRay).toFixed(),
   baseVariableBorrowRate: '0',
   variableRateSlope1: new BigNumber(0.07).multipliedBy(oneRay).toFixed(),
@@ -100,6 +99,3 @@ export const rateStrategyVolatileFour: IInterestRateStrategyParams = {
   stableRateSlope1: '0',
   stableRateSlope2: '0',
 }
-
-
-

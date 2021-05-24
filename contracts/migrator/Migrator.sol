@@ -9,6 +9,8 @@ import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../tools/math/WadRayMath.sol';
 import {ILendableToken} from './interfaces/ILendableToken.sol';
+import {IMigratorHook} from '../interfaces/IMigratorHook.sol';
+import {IBalanceHook} from '../interfaces/IBalanceHook.sol';
 
 contract Migrator is Ownable {
   using SafeERC20 for IERC20;
@@ -20,13 +22,38 @@ contract Migrator is Ownable {
   mapping(address => uint256) private _adapters;
   /* underlying */
   mapping(address => uint256[]) private _underlyings;
+  IMigratorHook private _migrateHook;
 
   function depositToMigrate(
     address token,
     uint256 amount,
     uint64 referralCode
   ) public returns (uint256) {
-    return getAdapter(token).depositToMigrate(amount, msg.sender, referralCode);
+    return _depositToMigrate(msg.sender, token, amount, referralCode);
+  }
+
+  function depositToMigrateOnBehalf(
+    address holder,
+    address token,
+    uint256 amount,
+    uint64 referralCode
+  ) public returns (uint256) {
+    require(holder != address(0), 'unknown holder');
+    return _depositToMigrate(holder, token, amount, referralCode);
+  }
+
+  function _depositToMigrate(
+    address holder,
+    address token,
+    uint256 amount,
+    uint64 referralCode
+  ) private returns (uint256) {
+    IMigrationAdapter adapter = getAdapter(token);
+    uint256 preBalance = adapter.preDepositOnBehalf();
+
+    IERC20(token).safeTransferFrom(holder, address(adapter), amount);
+
+    return adapter.postDepositOnBehalf(holder, preBalance, amount, referralCode);
   }
 
   function withdrawFromMigrate(address token, uint256 maxAmount) public returns (uint256) {
@@ -37,19 +64,27 @@ contract Migrator is Ownable {
     return getAdapter(token).balanceForMigrate(holder);
   }
 
-  function claimMigrated(address token) public returns (uint256) {
+  function claimMigrated(address token) public returns (uint256, bool) {
     return getAdapter(token).claimMigrated(msg.sender);
   }
 
-  function claimAllMigrated() public {
+  function claimAllMigrated()
+    public
+    returns (uint256 claimedTokenTypes, uint256 notClaimableTokenTypes)
+  {
     for (uint256 i = 0; i < _adaptersList.length; i++) {
       if (address(_adaptersList[i]) == address(0)) {
         continue;
       }
-      if (_adaptersList[i].isClaimable()) {
-        _adaptersList[i].claimMigrated(msg.sender);
+      (uint256 claimedAmount, bool claimed) = _adaptersList[i].claimMigrated(msg.sender);
+      console.log('claimed AG:', claimedAmount, claimed);
+      if (!claimed) {
+        notClaimableTokenTypes++;
+      } else if (claimedAmount > 0) {
+        claimedTokenTypes++;
       }
     }
+    return (claimedTokenTypes, notClaimableTokenTypes);
   }
 
   function getAdapter(address token) public view returns (IMigrationAdapter adapter) {
@@ -100,6 +135,10 @@ contract Migrator is Ownable {
     return true;
   }
 
+  function admin_setRewardPool(address adapter, IBalanceHook rewardPool) public onlyOwner {
+    IMigrationAdapter(adapter).admin_setRewardPool(rewardPool);
+  }
+
   function admin_migrateToToken(ILendableToken target)
     public
     onlyOwner
@@ -108,26 +147,64 @@ contract Migrator is Ownable {
     return internalMigrateToToken(target);
   }
 
+  function admin_setHook(IMigratorHook hook) public onlyOwner {
+    _migrateHook = hook;
+  }
+
+  /// @dev admin_sweepToken allows an owner to handle funds accidentially sent to the adapter or migrator contract.
+  /// When an adapter is swept, following limitations apply for safety reasons:
+  /// 1. target asset can not be swept after migration as there will be unclaimed funds.
+  /// 2. origin and underlying assets can only be swept after migration (residuals).
+  /// Migrator itself can be swept at any moment.
+  function admin_sweepToken(
+    address holder,
+    address token,
+    address to
+  ) external onlyOwner returns (uint256) {
+    if (holder != address(this)) {
+      return IMigrationAdapter(holder).admin_sweepToken(token, to);
+    }
+
+    require(to != address(0), 'valid destination is required');
+    uint256 amount = IERC20(token).balanceOf(address(this));
+    if (amount > 0) {
+      IERC20(token).safeTransfer(to, amount);
+    }
+    return amount;
+  }
+
   function internalMigrateToToken(ILendableToken target)
     internal
     returns (IMigrationAdapter[] memory migrated, uint256 count)
   {
     address underlying = target.UNDERLYING_ASSET_ADDRESS();
+    console.log('target underlying: ', underlying);
     uint256[] storage indices = _underlyings[underlying];
-    if (indices.length == 0) {
+    uint256 nTokens = indices.length;
+    console.log('nTokens: ', nTokens);
+    if (nTokens == 0) {
       return (migrated, 0);
     }
-    migrated = new IMigrationAdapter[](indices.length);
 
-    for (uint256 i = 0; i < indices.length; i++) {
-      IMigrationAdapter adapter = _adaptersList[indices[i]];
+    migrated = new IMigrationAdapter[](nTokens);
+    address[] memory rewardPools = new address[](nTokens);
+
+    for (uint256 i = nTokens; i > 0; ) {
+      i--;
+      IMigrationAdapter adapter = _adaptersList[indices[i] - 1];
       if (address(adapter) == address(0)) {
         continue;
       }
       adapter.admin_migrateAll(target);
       migrated[count] = adapter;
+      rewardPools[count] = adapter.getRewardPool();
       count++;
     }
+
+    if (_migrateHook != IMigratorHook(0)) {
+      _migrateHook.handleTokenMigrated(underlying, rewardPools);
+    }
+
     return (migrated, count);
   }
 

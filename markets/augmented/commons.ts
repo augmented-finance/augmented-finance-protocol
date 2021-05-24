@@ -39,57 +39,15 @@ export const CommonsConfig: ICommonConfiguration = {
     DAI: {
       borrowRate: oneRay.multipliedBy(0.039).toFixed(),
     },
-    // TUSD: {
-    //   borrowRate: oneRay.multipliedBy(0.035).toFixed(),
-    // },
     USDC: {
       borrowRate: oneRay.multipliedBy(0.039).toFixed(),
     },
-    // SUSD: {
-    //   borrowRate: oneRay.multipliedBy(0.035).toFixed(),
-    // },
     USDT: {
       borrowRate: oneRay.multipliedBy(0.035).toFixed(),
     },
-    // BAT: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // AAVE: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // LINK: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // KNC: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // MKR: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // MANA: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
     WBTC: {
       borrowRate: oneRay.multipliedBy(0.03).toFixed(),
     },
-    // ZRX: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // SNX: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // YFI: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // REN: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // UNI: {
-    //   borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    // },
-    // BUSD: {
-    //   borrowRate: oneRay.multipliedBy(0.05).toFixed(),
-    // },
   },
   // ----------------
   // COMMON PROTOCOL ADDRESSES ACROSS POOLS
@@ -119,7 +77,7 @@ export const CommonsConfig: ICommonConfiguration = {
   EmergencyAdminIndex: 1,
   ProviderRegistry: {
     [eEthereumNetwork.kovan]: '',
-    [eEthereumNetwork.ropsten]: '0x22CfbC0e4cCB20044Fe6646Daf642da24B34716d',
+    [eEthereumNetwork.ropsten]: '0x7fDDBe70E51b81BC95535B7fb1076cb312c71Cfa',
     [eEthereumNetwork.rinkeby]: '0x1cfDBe61a245e246D81bD51e9661A216f27d43AD',
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',

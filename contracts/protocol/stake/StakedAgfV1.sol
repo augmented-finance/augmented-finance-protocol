@@ -2,13 +2,10 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {VotingToken} from './VotingToken.sol';
-import {StakeToken} from './StakeToken.sol';
-
+import {StakeTokenBase} from './StakeTokenBase.sol';
 import {AccessFlags} from '../../access/AccessFlags.sol';
 import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
 import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
-
 import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
 
 /**
@@ -16,22 +13,18 @@ import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
  * @notice Staked AGF token
  **/
 contract StakedAgfV1 is
-  StakeToken, // VotingToken,
+  StakeTokenBase, // VotingToken,
   VersionedInitializable,
   IRewardMinter
 {
   string internal constant NAME = 'Staked AGF';
   string internal constant SYMBOL = 'stkAGF';
+  uint32 internal constant COOLDOWN_BLOCKS = 100;
+  uint32 internal constant UNSTAKE_BLOCKS = 10;
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor()
-    public
-    StakeToken(zeroConfig(), NAME, SYMBOL, 18)
-  //    VotingToken(zeroConfig(), NAME, SYMBOL, 18)
-  {
-
-  }
+  constructor() public StakeTokenBase(zeroConfig(), NAME, SYMBOL, 0) {}
 
   function zeroConfig() private pure returns (StakeTokenConfig memory) {}
 
@@ -40,13 +33,19 @@ contract StakedAgfV1 is
     string calldata name,
     string calldata symbol,
     uint8 decimals
-  ) external virtual override initializerRunAlways(TOKEN_REVISION) {
+  ) external virtual override initializer(TOKEN_REVISION) {
+    _initialize(params, name, symbol, decimals);
+  }
+
+  function _initialize(
+    StakeTokenConfig memory params,
+    string memory name,
+    string memory symbol,
+    uint8 decimals
+  ) private {
     super._initializeERC20(name, symbol, decimals);
     super._initializeToken(params);
-
-    if (!isRevisionInitialized(TOKEN_REVISION)) {
-      super._initializeDomainSeparator();
-    }
+    super._initializeDomainSeparator();
     emit Initialized(params, name, symbol, decimals);
   }
 

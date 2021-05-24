@@ -20,8 +20,8 @@ import { rawInsertContractAddressInDb } from './contracts-helpers';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
 import {
   deployDefaultReserveInterestRateStrategy,
-  deployDelegationAwareAToken,
-  deployDelegationAwareATokenImpl,
+  deployDelegationAwareDepositToken,
+  deployDelegationAwareDepositTokenImpl,
   deployGenericDepositToken,
   deployGenericDepositTokenImpl,
   deployGenericStableDebtToken,
@@ -31,14 +31,14 @@ import {
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
 import { isZeroAddress } from 'ethereumjs-util';
-import { DefaultReserveInterestRateStrategy, DelegationAwareAToken } from '../types';
+import { DefaultReserveInterestRateStrategy, DelegationAwareDepositToken } from '../types';
 
 export const chooseATokenDeployment = (id: eContractid) => {
   switch (id) {
     case eContractid.DepositToken:
       return deployGenericDepositToken;
-    case eContractid.DelegationAwareAToken:
-      return deployDelegationAwareAToken;
+    case eContractid.DelegationAwareDepositToken:
+      return deployDelegationAwareDepositToken;
     default:
       throw Error(`Missing aToken deployment script for: ${id}`);
   }
@@ -126,11 +126,11 @@ export const initReservesByHelper = async (
   rawInsertContractAddressInDb(`aTokenImpl`, aTokenImplementationAddress);
 
   const delegatedAwareReserves = Object.entries(reservesParams).filter(
-    ([_, { aTokenImpl }]) => aTokenImpl === eContractid.DelegationAwareAToken
+    ([_, { aTokenImpl }]) => aTokenImpl === eContractid.DelegationAwareDepositToken
   ) as [string, IReserveParams][];
 
   if (delegatedAwareReserves.length > 0) {
-    const delegationAwareATokenImplementation = await deployDelegationAwareATokenImpl(verify);
+    const delegationAwareATokenImplementation = await deployDelegationAwareDepositTokenImpl(verify);
     delegationAwareATokenImplementationAddress = delegationAwareATokenImplementation.address;
     rawInsertContractAddressInDb(
       `delegationAwareATokenImpl`,
@@ -140,7 +140,8 @@ export const initReservesByHelper = async (
 
   const reserves = Object.entries(reservesParams).filter(
     ([_, { aTokenImpl }]) =>
-      aTokenImpl === eContractid.DelegationAwareAToken || aTokenImpl === eContractid.DepositToken
+      aTokenImpl === eContractid.DelegationAwareDepositToken ||
+      aTokenImpl === eContractid.DepositToken
   ) as [string, IReserveParams][];
 
   for (let [symbol, params] of reserves) {
@@ -179,7 +180,7 @@ export const initReservesByHelper = async (
     if (aTokenImpl === eContractid.DepositToken) {
       aTokenType[symbol] = 'generic';
       console.log('---- generic:', symbol);
-    } else if (aTokenImpl === eContractid.DelegationAwareAToken) {
+    } else if (aTokenImpl === eContractid.DelegationAwareDepositToken) {
       aTokenType[symbol] = 'delegation aware';
       console.log('---- delegation aware:', symbol);
     }
@@ -209,7 +210,7 @@ export const initReservesByHelper = async (
       incentivesController: ZERO_ADDRESS,
       underlyingAssetName: reserveSymbols[i],
       aTokenName: `${aTokenNamePrefix} ${reserveSymbols[i]}`,
-      aTokenSymbol: `a${symbolPrefix}${reserveSymbols[i]}`,
+      aTokenSymbol: `ag${symbolPrefix}${reserveSymbols[i]}`,
       variableDebtTokenName: `${variableDebtTokenNamePrefix} ${symbolPrefix}${reserveSymbols[i]}`,
       variableDebtTokenSymbol: `variableDebt${symbolPrefix}${reserveSymbols[i]}`,
       stableDebtTokenName: `${stableDebtTokenNamePrefix} ${reserveSymbols[i]}`,
@@ -256,10 +257,9 @@ export const getPairsTokenAggregator = (
       const aggregatorAddressIndex = Object.keys(aggregatorsAddresses).findIndex(
         (value) => value === tokenSymbol
       );
-      const [, aggregatorAddress] = (Object.entries(aggregatorsAddresses) as [
-        string,
-        tEthereumAddress
-      ][])[aggregatorAddressIndex];
+      const [, aggregatorAddress] = (
+        Object.entries(aggregatorsAddresses) as [string, tEthereumAddress][]
+      )[aggregatorAddressIndex];
       return [tokenAddress, aggregatorAddress];
     }
   }) as [string, string][];
@@ -386,16 +386,16 @@ export const initTokenReservesByHelper = async (
   verify: boolean
 ) => {
   let gasUsage = BigNumber.from('0');
-  const atokenAndRatesDeployer = await (await getATokensAndRatesHelper(ratesHelperAddress)).connect(
-    signer
-  );
+  const atokenAndRatesDeployer = await (
+    await getATokensAndRatesHelper(ratesHelperAddress)
+  ).connect(signer);
 
   const addressProvider = await (
     await getLendingPoolAddressesProvider(addressesProviderAddress)
   ).connect(signer);
-  const protocolDataProvider = await (await getProtocolDataProvider(dataProviderAddress)).connect(
-    signer
-  );
+  const protocolDataProvider = await (
+    await getProtocolDataProvider(dataProviderAddress)
+  ).connect(signer);
   const poolAddress = await addressProvider.getLendingPool();
 
   // Set aTokenAndRatesDeployer as temporal admin
@@ -438,10 +438,9 @@ export const initTokenReservesByHelper = async (
   for (const [symbol, address] of Object.entries(tokenAddresses)) {
     const { aTokenAddress } = await protocolDataProvider.getReserveTokensAddresses(address);
     const reserveParamIndex = Object.keys(reservesParams).findIndex((value) => value === symbol);
-    const [, { reserveDecimals: decimals }] = (Object.entries(reservesParams) as [
-      string,
-      IReserveParams
-    ][])[reserveParamIndex];
+    const [, { reserveDecimals: decimals }] = (
+      Object.entries(reservesParams) as [string, IReserveParams][]
+    )[reserveParamIndex];
 
     if (!isZeroAddress(aTokenAddress)) {
       console.log(`- Skipping ${symbol} due already initialized`);
@@ -450,13 +449,12 @@ export const initTokenReservesByHelper = async (
     let stableTokenImpl = await getAddressById(`stableDebtTokenImpl`, network);
     let variableTokenImpl = await getAddressById(`variableDebtTokenImpl`, network);
     let aTokenImplementation: string | undefined = '';
-    const [, { aTokenImpl, strategy }] = (Object.entries(reservesParams) as [
-      string,
-      IReserveParams
-    ][])[reserveParamIndex];
+    const [, { aTokenImpl, strategy }] = (
+      Object.entries(reservesParams) as [string, IReserveParams][]
+    )[reserveParamIndex];
     if (aTokenImpl === eContractid.DepositToken) {
       aTokenImplementation = await getAddressById(`aTokenImpl`, network);
-    } else if (aTokenImpl === eContractid.DelegationAwareAToken) {
+    } else if (aTokenImpl === eContractid.DelegationAwareDepositToken) {
       aTokenImplementation = await getAddressById(`delegationAwareATokenImpl`, network);
     }
 

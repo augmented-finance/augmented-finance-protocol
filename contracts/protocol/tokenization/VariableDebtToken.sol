@@ -2,59 +2,34 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
+import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import {PoolTokenBase} from './base/PoolTokenBase.sol';
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {DebtTokenBase} from './base/DebtTokenBase.sol';
-import {ILendingPool} from '../../interfaces/ILendingPool.sol';
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
-import {IInitializablePoolToken} from './interfaces/IInitializablePoolToken.sol';
 import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
+import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
 
 /**
  * @title VariableDebtToken
  * @notice Implements a variable debt token to track the borrowing positions of users
  * at variable rate mode
- * @author Aave
  **/
-contract VariableDebtToken is DebtTokenBase, IVariableDebtToken, IInitializablePoolToken {
+contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDebtToken {
   using WadRayMath for uint256;
 
   uint256 private constant DEBT_TOKEN_REVISION = 0x1;
 
-  ILendingPool internal _pool;
-  address internal _underlyingAsset;
-
-  /**
-   * @dev Initializes the debt token.
-   * @param config The data about lending pool where this token will be used
-   * @param debtTokenName The name of the token
-   * @param debtTokenSymbol The symbol of the token
-   * @param debtTokenDecimals The decimals of the debtToken, same as the underlying asset's
-   */
   function initialize(
     PoolTokenConfig memory config,
-    string memory debtTokenName,
-    string memory debtTokenSymbol,
-    uint8 debtTokenDecimals,
+    string memory name,
+    string memory symbol,
+    uint8 decimals,
     bytes calldata params
   ) public override initializerRunAlways(DEBT_TOKEN_REVISION) {
-    _setName(debtTokenName);
-    _setSymbol(debtTokenSymbol);
-    _setDecimals(debtTokenDecimals);
-
-    _pool = config.pool;
-    _underlyingAsset = config.underlyingAsset;
-
-    emit Initialized(
-      config.underlyingAsset,
-      address(config.pool),
-      address(0),
-      debtTokenName,
-      debtTokenSymbol,
-      debtTokenDecimals,
-      params
-    );
+    _initializeERC20(name, symbol, decimals);
+    _initializePoolToken(config, name, symbol, decimals, params);
   }
 
   /**
@@ -69,7 +44,13 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken, IInitializableP
    * @dev Calculates the accumulated debt balance of the user
    * @return The debt balance of the user
    **/
-  function balanceOf(address user) public view virtual override returns (uint256) {
+  function balanceOf(address user)
+    public
+    view
+    virtual
+    override(IERC20, PoolTokenBase)
+    returns (uint256)
+  {
     uint256 scaledBalance = super.balanceOf(user);
 
     if (scaledBalance == 0) {
@@ -103,7 +84,7 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken, IInitializableP
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
-    _mint(onBehalfOf, amountScaled);
+    _mintBalance(onBehalfOf, amountScaled, index);
 
     emit Transfer(address(0), onBehalfOf, amount);
     emit Mint(user, onBehalfOf, amount, index);
@@ -126,7 +107,7 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken, IInitializableP
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
 
-    _burn(user, amountScaled);
+    _burnBalance(user, amountScaled, index);
 
     emit Transfer(user, address(0), amount);
     emit Burn(user, amount, index);
@@ -144,7 +125,7 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken, IInitializableP
    * @dev Returns the total supply of the variable debt token. Represents the total debt accrued by the users
    * @return The total supply
    **/
-  function totalSupply() public view virtual override returns (uint256) {
+  function totalSupply() public view virtual override(IERC20, PoolTokenBase) returns (uint256) {
     return super.totalSupply().rayMul(_pool.getReserveNormalizedVariableDebt(_underlyingAsset));
   }
 
@@ -169,27 +150,5 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken, IInitializableP
     returns (uint256, uint256)
   {
     return (super.balanceOf(user), super.totalSupply());
-  }
-
-  /**
-   * @dev Returns the address of the underlying asset of this aToken (E.g. WETH for aWETH)
-   **/
-  function UNDERLYING_ASSET_ADDRESS() public view returns (address) {
-    return _underlyingAsset;
-  }
-
-  /**
-   * @dev Returns the address of the lending pool where this aToken is used
-   **/
-  function POOL() public view returns (ILendingPool) {
-    return _pool;
-  }
-
-  function _getUnderlyingAssetAddress() internal view override returns (address) {
-    return _underlyingAsset;
-  }
-
-  function _getLendingPool() internal view override returns (ILendingPool) {
-    return _pool;
   }
 }

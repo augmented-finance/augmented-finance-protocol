@@ -5,21 +5,19 @@ import 'hardhat/console.sol';
 import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
-import {
-  IRemoteAccessBitmask,
-  RemoteAccessBitmaskHelper
-} from './interfaces/IRemoteAccessBitmask.sol';
+import {IRemoteAccessBitmask} from './interfaces/IRemoteAccessBitmask.sol';
+import {AccessHelper} from './AccessHelper.sol';
 
 contract RemoteAccessBitmask is Context {
-  using RemoteAccessBitmaskHelper for IRemoteAccessBitmask;
+  using AccessHelper for IRemoteAccessBitmask;
   IRemoteAccessBitmask internal _remoteAcl;
-
-  constructor(IRemoteAccessBitmask remoteAcl) public {
-    _remoteAcl = remoteAcl;
-  }
 
   function _getRemoteAcl(address addr) internal view returns (uint256) {
     return _remoteAcl.getAcl(addr);
+  }
+
+  function hasRemoteAcl() internal view returns (bool) {
+    return _remoteAcl != IRemoteAccessBitmask(0);
   }
 
   modifier aclHas(uint256 flags) virtual {

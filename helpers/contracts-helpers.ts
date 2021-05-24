@@ -8,7 +8,7 @@ import {
   eContractid,
   tStringTokenSmallUnits,
   eEthereumNetwork,
-  AavePools,
+  LendingPools,
   iParamsPerNetwork,
   iParamsPerPool,
   ePolygonNetwork,
@@ -79,9 +79,9 @@ export const deployContract = async <ContractType extends Contract>(
   contractName: string,
   args: any[]
 ): Promise<ContractType> => {
-  const contract = (await (await DRE.ethers.getContractFactory(contractName)).deploy(
-    ...args
-  )) as ContractType;
+  const contract = (await (
+    await DRE.ethers.getContractFactory(contractName)
+  ).deploy(...args)) as ContractType;
   await waitForTx(contract.deployTransaction);
   await registerContractInJsonDb(<eContractid>contractName, contract);
   return contract;
@@ -98,7 +98,7 @@ export const withSaveAndVerify = async <ContractType extends Contract>(
   if (usingTenderly()) {
     console.log();
     console.log('Doing Tenderly contract verification of', id);
-    await (DRE as any).tenderlyRPC.verify({
+    await (DRE as any).tenderlyNetwork.verify({
       name: id,
       address: instance.address,
     });
@@ -140,15 +140,8 @@ export const linkBytecode = (artifact: Artifact, libraries: any) => {
 };
 
 export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNetwork) => {
-  const {
-    main,
-    ropsten,
-    rinkeby,
-    kovan,
-    hardhat,
-    coverage,
-    tenderlyMain,
-  } = param as iEthereumParamsPerNetwork<T>;
+  const { main, ropsten, rinkeby, kovan, hardhat, coverage, tenderlyMain } =
+    param as iEthereumParamsPerNetwork<T>;
   const { matic, mumbai } = param as iPolygonParamsPerNetwork<T>;
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
   if (MAINNET_FORK) {
@@ -177,26 +170,18 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNet
   }
 };
 
-export const getParamPerPool = <T>(
-  { proto, matic, augmented }: iParamsPerPool<T>,
-  pool: AavePools
-) => {
+export const getParamPerPool = <T>({ augmented }: iParamsPerPool<T>, pool: LendingPools) => {
   switch (pool) {
-    case AavePools.proto:
-      return proto;
-    case AavePools.matic:
-      return matic;
-    case AavePools.augmented:
+    case LendingPools.augmented:
       return augmented;
     default:
-      return proto;
+      return augmented;
   }
 };
 
 export const convertToCurrencyDecimals = async (tokenAddress: tEthereumAddress, amount: string) => {
   const token = await getIErc20Detailed(tokenAddress);
   let decimals = (await token.decimals()).toString();
-
   return ethers.utils.parseUnits(amount, decimals);
 };
 

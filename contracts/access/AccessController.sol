@@ -9,9 +9,9 @@ import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 
 import {BitUtils} from '../tools/math/BitUtils.sol';
 
-// Prettier ignore to prevent buidler flatter bug
 // prettier-ignore
 import {InitializableImmutableAdminUpgradeabilityProxy} from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
+import {IProxy} from '../tools/upgradeability/IProxy.sol';
 
 import {IManagedAccessController} from './interfaces/IAccessController.sol';
 import {AccessFlags} from './AccessFlags.sol';
@@ -21,31 +21,48 @@ contract AccessController is Ownable, IManagedAccessController {
 
   mapping(uint256 => address) private _addresses;
   mapping(address => uint256) private _masks;
+  mapping(uint256 => address[]) private _grantees;
   uint256 private _nonSingletons;
   uint256 private _singletons;
   uint256 private _proxies;
 
-  function getAccessControlMask(address addr) external view override returns (uint256) {
-    return _masks[addr];
-  }
+  mapping(string => address) private _implementations;
 
   function queryAccessControlMask(address addr, uint256 filter)
     external
     view
     override
-    returns (uint256)
+    returns (uint256 flags)
   {
-    return _masks[addr] & filter;
+    flags = _masks[addr];
+    if (filter == 0) {
+      return flags;
+    }
+    return flags & filter;
   }
 
   function grantRoles(address addr, uint256 flags) external onlyOwner returns (uint256) {
     require(_singletons & flags == 0, 'singleton should use setAddress');
 
     uint256 m = _masks[addr];
-    if (m & flags != flags) {
-      _nonSingletons |= flags;
-      m |= flags;
-      _masks[addr] = m;
+    flags &= ~m;
+    if (flags == 0) {
+      return m;
+    }
+
+    _nonSingletons |= flags;
+    m |= flags;
+    _masks[addr] = m;
+
+    for (uint8 i = 0; i <= 255; i++) {
+      uint256 mask = uint256(1) << i;
+      if (mask & flags == 0) {
+        if (mask > flags) {
+          break;
+        }
+        continue;
+      }
+      _grantees[mask].push(addr);
     }
     return m;
   }
@@ -53,12 +70,55 @@ contract AccessController is Ownable, IManagedAccessController {
   function revokeRoles(address addr, uint256 flags) external onlyOwner returns (uint256) {
     require(_singletons & flags == 0, 'singleton should use setAddress');
 
+    return _revokeRoles(addr, flags);
+  }
+
+  function _revokeRoles(address addr, uint256 flags) private returns (uint256) {
     uint256 m = _masks[addr];
     if (m & flags != 0) {
       m &= ~flags;
       _masks[addr] = m;
     }
     return m;
+  }
+
+  function revokeRolesFromAll(uint256 flags, uint256 limit) external onlyOwner returns (bool) {
+    require(_singletons & flags == 0, 'singleton should use setAddress');
+
+    for (uint8 i = 0; i <= 255; i++) {
+      uint256 mask = uint256(1) << i;
+      if (mask & flags == 0) {
+        if (mask > flags) {
+          break;
+        }
+        continue;
+      }
+      address[] storage grantees = _grantees[mask];
+      for (uint256 j = grantees.length; j > 0; ) {
+        j--;
+        if (limit == 0) {
+          return false;
+        }
+        limit--;
+        _revokeRoles(grantees[j], mask);
+        grantees.pop();
+      }
+    }
+    return true;
+  }
+
+  function roleGrantees(uint256 id) external view returns (address[] memory addrList) {
+    if (_singletons & id == 0) {
+      require(id.isPowerOf2nz(), 'only one role is allowed');
+      return _grantees[id];
+    }
+
+    address addr = getAddress(id);
+    if (addr != address(0)) {
+      addrList = new address[](1);
+      addrList[0] = addr;
+    }
+    return addrList;
   }
 
   /**
@@ -144,6 +204,15 @@ contract AccessController is Ownable, IManagedAccessController {
     emit AddressSet(id, implementationAddress, true);
   }
 
+  function setAddressAsProxyWithInit(
+    uint256 id,
+    address implementationAddress,
+    bytes calldata params
+  ) public override onlyOwner {
+    _updateCustomImpl(id, implementationAddress, params);
+    emit AddressSet(id, implementationAddress, true);
+  }
+
   /**
    * @dev Internal function to update the implementation of a specific proxied component of the protocol
    * - If there is no proxy registered in the given `id`, it creates the proxy setting `newAdress`
@@ -157,18 +226,87 @@ contract AccessController is Ownable, IManagedAccessController {
     require(id.isPowerOf2nz(), 'invalid singleton id');
     address payable proxyAddress = payable(getAddress(id));
 
-    InitializableImmutableAdminUpgradeabilityProxy proxy =
-      InitializableImmutableAdminUpgradeabilityProxy(proxyAddress);
     bytes memory params = abi.encodeWithSignature('initialize(address)', address(this));
 
-    if (proxyAddress == address(0)) {
-      proxy = new InitializableImmutableAdminUpgradeabilityProxy(address(this));
-      proxy.initialize(newAddress, params);
-      _internalSetAddress(id, address(proxy));
-      _proxies |= id;
-      emit ProxyCreated(id, address(proxy));
-    } else {
-      proxy.upgradeToAndCall(newAddress, params);
+    if (proxyAddress != address(0)) {
+      InitializableImmutableAdminUpgradeabilityProxy(proxyAddress).upgradeToAndCall(
+        newAddress,
+        params
+      );
+      return;
     }
+
+    proxyAddress = payable(_createProxy(address(this), newAddress, params));
+    _internalSetAddress(id, proxyAddress);
+    _proxies |= id;
+    emit ProxyCreated(id, proxyAddress);
+  }
+
+  function _updateCustomImpl(
+    uint256 id,
+    address newAddress,
+    bytes calldata params
+  ) private {
+    require(id.isPowerOf2nz(), 'invalid singleton id');
+    address payable proxyAddress = payable(getAddress(id));
+
+    if (proxyAddress != address(0)) {
+      InitializableImmutableAdminUpgradeabilityProxy(proxyAddress).upgradeToAndCall(
+        newAddress,
+        params
+      );
+      return;
+    }
+
+    proxyAddress = payable(address(createProxy(address(this), newAddress, params)));
+    _internalSetAddress(id, proxyAddress);
+    _proxies |= id;
+    emit ProxyCreated(id, proxyAddress);
+  }
+
+  function _createProxy(
+    address adminAddress,
+    address implAddress,
+    bytes memory params
+  ) private returns (InitializableImmutableAdminUpgradeabilityProxy) {
+    InitializableImmutableAdminUpgradeabilityProxy proxy =
+      new InitializableImmutableAdminUpgradeabilityProxy(adminAddress);
+    proxy.initialize(implAddress, params);
+    return proxy;
+  }
+
+  function createProxy(
+    address adminAddress,
+    address implAddress,
+    bytes calldata params
+  ) public override returns (IProxy) {
+    require(implAddress != address(0), 'implementation is required');
+
+    InitializableImmutableAdminUpgradeabilityProxy proxy =
+      new InitializableImmutableAdminUpgradeabilityProxy(adminAddress);
+    proxy.initialize(implAddress, params);
+    return proxy;
+  }
+
+  function createProxyByName(
+    address adminAddress,
+    string calldata implName,
+    bytes calldata params
+  ) public override returns (IProxy) {
+    return createProxy(adminAddress, getImplementation(implName), params);
+  }
+
+  function getImplementation(string calldata id) public view override returns (address) {
+    return _implementations[id];
+  }
+
+  function addImplementation(string calldata id, address addr) public override {
+    require(addr != address(0), 'implementation is required');
+    address a = _implementations[id];
+    if (a == addr) {
+      return;
+    }
+    require(a == address(0), 'conflicting implementations');
+    _implementations[id] = addr;
   }
 }

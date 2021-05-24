@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import {IBalanceHook} from './IBalanceHook.sol';
+import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 
 /**
  * @title IStableDebtToken
@@ -10,7 +11,7 @@ import {IBalanceHook} from './IBalanceHook.sol';
  * @author Aave
  **/
 
-interface IStableDebtToken {
+interface IStableDebtToken is IERC20 {
   /**
    * @dev Emitted when new stable debt is minted
    * @param user The address of the user who triggered the minting

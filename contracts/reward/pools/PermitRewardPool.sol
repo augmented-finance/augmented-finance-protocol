@@ -6,10 +6,11 @@ import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {AccessBitmask} from '../../access/AccessBitmask.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {IManagedRewardPool} from '../interfaces/IRewardPool.sol';
+import {ControlledRewardPool} from './ControlledRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-contract PermitRewardPool is AccessBitmask, IManagedRewardPool {
+contract PermitRewardPool is AccessBitmask, ControlledRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
@@ -28,7 +29,6 @@ contract PermitRewardPool is AccessBitmask, IManagedRewardPool {
   /// @dev spender => next valid nonce to submit with permit()
   mapping(address => uint256) public _nonces;
 
-  IRewardController private _controller;
   uint256 private _rewardLimit;
   string private _rewardPoolName;
 
@@ -36,10 +36,8 @@ contract PermitRewardPool is AccessBitmask, IManagedRewardPool {
     IRewardController controller,
     uint256 rewardLimit,
     string memory rewardPoolName
-  ) public {
-    require(address(controller) != address(0), 'controller is required');
+  ) public ControlledRewardPool(controller) {
     require(rewardLimit > 0, 'reward limit is required');
-    _controller = controller;
     _rewardLimit = rewardLimit;
     _rewardPoolName = rewardPoolName;
     //    _grantAcl(msg.sender, aclConfigure);
@@ -67,21 +65,13 @@ contract PermitRewardPool is AccessBitmask, IManagedRewardPool {
     _rewardLimit = 0;
   }
 
-  function updateBaseline(uint256) external override onlyController {}
+  function internalDisableRate() internal override {}
 
-  function disableBaseline() external override onlyController {}
-
-  function setBaselinePercentage(uint16) external override {
-    revert('unsupported');
-  }
-
-  function setRate(uint256 rate) external override aclHas(aclConfigure) {}
-
-  function claimRewardFor(address) external override onlyController returns (uint256, uint32) {
+  function internalGetReward(address, uint32) internal override returns (uint256, uint32) {
     return (0, 0);
   }
 
-  function calcRewardFor(address) external view override onlyController returns (uint256, uint32) {
+  function internalCalcReward(address, uint32) internal view override returns (uint256, uint32) {
     return (0, 0);
   }
 
@@ -106,7 +96,7 @@ contract PermitRewardPool is AccessBitmask, IManagedRewardPool {
     uint8 v,
     bytes32 r,
     bytes32 s
-  ) external {
+  ) external notPaused {
     require(provider != address(0), 'INVALID_PROVIDER');
     require(_getAcl(provider) & aclProvider == aclProvider, 'INVALID_PROVIDER');
     require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
@@ -130,11 +120,8 @@ contract PermitRewardPool is AccessBitmask, IManagedRewardPool {
       return;
     }
     _rewardLimit = _rewardLimit.sub(value, 'insufficient reward pool balance');
-    _controller.allocatedByPool(spender, value, uint32(block.timestamp), AllocationMode.Push);
+    internalAllocateReward(spender, value, uint32(block.timestamp), AllocationMode.Push);
   }
 
-  modifier onlyController() {
-    require(msg.sender == address(_controller), 'only controller is allowed');
-    _;
-  }
+  function internalPause(bool paused) internal override {}
 }

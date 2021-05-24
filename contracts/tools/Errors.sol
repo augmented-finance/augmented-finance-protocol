@@ -64,8 +64,6 @@ library Errors {
   string public constant LPC_INVALID_STABLE_DEBT_TOKEN_UNDERLYING_ADDRESS = '38'; // 'The liquidity of the reserve needs to be 0'
   string public constant LPC_INVALID_VARIABLE_DEBT_TOKEN_UNDERLYING_ADDRESS = '39'; // 'The liquidity of the reserve needs to be 0'
   string public constant LPC_INVALID_ADDRESSES_PROVIDER_ID = '40'; // 'The liquidity of the reserve needs to be 0'
-  string public constant LPC_INVALID_CONFIGURATION = '75'; // 'Invalid risk parameters for the reserve'
-  string public constant LPC_CALLER_NOT_EMERGENCY_ADMIN = '76'; // 'The caller must be the emergency admin'
   string public constant LPAPR_PROVIDER_NOT_REGISTERED = '41'; // 'Provider is not registered'
   string public constant LPCM_HEALTH_FACTOR_NOT_BELOW_THRESHOLD = '42'; // 'Health factor is not below the threshold'
   string public constant LPCM_COLLATERAL_CANNOT_BE_LIQUIDATED = '43'; // 'The collateral chosen cannot be liquidated'
@@ -99,6 +97,8 @@ library Errors {
   string public constant LPAPR_INVALID_ADDRESSES_PROVIDER_ID = '72';
   string public constant VL_INCONSISTENT_FLASHLOAN_PARAMS = '73';
   string public constant LP_INCONSISTENT_PARAMS_LENGTH = '74';
+  string public constant LPC_INVALID_CONFIGURATION = '75'; // 'Invalid risk parameters for the reserve'
+  string public constant CALLER_NOT_EMERGENCY_ADMIN = '76'; // 'The caller must be the emergency admin'
   string public constant UL_INVALID_INDEX = '77';
   string public constant LP_NOT_CONTRACT = '78';
   string public constant SDT_STABLE_DEBT_OVERFLOW = '79';
@@ -106,6 +106,7 @@ library Errors {
   string public constant CT_CALLER_MUST_BE_REWARD_ADMIN = '81'; // 'The caller of this function must be a reward admin'
   string public constant LP_INVALID_PERCENTAGE = '82'; // 'Percentage can't be more than 100%'
   string public constant LP_IS_NOT_SPONSORED_LOAN = '83';
+  string public constant CALLER_NOT_REWARD_ADMIN = '84';
 
   enum CollateralManagerErrors {
     NO_ERROR,

@@ -2,27 +2,69 @@ version: 2.1
 orbs:
   node: circleci/node@4.3.0
   slack: circleci/slack@4.4.2
+defaults: &defaults
+  docker:
+    - image: cimg/node:12.16
 jobs:
-  test_all:
+  cancel_draft_build:
     docker:
-      - image: circleci/node:12
+      - image: vitalinfo/circleci-cancel-draft
+    steps:
+      - run: cancel-draft-build
+  test_all:
+    <<: *defaults
     steps:
       - checkout
-      - run:
-          name: Clear cache
-          command: rm -rf node_modules/
-      - node/install:
-          install-yarn: true
-      - run: |
-          yarn install
-          yarn run compile
-          yarn run test
+      - restore_cache:
+          name: Restore yarn package cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
+      - run: yarn install --immutable
+      - run: yarn run compile
+      - run: yarn run test
+      - run: yarn run test:main:augmented:migrator-zombie
+      - run: yarn run test:main:augmented:migrator-aave
+      - run: yarn run test:main:augmented:migrator-comp
+      - run: yarn run test:augmented:stake
+      - save_cache:
+          name: Save yarn package cache
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+      - persist_to_workspace:
+          root: ~/
+          paths: .
       - slack/notify:
           channel: build
           event: fail
           template: basic_fail_1
+  npm-publish:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+      - run: git config --global user.email "$CIRCLE_USERNAME@augmented.finance"
+      - run: git config --global user.name $CIRCLE_USERNAME
+      - run: npm version 1.0.0-$CIRCLE_SHA1
+      - run: npm publish
 workflows:
   test:
     jobs:
+      - cancel_draft_build:
+          filters:
+            branches:
+              ignore: /develop/
+          context: cancel-draft
       - test_all:
-          context: slack-secret
+          context:
+            - slack-secret
+            - alchemy-secret
+      - npm-publish:
+          requires:
+            - test_all
+          filters:
+            branches:
+              only: /develop/
+          context:
+            - npm-secret

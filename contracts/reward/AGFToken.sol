@@ -3,10 +3,7 @@ pragma solidity ^0.6.12;
 
 import {AccessFlags} from '../access/AccessFlags.sol';
 import {RemoteAccessBitmask} from '../access/RemoteAccessBitmask.sol';
-import {
-  IRemoteAccessBitmask,
-  RemoteAccessBitmaskHelper
-} from '../access/interfaces/IRemoteAccessBitmask.sol';
+import {IRemoteAccessBitmask} from '../access/interfaces/IRemoteAccessBitmask.sol';
 
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {RewardToken} from './RewardToken.sol';
@@ -28,21 +25,34 @@ contract AGFToken is
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor()
-    public
-    RewardToken(NAME, SYMBOL, DECIMALS)
-    RemoteAccessBitmask(IRemoteAccessBitmask(0))
-  {}
+  constructor() public RewardToken(NAME, SYMBOL, DECIMALS) {}
 
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
+  }
+
+  // This initializer is invoked by AccessController.setAddressAsImpl
+  function initialize(IRemoteAccessBitmask remoteAcl)
+    external
+    virtual
+    initializerRunAlways(TOKEN_REVISION)
+  {
+    _initialize(remoteAcl, NAME, SYMBOL);
   }
 
   function initialize(
     IRemoteAccessBitmask remoteAcl,
     string calldata name,
     string calldata symbol
-  ) external virtual override initializerRunAlways(TOKEN_REVISION) {
+  ) public virtual override initializerRunAlways(TOKEN_REVISION) {
+    _initialize(remoteAcl, name, symbol);
+  }
+
+  function _initialize(
+    IRemoteAccessBitmask remoteAcl,
+    string memory name,
+    string memory symbol
+  ) private {
     super._initializeERC20(name, symbol, DECIMALS);
     _remoteAcl = remoteAcl;
     if (!isRevisionInitialized(TOKEN_REVISION)) {
@@ -65,11 +75,11 @@ contract AGFToken is
   }
 
   function _checkTransfer(address from, address to) internal view virtual {
-    require(_getRemoteAcl(from) & AccessFlags.REWARD_SUSPEND_USER == 0, 'sender is suspended');
-    if (from == to) {
-      return;
-    }
-    require(_getRemoteAcl(to) & AccessFlags.REWARD_SUSPEND_USER == 0, 'receiver is suspended');
+    // require(_getRemoteAcl(from) & AccessFlags.REWARD_SUSPEND_USER == 0, 'sender is suspended');
+    // if (from == to) {
+    //   return;
+    // }
+    // require(_getRemoteAcl(to) & AccessFlags.REWARD_SUSPEND_USER == 0, 'receiver is suspended');
   }
 
   function _beforeTokenTransfer(

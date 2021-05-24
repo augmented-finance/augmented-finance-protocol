@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 /**
- * @dev Interface of the ERC20 standard as defined in the EIP.
+ * @dev Interface of the ERC20 standard as defined in the EIP excluding events to avoid linearization issues.
  */
 interface IERC20 {
   /**
@@ -19,8 +19,6 @@ interface IERC20 {
    * @dev Moves `amount` tokens from the caller's account to `recipient`.
    *
    * Returns a boolean value indicating whether the operation succeeded.
-   *
-   * Emits a {Transfer} event.
    */
   function transfer(address recipient, uint256 amount) external returns (bool);
 
@@ -44,8 +42,6 @@ interface IERC20 {
    * condition is to first reduce the spender's allowance to 0 and set the
    * desired value afterwards:
    * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-   *
-   * Emits an {Approval} event.
    */
   function approve(address spender, uint256 amount) external returns (bool);
 
@@ -55,26 +51,10 @@ interface IERC20 {
    * allowance.
    *
    * Returns a boolean value indicating whether the operation succeeded.
-   *
-   * Emits a {Transfer} event.
    */
   function transferFrom(
     address sender,
     address recipient,
     uint256 amount
   ) external returns (bool);
-
-  /**
-   * @dev Emitted when `value` tokens are moved from one account (`from`) to
-   * another (`to`).
-   *
-   * Note that `value` may be zero.
-   */
-  event Transfer(address indexed from, address indexed to, uint256 value);
-
-  /**
-   * @dev Emitted when the allowance of a `spender` for an `owner` is set by
-   * a call to {approve}. `value` is the new allowance.
-   */
-  event Approval(address indexed owner, address indexed spender, uint256 value);
 }

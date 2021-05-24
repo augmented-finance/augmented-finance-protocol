@@ -104,10 +104,6 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
     return isAddress(AccessFlags.POOL_ADMIN, addr);
   }
 
-  function isRewardAdmin(address addr) external view override returns (bool) {
-    return isAddress(AccessFlags.POOL_ADMIN, addr);
-  }
-
   function setPoolAdmin(address admin) external override onlyOwner {
     setAddress(AccessFlags.POOL_ADMIN, admin);
   }
@@ -128,15 +124,43 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
     setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle);
   }
 
-  function isSponsoredLoanUser(address addr) external view override returns (bool) {
-    return isAddress(AccessFlags.POOL_SPONSORED_LOAN_USER, addr);
-  }
-
   function getTreasury() external view override returns (address) {
     return getAddress(AccessFlags.TREASURY);
   }
 
   function setTreasuryImpl(address treasury) external override onlyOwner {
     setAddressAsProxy(AccessFlags.TREASURY, treasury);
+  }
+
+  function getRewardToken() external view override returns (address) {
+    return getAddress(AccessFlags.REWARD_TOKEN);
+  }
+
+  function getRewardStakeToken() external view override returns (address) {
+    return getAddress(AccessFlags.REWARD_STAKE_TOKEN);
+  }
+
+  function getRewardController() external view override returns (address) {
+    return getAddress(AccessFlags.REWARD_CONTROLLER);
+  }
+
+  function getRewardConfigurator() external view override returns (address) {
+    return getAddress(AccessFlags.REWARD_CONFIGURATOR);
+  }
+
+  function setRewardTokenImpl(address addr) external override onlyOwner {
+    setAddressAsProxy(AccessFlags.REWARD_TOKEN, addr);
+  }
+
+  function setRewardStakeTokenImpl(address addr) external override {
+    setAddressAsProxy(AccessFlags.REWARD_STAKE_TOKEN, addr);
+  }
+
+  function setRewardController(address addr) external override {
+    setAddress(AccessFlags.REWARD_CONTROLLER, addr);
+  }
+
+  function setRewardConfiguratorImpl(address addr) external override {
+    setAddressAsProxy(AccessFlags.REWARD_CONFIGURATOR, addr);
   }
 }

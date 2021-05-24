@@ -15,13 +15,53 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   using PercentageMath for uint256;
 
   IRewardController internal _controller;
+  bool private _paused;
 
   constructor(IRewardController controller) public {
     require(address(controller) != address(0), 'controller is required');
     _controller = controller;
   }
 
-  function getRewardController() public view returns (address) {
+  function updateBaseline(uint256) external virtual override onlyController returns (bool) {
+    return false;
+  }
+
+  function disableBaseline() external override onlyController {
+    internalDisableBaseline();
+  }
+
+  function disableRewardPool() external override onlyController {
+    internalDisableBaseline();
+    internalDisableRate();
+  }
+
+  function internalDisableBaseline() internal virtual {}
+
+  function internalDisableRate() internal virtual;
+
+  function setBaselinePercentage(uint16) external virtual override onlyRateController {
+    revert('UNSUPPORTED');
+  }
+
+  function setRate(uint256) public virtual override onlyRateController {
+    revert('UNSUPPORTED');
+  }
+
+  function setPaused(bool paused) public override onlyEmergencyAdmin {
+    if (_paused == paused) {
+      return;
+    }
+    _paused = paused;
+    internalPause(paused);
+  }
+
+  function isPaused() public view override returns (bool) {
+    return _paused;
+  }
+
+  function internalPause(bool paused) internal virtual;
+
+  function getRewardController() public view override returns (address) {
     return address(_controller);
   }
 
@@ -59,7 +99,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     returns (uint256, uint32);
 
   function isController(address addr) internal view returns (bool) {
-    return address(_controller) == addr;
+    return address(_controller) == addr || _controller.isConfigurator(addr);
   }
 
   modifier onlyController() {
@@ -69,6 +109,16 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   modifier onlyRateController() {
     require(_controller.isRateController(msg.sender), 'only rate controller is allowed');
+    _;
+  }
+
+  modifier onlyEmergencyAdmin() {
+    require(_controller.isEmergencyAdmin(msg.sender), 'only emergency admin is allowed');
+    _;
+  }
+
+  modifier notPaused() {
+    require(!_paused, 'rewards are paused');
     _;
   }
 }
