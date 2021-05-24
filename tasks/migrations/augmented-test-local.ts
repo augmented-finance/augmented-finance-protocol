@@ -16,9 +16,16 @@ import {
   deployZombieAdapter,
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
-import { ONE_ADDRESS, oneRay, RAY } from '../../helpers/constants';
+import { ONE_ADDRESS, oneRay, RAY, ZERO_ADDRESS } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
-import { ADAI_ADDRESS, CDAI_ADDRESS, DAI_ADDRESS, ZTOKEN_ADDRESS } from './defaultTestDeployConfig';
+import {
+  ADAI_ADDRESS,
+  CDAI_ADDRESS,
+  DAI_ADDRESS,
+  stakingCooldownBlocks,
+  stakingUnstakeBlocks,
+  ZTOKEN_ADDRESS,
+} from './defaultTestDeployConfig';
 import { getAGTokenByName } from '../../helpers/contracts-getters';
 
 task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
@@ -37,6 +44,13 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
     types.int
   )
   .addOptionalParam('zombieRewardLimit', 'zombie reward limit', 5000, types.int)
+  .addOptionalParam(
+    'stakeCooldownBlocks',
+    'staking cooldown blocks',
+    stakingCooldownBlocks,
+    types.int
+  )
+  .addOptionalParam('stakeUnstakeBlocks', 'staking unstake blocks', stakingUnstakeBlocks, types.int)
   .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(
     async (
@@ -51,6 +65,8 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
         teamRewardUnlockBlock,
         teamRewardsFreezePercentage,
         zombieRewardLimit,
+        stakeCooldownBlocks,
+        stakeUnstakeBlocks,
         verify,
       },
       localBRE
@@ -148,27 +164,33 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
       }
       console.log(`#10 Staking`);
       const agDaiToken = await getAGTokenByName('agDAI');
-      const stkPoolForAG = await deployTokenWeightedRewardPoolAG(
+      const PoolxAG = await deployTokenWeightedRewardPoolAG(
         [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
         verify
       );
-      const stkAGToken = await deployMockStakedAgToken([
-        stkPoolForAG.address,
+      await deployMockStakedAgToken([
+        PoolxAG.address,
         agDaiToken.address,
         'Staked AG Token',
         'stkAG',
+        stakeCooldownBlocks,
+        stakeUnstakeBlocks,
+        ZERO_ADDRESS,
       ]);
 
-      const stkPoolForAGF = await deployTokenWeightedRewardPoolAGF(
+      const poolXAGF = await deployTokenWeightedRewardPoolAGF(
         [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
         verify
       );
 
-      const stkAGFToken = await deployMockStakedAgfToken([
-        stkPoolForAGF.address,
+      await deployMockStakedAgfToken([
+        poolXAGF.address,
         agfToken.address,
         'Staked AGF Token',
         'stkAGF',
+        stakeCooldownBlocks,
+        stakeUnstakeBlocks,
+        ZERO_ADDRESS,
       ]);
     }
   );

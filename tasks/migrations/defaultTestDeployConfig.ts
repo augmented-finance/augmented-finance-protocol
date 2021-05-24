@@ -1,6 +1,6 @@
 import { RAY } from '../../helpers/constants';
 
-// mainnet addresses
+// mainnet addresses for fork tests
 export const ADAI_ADDRESS = '0x028171bca77440897b824ca71d1c56cac55b68a3';
 export const CDAI_ADDRESS = '0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643';
 export const DAI_ADDRESS = '0x6b175474e89094c44da98b954eedeac495271d0f';
@@ -13,6 +13,10 @@ export const cDaiWhaleTHREE = '0x7d6149ad9a573a6e2ca6ebf7d4897c1b766841b4';
 export const ZTOKEN_ADDRESS = '0xdac17f958d2ee523a2206206994597c13d831ec7';
 export const zombieWhaleONE = '0x5754284f345afc66a98fbb0a0afe71e0f007b949';
 
+// staking constants
+export const stakingCooldownBlocks = 5;
+export const stakingUnstakeBlocks = 150;
+
 export const CFG = {
   aDaiAddress: ADAI_ADDRESS,
   cDaiAddress: CDAI_ADDRESS,
@@ -22,4 +26,6 @@ export const CFG = {
   teamRewardUnlockBlock: 1000,
   teamRewardsFreezePercentage: 0,
   zombieRewardLimit: 5000,
+  stakingCooldownBlocks,
+  stakingUnstakeBlocks,
 };

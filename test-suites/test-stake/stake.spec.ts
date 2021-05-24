@@ -21,8 +21,11 @@ import {
   TokenWeightedRewardPool,
 } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
-import { currentBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
+import { CFG, stakingCooldownBlocks, stakingUnstakeBlocks } from '../../tasks/migrations/defaultTestDeployConfig';
+import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
+import { BigNumberish } from 'ethers';
+import { tEthereumAddress } from './helpers/types';
+import { VL_INVALID_AMOUNT } from '../../helpers/contract_errors';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -34,7 +37,7 @@ describe('Team rewards suite', () => {
   let rpAG: TokenWeightedRewardPool;
   let rc: RewardFreezer;
   let AGF: MockAgfToken;
-  let stkAGF: MockStakedAgfToken;
+  let xAGF: MockStakedAgfToken;
   let AG: DepositToken;
   let stkAG: MockStakedAgfToken;
   let blkBeforeDeploy;
@@ -48,7 +51,7 @@ describe('Team rewards suite', () => {
     rc = await getRewardFreezer();
 
     AGF = await getMockAgfToken();
-    stkAGF = await getMockStakedAgfToken();
+    xAGF = await getMockStakedAgfToken();
     rpAGF = await getTokenWeightedRewardPoolAGF();
 
     AG = await getAGTokenByName('agDAI');
@@ -61,12 +64,52 @@ describe('Team rewards suite', () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  it('stake tokens', async () => {
-    await AGF.connect(root).mintReward(user1.address, defaultStkAmount);
-    console.log(`balance AGF: ${await AGF.balanceOf(user1.address)}`);
-    await AGF.connect(user1).approve(stkAGF.address, defaultStkAmount);
-    await stkAGF.connect(user1).stake(user1.address, defaultStkAmount);
-    console.log(`balance stkAGF: ${await stkAGF.balanceOf(user1.address)}`);
-    console.log(`balance AGF: ${await AGF.balanceOf(user1.address)}`);
+  const stake = async (s: SignerWithAddress, amount: BigNumberish) => {
+    await AGF.connect(root).mintReward(s.address, amount);
+    await AGF.connect(s).approve(xAGF.address, amount);
+    await xAGF.connect(s).stake(s.address, amount);
+  };
+
+  const printBalances = async () => {
+    console.log(
+      `balances
+xAGFBalance: ${await xAGF.balanceOf(user1.address)}
+AGFBalance: ${await AGF.balanceOf(user1.address)}`
+    );
+  };
+
+  it('can not call cooldown if not staking', async () => {
+    await expect(xAGF.cooldown()).to.be.revertedWith('STK_INVALID_BALANCE_ON_COOLDOWN');
+  });
+
+  it('can not redeem when after unstake block has passed', async () => {
+    await stake(user1, defaultStkAmount);
+    await mineToBlock(stakingUnstakeBlocks + 10);
+    await expect(xAGF.redeem(user1.address, defaultStkAmount)).to.be.revertedWith(
+      'STK_UNSTAKE_WINDOW_FINISHED',
+    );
+  });
+
+  it('can stake AGF and receive xAGF', async () => {
+    await stake(user1, defaultStkAmount);
+    expect(await xAGF.balanceOf(user1.address)).to.eq(defaultStkAmount);
+    expect(await AGF.balanceOf(user1.address)).to.eq(0);
+  });
+
+  it('error when redeeming if amount is zero', async () => {
+    await expect(xAGF.redeem(user1.address, 0)).to.be.revertedWith(VL_INVALID_AMOUNT);
+  });
+
+  it.skip('test paused', async () => {
+    // Transaction reverted: function selector was not recognized and there's no fallback function
+    await xAGF.connect(root).setPaused(true);
+    // await stake(user1, defaultStkAmount);
+  });
+
+  it('can redeem before unstake', async () => {
+    await stake(user1, defaultStkAmount);
+    await xAGF.connect(user1).redeem(user1.address, defaultStkAmount);
+    expect(await xAGF.balanceOf(user1.address)).to.eq(0);
+    expect(await AGF.balanceOf(user1.address)).to.eq(defaultStkAmount);
   });
 });

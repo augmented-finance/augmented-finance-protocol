@@ -21,6 +21,8 @@ import {Errors} from '../../tools/Errors.sol';
 import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
 import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.sol';
 
+import 'hardhat/console.sol';
+
 abstract contract StakeTokenBase is
   IManagedStakeToken,
   ERC20WithPermit,
@@ -150,6 +152,10 @@ abstract contract StakeTokenBase is
 
     uint256 cooldownStartBlock = _stakersCooldowns[from];
     require(block.number > cooldownStartBlock.add(_cooldownBlocks), 'STK_INSUFFICIENT_COOLDOWN');
+    console.log('block.number: ', block.number);
+    console.log('cooldownStartBlock: ', cooldownStartBlock);
+    console.log('cooldownBlocks: ', _cooldownBlocks);
+    console.log('unstakeBlocks: ', _unstakeBlocks);
     require(
       block.number.sub(cooldownStartBlock.add(_cooldownBlocks)) <= _unstakeBlocks,
       'STK_UNSTAKE_WINDOW_FINISHED'
@@ -207,7 +213,7 @@ abstract contract StakeTokenBase is
    * @dev Gets end of the cooldown period.
    * - Returns zero for a not staking user.
    **/
-  function getCooldown(address holder) external override returns (uint32) {
+  function getCooldown(address holder) external view override returns (uint32) {
     return _stakersCooldowns[holder];
   }
 
