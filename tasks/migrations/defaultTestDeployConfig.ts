@@ -16,6 +16,8 @@ export const zombieWhaleONE = '0x5754284f345afc66a98fbb0a0afe71e0f007b949';
 // staking constants
 export const stakingCooldownBlocks = 5;
 export const stakingUnstakeBlocks = 150;
+export const slashingDefaultPercentage = 3000;
+export const slashingDefaultPercentageHR = 0.3;
 
 export const CFG = {
   aDaiAddress: ADAI_ADDRESS,
