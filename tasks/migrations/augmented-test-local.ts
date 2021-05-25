@@ -16,9 +16,17 @@ import {
   deployZombieAdapter,
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
-import { ONE_ADDRESS, oneRay, RAY } from '../../helpers/constants';
+import { ONE_ADDRESS, oneRay, RAY, ZERO_ADDRESS } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
-import { ADAI_ADDRESS, CDAI_ADDRESS, DAI_ADDRESS, ZTOKEN_ADDRESS } from './defaultTestDeployConfig';
+import {
+  ADAI_ADDRESS,
+  CDAI_ADDRESS,
+  DAI_ADDRESS,
+  slashingDefaultPercentage,
+  stakingCooldownBlocks,
+  stakingUnstakeBlocks,
+  ZTOKEN_ADDRESS,
+} from './defaultTestDeployConfig';
 import { getAGTokenByName } from '../../helpers/contracts-getters';
 
 task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
@@ -37,6 +45,19 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
     types.int
   )
   .addOptionalParam('zombieRewardLimit', 'zombie reward limit', 5000, types.int)
+  .addOptionalParam(
+    'stakeCooldownBlocks',
+    'staking cooldown blocks',
+    stakingCooldownBlocks,
+    types.int
+  )
+  .addOptionalParam('stakeUnstakeBlocks', 'staking unstake blocks', stakingUnstakeBlocks, types.int)
+  .addOptionalParam(
+    'slashingPercentage',
+    'slashing default percentage',
+    slashingDefaultPercentage,
+    types.int
+  )
   .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(
     async (
@@ -51,16 +72,22 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
         teamRewardUnlockBlock,
         teamRewardsFreezePercentage,
         zombieRewardLimit,
+        stakeCooldownBlocks,
+        stakeUnstakeBlocks,
+        slashingPercentage,
         verify,
       },
       localBRE
     ) => {
       await localBRE.run('set-DRE');
-      const [root] = await localBRE.ethers.getSigners();
+      const [root, user1, user2, slasher] = await localBRE.ethers.getSigners();
 
       console.log(`#1 deploying: Access Controller`);
       const ac = await deployAccessController();
+      // emergency admin + liquidity admin
       await ac.setEmergencyAdmin(root.address);
+      await ac.grantRoles(root.address, 1 << 5);
+      await ac.grantRoles(slasher.address, 1 << 15);
 
       console.log(`#2 deploying: mock AGF`);
       const agfToken = await deployMockAgfToken(
@@ -148,27 +175,35 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
       }
       console.log(`#10 Staking`);
       const agDaiToken = await getAGTokenByName('agDAI');
-      const stkPoolForAG = await deployTokenWeightedRewardPoolAG(
+      await deployTokenWeightedRewardPoolAG(
         [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
         verify
       );
-      const stkAGToken = await deployMockStakedAgToken([
-        stkPoolForAG.address,
+      const xAG = await deployMockStakedAgToken([
+        ac.address,
         agDaiToken.address,
         'Staked AG Token',
-        'stkAG',
+        'xAG',
+        stakeCooldownBlocks,
+        stakeUnstakeBlocks,
+        ZERO_ADDRESS,
       ]);
+      await xAG.connect(root).setMaxSlashablePercentage(slashingPercentage);
 
-      const stkPoolForAGF = await deployTokenWeightedRewardPoolAGF(
+      await deployTokenWeightedRewardPoolAGF(
         [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
         verify
       );
 
-      const stkAGFToken = await deployMockStakedAgfToken([
-        stkPoolForAGF.address,
+      const xAGF = await deployMockStakedAgfToken([
+        ac.address,
         agfToken.address,
         'Staked AGF Token',
-        'stkAGF',
+        'xAGF',
+        stakeCooldownBlocks,
+        stakeUnstakeBlocks,
+        ZERO_ADDRESS,
       ]);
+      await xAGF.connect(root).setMaxSlashablePercentage(slashingPercentage);
     }
   );

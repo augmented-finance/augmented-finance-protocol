@@ -15,7 +15,7 @@ interface IStakeToken is IDerivedToken {
 
   function cooldown() external;
 
-  function getCooldown(address) external returns (uint32);
+  function getCooldown(address) external view returns (uint32);
 
   function exchangeRate() external view returns (uint256);
 
