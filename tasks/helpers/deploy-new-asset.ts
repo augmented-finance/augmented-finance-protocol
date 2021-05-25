@@ -53,8 +53,8 @@ WRONG RESERVE ASSET SETUP:
         poolAddress,
         reserveAssetAddress,
         treasuryAddress,
-        `Aave interest bearing ${symbol}`,
-        `a${symbol}`,
+        `Augmented interest bearing ${symbol}`,
+        `ag${symbol}`,
       ],
       verify
     );
@@ -62,7 +62,7 @@ WRONG RESERVE ASSET SETUP:
       [
         poolAddress,
         reserveAssetAddress,
-        `Aave stable debt bearing ${symbol}`,
+        `Augmented stable debt bearing ${symbol}`,
         `stableDebt${symbol}`,
       ],
       verify
@@ -71,7 +71,7 @@ WRONG RESERVE ASSET SETUP:
       [
         poolAddress,
         reserveAssetAddress,
-        `Aave variable debt bearing ${symbol}`,
+        `Augmented variable debt bearing ${symbol}`,
         `variableDebt${symbol}`,
       ],
       verify

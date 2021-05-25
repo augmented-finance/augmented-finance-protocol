@@ -178,8 +178,10 @@ contract Migrator is Ownable {
     returns (IMigrationAdapter[] memory migrated, uint256 count)
   {
     address underlying = target.UNDERLYING_ASSET_ADDRESS();
+    console.log('target underlying: ', underlying);
     uint256[] storage indices = _underlyings[underlying];
     uint256 nTokens = indices.length;
+    console.log('nTokens: ', nTokens);
     if (nTokens == 0) {
       return (migrated, 0);
     }

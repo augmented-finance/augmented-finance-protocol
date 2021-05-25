@@ -12,7 +12,7 @@ import {
   eEthereumNetwork,
   tStringTokenBigUnits,
 } from './types';
-import { MintableERC20 } from '../types/MintableERC20';
+import { MintableERC20 } from '../types';
 import { MockContract } from 'ethereum-waffle';
 import { getReservesConfigByPool } from './configuration';
 import { getFirstSigner } from './contracts-getters';
@@ -71,12 +71,10 @@ import {
   linkBytecode,
   insertContractAddressInDb,
 } from './contracts-helpers';
-// tslint:disable-next-line:max-line-length
-import { StableAndVariableTokensHelperFactory } from '../types/StableAndVariableTokensHelperFactory';
-import { MintableDelegationERC20 } from '../types/MintableDelegationERC20';
+import { StableAndVariableTokensHelperFactory } from '../types';
+import { MintableDelegationERC20 } from '../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { LendingPoolLibraryAddresses } from '../types/LendingPoolFactory';
-import { Overrides } from '@ethersproject/contracts';
 
 const readArtifact = async (id: string) => {
   return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
@@ -637,6 +635,32 @@ export const deployMockAgfToken = async (
   return instance;
 };
 
+export const deployMockStakedAgToken = async (
+  args: [tEthereumAddress, tEthereumAddress, string, string],
+  verify?: boolean
+) => {
+  const instance = await withSaveAndVerify(
+    await new MockStakedAgfTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.MockStakedAgToken,
+    [],
+    verify
+  );
+  await instance.initialize(
+    {
+      stakeController: args[0],
+      stakedToken: args[1],
+      cooldownBlocks: 10,
+      unstakeBlocks: 10,
+      governance: ZERO_ADDRESS,
+    },
+    args[2],
+    args[3],
+    '18'
+  );
+
+  return instance;
+};
+
 export const deployMockStakedAgfToken = async (
   args: [tEthereumAddress, tEthereumAddress, string, string],
   verify?: boolean
@@ -773,13 +797,24 @@ export const deployMigratorWeightedRewardPool = async (
     verify
   );
 
-export const deployTokenWeightedRewardPool = async (
+export const deployTokenWeightedRewardPoolAGF = async (
   args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.TokenWeightedRewardPool,
+    eContractid.TokenWeightedRewardPoolAGF,
+    [], // TODO:
+    verify
+  );
+
+export const deployTokenWeightedRewardPoolAG = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TokenWeightedRewardPoolAG,
     [], // TODO:
     verify
   );

@@ -12,6 +12,7 @@ import {
 import { MockAgfToken, RewardFreezer, ZombieRewardPool } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { RAY } from '../../helpers/constants';
+import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -23,19 +24,10 @@ describe('Augmented pausable suite', () => {
   let zrp: ZombieRewardPool;
   let rc: RewardFreezer;
   let agf: MockAgfToken;
-  let teamRewardInitialRate: string = RAY;
-  let teamRewardsFreezePercentage = 0;
-  let zombieRewardLimit = 5000;
 
   beforeEach(async () => {
     [root, user1, user2] = await ethers.getSigners();
-    await rawBRE.run('dev:agf-rewards', {
-      teamRewardInitialRate: teamRewardInitialRate,
-      teamRewardBaselinePercentage: 0,
-      teamRewardUnlockBlock: 1000,
-      teamRewardsFreezePercentage: teamRewardsFreezePercentage,
-      zombieRewardLimit: zombieRewardLimit,
-    });
+    await rawBRE.run('augmented:test-local', CFG);
     rc = await getRewardFreezer();
     zrp = await getZombieRewardPool();
     agf = await getMockAgfToken();

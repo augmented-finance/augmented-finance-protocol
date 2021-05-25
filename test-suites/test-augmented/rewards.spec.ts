@@ -15,13 +15,13 @@ import {
 
 import { AGFToken, RewardFreezer } from '../../types';
 import { ONE_ADDRESS, RAY, ZERO_ADDRESS } from '../../helpers/constants';
+import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 
 chai.use(solidity);
 const { expect } = chai;
 
 // makeSuite('Rewards test suite', (testEnv: TestEnv) => {
 describe('Migrator test suite', () => {
-  // const { deployer, users } = testEnv;
   let deployer: SignerWithAddress;
   let user: SignerWithAddress;
   let user2: SignerWithAddress;
@@ -32,8 +32,7 @@ describe('Migrator test suite', () => {
 
   before(async () => {
     await rawBRE.run('set-DRE');
-    await rawBRE.run('dev:augmented-access');
-    await rawBRE.run('dev:agf-rewards');
+    await rawBRE.run('augmented:test-local', CFG);
 
     [deployer, user, user2, ...otherUsers] = await ethers.getSigners();
     console.log(`Admin address: ${deployer.address}`);
@@ -54,18 +53,6 @@ describe('Migrator test suite', () => {
 
     agf = await getMockAgfToken();
   });
-
-  // it('Measure multiple update & claim', async () => {
-  //   const linearUnweightedRewardPool = await getLinearUnweightedRewardPool();
-
-  //   await rewardFreezer.admin_setFreezePercentage(5000);
-  //   await (await rewardFreezer.admin_setMeltDownBlock(100000)).wait(1);
-
-  //   for (var i = 2000; i <= 2010; i++) {
-  //     await linearUnweightedRewardPool.handleBalanceUpdate(user.address, i, i+1, 100000);
-  //     await (await rewardFreezer.connect(user).claimReward()).wait(1);
-  //   }
-  // });
 
   it('Should claim reward', async () => {
     const tokenUnweightedRewardPool = await getTokenUnweightedRewardPool();
