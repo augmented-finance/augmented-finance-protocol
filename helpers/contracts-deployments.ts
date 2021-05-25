@@ -636,7 +636,7 @@ export const deployMockAgfToken = async (
 };
 
 export const deployMockStakedAgToken = async (
-  args: [tEthereumAddress, tEthereumAddress, string, string],
+  args: [tEthereumAddress, tEthereumAddress, string, string, number, number, tEthereumAddress],
   verify?: boolean
 ) => {
   const instance = await withSaveAndVerify(
@@ -649,9 +649,9 @@ export const deployMockStakedAgToken = async (
     {
       stakeController: args[0],
       stakedToken: args[1],
-      cooldownBlocks: 10,
-      unstakeBlocks: 10,
-      governance: ZERO_ADDRESS,
+      cooldownBlocks: args[4],
+      unstakeBlocks: args[5],
+      governance: args[6],
     },
     args[2],
     args[3],
@@ -662,7 +662,7 @@ export const deployMockStakedAgToken = async (
 };
 
 export const deployMockStakedAgfToken = async (
-  args: [tEthereumAddress, tEthereumAddress, string, string],
+  args: [tEthereumAddress, tEthereumAddress, string, string, number, number, tEthereumAddress],
   verify?: boolean
 ) => {
   const instance = await withSaveAndVerify(
@@ -675,9 +675,9 @@ export const deployMockStakedAgfToken = async (
     {
       stakeController: args[0],
       stakedToken: args[1],
-      cooldownBlocks: 10,
-      unstakeBlocks: 10,
-      governance: ZERO_ADDRESS,
+      cooldownBlocks: args[4],
+      unstakeBlocks: args[5],
+      governance: args[6],
     },
     args[2],
     args[3],
