@@ -551,31 +551,6 @@
     "@nodelib/fs.scandir" "2.1.4"
     fastq "^1.6.0"
 
-"@nomiclabs/buidler-ethers@^2.0.2":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-ethers/-/buidler-ethers-2.0.2.tgz#56c7f3d6f2d1bbf701e97a0003abb30f1071b2c4"
-  integrity sha512-lFcM7HVi44JB5xl7MKD8qChPQ5tfeO02ZYlrI6uef7J1SJCgE+wiokrl7HQ/jb7DgTHS5agfZxVO9yUbkrMIrQ==
-
-"@nomiclabs/buidler-etherscan@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-etherscan/-/buidler-etherscan-2.1.0.tgz#cdebc96f7683de9586935fb446efce78e98cf973"
-  integrity sha512-Rh1PGCtIVNU9zDSnLn6WlJDMBM9LXzkwNnzRFnTrMdA+Aa9nMVX7qwbAXG9pyIIsuqNH6MRfk7CDvi8aMoojng==
-  dependencies:
-    "@ethersproject/abi" "^5.0.2"
-    "@ethersproject/address" "^5.0.2"
-    cbor "^5.0.2"
-    ethereumjs-abi "^0.6.8"
-    node-fetch "^2.6.0"
-    semver "^6.3.0"
-
-"@nomiclabs/buidler-waffle@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-waffle/-/buidler-waffle-2.1.0.tgz#9869ac829162eb57ac4e4096f0a02bd7ef54a71a"
-  integrity sha512-Z1SJOGrRCcSu9E87mFaBHi4QimNxP9ZTYtJwLZCcyszS1fi0XLgp4syzTH3QXrQUBOP2P5oQMD6uCp0gNNS3hw==
-  dependencies:
-    "@types/sinon-chai" "^3.2.3"
-    "@types/web3" "1.0.19"
-
 "@nomiclabs/hardhat-ethers@^2.0.0", "@nomiclabs/hardhat-ethers@^2.0.1":
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@nomiclabs/hardhat-ethers/-/hardhat-ethers-2.0.2.tgz#c472abcba0c5185aaa4ad4070146e95213c68511"
@@ -2147,11 +2122,6 @@ bufferutil@^4.0.1:
   integrity sha512-yEYTwGndELGvfXsImMBLop58eaGW+YdONi1fNjTINSY98tmMmFijBG6WXgdkfuLNt4imzQNtIE+eBp1PVpMCSw==
   dependencies:
     node-gyp-build "^4.2.0"
-
-buidler-typechain@^0.2.2:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/buidler-typechain/-/buidler-typechain-0.2.2.tgz#4cfe0c08c0b8de9e8f37b1246789487314551df7"
-  integrity sha512-EaXWLRCe7tBVzFUmbR3dP0HlVex/Si0njr/9Q+5+MJqeyv21OSvD334pPgRNT9o0OUvPDhCcV9kkj51eAgbRqQ==
 
 builtin-modules@^1.1.1:
   version "1.1.1"

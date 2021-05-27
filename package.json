@@ -63,7 +63,7 @@
     "prettier:check": "npx prettier -c 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'",
     "prettier:write": "prettier --write 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'",
     "ci:test": "npm run compile && npm run test",
-    "ci:clean": "rm -rf ./artifacts ./cache ./types",
+    "ci:clean": "rm -rf ./artifacts ./cache ./types ./dist",
     "print-contracts:kovan": "npm run hardhat:kovan -- print-contracts",
     "print-contracts:main": "npm run hardhat:main -- print-contracts",
     "print-contracts:ropsten": "npm run hardhat:ropsten -- print-contracts",
