@@ -149,5 +149,8 @@
     "protocol-v1",
     "ethereum",
     "solidity"
-  ]
+  ],
+  "engines": {
+    "node": "14.x"
+  }
 }
