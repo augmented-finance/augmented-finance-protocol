@@ -6,13 +6,10 @@ import {
   deployCompAdapter,
   deployMigratorWeightedRewardPool,
   deployMockAgfToken,
-  deployMockStakedAgfToken,
-  deployMockStakedAgToken,
   deployRewardFreezer,
   deployTeamRewardPool,
   deployTokenUnweightedRewardPool,
-  deployTokenWeightedRewardPoolAG,
-  deployTokenWeightedRewardPoolAGF,
+  deployTokenWeightedRewardPoolAGFSeparate,
   deployZombieAdapter,
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
@@ -106,6 +103,21 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
       );
       await waitForTx(await rewardFreezer.admin_addRewardPool(linearUnweightedRewardPool.address));
 
+      // deploy token weighted reward pool, register in controller, separated pool for math tests
+      const tokenWeightedRewardPoolSeparate = await deployTokenWeightedRewardPoolAGFSeparate(
+        [
+          rewardFreezer.address,
+          oneRay.multipliedBy(100).toFixed(),
+          0,
+          oneRay.multipliedBy(100).toFixed(),
+        ],
+        verify
+      );
+      await waitForTx(
+        await rewardFreezer.admin_addRewardPool(tokenWeightedRewardPoolSeparate.address)
+      );
+      await tokenWeightedRewardPoolSeparate.addRewardProvider(root.address, ONE_ADDRESS);
+
       console.log(`#4 deploying: Team Reward Pool, unlock at block: ${teamRewardUnlockBlock}`);
       const teamRewardPool = await deployTeamRewardPool(
         [rewardFreezer.address, teamRewardInitialRate, teamRewardBaselinePercentage, root.address],
@@ -173,37 +185,38 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
         await crp.addRewardProvider(compAdapter.address, DAI_ADDRESS);
         await migrator.admin_setRewardPool(compAdapter.address, crp.address);
       }
-      console.log(`#10 Staking`);
-      const agDaiToken = await getAGTokenByName('agDAI');
-      await deployTokenWeightedRewardPoolAG(
-        [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
-        verify
-      );
-      const xAG = await deployMockStakedAgToken([
-        ac.address,
-        agDaiToken.address,
-        'Staked AG Token',
-        'xAG',
-        stakeCooldownBlocks,
-        stakeUnstakeBlocks,
-        ZERO_ADDRESS,
-      ]);
-      await xAG.connect(root).setMaxSlashablePercentage(slashingPercentage);
-
-      await deployTokenWeightedRewardPoolAGF(
-        [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
-        verify
-      );
-
-      const xAGF = await deployMockStakedAgfToken([
-        ac.address,
-        agfToken.address,
-        'Staked AGF Token',
-        'xAGF',
-        stakeCooldownBlocks,
-        stakeUnstakeBlocks,
-        ZERO_ADDRESS,
-      ]);
-      await xAGF.connect(root).setMaxSlashablePercentage(slashingPercentage);
+      // TODO: getAllATokens() filed with revert, fix
+      // console.log(`#10 Staking`);
+      // const agDaiToken = await getAGTokenByName('agDAI');
+      // await deployTokenWeightedRewardPoolAG(
+      //   [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
+      //   verify
+      // );
+      // const xAG = await deployMockStakedAgToken([
+      //   ac.address,
+      //   agDaiToken.address,
+      //   'Staked AG Token',
+      //   'xAG',
+      //   stakeCooldownBlocks,
+      //   stakeUnstakeBlocks,
+      //   ZERO_ADDRESS,
+      // ]);
+      // await xAG.connect(root).setMaxSlashablePercentage(slashingPercentage);
+      //
+      // await deployTokenWeightedRewardPoolAGF(
+      //   [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
+      //   verify
+      // );
+      //
+      // const xAGF = await deployMockStakedAgfToken([
+      //   ac.address,
+      //   agfToken.address,
+      //   'Staked AGF Token',
+      //   'xAGF',
+      //   stakeCooldownBlocks,
+      //   stakeUnstakeBlocks,
+      //   ZERO_ADDRESS,
+      // ]);
+      // await xAGF.connect(root).setMaxSlashablePercentage(slashingPercentage);
     }
   );
