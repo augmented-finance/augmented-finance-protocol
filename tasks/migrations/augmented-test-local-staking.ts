@@ -16,7 +16,7 @@ import {
 } from './defaultTestDeployConfig';
 import { getAGTokenByName } from '../../helpers/contracts-getters';
 
-task('augmented:test-local-staking', 'Deploy Augmented Migrator contracts.')
+task('augmented:test-local-staking', 'Deploy staking contracts')
   .addOptionalParam(
     'stakeCooldownBlocks',
     'staking cooldown blocks',
