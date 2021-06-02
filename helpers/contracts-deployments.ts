@@ -808,6 +808,17 @@ export const deployTokenWeightedRewardPoolAGF = async (
     verify
   );
 
+export const deployTokenWeightedRewardPoolAGFSeparate = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TokenWeightedRewardPoolAGFSeparate,
+    [], // TODO:
+    verify
+  );
+
 export const deployTokenWeightedRewardPoolAG = async (
   args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean

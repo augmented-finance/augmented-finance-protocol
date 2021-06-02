@@ -1,22 +1,33 @@
 import rawBRE, { ethers } from 'hardhat';
 
-// doesn't work
-// export const oneBlock = async (f: Function) => {
-//   await ethers.provider.send('evm_setAutomine', [false]);
-//   f();
-//   await ethers.provider.send('evm_setAutomine', [true]);
-//   await oneTx();
-// };
-
-const oneTx = async () => {
+export const mineBlocks = async (amount: number): Promise<number> => {
+  const blk = await ethers.provider.getBlock('latest');
   const wallets = await ethers.getSigners();
-  const nonce = await wallets[7].getTransactionCount();
-  await wallets[7].sendTransaction({
-    nonce: ethers.utils.hexlify(nonce),
-    to: wallets[8].address,
-    value: 1,
-    chainId: rawBRE.network.config.chainId,
-  });
+  let blockMined = 0;
+  for (let i = 0; i < amount; i++) {
+    blk.number += 1;
+    blockMined += 1;
+    if (blk.number % 2 == 0) {
+      const nonce = await wallets[7].getTransactionCount();
+      await wallets[7].sendTransaction({
+        nonce: ethers.utils.hexlify(nonce),
+        to: wallets[8].address,
+        value: 1,
+        chainId: rawBRE.network.config.chainId,
+      });
+    } else {
+      const nonce = await wallets[8].getTransactionCount();
+      await wallets[8].sendTransaction({
+        nonce: ethers.utils.hexlify(nonce),
+        to: wallets[7].address,
+        value: 1,
+        chainId: rawBRE.network.config.chainId,
+      });
+    }
+  }
+  const blkAfter = await ethers.provider.getBlock('latest');
+  console.log(`moved to block: ${blkAfter.number}`);
+  return blockMined;
 };
 
 export const mineToBlock = async (to: number): Promise<number> => {
@@ -26,7 +37,6 @@ export const mineToBlock = async (to: number): Promise<number> => {
     return 0;
   }
   if (to < blk.number) {
-    console.log(`already at block: ${blk.number}`);
     return 0;
   }
   let blockMined = 0;

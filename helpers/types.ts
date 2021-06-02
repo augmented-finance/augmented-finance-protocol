@@ -91,6 +91,7 @@ export enum eContractid {
   TeamRewardPool = 'TeamRewardPool',
   ZombieRewardPool = 'ZombieRewardPool',
   MigratorWeightedRewardPool = 'MigratorWeightedRewardPool',
+  TokenWeightedRewardPoolAGFSeparate = 'TokenWeightedRewardPoolAGFSeparate',
   TokenWeightedRewardPoolAGF = 'TokenWeightedRewardPoolAGF',
   TokenWeightedRewardPoolAG = 'TokenWeightedRewardPoolAG',
   TokenUnweightedRewardPool = 'TokenUnweightedRewardPool',
