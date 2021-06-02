@@ -13,7 +13,7 @@ import {
 
 import { MockAgfToken, RewardFreezer, TokenWeightedRewardPool } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { currentBlock, mineBlocks, mineToBlock, revertSnapshot, takeSnapshot } from './utils';
+import { currentBlock, mineBlocks, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import { ONE_ADDRESS } from '../../helpers/constants';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { waitForTx } from '../../helpers/misc-utils';
