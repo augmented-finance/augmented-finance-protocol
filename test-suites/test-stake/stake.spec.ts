@@ -53,7 +53,7 @@ describe('Staking', () => {
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
     [root, user1, user2, slasher] = await ethers.getSigners();
-    await rawBRE.run('augmented:test-local', CFG);
+    await rawBRE.run('augmented:test-local-staking', CFG);
     rc = await getRewardFreezer();
 
     AG = await getAGTokenByName('agDAI');

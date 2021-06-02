@@ -185,38 +185,5 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
         await crp.addRewardProvider(compAdapter.address, DAI_ADDRESS);
         await migrator.admin_setRewardPool(compAdapter.address, crp.address);
       }
-      // TODO: getAllATokens() filed with revert, fix
-      // console.log(`#10 Staking`);
-      // const agDaiToken = await getAGTokenByName('agDAI');
-      // await deployTokenWeightedRewardPoolAG(
-      //   [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
-      //   verify
-      // );
-      // const xAG = await deployMockStakedAgToken([
-      //   ac.address,
-      //   agDaiToken.address,
-      //   'Staked AG Token',
-      //   'xAG',
-      //   stakeCooldownBlocks,
-      //   stakeUnstakeBlocks,
-      //   ZERO_ADDRESS,
-      // ]);
-      // await xAG.connect(root).setMaxSlashablePercentage(slashingPercentage);
-      //
-      // await deployTokenWeightedRewardPoolAGF(
-      //   [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
-      //   verify
-      // );
-      //
-      // const xAGF = await deployMockStakedAgfToken([
-      //   ac.address,
-      //   agfToken.address,
-      //   'Staked AGF Token',
-      //   'xAGF',
-      //   stakeCooldownBlocks,
-      //   stakeUnstakeBlocks,
-      //   ZERO_ADDRESS,
-      // ]);
-      // await xAGF.connect(root).setMaxSlashablePercentage(slashingPercentage);
     }
   );
