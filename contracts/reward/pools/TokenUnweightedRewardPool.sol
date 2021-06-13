@@ -13,8 +13,6 @@ contract TokenUnweightedRewardPool is BaseTokenAbsRewardPool, CalcLinearUnweight
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
-  uint256 private _accumRate;
-
   constructor(
     IRewardController controller,
     uint256 initialRate,
