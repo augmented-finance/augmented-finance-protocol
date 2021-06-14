@@ -18,17 +18,13 @@ import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 
 import {Errors} from '../../tools/Errors.sol';
-import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
-import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.sol';
 
 import 'hardhat/console.sol';
 
 abstract contract TimeWeightedStakeTokenBase is
-  IStakeToken,
   IManagedStakeToken,
   ERC20WithPermit,
-  MarketAccessBitmask,
-  IInitializableStakeToken
+  MarketAccessBitmask
 {
   using SafeMath for uint256;
   using PercentageMath for uint256;
@@ -37,254 +33,197 @@ abstract contract TimeWeightedStakeTokenBase is
   IERC20 private _stakedToken;
   IBalanceHook internal _incentivesController;
 
-  mapping(address => uint32) private _stakersCooldowns;
+  uint256 private _stakedTotal;
+  mapping(uint32 => uint256) _pointTotal;
 
-  uint256 private _maxSlashablePercentage;
-  uint32 private _cooldownBlocks;
-  uint32 private _unstakeBlocks;
+  uint256 private _knownPointsMask;
+  uint32 private _pointPeriod;
+  uint32 private _earliestKnownPoint;
+  uint32 private _lastUpdatePoint;
+  uint32 private _lastUpdateBlock;
+
   bool private _redeemPaused;
+
+  struct UserBalance {
+    uint224 underlyingAmount;
+    uint32 startPoint;
+    uint224 stakeAmount;
+    uint32 endPoint;
+  }
+
+  mapping(address => UserBalance) private _balances;
 
   event Staked(address from, address to, uint256 amount);
   event Redeem(address from, address to, uint256 amount, uint256 underlyingAmount);
-  event Cooldown(address user, uint32 blockNumber);
-  event Donated(address from, uint256 amount);
-  event Slashed(address to, uint256 amount);
 
   constructor(
-    StakeTokenConfig memory params,
     string memory name,
     string memory symbol,
-    uint8 decimals
+    uint8 decimals,
+    uint32 pointPeriod
   ) public ERC20WithPermit(name, symbol, decimals) {
-    _initializeToken(params);
+    require(pointPeriod > 0, 'invalid pointPeriod');
+    _pointPeriod = pointPeriod;
   }
 
-  function _initializeToken(StakeTokenConfig memory params) internal virtual {
-    _remoteAcl = params.stakeController;
-    _stakedToken = params.stakedToken;
-    _cooldownBlocks = params.cooldownBlocks;
-    if (params.unstakeBlocks == 0) {
-      _unstakeBlocks = 10;
-    } else {
-      _unstakeBlocks = params.unstakeBlocks;
-    }
-
-    if (_maxSlashablePercentage == 0) {
-      _maxSlashablePercentage = 30 * PercentageMath.PCT;
-    }
-  }
-
-  function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
+  function UNDERLYING_ASSET_ADDRESS() external view returns (address) {
     return address(_stakedToken);
   }
 
-  function stake(address to, uint256 underlyingAmount) external override returns (uint256) {
-    internalStake(msg.sender, to, underlyingAmount, true);
+  function stake(
+    address to,
+    uint256 underlyingAmount,
+    uint32 duration
+  ) external returns (uint256) {
+    internalStake(msg.sender, to, underlyingAmount, duration, true);
   }
+
+  uint32 private constant _maxDurationPoints = 255;
 
   function internalStake(
     address from,
     address to,
     uint256 underlyingAmount,
+    uint32 duration,
     bool transferFrom
   ) internal returns (uint256 stakeAmount) {
-    require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
-    uint256 oldReceiverBalance = balanceOf(to);
-    stakeAmount = underlyingAmount.percentDiv(exchangeRate());
+    require(to != address(0));
+    require(underlyingAmount > 0);
+    require(duration > 0);
+    duration = (duration + _pointPeriod - 1) / _pointPeriod;
+    require(duration <= _maxDurationPoints);
 
-    _stakersCooldowns[to] = getNextCooldownBlocks(0, stakeAmount, to, oldReceiverBalance);
+    uint32 currentPoint = uint32((block.timestamp + _pointPeriod - 1) / _pointPeriod);
+    updateEarliestPoint(currentPoint);
 
     if (transferFrom) {
       _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
     }
-    _mint(to, stakeAmount);
 
-    if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(
-        address(this),
-        to,
-        oldReceiverBalance,
-        balanceOf(to),
-        totalSupply()
+    UserBalance memory userBalance = _balances[to];
+
+    if (userBalance.endPoint >= _earliestKnownPoint) {
+      _stakedTotal = _stakedTotal.sub(userBalance.stakeAmount);
+      _pointTotal[userBalance.endPoint] = _pointTotal[userBalance.endPoint].sub(
+        userBalance.stakeAmount
       );
     }
 
+    underlyingAmount = underlyingAmount.add(userBalance.underlyingAmount);
+    require(underlyingAmount <= type(uint224).max);
+
+    userBalance.underlyingAmount = uint224(underlyingAmount);
+    if (duration < _maxDurationPoints) {
+      userBalance.stakeAmount = uint224(underlyingAmount.mul(duration).div(_maxDurationPoints));
+    } else {
+      userBalance.stakeAmount = uint224(underlyingAmount);
+    }
+    userBalance.startPoint = currentPoint;
+    userBalance.endPoint += duration;
+    require(userBalance.startPoint < userBalance.endPoint);
+
+    _knownPointsMask |= uint256(1) << duration;
+
+    _stakedTotal = _stakedTotal.add(userBalance.stakeAmount);
+    _pointTotal[userBalance.endPoint] = _pointTotal[userBalance.endPoint].add(
+      userBalance.stakeAmount
+    );
+
+    if (_earliestKnownPoint > userBalance.endPoint) {
+      _earliestKnownPoint = userBalance.endPoint;
+    }
+
+    _balances[to] = userBalance;
+
+    // if (address(_incentivesController) != address(0)) {
+    //   _incentivesController.handleBalanceUpdate(
+    //     address(this),
+    //     to,
+    //     oldReceiverBalance,
+    //     balanceOf(to),
+    //     totalSupply()
+    //   );
+    // }
+
     emit Staked(from, to, underlyingAmount);
-    return stakeAmount;
+    return userBalance.stakeAmount;
   }
+
+  function updateEarliestPoint(uint32 currentPoint) private {
+    if (_lastUpdatePoint == currentPoint) {
+      return;
+    }
+    uint256 pointsPassed = uint256(currentPoint).sub(_lastUpdatePoint);
+    uint256 maskPassed = _knownPointsMask;
+
+    (uint32 lastUpdatePoint, uint32 lastUpdateBlock) = (_lastUpdatePoint, _lastUpdateBlock);
+    (_lastUpdatePoint, _lastUpdateBlock) = (currentPoint, uint32(block.number));
+
+    if (pointsPassed > 255) {
+      _knownPointsMask = 0;
+      _earliestKnownPoint = 0;
+    } else {
+      _knownPointsMask = maskPassed >> pointsPassed;
+      maskPassed &= (1 << pointsPassed) - 1;
+      _earliestKnownPoint = findEarliestKnownPoint();
+    }
+
+    walkPoints(lastUpdatePoint, lastUpdateBlock, currentPoint, maskPassed);
+  }
+
+  function walkPoints(
+    uint32 leftmostPoint,
+    uint32 leftmostBlock,
+    uint32 currentPoint,
+    uint256 mask
+  ) private {
+    for (uint32 point = leftmostPoint; mask != 0; (mask, point) = (mask >> 1, point + 1)) {
+      if (mask & 1 == 0) {
+        continue;
+      }
+      uint256 pointTotal = _pointTotal[point];
+      if (pointTotal == 0) {
+        continue;
+      }
+      delete (_pointTotal[point]);
+      uint256 totalBefore = _stakedTotal;
+      uint256 totalAfter = totalBefore.sub(pointTotal);
+      _stakedTotal = totalAfter;
+
+      uint256 blockNumber =
+        leftmostBlock +
+          ((block.number - leftmostBlock) * (point - leftmostPoint)) /
+          (currentPoint - leftmostPoint);
+      updateTotalSlope(uint32(blockNumber), totalBefore, totalAfter);
+    }
+  }
+
+  function updateTotalSlope(
+    uint32 blockNumber,
+    uint256 totalBefore,
+    uint256 totalAfter
+  ) private {}
+
+  function findEarliestKnownPoint() private view returns (uint32) {}
 
   /**
    * @dev Redeems staked tokens, and stop earning rewards
    * @param to Address to redeem to
    * @param stakeAmount Amount of stake to redeem
    **/
-  function redeem(address to, uint256 stakeAmount)
+  function redeem(address to)
     external
-    override
-    returns (uint256 stakeAmount_)
+    returns (
+      //    override
+      uint256 stakeAmount
+    )
   {
-    require(stakeAmount > 0, Errors.VL_INVALID_AMOUNT);
-    (stakeAmount_, ) = internalRedeem(msg.sender, to, stakeAmount, 0);
-    return stakeAmount_;
+    // require(stakeAmount > 0, Errors.VL_INVALID_AMOUNT);
+    // (stakeAmount_, ) = internalRedeem(msg.sender, to, stakeAmount, 0);
+    // return stakeAmount_;
   }
 
-  /**
-   * @dev Redeems staked tokens, and stop earning rewards
-   * @param to Address to redeem to
-   * @param underlyingAmount Amount of underlying to redeem
-   **/
-  function redeemUnderlying(address to, uint256 underlyingAmount)
-    external
-    override
-    returns (uint256 underlyingAmount_)
-  {
-    require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
-    (, underlyingAmount_) = internalRedeem(msg.sender, to, 0, underlyingAmount);
-    return underlyingAmount_;
-  }
-
-  function internalRedeem(
-    address from,
-    address to,
-    uint256 stakeAmount,
-    uint256 underlyingAmount
-  ) internal returns (uint256, uint256) {
-    require(!_redeemPaused, 'STK_REDEEM_PAUSED');
-
-    uint256 cooldownStartBlock = _stakersCooldowns[from];
-    require(block.number > cooldownStartBlock.add(_cooldownBlocks), 'STK_INSUFFICIENT_COOLDOWN');
-    console.log('block.number: ', block.number);
-    console.log('cooldownStartBlock: ', cooldownStartBlock);
-    console.log('cooldownBlocks: ', _cooldownBlocks);
-    console.log('unstakeBlocks: ', _unstakeBlocks);
-    require(
-      block.number.sub(cooldownStartBlock.add(_cooldownBlocks)) <= _unstakeBlocks,
-      'STK_UNSTAKE_WINDOW_FINISHED'
-    );
-
-    uint256 oldBalance = balanceOf(from);
-    if (stakeAmount == 0) {
-      stakeAmount = underlyingAmount.percentDiv(exchangeRate());
-
-      if (stakeAmount == 0) {
-        // don't allow tiny withdrawals
-        return (0, 0);
-      }
-      if (stakeAmount > oldBalance) {
-        stakeAmount = oldBalance;
-        underlyingAmount = stakeAmount.percentMul(exchangeRate());
-      }
-    } else {
-      if (stakeAmount > oldBalance) {
-        stakeAmount = oldBalance;
-      }
-      underlyingAmount = stakeAmount.percentMul(exchangeRate());
-      if (underlyingAmount == 0) {
-        // protect the user - don't waste balance without an outcome
-        return (0, 0);
-      }
-    }
-
-    _burn(from, stakeAmount);
-
-    if (oldBalance == stakeAmount) {
-      delete (_stakersCooldowns[from]);
-    }
-
-    if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(
-        address(this),
-        from,
-        oldBalance,
-        balanceOf(from),
-        totalSupply()
-      );
-    }
-
-    IERC20(_stakedToken).safeTransfer(to, underlyingAmount);
-
-    emit Redeem(from, to, stakeAmount, underlyingAmount);
-    return (stakeAmount, underlyingAmount);
-  }
-
-  /**
-   * @dev Activates the cooldown period to unstake
-   * - It can't be called if the user is not staking
-   **/
-  function cooldown() external override {
-    require(balanceOf(msg.sender) != 0, 'STK_INVALID_BALANCE_ON_COOLDOWN');
-
-    _stakersCooldowns[msg.sender] = uint32(block.number);
-    emit Cooldown(msg.sender, uint32(block.number));
-  }
-
-  /**
-   * @dev Gets end of the cooldown period.
-   * - Returns zero for a not staking user.
-   **/
-  function getCooldown(address holder) external view override returns (uint32) {
-    return _stakersCooldowns[holder];
-  }
-
-  function exchangeRate() public view override returns (uint256) {
-    uint256 total = totalSupply();
-    if (total == 0) {
-      return PercentageMath.ONE; // 100%
-    }
-    return _stakedToken.balanceOf(address(this)).percentOf(total);
-  }
-
-  function slashUnderlying(
-    address destination,
-    uint256 minAmount,
-    uint256 maxAmount
-  ) external override aclHas(AccessFlags.LIQUIDITY_CONTROLLER) returns (uint256 amount) {
-    uint256 balance = _stakedToken.balanceOf(address(this));
-    uint256 maxSlashable = balance.percentMul(_maxSlashablePercentage);
-
-    if (maxAmount > maxSlashable) {
-      amount = maxSlashable;
-    } else {
-      amount = maxAmount;
-    }
-    if (amount < minAmount) {
-      return 0;
-    }
-
-    _stakedToken.safeTransfer(destination, amount);
-
-    emit Slashed(destination, amount);
-    return amount;
-  }
-
-  function donate(uint256 amount) external {
-    _stakedToken.safeTransferFrom(msg.sender, address(this), amount);
-    emit Donated(msg.sender, amount);
-  }
-
-  function getMaxSlashablePercentage() external view override returns (uint256) {
-    return _maxSlashablePercentage;
-  }
-
-  function setMaxSlashablePercentage(uint256 percentageInRay)
-    external
-    override
-    aclHas(AccessFlags.STAKE_ADMIN)
-  {
-    require(percentageInRay <= PercentageMath.ONE, 'STK_EXCESSIVE_SLASH_PCT');
-    _maxSlashablePercentage = percentageInRay;
-  }
-
-  function setCooldown(uint32 cooldownBlocks, uint32 unstakeBlocks)
-    external
-    override
-    aclHas(AccessFlags.STAKE_ADMIN)
-  {
-    _cooldownBlocks = cooldownBlocks;
-    _unstakeBlocks = unstakeBlocks;
-  }
-
-  function isRedeemable() external view override returns (bool) {
+  function isRedeemable() external view returns (bool) {
     return !_redeemPaused;
   }
 
@@ -319,84 +258,6 @@ abstract contract TimeWeightedStakeTokenBase is
     address to,
     uint256 amount
   ) internal override {
-    uint256 balanceOfFrom = balanceOf(from);
-
-    // Recipient
-    if (from != to) {
-      uint256 balanceOfTo = balanceOf(to);
-
-      uint32 previousSenderCooldown = _stakersCooldowns[from];
-      _stakersCooldowns[to] = getNextCooldownBlocks(
-        previousSenderCooldown,
-        amount,
-        to,
-        balanceOfTo
-      );
-
-      // if cooldown was set and whole balance of sender was transferred - clear cooldown
-      if (balanceOfFrom == amount && previousSenderCooldown != 0) {
-        delete (_stakersCooldowns[from]);
-      }
-    }
-
     super._transfer(from, to, amount);
-  }
-
-  /**
-   * @dev Calculates the how is gonna be a new cooldown block depending on the sender/receiver situation
-   *  - If the block of the sender is "better" or the block of the recipient is 0, we take the one of the recipient
-   *  - Weighted average of from/to cooldown blocks if:
-   *    # The sender doesn't have the cooldown activated (block 0).
-   *    # The sender block is passed
-   *    # The sender has a "worse" block
-   *  - If the receiver's cooldown block passed (too old), the next is 0
-   * @param fromCooldownBlock Cooldown block of the sender
-   * @param amountToReceive Amount
-   * @param toAddress Address of the recipient
-   * @param toBalance Current balance of the receiver
-   * @return The new cooldown block
-   **/
-  function getNextCooldownBlocks(
-    uint32 fromCooldownBlock,
-    uint256 amountToReceive,
-    address toAddress,
-    uint256 toBalance
-  ) public returns (uint32) {
-    uint32 toCooldownBlock = _stakersCooldowns[toAddress];
-    if (toCooldownBlock == 0) {
-      return 0;
-    }
-
-    uint256 minimalValidCooldownBlock = block.number.sub(_cooldownBlocks).sub(_unstakeBlocks);
-
-    if (minimalValidCooldownBlock > toCooldownBlock) {
-      toCooldownBlock = 0;
-    } else {
-      if (minimalValidCooldownBlock > fromCooldownBlock) {
-        fromCooldownBlock = uint32(block.number);
-      }
-
-      if (fromCooldownBlock < toCooldownBlock) {
-        return toCooldownBlock;
-      } else {
-        toCooldownBlock = uint32(
-          (amountToReceive.mul(fromCooldownBlock).add(toBalance.mul(toCooldownBlock))).div(
-            amountToReceive.add(toBalance)
-          )
-        );
-      }
-    }
-    _stakersCooldowns[toAddress] = toCooldownBlock;
-
-    return toCooldownBlock;
-  }
-
-  function COOLDOWN_BLOCKS() external view returns (uint256) {
-    return _cooldownBlocks;
-  }
-
-  /// @notice Seconds available to redeem once the cooldown period is fullfilled
-  function UNSTAKE_WINDOW_BLOCKS() external view returns (uint256) {
-    return _unstakeBlocks;
   }
 }
