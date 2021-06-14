@@ -28,7 +28,7 @@ interface IStakeToken is IDerivedToken {
   ) external returns (uint256);
 }
 
-interface IManagedStakeToken is IEmergencyAccess, IStakeToken {
+interface IManagedStakeToken is IEmergencyAccess {
   function setRedeemable(bool redeemable) external;
 
   function getMaxSlashablePercentage() external view returns (uint256);
