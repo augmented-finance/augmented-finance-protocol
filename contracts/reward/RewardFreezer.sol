@@ -42,10 +42,10 @@ contract RewardFreezer is BasicRewardController {
   function internalAllocatedByPool(
     address holder,
     uint256 allocated,
-    uint32 sinceBlock,
-    uint32 currentBlock
+    address,
+    uint32 sinceBlock
   ) internal override {
-    allocated = internalApplyAllocated(holder, allocated, sinceBlock, currentBlock);
+    allocated = internalApplyAllocated(holder, allocated, sinceBlock, uint32(block.number));
     if (allocated > 0) {
       _claimableRewards[holder] = _claimableRewards[holder].add(allocated);
     }
@@ -54,10 +54,9 @@ contract RewardFreezer is BasicRewardController {
   function internalClaimByCall(
     address holder,
     uint256 allocated,
-    uint32 sinceBlock,
-    uint32 currentBlock
+    uint32 sinceBlock
   ) internal override returns (uint256 amount) {
-    amount = internalApplyAllocated(holder, allocated, sinceBlock, currentBlock);
+    amount = internalApplyAllocated(holder, allocated, sinceBlock, uint32(block.number));
 
     uint256 claimableReward = _claimableRewards[holder];
     if (claimableReward > 0) {
@@ -85,8 +84,6 @@ contract RewardFreezer is BasicRewardController {
       FrozenRewardState state
     )
   {
-    // console.log('internalApplyAllocated ', _meltdownBlock, _unfrozenPortion, allocated);
-
     if (_meltdownBlock > 0 && _meltdownBlock <= currentBlock) {
       if (incremental) {
         return (allocated, 0, FrozenRewardState.NotRead);
@@ -187,14 +184,13 @@ contract RewardFreezer is BasicRewardController {
     address holder,
     uint256 allocated,
     uint32 sinceBlock,
-    uint32 currentBlock,
     bool incremental
   ) internal view override returns (uint256 claimableAmount, uint256 frozenAmount) {
     (claimableAmount, frozenAmount, ) = internalCalcAllocated(
       holder,
       allocated,
       sinceBlock,
-      currentBlock,
+      uint32(block.number),
       incremental
     );
 

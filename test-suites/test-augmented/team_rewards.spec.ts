@@ -93,17 +93,14 @@ describe('Team rewards suite', () => {
       // rate #1 - 100% - 5 blocks
       await mineToBlock(REWARD_UNLOCK_BLOCK + 5);
       expect(await trp.isUnlocked(await currentBlock())).to.be.true;
-      const rewardCalc = await rewardController.claimableReward(
-        teamMember1.address,
-        await currentBlock()
-      );
-      console.log(`rewards = claimable: ${rewardCalc.claimable}, delayed: ${rewardCalc.delayed}`);
+      const rewardCalc = await rewardController.claimableReward(teamMember1.address);
+      console.log(`rewards = claimable: ${rewardCalc.claimable}, delayed: ${rewardCalc.extra}`);
 
       console.log(`claim is made at block: ${await currentBlock()}`);
       await rewardController.connect(teamMember1).claimReward();
 
       claimedInStepOne = await agf.balanceOf(teamMember1.address);
-      expect(rewardCalc.delayed).to.eq(0);
+      expect(rewardCalc.extra).to.eq(0);
       expect(claimedInStepOne.toNumber()).to.be.approximately(
         rewardCalc.claimable.toNumber(),
         rewardPrecision,
@@ -114,15 +111,12 @@ describe('Team rewards suite', () => {
     {
       // rate #2 - 0% - 5 blocks
       await mineToBlock(REWARD_UNLOCK_BLOCK + 10);
-      const rewardCalc = await rewardController.claimableReward(
-        teamMember1.address,
-        await currentBlock()
-      );
-      console.log(`rewards = claimable: ${rewardCalc.claimable}, delayed: ${rewardCalc.delayed}`);
+      const rewardCalc = await rewardController.claimableReward(teamMember1.address);
+      console.log(`rewards = claimable: ${rewardCalc.claimable}, delayed: ${rewardCalc.extra}`);
 
       console.log(`claim is made at block: ${await currentBlock()}`);
       await rewardController.connect(teamMember1).claimReward();
-      expect(rewardCalc.delayed).to.eq(0);
+      expect(rewardCalc.extra).to.eq(0);
       const rewardClaimed = await agf.balanceOf(teamMember1.address);
       expect(rewardClaimed.toNumber()).to.be.approximately(
         claimedInStepOne.toNumber(),
@@ -310,13 +304,13 @@ describe('Team rewards suite', () => {
       freezePercent
     );
     console.log(`calc is made at block: ${await currentBlock()}`);
-    const rewardCalc = await rewardController.claimableReward(teamMember1.address, 0);
+    const rewardCalc = await rewardController.claimableReward(teamMember1.address);
     expect(rewardCalc.claimable.toNumber()).to.be.approximately(
       expectedReward,
       rewardPrecision,
       'claimable is wrong'
     );
-    expect(rewardCalc.delayed.toNumber()).to.be.approximately(
+    expect(rewardCalc.extra.toNumber()).to.be.approximately(
       expectedReward / 2,
       rewardPrecision,
       'delayed is wrong'

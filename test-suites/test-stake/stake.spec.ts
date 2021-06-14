@@ -72,7 +72,7 @@ describe('Staking', () => {
   });
 
   const stake = async (s: SignerWithAddress, amount: BigNumberish) => {
-    await AGF.connect(root).mintReward(s.address, amount);
+    await AGF.connect(root).mintReward(s.address, amount, false);
     await AGF.connect(s).approve(xAGF.address, amount);
     await xAGF.connect(s).stake(s.address, amount);
   };

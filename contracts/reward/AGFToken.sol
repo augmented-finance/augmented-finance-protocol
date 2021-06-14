@@ -60,12 +60,11 @@ contract AGFToken is
     }
   }
 
-  function mintReward(address account, uint256 amount)
-    external
-    override
-    aclHas(AccessFlags.REWARD_MINT)
-    returns (IRewardMinter, address)
-  {
+  function mintReward(
+    address account,
+    uint256 amount,
+    bool
+  ) external override aclHas(AccessFlags.REWARD_MINT) returns (IRewardMinter, address) {
     _mint(account, amount);
     return (IRewardMinter(0), address(0));
   }
