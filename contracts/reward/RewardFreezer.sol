@@ -42,6 +42,7 @@ contract RewardFreezer is BasicRewardController {
   function internalAllocatedByPool(
     address holder,
     uint256 allocated,
+    address,
     uint32 sinceBlock
   ) internal override {
     allocated = internalApplyAllocated(holder, allocated, sinceBlock, uint32(block.number));

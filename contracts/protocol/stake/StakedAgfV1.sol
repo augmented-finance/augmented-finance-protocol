@@ -60,12 +60,15 @@ contract StakedAgfV1 is
   /**
    * @dev mints stake token on top of the underlying (reward) token. Reward token MUST be minted to AFTER this call.
    */
-  function mintReward(address account, uint256 amount)
-    external
-    override
-    aclHas(AccessFlags.REWARD_MINT)
-    returns (IRewardMinter, address)
-  {
+  function mintReward(
+    address account,
+    uint256 amount,
+    bool serviceAccount
+  ) external override aclHas(AccessFlags.REWARD_MINT) returns (IRewardMinter, address) {
+    if (serviceAccount) {
+      return (IRewardMinter(getUnderlying()), account);
+    }
+
     internalStake(msg.sender, account, amount, false);
     return (IRewardMinter(getUnderlying()), address(this));
   }

@@ -62,7 +62,16 @@ abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManaged
     _poolList[idx] = IManagedRewardPool(0);
     delete (_poolMask[address(pool)]);
     _ignoreMask |= mask;
+
+    internalOnPoolRemoved(pool);
   }
+
+  function isKnownRewardPool(address pool) public view returns (bool) {
+    uint256 mask = _poolMask[pool];
+    return mask == mask & ~_ignoreMask;
+  }
+
+  function internalOnPoolRemoved(IManagedRewardPool) internal virtual {}
 
   function admin_addRewardProvider(
     address pool,
@@ -160,7 +169,7 @@ abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManaged
     require(poolMask != 0, 'unknown pool');
 
     if (allocated > 0) {
-      internalAllocatedByPool(holder, allocated, sinceBlock);
+      internalAllocatedByPool(holder, allocated, msg.sender, sinceBlock);
       emit RewardsAllocated(holder, allocated);
     }
 
@@ -198,7 +207,7 @@ abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManaged
     return acl_hasAllOf(addr, AccessFlags.EMERGENCY_ADMIN);
   }
 
-  function getClaimMask(address holder, uint256 mask) internal view virtual returns (uint256) {
+  function getClaimMask(address holder, uint256 mask) private view returns (uint256) {
     mask &= ~_ignoreMask;
     mask &= _memberOf[holder];
     return mask;
@@ -217,14 +226,21 @@ abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManaged
     claimableAmount = internalClaimAndMintReward(holder, mask);
 
     if (claimableAmount > 0) {
-      address mintTo = receiver;
-      for (IRewardMinter minter = _rewardMinter; minter != IRewardMinter(0); ) {
-        (minter, mintTo) = minter.mintReward(mintTo, claimableAmount);
-      }
+      internalMint(receiver, claimableAmount, false);
       emit RewardsClaimed(holder, receiver, claimableAmount);
     }
     console.log('RewardsClaimed', claimableAmount);
     return claimableAmount;
+  }
+
+  function internalMint(
+    address mintTo,
+    uint256 amount,
+    bool serviceAccount
+  ) internal {
+    for (IRewardMinter minter = _rewardMinter; minter != IRewardMinter(0); ) {
+      (minter, mintTo) = minter.mintReward(mintTo, amount, serviceAccount);
+    }
   }
 
   function internalClaimAndMintReward(address holder, uint256 mask)
@@ -250,6 +266,7 @@ abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManaged
   function internalAllocatedByPool(
     address holder,
     uint256 allocated,
+    address pool,
     uint32 sinceBlock
   ) internal virtual;
 

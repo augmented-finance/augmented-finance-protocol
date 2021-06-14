@@ -8,6 +8,7 @@ import {IMarketAccessController} from '../access/interfaces/IMarketAccessControl
 import {BaseRewardController} from './BaseRewardController.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
+import {IBoostExcesser} from './interfaces/IBoostExcesser.sol';
 
 import 'hardhat/console.sol';
 
@@ -18,6 +19,9 @@ contract RewardBooster is BaseRewardController {
   mapping(address => uint256) private _boostFactor;
   IManagedRewardPool private _boostPool;
 
+  address private _boostExcessDelegate;
+  bool private _mintExcess;
+
   mapping(address => uint256) private _boostRewards;
   mapping(address => uint256) private _claimableRewards;
 
@@ -26,9 +30,50 @@ contract RewardBooster is BaseRewardController {
     BaseRewardController(accessController, rewardMinter)
   {}
 
-  function setBoostFactor(address pool, uint32 pctFactor) external onlyOwner {}
+  function internalOnPoolRemoved(IManagedRewardPool pool) internal override {
+    super.internalOnPoolRemoved(pool);
+    if (_boostPool == pool) {
+      _boostPool = IManagedRewardPool(0);
+      _mintExcess = false;
+    } else {
+      delete (_boostFactor[address(pool)]);
+    }
+  }
 
-  function setBoostPool(address pool) external onlyOwner {}
+  function setBoostFactor(address pool, uint32 pctFactor) external {
+    require(
+      isConfigurator(msg.sender) || isRateController(msg.sender),
+      'only owner or rate controller are allowed'
+    );
+    require(isKnownRewardPool(pool), 'unknown pool');
+    require(pool != address(_boostPool), 'factor for the boost pool');
+    _boostFactor[pool] = pctFactor;
+  }
+
+  function getBoostFactor(address pool) external view returns (uint32 pctFactor) {
+    return uint32(_boostFactor[pool]);
+  }
+
+  function setBoostPool(address pool) external onlyOwner {
+    if (pool != address(0)) {
+      require(isKnownRewardPool(pool), 'unknown pool');
+      delete (_boostFactor[pool]);
+    }
+    _boostPool = IManagedRewardPool(pool);
+  }
+
+  function getBoostPool() external view returns (address) {
+    return address(_boostPool);
+  }
+
+  function setBoostExcessTarget(address target, bool mintExcess) external onlyOwner {
+    _boostExcessDelegate = target;
+    _mintExcess = mintExcess && (target != address(0));
+  }
+
+  function getBoostExcessTarget() external view returns (address target, bool mintExcess) {
+    return (_boostExcessDelegate, _mintExcess);
+  }
 
   function internalClaimAndMintReward(address holder, uint256 mask)
     internal
@@ -119,8 +164,26 @@ contract RewardBooster is BaseRewardController {
   function internalAllocatedByPool(
     address holder,
     uint256 allocated,
-    uint32 sinceBlock
-  ) internal override {}
+    address pool,
+    uint32
+  ) internal override {
+    if (address(_boostPool) == pool) {
+      _boostRewards[holder] = _boostRewards[holder].add(allocated);
+    } else {
+      _claimableRewards[holder] = _claimableRewards[holder].add(allocated);
+    }
+  }
 
-  function internalStoreBoostExcess(uint256 boostExcess) private {}
+  function internalStoreBoostExcess(uint256 boostExcess) private {
+    if (_boostExcessDelegate == address(0)) {
+      return;
+    }
+
+    if (_mintExcess) {
+      internalMint(_boostExcessDelegate, boostExcess, true);
+      return;
+    }
+
+    IBoostExcesser(_boostExcessDelegate).storeBoostExcess(boostExcess);
+  }
 }
