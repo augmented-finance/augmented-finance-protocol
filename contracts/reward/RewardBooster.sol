@@ -18,6 +18,7 @@ contract RewardBooster is BaseRewardController {
 
   mapping(address => uint256) private _boostFactor;
   IManagedRewardPool private _boostPool;
+  uint256 private _boostPoolMask;
 
   address private _boostExcessDelegate;
   bool private _mintExcess;
@@ -34,7 +35,7 @@ contract RewardBooster is BaseRewardController {
     super.internalOnPoolRemoved(pool);
     if (_boostPool == pool) {
       _boostPool = IManagedRewardPool(0);
-      _mintExcess = false;
+      _boostPoolMask = 0;
     } else {
       delete (_boostFactor[address(pool)]);
     }
@@ -45,7 +46,7 @@ contract RewardBooster is BaseRewardController {
       isConfigurator(msg.sender) || isRateController(msg.sender),
       'only owner or rate controller are allowed'
     );
-    require(isKnownRewardPool(pool), 'unknown pool');
+    require(getPoolMask(pool) != 0, 'unknown pool');
     require(pool != address(_boostPool), 'factor for the boost pool');
     _boostFactor[pool] = pctFactor;
   }
@@ -55,8 +56,13 @@ contract RewardBooster is BaseRewardController {
   }
 
   function setBoostPool(address pool) external onlyOwner {
-    if (pool != address(0)) {
-      require(isKnownRewardPool(pool), 'unknown pool');
+    if (pool == address(0)) {
+      _boostPoolMask = 0;
+    } else {
+      uint256 mask = getPoolMask(pool);
+      require(mask != 0, 'unknown pool');
+      _boostPoolMask = mask;
+
       delete (_boostFactor[pool]);
     }
     _boostPool = IManagedRewardPool(pool);
@@ -73,6 +79,12 @@ contract RewardBooster is BaseRewardController {
 
   function getBoostExcessTarget() external view returns (address target, bool mintExcess) {
     return (_boostExcessDelegate, _mintExcess);
+  }
+
+  function getClaimMask(address holder, uint256 mask) internal view override returns (uint256) {
+    mask = super.getClaimMask(holder, mask);
+    mask &= ~_boostPoolMask;
+    return mask;
   }
 
   function internalClaimAndMintReward(address holder, uint256 mask)

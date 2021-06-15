@@ -66,9 +66,12 @@ abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManaged
     internalOnPoolRemoved(pool);
   }
 
-  function isKnownRewardPool(address pool) public view returns (bool) {
-    uint256 mask = _poolMask[pool];
-    return mask == mask & ~_ignoreMask;
+  function getPoolMask(address pool) public view returns (uint256 poolMask) {
+    poolMask = _poolMask[pool];
+    if (poolMask & _ignoreMask != 0) {
+      return 0;
+    }
+    return poolMask;
   }
 
   function internalOnPoolRemoved(IManagedRewardPool) internal virtual {}
@@ -207,7 +210,7 @@ abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManaged
     return acl_hasAllOf(addr, AccessFlags.EMERGENCY_ADMIN);
   }
 
-  function getClaimMask(address holder, uint256 mask) private view returns (uint256) {
+  function getClaimMask(address holder, uint256 mask) internal view virtual returns (uint256) {
     mask &= ~_ignoreMask;
     mask &= _memberOf[holder];
     return mask;
