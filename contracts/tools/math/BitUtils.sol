@@ -45,6 +45,11 @@ library BitUtils {
     return (v & (v - 1)) == 0;
   }
 
+  function mostSignificantBit(uint256 v) internal pure returns (uint8 r) {
+    require(v > 0);
+    return uint8(bitLength(v));
+  }
+
   function bitLength(uint256 v) internal pure returns (uint256 len) {
     if (v == 0) {
       return 0;
