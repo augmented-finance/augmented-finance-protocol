@@ -151,7 +151,10 @@ abstract contract StakeTokenBase is
     require(!_redeemPaused, 'STK_REDEEM_PAUSED');
 
     uint256 cooldownStartBlock = _stakersCooldowns[from];
-    require(block.number > cooldownStartBlock.add(_cooldownBlocks), 'STK_INSUFFICIENT_COOLDOWN');
+    require(
+      cooldownStartBlock != 0 && block.number > cooldownStartBlock.add(_cooldownBlocks),
+      'STK_INSUFFICIENT_COOLDOWN'
+    );
     console.log('block.number: ', block.number);
     console.log('cooldownStartBlock: ', cooldownStartBlock);
     console.log('cooldownBlocks: ', _cooldownBlocks);
