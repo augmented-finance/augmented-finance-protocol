@@ -21,6 +21,7 @@ jobs:
             - yarn-packages-{{ checksum "yarn.lock" }}
       - run: yarn install --immutable
       - run: yarn run compile
+      - run: yarn run test:augmented:boost
       - run: yarn run test:augmented:utils
       - run: yarn run test:augmented:token-weighted-pool
       - run: yarn run test

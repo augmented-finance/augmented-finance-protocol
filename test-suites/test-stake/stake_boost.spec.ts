@@ -100,7 +100,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
     expect(await AGF.balanceOf(user1.address)).to.eq(boostAmount);
   });
 
-  it('deposit agDAI for 10 blocks, redeem, wait 10 blocks and get reward', async () => {
+  it('deposit agDAI for 10 blocks, redeem, wait 10 blocks and get full reward', async () => {
     await stake(user1, defaultStkAmount);
     const ti = {
       TotalRewardBlocks: 10,
@@ -109,11 +109,14 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
         { Signer: user1, BlocksFromStart: 0, AmountDepositedBefore: 0, AmountDeposited: 10000 },
       ],
     } as TestInfo;
-    const boostAmount = ti.TotalRewardBlocks - 1;
+    const boostAmount = ti.TotalRewardBlocks;
     await applyDepositPlanAndClaimAll(ti, rpAG, rb);
     await xAGF.connect(user1).redeem(user1.address, defaultStkAmount);
-    await mineBlocks(10);
+    const blocksWithoutStaking = 10;
+    await mineBlocks(blocksWithoutStaking);
     await rb.connect(user1).claimReward();
-    expect(await AGF.balanceOf(user1.address)).to.eq(defaultStkAmount + boostAmount);
+    expect(await AGF.balanceOf(user1.address)).to.eq(
+      defaultStkAmount + blocksWithoutStaking + boostAmount
+    );
   });
 });
