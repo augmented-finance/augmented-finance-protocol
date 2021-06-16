@@ -4,11 +4,14 @@ import {
   deployMockAgfToken,
   deployMockStakedAgfToken,
   deployMockStakedAgToken,
+  deployRewardBooster,
   deployRewardFreezer,
   deployTokenWeightedRewardPoolAG,
+  deployTokenWeightedRewardPoolAGBoosted,
   deployTokenWeightedRewardPoolAGF,
+  deployTokenWeightedRewardPoolAGFBoosted,
 } from '../../helpers/contracts-deployments';
-import { oneRay, RAY, ZERO_ADDRESS } from '../../helpers/constants';
+import { ONE_ADDRESS, oneRay, RAY, ZERO_ADDRESS } from '../../helpers/constants';
 import {
   slashingDefaultPercentage,
   stakingCooldownBlocks,
@@ -34,13 +37,13 @@ task('augmented:test-local-staking', 'Deploy staking contracts')
   .setAction(
     async ({ stakeCooldownBlocks, stakeUnstakeBlocks, slashingPercentage, verify }, localBRE) => {
       await localBRE.run('set-DRE');
-      const [root, user1, user2, slasher] = await localBRE.ethers.getSigners();
+      const [root, user1, user2, slasher, excessReceiverUser] = await localBRE.ethers.getSigners();
 
       console.log(`#1 deploying: Access Controller`);
       const ac = await deployAccessController();
       // emergency admin + liquidity admin
       await ac.setEmergencyAdmin(root.address);
-      await ac.grantRoles(root.address, 1 << 5);
+      await ac.grantRoles(root.address, (1 << 5) | (1 << 25) | (1 << 24) | (1 << 27) | (1 << 3));
       await ac.grantRoles(slasher.address, 1 << 15);
 
       console.log(`#2 deploying: mock AGF`);
@@ -55,7 +58,7 @@ task('augmented:test-local-staking', 'Deploy staking contracts')
 
       console.log(`#4 Staking`);
       const agDaiToken = await getAGTokenByName('agDAI');
-      await deployTokenWeightedRewardPoolAG(
+      const xAGPool = await deployTokenWeightedRewardPoolAG(
         [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
         verify
       );
@@ -70,7 +73,7 @@ task('augmented:test-local-staking', 'Deploy staking contracts')
       ]);
       await xAG.connect(root).setMaxSlashablePercentage(slashingPercentage);
 
-      await deployTokenWeightedRewardPoolAGF(
+      const xAGFPool = await deployTokenWeightedRewardPoolAGF(
         [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
         verify
       );
@@ -85,5 +88,24 @@ task('augmented:test-local-staking', 'Deploy staking contracts')
         ZERO_ADDRESS,
       ]);
       await xAGF.connect(root).setMaxSlashablePercentage(slashingPercentage);
+
+      console.log('#5 Staking boosters');
+      const boosterController = await deployRewardBooster([ac.address, agfToken.address]);
+      const AGPoolBoosted = await deployTokenWeightedRewardPoolAGBoosted(
+        [boosterController.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
+        verify
+      );
+      await AGPoolBoosted.connect(root).addRewardProvider(root.address, agDaiToken.address);
+
+      const AGFPoolBooster = await deployTokenWeightedRewardPoolAGFBoosted(
+        [boosterController.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
+        verify
+      );
+      await boosterController.connect(root).admin_addRewardPool(AGPoolBoosted.address);
+      await boosterController.connect(root).admin_addRewardPool(AGFPoolBooster.address);
+
+      await boosterController.connect(root).setBoostPool(AGFPoolBooster.address);
+      await boosterController.connect(root).setBoostFactor(AGPoolBoosted.address, 30000); // 300%
+      await boosterController.connect(root).setBoostExcessTarget(excessReceiverUser.address, true);
     }
   );

@@ -89,7 +89,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
     await stake(user1, defaultStkAmount);
     await mineToBlock(stakingUnstakeBlocks + 10);
     await expect(xAGF.redeem(user1.address, defaultStkAmount)).to.be.revertedWith(
-      'STK_UNSTAKE_WINDOW_FINISHED',
+      'STK_UNSTAKE_WINDOW_FINISHED'
     );
   });
 
@@ -107,7 +107,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
     await xAGF.connect(root).setPaused(true);
     await stake(user1, defaultStkAmount);
     await expect(xAGF.connect(user1).redeem(user1.address, defaultStkAmount)).to.be.revertedWith(
-      'STK_REDEEM_PAUSED',
+      'STK_REDEEM_PAUSED'
     );
   });
 

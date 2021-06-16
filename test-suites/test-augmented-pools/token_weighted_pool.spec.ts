@@ -3,8 +3,6 @@ import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import rawBRE, { ethers } from 'hardhat';
 
-import _ from 'underscore';
-
 import {
   getMockAgfToken,
   getRewardFreezer,
@@ -13,29 +11,12 @@ import {
 
 import { MockAgfToken, RewardFreezer, TokenWeightedRewardPool } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { currentBlock, mineBlocks, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
-import { ONE_ADDRESS } from '../../helpers/constants';
+import { currentBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
-import { waitForTx } from '../../helpers/misc-utils';
-import { BigNumberish } from 'ethers';
+import { applyDepositPlanAndClaimAll, TestInfo } from '../test_utils';
 
 chai.use(solidity);
 const { expect } = chai;
-
-interface UserBalanceChange {
-  Signer: SignerWithAddress;
-  BlocksFromStart: number;
-  AmountDepositedBefore: BigNumberish;
-  AmountDeposited: BigNumberish;
-}
-
-interface TestInfo {
-  TotalRewardBlocks: number;
-  TotalAmountDeposited: BigNumberish;
-  UserBalanceChanges: UserBalanceChange[];
-  BlocksToMeltdown: number;
-  FreezePercentage: BigNumberish;
-}
 
 describe('Token weighted reward pool tests', () => {
   let root: SignerWithAddress;
@@ -64,46 +45,40 @@ describe('Token weighted reward pool tests', () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  const printTestInfo = (s: Object) => {
-    console.log(`test params: ${JSON.stringify(s, null, 2)}`);
-  };
-
-  const waitForRewards = async (ti: TestInfo) => {
-    printTestInfo(ti);
-    console.log(`current block: ${await currentBlock()}`);
-    await rc.admin_setFreezePercentage(ti.FreezePercentage);
-    await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
-
-    // applying balance changes in order
-    ti.UserBalanceChanges = _.sortBy(ti.UserBalanceChanges, 'block');
-
-    let totalSetupBlocks = 0;
-    for (let u of ti.UserBalanceChanges) {
-      expect(await agf.balanceOf(u.Signer.address)).to.eq(0);
-      // mine to set balance update for relative block
-      if (u.BlocksFromStart !== 0) {
-        totalSetupBlocks += await mineBlocks(u.BlocksFromStart);
-      }
-      await wrp.handleBalanceUpdate(
-        ONE_ADDRESS,
-        u.Signer.address,
-        u.AmountDepositedBefore,
-        u.AmountDeposited,
-        ti.TotalAmountDeposited
-      );
-    }
-    const uniq_addresses = [...new Set(ti.UserBalanceChanges.map((item) => item.Signer.address))];
-    // mine the rest blocks until ti.TotalRewardBlocks, subtract already mined blocks + blocks with claims afterwards
-    await mineBlocks(ti.TotalRewardBlocks - totalSetupBlocks - uniq_addresses.length);
-    // claim for every user only once
-    for (let ua of uniq_addresses) {
-      for (let s of ti.UserBalanceChanges) {
-        if (ua === s.Signer.address) {
-          await rc.connect(s.Signer).claimReward();
-        }
-      }
-    }
-  };
+  // const applyBalanceChanges = async (ti: TestInfo) => {
+  //   printTestInfo(ti);
+  //   console.log(`current block: ${await currentBlock()}`);
+  //   // applying balance changes in order
+  //   ti.UserBalanceChanges = _.sortBy(ti.UserBalanceChanges, 'block');
+  //
+  //   let totalSetupBlocks = 0;
+  //   for (let u of ti.UserBalanceChanges) {
+  //     expect(await agf.balanceOf(u.Signer.address)).to.eq(0);
+  //     // mine to set balance update for relative block
+  //     if (u.BlocksFromStart !== 0) {
+  //       totalSetupBlocks += await mineBlocks(u.BlocksFromStart);
+  //     }
+  //     await wrp.handleBalanceUpdate(
+  //       ONE_ADDRESS,
+  //       u.Signer.address,
+  //       u.AmountDepositedBefore,
+  //       u.AmountDeposited,
+  //       ti.TotalAmountDeposited
+  //     );
+  //   }
+  //   const uniq_addresses = [...new Set(ti.UserBalanceChanges.map((item) => item.Signer.address))];
+  //   // mine the rest blocks until ti.TotalRewardBlocks,
+  //   // subtract already mined blocks + blocks with claims afterwards
+  //   await mineBlocks(ti.TotalRewardBlocks - totalSetupBlocks - uniq_addresses.length);
+  //   // claim for every user only once
+  //   for (let ua of uniq_addresses) {
+  //     for (let s of ti.UserBalanceChanges) {
+  //       if (ua === s.Signer.address) {
+  //         await rc.connect(s.Signer).claimReward();
+  //       }
+  //     }
+  //   }
+  // };
 
   it('20 blocks, 100% deposited, 0% frozen, meltdown immediately', async () => {
     const ti = {
@@ -115,7 +90,9 @@ describe('Token weighted reward pool tests', () => {
       BlocksToMeltdown: 0,
       FreezePercentage: 0,
     } as TestInfo;
-    await waitForRewards(ti);
+    await rc.admin_setFreezePercentage(ti.FreezePercentage);
+    await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
+    await applyDepositPlanAndClaimAll(ti, wrp, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     console.log(`reward: ${reward}`);
     expect(reward).to.be.approximately(
@@ -135,7 +112,9 @@ describe('Token weighted reward pool tests', () => {
       BlocksToMeltdown: 0,
       FreezePercentage: 0,
     } as TestInfo;
-    await waitForRewards(ti);
+    await rc.admin_setFreezePercentage(ti.FreezePercentage);
+    await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
+    await applyDepositPlanAndClaimAll(ti, wrp, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(
       (ti.TotalRewardBlocks * rewardPerBlock) / 2,
@@ -154,7 +133,9 @@ describe('Token weighted reward pool tests', () => {
       BlocksToMeltdown: 20,
       FreezePercentage: 10000,
     } as TestInfo;
-    await waitForRewards(ti);
+    await rc.admin_setFreezePercentage(ti.FreezePercentage);
+    await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
+    await applyDepositPlanAndClaimAll(ti, wrp, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(
       ti.TotalRewardBlocks * rewardPerBlock,
@@ -173,9 +154,11 @@ describe('Token weighted reward pool tests', () => {
       BlocksToMeltdown: 40,
       FreezePercentage: 10000,
     } as TestInfo;
-    await waitForRewards(ti);
+    await rc.admin_setFreezePercentage(ti.FreezePercentage);
+    await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
+    await applyDepositPlanAndClaimAll(ti, wrp, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
-    expect(reward).to.be.approximately(520, rewardPrecision, 'reward is wrong');
+    expect(reward).to.be.approximately(510, rewardPrecision, 'reward is wrong');
   });
 
   it('20 blocks, 100% deposited, 100% frozen, meltdown at +80 blocks, partly melted', async () => {
@@ -188,7 +171,9 @@ describe('Token weighted reward pool tests', () => {
       BlocksToMeltdown: 80,
       FreezePercentage: 10000,
     } as TestInfo;
-    await waitForRewards(ti);
+    await rc.admin_setFreezePercentage(ti.FreezePercentage);
+    await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
+    await applyDepositPlanAndClaimAll(ti, wrp, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(250, rewardPrecision, 'reward is wrong');
   });
@@ -204,7 +189,9 @@ describe('Token weighted reward pool tests', () => {
       BlocksToMeltdown: 0,
       FreezePercentage: 0,
     } as TestInfo;
-    await waitForRewards(ti);
+    await rc.admin_setFreezePercentage(ti.FreezePercentage);
+    await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
+    await applyDepositPlanAndClaimAll(ti, wrp, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     const reward2 = (await agf.balanceOf(user2.address)).toNumber();
     expect(reward).to.be.approximately(1000, rewardPrecision, 'reward is wrong');
@@ -222,7 +209,9 @@ describe('Token weighted reward pool tests', () => {
       BlocksToMeltdown: 0,
       FreezePercentage: 0,
     } as TestInfo;
-    await waitForRewards(ti);
+    await rc.admin_setFreezePercentage(ti.FreezePercentage);
+    await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
+    await applyDepositPlanAndClaimAll(ti, wrp, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(1099, rewardPrecision, 'reward is wrong');
   });

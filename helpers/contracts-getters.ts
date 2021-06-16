@@ -44,6 +44,7 @@ import {
   CompAdapterFactory,
   DepositToken,
   TokenWeightedRewardPoolFactory,
+  RewardBoosterFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -510,6 +511,15 @@ export const getRewardFreezer = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getRewardBooster = async (address?: tEthereumAddress) =>
+  await RewardBoosterFactory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.RewardBooster}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getTokenUnweightedRewardPool = async (address?: tEthereumAddress) =>
   await TokenUnweightedRewardPoolFactory.connect(
     address ||
@@ -524,6 +534,17 @@ export const getTokenWeightedRewardPoolAGF = async (address?: tEthereumAddress) 
     address ||
       (
         await getDb().get(`${eContractid.TokenWeightedRewardPoolAGF}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getTokenWeightedRewardPoolAGFBoosted = async (address?: tEthereumAddress) =>
+  await TokenWeightedRewardPoolFactory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.TokenWeightedRewardPoolAGFBoosted}.${DRE.network.name}`)
+          .value()
       ).address,
     await getFirstSigner()
   );
@@ -544,6 +565,17 @@ export const getTokenWeightedRewardPoolAG = async (address?: tEthereumAddress) =
     address ||
       (
         await getDb().get(`${eContractid.TokenWeightedRewardPoolAG}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getTokenWeightedRewardPoolAGBoosted = async (address?: tEthereumAddress) =>
+  await TokenWeightedRewardPoolFactory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.TokenWeightedRewardPoolAGBoosted}.${DRE.network.name}`)
+          .value()
       ).address,
     await getFirstSigner()
   );
