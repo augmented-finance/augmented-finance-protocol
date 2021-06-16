@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
 import {MathUtils} from './MathUtils.sol';
@@ -11,7 +12,7 @@ contract LibTestUtils {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
-  function TestLinearInterest(uint256 rate, uint256 ts) public returns (uint256) {
+  function TestLinearInterest(uint256 rate, uint256 ts) public view returns (uint256) {
     console.log('block ts:', ts);
     uint256 res = MathUtils.calculateLinearInterest(rate, uint40(ts));
     return res;
