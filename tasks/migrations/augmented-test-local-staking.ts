@@ -87,7 +87,7 @@ task('augmented:test-local-staking', 'Deploy staking contracts')
         stakeUnstakeBlocks,
         ZERO_ADDRESS,
       ]);
-      await xAGF.connect(root).setMaxSlashablePercentage(slashingPercentage);
+      await xAGF.connect(root).setMaxSlashablePercentage(0);
 
       console.log('#5 Staking boosters');
       const boosterController = await deployRewardBooster([ac.address, agfToken.address]);
@@ -95,7 +95,6 @@ task('augmented:test-local-staking', 'Deploy staking contracts')
         [boosterController.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
         verify
       );
-      await AGPoolBoosted.connect(root).addRewardProvider(root.address, agDaiToken.address);
 
       const AGFPoolBooster = await deployTokenWeightedRewardPoolAGFBoosted(
         [boosterController.address, RAY, 0, oneRay.multipliedBy(100).toFixed()],
@@ -103,6 +102,9 @@ task('augmented:test-local-staking', 'Deploy staking contracts')
       );
       await boosterController.connect(root).admin_addRewardPool(AGPoolBoosted.address);
       await boosterController.connect(root).admin_addRewardPool(AGFPoolBooster.address);
+
+      await AGPoolBoosted.connect(root).addRewardProvider(root.address, agDaiToken.address);
+      await AGFPoolBooster.connect(root).addRewardProvider(root.address, xAGF.address);
 
       await boosterController.connect(root).setBoostPool(AGFPoolBooster.address);
       await boosterController.connect(root).setBoostFactor(AGPoolBoosted.address, 30000); // 300%
