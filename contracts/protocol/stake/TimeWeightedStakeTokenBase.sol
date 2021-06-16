@@ -10,6 +10,7 @@ import {IStakeToken, IManagedStakeToken} from './interfaces/IStakeToken.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
+import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 
@@ -22,12 +23,14 @@ import {Errors} from '../../tools/Errors.sol';
 import 'hardhat/console.sol';
 
 abstract contract TimeWeightedStakeTokenBase is
+  IERC20,
   IManagedStakeToken,
-  ERC20WithPermit,
+  // ERC20WithPermit,
   MarketAccessBitmask
 {
   using SafeMath for uint256;
   using PercentageMath for uint256;
+  using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
   IERC20 private _stakedToken;
@@ -36,17 +39,20 @@ abstract contract TimeWeightedStakeTokenBase is
   uint256 private _stakedTotal;
   mapping(uint32 => uint256) _pointTotal;
 
-  uint256 private _knownPointsMask;
+  uint256 private _totalDecayPerS;
+  uint256 private _lastDecayRate;
+  uint256 private _accDecayRate;
+
+  uint32 private _lastDecayRateTS;
+
   uint32 private _pointPeriod;
   uint32 private _earliestKnownPoint;
-  uint32 private _lastUpdatePoint;
-  uint32 private _lastUpdateBlock;
+  uint32 private _lastPointTS;
 
-  bool private _redeemPaused;
+  bool private _paused;
 
   struct UserBalance {
     uint224 underlyingAmount;
-    uint32 startPoint;
     uint224 stakeAmount;
     uint32 endPoint;
   }
@@ -61,13 +67,33 @@ abstract contract TimeWeightedStakeTokenBase is
     string memory symbol,
     uint8 decimals,
     uint32 pointPeriod
-  ) public ERC20WithPermit(name, symbol, decimals) {
+  ) public {
+    // ERC20WithPermit(name, symbol, decimals) {
     require(pointPeriod > 0, 'invalid pointPeriod');
+    name;
+    symbol;
+    decimals;
     _pointPeriod = pointPeriod;
   }
 
   function UNDERLYING_ASSET_ADDRESS() external view returns (address) {
     return address(_stakedToken);
+  }
+
+  uint32 private constant _maxDurationPoints = 255;
+
+  function getCurrentPoint() private view returns (uint32) {
+    return pointOfTS(uint32(block.timestamp));
+  }
+
+  function pointOfTS(uint32 ts) private view returns (uint32) {
+    return uint32(ts / _pointPeriod);
+  }
+
+  function setDecayRate(uint256 decayRate, uint32 currentTS) private {
+    _accDecayRate = _accDecayRate.add(uint256(currentTS).sub(_lastDecayRateTS).mul(_lastDecayRate));
+    _lastDecayRateTS = currentTS;
+    _lastDecayRate = decayRate;
   }
 
   function stake(
@@ -78,8 +104,6 @@ abstract contract TimeWeightedStakeTokenBase is
     internalStake(msg.sender, to, underlyingAmount, duration, true);
   }
 
-  uint32 private constant _maxDurationPoints = 255;
-
   function internalStake(
     address from,
     address to,
@@ -89,27 +113,33 @@ abstract contract TimeWeightedStakeTokenBase is
   ) internal returns (uint256 stakeAmount) {
     require(to != address(0));
     require(underlyingAmount > 0);
-    require(duration > 0);
-    duration = (duration + _pointPeriod - 1) / _pointPeriod;
-    require(duration <= _maxDurationPoints);
+    require(duration >= _pointPeriod);
 
-    uint32 currentPoint = uint32((block.timestamp + _pointPeriod - 1) / _pointPeriod);
-    updateEarliestPoint(currentPoint);
+    uint32 endPoint = pointOfTS(uint32(block.timestamp + duration));
+
+    uint32 currentPoint = updateEarliestPoint();
+    require(endPoint <= currentPoint + _maxDurationPoints);
 
     if (transferFrom) {
       _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
     }
 
     UserBalance memory userBalance = _balances[to];
+    uint256 oldBalance = userBalance.stakeAmount;
+    underlyingAmount = underlyingAmount.add(userBalance.underlyingAmount);
 
-    if (userBalance.endPoint >= _earliestKnownPoint) {
+    if (userBalance.endPoint > currentPoint) {
+      // if (userBalance.endPoint == endPoint) {
+      //   // _balances[to].underlyingAmount
+      // } else {
       _stakedTotal = _stakedTotal.sub(userBalance.stakeAmount);
       _pointTotal[userBalance.endPoint] = _pointTotal[userBalance.endPoint].sub(
         userBalance.stakeAmount
       );
+      // }
     }
+    userBalance.endPoint = endPoint;
 
-    underlyingAmount = underlyingAmount.add(userBalance.underlyingAmount);
     require(underlyingAmount <= type(uint224).max);
 
     userBalance.underlyingAmount = uint224(underlyingAmount);
@@ -118,11 +148,6 @@ abstract contract TimeWeightedStakeTokenBase is
     } else {
       userBalance.stakeAmount = uint224(underlyingAmount);
     }
-    userBalance.startPoint = currentPoint;
-    userBalance.endPoint += duration;
-    require(userBalance.startPoint < userBalance.endPoint);
-
-    _knownPointsMask |= uint256(1) << duration;
 
     _stakedTotal = _stakedTotal.add(userBalance.stakeAmount);
     _pointTotal[userBalance.endPoint] = _pointTotal[userBalance.endPoint].add(
@@ -135,67 +160,124 @@ abstract contract TimeWeightedStakeTokenBase is
 
     _balances[to] = userBalance;
 
-    // if (address(_incentivesController) != address(0)) {
-    //   _incentivesController.handleBalanceUpdate(
-    //     address(this),
-    //     to,
-    //     oldReceiverBalance,
-    //     balanceOf(to),
-    //     totalSupply()
-    //   );
-    // }
+    if (address(_incentivesController) != address(0)) {
+      _incentivesController.handleBalanceUpdate(
+        address(this),
+        to,
+        oldBalance,
+        userBalance.stakeAmount,
+        _stakedTotal
+      );
+    }
 
     emit Staked(from, to, underlyingAmount);
     return userBalance.stakeAmount;
   }
 
-  function updateEarliestPoint(uint32 currentPoint) private {
-    if (_lastUpdatePoint == currentPoint) {
-      return;
+  function totalSupply() external view override returns (uint256 totalSupply_) {
+    totalSupply_ = _stakedTotal;
+    uint32 currentTS = uint32(block.timestamp);
+    uint32 currentPoint = pointOfTS(currentTS);
+    uint32 lastPoint = pointOfTS(_lastPointTS);
+
+    if (lastPoint != currentPoint) {
+      if (lastPoint + _maxDurationPoints < currentPoint) {
+        currentPoint = lastPoint + _maxDurationPoints;
+      }
+
+      for (lastPoint++; lastPoint <= currentPoint; lastPoint++) {
+        totalSupply_ = totalSupply_.sub(_pointTotal[lastPoint]);
+      }
     }
-    uint256 pointsPassed = uint256(currentPoint).sub(_lastUpdatePoint);
-    uint256 maskPassed = _knownPointsMask;
 
-    (uint32 lastUpdatePoint, uint32 lastUpdateBlock) = (_lastUpdatePoint, _lastUpdateBlock);
-    (_lastUpdatePoint, _lastUpdateBlock) = (currentPoint, uint32(block.number));
+    uint256 accDecayRate =
+      _accDecayRate.add(uint256(currentTS).sub(_lastDecayRateTS).mul(_lastDecayRate));
+    uint256 totalDecay = totalSupply_.rayMul(accDecayRate);
+    if (totalDecay >= totalSupply_) {
+      return 0;
+    }
+    return totalSupply_.sub(totalDecay);
+  }
 
-    if (pointsPassed > 255) {
-      _knownPointsMask = 0;
-      _earliestKnownPoint = 0;
-    } else {
-      _knownPointsMask = maskPassed >> pointsPassed;
-      maskPassed &= (1 << pointsPassed) - 1;
+  function balanceOf(address account) external view override returns (uint256) {
+    UserBalance memory userBalance = _balances[account];
+
+    uint32 currentTS = uint32(block.timestamp);
+    if (userBalance.endPoint <= pointOfTS(currentTS)) {
+      return 0;
+    }
+
+    uint256 accDecayRate =
+      _accDecayRate.add(uint256(currentTS).sub(_lastDecayRateTS).mul(_lastDecayRate));
+    uint256 balanceDecay = uint256(userBalance.stakeAmount).rayMul(accDecayRate);
+    if (balanceDecay >= userBalance.stakeAmount) {
+      return 0;
+    }
+    return uint256(userBalance.stakeAmount).sub(balanceDecay);
+  }
+
+  function balanceOfUnderlying(address account) external view returns (uint256) {
+    return _balances[account].underlyingAmount;
+  }
+
+  function stakeUnderlyingAndExpiry(address account)
+    external
+    view
+    returns (uint256 underlying, uint32 availableSince)
+  {
+    underlying = _balances[account].underlyingAmount;
+    if (underlying == 0) {
+      return (0, 0);
+    }
+    return (underlying, _balances[account].endPoint * _pointPeriod);
+  }
+
+  function updateEarliestPoint() private returns (uint32 currentPoint) {
+    currentPoint = pointOfTS(uint32(block.timestamp));
+
+    uint32 lastUpdatePoint = pointOfTS(_lastPointTS);
+    if (lastUpdatePoint == currentPoint) {
+      return currentPoint;
+    }
+
+    uint256 pointsPassed = uint256(currentPoint).sub(lastUpdatePoint);
+
+    uint32 lastPointTS = _lastPointTS;
+    _lastPointTS = uint32(block.timestamp);
+
+    _earliestKnownPoint = 0;
+
+    walkPoints(lastUpdatePoint, lastPointTS, currentPoint, uint32(block.timestamp));
+
+    if (pointsPassed <= _maxDurationPoints && _stakedTotal > 0) {
       _earliestKnownPoint = findEarliestKnownPoint();
     }
-
-    walkPoints(lastUpdatePoint, lastUpdateBlock, currentPoint, maskPassed);
   }
 
   function walkPoints(
     uint32 leftmostPoint,
-    uint32 leftmostBlock,
+    uint32 leftmostPointTS,
     uint32 currentPoint,
-    uint256 mask
+    uint32 currentPointTS
   ) private {
-    for (uint32 point = leftmostPoint; mask != 0; (mask, point) = (mask >> 1, point + 1)) {
-      if (mask & 1 == 0) {
-        continue;
-      }
-      uint256 pointTotal = _pointTotal[point];
-      if (pointTotal == 0) {
-        continue;
-      }
-      delete (_pointTotal[point]);
-      uint256 totalBefore = _stakedTotal;
-      uint256 totalAfter = totalBefore.sub(pointTotal);
-      _stakedTotal = totalAfter;
-
-      uint256 blockNumber =
-        leftmostBlock +
-          ((block.number - leftmostBlock) * (point - leftmostPoint)) /
-          (currentPoint - leftmostPoint);
-      updateTotalSlope(uint32(blockNumber), totalBefore, totalAfter);
-    }
+    // for (uint32 point = leftmostPoint; mask != 0; (mask, point) = (mask >> 1, point + 1)) {
+    //   if (mask & 1 == 0) {
+    //     continue;
+    //   }
+    //   uint256 pointTotal = _pointTotal[point];
+    //   if (pointTotal == 0) {
+    //     continue;
+    //   }
+    //   delete (_pointTotal[point]);
+    //   uint256 totalBefore = _stakedTotal;
+    //   uint256 totalAfter = totalBefore.sub(pointTotal);
+    //   _stakedTotal = totalAfter;
+    //   uint256 blockNumber =
+    //     leftmostBlock +
+    //       ((block.number - leftmostBlock) * (point - leftmostPoint)) /
+    //       (currentPoint - leftmostPoint);
+    //   updateTotalSlope(uint32(blockNumber), totalBefore, totalAfter);
+    // }
   }
 
   function updateTotalSlope(
@@ -209,22 +291,32 @@ abstract contract TimeWeightedStakeTokenBase is
   /**
    * @dev Redeems staked tokens, and stop earning rewards
    * @param to Address to redeem to
-   * @param stakeAmount Amount of stake to redeem
    **/
-  function redeem(address to)
-    external
-    returns (
-      //    override
-      uint256 stakeAmount
-    )
-  {
-    // require(stakeAmount > 0, Errors.VL_INVALID_AMOUNT);
-    // (stakeAmount_, ) = internalRedeem(msg.sender, to, stakeAmount, 0);
-    // return stakeAmount_;
+  function redeem(address to) external notPaused returns (uint256 underlyingAmount) {
+    return internalRedeem(msg.sender, to);
+  }
+
+  function internalRedeem(address from, address to) private returns (uint256 underlyingAmount) {
+    uint32 currentPoint = updateEarliestPoint();
+    UserBalance memory userBalance = _balances[from];
+
+    if (userBalance.underlyingAmount == 0 || userBalance.endPoint >= currentPoint) {
+      return 0;
+    }
+
+    delete (_balances[from]);
+
+    _stakedToken.safeTransfer(to, userBalance.underlyingAmount);
+    return userBalance.underlyingAmount;
+  }
+
+  modifier notPaused() {
+    require(!_paused);
+    _;
   }
 
   function isRedeemable() external view returns (bool) {
-    return !_redeemPaused;
+    return !_paused;
   }
 
   function setRedeemable(bool redeemable)
@@ -232,32 +324,38 @@ abstract contract TimeWeightedStakeTokenBase is
     override
     aclHas(AccessFlags.LIQUIDITY_CONTROLLER)
   {
-    _redeemPaused = !redeemable;
+    _paused = !redeemable;
   }
 
   function setPaused(bool paused) external override onlyEmergencyAdmin {
-    _redeemPaused = paused;
+    _paused = paused;
   }
 
   function isPaused() external view override returns (bool) {
-    return _redeemPaused;
+    return _paused;
   }
 
   function getUnderlying() internal view returns (address) {
     return address(_stakedToken);
   }
 
-  /**
-   * @dev Internal ERC20 _transfer of the tokenized staked tokens
-   * @param from Address to transfer from
-   * @param to Address to transfer to
-   * @param amount Amount to transfer
-   **/
-  function _transfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal override {
-    super._transfer(from, to, amount);
+  function transfer(address, uint256) external override returns (bool) {
+    revert('not allowed');
+  }
+
+  function allowance(address, address) external view override returns (uint256) {
+    revert('not allowed');
+  }
+
+  function approve(address, uint256) external override returns (bool) {
+    revert('not allowed');
+  }
+
+  function transferFrom(
+    address,
+    address,
+    uint256
+  ) external override returns (bool) {
+    revert('not allowed');
   }
 }
