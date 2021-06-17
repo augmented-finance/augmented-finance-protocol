@@ -71,12 +71,6 @@ describe('Staking', () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  const stake = async (s: SignerWithAddress, amount: BigNumberish) => {
-    await AGF.connect(root).mintReward(s.address, amount, false);
-    await AGF.connect(s).approve(xAGF.address, amount);
-    await xAGF.connect(s).stake(s.address, amount);
-  };
-
   const printBalances = async (s: SignerWithAddress) => {
     console.log(
       `balances of ${s.address}
@@ -85,9 +79,17 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
     );
   };
 
-  it('can not redeem when after unstake block has passed', async () => {
+  const stake = async (s: SignerWithAddress, amount: BigNumberish) => {
+    await AGF.connect(root).mintReward(s.address, amount, false);
+    await AGF.connect(s).approve(xAGF.address, amount);
+    await xAGF.connect(s).stake(s.address, amount);
+  };
+
+  it.only('can not redeem when after unstake block has passed', async () => {
+    console.log(`user address: ${user1.address}`);
     await stake(user1, defaultStkAmount);
-    await mineToBlock(stakingUnstakeBlocks + 10);
+    await xAGF.connect(user1).cooldown();
+    await mineToBlock(stakingUnstakeBlocks + stakingCooldownBlocks + 1);
     await expect(xAGF.redeem(user1.address, defaultStkAmount)).to.be.revertedWith(
       'STK_UNSTAKE_WINDOW_FINISHED'
     );

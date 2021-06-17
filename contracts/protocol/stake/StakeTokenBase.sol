@@ -92,6 +92,8 @@ abstract contract StakeTokenBase is
     stakeAmount = underlyingAmount.percentDiv(exchangeRate());
 
     _stakersCooldowns[to] = getNextCooldownBlocks(0, stakeAmount, to, oldReceiverBalance);
+    console.log('setting cooldown for user: ', to);
+    console.log('cooldown set at stake: ', _stakersCooldowns[to]);
 
     if (transferFrom) {
       _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
@@ -151,14 +153,14 @@ abstract contract StakeTokenBase is
     require(!_redeemPaused, 'STK_REDEEM_PAUSED');
 
     uint256 cooldownStartBlock = _stakersCooldowns[from];
-    require(
-      cooldownStartBlock != 0 && block.number > cooldownStartBlock.add(_cooldownBlocks),
-      'STK_INSUFFICIENT_COOLDOWN'
-    );
     console.log('block.number: ', block.number);
     console.log('cooldownStartBlock: ', cooldownStartBlock);
     console.log('cooldownBlocks: ', _cooldownBlocks);
     console.log('unstakeBlocks: ', _unstakeBlocks);
+    require(
+      cooldownStartBlock != 0 && block.number > cooldownStartBlock.add(_cooldownBlocks),
+      'STK_INSUFFICIENT_COOLDOWN'
+    );
     require(
       block.number.sub(cooldownStartBlock.add(_cooldownBlocks)) <= _unstakeBlocks,
       'STK_UNSTAKE_WINDOW_FINISHED'
@@ -215,6 +217,7 @@ abstract contract StakeTokenBase is
    **/
   function cooldown() external override {
     require(balanceOf(msg.sender) != 0, 'STK_INVALID_BALANCE_ON_COOLDOWN');
+    console.log('cooldown set!');
 
     _stakersCooldowns[msg.sender] = uint32(block.number);
     emit Cooldown(msg.sender, uint32(block.number));

@@ -66,29 +66,20 @@ describe('Staking with boosting', () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  const stake = async (s: SignerWithAddress, amount: BigNumberish) => {
-    rpAGF.handleBalanceUpdate(xAGF.address, s.address, 0, amount, amount);
-    // await AGF.connect(root).mintReward(s.address, amount, false);
-    // await AGF.connect(s).approve(xAGF.address, amount);
-    // await xAGF.connect(s).stake(s.address, amount);
-  };
-
-  const printBalances = async (s: SignerWithAddress) => {
-    console.log(
-      `balances of ${s.address}
-xAGFBalance: ${await xAGF.balanceOf(s.address)}
-AGFBalance: ${await AGF.balanceOf(s.address)}`
-    );
-  };
-
-  it('no boost if no work', async () => {
+  it('no boost if no work and no staking', async () => {
     await mineBlocks(5);
     await rb.connect(user1).claimReward();
     expect(await AGF.balanceOf(user1.address)).to.eq(0);
   });
 
   it('can stake AGF to xAGF, deposit agDAI for 20 blocks, receive boost reward', async () => {
-    await stake(user1, defaultStkAmount);
+    await rpAGF.handleBalanceUpdate(
+      xAGF.address,
+      user1.address,
+      0,
+      defaultStkAmount,
+      defaultStkAmount
+    );
     const ti = {
       TotalRewardBlocks: 20,
       TotalAmountDeposited: 10000,
@@ -96,8 +87,9 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
         { Signer: user1, BlocksFromStart: 0, AmountDepositedBefore: 0, AmountDeposited: 10000 },
       ],
     } as TestInfo;
-    
-    const basicAmount = ti.TotalRewardBlocks - 1; // basic work of the deposit - deposit is added one block after the stake
+
+    // basic work of the deposit - deposit is added one block after the stake
+    const basicAmount = ti.TotalRewardBlocks - 1;
     const boostAmount = ti.TotalRewardBlocks;
 
     await applyDepositPlanAndClaimAll(ti, rpAG, rb);
@@ -105,7 +97,13 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
   });
 
   it('deposit agDAI for 10 blocks, redeem, wait 10 blocks and get full reward', async () => {
-    await stake(user1, defaultStkAmount);
+    await rpAGF.handleBalanceUpdate(
+      xAGF.address,
+      user1.address,
+      0,
+      defaultStkAmount,
+      defaultStkAmount
+    );
     const ti = {
       TotalRewardBlocks: 10,
       TotalAmountDeposited: 10000,
@@ -113,15 +111,17 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
         { Signer: user1, BlocksFromStart: 0, AmountDepositedBefore: 0, AmountDeposited: 10000 },
       ],
     } as TestInfo;
-    const basicAmount = ti.TotalRewardBlocks - 1; // basic work of the deposit - deposit is added one block after the stake
+    // basic work of the deposit - deposit is added one block after the stake
+    const basicAmount = ti.TotalRewardBlocks - 1;
     const boostAmount = ti.TotalRewardBlocks;
     await applyDepositPlanAndClaimAll(ti, rpAG, rb);
-    
-    // simulate a successful redeem
-    rpAGF.handleBalanceUpdate(xAGF.address, user1.address, defaultStkAmount, 0, 0);
 
-    const blocksWithoutStaking = 10; 
-    await mineBlocks(blocksWithoutStaking - 1); // one block is consumed by the next claimReward()
+    // simulate a successful redeem
+    await rpAGF.handleBalanceUpdate(xAGF.address, user1.address, defaultStkAmount, 0, 0);
+
+    const blocksWithoutStaking = 10;
+    // one block is consumed by the next claimReward()
+    await mineBlocks(blocksWithoutStaking - 1);
     await rb.connect(user1).claimReward();
 
     expect(await AGF.balanceOf(user1.address)).to.eq(
