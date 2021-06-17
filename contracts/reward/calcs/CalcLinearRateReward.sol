@@ -21,15 +21,19 @@ abstract contract CalcLinearRateReward {
     uint32 lastUpdateBlock;
   }
 
-  function setLinearRate(uint256 rate, uint32 currentBlock) internal {
+  function setLinearRate(uint256 rate) internal {
     if (_rate == rate) {
       return;
     }
     uint256 prevRate = _rate;
     uint32 prevBlock = _lastRateUpdateBlock;
+    uint32 currentBlock = getCurrentBlock();
+
     internalRateUpdate(rate, currentBlock);
     internalRateUpdated(prevRate, prevBlock, currentBlock);
   }
+
+  function getCurrentBlock() internal view virtual returns (uint32);
 
   function internalRateUpdated(
     uint256 lastRate,
@@ -68,8 +72,7 @@ abstract contract CalcLinearRateReward {
   function doUpdateReward(
     address holder,
     uint256 oldBalance,
-    uint256 newBalance,
-    uint32 currentBlock
+    uint256 newBalance
   )
     internal
     virtual
@@ -93,6 +96,8 @@ abstract contract CalcLinearRateReward {
 
     newBalance = internalCalcBalance(entry, oldBalance, newBalance);
     require(newBalance <= type(uint224).max, 'balance is too high');
+
+    uint32 currentBlock = getCurrentBlock();
 
     uint256 adjRate;
     (adjRate, allocated, since) = internalCalcRateAndReward(entry, currentBlock);
@@ -135,14 +140,12 @@ abstract contract CalcLinearRateReward {
     return rewardBase;
   }
 
-  function doGetReward(address holder, uint32 currentBlock)
-    internal
-    virtual
-    returns (uint256, uint32)
-  {
+  function doGetReward(address holder) internal virtual returns (uint256, uint32) {
     if (_rewards[holder].rewardBase == 0) {
       return (0, 0);
     }
+
+    uint32 currentBlock = getCurrentBlock();
 
     (uint256 adjRate, uint256 allocated, uint32 since) =
       internalCalcRateAndReward(_rewards[holder], currentBlock);
@@ -151,17 +154,13 @@ abstract contract CalcLinearRateReward {
     return (allocated, since);
   }
 
-  function doCalcReward(address holder, uint32 currentBlock)
-    internal
-    view
-    virtual
-    returns (uint256, uint32)
-  {
+  function doCalcReward(address holder) internal view virtual returns (uint256, uint32) {
     if (_rewards[holder].rewardBase == 0) {
       return (0, 0);
     }
 
-    (, uint256 allocated, uint32 since) = internalCalcRateAndReward(_rewards[holder], currentBlock);
+    (, uint256 allocated, uint32 since) =
+      internalCalcRateAndReward(_rewards[holder], getCurrentBlock());
     return (allocated, since);
   }
 }

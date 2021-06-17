@@ -77,10 +77,10 @@ abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
       newSupply = 1;
     }
 
-    internalUpdateSupplyDiff(oldSupply, newSupply, uint32(block.number));
+    internalUpdateSupplyDiff(oldSupply, newSupply);
 
     (uint256 allocated, uint32 since, AllocationMode mode) =
-      internalUpdateReward(msg.sender, holder, oldBalance, newBalance, uint32(block.number));
+      internalUpdateReward(msg.sender, holder, oldBalance, newBalance);
 
     internalAllocateReward(holder, allocated, since, mode);
   }
@@ -102,7 +102,7 @@ abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
       return;
     }
     _providers[provider] = 1;
-    internalUpdateSupplyDiff(0, 1, uint32(block.number));
+    internalUpdateSupplyDiff(0, 1);
   }
 
   function removeRewardProvider(address provider) external virtual override onlyController {
@@ -111,27 +111,22 @@ abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
       return;
     }
     delete (_providers[provider]);
-    internalUpdateSupplyDiff(oldSupply, 0, uint32(block.number));
+    internalUpdateSupplyDiff(oldSupply, 0);
   }
 
   function internalUpdateReward(
     address provider,
     address holder,
     uint256 oldBalance,
-    uint256 newBalance,
-    uint32 currentBlock
+    uint256 newBalance
   )
     internal
     virtual
     returns (
       uint256 allocated,
-      uint32 since,
+      uint32 sinceBlock,
       AllocationMode mode
     );
 
-  function internalUpdateSupplyDiff(
-    uint256 oldSupply,
-    uint256 newSupply,
-    uint32 currentBlock
-  ) internal virtual;
+  function internalUpdateSupplyDiff(uint256 oldSupply, uint256 newSupply) internal virtual;
 }

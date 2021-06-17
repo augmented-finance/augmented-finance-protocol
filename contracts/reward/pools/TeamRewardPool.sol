@@ -37,31 +37,22 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     return super.getLinearRate();
   }
 
-  function internalSetRate(uint256 newRate, uint32 currentBlock) internal override {
-    super.setLinearRate(newRate, currentBlock);
+  function internalSetRate(uint256 newRate) internal override {
+    super.setLinearRate(newRate);
   }
 
-  function internalGetReward(address holder, uint32 currentBlock)
-    internal
-    override
-    returns (uint256, uint32)
-  {
-    if (!isUnlocked(currentBlock)) {
+  function internalGetReward(address holder) internal override returns (uint256, uint32) {
+    if (!isUnlocked(getCurrentBlock())) {
       return (0, 0);
     }
-    return doGetReward(holder, currentBlock);
+    return doGetReward(holder);
   }
 
-  function internalCalcReward(address holder, uint32 currentBlock)
-    internal
-    view
-    override
-    returns (uint256, uint32)
-  {
-    if (!isUnlocked(currentBlock)) {
+  function internalCalcReward(address holder) internal view override returns (uint256, uint32) {
+    if (!isUnlocked(getCurrentBlock())) {
       return (0, 0);
     }
-    return doCalcReward(holder, currentBlock);
+    return doCalcReward(holder);
   }
 
   function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
@@ -108,10 +99,10 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     _totalShare = uint16(newTotalShare);
 
     (uint256 allocated, uint32 since, AllocationMode mode) =
-      doUpdateReward(member, oldSharePct, memberSharePct, uint32(block.number));
+      doUpdateReward(member, oldSharePct, memberSharePct);
 
     require(
-      allocated == 0 || isUnlocked(uint32(block.number)),
+      allocated == 0 || isUnlocked(getCurrentBlock()),
       'member share can not be changed during lockup'
     );
 
@@ -141,12 +132,16 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
   function setUnlockBlock(uint32 blockNumber) external onlyTeamManagerOrController {
     require(blockNumber > 0, 'blockNumber is required');
     if (_lockupBlock != 0) {
-      require(_lockupBlock > block.number, 'lockup is finished');
+      require(_lockupBlock > getCurrentBlock(), 'lockup is finished');
     }
     _lockupBlock = blockNumber;
   }
 
   function getUnlockBlock() external view returns (uint32) {
     return _lockupBlock;
+  }
+
+  function getCurrentBlock() internal view override returns (uint32) {
+    return uint32(block.number);
   }
 }

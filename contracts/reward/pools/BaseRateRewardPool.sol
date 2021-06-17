@@ -29,7 +29,7 @@ abstract contract BaseRateRewardPool is ControlledRewardPool {
     } else {
       _baselinePercentage = baselinePercentage;
     }
-    internalSetRate(initialRate, uint32(block.number));
+    internalSetRate(initialRate);
   }
 
   function updateBaseline(uint256 baseline) external override onlyController returns (bool) {
@@ -46,7 +46,7 @@ abstract contract BaseRateRewardPool is ControlledRewardPool {
 
   function internalDisableRate() internal override {
     _pausedRate = 0;
-    internalSetRate(0, uint32(block.number));
+    internalSetRate(0);
   }
 
   function setBaselinePercentage(uint16 factor) external override onlyRateController {
@@ -59,19 +59,19 @@ abstract contract BaseRateRewardPool is ControlledRewardPool {
       _pausedRate = rate;
       return;
     }
-    internalSetRate(rate, uint32(block.number));
+    internalSetRate(rate);
   }
 
-  function internalSetRate(uint256 rate, uint32 currentBlock) internal virtual;
+  function internalSetRate(uint256 rate) internal virtual;
 
   function getRate() public view virtual returns (uint256);
 
   function internalPause(bool paused) internal override {
     if (paused) {
       _pausedRate = getRate();
-      internalSetRate(0, uint32(block.number));
+      internalSetRate(0);
       return;
     }
-    internalSetRate(_pausedRate, uint32(block.number));
+    internalSetRate(_pausedRate);
   }
 }

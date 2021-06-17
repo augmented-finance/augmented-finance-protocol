@@ -31,8 +31,8 @@ abstract contract BaseTokenAbsRewardPool is BaseRateRewardPool, IRewardPool {
     uint256 newBalance,
     uint256 totalBalance
   ) external override {
-    internalUpdateTotal(totalBalance, uint32(block.number));
-    _handleBalanceUpdate(holder, oldBalance, newBalance, uint32(block.number));
+    internalUpdateTotal(totalBalance);
+    _handleBalanceUpdate(holder, oldBalance, newBalance);
   }
 
   function handleScaledBalanceUpdate(
@@ -44,8 +44,8 @@ abstract contract BaseTokenAbsRewardPool is BaseRateRewardPool, IRewardPool {
     uint256
   ) external virtual override {
     // NB! as we have only one provider - scaling matters not
-    internalUpdateTotal(totalBalance, uint32(block.number));
-    _handleBalanceUpdate(holder, oldBalance, newBalance, uint32(block.number));
+    internalUpdateTotal(totalBalance);
+    _handleBalanceUpdate(holder, oldBalance, newBalance);
   }
 
   function isScaledBalanceUpdateNeeded() external view override returns (bool) {
@@ -56,13 +56,12 @@ abstract contract BaseTokenAbsRewardPool is BaseRateRewardPool, IRewardPool {
   function _handleBalanceUpdate(
     address holder,
     uint256 oldBalance,
-    uint256 newBalance,
-    uint32 blockNumber
+    uint256 newBalance
   ) private {
     require(_provider == msg.sender, 'unknown reward provider');
 
     (uint256 allocated, uint32 since, AllocationMode mode) =
-      internalUpdateReward(msg.sender, holder, oldBalance, newBalance, blockNumber);
+      internalUpdateReward(msg.sender, holder, oldBalance, newBalance);
     internalAllocateReward(holder, allocated, since, mode);
   }
 
@@ -79,20 +78,19 @@ abstract contract BaseTokenAbsRewardPool is BaseRateRewardPool, IRewardPool {
     _provider = address(0);
   }
 
-  function internalUpdateTotal(uint256 totalBalance, uint32 currentBlock) internal virtual;
+  function internalUpdateTotal(uint256 totalBalance) internal virtual;
 
   function internalUpdateReward(
     address provider,
     address holder,
     uint256 oldBalance,
-    uint256 newBalance,
-    uint32 currentBlock
+    uint256 newBalance
   )
     internal
     virtual
     returns (
       uint256 allocated,
-      uint32 since,
+      uint32 sinceBlock,
       AllocationMode mode
     );
 }

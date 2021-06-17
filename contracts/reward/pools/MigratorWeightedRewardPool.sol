@@ -30,51 +30,37 @@ contract MigratorWeightedRewardPool is BaseTokenDiffRewardPool, CalcLinearWeight
     return super.getLinearRate();
   }
 
-  function internalSetRate(uint256 newRate, uint32 currentBlock) internal override {
-    super.setLinearRate(newRate, currentBlock);
+  function internalSetRate(uint256 newRate) internal override {
+    super.setLinearRate(newRate);
   }
 
-  function internalGetReward(address holder, uint32 currentBlock)
-    internal
-    override
-    returns (uint256, uint32)
-  {
-    return doGetReward(holder, currentBlock);
+  function internalGetReward(address holder) internal override returns (uint256, uint32) {
+    return doGetReward(holder);
   }
 
-  function internalCalcReward(address holder, uint32 currentBlock)
-    internal
-    view
-    override
-    returns (uint256, uint32)
-  {
-    return doCalcReward(holder, currentBlock);
+  function internalCalcReward(address holder) internal view override returns (uint256, uint32) {
+    return doCalcReward(holder);
   }
 
   function internalUpdateReward(
     address,
     address holder,
     uint256 oldBalance,
-    uint256 newBalance,
-    uint32 currentBlock
+    uint256 newBalance
   )
     internal
     override
     returns (
       uint256 allocated,
-      uint32 since,
+      uint32 sinceBlock,
       AllocationMode mode
     )
   {
-    return doUpdateReward(holder, oldBalance, newBalance, currentBlock);
+    return doUpdateReward(holder, oldBalance, newBalance);
   }
 
-  function internalUpdateSupplyDiff(
-    uint256 oldSupply,
-    uint256 newSupply,
-    uint32 currentBlock
-  ) internal override {
-    doUpdateTotalSupplyDiff(oldSupply, newSupply, currentBlock);
+  function internalUpdateSupplyDiff(uint256 oldSupply, uint256 newSupply) internal override {
+    doUpdateTotalSupplyDiff(oldSupply, newSupply);
   }
 
   function internalCalcBalance(
@@ -86,5 +72,9 @@ contract MigratorWeightedRewardPool is BaseTokenDiffRewardPool, CalcLinearWeight
       return uint256(entry.rewardBase).add(newBalance - oldBalance);
     }
     return uint256(entry.rewardBase).sub(oldBalance - newBalance);
+  }
+
+  function getCurrentBlock() internal view override returns (uint32) {
+    return uint32(block.number);
   }
 }

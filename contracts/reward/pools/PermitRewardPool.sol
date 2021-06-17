@@ -67,11 +67,11 @@ contract PermitRewardPool is AccessBitmask, ControlledRewardPool {
 
   function internalDisableRate() internal override {}
 
-  function internalGetReward(address, uint32) internal override returns (uint256, uint32) {
+  function internalGetReward(address) internal override returns (uint256, uint32) {
     return (0, 0);
   }
 
-  function internalCalcReward(address, uint32) internal view override returns (uint256, uint32) {
+  function internalCalcReward(address) internal view override returns (uint256, uint32) {
     return (0, 0);
   }
 
@@ -120,7 +120,7 @@ contract PermitRewardPool is AccessBitmask, ControlledRewardPool {
       return;
     }
     _rewardLimit = _rewardLimit.sub(value, 'insufficient reward pool balance');
-    internalAllocateReward(spender, value, uint32(block.timestamp), AllocationMode.Push);
+    internalAllocateReward(spender, value, uint32(block.number), AllocationMode.Push);
   }
 
   function internalPause(bool paused) internal override {}

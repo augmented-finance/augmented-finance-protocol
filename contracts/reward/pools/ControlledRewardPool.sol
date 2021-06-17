@@ -71,32 +71,25 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     onlyController
     returns (uint256, uint32)
   {
-    return internalGetReward(holder, uint32(block.number));
+    return internalGetReward(holder);
   }
 
   function calcRewardFor(address holder) external view override returns (uint256, uint32) {
-    return internalCalcReward(holder, uint32(block.number));
+    return internalCalcReward(holder);
   }
 
   function internalAllocateReward(
     address holder,
     uint256 allocated,
-    uint32 since,
+    uint32 sinceBlock, // must block, not TS
     AllocationMode mode
   ) internal {
-    _controller.allocatedByPool(holder, allocated, since, mode);
+    _controller.allocatedByPool(holder, allocated, sinceBlock, mode);
   }
 
-  function internalGetReward(address holder, uint32 currentBlock)
-    internal
-    virtual
-    returns (uint256, uint32);
+  function internalGetReward(address holder) internal virtual returns (uint256, uint32);
 
-  function internalCalcReward(address holder, uint32 currentBlock)
-    internal
-    view
-    virtual
-    returns (uint256, uint32);
+  function internalCalcReward(address holder) internal view virtual returns (uint256, uint32);
 
   function isController(address addr) internal view returns (bool) {
     return address(_controller) == addr || _controller.isConfigurator(addr);
