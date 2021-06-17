@@ -76,4 +76,15 @@ contract MigratorWeightedRewardPool is BaseTokenDiffRewardPool, CalcLinearWeight
   ) internal override {
     doUpdateTotalSupplyDiff(oldSupply, newSupply, currentBlock);
   }
+
+  function internalCalcBalance(
+    RewardEntry memory entry,
+    uint256 oldBalance,
+    uint256 newBalance
+  ) internal pure override returns (uint256) {
+    if (newBalance >= oldBalance) {
+      return uint256(entry.rewardBase).add(newBalance - oldBalance);
+    }
+    return uint256(entry.rewardBase).sub(oldBalance - newBalance);
+  }
 }

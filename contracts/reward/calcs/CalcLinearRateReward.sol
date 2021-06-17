@@ -85,7 +85,7 @@ abstract contract CalcLinearRateReward {
 
     if (newBalance == 0) {
       mode = AllocationMode.UnsetPull;
-    } else if (oldBalance == 0 || entry.rewardBase == 0) {
+    } else if (entry.rewardBase == 0) {
       mode = AllocationMode.SetPull;
     } else {
       mode = AllocationMode.Push;
@@ -108,13 +108,23 @@ abstract contract CalcLinearRateReward {
     RewardEntry memory entry,
     uint256 oldBalance,
     uint256 newBalance
-  ) internal view virtual returns (uint256) {
-    this;
-    if (newBalance >= oldBalance) {
-      return uint256(entry.rewardBase).add(newBalance - oldBalance);
-    }
-    return uint256(entry.rewardBase).sub(oldBalance - newBalance);
+  ) internal pure virtual returns (uint256) {
+    entry;
+    oldBalance;
+    return newBalance;
   }
+
+  // function internalCalcBalance(
+  //   RewardEntry memory entry,
+  //   uint256 oldBalance,
+  //   uint256 newBalance
+  // ) internal view virtual returns (uint256) {
+  //   this;
+  //   if (newBalance >= oldBalance) {
+  //     return uint256(entry.rewardBase).add(newBalance - oldBalance);
+  //   }
+  //   return uint256(entry.rewardBase).sub(oldBalance - newBalance);
+  // }
 
   function internalRemoveReward(address holder) internal virtual returns (uint256 rewardBase) {
     rewardBase = _rewards[holder].rewardBase;
