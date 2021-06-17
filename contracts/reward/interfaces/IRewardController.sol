@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {IManagedRewardPool} from './IRewardPool.sol';
+import {IManagedRewardPool} from './IManagedRewardPool.sol';
 import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
 import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
 

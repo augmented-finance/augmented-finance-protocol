@@ -5,7 +5,7 @@ import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {AccessBitmask} from '../../access/AccessBitmask.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {IManagedRewardPool} from '../interfaces/IRewardPool.sol';
+import {IManagedRewardPool} from '../interfaces/IManagedRewardPool.sol';
 import {ControlledRewardPool} from './ControlledRewardPool.sol';
 
 import 'hardhat/console.sol';

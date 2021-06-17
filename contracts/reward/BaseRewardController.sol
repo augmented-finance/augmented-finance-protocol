@@ -9,7 +9,8 @@ import {IMarketAccessController} from '../access/interfaces/IMarketAccessControl
 import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
 import {AccessFlags} from '../access/AccessFlags.sol';
 import {IManagedRewardController, AllocationMode} from './interfaces/IRewardController.sol';
-import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
+import {IRewardPool} from './interfaces/IRewardPool.sol';
+import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
 import 'hardhat/console.sol';

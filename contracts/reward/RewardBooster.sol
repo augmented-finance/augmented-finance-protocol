@@ -7,7 +7,8 @@ import {PercentageMath} from '../tools/math/PercentageMath.sol';
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 import {BaseRewardController} from './BaseRewardController.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
-import {IRewardPool, IManagedRewardPool} from './interfaces/IRewardPool.sol';
+import {IRewardPool} from './interfaces/IRewardPool.sol';
+import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IBoostExcesser} from './interfaces/IBoostExcesser.sol';
 
 import 'hardhat/console.sol';
