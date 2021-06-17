@@ -45,7 +45,7 @@ contract TokenUnweightedRewardPool is BaseTokenAbsRewardPool, CalcLinearUnweight
   }
 
   function internalUpdateReward(
-    address provider,
+    address,
     address holder,
     uint256 oldBalance,
     uint256 newBalance,
@@ -59,7 +59,7 @@ contract TokenUnweightedRewardPool is BaseTokenAbsRewardPool, CalcLinearUnweight
       AllocationMode mode
     )
   {
-    return doUpdateReward(provider, holder, oldBalance, newBalance, currentBlock);
+    return doUpdateReward(holder, oldBalance, newBalance, currentBlock);
   }
 
   function internalUpdateTotal(uint256 totalBalance, uint32 currentBlock) internal override {}

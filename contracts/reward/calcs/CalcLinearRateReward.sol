@@ -66,7 +66,6 @@ abstract contract CalcLinearRateReward {
   }
 
   function doUpdateReward(
-    address provider,
     address holder,
     uint256 oldBalance,
     uint256 newBalance,
@@ -92,7 +91,7 @@ abstract contract CalcLinearRateReward {
       mode = AllocationMode.Push;
     }
 
-    newBalance = internalCalcBalance(provider, entry, oldBalance, newBalance);
+    newBalance = internalCalcBalance(entry, oldBalance, newBalance);
     require(newBalance <= type(uint224).max, 'balance is too high');
 
     uint256 adjRate;
@@ -106,12 +105,10 @@ abstract contract CalcLinearRateReward {
   }
 
   function internalCalcBalance(
-    address provider,
     RewardEntry memory entry,
     uint256 oldBalance,
     uint256 newBalance
   ) internal view virtual returns (uint256) {
-    provider;
     this;
     if (newBalance >= oldBalance) {
       return uint256(entry.rewardBase).add(newBalance - oldBalance);

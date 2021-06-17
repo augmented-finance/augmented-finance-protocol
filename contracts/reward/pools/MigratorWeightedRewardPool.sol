@@ -52,7 +52,7 @@ contract MigratorWeightedRewardPool is BaseTokenDiffRewardPool, CalcLinearWeight
   }
 
   function internalUpdateReward(
-    address provider,
+    address,
     address holder,
     uint256 oldBalance,
     uint256 newBalance,
@@ -66,7 +66,7 @@ contract MigratorWeightedRewardPool is BaseTokenDiffRewardPool, CalcLinearWeight
       AllocationMode mode
     )
   {
-    return doUpdateReward(provider, holder, oldBalance, newBalance, currentBlock);
+    return doUpdateReward(holder, oldBalance, newBalance, currentBlock);
   }
 
   function internalUpdateSupplyDiff(

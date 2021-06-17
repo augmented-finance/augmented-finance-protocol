@@ -108,7 +108,7 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     _totalShare = uint16(newTotalShare);
 
     (uint256 allocated, uint32 since, AllocationMode mode) =
-      doUpdateReward(_teamManager, member, oldSharePct, memberSharePct, uint32(block.number));
+      doUpdateReward(member, oldSharePct, memberSharePct, uint32(block.number));
 
     require(
       allocated == 0 || isUnlocked(uint32(block.number)),
