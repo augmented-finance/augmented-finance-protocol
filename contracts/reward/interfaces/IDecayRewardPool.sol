@@ -15,7 +15,8 @@ interface IDecayRewardPool {
   function handleDecayTotalUpdate(
     uint256 totalSupply,
     uint256 totalDecay,
-    uint32 decayPeriod
+    uint32 decayPeriod,
+    uint32 updatedAt
   ) external;
 }
 
