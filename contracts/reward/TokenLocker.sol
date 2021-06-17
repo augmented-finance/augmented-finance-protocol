@@ -2,29 +2,27 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ERC20WithPermit} from '../../misc/ERC20WithPermit.sol';
+import {ERC20WithPermit} from '../misc/ERC20WithPermit.sol';
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IStakeToken, IManagedStakeToken} from './interfaces/IStakeToken.sol';
+import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {PercentageMath} from '../tools/math/PercentageMath.sol';
+import {WadRayMath} from '../tools/math/WadRayMath.sol';
 
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
+import {IBalanceHook} from '../interfaces/IBalanceHook.sol';
 
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
+import {AccessFlags} from '../access/AccessFlags.sol';
+import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 
-import {Errors} from '../../tools/Errors.sol';
+import {Errors} from '../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract TimeWeightedStakeTokenBase is
+abstract contract TokenLocker is
   IERC20,
-  IManagedStakeToken,
   // ERC20WithPermit,
   MarketAccessBitmask
 {
@@ -33,16 +31,13 @@ abstract contract TimeWeightedStakeTokenBase is
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
-  IERC20 private _stakedToken;
-  IBalanceHook internal _incentivesController;
+  IERC20 private _underlyingToken;
+  uint256 private _underlyingTotal; // TODO
+
+  //  IBalanceHook internal _incentivesController;
 
   uint256 private _stakedTotal;
   mapping(uint32 => uint256) _pointTotal;
-
-  uint256 private _lastDecayRate;
-  uint256 private _accDecayRate;
-
-  uint32 private _lastDecayRateTS;
 
   uint32 private constant _maxDurationPoints = 255;
   uint32 private _maxValuePeriod; // = 208 weeks; // 4 * 52, must be less than _maxDurationPoints
@@ -56,6 +51,7 @@ abstract contract TimeWeightedStakeTokenBase is
   struct UserBalance {
     uint224 underlyingAmount;
     uint224 stakeAmount;
+    uint32 startPoint;
     uint32 endPoint;
   }
 
@@ -64,17 +60,7 @@ abstract contract TimeWeightedStakeTokenBase is
   event Staked(address from, address to, uint256 amount);
   event Redeem(address from, address to, uint256 amount, uint256 underlyingAmount);
 
-  constructor(
-    string memory name,
-    string memory symbol,
-    uint8 decimals,
-    uint32 pointPeriod,
-    uint32 maxValuePeriod
-  ) public {
-    // ERC20WithPermit(name, symbol, decimals) {
-    name;
-    symbol;
-    decimals;
+  constructor(uint32 pointPeriod, uint32 maxValuePeriod) public {
     require(pointPeriod > 0, 'invalid pointPeriod');
     require(maxValuePeriod > pointPeriod, 'invalid maxValuePeriod');
     require(maxValuePeriod < pointPeriod * _maxDurationPoints, 'invalid maxValuePeriod');
@@ -84,24 +70,14 @@ abstract contract TimeWeightedStakeTokenBase is
   }
 
   function UNDERLYING_ASSET_ADDRESS() external view returns (address) {
-    return address(_stakedToken);
-  }
-
-  function getCurrentPoint() private view returns (uint32) {
-    return pointOfTS(uint32(block.timestamp));
+    return address(_underlyingToken);
   }
 
   function pointOfTS(uint32 ts) private view returns (uint32) {
     return uint32(ts / _pointPeriod);
   }
 
-  function internalSetDecayRate(uint256 decayRate, uint32 currentTS) private {
-    _accDecayRate = _accDecayRate.add(uint256(currentTS).sub(_lastDecayRateTS).mul(_lastDecayRate));
-    _lastDecayRateTS = currentTS;
-    _lastDecayRate = decayRate;
-  }
-
-  function stake(
+  function lock(
     address to,
     uint256 underlyingAmount,
     uint32 duration
@@ -126,7 +102,7 @@ abstract contract TimeWeightedStakeTokenBase is
     require(endPoint <= currentPoint + _maxDurationPoints);
 
     if (transferFrom) {
-      _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
+      _underlyingToken.safeTransferFrom(from, address(this), underlyingAmount);
     }
 
     UserBalance memory userBalance = _balances[to];
@@ -146,6 +122,8 @@ abstract contract TimeWeightedStakeTokenBase is
     } else {
       userBalance.endPoint = endPoint;
     }
+    // TODO stakeAmount correction when timestamp != startPoint*_pointPeriod
+    userBalance.startPoint = currentPoint;
 
     require(underlyingAmount <= type(uint224).max);
     userBalance.underlyingAmount = uint224(underlyingAmount);
@@ -156,7 +134,6 @@ abstract contract TimeWeightedStakeTokenBase is
     } else {
       stakeAmount = underlyingAmount;
     }
-    stakeAmount = stakeAmount.add(stakeAmount.rayMul(getDecayRateAt(uint32(block.timestamp))));
 
     require(stakeAmount <= type(uint224).max);
     userBalance.stakeAmount = uint224(stakeAmount);
@@ -172,37 +149,39 @@ abstract contract TimeWeightedStakeTokenBase is
 
     _balances[to] = userBalance;
 
-    if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(
-        address(this),
-        to,
-        oldBalance,
-        userBalance.stakeAmount,
-        _stakedTotal
-      );
-    }
+    // if (address(_incentivesController) != address(0)) {
+    //   _incentivesController.handleBalanceUpdate(
+    //     address(this),
+    //     to,
+    //     oldBalance,
+    //     userBalance.stakeAmount,
+    //     _stakedTotal
+    //   );
+    // }
 
     emit Staked(from, to, underlyingAmount);
     return userBalance.stakeAmount;
   }
 
-  function getDecayRateAt(uint32 ts) private view returns (uint256) {
-    return _accDecayRate.add(uint256(ts).sub(_lastDecayRateTS).mul(_lastDecayRate));
-  }
-
   function balanceOf(address account) external view override returns (uint256) {
     UserBalance memory userBalance = _balances[account];
-
-    uint32 currentTS = uint32(block.timestamp);
-    if (userBalance.endPoint <= pointOfTS(currentTS)) {
+    if (userBalance.stakeAmount == 0) {
       return 0;
     }
 
-    uint256 balanceDecay = uint256(userBalance.stakeAmount).rayMul(getDecayRateAt(currentTS));
-    if (balanceDecay >= userBalance.stakeAmount) {
+    uint32 endPointTS = userBalance.endPoint * _pointPeriod;
+    if (endPointTS <= block.timestamp) {
       return 0;
     }
-    return uint256(userBalance.stakeAmount).sub(balanceDecay);
+    return userBalance.stakeAmount;
+
+    // uint256 balanceDecay = uint256(userBalance.stakeAmount).mul(endPointTS - block.timestamp).
+    //   div((userBalance.endPoint - userBalance.startPoint) * _pointPeriod);
+
+    // if (balanceDecay >= userBalance.stakeAmount) {
+    //   return 0;
+    // }
+    // return uint256(userBalance.stakeAmount).sub(balanceDecay);
   }
 
   function balanceOfUnderlying(address account) external view returns (uint256) {
@@ -239,7 +218,7 @@ abstract contract TimeWeightedStakeTokenBase is
 
     delete (_balances[from]);
 
-    _stakedToken.safeTransfer(to, userBalance.underlyingAmount);
+    _underlyingToken.safeTransfer(to, userBalance.underlyingAmount);
     return userBalance.underlyingAmount;
   }
 
@@ -247,52 +226,78 @@ abstract contract TimeWeightedStakeTokenBase is
     internalUpdate(false, false);
   }
 
-  // function updateAndGetBalanceOf(address account) public {
-  //   updateEarliestPoint();
-  // }
-
   function getScanRange(uint32 currentPoint)
     private
     view
-    returns (uint32 fromPoint, uint32 tillPoint)
+    returns (
+      uint32 fromPoint,
+      uint32 tillPoint,
+      uint32 maxPoint
+    )
   {
-    if (currentPoint < _earliestKnownPoint || _earliestKnownPoint == 0) {
-      return (0, 0);
+    if (currentPoint < _earliestKnownPoint || _earliestKnownPoint == 0 || _lastPointTS == 0) {
+      return (0, 0, 0);
     }
 
     fromPoint = _earliestKnownPoint;
+    maxPoint = pointOfTS(_lastPointTS) + _maxDurationPoints;
 
-    if (_lastPointTS > 0) {
-      tillPoint = pointOfTS(_lastPointTS) + _maxDurationPoints;
-      if (tillPoint > currentPoint) {
-        tillPoint = currentPoint;
-      }
-    } else {
+    if (maxPoint > currentPoint) {
       tillPoint = currentPoint;
-      if (tillPoint > fromPoint + _maxDurationPoints) {
-        tillPoint = fromPoint + _maxDurationPoints;
-      }
+    } else {
+      tillPoint = maxPoint;
     }
 
-    return (fromPoint, tillPoint);
+    return (fromPoint, tillPoint, maxPoint);
+  }
+
+  function totalOfUnderlying() external view returns (uint256) {
+    return _underlyingTotal;
   }
 
   function totalSupply() external view override returns (uint256 totalSupply_) {
-    totalSupply_ = _stakedTotal;
-    uint32 currentTS = uint32(block.timestamp);
-    (uint32 fromPoint, uint32 tillPoint) = getScanRange(pointOfTS(currentTS));
+    uint32 currentPoint = pointOfTS(uint32(block.timestamp));
+    (uint32 fromPoint, uint32 tillPoint, uint32 maxPoint) = getScanRange(currentPoint);
 
-    if (tillPoint > 0) {
-      for (; fromPoint <= tillPoint; fromPoint++) {
-        totalSupply_ = totalSupply_.sub(_pointTotal[fromPoint]);
+    if (tillPoint == 0) {
+      return 0;
+    }
+
+    totalSupply_ = _stakedTotal;
+
+    uint32 lastPoint;
+    uint256 pointTotal;
+
+    for (; fromPoint <= tillPoint; fromPoint++) {
+      pointTotal = _pointTotal[fromPoint];
+      if (pointTotal > 0) {
+        totalSupply_ = totalSupply_.sub(pointTotal);
+        lastPoint = fromPoint;
       }
     }
 
-    uint256 totalDecay = totalSupply_.rayMul(getDecayRateAt(currentTS));
-    if (totalDecay >= totalSupply_) {
-      return 0;
-    }
-    return totalSupply_.sub(totalDecay);
+    return totalSupply_;
+
+    // if (totalSupply_ == 0) {
+    //   return 0;
+    // }
+
+    // for (tillPoint = currentPoint + 1; tillPoint <= maxPoint; tillPoint++) {
+    //   pointTotal = _pointTotal[tillPoint];
+    //   if (pointTotal > 0) {
+    //     break;
+    //   }
+    // }
+
+    // if (pointTotal == 0) {
+    //   return 0;
+    // }
+
+    // uint256 totalDecay = pointTotal.mul((tillPoint - lastPoint)*_pointPeriod).div(tillPoint*_pointPeriod - block.timestamp);
+    // if (totalDecay >= totalSupply_) {
+    //   return 0;
+    // }
+    // return totalSupply_.sub(totalDecay);
   }
 
   function internalUpdate(bool newStake, bool preventReentry)
@@ -309,7 +314,7 @@ abstract contract TimeWeightedStakeTokenBase is
       return currentPoint;
     }
 
-    (uint32 fromPoint, uint32 tillPoint) = getScanRange(currentPoint);
+    (uint32 fromPoint, uint32 tillPoint, ) = getScanRange(currentPoint);
 
     if (newStake) {
       _lastPointTS = uint32(block.timestamp);
@@ -354,9 +359,9 @@ abstract contract TimeWeightedStakeTokenBase is
       _earliestKnownPoint = _findEarliestKnownPoint(currentPoint);
     }
 
-    if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(address(this), address(0), 0, 0, stakedTotal);
-    }
+    // if (address(_incentivesController) != address(0)) {
+    //   _incentivesController.handleBalanceUpdate(address(this), address(0), 0, 0, stakedTotal);
+    // }
   }
 
   function internalUpdateCallEach(uint32 fromPoint, uint32 tillPoint) private {
@@ -411,24 +416,24 @@ abstract contract TimeWeightedStakeTokenBase is
     return !_paused;
   }
 
-  function setRedeemable(bool redeemable)
-    external
-    override
-    aclHas(AccessFlags.LIQUIDITY_CONTROLLER)
-  {
-    _paused = !redeemable;
-  }
+  // function setRedeemable(bool redeemable)
+  //   external
+  //   override
+  //   aclHas(AccessFlags.LIQUIDITY_CONTROLLER)
+  // {
+  //   _paused = !redeemable;
+  // }
 
-  function setPaused(bool paused) external override onlyEmergencyAdmin {
+  function setPaused(bool paused) external onlyEmergencyAdmin {
     _paused = paused;
   }
 
-  function isPaused() external view override returns (bool) {
+  function isPaused() external view returns (bool) {
     return _paused;
   }
 
   function getUnderlying() internal view returns (address) {
-    return address(_stakedToken);
+    return address(_underlyingToken);
   }
 
   function transfer(address, uint256) external override returns (bool) {
