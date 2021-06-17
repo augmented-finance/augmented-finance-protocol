@@ -43,7 +43,10 @@ describe('Staking with boosting', () => {
   let blkAfterDeploy;
   const defaultStkAmount = 100;
 
-  before(async () => {
+  beforeEach(async () => {
+    blkBeforeDeploy = await takeSnapshot();
+    [root, user1, user2, slasher] = await ethers.getSigners();
+    await rawBRE.run('augmented:test-local-staking', CFG);
     rb = await getRewardBooster();
 
     agDAI = await getAGTokenByName('agDAI');
@@ -53,12 +56,7 @@ describe('Staking with boosting', () => {
     AGF = await getMockAgfToken();
     xAGF = await getMockStakedAgfToken();
     rpAGF = await getTokenWeightedRewardPoolAGFBoosted();
-  });
 
-  beforeEach(async () => {
-    blkBeforeDeploy = await takeSnapshot();
-    [root, user1, user2, slasher] = await ethers.getSigners();
-    await rawBRE.run('augmented:test-local-staking', CFG);
     blkAfterDeploy = await currentBlock();
   });
 
@@ -68,6 +66,20 @@ describe('Staking with boosting', () => {
 
   it('no boost if no staking', async () => {
     await mineBlocks(stakingCooldownBlocks);
+    await rb.connect(user1).claimReward();
+    expect(await AGF.balanceOf(user1.address)).to.eq(0);
+  });
+
+  it('no boost without work in pools', async () => {
+    await rpAGF.handleBalanceUpdate(
+      xAGF.address,
+      user1.address,
+      0,
+      defaultStkAmount,
+      defaultStkAmount
+    );
+    const rewardingBlocks = 19;
+    await mineBlocks(rewardingBlocks);
     await rb.connect(user1).claimReward();
     expect(await AGF.balanceOf(user1.address)).to.eq(0);
   });
@@ -111,20 +123,6 @@ describe('Staking with boosting', () => {
     expect(await AGF.balanceOf(user1.address)).to.eq(
       boostAmount * numberOfWorkingPools + basicAmount + 2 // 2 blocks for balance changes
     );
-  });
-
-  it.skip('basic boost for staking', async () => {
-    await rpAGF.handleBalanceUpdate(
-      xAGF.address,
-      user1.address,
-      0,
-      defaultStkAmount,
-      defaultStkAmount
-    );
-    const rewardingBlocks = 19;
-    await mineBlocks(rewardingBlocks);
-    await rb.connect(user1).claimReward();
-    expect(await AGF.balanceOf(user1.address)).to.eq(rewardingBlocks);
   });
 
   it('can stake AGF to xAGF, deposit agDAI for 20 blocks, receive boost reward', async () => {
