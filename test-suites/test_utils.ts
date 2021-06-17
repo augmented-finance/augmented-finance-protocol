@@ -12,14 +12,15 @@ const { expect } = chai;
 
 export interface UserBalanceChange {
   Signer: SignerWithAddress;
+  TokenAddress: any;
   BlocksFromStart: number;
   AmountDepositedBefore: BigNumberish;
   AmountDeposited: BigNumberish;
+  TotalAmountDeposited: BigNumberish;
 }
 
 export interface TestInfo {
   TotalRewardBlocks: number;
-  TotalAmountDeposited: BigNumberish;
   UserBalanceChanges: UserBalanceChange[];
   BlocksToMeltdown: number;
   FreezePercentage: BigNumberish;
@@ -44,11 +45,11 @@ export const applyDepositPlanAndClaimAll = async (ti: TestInfo, pool: any, contr
       totalSetupBlocks += await mineBlocks(u.BlocksFromStart);
     }
     await pool.handleBalanceUpdate(
-      ONE_ADDRESS,
+      u.TokenAddress,
       u.Signer.address,
       u.AmountDepositedBefore,
       u.AmountDeposited,
-      ti.TotalAmountDeposited
+      u.TotalAmountDeposited
     );
   }
   const uniq_addresses = [...new Set(ti.UserBalanceChanges.map((item) => item.Signer.address))];
