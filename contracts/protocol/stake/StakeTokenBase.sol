@@ -92,8 +92,6 @@ abstract contract StakeTokenBase is
     stakeAmount = underlyingAmount.percentDiv(exchangeRate());
 
     _stakersCooldowns[to] = getNextCooldownBlocks(0, stakeAmount, to, oldReceiverBalance);
-    console.log('setting cooldown for user: ', to);
-    console.log('cooldown set at stake: ', _stakersCooldowns[to]);
 
     if (transferFrom) {
       _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
@@ -153,6 +151,7 @@ abstract contract StakeTokenBase is
     require(!_redeemPaused, 'STK_REDEEM_PAUSED');
 
     uint256 cooldownStartBlock = _stakersCooldowns[from];
+    console.log('internal redeem from: ', from);
     console.log('block.number: ', block.number);
     console.log('cooldownStartBlock: ', cooldownStartBlock);
     console.log('cooldownBlocks: ', _cooldownBlocks);
@@ -217,7 +216,6 @@ abstract contract StakeTokenBase is
    **/
   function cooldown() external override {
     require(balanceOf(msg.sender) != 0, 'STK_INVALID_BALANCE_ON_COOLDOWN');
-    console.log('cooldown set!');
 
     _stakersCooldowns[msg.sender] = uint32(block.number);
     emit Cooldown(msg.sender, uint32(block.number));
@@ -245,17 +243,20 @@ abstract contract StakeTokenBase is
     uint256 maxAmount
   ) external override aclHas(AccessFlags.LIQUIDITY_CONTROLLER) returns (uint256 amount) {
     uint256 balance = _stakedToken.balanceOf(address(this));
+    console.log('balance: ', balance);
     uint256 maxSlashable = balance.percentMul(_maxSlashablePercentage);
+    console.log('max slashable: ', maxSlashable);
 
     if (maxAmount > maxSlashable) {
       amount = maxSlashable;
     } else {
       amount = maxAmount;
     }
+    console.log('amount: ', amount);
     if (amount < minAmount) {
       return 0;
     }
-
+    console.log('transferring to destination: ', destination);
     _stakedToken.safeTransfer(destination, amount);
 
     emit Slashed(destination, amount);

@@ -87,7 +87,7 @@ task('augmented:test-local-staking', 'Deploy staking contracts')
         stakeUnstakeBlocks,
         ZERO_ADDRESS,
       ]);
-      await xAGF.connect(root).setMaxSlashablePercentage(0);
+      await xAGF.connect(root).setMaxSlashablePercentage(slashingPercentage);
 
       console.log('#5 Staking boosters');
       const boosterController = await deployRewardBooster([ac.address, agfToken.address]);
