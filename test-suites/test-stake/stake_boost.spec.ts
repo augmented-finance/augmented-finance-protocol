@@ -22,6 +22,7 @@ import {
   TokenWeightedRewardPool,
 } from '../../types';
 import { applyDepositPlanAndClaimAll, TestInfo } from '../test_utils';
+import { PERC_100 } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -38,7 +39,7 @@ describe('Staking with boosting', () => {
   let agDAI: DepositToken;
   let agUSDC: DepositToken;
   let rpAGF: TokenWeightedRewardPool;
-  let rpAG: TokenWeightedRewardPool;
+  let rpAGDAI: TokenWeightedRewardPool;
   let rpUSDC: TokenWeightedRewardPool;
   let blkBeforeDeploy;
   let blkAfterDeploy;
@@ -52,7 +53,7 @@ describe('Staking with boosting', () => {
 
     agDAI = await getAGTokenByName('agDAI');
     agUSDC = await getAGTokenByName('agUSDC');
-    rpAG = await getTokenWeightedRewardPoolAGBoosted();
+    rpAGDAI = await getTokenWeightedRewardPoolAGBoosted();
     rpUSDC = await getTokenWeightedRewardPoolAGUSDCBoosted();
 
     AGF = await getMockAgfToken();
@@ -86,6 +87,52 @@ describe('Staking with boosting', () => {
     expect(await AGF.balanceOf(user1.address)).to.eq(0);
   });
 
+  it.skip('agDAI boost factor set to zero, get rewards', async () => {
+    await rb.connect(root).setBoostFactor(rpAGDAI.address, 0);
+    const ti = {
+      TotalRewardBlocks: 20,
+      UserBalanceChanges: [
+        {
+          Signer: user1,
+          Pool: rpAGF,
+          TokenAddress: xAGF.address,
+          BlocksFromStart: 0,
+          AmountDepositedBefore: 0,
+          AmountDeposited: defaultStkAmount,
+          TotalAmountDeposited: defaultStkAmount,
+        },
+        {
+          Signer: user1,
+          Pool: rpAGDAI,
+          TokenAddress: agDAI.address,
+          BlocksFromStart: 0,
+          AmountDepositedBefore: 0,
+          AmountDeposited: 10000,
+          TotalAmountDeposited: 10000,
+        },
+        {
+          Signer: user1,
+          Pool: rpUSDC,
+          TokenAddress: agUSDC.address,
+          BlocksFromStart: 0,
+          AmountDepositedBefore: 0,
+          AmountDeposited: 10000,
+          TotalAmountDeposited: 10000,
+        },
+      ],
+    } as TestInfo;
+
+    // basic work of the deposit
+    const basicAmount = ti.TotalRewardBlocks;
+    const boostAmount = ti.TotalRewardBlocks;
+
+    await applyDepositPlanAndClaimAll(ti, rb);
+    const numberOfWorkingPools = 0;
+    expect(await AGF.balanceOf(user1.address)).to.eq(
+      boostAmount * numberOfWorkingPools + basicAmount
+    );
+  });
+
   it('multiple deposits for work', async () => {
     const ti = {
       TotalRewardBlocks: 20,
@@ -101,7 +148,7 @@ describe('Staking with boosting', () => {
         },
         {
           Signer: user1,
-          Pool: rpAG,
+          Pool: rpAGDAI,
           TokenAddress: agDAI.address,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -144,7 +191,7 @@ describe('Staking with boosting', () => {
       UserBalanceChanges: [
         {
           Signer: user1,
-          Pool: rpAG,
+          Pool: rpAGDAI,
           TokenAddress: agDAI.address,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -175,7 +222,7 @@ describe('Staking with boosting', () => {
       UserBalanceChanges: [
         {
           Signer: user1,
-          Pool: rpAG,
+          Pool: rpAGDAI,
           TokenAddress: agDAI.address,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,

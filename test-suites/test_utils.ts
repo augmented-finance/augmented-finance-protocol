@@ -29,7 +29,16 @@ export interface TestInfo {
 }
 
 const printTestInfo = (s: Object) => {
-  console.log(`test params: ${JSON.stringify(s, null, 2)}`);
+  const replacer = (k, v) => {
+    if (k === 'Pool') {
+      return v.address;
+    } else if (k === 'Signer') {
+      return v.address;
+    } else {
+      return v;
+    }
+  };
+  console.log(`test params: ${JSON.stringify(s, replacer, 2)}`);
 };
 
 // used in test to perform "work" in pools by depositing by different users

@@ -119,9 +119,9 @@ task('augmented:test-local-staking', 'Deploy staking contracts')
       await boosterController.connect(root).admin_addRewardPool(AGFPoolBooster.address);
 
       await boosterController.connect(root).setBoostPool(AGFPoolBooster.address);
-      // set boost configuration for agDAI pool
+      // set boost factor for agDAI pool
       await boosterController.connect(root).setBoostFactor(agDAIPoolBoosted.address, PERC_100);
-      // set boost configuration for agUSDC pool
+      // set boost factor for agUSDC pool
       await boosterController.connect(root).setBoostFactor(agUSDCPoolBoosted.address, PERC_100);
 
       await boosterController.connect(root).setBoostExcessTarget(excessReceiverUser.address, true);
