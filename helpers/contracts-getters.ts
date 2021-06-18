@@ -538,7 +538,7 @@ export const getTokenWeightedRewardPoolAGF = async (address?: tEthereumAddress) 
     await getFirstSigner()
   );
 
-export const getTokenWeightedRewardPoolAGFBoosted = async (address?: tEthereumAddress) =>
+export const getTokenWeightedRewardPoolAGFBooster = async (address?: tEthereumAddress) =>
   await TokenWeightedRewardPoolFactory.connect(
     address ||
       (
@@ -575,6 +575,17 @@ export const getTokenWeightedRewardPoolAGBoosted = async (address?: tEthereumAdd
       (
         await getDb()
           .get(`${eContractid.TokenWeightedRewardPoolAGBoosted}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getTokenWeightedRewardPoolAGUSDCBoosted = async (address?: tEthereumAddress) =>
+  await TokenWeightedRewardPoolFactory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.TokenWeightedRewardPoolAGUSDCBoosted}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

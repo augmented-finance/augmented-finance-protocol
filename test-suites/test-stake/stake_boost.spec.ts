@@ -9,7 +9,7 @@ import {
   getMockStakedAgfToken,
   getRewardBooster,
   getTokenWeightedRewardPoolAGBoosted,
-  getTokenWeightedRewardPoolAGFBoosted,
+  getTokenWeightedRewardPoolAGFBooster, getTokenWeightedRewardPoolAGUSDCBoosted,
 } from '../../helpers/contracts-getters';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { CFG, stakingCooldownBlocks } from '../../tasks/migrations/defaultTestDeployConfig';
@@ -39,6 +39,7 @@ describe('Staking with boosting', () => {
   let agUSDC: DepositToken;
   let rpAGF: TokenWeightedRewardPool;
   let rpAG: TokenWeightedRewardPool;
+  let rpUSDC: TokenWeightedRewardPool;
   let blkBeforeDeploy;
   let blkAfterDeploy;
   const defaultStkAmount = 100;
@@ -52,10 +53,11 @@ describe('Staking with boosting', () => {
     agDAI = await getAGTokenByName('agDAI');
     agUSDC = await getAGTokenByName('agUSDC');
     rpAG = await getTokenWeightedRewardPoolAGBoosted();
+    rpUSDC = await getTokenWeightedRewardPoolAGUSDCBoosted();
 
     AGF = await getMockAgfToken();
     xAGF = await getMockStakedAgfToken();
-    rpAGF = await getTokenWeightedRewardPoolAGFBoosted();
+    rpAGF = await getTokenWeightedRewardPoolAGFBooster();
 
     blkAfterDeploy = await currentBlock();
   });
@@ -85,18 +87,21 @@ describe('Staking with boosting', () => {
   });
 
   it('multiple deposits for work', async () => {
-    await rpAGF.handleBalanceUpdate(
-      xAGF.address,
-      user1.address,
-      0,
-      defaultStkAmount,
-      defaultStkAmount
-    );
     const ti = {
       TotalRewardBlocks: 20,
       UserBalanceChanges: [
         {
           Signer: user1,
+          Pool: rpAGF,
+          TokenAddress: xAGF.address,
+          BlocksFromStart: 0,
+          AmountDepositedBefore: 0,
+          AmountDeposited: defaultStkAmount,
+          TotalAmountDeposited: defaultStkAmount,
+        },
+        {
+          Signer: user1,
+          Pool: rpAG,
           TokenAddress: agDAI.address,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -105,6 +110,7 @@ describe('Staking with boosting', () => {
         },
         {
           Signer: user1,
+          Pool: rpUSDC,
           TokenAddress: agUSDC.address,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -114,14 +120,14 @@ describe('Staking with boosting', () => {
       ],
     } as TestInfo;
 
-    // basic work of the deposit - deposit is added one block after the stake +
-    const basicAmount = ti.TotalRewardBlocks - 1;
+    // basic work of the deposit
+    const basicAmount = ti.TotalRewardBlocks;
     const boostAmount = ti.TotalRewardBlocks;
 
-    await applyDepositPlanAndClaimAll(ti, rpAG, rb);
+    await applyDepositPlanAndClaimAll(ti, rb);
     const numberOfWorkingPools = 2;
     expect(await AGF.balanceOf(user1.address)).to.eq(
-      boostAmount * numberOfWorkingPools + basicAmount + 2 // 2 blocks for balance changes
+      boostAmount * numberOfWorkingPools + basicAmount
     );
   });
 
@@ -138,6 +144,7 @@ describe('Staking with boosting', () => {
       UserBalanceChanges: [
         {
           Signer: user1,
+          Pool: rpAG,
           TokenAddress: agDAI.address,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -151,7 +158,7 @@ describe('Staking with boosting', () => {
     const basicAmount = ti.TotalRewardBlocks - 2;
     const boostAmount = ti.TotalRewardBlocks;
 
-    await applyDepositPlanAndClaimAll(ti, rpAG, rb);
+    await applyDepositPlanAndClaimAll(ti, rb);
     expect(await AGF.balanceOf(user1.address)).to.eq(boostAmount + basicAmount);
   });
 
@@ -168,6 +175,7 @@ describe('Staking with boosting', () => {
       UserBalanceChanges: [
         {
           Signer: user1,
+          Pool: rpAG,
           TokenAddress: agDAI.address,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -179,7 +187,7 @@ describe('Staking with boosting', () => {
     // basic work of the deposit - deposit is added one block after the stake
     const basicAmount = ti.TotalRewardBlocks - 2;
     const boostAmount = ti.TotalRewardBlocks;
-    await applyDepositPlanAndClaimAll(ti, rpAG, rb);
+    await applyDepositPlanAndClaimAll(ti, rb);
 
     // simulate a successful redeem
     await rpAGF.handleBalanceUpdate(xAGF.address, user1.address, defaultStkAmount, 0, 0);
@@ -189,8 +197,10 @@ describe('Staking with boosting', () => {
     await mineBlocks(blocksWithoutStaking - 1);
     await rb.connect(user1).claimReward();
 
+    const rewardPerBlock = 1; // deposit gives gives 1 agf per block
+
     expect(await AGF.balanceOf(user1.address)).to.eq(
-      boostAmount + basicAmount + blocksWithoutStaking * 1 // deposit gives gives 1 agf per block
+      boostAmount + basicAmount + blocksWithoutStaking * rewardPerBlock
     );
   });
 });

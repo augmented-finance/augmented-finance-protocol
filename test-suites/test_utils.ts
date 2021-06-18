@@ -6,13 +6,15 @@ import { BigNumberish } from 'ethers';
 
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
+import { tEthereumAddress } from '../helpers/types';
 
 chai.use(solidity);
 const { expect } = chai;
 
 export interface UserBalanceChange {
   Signer: SignerWithAddress;
-  TokenAddress: any;
+  Pool: any;
+  TokenAddress: tEthereumAddress;
   BlocksFromStart: number;
   AmountDepositedBefore: BigNumberish;
   AmountDeposited: BigNumberish;
@@ -32,7 +34,7 @@ const printTestInfo = (s: Object) => {
 
 // used in test to perform "work" in pools by depositing by different users
 // parsing TestInfo struct and applying deposits in different blocks then claims all rewards
-export const applyDepositPlanAndClaimAll = async (ti: TestInfo, pool: any, controller: any) => {
+export const applyDepositPlanAndClaimAll = async (ti: TestInfo, controller: any) => {
   printTestInfo(ti);
   console.log(`current block: ${await currentBlock()}`);
   // applying balance changes in order
@@ -44,7 +46,7 @@ export const applyDepositPlanAndClaimAll = async (ti: TestInfo, pool: any, contr
     if (u.BlocksFromStart !== 0) {
       totalSetupBlocks += await mineBlocks(u.BlocksFromStart);
     }
-    await pool.handleBalanceUpdate(
+    await u.Pool.handleBalanceUpdate(
       u.TokenAddress,
       u.Signer.address,
       u.AmountDepositedBefore,

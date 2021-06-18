@@ -52,6 +52,7 @@ describe('Token weighted reward pool tests', () => {
       UserBalanceChanges: [
         {
           Signer: user1,
+          Pool: wrp,
           TokenAddress: ONE_ADDRESS,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -64,7 +65,7 @@ describe('Token weighted reward pool tests', () => {
     } as TestInfo;
     await rc.admin_setFreezePercentage(ti.FreezePercentage);
     await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
-    await applyDepositPlanAndClaimAll(ti, wrp, rc);
+    await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     console.log(`reward: ${reward}`);
     expect(reward).to.be.approximately(
@@ -80,6 +81,7 @@ describe('Token weighted reward pool tests', () => {
       UserBalanceChanges: [
         {
           Signer: user1,
+          Pool: wrp,
           TokenAddress: ONE_ADDRESS,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -92,7 +94,7 @@ describe('Token weighted reward pool tests', () => {
     } as TestInfo;
     await rc.admin_setFreezePercentage(ti.FreezePercentage);
     await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
-    await applyDepositPlanAndClaimAll(ti, wrp, rc);
+    await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(
       (ti.TotalRewardBlocks * rewardPerBlock) / 2,
@@ -107,6 +109,7 @@ describe('Token weighted reward pool tests', () => {
       UserBalanceChanges: [
         {
           Signer: user1,
+          Pool: wrp,
           TokenAddress: ONE_ADDRESS,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -119,7 +122,7 @@ describe('Token weighted reward pool tests', () => {
     } as TestInfo;
     await rc.admin_setFreezePercentage(ti.FreezePercentage);
     await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
-    await applyDepositPlanAndClaimAll(ti, wrp, rc);
+    await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(
       ti.TotalRewardBlocks * rewardPerBlock,
@@ -134,6 +137,7 @@ describe('Token weighted reward pool tests', () => {
       UserBalanceChanges: [
         {
           Signer: user1,
+          Pool: wrp,
           TokenAddress: ONE_ADDRESS,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -146,7 +150,7 @@ describe('Token weighted reward pool tests', () => {
     } as TestInfo;
     await rc.admin_setFreezePercentage(ti.FreezePercentage);
     await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
-    await applyDepositPlanAndClaimAll(ti, wrp, rc);
+    await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(510, rewardPrecision, 'reward is wrong');
   });
@@ -157,6 +161,7 @@ describe('Token weighted reward pool tests', () => {
       UserBalanceChanges: [
         {
           Signer: user1,
+          Pool: wrp,
           TokenAddress: ONE_ADDRESS,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -169,7 +174,7 @@ describe('Token weighted reward pool tests', () => {
     } as TestInfo;
     await rc.admin_setFreezePercentage(ti.FreezePercentage);
     await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
-    await applyDepositPlanAndClaimAll(ti, wrp, rc);
+    await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(250, rewardPrecision, 'reward is wrong');
   });
@@ -180,6 +185,7 @@ describe('Token weighted reward pool tests', () => {
       UserBalanceChanges: [
         {
           Signer: user1,
+          Pool: wrp,
           TokenAddress: ONE_ADDRESS,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -188,6 +194,7 @@ describe('Token weighted reward pool tests', () => {
         },
         {
           Signer: user2,
+          Pool: wrp,
           TokenAddress: ONE_ADDRESS,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -200,7 +207,7 @@ describe('Token weighted reward pool tests', () => {
     } as TestInfo;
     await rc.admin_setFreezePercentage(ti.FreezePercentage);
     await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
-    await applyDepositPlanAndClaimAll(ti, wrp, rc);
+    await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     const reward2 = (await agf.balanceOf(user2.address)).toNumber();
     expect(reward).to.be.approximately(1000, rewardPrecision, 'reward is wrong');
@@ -213,6 +220,7 @@ describe('Token weighted reward pool tests', () => {
       UserBalanceChanges: [
         {
           Signer: user1,
+          Pool: wrp,
           TokenAddress: ONE_ADDRESS,
           BlocksFromStart: 0,
           AmountDepositedBefore: 0,
@@ -221,6 +229,7 @@ describe('Token weighted reward pool tests', () => {
         },
         {
           Signer: user1,
+          Pool: wrp,
           TokenAddress: ONE_ADDRESS,
           BlocksFromStart: 10,
           AmountDepositedBefore: 1000000,
@@ -233,7 +242,7 @@ describe('Token weighted reward pool tests', () => {
     } as TestInfo;
     await rc.admin_setFreezePercentage(ti.FreezePercentage);
     await rc.admin_setMeltDownBlock((await currentBlock()) + ti.BlocksToMeltdown);
-    await applyDepositPlanAndClaimAll(ti, wrp, rc);
+    await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(1099, rewardPrecision, 'reward is wrong');
   });
