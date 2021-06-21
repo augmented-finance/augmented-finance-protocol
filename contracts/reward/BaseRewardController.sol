@@ -12,10 +12,16 @@ import {IManagedRewardController, AllocationMode} from './interfaces/IRewardCont
 import {IRewardPool} from './interfaces/IRewardPool.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
+import {IRewardCollector} from './interfaces/IRewardCollector.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManagedRewardController {
+abstract contract BaseRewardController is
+  Ownable,
+  IRewardCollector,
+  MarketAccessBitmask,
+  IManagedRewardController
+{
   using SafeMath for uint256;
 
   IRewardMinter private _rewardMinter;
@@ -89,8 +95,22 @@ abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManaged
     IManagedRewardPool(pool).removeRewardProvider(provider);
   }
 
-  function updateBaseline(uint256 baseline) external override onlyOwner {
-    uint256 baselineMask = _baselineMask & ~_ignoreMask;
+  function updateBaseline(uint256 baseline)
+    external
+    override
+    onlyOwner
+    returns (uint256 totalRate)
+  {
+    (totalRate, _baselineMask) = internalUpdateBaseline(baseline, _baselineMask);
+    return totalRate;
+  }
+
+  function internalUpdateBaseline(uint256 baseline, uint256 baselineMask)
+    internal
+    virtual
+    returns (uint256 totalRate, uint256)
+  {
+    baselineMask &= ~_ignoreMask;
 
     for (uint8 i = 0; i <= 255; i++) {
       uint256 mask = uint256(1) << i;
@@ -100,12 +120,14 @@ abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManaged
         }
         continue;
       }
-      if (_poolList[i].updateBaseline(baseline)) {
+      (bool hasBaseline, uint256 appliedRate) = _poolList[i].updateBaseline(baseline);
+      if (appliedRate != 0 || hasBaseline) {
+        totalRate += appliedRate;
         continue;
       }
       baselineMask &= ~mask;
     }
-    _baselineMask = baselineMask;
+    return (totalRate, baselineMask);
   }
 
   function admin_setRewardMinter(IRewardMinter minter) external override onlyOwner {
@@ -120,17 +142,13 @@ abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManaged
     return address(_rewardMinter);
   }
 
-  function claimReward() external notPaused returns (uint256 amount) {
+  function claimReward() external override notPaused returns (uint256 amount) {
     return _claimReward(msg.sender, ~uint256(0), msg.sender);
   }
 
-  function claimRewardAndTransferTo(address receiver, uint256 mask)
-    external
-    notPaused
-    returns (uint256)
-  {
+  function claimRewardTo(address receiver) external override notPaused returns (uint256) {
     require(receiver != address(0), 'receiver is required');
-    return _claimReward(msg.sender, mask, receiver);
+    return _claimReward(msg.sender, ~uint256(0), receiver);
   }
 
   function claimRewardFor(address holder, uint256 mask) external notPaused returns (uint256) {
@@ -151,7 +169,7 @@ abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManaged
     return _calcReward(holder, mask);
   }
 
-  function balanceOf(address holder) external view returns (uint256) {
+  function balanceOf(address holder) external view override returns (uint256) {
     if (holder == address(0)) {
       return 0;
     }
@@ -285,5 +303,9 @@ abstract contract BaseRewardController is Ownable, MarketAccessBitmask, IManaged
 
   function isPaused() public view override returns (bool) {
     return _paused;
+  }
+
+  function totalSupply() external view override returns (uint256) {
+    return _rewardMinter.rewardTotalSupply();
   }
 }

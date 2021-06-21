@@ -23,7 +23,7 @@ interface IRewardController {
 }
 
 interface IManagedRewardController is IEmergencyAccess, IRewardController {
-  function updateBaseline(uint256 baseline) external;
+  function updateBaseline(uint256 baseline) external returns (uint256 totalRate);
 
   function admin_addRewardPool(IManagedRewardPool) external;
 

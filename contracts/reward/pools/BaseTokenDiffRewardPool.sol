@@ -7,11 +7,11 @@ import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 // import {AccessBitmask} from '../../access/AccessBitmask.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {IRewardPool} from '../interfaces/IRewardPool.sol';
-import {BaseRateRewardPool} from './BaseRateRewardPool.sol';
+import {ControlledRewardPool} from './ControlledRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
+abstract contract BaseTokenDiffRewardPool is ControlledRewardPool, IRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -25,7 +25,7 @@ abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
     uint256 initialRate,
     uint16 baselinePercentage,
     address token
-  ) public BaseRateRewardPool(controller, initialRate, baselinePercentage) {
+  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _token = token;
   }
 

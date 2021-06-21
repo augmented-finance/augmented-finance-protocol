@@ -46,13 +46,14 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     virtual
     override
     onlyController
-    returns (bool)
+    returns (bool hasBaseline, uint256 appliedRate)
   {
     if (_baselinePercentage == NO_BASELINE) {
-      return false;
+      return (false, getRate());
     }
-    setRate(baseline.percentMul(_baselinePercentage));
-    return true;
+    appliedRate = baseline.percentMul(_baselinePercentage);
+    setRate(appliedRate);
+    return (true, appliedRate);
   }
 
   function disableBaseline() external override onlyController {

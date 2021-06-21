@@ -3,12 +3,12 @@ pragma solidity ^0.6.12;
 
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {BaseRateRewardPool} from './BaseRateRewardPool.sol';
+import {ControlledRewardPool} from './ControlledRewardPool.sol';
 import {CalcLinearUnweightedReward} from '../calcs/CalcLinearUnweightedReward.sol';
 
 import 'hardhat/console.sol';
 
-contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
+contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   using PercentageMath for uint256;
 
   address private _teamManager;
@@ -21,7 +21,7 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     uint256 initialRate,
     uint16 baselinePercentage,
     address teamManager
-  ) public BaseRateRewardPool(controller, initialRate, baselinePercentage) {
+  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _teamManager = teamManager;
   }
 

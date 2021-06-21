@@ -72,4 +72,8 @@ contract StakedAgfV1 is
     internalStake(msg.sender, account, amount, false);
     return (IRewardMinter(getUnderlying()), address(this));
   }
+
+  function rewardTotalSupply() external view override returns (uint256) {
+    return IRewardMinter(getUnderlying()).rewardTotalSupply();
+  }
 }

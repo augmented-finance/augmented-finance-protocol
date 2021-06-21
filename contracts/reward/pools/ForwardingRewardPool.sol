@@ -6,12 +6,12 @@ import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 // import {AccessBitmask} from '../../access/AccessBitmask.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {BaseRateRewardPool} from './BaseRateRewardPool.sol';
+import {ControlledRewardPool} from './ControlledRewardPool.sol';
 import {IForwardedRewardPool} from '../interfaces/IForwardedRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-contract ForwardingRewardPool is BaseRateRewardPool {
+contract ForwardingRewardPool is ControlledRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -22,7 +22,7 @@ contract ForwardingRewardPool is BaseRateRewardPool {
     IRewardController controller,
     uint256 initialRate,
     uint16 baselinePercentage
-  ) public BaseRateRewardPool(controller, initialRate, baselinePercentage) {}
+  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {}
 
   function addRewardProvider(address provider, address) external virtual override onlyController {
     require(provider != address(0), 'provider is required');

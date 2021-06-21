@@ -4,7 +4,7 @@ pragma solidity ^0.6.12;
 import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
 
 interface IManagedRewardPool is IEmergencyAccess {
-  function updateBaseline(uint256) external returns (bool);
+  function updateBaseline(uint256) external returns (bool hasBaseline, uint256 appliedRate);
 
   function setBaselinePercentage(uint16) external;
 
@@ -14,9 +14,9 @@ interface IManagedRewardPool is IEmergencyAccess {
 
   function setRate(uint256 rate) external;
 
-  function claimRewardFor(address holder) external returns (uint256 amount, uint32 sinceBlock);
+  function claimRewardFor(address holder) external returns (uint256 amount, uint32 since);
 
-  function calcRewardFor(address holder) external view returns (uint256 amount, uint32 sinceBlock);
+  function calcRewardFor(address holder) external view returns (uint256 amount, uint32 since);
 
   function addRewardProvider(address provider, address token) external;
 
