@@ -28,8 +28,13 @@ contract RewardBooster is BaseRewardController {
   BoostPoolRateUpdateMode private _boostRateMode;
 
   mapping(address => uint256) private _boostRewards;
-  mapping(address => uint256) private _claimableRewards;
-  mapping(address => uint256) private _boostLimits;
+
+  struct WorkReward {
+    // saves some of storage cost
+    uint128 claimableReward;
+    uint128 boostLimit;
+  }
+  mapping(address => WorkReward) private _workRewards;
 
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
     public
@@ -124,14 +129,14 @@ contract RewardBooster is BaseRewardController {
     override
     returns (uint256 claimableAmount)
   {
-    uint256 boostLimit = _boostLimits[holder];
-    if (boostLimit > 0) {
-      delete (_boostLimits[holder]);
-    }
+    uint256 boostLimit;
+    (claimableAmount, boostLimit) = (
+      _workRewards[holder].claimableReward,
+      _workRewards[holder].boostLimit
+    );
 
-    claimableAmount = _claimableRewards[holder];
-    if (claimableAmount > 0) {
-      delete (_claimableRewards[holder]);
+    if (boostLimit > 0 || claimableAmount > 0) {
+      delete (_workRewards[holder]);
     }
 
     for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
@@ -175,7 +180,11 @@ contract RewardBooster is BaseRewardController {
     override
     returns (uint256 claimableAmount, uint256)
   {
-    uint256 boostLimit = _boostLimits[holder];
+    uint256 boostLimit;
+    (claimableAmount, boostLimit) = (
+      _workRewards[holder].claimableReward,
+      _workRewards[holder].boostLimit
+    );
 
     for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
       if (mask & 1 == 0) {
@@ -216,13 +225,23 @@ contract RewardBooster is BaseRewardController {
   ) internal override {
     if (address(_boostPool) == pool) {
       _boostRewards[holder] = _boostRewards[holder].add(allocated);
-    } else {
-      _claimableRewards[holder] = _claimableRewards[holder].add(allocated);
-      uint256 factor = _boostFactor[pool];
-      if (factor != 0) {
-        _boostLimits[holder] = _boostLimits[holder].add(allocated.percentMul(factor));
-      }
+      return;
     }
+
+    WorkReward memory workReward = _workRewards[holder];
+
+    uint256 v = uint256(workReward.claimableReward).add(allocated);
+    require(v <= type(uint128).max);
+    workReward.claimableReward = uint128(v);
+
+    uint256 factor = _boostFactor[pool];
+    if (factor != 0) {
+      v = uint256(workReward.boostLimit).add(allocated.mul(factor));
+      require(v <= type(uint128).max);
+      workReward.boostLimit = uint128(v);
+    }
+
+    _workRewards[holder] = workReward;
   }
 
   function internalStoreBoostExcess(uint256 boostExcess) private {
