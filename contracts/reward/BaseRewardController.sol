@@ -37,8 +37,10 @@ abstract contract BaseRewardController is
 
   bool private _paused;
 
-  constructor(IMarketAccessController accessController, IRewardMinter rewardMinter) public {
-    _remoteAcl = accessController;
+  constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
+    public
+    MarketAccessBitmask(accessController)
+  {
     _rewardMinter = rewardMinter;
   }
 

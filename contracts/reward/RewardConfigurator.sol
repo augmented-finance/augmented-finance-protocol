@@ -20,7 +20,7 @@ import {ITransferHook} from '../protocol/stake/interfaces/ITransferHook.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
 contract RewardConfigurator is
-  MarketAccessBitmask,
+  MarketAccessBitmask(IMarketAccessController(0)),
   VersionedInitializable,
   IRewardConfigurator,
   IMigratorHook

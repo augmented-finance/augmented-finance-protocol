@@ -4,15 +4,18 @@ pragma solidity ^0.6.12;
 import 'hardhat/console.sol';
 import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
 import {IMarketAccessController} from './interfaces/IMarketAccessController.sol';
 import {AccessHelper} from './AccessHelper.sol';
 import {AccessFlags} from './AccessFlags.sol';
 import {Errors} from '../tools/Errors.sol';
 
-contract MarketAccessBitmask is Context {
+contract MarketAccessBitmask {
   using AccessHelper for IMarketAccessController;
   IMarketAccessController internal _remoteAcl;
+
+  constructor(IMarketAccessController remoteAcl) internal {
+    _remoteAcl = remoteAcl;
+  }
 
   function _getRemoteAcl(address addr) internal view returns (uint256) {
     return _remoteAcl.getAcl(addr);
@@ -27,48 +30,48 @@ contract MarketAccessBitmask is Context {
   }
 
   modifier aclHas(uint256 flags) virtual {
-    require(_remoteAcl.hasAllOf(_msgSender(), flags), 'access is restricted');
+    require(_remoteAcl.hasAllOf(msg.sender, flags), 'access is restricted');
     _;
   }
 
   modifier aclAllOf(uint256 flags) {
-    require(_remoteAcl.hasAllOf(_msgSender(), flags), 'access is restricted');
+    require(_remoteAcl.hasAllOf(msg.sender, flags), 'access is restricted');
     _;
   }
 
   modifier aclNoneOf(uint256 flags) {
-    require(_remoteAcl.hasNoneOf(_msgSender(), flags), 'access is restricted');
+    require(_remoteAcl.hasNoneOf(msg.sender, flags), 'access is restricted');
     _;
   }
 
   modifier aclAnyOf(uint256 flags) {
-    require(_remoteAcl.hasAnyOf(_msgSender(), flags), 'access is restricted');
+    require(_remoteAcl.hasAnyOf(msg.sender, flags), 'access is restricted');
     _;
   }
 
   modifier aclAny() {
-    require(_remoteAcl.hasAny(_msgSender()), 'access is restricted');
+    require(_remoteAcl.hasAny(msg.sender), 'access is restricted');
     _;
   }
 
   modifier aclNone() {
-    require(_remoteAcl.hasNone(_msgSender()), 'access is restricted');
+    require(_remoteAcl.hasNone(msg.sender), 'access is restricted');
     _;
   }
 
   modifier onlyPoolAdmin {
-    require(_remoteAcl.isPoolAdmin(_msgSender()), Errors.CALLER_NOT_POOL_ADMIN);
+    require(_remoteAcl.isPoolAdmin(msg.sender), Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
 
   modifier onlyEmergencyAdmin {
-    require(_remoteAcl.isEmergencyAdmin(_msgSender()), Errors.CALLER_NOT_EMERGENCY_ADMIN);
+    require(_remoteAcl.isEmergencyAdmin(msg.sender), Errors.CALLER_NOT_EMERGENCY_ADMIN);
     _;
   }
 
   modifier onlyRewardAdmin {
     require(
-      _remoteAcl.hasAllOf(_msgSender(), AccessFlags.REWARD_CONFIG_ADMIN),
+      _remoteAcl.hasAllOf(msg.sender, AccessFlags.REWARD_CONFIG_ADMIN),
       Errors.CALLER_NOT_REWARD_ADMIN
     );
     _;

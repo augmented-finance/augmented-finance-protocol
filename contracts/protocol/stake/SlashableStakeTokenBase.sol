@@ -27,7 +27,7 @@ abstract contract SlashableStakeTokenBase is
   IStakeToken,
   IManagedStakeToken,
   ERC20WithPermit,
-  MarketAccessBitmask,
+  MarketAccessBitmask(IMarketAccessController(0)),
   IInitializableStakeToken
 {
   using SafeMath for uint256;

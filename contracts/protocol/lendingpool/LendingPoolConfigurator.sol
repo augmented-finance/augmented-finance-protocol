@@ -25,7 +25,7 @@ import {ILendingPoolConfigurator} from '../../interfaces/ILendingPoolConfigurato
 
 contract LendingPoolConfigurator is
   VersionedInitializable,
-  MarketAccessBitmask,
+  MarketAccessBitmask(IMarketAccessController(0)),
   ILendingPoolConfigurator
 {
   using SafeMath for uint256;
