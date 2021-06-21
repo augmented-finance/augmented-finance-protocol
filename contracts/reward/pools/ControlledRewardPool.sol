@@ -14,38 +14,83 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
 
+  uint16 internal constant NO_BASELINE = type(uint16).max;
+
   IRewardController internal _controller;
+
+  uint224 internal _pausedRate;
+  uint16 private _baselinePercentage;
   bool private _paused;
 
-  constructor(IRewardController controller) public {
+  constructor(
+    IRewardController controller,
+    uint256 initialRate,
+    uint16 baselinePercentage
+  ) public {
     require(address(controller) != address(0), 'controller is required');
     _controller = controller;
+
+    require(initialRate <= type(uint224).max, 'excessive initialRate value');
+
+    if (initialRate != 0 && baselinePercentage == 0) {
+      _baselinePercentage = NO_BASELINE;
+    } else {
+      _baselinePercentage = baselinePercentage;
+    }
+
+    internalSetRate(uint224(initialRate));
   }
 
-  function updateBaseline(uint256) external virtual override onlyController returns (bool) {
-    return false;
+  function updateBaseline(uint256 baseline)
+    external
+    virtual
+    override
+    onlyController
+    returns (bool)
+  {
+    if (_baselinePercentage == NO_BASELINE) {
+      return false;
+    }
+    setRate(baseline.percentMul(_baselinePercentage));
+    return true;
   }
 
   function disableBaseline() external override onlyController {
-    internalDisableBaseline();
+    _baselinePercentage = NO_BASELINE;
   }
 
   function disableRewardPool() external override onlyController {
-    internalDisableBaseline();
-    internalDisableRate();
+    _baselinePercentage = NO_BASELINE;
+    _pausedRate = 0;
+    internalSetRate(0);
   }
 
-  function internalDisableBaseline() internal virtual {}
+  //  function internalDisableBaseline() internal virtual {}
 
-  function internalDisableRate() internal virtual;
+  //  function internalDisableRate() internal virtual;
 
-  function setBaselinePercentage(uint16) external virtual override onlyRateController {
-    revert('UNSUPPORTED');
+  function setBaselinePercentage(uint16 factor) external override onlyRateController {
+    internalSetBaselinePercentage(factor);
   }
 
-  function setRate(uint256) public virtual override onlyRateController {
-    revert('UNSUPPORTED');
+  function internalSetBaselinePercentage(uint16 factor) internal virtual {
+    require(factor <= PercentageMath.ONE, 'illegal value');
+    _baselinePercentage = factor;
   }
+
+  function setRate(uint256 rate) public virtual override onlyRateController {
+    require(rate <= type(uint224).max, 'excessive rate value');
+
+    if (isPaused()) {
+      _pausedRate = uint224(rate);
+      return;
+    }
+    internalSetRate(rate);
+  }
+
+  function getRate() public view virtual returns (uint256);
+
+  function internalSetRate(uint256 rate) internal virtual;
 
   function setPaused(bool paused) public override onlyEmergencyAdmin {
     if (_paused == paused) {
@@ -59,7 +104,14 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return _paused;
   }
 
-  function internalPause(bool paused) internal virtual;
+  function internalPause(bool paused) internal virtual {
+    if (paused) {
+      _pausedRate = uint224(getRate());
+      internalSetRate(0);
+      return;
+    }
+    internalSetRate(_pausedRate);
+  }
 
   function getRewardController() public view override returns (address) {
     return address(_controller);
