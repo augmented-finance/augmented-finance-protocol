@@ -13,7 +13,7 @@ import {
   deployZombieAdapter,
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
-import { ONE_ADDRESS, oneRay, RAY, ZERO_ADDRESS } from '../../helpers/constants';
+import { ONE_ADDRESS, RAY, RAY_100 } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
 import {
   ADAI_ADDRESS,
@@ -24,7 +24,6 @@ import {
   stakingUnstakeBlocks,
   ZTOKEN_ADDRESS,
 } from './defaultTestDeployConfig';
-import { getAGTokenByName } from '../../helpers/contracts-getters';
 
 task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
@@ -105,12 +104,7 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const tokenWeightedRewardPoolSeparate = await deployTokenWeightedRewardPoolAGFSeparate(
-        [
-          rewardFreezer.address,
-          oneRay.multipliedBy(100).toFixed(),
-          0,
-          oneRay.multipliedBy(100).toFixed(),
-        ],
+        [rewardFreezer.address, RAY_100, 0, RAY_100],
         verify
       );
       await waitForTx(
@@ -161,7 +155,7 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
         const underlyingToken = await aaveAdapter.UNDERLYING_ASSET_ADDRESS();
         console.log(`underlying deployment: ${underlyingToken}`);
         const arp = await deployMigratorWeightedRewardPool(
-          [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed(), underlyingToken],
+          [rewardFreezer.address, RAY, 0, RAY_100, underlyingToken],
           verify
         );
 
@@ -176,7 +170,7 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
           verify
         );
         const crp = await deployMigratorWeightedRewardPool(
-          [rewardFreezer.address, RAY, 0, oneRay.multipliedBy(100).toFixed(), DAI_ADDRESS],
+          [rewardFreezer.address, RAY, 0, RAY_100, DAI_ADDRESS],
           verify
         );
 
