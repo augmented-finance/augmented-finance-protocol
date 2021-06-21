@@ -55,7 +55,11 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return doCalcReward(holder);
   }
 
-  function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
+  function internalCalcRateAndReward(
+    RewardEntry memory entry,
+    uint256 lastAccumRate,
+    uint32 currentBlock
+  )
     internal
     view
     override
@@ -65,7 +69,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
       uint32 since
     )
   {
-    (rate, allocated, since) = super.internalCalcRateAndReward(entry, currentBlock);
+    (rate, allocated, since) = super.internalCalcRateAndReward(entry, lastAccumRate, currentBlock);
     allocated = (allocated + PercentageMath.HALF_ONE) / PercentageMath.ONE;
     return (rate, allocated, since);
   }

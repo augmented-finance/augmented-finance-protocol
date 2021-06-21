@@ -74,7 +74,11 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     return rateUpdated;
   }
 
-  function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
+  function internalCalcRateAndReward(
+    RewardEntry memory entry,
+    uint256 lastAccumRate,
+    uint32 currentBlock
+  )
     internal
     view
     override
@@ -91,12 +95,12 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     uint256 weightedRate = getLinearRate().mul(_totalSupplyMax.div(_totalSupply));
     adjRate = _accumRate.add(weightedRate.mul(currentBlock - getRateUpdateBlock()));
 
-    weightedRate = adjRate.sub(entry.lastAccumRate);
+    weightedRate = adjRate.sub(lastAccumRate);
     // ATTN! TODO Prevent overflow checks here
     uint256 x = entry.rewardBase * weightedRate;
     if (x / weightedRate == entry.rewardBase) {
       // the easy way - no overflow
-      return (adjRate, (x / _totalSupplyMax) / WadRayMath.RAY, entry.lastUpdateBlock);
+      return (adjRate, (x / _totalSupplyMax) / WadRayMath.RAY, entry.lastUpdate);
     }
 
     // the hard way - numbers are too large for one-hit, so do it by chunks
@@ -109,6 +113,6 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
       allocated = allocated.add((((x & baseMask) * weightedRate) / _totalSupplyMax) << shiftedBits);
       shiftedBits += remainingBits;
     }
-    return (adjRate, allocated / WadRayMath.RAY, entry.lastUpdateBlock);
+    return (adjRate, allocated / WadRayMath.RAY, entry.lastUpdate);
   }
 }

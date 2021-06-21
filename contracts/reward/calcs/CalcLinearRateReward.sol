@@ -15,10 +15,11 @@ abstract contract CalcLinearRateReward {
   uint256 private _rate;
   uint32 private _lastRateUpdateBlock;
 
+  mapping(address => uint256) _accumRates;
+
   struct RewardEntry {
-    uint256 lastAccumRate;
     uint224 rewardBase;
-    uint32 lastUpdateBlock;
+    uint32 lastUpdate;
   }
 
   function setLinearRate(uint256 rate) internal {
@@ -55,7 +56,11 @@ abstract contract CalcLinearRateReward {
     return _lastRateUpdateBlock;
   }
 
-  function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
+  function internalCalcRateAndReward(
+    RewardEntry memory entry,
+    uint256 lastAccumRate,
+    uint32 currentBlock
+  )
     internal
     view
     virtual
@@ -100,12 +105,16 @@ abstract contract CalcLinearRateReward {
     uint32 currentBlock = getCurrentBlock();
 
     uint256 adjRate;
-    (adjRate, allocated, since) = internalCalcRateAndReward(entry, currentBlock);
+    (adjRate, allocated, since) = internalCalcRateAndReward(
+      entry,
+      _accumRates[holder],
+      currentBlock
+    );
     // console.log('internalUpdateReward: ', adjRate, allocated);
 
-    _rewards[holder].lastAccumRate = adjRate;
+    _accumRates[holder] = adjRate;
     _rewards[holder].rewardBase = uint224(newBalance);
-    _rewards[holder].lastUpdateBlock = currentBlock;
+    _rewards[holder].lastUpdate = currentBlock;
     return (allocated, since, mode);
   }
 
@@ -133,7 +142,7 @@ abstract contract CalcLinearRateReward {
 
   function internalRemoveReward(address holder) internal virtual returns (uint256 rewardBase) {
     rewardBase = _rewards[holder].rewardBase;
-    if (rewardBase == 0 && _rewards[holder].lastUpdateBlock == 0) {
+    if (rewardBase == 0 && _rewards[holder].lastUpdate == 0) {
       return 0;
     }
     delete (_rewards[holder]);
@@ -148,9 +157,9 @@ abstract contract CalcLinearRateReward {
     uint32 currentBlock = getCurrentBlock();
 
     (uint256 adjRate, uint256 allocated, uint32 since) =
-      internalCalcRateAndReward(_rewards[holder], currentBlock);
-    _rewards[holder].lastAccumRate = adjRate;
-    _rewards[holder].lastUpdateBlock = currentBlock;
+      internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentBlock);
+    _accumRates[holder] = adjRate;
+    _rewards[holder].lastUpdate = currentBlock;
     return (allocated, since);
   }
 
@@ -160,7 +169,7 @@ abstract contract CalcLinearRateReward {
     }
 
     (, uint256 allocated, uint32 since) =
-      internalCalcRateAndReward(_rewards[holder], getCurrentBlock());
+      internalCalcRateAndReward(_rewards[holder], _accumRates[holder], getCurrentBlock());
     return (allocated, since);
   }
 }
