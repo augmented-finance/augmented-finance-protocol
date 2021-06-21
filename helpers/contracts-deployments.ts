@@ -12,7 +12,7 @@ import {
   eEthereumNetwork,
   tStringTokenBigUnits,
 } from './types';
-import { MintableERC20 } from '../types';
+import { MintableERC20, RewardBoosterFactory } from '../types';
 import { MockContract } from 'ethereum-waffle';
 import { getReservesConfigByPool } from './configuration';
 import { getFirstSigner } from './contracts-getters';
@@ -744,6 +744,17 @@ export const deployAGFToken = async (verify?: boolean) =>
     verify
   );
 
+export const deployRewardBooster = async (
+  args: [tEthereumAddress, tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new RewardBoosterFactory(await getFirstSigner()).deploy(...args),
+    eContractid.RewardBooster,
+    [],
+    verify
+  );
+
 export const deployRewardFreezer = async (
   args: [tEthereumAddress, tEthereumAddress],
   verify?: boolean
@@ -808,6 +819,17 @@ export const deployTokenWeightedRewardPoolAGF = async (
     verify
   );
 
+export const deployTokenWeightedRewardPoolAGFBoosted = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TokenWeightedRewardPoolAGFBoosted,
+    [], // TODO:
+    verify
+  );
+
 export const deployTokenWeightedRewardPoolAGFSeparate = async (
   args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
@@ -826,6 +848,28 @@ export const deployTokenWeightedRewardPoolAG = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAG,
+    [], // TODO:
+    verify
+  );
+
+export const deployTokenWeightedRewardPoolAGBoosted = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TokenWeightedRewardPoolAGBoosted,
+    [], // TODO:
+    verify
+  );
+
+export const deployTokenWeightedRewardPoolAGUSDCBoosted = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TokenWeightedRewardPoolAGUSDCBoosted,
     [], // TODO:
     verify
   );
