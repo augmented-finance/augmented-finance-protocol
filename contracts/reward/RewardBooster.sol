@@ -29,6 +29,7 @@ contract RewardBooster is BaseRewardController {
 
   mapping(address => uint256) private _boostRewards;
   mapping(address => uint256) private _claimableRewards;
+  mapping(address => uint256) private _boostLimits;
 
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
     public
@@ -123,7 +124,10 @@ contract RewardBooster is BaseRewardController {
     override
     returns (uint256 claimableAmount)
   {
-    uint256 boostLimit = 0;
+    uint256 boostLimit = _boostLimits[holder];
+    if (boostLimit > 0) {
+      delete (_boostLimits[holder]);
+    }
 
     claimableAmount = _claimableRewards[holder];
     if (claimableAmount > 0) {
@@ -171,7 +175,7 @@ contract RewardBooster is BaseRewardController {
     override
     returns (uint256 claimableAmount, uint256)
   {
-    uint256 boostLimit = 0;
+    uint256 boostLimit = _boostLimits[holder];
 
     for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
       if (mask & 1 == 0) {
@@ -214,6 +218,10 @@ contract RewardBooster is BaseRewardController {
       _boostRewards[holder] = _boostRewards[holder].add(allocated);
     } else {
       _claimableRewards[holder] = _claimableRewards[holder].add(allocated);
+      uint256 factor = _boostFactor[pool];
+      if (factor != 0) {
+        _boostLimits[holder] = _boostLimits[holder].add(allocated.percentMul(factor));
+      }
     }
   }
 
