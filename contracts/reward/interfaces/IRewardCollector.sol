@@ -14,4 +14,14 @@ interface IRewardCollector {
   function balanceOf(address holder) external view returns (uint256);
 
   function totalSupply() external view returns (uint256);
+
+  //  function explainRewardFor(address holder) external returns (uint256 amount, RewardExplainEntry[] memory explainRecords);
 }
+
+// enum RewardType {BasicReward, BoostReward, UnfrozenReward, FrozenReward}
+
+// struct RewardExplainEntry {
+//   uint256 amount;
+//   uint32 since;
+//   RewardType rewardType;
+// }
