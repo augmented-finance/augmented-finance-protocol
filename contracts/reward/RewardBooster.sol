@@ -164,6 +164,8 @@ contract RewardBooster is BaseRewardController {
       boost = boost.add(boost_);
     }
 
+    // console.log('internalClaimAndMintReward', claimableAmount, boostLimit, boost);
+
     if (boost <= boostLimit) {
       claimableAmount = claimableAmount.add(boost);
     } else {

@@ -27,7 +27,7 @@ import {
   stakingCooldownBlocks,
   stakingUnstakeBlocks,
 } from '../../tasks/migrations/defaultTestDeployConfig';
-import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
+import { currentBlock, mineBlocks, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import { BigNumberish } from 'ethers';
 import { VL_INVALID_AMOUNT } from '../../helpers/contract_errors';
 
@@ -71,12 +71,6 @@ describe('Staking', () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  const stake = async (s: SignerWithAddress, amount: BigNumberish) => {
-    await AGF.connect(root).mintReward(s.address, amount, false);
-    await AGF.connect(s).approve(xAGF.address, amount);
-    await xAGF.connect(s).stake(s.address, amount);
-  };
-
   const printBalances = async (s: SignerWithAddress) => {
     console.log(
       `balances of ${s.address}
@@ -85,11 +79,19 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
     );
   };
 
+  const stake = async (s: SignerWithAddress, amount: BigNumberish) => {
+    await AGF.connect(root).mintReward(s.address, amount, false);
+    await AGF.connect(s).approve(xAGF.address, amount);
+    await xAGF.connect(s).stake(s.address, amount);
+  };
+
   it('can not redeem when after unstake block has passed', async () => {
+    console.log(`user address: ${user1.address}`);
     await stake(user1, defaultStkAmount);
-    await mineToBlock(stakingUnstakeBlocks + 10);
-    await expect(xAGF.redeem(user1.address, defaultStkAmount)).to.be.revertedWith(
-      'STK_UNSTAKE_WINDOW_FINISHED',
+    await xAGF.connect(user1).cooldown();
+    await mineBlocks(stakingUnstakeBlocks + stakingCooldownBlocks + 1);
+    await expect(xAGF.connect(user1).redeem(user1.address, defaultStkAmount)).to.be.revertedWith(
+      'STK_UNSTAKE_WINDOW_FINISHED'
     );
   });
 
@@ -100,34 +102,32 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
   });
 
   it('error when redeeming if amount is zero', async () => {
-    await expect(xAGF.redeem(user1.address, 0)).to.be.revertedWith(VL_INVALID_AMOUNT);
+    await expect(xAGF.connect(user1).redeem(user1.address, 0)).to.be.revertedWith(
+      VL_INVALID_AMOUNT
+    );
   });
 
   it('can not redeem when paused', async () => {
     await xAGF.connect(root).setPaused(true);
     await stake(user1, defaultStkAmount);
     await expect(xAGF.connect(user1).redeem(user1.address, defaultStkAmount)).to.be.revertedWith(
-      'STK_REDEEM_PAUSED',
+      'STK_REDEEM_PAUSED'
     );
   });
 
   it('can redeem before unstake', async () => {
     await stake(user1, defaultStkAmount);
+    await xAGF.connect(user1).cooldown();
+    await mineBlocks(stakingCooldownBlocks);
     await xAGF.connect(user1).redeem(user1.address, defaultStkAmount);
     expect(await xAGF.balanceOf(user1.address)).to.eq(0);
     expect(await AGF.balanceOf(user1.address)).to.eq(defaultStkAmount);
   });
 
-  // tslint:disable-next-line:max-line-length
-  it('call from another account can not redeem if not enough balance to be burned', async () => {
-    await stake(user1, defaultStkAmount);
-    await xAGF.connect(user2).redeem(user1.address, defaultStkAmount);
-    expect(await xAGF.balanceOf(user1.address)).to.eq(defaultStkAmount);
-    expect(await AGF.balanceOf(user1.address)).to.eq(0);
-  });
-
   it('can burn from another account when redeeming', async () => {
     await stake(user2, defaultStkAmount);
+    await xAGF.connect(user2).cooldown();
+    await mineBlocks(stakingCooldownBlocks);
     await xAGF.connect(user2).redeem(user1.address, defaultStkAmount);
     expect(await xAGF.balanceOf(user2.address)).to.eq(0);
     expect(await AGF.balanceOf(user1.address)).to.eq(defaultStkAmount);
@@ -158,6 +158,8 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
 
   it('can slash underlying', async () => {
     await stake(user1, defaultStkAmount);
+    await xAGF.connect(user1).cooldown();
+    await mineBlocks(stakingCooldownBlocks);
     await xAGF.connect(slasher).slashUnderlying(slasher.address, 10, 110);
     const slashed = defaultStkAmount * slashingDefaultPercentageHR;
     expect(await AGF.balanceOf(slasher.address)).to.eq(slashed);

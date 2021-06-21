@@ -152,11 +152,15 @@ abstract contract SlashableStakeTokenBase is
     require(!_redeemPaused, 'STK_REDEEM_PAUSED');
 
     uint256 cooldownStartBlock = _stakersCooldowns[from];
-    require(block.number > cooldownStartBlock.add(_cooldownBlocks), 'STK_INSUFFICIENT_COOLDOWN');
+    console.log('internal redeem from: ', from);
     console.log('block.number: ', block.number);
     console.log('cooldownStartBlock: ', cooldownStartBlock);
     console.log('cooldownBlocks: ', _cooldownBlocks);
     console.log('unstakeBlocks: ', _unstakeBlocks);
+    require(
+      cooldownStartBlock != 0 && block.number > cooldownStartBlock.add(_cooldownBlocks),
+      'STK_INSUFFICIENT_COOLDOWN'
+    );
     require(
       block.number.sub(cooldownStartBlock.add(_cooldownBlocks)) <= _unstakeBlocks,
       'STK_UNSTAKE_WINDOW_FINISHED'
@@ -240,17 +244,20 @@ abstract contract SlashableStakeTokenBase is
     uint256 maxAmount
   ) external override aclHas(AccessFlags.LIQUIDITY_CONTROLLER) returns (uint256 amount) {
     uint256 balance = _stakedToken.balanceOf(address(this));
+    console.log('balance: ', balance);
     uint256 maxSlashable = balance.percentMul(_maxSlashablePercentage);
+    console.log('max slashable: ', maxSlashable);
 
     if (maxAmount > maxSlashable) {
       amount = maxSlashable;
     } else {
       amount = maxAmount;
     }
+    console.log('amount: ', amount);
     if (amount < minAmount) {
       return 0;
     }
-
+    console.log('transferring to destination: ', destination);
     _stakedToken.safeTransfer(destination, amount);
 
     emit Slashed(destination, amount);
