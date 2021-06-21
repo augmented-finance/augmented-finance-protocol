@@ -51,7 +51,7 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
     override
     returns (
       uint256 allocated,
-      uint32 sinceBlock,
+      uint32 since,
       AllocationMode mode
     )
   {

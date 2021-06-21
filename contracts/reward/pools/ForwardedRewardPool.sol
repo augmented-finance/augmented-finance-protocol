@@ -7,18 +7,19 @@ import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 // import {AccessBitmask} from '../../access/AccessBitmask.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {IForwardedRewardPool} from '../interfaces/IForwardedRewardPool.sol';
+import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
 
 import 'hardhat/console.sol';
 
 abstract contract ForwardedRewardPool is IForwardedRewardPool {
-  address private _forwarder;
+  IForwardingRewardPool private _forwarder;
 
-  function internalSetForwarder(address forwarder) internal {
+  function internalSetForwarder(IForwardingRewardPool forwarder) internal {
     _forwarder = forwarder;
   }
 
   modifier onlyForwarder() {
-    require(msg.sender == _forwarder, 'only forwarder');
+    require(msg.sender == address(_forwarder), 'only forwarder');
     _;
   }
 
@@ -41,4 +42,13 @@ abstract contract ForwardedRewardPool is IForwardedRewardPool {
   }
 
   function internalSetRewardRate(uint256) internal virtual;
+
+  function internalAllocateReward(
+    address holder,
+    uint256 allocated,
+    uint32 since,
+    AllocationMode mode
+  ) internal {
+    _forwarder.allocateReward(holder, allocated, since, mode);
+  }
 }

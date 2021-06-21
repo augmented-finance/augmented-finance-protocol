@@ -134,10 +134,10 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   function internalAllocateReward(
     address holder,
     uint256 allocated,
-    uint32 sinceBlock, // must block, not TS
+    uint32 since,
     AllocationMode mode
   ) internal {
-    _controller.allocatedByPool(holder, allocated, sinceBlock, mode);
+    _controller.allocatedByPool(holder, allocated, since, mode);
   }
 
   function internalGetReward(address holder) internal virtual returns (uint256, uint32);

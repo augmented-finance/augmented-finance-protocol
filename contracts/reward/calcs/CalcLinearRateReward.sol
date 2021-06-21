@@ -150,11 +150,17 @@ abstract contract CalcLinearRateReward {
   }
 
   function doGetReward(address holder) internal virtual returns (uint256, uint32) {
+    return doGetRewardAt(holder, getCurrentBlock());
+  }
+
+  function doGetRewardAt(address holder, uint32 currentBlock)
+    internal
+    virtual
+    returns (uint256, uint32)
+  {
     if (_rewards[holder].rewardBase == 0) {
       return (0, 0);
     }
-
-    uint32 currentBlock = getCurrentBlock();
 
     (uint256 adjRate, uint256 allocated, uint32 since) =
       internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentBlock);
@@ -164,12 +170,21 @@ abstract contract CalcLinearRateReward {
   }
 
   function doCalcReward(address holder) internal view virtual returns (uint256, uint32) {
+    return doCalcRewardAt(holder, getCurrentBlock());
+  }
+
+  function doCalcRewardAt(address holder, uint32 currentBlock)
+    internal
+    view
+    virtual
+    returns (uint256, uint32)
+  {
     if (_rewards[holder].rewardBase == 0) {
       return (0, 0);
     }
 
     (, uint256 allocated, uint32 since) =
-      internalCalcRateAndReward(_rewards[holder], _accumRates[holder], getCurrentBlock());
+      internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentBlock);
     return (allocated, since);
   }
 }

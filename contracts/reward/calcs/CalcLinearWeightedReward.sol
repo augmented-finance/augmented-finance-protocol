@@ -30,10 +30,10 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
 
   function doUpdateTotalSupplyDiff(uint256 oldSupply, uint256 newSupply) internal returns (bool) {
     if (newSupply > oldSupply) {
-      return internalSetTotalSupply(_totalSupply.add(newSupply - oldSupply));
+      return internalSetTotalSupply(_totalSupply.add(newSupply - oldSupply), getCurrentBlock());
     }
     if (oldSupply > newSupply) {
-      return internalSetTotalSupply(_totalSupply.sub(oldSupply - newSupply));
+      return internalSetTotalSupply(_totalSupply.sub(oldSupply - newSupply), getCurrentBlock());
     }
     return false;
   }
@@ -42,7 +42,14 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     if (newSupply == _totalSupply) {
       return false;
     }
-    return internalSetTotalSupply(newSupply);
+    return internalSetTotalSupply(newSupply, getCurrentBlock());
+  }
+
+  function doUpdateTotalSupplyAt(uint256 newSupply, uint32 at) internal returns (bool) {
+    if (newSupply == _totalSupply) {
+      return false;
+    }
+    return internalSetTotalSupply(newSupply, at);
   }
 
   function internalRateUpdated(
@@ -61,13 +68,15 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     }
   }
 
-  function internalSetTotalSupply(uint256 totalSupply) internal returns (bool rateUpdated) {
+  function internalSetTotalSupply(uint256 totalSupply, uint32 at)
+    internal
+    returns (bool rateUpdated)
+  {
     uint256 lastRate = getLinearRate();
     if (lastRate > 0) {
-      uint32 currentBlock = getCurrentBlock();
       uint32 lastBlock = getRateUpdateBlock();
-      internalRateUpdated(lastRate, lastBlock, currentBlock);
-      rateUpdated = lastBlock != currentBlock;
+      internalRateUpdated(lastRate, lastBlock, at);
+      rateUpdated = lastBlock != at;
     }
 
     _totalSupply = totalSupply;

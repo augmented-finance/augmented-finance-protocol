@@ -13,12 +13,13 @@ import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 
 import {ForwardedRewardPool} from '../pools/ForwardedRewardPool.sol';
+import {CalcLinearRateReward} from '../calcs/CalcLinearRateReward.sol';
 
 import {Errors} from '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
-contract TokenLocker is IERC20, MarketAccessBitmask {
+abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
@@ -40,8 +41,6 @@ contract TokenLocker is IERC20, MarketAccessBitmask {
 
   struct UserBalance {
     uint224 underlyingAmount;
-    uint32 startTS;
-    uint224 stakeAmount;
     uint32 endPoint;
   }
 
@@ -101,15 +100,14 @@ contract TokenLocker is IERC20, MarketAccessBitmask {
     }
 
     UserBalance memory userBalance = _balances[to];
+    (stakeAmount, ) = getStakeBalance(to);
 
     _underlyingTotal = _underlyingTotal.add(underlyingAmount);
     underlyingAmount = underlyingAmount.add(userBalance.underlyingAmount);
 
     if (userBalance.endPoint > currentPoint) {
-      _stakedTotal = _stakedTotal.sub(userBalance.stakeAmount);
-      _pointTotal[userBalance.endPoint] = _pointTotal[userBalance.endPoint].sub(
-        userBalance.stakeAmount
-      );
+      _stakedTotal = _stakedTotal.sub(stakeAmount);
+      _pointTotal[userBalance.endPoint] = _pointTotal[userBalance.endPoint].sub(stakeAmount);
 
       if (userBalance.endPoint < endPoint) {
         userBalance.endPoint = endPoint;
@@ -118,54 +116,44 @@ contract TokenLocker is IERC20, MarketAccessBitmask {
       require(duration > 0, 'NOTHING_LOCKED');
       userBalance.endPoint = endPoint;
     }
-    userBalance.startTS = uint32(block.timestamp);
 
     require(underlyingAmount <= type(uint224).max);
     userBalance.underlyingAmount = uint224(underlyingAmount);
 
-    uint256 adjDuration = uint256(endPoint * _pointPeriod).sub(userBalance.startTS);
+    uint256 adjDuration = uint256(endPoint * _pointPeriod).sub(block.timestamp);
     if (adjDuration < _maxValuePeriod) {
       stakeAmount = underlyingAmount.mul(adjDuration).div(_maxValuePeriod);
     } else {
       stakeAmount = underlyingAmount;
     }
-
     require(stakeAmount <= type(uint224).max);
-    userBalance.stakeAmount = uint224(stakeAmount);
 
-    _stakedTotal = _stakedTotal.add(userBalance.stakeAmount);
-    _pointTotal[userBalance.endPoint] = _pointTotal[userBalance.endPoint].add(
-      userBalance.stakeAmount
-    );
+    _stakedTotal = _stakedTotal.add(stakeAmount);
+    _pointTotal[userBalance.endPoint] = _pointTotal[userBalance.endPoint].add(stakeAmount);
 
     if (_nextKnownPoint > userBalance.endPoint || _nextKnownPoint == 0) {
       _nextKnownPoint = userBalance.endPoint;
     }
 
     _balances[to] = userBalance;
+    setStakeBalance(to, uint224(stakeAmount));
 
-    emit Locked(
-      from,
-      to,
-      underlyingAmount,
-      userBalance.stakeAmount,
-      userBalance.endPoint * _pointPeriod
-    );
-    return userBalance.stakeAmount;
+    emit Locked(from, to, underlyingAmount, stakeAmount, userBalance.endPoint * _pointPeriod);
+    return stakeAmount;
   }
 
-  function balanceOf(address account) external view override returns (uint256) {
-    UserBalance memory userBalance = _balances[account];
-    if (userBalance.stakeAmount == 0) {
+  function balanceOf(address account) external view override returns (uint256 stakeAmount) {
+    (stakeAmount, ) = getStakeBalance(account);
+    if (stakeAmount == 0) {
       return 0;
     }
 
-    uint32 endPointTS = userBalance.endPoint * _pointPeriod;
+    uint32 endPointTS = _balances[account].endPoint * _pointPeriod;
     if (endPointTS <= block.timestamp) {
       return 0;
     }
 
-    return userBalance.stakeAmount;
+    return stakeAmount;
 
     // uint32 tsDelta = endPointTS - uint32(block.timestamp);
     // if (tsDelta == 0) {
@@ -195,6 +183,10 @@ contract TokenLocker is IERC20, MarketAccessBitmask {
       return (0, 0);
     }
     return (underlying, _balances[account].endPoint * _pointPeriod);
+  }
+
+  function expiryOf(address account) internal view returns (uint32 availableSince) {
+    return _balances[account].endPoint * _pointPeriod;
   }
 
   /**
@@ -300,7 +292,7 @@ contract TokenLocker is IERC20, MarketAccessBitmask {
   }
 
   function internalUpdate(bool updateTS, bool preventReentry)
-    private
+    internal
     returns (uint32 currentPoint)
   {
     currentPoint = pointOfTS(uint32(block.timestamp));
@@ -341,14 +333,15 @@ contract TokenLocker is IERC20, MarketAccessBitmask {
     uint256 pointTotal = _pointTotal[nextPoint];
 
     for (; nextPoint <= tillPoint; ) {
-      uint256 totalAfter = stakedTotal.sub(pointTotal);
-      pointTotal = 0;
-
-      if (totalAfter == 0) {
-        // no more points
+      if (stakedTotal == pointTotal) {
+        // the last point
         nextPoint = 0;
+        internalUpdateTotal(stakedTotal, 0, nextPoint * _pointPeriod);
         break;
       }
+
+      uint256 totalAfter = stakedTotal.sub(pointTotal);
+      pointTotal = 0;
 
       // look for the next non-zero point
       for (nextPoint++; nextPoint <= maxPoint; nextPoint++) {
@@ -364,6 +357,7 @@ contract TokenLocker is IERC20, MarketAccessBitmask {
         break;
       }
 
+      internalUpdateTotal(stakedTotal, totalAfter, nextPoint * _pointPeriod);
       stakedTotal = totalAfter;
     }
 
@@ -411,4 +405,18 @@ contract TokenLocker is IERC20, MarketAccessBitmask {
   ) external override returns (bool) {
     revert('NOT_SUPPORTED');
   }
+
+  function setStakeBalance(address holder, uint224 stakeAmount) internal virtual;
+
+  function getStakeBalance(address holder)
+    internal
+    view
+    virtual
+    returns (uint224 stakeAmount, uint32 startTS);
+
+  function internalUpdateTotal(
+    uint256 totalBefore,
+    uint256 totalAfter,
+    uint32 at
+  ) internal virtual;
 }
