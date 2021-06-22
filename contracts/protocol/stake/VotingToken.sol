@@ -3,14 +3,14 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import {VoteDelegatorWithSnapshot} from './lib/VoteDelegatorWithSnapshot.sol';
-import {StakeTokenBase} from './StakeTokenBase.sol';
+import {SlashableStakeTokenBase} from './SlashableStakeTokenBase.sol';
 import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
 
 /**
  * @title VotingToken
  * @notice Contract to provide votes based on a staked token.
  **/
-abstract contract VotingToken is StakeTokenBase, VoteDelegatorWithSnapshot {
+abstract contract VotingToken is SlashableStakeTokenBase, VoteDelegatorWithSnapshot {
   mapping(address => address) internal _votingDelegates;
   mapping(address => mapping(uint256 => Snapshot)) internal _propositionPowerSnapshots;
   mapping(address => uint256) internal _propositionPowerSnapshotsCounts;
@@ -21,7 +21,7 @@ abstract contract VotingToken is StakeTokenBase, VoteDelegatorWithSnapshot {
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public StakeTokenBase(params, name, symbol, decimals) {}
+  ) public SlashableStakeTokenBase(params, name, symbol, decimals) {}
 
   function _initializeToken(StakeTokenConfig memory params) internal virtual override {
     super._initializeToken(params);

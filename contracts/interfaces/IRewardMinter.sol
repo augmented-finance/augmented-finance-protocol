@@ -10,4 +10,6 @@ interface IRewardMinter {
     uint256 amount,
     bool serviceAccount
   ) external returns (IRewardMinter underlying, address mintTo);
+
+  function rewardTotalSupply() external view returns (uint256);
 }

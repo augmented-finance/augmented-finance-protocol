@@ -12,7 +12,7 @@ import {
 } from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
 import {IRewardConfigurator} from './interfaces/IRewardConfigurator.sol';
 import {IManagedRewardController} from './interfaces/IRewardController.sol';
-import {IManagedRewardPool} from './interfaces/IRewardPool.sol';
+import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IMigratorHook} from '../interfaces/IMigratorHook.sol';
 import {IInitializableStakeToken} from '../protocol/stake/interfaces/IInitializableStakeToken.sol';
 import {StakeTokenConfig} from '../protocol/stake/interfaces/StakeTokenConfig.sol';
@@ -20,7 +20,7 @@ import {ITransferHook} from '../protocol/stake/interfaces/ITransferHook.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
 contract RewardConfigurator is
-  MarketAccessBitmask,
+  MarketAccessBitmask(IMarketAccessController(0)),
   VersionedInitializable,
   IRewardConfigurator,
   IMigratorHook

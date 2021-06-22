@@ -16,12 +16,13 @@ import {
 import { AGFToken, RewardFreezer } from '../../types';
 import { ONE_ADDRESS, RAY, ZERO_ADDRESS } from '../../helpers/constants';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
+import { getCurrentBlock } from '../../helpers/contracts-helpers';
 
 chai.use(solidity);
 const { expect } = chai;
 
 // makeSuite('Rewards test suite', (testEnv: TestEnv) => {
-describe('Migrator test suite', () => {
+describe('Rewards test suite', () => {
   let deployer: SignerWithAddress;
   let user: SignerWithAddress;
   let user2: SignerWithAddress;
@@ -81,9 +82,22 @@ describe('Migrator test suite', () => {
     expect(await agf.balanceOf(user.address)).to.eq(8000); // +50% of 2k for block 15, ttl frozen 4k
 
     // immediate meltdown
-    await (await rewardFreezer.admin_setMeltDownBlock(1)).wait(1); // block 17
-    await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 18
-    expect(await agf.balanceOf(user.address)).to.eq(16000); // + 4k for blocks 17-18 and frozen 4k
+    await (await rewardFreezer.admin_setMeltDownBlock(1)).wait(1); // block 18
+    // 9000: +50% of 2k for block 18, ttl frozen 5k
+
+    await (
+      await tokenUnweightedRewardPool.handleBalanceUpdate(
+        ONE_ADDRESS,
+        user.address,
+        2000,
+        10000,
+        100000
+      )
+    ).wait(1); // block 19
+    // 11000: +2k for block 19, ttl ex-frozen 5k
+
+    await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 20
+    expect(await agf.balanceOf(user.address)).to.eq(26000); // = 10k for block 20 + 11000 + ex-frozen 5k
 
     // todo gradual meltdown
   });

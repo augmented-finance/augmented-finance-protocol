@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import {ERC20WithPermit} from '../../misc/ERC20WithPermit.sol';
 
 import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IManagedStakeToken} from './interfaces/IStakeToken.sol';
+import {IStakeToken, IManagedStakeToken} from './interfaces/IStakeToken.sol';
 
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
@@ -23,10 +23,11 @@ import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.so
 
 import 'hardhat/console.sol';
 
-abstract contract StakeTokenBase is
+abstract contract SlashableStakeTokenBase is
+  IStakeToken,
   IManagedStakeToken,
   ERC20WithPermit,
-  MarketAccessBitmask,
+  MarketAccessBitmask(IMarketAccessController(0)),
   IInitializableStakeToken
 {
   using SafeMath for uint256;

@@ -28,25 +28,28 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     _totalSupplyMax = (1 << maxSupplyBits) - 1;
   }
 
-  function doUpdateTotalSupplyDiff(
-    uint256 oldSupply,
-    uint256 newSupply,
-    uint32 currentBlock
-  ) internal returns (bool) {
+  function doUpdateTotalSupplyDiff(uint256 oldSupply, uint256 newSupply) internal returns (bool) {
     if (newSupply > oldSupply) {
-      return internalSetTotalSupply(_totalSupply.add(newSupply - oldSupply), currentBlock);
+      return internalSetTotalSupply(_totalSupply.add(newSupply - oldSupply), getCurrentBlock());
     }
     if (oldSupply > newSupply) {
-      return internalSetTotalSupply(_totalSupply.sub(oldSupply - newSupply), currentBlock);
+      return internalSetTotalSupply(_totalSupply.sub(oldSupply - newSupply), getCurrentBlock());
     }
     return false;
   }
 
-  function doUpdateTotalSupply(uint256 newSupply, uint32 currentBlock) internal returns (bool) {
+  function doUpdateTotalSupply(uint256 newSupply) internal returns (bool) {
     if (newSupply == _totalSupply) {
       return false;
     }
-    return internalSetTotalSupply(newSupply, currentBlock);
+    return internalSetTotalSupply(newSupply, getCurrentBlock());
+  }
+
+  function doUpdateTotalSupplyAt(uint256 newSupply, uint32 at) internal returns (bool) {
+    if (newSupply == _totalSupply) {
+      return false;
+    }
+    return internalSetTotalSupply(newSupply, at);
   }
 
   function internalRateUpdated(
@@ -65,22 +68,26 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     }
   }
 
-  function internalSetTotalSupply(uint256 totalSupply, uint32 currentBlock)
+  function internalSetTotalSupply(uint256 totalSupply, uint32 at)
     internal
     returns (bool rateUpdated)
   {
     uint256 lastRate = getLinearRate();
     if (lastRate > 0) {
       uint32 lastBlock = getRateUpdateBlock();
-      internalRateUpdated(lastRate, lastBlock, currentBlock);
-      rateUpdated = lastBlock != currentBlock;
+      internalRateUpdated(lastRate, lastBlock, at);
+      rateUpdated = lastBlock != at;
     }
 
     _totalSupply = totalSupply;
     return rateUpdated;
   }
 
-  function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
+  function internalCalcRateAndReward(
+    RewardEntry memory entry,
+    uint256 lastAccumRate,
+    uint32 currentBlock
+  )
     internal
     view
     override
@@ -97,12 +104,12 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     uint256 weightedRate = getLinearRate().mul(_totalSupplyMax.div(_totalSupply));
     adjRate = _accumRate.add(weightedRate.mul(currentBlock - getRateUpdateBlock()));
 
-    weightedRate = adjRate.sub(entry.lastAccumRate);
+    weightedRate = adjRate.sub(lastAccumRate);
     // ATTN! TODO Prevent overflow checks here
     uint256 x = entry.rewardBase * weightedRate;
     if (x / weightedRate == entry.rewardBase) {
       // the easy way - no overflow
-      return (adjRate, (x / _totalSupplyMax) / WadRayMath.RAY, entry.lastUpdateBlock);
+      return (adjRate, (x / _totalSupplyMax) / WadRayMath.RAY, entry.lastUpdate);
     }
 
     // the hard way - numbers are too large for one-hit, so do it by chunks
@@ -115,6 +122,6 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
       allocated = allocated.add((((x & baseMask) * weightedRate) / _totalSupplyMax) << shiftedBits);
       shiftedBits += remainingBits;
     }
-    return (adjRate, allocated / WadRayMath.RAY, entry.lastUpdateBlock);
+    return (adjRate, allocated / WadRayMath.RAY, entry.lastUpdate);
   }
 }
