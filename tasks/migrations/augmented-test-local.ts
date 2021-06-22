@@ -20,8 +20,8 @@ import {
   CDAI_ADDRESS,
   DAI_ADDRESS,
   slashingDefaultPercentage,
-  stakingCooldownBlocks,
-  stakingUnstakeBlocks,
+  stakingCooldownTicks,
+  stakingUnstakeTicks,
   ZTOKEN_ADDRESS,
 } from './defaultTestDeployConfig';
 
@@ -33,7 +33,7 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
   .addFlag('withAAVEAdapter', 'deploy with AAVE adapter of aDai')
   .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', RAY, types.string)
   .addOptionalParam('teamRewardBaselinePercentage', 'baseline percentage - bigNumber', 0, types.int)
-  .addOptionalParam('teamRewardUnlockBlock', 'unlock rewards from block', 1, types.int)
+  .addOptionalParam('teamRewardUnlockedAt', 'unlock rewards at', 1, types.int)
   .addOptionalParam(
     'teamRewardsFreezePercentage',
     'rewards controller freeze percentage (10k = 100%)',
@@ -41,13 +41,13 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
     types.int
   )
   .addOptionalParam('zombieRewardLimit', 'zombie reward limit', 5000, types.int)
+  .addOptionalParam('stakeCooldownTicks', 'staking cooldown ticks', stakingCooldownTicks, types.int)
   .addOptionalParam(
-    'stakeCooldownBlocks',
-    'staking cooldown blocks',
-    stakingCooldownBlocks,
+    'stakeUnstakeTicks',
+    'staking unstake window ticks',
+    stakingUnstakeTicks,
     types.int
   )
-  .addOptionalParam('stakeUnstakeBlocks', 'staking unstake blocks', stakingUnstakeBlocks, types.int)
   .addOptionalParam(
     'slashingPercentage',
     'slashing default percentage',
@@ -65,11 +65,11 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
         withAAVEAdapter,
         teamRewardInitialRate,
         teamRewardBaselinePercentage,
-        teamRewardUnlockBlock,
+        teamRewardUnlockedAt,
         teamRewardsFreezePercentage,
         zombieRewardLimit,
-        stakeCooldownBlocks,
-        stakeUnstakeBlocks,
+        stakeCooldownTicks,
+        stakeUnstakeTicks,
         slashingPercentage,
         verify,
       },
@@ -112,13 +112,13 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
       );
       await tokenWeightedRewardPoolSeparate.addRewardProvider(root.address, ONE_ADDRESS);
 
-      console.log(`#4 deploying: Team Reward Pool, unlock at block: ${teamRewardUnlockBlock}`);
+      console.log(`#4 deploying: Team Reward Pool, unlock at: ${teamRewardUnlockedAt}`);
       const teamRewardPool = await deployTeamRewardPool(
         [rewardFreezer.address, teamRewardInitialRate, teamRewardBaselinePercentage, root.address],
         verify
       );
       await waitForTx(await rewardFreezer.admin_addRewardPool(teamRewardPool.address));
-      await waitForTx(await teamRewardPool.setUnlockBlock(teamRewardUnlockBlock));
+      await waitForTx(await teamRewardPool.setUnlockedAt(teamRewardUnlockedAt));
 
       console.log(`#5 deploying: Zombie Reward Pool`);
       const zombieRewardPool = await deployZombieRewardPool(

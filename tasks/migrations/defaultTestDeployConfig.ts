@@ -14,8 +14,8 @@ export const ZTOKEN_ADDRESS = '0xdac17f958d2ee523a2206206994597c13d831ec7';
 export const zombieWhaleONE = '0x5754284f345afc66a98fbb0a0afe71e0f007b949';
 
 // staking constants
-export const stakingCooldownBlocks = 5;
-export const stakingUnstakeBlocks = 150;
+export const stakingCooldownTicks = 5;
+export const stakingUnstakeTicks = 150;
 export const slashingDefaultPercentage = 3000;
 export const slashingDefaultPercentageHR = 0.3;
 
@@ -25,9 +25,9 @@ export const CFG = {
   zTokenAddress: ZTOKEN_ADDRESS,
   teamRewardInitialRate: RAY,
   teamRewardBaselinePercentage: 0,
-  teamRewardUnlockBlock: 1000,
+  teamRewardUnlockedAt: 1000,
   teamRewardsFreezePercentage: 0,
   zombieRewardLimit: 5000,
-  stakingCooldownBlocks,
-  stakingUnstakeBlocks,
+  stakingCooldownTicks,
+  stakingUnstakeTicks,
 };

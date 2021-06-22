@@ -74,7 +74,7 @@ contract MigratorWeightedRewardPool is BaseTokenDiffRewardPool, CalcLinearWeight
     return uint256(entry.rewardBase).sub(oldBalance - newBalance);
   }
 
-  function getCurrentBlock() internal view override returns (uint32) {
+  function getCurrentTick() internal view override returns (uint32) {
     return uint32(block.number);
   }
 }

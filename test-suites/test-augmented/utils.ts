@@ -33,10 +33,22 @@ export const mineBlocks = async (amount: number): Promise<number> => {
 export const increaseTime = async (secondsToIncrease: number) =>
   await ethers.provider.send('evm_increaseTime', [secondsToIncrease]);
 
+export const advanceBlock = async (timestamp: number) =>
+  await ethers.provider.send('evm_mine', [timestamp]);
+
 export const mineSeconds = async (amount: number): Promise<number> => {
   const blkBefore = await ethers.provider.getBlock('latest');
-  console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} + ${amount}`);
+  console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} +${amount}`);
   await increaseTime(amount);
+  await mineBlocks(1);
+  const blkAfter = await ethers.provider.getBlock('latest');
+  return blkAfter.timestamp - blkBefore.timestamp;
+};
+
+export const mineToSeconds = async (amount: number): Promise<number> => {
+  const blkBefore = await ethers.provider.getBlock('latest');
+  console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} @${amount}`);
+  await advanceBlock(amount);
   await mineBlocks(1);
   const blkAfter = await ethers.provider.getBlock('latest');
   return blkAfter.timestamp - blkBefore.timestamp;
@@ -80,6 +92,11 @@ export const mineToBlock = async (to: number): Promise<number> => {
 };
 
 export const currentBlock = async () => await ethers.provider.getBlockNumber();
+
+export const currentTick = async () => {
+  const blk = await ethers.provider.getBlock('latest');
+  return blk.timestamp;
+};
 
 export const takeSnapshot = async () => {
   const snap = await ethers.provider.send('evm_snapshot', []);

@@ -7,9 +7,6 @@ interface IRewardConfigurator {
     address stakedToken;
     string stkTokenName;
     string stkTokenSymbol;
-    uint32 cooldownBlocks;
-    uint32 unstakeBlocks;
-    uint16 maxSlashPct;
     uint8 stkTokenDecimals;
   }
 

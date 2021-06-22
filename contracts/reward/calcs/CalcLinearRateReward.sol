@@ -13,7 +13,7 @@ abstract contract CalcLinearRateReward {
 
   mapping(address => RewardEntry) private _rewards;
   uint256 private _rate;
-  uint32 private _lastRateUpdateBlock;
+  uint32 private _lastRateUpdateAt;
 
   mapping(address => uint256) _accumRates;
 
@@ -27,39 +27,39 @@ abstract contract CalcLinearRateReward {
       return;
     }
     uint256 prevRate = _rate;
-    uint32 prevBlock = _lastRateUpdateBlock;
-    uint32 currentBlock = getCurrentBlock();
+    uint32 prevTick = _lastRateUpdateAt;
+    uint32 currentTick = getCurrentTick();
 
-    internalRateUpdate(rate, currentBlock);
-    internalRateUpdated(prevRate, prevBlock, currentBlock);
+    internalRateUpdate(rate, currentTick);
+    internalRateUpdated(prevRate, prevTick, currentTick);
   }
 
-  function getCurrentBlock() internal view virtual returns (uint32);
+  function getCurrentTick() internal view virtual returns (uint32);
 
   function internalRateUpdated(
     uint256 lastRate,
-    uint32 lastBlock,
-    uint32 currentBlock
+    uint32 lastAt,
+    uint32 currentTick
   ) internal virtual;
 
-  function internalRateUpdate(uint256 newRate, uint32 currentBlock) internal virtual {
-    require(currentBlock >= _lastRateUpdateBlock, 'retroactive update');
+  function internalRateUpdate(uint256 newRate, uint32 currentTick) internal virtual {
+    require(currentTick >= _lastRateUpdateAt, 'retroactive update');
     _rate = newRate;
-    _lastRateUpdateBlock = currentBlock;
+    _lastRateUpdateAt = currentTick;
   }
 
   function getLinearRate() internal view virtual returns (uint256) {
     return _rate;
   }
 
-  function getRateUpdateBlock() internal view returns (uint32) {
-    return _lastRateUpdateBlock;
+  function getRateUpdatedAt() internal view returns (uint32) {
+    return _lastRateUpdateAt;
   }
 
   function internalCalcRateAndReward(
     RewardEntry memory entry,
     uint256 lastAccumRate,
-    uint32 currentBlock
+    uint32 currentTick
   )
     internal
     view
@@ -102,19 +102,19 @@ abstract contract CalcLinearRateReward {
     newBalance = internalCalcBalance(entry, oldBalance, newBalance);
     require(newBalance <= type(uint224).max, 'balance is too high');
 
-    uint32 currentBlock = getCurrentBlock();
+    uint32 currentTick = getCurrentTick();
 
     uint256 adjRate;
     (adjRate, allocated, since) = internalCalcRateAndReward(
       entry,
       _accumRates[holder],
-      currentBlock
+      currentTick
     );
     // console.log('internalUpdateReward: ', adjRate, allocated);
 
     _accumRates[holder] = adjRate;
     _rewards[holder].rewardBase = uint224(newBalance);
-    _rewards[holder].lastUpdate = currentBlock;
+    _rewards[holder].lastUpdate = currentTick;
     return (allocated, since, mode);
   }
 
@@ -150,10 +150,10 @@ abstract contract CalcLinearRateReward {
   }
 
   function doGetReward(address holder) internal virtual returns (uint256, uint32) {
-    return doGetRewardAt(holder, getCurrentBlock());
+    return doGetRewardAt(holder, getCurrentTick());
   }
 
-  function doGetRewardAt(address holder, uint32 currentBlock)
+  function doGetRewardAt(address holder, uint32 currentTick)
     internal
     virtual
     returns (uint256, uint32)
@@ -163,17 +163,17 @@ abstract contract CalcLinearRateReward {
     }
 
     (uint256 adjRate, uint256 allocated, uint32 since) =
-      internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentBlock);
+      internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentTick);
     _accumRates[holder] = adjRate;
-    _rewards[holder].lastUpdate = currentBlock;
+    _rewards[holder].lastUpdate = currentTick;
     return (allocated, since);
   }
 
   function doCalcReward(address holder) internal view virtual returns (uint256, uint32) {
-    return doCalcRewardAt(holder, getCurrentBlock());
+    return doCalcRewardAt(holder, getCurrentTick());
   }
 
-  function doCalcRewardAt(address holder, uint32 currentBlock)
+  function doCalcRewardAt(address holder, uint32 currentTick)
     internal
     view
     virtual
@@ -184,7 +184,7 @@ abstract contract CalcLinearRateReward {
     }
 
     (, uint256 allocated, uint32 since) =
-      internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentBlock);
+      internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentTick);
     return (allocated, since);
   }
 }

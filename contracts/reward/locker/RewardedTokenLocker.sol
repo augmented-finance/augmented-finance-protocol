@@ -69,7 +69,7 @@ contract RewardedTokenLocker is BaseTokenLocker, ForwardedRewardPool, CalcLinear
     if (expiry == 0) {
       return (0, 0);
     }
-    uint32 current = getCurrentBlock();
+    uint32 current = getCurrentTick();
     if (current > expiry) {
       current = expiry;
     }
@@ -88,7 +88,7 @@ contract RewardedTokenLocker is BaseTokenLocker, ForwardedRewardPool, CalcLinear
     if (expiry == 0) {
       return (0, 0);
     }
-    uint32 current = getCurrentBlock();
+    uint32 current = getCurrentTick();
     if (current < expiry) {
       return super.doGetRewardAt(holder, current);
     }
@@ -107,7 +107,7 @@ contract RewardedTokenLocker is BaseTokenLocker, ForwardedRewardPool, CalcLinear
     super.setLinearRate(rate);
   }
 
-  function getCurrentBlock() internal view override returns (uint32) {
+  function getCurrentTick() internal view override returns (uint32) {
     return uint32(block.timestamp);
   }
 

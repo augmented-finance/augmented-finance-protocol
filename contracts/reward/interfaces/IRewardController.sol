@@ -11,7 +11,7 @@ interface IRewardController {
   function allocatedByPool(
     address holder,
     uint256 allocated,
-    uint32 sinceBlock,
+    uint32 since,
     AllocationMode mode
   ) external;
 

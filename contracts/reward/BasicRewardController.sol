@@ -24,7 +24,7 @@ abstract contract BasicRewardController is BaseRewardController {
     override
     returns (uint256 claimableAmount)
   {
-    uint32 sinceBlock = 0;
+    uint32 since = 0;
     uint256 amountSince = 0;
     bool incremental = false;
 
@@ -38,21 +38,21 @@ abstract contract BasicRewardController is BaseRewardController {
         continue;
       }
 
-      if (sinceBlock == since_) {
+      if (since == since_) {
         amountSince = amountSince.add(amount_);
         continue;
       }
 
       if (amountSince > 0) {
-        claimableAmount = claimableAmount.add(internalClaimByCall(holder, amountSince, sinceBlock));
+        claimableAmount = claimableAmount.add(internalClaimByCall(holder, amountSince, since));
         incremental = true;
       }
       amountSince = amount_;
-      sinceBlock = since_;
+      since = since_;
     }
 
     if (amountSince > 0 || !incremental) {
-      claimableAmount = claimableAmount.add(internalClaimByCall(holder, amountSince, sinceBlock));
+      claimableAmount = claimableAmount.add(internalClaimByCall(holder, amountSince, since));
     }
 
     return claimableAmount;
@@ -64,7 +64,7 @@ abstract contract BasicRewardController is BaseRewardController {
     override
     returns (uint256 claimableAmount, uint256 delayedAmount)
   {
-    uint32 sinceBlock = 0;
+    uint32 since = 0;
     uint256 amountSince = 0;
     bool incremental = false;
 
@@ -78,23 +78,23 @@ abstract contract BasicRewardController is BaseRewardController {
         continue;
       }
 
-      if (sinceBlock == since_) {
+      if (since == since_) {
         amountSince = amountSince.add(amount_);
         continue;
       }
 
       if (amountSince > 0) {
-        (uint256 ca, uint256 da) = internalCalcByCall(holder, amountSince, sinceBlock, incremental);
+        (uint256 ca, uint256 da) = internalCalcByCall(holder, amountSince, since, incremental);
         claimableAmount = claimableAmount.add(ca);
         delayedAmount = delayedAmount.add(da);
         incremental = true;
       }
       amountSince = amount_;
-      sinceBlock = since_;
+      since = since_;
     }
 
     if (amountSince > 0 || !incremental) {
-      (uint256 ca, uint256 da) = internalCalcByCall(holder, amountSince, sinceBlock, incremental);
+      (uint256 ca, uint256 da) = internalCalcByCall(holder, amountSince, since, incremental);
       claimableAmount = claimableAmount.add(ca);
       delayedAmount = delayedAmount.add(da);
     }
@@ -105,13 +105,13 @@ abstract contract BasicRewardController is BaseRewardController {
   function internalClaimByCall(
     address holder,
     uint256 allocated,
-    uint32 sinceBlock
+    uint32 since
   ) internal virtual returns (uint256 amount);
 
   function internalCalcByCall(
     address holder,
     uint256 allocated,
-    uint32 sinceBlock,
+    uint32 since,
     bool incremental
   ) internal view virtual returns (uint256 claimableAmount, uint256 delayedAmount);
 }

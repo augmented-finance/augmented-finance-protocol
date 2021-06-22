@@ -24,8 +24,8 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import {
   CFG,
   slashingDefaultPercentageHR,
-  stakingCooldownBlocks,
-  stakingUnstakeBlocks,
+  stakingCooldownTicks,
+  stakingUnstakeTicks,
 } from '../../tasks/migrations/defaultTestDeployConfig';
 import { mineSeconds, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import { BigNumberish } from 'ethers';
@@ -86,7 +86,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
     console.log(`user address: ${user1.address}`);
     await stake(user1, defaultStkAmount);
     await xAGF.connect(user1).cooldown();
-    await mineSeconds(stakingUnstakeBlocks + stakingCooldownBlocks + 1);
+    await mineSeconds(stakingUnstakeTicks + stakingCooldownTicks + 1);
     await expect(xAGF.connect(user1).redeem(user1.address, defaultStkAmount)).to.be.revertedWith(
       'STK_UNSTAKE_WINDOW_FINISHED'
     );
@@ -115,7 +115,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
   it('can redeem before unstake', async () => {
     await stake(user1, defaultStkAmount);
     await xAGF.connect(user1).cooldown();
-    await mineSeconds(stakingCooldownBlocks);
+    await mineSeconds(stakingCooldownTicks);
     await xAGF.connect(user1).redeem(user1.address, defaultStkAmount);
     expect(await xAGF.balanceOf(user1.address)).to.eq(0);
     expect(await AGF.balanceOf(user1.address)).to.eq(defaultStkAmount);
@@ -124,7 +124,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
   it('can burn from another account when redeeming', async () => {
     await stake(user2, defaultStkAmount);
     await xAGF.connect(user2).cooldown();
-    await mineSeconds(stakingCooldownBlocks);
+    await mineSeconds(stakingCooldownTicks);
     await xAGF.connect(user2).redeem(user1.address, defaultStkAmount);
     expect(await xAGF.balanceOf(user2.address)).to.eq(0);
     expect(await AGF.balanceOf(user1.address)).to.eq(defaultStkAmount);
@@ -140,8 +140,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
     await expect(xAGF.connect(user1).redeem(user1.address, defaultStkAmount)).to.be.revertedWith(
       'STK_INSUFFICIENT_COOLDOWN'
     );
-    // await mineToBlock((await currentBlock()) + stakingCooldownBlocks);
-    await mineSeconds(stakingCooldownBlocks);
+    await mineSeconds(stakingCooldownTicks);
     await xAGF.connect(user1).redeem(user1.address, defaultStkAmount);
     expect(await xAGF.balanceOf(user1.address)).to.eq(0);
     expect(await AGF.balanceOf(user1.address)).to.eq(defaultStkAmount);
@@ -157,7 +156,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
   it('can slash underlying', async () => {
     await stake(user1, defaultStkAmount);
     await xAGF.connect(user1).cooldown();
-    await mineSeconds(stakingCooldownBlocks);
+    await mineSeconds(stakingCooldownTicks);
     await xAGF.connect(slasher).slashUnderlying(slasher.address, 10, 110);
     const slashed = defaultStkAmount * slashingDefaultPercentageHR;
     expect(await AGF.balanceOf(slasher.address)).to.eq(slashed);
