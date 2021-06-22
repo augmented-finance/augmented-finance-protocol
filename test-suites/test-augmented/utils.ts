@@ -26,14 +26,26 @@ export const mineBlocks = async (amount: number): Promise<number> => {
     }
   }
   const blkAfter = await ethers.provider.getBlock('latest');
-  console.log(`moved to block: ${blkAfter.number}`);
+  console.log(`moved to block: ${blkAfter.number} ${blkAfter.timestamp}`);
   return blockMined;
+};
+
+export const increaseTime = async (secondsToIncrease: number) =>
+  await ethers.provider.send('evm_increaseTime', [secondsToIncrease]);
+
+export const mineSeconds = async (amount: number): Promise<number> => {
+  const blkBefore = await ethers.provider.getBlock('latest');
+  console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} + ${amount}`);
+  await increaseTime(amount);
+  await mineBlocks(1);
+  const blkAfter = await ethers.provider.getBlock('latest');
+  return blkAfter.timestamp - blkBefore.timestamp;
 };
 
 export const mineToBlock = async (to: number): Promise<number> => {
   const blk = await ethers.provider.getBlock('latest');
   if (to == blk.number) {
-    console.log(`exactly at block: ${blk.number}`);
+    console.log(`exactly at block: ${blk.number} ${blk.timestamp}`);
     return 0;
   }
   if (to < blk.number) {
@@ -63,7 +75,7 @@ export const mineToBlock = async (to: number): Promise<number> => {
     blockMined += 1;
   }
   const blkAfter = await ethers.provider.getBlock('latest');
-  console.log(`moved to block: ${blkAfter.number}`);
+  console.log(`moved to block: ${blkAfter.number} ${blkAfter.timestamp}`);
   return blockMined;
 };
 

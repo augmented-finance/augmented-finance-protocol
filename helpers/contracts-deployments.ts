@@ -649,8 +649,8 @@ export const deployMockStakedAgToken = async (
     {
       stakeController: args[0],
       stakedToken: args[1],
-      cooldownBlocks: args[4],
-      unstakeBlocks: args[5],
+      cooldownPeriod: args[4],
+      unstakePeriod: args[5],
       governance: args[6],
     },
     args[2],
@@ -675,8 +675,8 @@ export const deployMockStakedAgfToken = async (
     {
       stakeController: args[0],
       stakedToken: args[1],
-      cooldownBlocks: args[4],
-      unstakeBlocks: args[5],
+      cooldownPeriod: args[4],
+      unstakePeriod: args[5],
       governance: args[6],
     },
     args[2],

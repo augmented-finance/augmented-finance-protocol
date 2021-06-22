@@ -152,17 +152,18 @@ abstract contract SlashableStakeTokenBase is
     require(!_redeemPaused, 'STK_REDEEM_PAUSED');
 
     uint256 cooldownStartAt = _stakersCooldowns[from];
-    // console.log('internal redeem from: ', from);
+    // console.log('internal redeem: ', from, to, address(this));
     // console.log('block.timestamp: ', block.timestamp);
     // console.log('cooldownStartAt: ', cooldownStartAt);
     // console.log('cooldownPeriod: ', _cooldownPeriod);
     // console.log('cooldownPeriod: ', _unstakePeriod);
+
     require(
-      cooldownStartAt != 0 && block.number > cooldownStartAt.add(_cooldownPeriod),
+      cooldownStartAt != 0 && block.timestamp > cooldownStartAt.add(_cooldownPeriod),
       'STK_INSUFFICIENT_COOLDOWN'
     );
     require(
-      block.number.sub(cooldownStartAt.add(_cooldownPeriod)) <= _unstakePeriod,
+      block.timestamp.sub(cooldownStartAt.add(_cooldownPeriod)) <= _unstakePeriod,
       'STK_UNSTAKE_WINDOW_FINISHED'
     );
 
@@ -218,8 +219,11 @@ abstract contract SlashableStakeTokenBase is
   function cooldown() external override {
     require(balanceOf(msg.sender) != 0, 'STK_INVALID_BALANCE_ON_COOLDOWN');
 
-    _stakersCooldowns[msg.sender] = uint32(block.number);
-    emit Cooldown(msg.sender, uint32(block.number));
+    // console.log('cooldown: ', msg.sender, address(this));
+    // console.log('block.timestamp: ', block.timestamp);
+
+    _stakersCooldowns[msg.sender] = uint32(block.timestamp);
+    emit Cooldown(msg.sender, uint32(block.timestamp));
   }
 
   /**
@@ -369,13 +373,13 @@ abstract contract SlashableStakeTokenBase is
       return 0;
     }
 
-    uint256 minimalValidCooldown = block.number.sub(_cooldownPeriod).sub(_unstakePeriod);
+    uint256 minimalValidCooldown = block.timestamp.sub(_cooldownPeriod).sub(_unstakePeriod);
 
     if (minimalValidCooldown > toCooldownPeriod) {
       toCooldownPeriod = 0;
     } else {
       if (minimalValidCooldown > fromCooldownPeriod) {
-        fromCooldownPeriod = uint32(block.number);
+        fromCooldownPeriod = uint32(block.timestamp);
       }
 
       if (fromCooldownPeriod < toCooldownPeriod) {
