@@ -2,22 +2,22 @@ import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
 import rawBRE, { ethers } from 'hardhat';
-import { LibTestUtils } from '../../types';
+import { MathUtils } from '../../types';
 import { mineBlocks, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import { BigNumber } from 'ethers';
 import moment = require('moment');
-import { RAY } from '../../helpers/constants';
+import { RAY, PW128 } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
 
-describe('Library tests example', () => {
-  let i: LibTestUtils;
+describe('Library tests', () => {
+  let i: MathUtils;
   let blkBeforeDeploy;
 
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
-    const c = await ethers.getContractFactory('LibTestUtils');
+    const c = await ethers.getContractFactory('MathUtils');
     i = await c.deploy();
   });
 
@@ -25,13 +25,10 @@ describe('Library tests example', () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  it.skip('test linear interest', async () => {
+  it('log2', async () => {
     {
-      let oneDayAgo = moment().subtract(1, 'days').unix();
-      let res = await i.callStatic.TestLinearInterest(RAY, BigNumber.from(oneDayAgo));
-      console.log(`linear rate: ${res}`);
-      await mineBlocks(1);
-      expect(res).eq(BigNumber.from('1002739186960933536276002029'));
+      expect(await i.callStatic.log_2(PW128)).eq(0);
+      expect(await i.callStatic.log_2(BigNumber.from(16).mul(PW128))).eq(BigNumber.from(4).mul(PW128));
     }
   });
 });
