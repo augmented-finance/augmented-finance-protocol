@@ -9,8 +9,8 @@ import {ITransferHook} from './ITransferHook.sol';
 struct StakeTokenConfig {
   IMarketAccessController stakeController;
   IERC20 stakedToken;
-  uint32 cooldownBlocks;
-  uint32 unstakeBlocks;
+  uint32 cooldownPeriod;
+  uint32 unstakePeriod;
   // For voting token only
   ITransferHook governance;
 }
