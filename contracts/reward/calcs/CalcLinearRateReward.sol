@@ -15,21 +15,26 @@ abstract contract CalcLinearRateReward {
   uint256 private _rate;
   uint32 private _lastRateUpdateBlock;
 
+  mapping(address => uint256) _accumRates;
+
   struct RewardEntry {
-    uint256 lastAccumRate;
     uint224 rewardBase;
-    uint32 lastUpdateBlock;
+    uint32 lastUpdate;
   }
 
-  function setLinearRate(uint256 rate, uint32 currentBlock) internal {
+  function setLinearRate(uint256 rate) internal {
     if (_rate == rate) {
       return;
     }
     uint256 prevRate = _rate;
     uint32 prevBlock = _lastRateUpdateBlock;
+    uint32 currentBlock = getCurrentBlock();
+
     internalRateUpdate(rate, currentBlock);
     internalRateUpdated(prevRate, prevBlock, currentBlock);
   }
+
+  function getCurrentBlock() internal view virtual returns (uint32);
 
   function internalRateUpdated(
     uint256 lastRate,
@@ -51,7 +56,11 @@ abstract contract CalcLinearRateReward {
     return _lastRateUpdateBlock;
   }
 
-  function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
+  function internalCalcRateAndReward(
+    RewardEntry memory entry,
+    uint256 lastAccumRate,
+    uint32 currentBlock
+  )
     internal
     view
     virtual
@@ -66,11 +75,9 @@ abstract contract CalcLinearRateReward {
   }
 
   function doUpdateReward(
-    address provider,
     address holder,
     uint256 oldBalance,
-    uint256 newBalance,
-    uint32 currentBlock
+    uint256 newBalance
   )
     internal
     virtual
@@ -86,49 +93,67 @@ abstract contract CalcLinearRateReward {
 
     if (newBalance == 0) {
       mode = AllocationMode.UnsetPull;
-    } else if (oldBalance == 0 || entry.rewardBase == 0) {
+    } else if (entry.rewardBase == 0) {
       mode = AllocationMode.SetPull;
     } else {
       mode = AllocationMode.Push;
     }
 
-    newBalance = internalCalcBalance(provider, entry, oldBalance, newBalance);
+    newBalance = internalCalcBalance(entry, oldBalance, newBalance);
     require(newBalance <= type(uint224).max, 'balance is too high');
 
+    uint32 currentBlock = getCurrentBlock();
+
     uint256 adjRate;
-    (adjRate, allocated, since) = internalCalcRateAndReward(entry, currentBlock);
+    (adjRate, allocated, since) = internalCalcRateAndReward(
+      entry,
+      _accumRates[holder],
+      currentBlock
+    );
     // console.log('internalUpdateReward: ', adjRate, allocated);
 
-    _rewards[holder].lastAccumRate = adjRate;
+    _accumRates[holder] = adjRate;
     _rewards[holder].rewardBase = uint224(newBalance);
-    _rewards[holder].lastUpdateBlock = currentBlock;
+    _rewards[holder].lastUpdate = currentBlock;
     return (allocated, since, mode);
   }
 
   function internalCalcBalance(
-    address provider,
     RewardEntry memory entry,
     uint256 oldBalance,
     uint256 newBalance
-  ) internal view virtual returns (uint256) {
-    provider;
-    this;
-    if (newBalance >= oldBalance) {
-      return uint256(entry.rewardBase).add(newBalance - oldBalance);
-    }
-    return uint256(entry.rewardBase).sub(oldBalance - newBalance);
+  ) internal pure virtual returns (uint256) {
+    entry;
+    oldBalance;
+    return newBalance;
   }
+
+  // function internalCalcBalance(
+  //   RewardEntry memory entry,
+  //   uint256 oldBalance,
+  //   uint256 newBalance
+  // ) internal view virtual returns (uint256) {
+  //   this;
+  //   if (newBalance >= oldBalance) {
+  //     return uint256(entry.rewardBase).add(newBalance - oldBalance);
+  //   }
+  //   return uint256(entry.rewardBase).sub(oldBalance - newBalance);
+  // }
 
   function internalRemoveReward(address holder) internal virtual returns (uint256 rewardBase) {
     rewardBase = _rewards[holder].rewardBase;
-    if (rewardBase == 0 && _rewards[holder].lastUpdateBlock == 0) {
+    if (rewardBase == 0 && _rewards[holder].lastUpdate == 0) {
       return 0;
     }
     delete (_rewards[holder]);
     return rewardBase;
   }
 
-  function doGetReward(address holder, uint32 currentBlock)
+  function doGetReward(address holder) internal virtual returns (uint256, uint32) {
+    return doGetRewardAt(holder, getCurrentBlock());
+  }
+
+  function doGetRewardAt(address holder, uint32 currentBlock)
     internal
     virtual
     returns (uint256, uint32)
@@ -138,13 +163,17 @@ abstract contract CalcLinearRateReward {
     }
 
     (uint256 adjRate, uint256 allocated, uint32 since) =
-      internalCalcRateAndReward(_rewards[holder], currentBlock);
-    _rewards[holder].lastAccumRate = adjRate;
-    _rewards[holder].lastUpdateBlock = currentBlock;
+      internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentBlock);
+    _accumRates[holder] = adjRate;
+    _rewards[holder].lastUpdate = currentBlock;
     return (allocated, since);
   }
 
-  function doCalcReward(address holder, uint32 currentBlock)
+  function doCalcReward(address holder) internal view virtual returns (uint256, uint32) {
+    return doCalcRewardAt(holder, getCurrentBlock());
+  }
+
+  function doCalcRewardAt(address holder, uint32 currentBlock)
     internal
     view
     virtual
@@ -154,7 +183,8 @@ abstract contract CalcLinearRateReward {
       return (0, 0);
     }
 
-    (, uint256 allocated, uint32 since) = internalCalcRateAndReward(_rewards[holder], currentBlock);
+    (, uint256 allocated, uint32 since) =
+      internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentBlock);
     return (allocated, since);
   }
 }

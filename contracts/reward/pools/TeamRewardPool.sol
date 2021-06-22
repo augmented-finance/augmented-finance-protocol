@@ -3,12 +3,12 @@ pragma solidity ^0.6.12;
 
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {BaseRateRewardPool} from './BaseRateRewardPool.sol';
+import {ControlledRewardPool} from './ControlledRewardPool.sol';
 import {CalcLinearUnweightedReward} from '../calcs/CalcLinearUnweightedReward.sol';
 
 import 'hardhat/console.sol';
 
-contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
+contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   using PercentageMath for uint256;
 
   address private _teamManager;
@@ -21,7 +21,7 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     uint256 initialRate,
     uint16 baselinePercentage,
     address teamManager
-  ) public BaseRateRewardPool(controller, initialRate, baselinePercentage) {
+  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _teamManager = teamManager;
   }
 
@@ -37,34 +37,29 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     return super.getLinearRate();
   }
 
-  function internalSetRate(uint256 newRate, uint32 currentBlock) internal override {
-    super.setLinearRate(newRate, currentBlock);
+  function internalSetRate(uint256 newRate) internal override {
+    super.setLinearRate(newRate);
   }
 
-  function internalGetReward(address holder, uint32 currentBlock)
-    internal
-    override
-    returns (uint256, uint32)
-  {
-    if (!isUnlocked(currentBlock)) {
+  function internalGetReward(address holder) internal override returns (uint256, uint32) {
+    if (!isUnlocked(getCurrentBlock())) {
       return (0, 0);
     }
-    return doGetReward(holder, currentBlock);
+    return doGetReward(holder);
   }
 
-  function internalCalcReward(address holder, uint32 currentBlock)
-    internal
-    view
-    override
-    returns (uint256, uint32)
-  {
-    if (!isUnlocked(currentBlock)) {
+  function internalCalcReward(address holder) internal view override returns (uint256, uint32) {
+    if (!isUnlocked(getCurrentBlock())) {
       return (0, 0);
     }
-    return doCalcReward(holder, currentBlock);
+    return doCalcReward(holder);
   }
 
-  function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
+  function internalCalcRateAndReward(
+    RewardEntry memory entry,
+    uint256 lastAccumRate,
+    uint32 currentBlock
+  )
     internal
     view
     override
@@ -74,7 +69,7 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
       uint32 since
     )
   {
-    (rate, allocated, since) = super.internalCalcRateAndReward(entry, currentBlock);
+    (rate, allocated, since) = super.internalCalcRateAndReward(entry, lastAccumRate, currentBlock);
     allocated = (allocated + PercentageMath.HALF_ONE) / PercentageMath.ONE;
     return (rate, allocated, since);
   }
@@ -108,10 +103,10 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     _totalShare = uint16(newTotalShare);
 
     (uint256 allocated, uint32 since, AllocationMode mode) =
-      doUpdateReward(_teamManager, member, oldSharePct, memberSharePct, uint32(block.number));
+      doUpdateReward(member, oldSharePct, memberSharePct);
 
     require(
-      allocated == 0 || isUnlocked(uint32(block.number)),
+      allocated == 0 || isUnlocked(getCurrentBlock()),
       'member share can not be changed during lockup'
     );
 
@@ -141,12 +136,16 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
   function setUnlockBlock(uint32 blockNumber) external onlyTeamManagerOrController {
     require(blockNumber > 0, 'blockNumber is required');
     if (_lockupBlock != 0) {
-      require(_lockupBlock > block.number, 'lockup is finished');
+      require(_lockupBlock > getCurrentBlock(), 'lockup is finished');
     }
     _lockupBlock = blockNumber;
   }
 
   function getUnlockBlock() external view returns (uint32) {
     return _lockupBlock;
+  }
+
+  function getCurrentBlock() internal view override returns (uint32) {
+    return uint32(block.number);
   }
 }

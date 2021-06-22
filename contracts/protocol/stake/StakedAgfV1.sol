@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {StakeTokenBase} from './StakeTokenBase.sol';
+import {SlashableStakeTokenBase} from './SlashableStakeTokenBase.sol';
 import {AccessFlags} from '../../access/AccessFlags.sol';
 import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
 import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
@@ -13,7 +13,7 @@ import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
  * @notice Staked AGF token
  **/
 contract StakedAgfV1 is
-  StakeTokenBase, // VotingToken,
+  SlashableStakeTokenBase, // VotingToken,
   VersionedInitializable,
   IRewardMinter
 {
@@ -24,7 +24,7 @@ contract StakedAgfV1 is
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor() public StakeTokenBase(zeroConfig(), NAME, SYMBOL, 0) {}
+  constructor() public SlashableStakeTokenBase(zeroConfig(), NAME, SYMBOL, 0) {}
 
   function zeroConfig() private pure returns (StakeTokenConfig memory) {}
 
@@ -71,5 +71,9 @@ contract StakedAgfV1 is
 
     internalStake(msg.sender, account, amount, false);
     return (IRewardMinter(getUnderlying()), address(this));
+  }
+
+  function rewardTotalSupply() external view override returns (uint256) {
+    return IRewardMinter(getUnderlying()).rewardTotalSupply();
   }
 }

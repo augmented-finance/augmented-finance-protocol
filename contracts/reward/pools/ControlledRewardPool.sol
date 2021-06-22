@@ -5,7 +5,7 @@ import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {IManagedRewardPool} from '../interfaces/IRewardPool.sol';
+import {IManagedRewardPool} from '../interfaces/IManagedRewardPool.sol';
 
 import 'hardhat/console.sol';
 
@@ -14,38 +14,84 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
 
+  uint16 internal constant NO_BASELINE = type(uint16).max;
+
   IRewardController internal _controller;
+
+  uint224 internal _pausedRate;
+  uint16 private _baselinePercentage;
   bool private _paused;
 
-  constructor(IRewardController controller) public {
+  constructor(
+    IRewardController controller,
+    uint256 initialRate,
+    uint16 baselinePercentage
+  ) public {
     require(address(controller) != address(0), 'controller is required');
     _controller = controller;
+
+    require(initialRate <= type(uint224).max, 'excessive initialRate value');
+
+    if (initialRate != 0 && baselinePercentage == 0) {
+      _baselinePercentage = NO_BASELINE;
+    } else {
+      _baselinePercentage = baselinePercentage;
+    }
+
+    internalSetRate(uint224(initialRate));
   }
 
-  function updateBaseline(uint256) external virtual override onlyController returns (bool) {
-    return false;
+  function updateBaseline(uint256 baseline)
+    external
+    virtual
+    override
+    onlyController
+    returns (bool hasBaseline, uint256 appliedRate)
+  {
+    if (_baselinePercentage == NO_BASELINE) {
+      return (false, getRate());
+    }
+    appliedRate = baseline.percentMul(_baselinePercentage);
+    setRate(appliedRate);
+    return (true, appliedRate);
   }
 
   function disableBaseline() external override onlyController {
-    internalDisableBaseline();
+    _baselinePercentage = NO_BASELINE;
   }
 
   function disableRewardPool() external override onlyController {
-    internalDisableBaseline();
-    internalDisableRate();
+    _baselinePercentage = NO_BASELINE;
+    _pausedRate = 0;
+    internalSetRate(0);
   }
 
-  function internalDisableBaseline() internal virtual {}
+  //  function internalDisableBaseline() internal virtual {}
 
-  function internalDisableRate() internal virtual;
+  //  function internalDisableRate() internal virtual;
 
-  function setBaselinePercentage(uint16) external virtual override onlyRateController {
-    revert('UNSUPPORTED');
+  function setBaselinePercentage(uint16 factor) external override onlyRateController {
+    internalSetBaselinePercentage(factor);
   }
 
-  function setRate(uint256) public virtual override onlyRateController {
-    revert('UNSUPPORTED');
+  function internalSetBaselinePercentage(uint16 factor) internal virtual {
+    require(factor <= PercentageMath.ONE, 'illegal value');
+    _baselinePercentage = factor;
   }
+
+  function setRate(uint256 rate) public virtual override onlyRateController {
+    require(rate <= type(uint224).max, 'excessive rate value');
+
+    if (isPaused()) {
+      _pausedRate = uint224(rate);
+      return;
+    }
+    internalSetRate(rate);
+  }
+
+  function getRate() public view virtual returns (uint256);
+
+  function internalSetRate(uint256 rate) internal virtual;
 
   function setPaused(bool paused) public override onlyEmergencyAdmin {
     if (_paused == paused) {
@@ -59,7 +105,14 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return _paused;
   }
 
-  function internalPause(bool paused) internal virtual;
+  function internalPause(bool paused) internal virtual {
+    if (paused) {
+      _pausedRate = uint224(getRate());
+      internalSetRate(0);
+      return;
+    }
+    internalSetRate(_pausedRate);
+  }
 
   function getRewardController() public view override returns (address) {
     return address(_controller);
@@ -71,11 +124,11 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     onlyController
     returns (uint256, uint32)
   {
-    return internalGetReward(holder, uint32(block.number));
+    return internalGetReward(holder);
   }
 
   function calcRewardFor(address holder) external view override returns (uint256, uint32) {
-    return internalCalcReward(holder, uint32(block.number));
+    return internalCalcReward(holder);
   }
 
   function internalAllocateReward(
@@ -87,16 +140,9 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _controller.allocatedByPool(holder, allocated, since, mode);
   }
 
-  function internalGetReward(address holder, uint32 currentBlock)
-    internal
-    virtual
-    returns (uint256, uint32);
+  function internalGetReward(address holder) internal virtual returns (uint256, uint32);
 
-  function internalCalcReward(address holder, uint32 currentBlock)
-    internal
-    view
-    virtual
-    returns (uint256, uint32);
+  function internalCalcReward(address holder) internal view virtual returns (uint256, uint32);
 
   function isController(address addr) internal view returns (bool) {
     return address(_controller) == addr || _controller.isConfigurator(addr);

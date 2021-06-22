@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {StakeTokenBase} from './StakeTokenBase.sol';
+import {SlashableStakeTokenBase} from './SlashableStakeTokenBase.sol';
 import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
 import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
 
@@ -10,10 +10,10 @@ import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitia
  * @title StakeToken
  * @notice Contract to stake a token for a system reserve.
  **/
-contract StakeToken is StakeTokenBase, VersionedInitializable {
+contract StakeToken is SlashableStakeTokenBase, VersionedInitializable {
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor() public StakeTokenBase(zeroConfig(), 'STAKE_STUB', 'STAKE_STUB', 0) {}
+  constructor() public SlashableStakeTokenBase(zeroConfig(), 'STAKE_STUB', 'STAKE_STUB', 0) {}
 
   function zeroConfig() private pure returns (StakeTokenConfig memory) {}
 

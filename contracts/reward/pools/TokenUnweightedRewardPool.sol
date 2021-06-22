@@ -23,44 +23,38 @@ contract TokenUnweightedRewardPool is BaseTokenAbsRewardPool, CalcLinearUnweight
     return super.getLinearRate();
   }
 
-  function internalSetRate(uint256 newRate, uint32 currentBlock) internal override {
-    super.setLinearRate(newRate, currentBlock);
+  function internalSetRate(uint256 newRate) internal override {
+    super.setLinearRate(newRate);
   }
 
-  function internalGetReward(address holder, uint32 currentBlock)
-    internal
-    override
-    returns (uint256, uint32)
-  {
-    return doGetReward(holder, currentBlock);
+  function internalGetReward(address holder) internal override returns (uint256, uint32) {
+    return doGetReward(holder);
   }
 
-  function internalCalcReward(address holder, uint32 currentBlock)
-    internal
-    view
-    override
-    returns (uint256, uint32)
-  {
-    return doCalcReward(holder, currentBlock);
+  function internalCalcReward(address holder) internal view override returns (uint256, uint32) {
+    return doCalcReward(holder);
   }
 
   function internalUpdateReward(
-    address provider,
+    address,
     address holder,
     uint256 oldBalance,
-    uint256 newBalance,
-    uint32 currentBlock
+    uint256 newBalance
   )
     internal
     override
     returns (
       uint256 allocated,
-      uint32 since,
+      uint32 sinceBlock,
       AllocationMode mode
     )
   {
-    return doUpdateReward(provider, holder, oldBalance, newBalance, currentBlock);
+    return doUpdateReward(holder, oldBalance, newBalance);
   }
 
-  function internalUpdateTotal(uint256 totalBalance, uint32 currentBlock) internal override {}
+  function internalUpdateTotal(uint256 totalBalance) internal override {}
+
+  function getCurrentBlock() internal view override returns (uint32) {
+    return uint32(block.number);
+  }
 }
