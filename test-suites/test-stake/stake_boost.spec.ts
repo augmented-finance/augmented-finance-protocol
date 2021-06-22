@@ -12,7 +12,7 @@ import {
   getTokenWeightedRewardPoolAGFBooster, getTokenWeightedRewardPoolAGUSDCBoosted,
 } from '../../helpers/contracts-getters';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { CFG, stakingCooldownBlocks } from '../../tasks/migrations/defaultTestDeployConfig';
+import { CFG, stakingCooldownTicks } from '../../tasks/migrations/defaultTestDeployConfig';
 import { currentBlock, mineBlocks, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import {
   DepositToken,
@@ -68,7 +68,7 @@ describe('Staking with boosting', () => {
   });
 
   it('no boost if no staking', async () => {
-    await mineBlocks(stakingCooldownBlocks);
+    await mineBlocks(stakingCooldownTicks);
     await rb.connect(user1).claimReward();
     expect(await AGF.balanceOf(user1.address)).to.eq(0);
   });

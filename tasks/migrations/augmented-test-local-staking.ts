@@ -15,19 +15,19 @@ import {
 import { ONE_ADDRESS, oneRay, PERC_100, RAY, RAY_100, ZERO_ADDRESS } from '../../helpers/constants';
 import {
   slashingDefaultPercentage,
-  stakingCooldownBlocks,
-  stakingUnstakeBlocks,
+  stakingCooldownTicks,
+  stakingUnstakeTicks,
 } from './defaultTestDeployConfig';
 import { getAGTokenByName } from '../../helpers/contracts-getters';
 
 task('augmented:test-local-staking', 'Deploy staking contracts')
   .addOptionalParam(
-    'stakeCooldownBlocks',
+    'stakeCooldownTicks',
     'staking cooldown blocks',
-    stakingCooldownBlocks,
+    stakingCooldownTicks,
     types.int
   )
-  .addOptionalParam('stakeUnstakeBlocks', 'staking unstake blocks', stakingUnstakeBlocks, types.int)
+  .addOptionalParam('stakeUnstakeTicks', 'staking unstake window', stakingUnstakeTicks, types.int)
   .addOptionalParam(
     'slashingPercentage',
     'slashing default percentage',
@@ -36,7 +36,7 @@ task('augmented:test-local-staking', 'Deploy staking contracts')
   )
   .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(
-    async ({ stakeCooldownBlocks, stakeUnstakeBlocks, slashingPercentage, verify }, localBRE) => {
+    async ({ stakeCooldownTicks, stakeUnstakeTicks, slashingPercentage, verify }, localBRE) => {
       await localBRE.run('set-DRE');
       const [root, user1, user2, slasher, excessReceiverUser] = await localBRE.ethers.getSigners();
 
@@ -68,8 +68,8 @@ task('augmented:test-local-staking', 'Deploy staking contracts')
         agDaiToken.address,
         'Staked AG Token',
         'xAG',
-        stakeCooldownBlocks,
-        stakeUnstakeBlocks,
+        stakeCooldownTicks,
+        stakeUnstakeTicks,
         ZERO_ADDRESS,
       ]);
       await xAG.connect(root).setMaxSlashablePercentage(slashingPercentage);
@@ -84,8 +84,8 @@ task('augmented:test-local-staking', 'Deploy staking contracts')
         agfToken.address,
         'Staked AGF Token',
         'xAGF',
-        stakeCooldownBlocks,
-        stakeUnstakeBlocks,
+        stakeCooldownTicks,
+        stakeUnstakeTicks,
         ZERO_ADDRESS,
       ]);
       await xAGF.connect(root).setMaxSlashablePercentage(slashingPercentage);
