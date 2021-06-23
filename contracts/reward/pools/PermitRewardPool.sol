@@ -111,7 +111,7 @@ contract PermitRewardPool is ControlledRewardPool {
       return;
     }
     _rewardLimit = _rewardLimit.sub(value, 'insufficient reward pool balance');
-    internalAllocateReward(spender, value, uint32(block.number), AllocationMode.Push);
+    internalAllocateReward(spender, value, uint32(block.timestamp), AllocationMode.Push);
   }
 
   function internalSetBaselinePercentage(uint16) internal override {

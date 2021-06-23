@@ -75,6 +75,6 @@ contract MigratorWeightedRewardPool is BaseTokenDiffRewardPool, CalcLinearWeight
   }
 
   function getCurrentTick() internal view override returns (uint32) {
-    return uint32(block.number);
+    return uint32(block.timestamp);
   }
 }

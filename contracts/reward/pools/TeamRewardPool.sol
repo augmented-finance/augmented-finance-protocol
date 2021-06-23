@@ -135,9 +135,8 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
 
   function setUnlockedAt(uint32 at) external onlyTeamManagerOrController {
     require(at > 0, 'unlockAt is required');
-    if (_lockupTill != 0) {
-      require(_lockupTill > getCurrentTick(), 'lockup is finished');
-    }
+    console.log('setUnlockedAt', _lockupTill, getCurrentTick(), at);
+    require(_lockupTill == 0 || _lockupTill >= getCurrentTick(), 'lockup is finished');
     _lockupTill = at;
   }
 
@@ -146,6 +145,6 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   }
 
   function getCurrentTick() internal view override returns (uint32) {
-    return uint32(block.number);
+    return uint32(block.timestamp);
   }
 }

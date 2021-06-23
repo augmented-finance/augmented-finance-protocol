@@ -33,7 +33,6 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
   .addFlag('withAAVEAdapter', 'deploy with AAVE adapter of aDai')
   .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', RAY, types.string)
   .addOptionalParam('teamRewardBaselinePercentage', 'baseline percentage - bigNumber', 0, types.int)
-  .addOptionalParam('teamRewardUnlockedAt', 'unlock rewards at', 1, types.int)
   .addOptionalParam(
     'teamRewardsFreezePercentage',
     'rewards controller freeze percentage (10k = 100%)',
@@ -65,7 +64,6 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
         withAAVEAdapter,
         teamRewardInitialRate,
         teamRewardBaselinePercentage,
-        teamRewardUnlockedAt,
         teamRewardsFreezePercentage,
         zombieRewardLimit,
         stakeCooldownTicks,
@@ -112,13 +110,12 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
       );
       await tokenWeightedRewardPoolSeparate.addRewardProvider(root.address, ONE_ADDRESS);
 
-      console.log(`#4 deploying: Team Reward Pool, unlock at: ${teamRewardUnlockedAt}`);
+      console.log(`#4 deploying: Team Reward Pool`);
       const teamRewardPool = await deployTeamRewardPool(
         [rewardFreezer.address, teamRewardInitialRate, teamRewardBaselinePercentage, root.address],
         verify
       );
       await waitForTx(await rewardFreezer.admin_addRewardPool(teamRewardPool.address));
-      await waitForTx(await teamRewardPool.setUnlockedAt(teamRewardUnlockedAt));
 
       console.log(`#5 deploying: Zombie Reward Pool`);
       const zombieRewardPool = await deployZombieRewardPool(

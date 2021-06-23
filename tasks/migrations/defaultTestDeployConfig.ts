@@ -25,7 +25,6 @@ export const CFG = {
   zTokenAddress: ZTOKEN_ADDRESS,
   teamRewardInitialRate: RAY,
   teamRewardBaselinePercentage: 0,
-  teamRewardUnlockedAt: 1000,
   teamRewardsFreezePercentage: 0,
   zombieRewardLimit: 5000,
   stakingCooldownTicks,

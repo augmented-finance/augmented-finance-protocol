@@ -12,16 +12,13 @@ import {
 import { MockAgfToken, RewardFreezer, TeamRewardPool } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { waitForTx } from '../../helpers/misc-utils';
-import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from './utils';
+import { currentTick, mineToTicks, revertSnapshot, takeSnapshot } from './utils';
 import { PERC_100 } from '../../helpers/constants';
 import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 
 chai.use(solidity);
 const { expect } = chai;
-
-export const currentTick = currentBlock;
-export const mineToTicks = mineToBlock;
 
 describe('Team rewards suite', () => {
   let root: SignerWithAddress;

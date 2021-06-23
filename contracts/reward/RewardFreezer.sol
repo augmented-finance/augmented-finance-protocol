@@ -45,7 +45,7 @@ contract RewardFreezer is BasicRewardController {
     address,
     uint32 since
   ) internal override {
-    allocated = internalApplyAllocated(holder, allocated, since, uint32(block.number));
+    allocated = internalApplyAllocated(holder, allocated, since, uint32(block.timestamp));
     if (allocated > 0) {
       _claimableRewards[holder] = _claimableRewards[holder].add(allocated);
     }
@@ -56,7 +56,7 @@ contract RewardFreezer is BasicRewardController {
     uint256 allocated,
     uint32 since
   ) internal override returns (uint256 amount) {
-    amount = internalApplyAllocated(holder, allocated, since, uint32(block.number));
+    amount = internalApplyAllocated(holder, allocated, since, uint32(block.timestamp));
 
     uint256 claimableReward = _claimableRewards[holder];
     if (claimableReward > 0) {
@@ -187,7 +187,7 @@ contract RewardFreezer is BasicRewardController {
       holder,
       allocated,
       since,
-      uint32(block.number),
+      uint32(block.timestamp),
       incremental
     );
 

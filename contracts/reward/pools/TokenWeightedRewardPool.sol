@@ -63,6 +63,6 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
   }
 
   function getCurrentTick() internal view override returns (uint32) {
-    return uint32(block.number);
+    return uint32(block.timestamp);
   }
 }
