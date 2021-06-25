@@ -186,14 +186,14 @@ abstract contract BaseRewardController is
   function allocatedByPool(
     address holder,
     uint256 allocated,
-    uint32 sinceBlock,
+    uint32 since,
     AllocationMode mode
   ) external override {
     uint256 poolMask = _poolMask[msg.sender];
     require(poolMask != 0, 'unknown pool');
 
     if (allocated > 0) {
-      internalAllocatedByPool(holder, allocated, msg.sender, sinceBlock);
+      internalAllocatedByPool(holder, allocated, msg.sender, since);
       emit RewardsAllocated(holder, allocated);
     }
 
@@ -291,7 +291,7 @@ abstract contract BaseRewardController is
     address holder,
     uint256 allocated,
     address pool,
-    uint32 sinceBlock
+    uint32 since
   ) internal virtual;
 
   modifier notPaused() {

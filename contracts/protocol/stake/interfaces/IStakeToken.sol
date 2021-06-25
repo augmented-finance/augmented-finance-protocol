@@ -35,5 +35,5 @@ interface IManagedStakeToken is IEmergencyAccess {
 
   function setMaxSlashablePercentage(uint256 percentage) external;
 
-  function setCooldown(uint32 cooldownBlocks, uint32 unstakeBlocks) external;
+  function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod) external;
 }

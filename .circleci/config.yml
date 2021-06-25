@@ -23,7 +23,7 @@ jobs:
       - run: yarn run compile
       - run: yarn run test:augmented:boost
       - run: yarn run test:augmented:utils
-      - run: yarn run test:augmented:token-weighted-pool
+      - run: yarn run test:augmented:pools
       - run: yarn run test
       - run: yarn run test:main:augmented:migrator-zombie
       - run: yarn run test:main:augmented:migrator-aave

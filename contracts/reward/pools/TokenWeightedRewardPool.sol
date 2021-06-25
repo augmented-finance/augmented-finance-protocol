@@ -62,7 +62,7 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
     doUpdateTotalSupply(totalBalance);
   }
 
-  function getCurrentBlock() internal view override returns (uint32) {
-    return uint32(block.number);
+  function getCurrentTick() internal view override returns (uint32) {
+    return uint32(block.timestamp);
   }
 }

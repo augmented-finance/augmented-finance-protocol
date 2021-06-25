@@ -1,4 +1,4 @@
-import { currentBlock, mineBlocks } from './test-augmented/utils';
+import { currentTick, mineTicks, mineToTicks, nextTicks, nextToTicks } from './test-augmented/utils';
 import _ from 'underscore';
 import { ONE_ADDRESS } from '../helpers/constants';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
@@ -15,16 +15,16 @@ export interface UserBalanceChange {
   Signer: SignerWithAddress;
   Pool: any;
   TokenAddress: tEthereumAddress;
-  BlocksFromStart: number;
+  TicksFromStart: number;
   AmountDepositedBefore: BigNumberish;
   AmountDeposited: BigNumberish;
   TotalAmountDeposited: BigNumberish;
 }
 
 export interface TestInfo {
-  TotalRewardBlocks: number;
+  TotalRewardTicks: number;
   UserBalanceChanges: UserBalanceChange[];
-  BlocksToMeltdown: number;
+  TicksToMeltdown: number;
   FreezePercentage: BigNumberish;
 }
 
@@ -45,15 +45,19 @@ const printTestInfo = (s: Object) => {
 // parsing TestInfo struct and applying deposits in different blocks then claims all rewards
 export const applyDepositPlanAndClaimAll = async (ti: TestInfo, controller: any) => {
   printTestInfo(ti);
-  console.log(`current block: ${await currentBlock()}`);
+  const startTick = await currentTick();
+  console.log(`current tick: ${startTick}`);
   // applying balance changes in order
   ti.UserBalanceChanges = _.sortBy(ti.UserBalanceChanges, 'block');
 
-  let totalSetupBlocks = 0;
+  let maxTicksFromStart = 0;
   for (let u of ti.UserBalanceChanges) {
     // mine to set balance update for relative block
-    if (u.BlocksFromStart !== 0) {
-      totalSetupBlocks += await mineBlocks(u.BlocksFromStart);
+    if (u.TicksFromStart > 0) {
+      if (maxTicksFromStart < u.TicksFromStart) {
+        maxTicksFromStart = u.TicksFromStart;
+      }
+      await nextToTicks(startTick + u.TicksFromStart);
     }
     await u.Pool.handleBalanceUpdate(
       u.TokenAddress,
@@ -63,16 +67,20 @@ export const applyDepositPlanAndClaimAll = async (ti: TestInfo, controller: any)
       u.TotalAmountDeposited
     );
   }
+  let extraSetupTicks = (await currentTick()) - (startTick + maxTicksFromStart);
+
   const uniq_addresses = [...new Set(ti.UserBalanceChanges.map((item) => item.Signer.address))];
-  // mine the rest blocks until ti.TotalRewardBlocks,
+  // mine the rest blocks until ti.TotalRewardTicks,
   // subtract already mined blocks + blocks with claims afterwards
-  await mineBlocks(ti.TotalRewardBlocks - totalSetupBlocks - uniq_addresses.length);
+  await mineToTicks(startTick + ti.TotalRewardTicks + extraSetupTicks - uniq_addresses.length);
   // claim for every user only once
   for (let ua of uniq_addresses) {
     for (let s of ti.UserBalanceChanges) {
       if (ua === s.Signer.address) {
         await controller.connect(s.Signer).claimReward();
+        break;
       }
     }
   }
+  await mineToTicks(startTick + ti.TotalRewardTicks + extraSetupTicks);
 };

@@ -13,7 +13,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
 
   address private _teamManager;
   uint256 private _accumRate;
-  uint32 private _lockupBlock;
+  uint32 private _lockupTill;
   uint16 private _totalShare;
 
   constructor(
@@ -42,14 +42,14 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   }
 
   function internalGetReward(address holder) internal override returns (uint256, uint32) {
-    if (!isUnlocked(getCurrentBlock())) {
+    if (!isUnlocked(getCurrentTick())) {
       return (0, 0);
     }
     return doGetReward(holder);
   }
 
   function internalCalcReward(address holder) internal view override returns (uint256, uint32) {
-    if (!isUnlocked(getCurrentBlock())) {
+    if (!isUnlocked(getCurrentTick())) {
       return (0, 0);
     }
     return doCalcReward(holder);
@@ -86,8 +86,8 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return _totalShare;
   }
 
-  function isUnlocked(uint32 blockNumber) public view returns (bool) {
-    return _lockupBlock > 0 && _lockupBlock < blockNumber;
+  function isUnlocked(uint32 at) public view returns (bool) {
+    return _lockupTill > 0 && _lockupTill < at;
   }
 
   function updateTeamMember(address member, uint16 memberSharePct)
@@ -106,7 +106,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
       doUpdateReward(member, oldSharePct, memberSharePct);
 
     require(
-      allocated == 0 || isUnlocked(getCurrentBlock()),
+      allocated == 0 || isUnlocked(getCurrentTick()),
       'member share can not be changed during lockup'
     );
 
@@ -133,19 +133,18 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return _teamManager;
   }
 
-  function setUnlockBlock(uint32 blockNumber) external onlyTeamManagerOrController {
-    require(blockNumber > 0, 'blockNumber is required');
-    if (_lockupBlock != 0) {
-      require(_lockupBlock > getCurrentBlock(), 'lockup is finished');
-    }
-    _lockupBlock = blockNumber;
+  function setUnlockedAt(uint32 at) external onlyTeamManagerOrController {
+    require(at > 0, 'unlockAt is required');
+    console.log('setUnlockedAt', _lockupTill, getCurrentTick(), at);
+    require(_lockupTill == 0 || _lockupTill >= getCurrentTick(), 'lockup is finished');
+    _lockupTill = at;
   }
 
-  function getUnlockBlock() external view returns (uint32) {
-    return _lockupBlock;
+  function getUnlockedAt() external view returns (uint32) {
+    return _lockupTill;
   }
 
-  function getCurrentBlock() internal view override returns (uint32) {
-    return uint32(block.number);
+  function getCurrentTick() internal view override returns (uint32) {
+    return uint32(block.timestamp);
   }
 }

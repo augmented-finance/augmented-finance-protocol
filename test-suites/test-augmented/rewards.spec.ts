@@ -82,7 +82,7 @@ describe('Rewards test suite', () => {
     expect(await agf.balanceOf(user.address)).to.eq(8000); // +50% of 2k for block 15, ttl frozen 4k
 
     // immediate meltdown
-    await (await rewardFreezer.admin_setMeltDownBlock(1)).wait(1); // block 18
+    await (await rewardFreezer.admin_setMeltDownAt(1)).wait(1); // block 18
     // 9000: +50% of 2k for block 18, ttl frozen 5k
 
     await (

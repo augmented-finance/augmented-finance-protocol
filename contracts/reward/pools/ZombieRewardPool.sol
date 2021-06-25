@@ -109,7 +109,7 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
     allocated = allocated.rayMul(tr.rateRay);
     tr.limit = tr.limit.sub(allocated, 'insufficient reward pool balance');
 
-    _controller.allocatedByPool(holder, allocated, uint32(block.number), AllocationMode.Push);
+    _controller.allocatedByPool(holder, allocated, uint32(block.timestamp), AllocationMode.Push);
   }
 
   function isScaledBalanceUpdateNeeded() external view override returns (bool) {

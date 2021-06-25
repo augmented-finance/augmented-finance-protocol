@@ -54,7 +54,7 @@ contract TokenUnweightedRewardPool is BaseTokenAbsRewardPool, CalcLinearUnweight
 
   function internalUpdateTotal(uint256 totalBalance) internal override {}
 
-  function getCurrentBlock() internal view override returns (uint32) {
-    return uint32(block.number);
+  function getCurrentTick() internal view override returns (uint32) {
+    return uint32(block.timestamp);
   }
 }
