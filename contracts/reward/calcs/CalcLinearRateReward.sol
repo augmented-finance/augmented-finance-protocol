@@ -162,8 +162,14 @@ abstract contract CalcLinearRateReward {
       return (0, 0);
     }
 
+    // console.log('internalCalcRateAndReward: ', _rewards[holder].lastUpdate, currentTick);
+    // console.log(_accumRates[holder], _rewards[holder].rewardBase);
+
     (uint256 adjRate, uint256 allocated, uint32 since) =
       internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentTick);
+
+    // console.log(adjRate, allocated, since);
+
     _accumRates[holder] = adjRate;
     _rewards[holder].lastUpdate = currentTick;
     return (allocated, since);

@@ -150,7 +150,7 @@ describe('Token weighted reward pool tests', () => {
     await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
-    expect(reward).to.be.approximately(510, rewardPrecision, 'reward is wrong');
+    expect(reward).to.be.approximately(520, rewardPrecision, 'reward is wrong');
   });
 
   it('20 blocks, 100% deposited, 100% frozen, meltdown at +80 blocks, partly melted', async () => {
