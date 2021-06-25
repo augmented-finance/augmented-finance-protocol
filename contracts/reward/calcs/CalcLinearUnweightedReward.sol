@@ -14,12 +14,8 @@ abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
 
   uint256 private _accumRate;
 
-  function internalRateUpdated(
-    uint256 lastRate,
-    uint32 lastAt,
-    uint32 current
-  ) internal override {
-    _accumRate = _accumRate.add(lastRate.mul(current - lastAt));
+  function internalRateUpdated(uint256 lastRate, uint32 lastAt) internal override {
+    _accumRate = _accumRate.add(lastRate.mul(getRateUpdatedAt() - lastAt));
   }
 
   function internalCalcRateAndReward(

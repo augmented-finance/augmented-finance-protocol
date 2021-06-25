@@ -188,7 +188,7 @@ describe('Token weighted reward pool tests', () => {
           TicksFromStart: 0,
           AmountDepositedBefore: 0,
           AmountDeposited: 500000,
-          TotalAmountDeposited: 1000000,
+          TotalAmountDeposited: 500000,
         },
         {
           Signer: user2,
@@ -209,10 +209,10 @@ describe('Token weighted reward pool tests', () => {
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     const reward2 = (await agf.balanceOf(user2.address)).toNumber();
     expect(reward).to.be.approximately(1000, rewardPrecision, 'reward is wrong');
-    expect(reward2).to.be.approximately(1000, rewardPrecision, 'reward is wrong');
+    expect(reward2).to.be.approximately(950, rewardPrecision, 'reward is wrong');
   });
 
-  it('20 blocks, 100% withdraw on block +10, half rewards payed', async () => {
+  it('20 blocks, 100% withdraw on block +10, half rewards paid', async () => { 
     const ti = {
       TotalRewardTicks: 20,
       UserBalanceChanges: [
@@ -232,7 +232,7 @@ describe('Token weighted reward pool tests', () => {
           TicksFromStart: 10,
           AmountDepositedBefore: 1000000,
           AmountDeposited: 0,
-          TotalAmountDeposited: 1000000,
+          TotalAmountDeposited: 0,
         },
       ],
       TicksToMeltdown: 0,
@@ -242,6 +242,6 @@ describe('Token weighted reward pool tests', () => {
     await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
-    expect(reward).to.be.approximately(1099, rewardPrecision, 'reward is wrong');
+    expect(reward).to.be.approximately(1000, rewardPrecision, 'reward is wrong');
   });
 });

@@ -30,21 +30,17 @@ abstract contract CalcLinearRateReward {
     uint32 prevTick = _lastRateUpdateAt;
     uint32 currentTick = getCurrentTick();
 
-    internalRateUpdate(rate, currentTick);
-    internalRateUpdated(prevRate, prevTick, currentTick);
+    _lastRateUpdateAt = currentTick;
+    _rate = rate;
+    internalRateUpdated(prevRate, prevTick);
   }
 
   function getCurrentTick() internal view virtual returns (uint32);
 
-  function internalRateUpdated(
-    uint256 lastRate,
-    uint32 lastAt,
-    uint32 currentTick
-  ) internal virtual;
+  function internalRateUpdated(uint256 lastRate, uint32 lastAt) internal virtual;
 
-  function internalRateUpdate(uint256 newRate, uint32 currentTick) internal virtual {
+  function internalMarkRateUpdate(uint32 currentTick) internal {
     require(currentTick >= _lastRateUpdateAt, 'retroactive update');
-    _rate = newRate;
     _lastRateUpdateAt = currentTick;
   }
 

@@ -1,4 +1,4 @@
-import { currentTick, mineTicks, mineToTicks } from './test-augmented/utils';
+import { currentTick, mineTicks, mineToTicks, nextTicks, nextToTicks } from './test-augmented/utils';
 import _ from 'underscore';
 import { ONE_ADDRESS } from '../helpers/constants';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
@@ -50,11 +50,11 @@ export const applyDepositPlanAndClaimAll = async (ti: TestInfo, controller: any)
   // applying balance changes in order
   ti.UserBalanceChanges = _.sortBy(ti.UserBalanceChanges, 'block');
 
-  let totalSetupTicks = 0;
+  // let totalSetupTicks = 0;
   for (let u of ti.UserBalanceChanges) {
     // mine to set balance update for relative block
-    if (u.TicksFromStart !== 0) {
-      totalSetupTicks += await mineTicks(u.TicksFromStart);
+    if (u.TicksFromStart > 0) {
+      await nextTicks(u.TicksFromStart);
     }
     await u.Pool.handleBalanceUpdate(
       u.TokenAddress,
@@ -67,14 +67,15 @@ export const applyDepositPlanAndClaimAll = async (ti: TestInfo, controller: any)
   const uniq_addresses = [...new Set(ti.UserBalanceChanges.map((item) => item.Signer.address))];
   // mine the rest blocks until ti.TotalRewardTicks,
   // subtract already mined blocks + blocks with claims afterwards
-  await mineTicks(ti.TotalRewardTicks - totalSetupTicks - uniq_addresses.length);
+  await mineToTicks(startTick + ti.TotalRewardTicks - uniq_addresses.length + 1);
   // claim for every user only once
   for (let ua of uniq_addresses) {
     for (let s of ti.UserBalanceChanges) {
       if (ua === s.Signer.address) {
         await controller.connect(s.Signer).claimReward();
+        break;
       }
     }
   }
-  await mineToTicks(startTick + ti.TotalRewardTicks);
+//  await mineToTicks(startTick + ti.TotalRewardTicks);
 };
