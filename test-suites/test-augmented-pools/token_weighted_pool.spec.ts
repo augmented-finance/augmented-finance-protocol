@@ -208,8 +208,8 @@ describe('Token weighted reward pool tests', () => {
     await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     const reward2 = (await agf.balanceOf(user2.address)).toNumber();
-    expect(reward).to.be.approximately(1000, rewardPrecision, 'reward is wrong');
-    expect(reward2).to.be.approximately(950, rewardPrecision, 'reward is wrong');
+    expect(reward).to.be.approximately(1050, rewardPrecision, 'reward is wrong'); // first tick takes 100% of reward
+    expect(reward2).to.be.approximately(1000, rewardPrecision, 'reward is wrong');
   });
 
   it('20 blocks, 100% withdraw on block +10, half rewards paid', async () => { 

@@ -52,14 +52,14 @@ export const nextTicks = async (amount: number): Promise<void> => {
   return;
 };
 
-export const nextToTicks = async (amount: number): Promise<void> => {
+export const nextToTicks = async (amount: number): Promise<boolean> => {
   const blkBefore = await ethers.provider.getBlock('latest');
   console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} =>)${amount}`);
-  if (blkBefore.timestamp >= amount) {
-    return;
+  if (blkBefore.timestamp < amount) {
+    await advanceBlock(amount);
+    return true;
   }
-  await advanceBlock(amount);
-  return;
+  return blkBefore.timestamp == amount;
 };
 
 export const mineToTicks = async (amount: number): Promise<number> => {
@@ -71,7 +71,12 @@ export const mineToTicks = async (amount: number): Promise<number> => {
   await advanceBlock(amount - 1);
   await mineBlocks(1);
   const blkAfter = await ethers.provider.getBlock('latest');
-  return blkAfter.timestamp - blkBefore.timestamp;
+  if (blkBefore.timestamp + amount >= blkAfter.timestamp) {
+    return blkAfter.timestamp - blkBefore.timestamp;
+  }
+
+  await mineBlocks(1);
+  return blkAfter.timestamp - blkBefore.timestamp + 1;
 };
 
 export const mineToBlock = async (to: number): Promise<number> => {

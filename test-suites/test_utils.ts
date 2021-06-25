@@ -50,11 +50,14 @@ export const applyDepositPlanAndClaimAll = async (ti: TestInfo, controller: any)
   // applying balance changes in order
   ti.UserBalanceChanges = _.sortBy(ti.UserBalanceChanges, 'block');
 
-  // let totalSetupTicks = 0;
+  let maxTicksFromStart = 0;
   for (let u of ti.UserBalanceChanges) {
     // mine to set balance update for relative block
     if (u.TicksFromStart > 0) {
-      await nextTicks(u.TicksFromStart);
+      if (maxTicksFromStart < u.TicksFromStart) {
+        maxTicksFromStart = u.TicksFromStart;
+      }
+      await nextToTicks(startTick + u.TicksFromStart);
     }
     await u.Pool.handleBalanceUpdate(
       u.TokenAddress,
@@ -64,10 +67,12 @@ export const applyDepositPlanAndClaimAll = async (ti: TestInfo, controller: any)
       u.TotalAmountDeposited
     );
   }
+  let extraSetupTicks = (await currentTick()) - (startTick + maxTicksFromStart);
+
   const uniq_addresses = [...new Set(ti.UserBalanceChanges.map((item) => item.Signer.address))];
   // mine the rest blocks until ti.TotalRewardTicks,
   // subtract already mined blocks + blocks with claims afterwards
-  await mineToTicks(startTick + ti.TotalRewardTicks - uniq_addresses.length + 1);
+  await mineToTicks(startTick + ti.TotalRewardTicks + extraSetupTicks - uniq_addresses.length);
   // claim for every user only once
   for (let ua of uniq_addresses) {
     for (let s of ti.UserBalanceChanges) {
@@ -77,5 +82,5 @@ export const applyDepositPlanAndClaimAll = async (ti: TestInfo, controller: any)
       }
     }
   }
-//  await mineToTicks(startTick + ti.TotalRewardTicks);
+  await mineToTicks(startTick + ti.TotalRewardTicks + extraSetupTicks);
 };
