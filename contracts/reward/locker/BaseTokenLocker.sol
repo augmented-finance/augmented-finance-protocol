@@ -48,8 +48,15 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   mapping(address => UserBalance) private _balances;
   mapping(address => mapping(address => bool)) private _allowAdd;
 
-  event Locked(address from, address to, uint256 underlyingAmount, uint256 amount, uint32 expiry);
-  event Redeemed(address from, address to, uint256 underlyingAmount);
+  event Locked(
+    address from,
+    address indexed to,
+    uint256 underlyingAmount,
+    uint256 amount,
+    uint32 indexed expiry,
+    uint64 indexed referal
+  );
+  event Redeemed(address indexed from, address indexed to, uint256 underlyingAmount);
 
   constructor(
     IMarketAccessController accessCtl,
@@ -82,9 +89,13 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return uint32(ts / _pointPeriod);
   }
 
-  function lock(uint256 underlyingAmount, uint32 duration) external returns (uint256) {
+  function lock(
+    uint256 underlyingAmount,
+    uint32 duration,
+    uint64 referal
+  ) external returns (uint256) {
     require(duration >= _pointPeriod);
-    internalLock(msg.sender, msg.sender, underlyingAmount, duration, true);
+    internalLock(msg.sender, msg.sender, underlyingAmount, duration, referal);
   }
 
   function allowAdd(address to, bool allow) external {
@@ -93,7 +104,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
   function lockAdd(address to, uint256 underlyingAmount) external returns (uint256) {
     require(_allowAdd[to][msg.sender], 'ADD_TO_LOCK_RESTRICTED');
-    internalLock(msg.sender, to, underlyingAmount, 0, true);
+    internalLock(msg.sender, to, underlyingAmount, 0, 0);
   }
 
   function internalLock(
@@ -101,7 +112,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     address to,
     uint256 underlyingAmount,
     uint32 duration,
-    bool transferFrom
+    uint64 referal
   ) internal returns (uint256 stakeAmount) {
     require(from != address(0));
     require(to != address(0));
@@ -109,9 +120,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
     uint32 currentPoint = internalUpdate(true, true);
 
-    if (transferFrom) {
-      _underlyingToken.safeTransferFrom(from, address(this), underlyingAmount);
-    }
+    _underlyingToken.safeTransferFrom(from, address(this), underlyingAmount);
 
     UserBalance memory userBalance = _balances[to];
 
@@ -163,7 +172,14 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     _balances[to] = userBalance;
     setStakeBalance(to, uint224(stakeAmount));
 
-    emit Locked(from, to, underlyingAmount, stakeAmount, userBalance.endPoint * _pointPeriod);
+    emit Locked(
+      from,
+      to,
+      underlyingAmount,
+      stakeAmount,
+      userBalance.endPoint * _pointPeriod,
+      referal
+    );
     return stakeAmount;
   }
 
