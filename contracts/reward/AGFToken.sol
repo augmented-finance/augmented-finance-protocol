@@ -89,8 +89,4 @@ contract AGFToken is
     super._beforeTokenTransfer(from, to, amount);
     _checkTransfer(from, to);
   }
-
-  function rewardTotalSupply() external view override returns (uint256) {
-    return totalSupply();
-  }
 }

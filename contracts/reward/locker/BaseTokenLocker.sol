@@ -54,6 +54,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     uint32 pointPeriod,
     uint32 maxValuePeriod
   ) public MarketAccessBitmask(accessCtl) {
+    _initialize(pointPeriod, maxValuePeriod);
+  }
+
+  function _initialize(uint32 pointPeriod, uint32 maxValuePeriod) internal {
     require(pointPeriod > 0, 'invalid pointPeriod');
     require(maxValuePeriod > pointPeriod, 'invalid maxValuePeriod');
     require(maxValuePeriod < pointPeriod * _maxDurationPoints, 'invalid maxValuePeriod');

@@ -306,8 +306,4 @@ abstract contract BaseRewardController is
   function isPaused() public view override returns (bool) {
     return _paused;
   }
-
-  function totalSupply() external view override returns (uint256) {
-    return _rewardMinter.rewardTotalSupply();
-  }
 }
