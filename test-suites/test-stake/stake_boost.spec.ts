@@ -41,7 +41,6 @@ describe('Staking with boosting', () => {
   let rpAGDAI: TokenWeightedRewardPool;
   let rpUSDC: TokenWeightedRewardPool;
   let blkBeforeDeploy;
-  let blkAfterDeploy;
   const defaultStkAmount = 100;
 
   beforeEach(async () => {
