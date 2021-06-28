@@ -383,6 +383,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       if (pointTotal > 0) {
         uint256 totalBefore = stakedTotal;
         stakedTotal = stakedTotal.sub(pointTotal);
+
+        console.log('internalUpdateTotal', totalBefore, stakedTotal, nextPoint * _pointPeriod);
         internalUpdateTotal(totalBefore, stakedTotal, nextPoint * _pointPeriod);
         pointTotal = 0;
       }

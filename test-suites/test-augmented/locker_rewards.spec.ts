@@ -56,7 +56,7 @@ describe('Token locker suite', () => {
     const lockTick = await currentTick();
 
     expect(await xAGF.totalSupply()).eq(0);
-    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod);
+    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod, 0);
 
     expect(await AGF.balanceOf(user1.address)).eq(0);
     expect(await xAGF.balanceOfUnderlying(user1.address)).eq(defaultStkAmount);
@@ -109,7 +109,7 @@ describe('Token locker suite', () => {
       'NOTHING_IS_LOCKED'
     );
 
-    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod);
+    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod, 0);
     const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
     expect(lockInfo.underlying).eq(defaultStkAmount);
 
@@ -162,11 +162,11 @@ describe('Token locker suite', () => {
   it('user1 locks for 6 weeks, user2 locks for 3 weeks, both users redeem together with some delay', async () => {
     const defaultPeriod = 3 * WEEK;
 
-    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod * 2);
+    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod * 2, 0);
     const balance1 = await xAGF.balanceOf(user1.address);
     expect(await xAGF.totalSupply()).eq(balance1);
 
-    await xAGF.connect(user2).lock(defaultStkAmount, defaultPeriod);
+    await xAGF.connect(user2).lock(defaultStkAmount, defaultPeriod, 0);
     expect(await xAGF.totalSupply()).gt(balance1);
 
     const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user2.address);
