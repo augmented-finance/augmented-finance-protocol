@@ -9,17 +9,45 @@ import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializ
 
 import 'hardhat/console.sol';
 
-contract xAgfTokenV1 is RewardedTokenLocker, VersionedInitializable {
+contract XAGFTokenV1 is RewardedTokenLocker, VersionedInitializable {
   string internal constant NAME = 'Augmented Finance Locked Reward Token';
   string internal constant SYMBOL = 'xAGF';
   uint8 internal constant DECIMALS = 18;
+
+  string private _name;
+  string private _symbol;
+  uint8 private _decimals;
 
   uint256 private constant TOKEN_REVISION = 1;
 
   constructor()
     public
     RewardedTokenLocker(IMarketAccessController(0), 1 weeks, 4 * 52 weeks, 10**36)
-  {}
+  {
+    _initializeERC20(NAME, SYMBOL, DECIMALS);
+  }
+
+  function _initializeERC20(
+    string memory name,
+    string memory symbol,
+    uint8 decimals
+  ) internal {
+    _name = name;
+    _symbol = symbol;
+    _decimals = decimals;
+  }
+
+  function name() public view returns (string memory) {
+    return _name;
+  }
+
+  function symbol() public view returns (string memory) {
+    return _symbol;
+  }
+
+  function decimals() public view returns (uint8) {
+    return _decimals;
+  }
 
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
@@ -36,23 +64,18 @@ contract xAgfTokenV1 is RewardedTokenLocker, VersionedInitializable {
 
   function initialize(
     IMarketAccessController remoteAcl,
-    string calldata name,
-    string calldata symbol
+    string calldata name_,
+    string calldata symbol_
   ) public virtual initializerRunAlways(TOKEN_REVISION) {
-    _initialize(remoteAcl, name, symbol);
+    _initialize(remoteAcl, name_, symbol_);
   }
 
   function _initialize(
     IMarketAccessController remoteAcl,
-    string memory name,
-    string memory symbol
+    string memory name_,
+    string memory symbol_
   ) private {
-    name;
-    symbol;
-    // super._initializeERC20(name, symbol, DECIMALS);
+    _initializeERC20(name_, symbol_, DECIMALS);
     _remoteAcl = remoteAcl;
-    if (!isRevisionInitialized(TOKEN_REVISION)) {
-      // super._initializeDomainSeparator();
-    }
   }
 }

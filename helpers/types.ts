@@ -87,6 +87,7 @@ export enum eContractid {
   FlashLiquidationAdapter = 'FlashLiquidationAdapter',
 
   AGFToken = 'AGFToken',
+  XAGFToken = 'XAGFToken',
   RewardFreezer = 'RewardFreezer',
   RewardBooster = 'RewardBooster',
   TeamRewardPool = 'TeamRewardPool',

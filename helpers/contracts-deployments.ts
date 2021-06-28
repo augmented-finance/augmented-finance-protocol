@@ -12,7 +12,7 @@ import {
   eEthereumNetwork,
   tStringTokenBigUnits,
 } from './types';
-import { MintableERC20, RewardBoosterFactory } from '../types';
+import { MintableERC20, RewardBoosterFactory, XAGFTokenV1Factory } from '../types';
 import { MockContract } from 'ethereum-waffle';
 import { getReservesConfigByPool } from './configuration';
 import { getFirstSigner } from './contracts-getters';
@@ -751,6 +751,14 @@ export const deployRewardBooster = async (
   withSaveAndVerify(
     await new RewardBoosterFactory(await getFirstSigner()).deploy(...args),
     eContractid.RewardBooster,
+    [],
+    verify
+  );
+
+export const deployXAGFToken = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await new XAGFTokenV1Factory(await getFirstSigner()).deploy(),
+    eContractid.XAGFToken,
     [],
     verify
   );
