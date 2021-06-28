@@ -34,7 +34,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   uint32 private _maxValuePeriod; // = 208 weeks; // 4 * 52, must be less than _maxDurationPoints
   uint32 private _pointPeriod;
   uint32 private _nextKnownPoint;
-  uint32 private _lastUpdateTS;
+  // uint32 private _lastKnownPoint;
+  uint32 private _updateTS;
 
   bool private _updateEntered;
   bool private _paused;
@@ -155,6 +156,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       _nextKnownPoint = userBalance.endPoint;
     }
 
+    // if (_lastKnownPoint < userBalance.endPoint || _lastKnownPoint == 0) {
+    //   _lastKnownPoint = userBalance.endPoint;
+    // }
+
     _balances[to] = userBalance;
     setStakeBalance(to, uint224(stakeAmount));
 
@@ -253,7 +258,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       return (fromPoint, 0, 0);
     }
 
-    maxPoint = pointOfTS(_lastUpdateTS) + _maxDurationPoints;
+    maxPoint = pointOfTS(_updateTS) + _maxDurationPoints;
+    // if (_lastKnownPoint > 0) {
+    //   maxPoint = _lastKnownPoint;
+    // }
 
     if (maxPoint > currentPoint) {
       tillPoint = currentPoint;
@@ -324,14 +332,14 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       require(!preventReentry, 're-entry to stake or to redeem');
       return currentPoint;
     }
-    if (_lastUpdateTS == block.timestamp) {
+    if (_updateTS == block.timestamp) {
       return currentPoint;
     }
 
     (uint32 fromPoint, uint32 tillPoint, uint32 maxPoint) = getScanRange(currentPoint);
 
     if (updateTS) {
-      _lastUpdateTS = uint32(block.timestamp);
+      _updateTS = uint32(block.timestamp);
     }
 
     if (tillPoint == 0) {
@@ -379,6 +387,9 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     }
 
     _nextKnownPoint = nextPoint;
+    // if (nextPoint == 0 || nextPoint > _lastKnownPoint) {
+    //   _lastKnownPoint = nextPoint;
+    // }
     _stakedTotal = stakedTotal;
   }
 
