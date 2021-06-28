@@ -45,6 +45,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   }
 
   mapping(address => UserBalance) private _balances;
+  mapping(address => mapping(address => bool)) private _allowAdd;
 
   event Locked(address from, address to, uint256 underlyingAmount, uint256 amount, uint32 expiry);
   event Redeemed(address from, address to, uint256 underlyingAmount);
@@ -85,7 +86,12 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     internalLock(msg.sender, msg.sender, underlyingAmount, duration, true);
   }
 
+  function allowAdd(address to, bool allow) external {
+    _allowAdd[msg.sender][to] = allow;
+  }
+
   function lockAdd(address to, uint256 underlyingAmount) external returns (uint256) {
+    require(_allowAdd[to][msg.sender], 'ADD_TO_LOCK_RESTRICTED');
     internalLock(msg.sender, to, underlyingAmount, 0, true);
   }
 
@@ -106,31 +112,34 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       _underlyingToken.safeTransferFrom(from, address(this), underlyingAmount);
     }
 
-    uint32 endPoint = pointOfTS(uint32(block.timestamp + duration + (_pointPeriod >> 1)));
-    require(endPoint <= currentPoint + _maxDurationPoints);
-
     UserBalance memory userBalance = _balances[to];
-    (stakeAmount, ) = getStakeBalance(to);
 
-    _underlyingTotal = _underlyingTotal.add(underlyingAmount);
-    underlyingAmount = underlyingAmount.add(userBalance.underlyingAmount);
+    {
+      uint32 endPoint = pointOfTS(uint32(block.timestamp + duration + (_pointPeriod >> 1)));
+      require(endPoint <= currentPoint + _maxDurationPoints);
 
-    if (userBalance.endPoint > currentPoint) {
-      _stakedTotal = _stakedTotal.sub(stakeAmount);
-      _pointTotal[userBalance.endPoint] = _pointTotal[userBalance.endPoint].sub(stakeAmount);
+      (stakeAmount, ) = getStakeBalance(to);
 
-      if (userBalance.endPoint < endPoint) {
+      _underlyingTotal = _underlyingTotal.add(underlyingAmount);
+      underlyingAmount = underlyingAmount.add(userBalance.underlyingAmount);
+
+      if (userBalance.endPoint > currentPoint) {
+        _stakedTotal = _stakedTotal.sub(stakeAmount);
+        _pointTotal[userBalance.endPoint] = _pointTotal[userBalance.endPoint].sub(stakeAmount);
+
+        if (userBalance.endPoint < endPoint) {
+          userBalance.endPoint = endPoint;
+        }
+      } else {
+        require(duration > 0, 'NOTHING_IS_LOCKED');
         userBalance.endPoint = endPoint;
       }
-    } else {
-      require(duration > 0, 'NOTHING_IS_LOCKED');
-      userBalance.endPoint = endPoint;
     }
 
     require(underlyingAmount <= type(uint224).max);
     userBalance.underlyingAmount = uint224(underlyingAmount);
 
-    uint256 adjDuration = uint256(endPoint * _pointPeriod).sub(block.timestamp);
+    uint256 adjDuration = uint256(userBalance.endPoint * _pointPeriod).sub(block.timestamp);
     console.log('internalLock', underlyingAmount, adjDuration, _maxValuePeriod);
     if (adjDuration < _maxValuePeriod) {
       stakeAmount = underlyingAmount.mul(adjDuration).div(_maxValuePeriod);
@@ -347,17 +356,12 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     uint256 pointTotal = _pointTotal[nextPoint];
 
     for (; nextPoint <= tillPoint; ) {
-      if (stakedTotal == pointTotal) {
-        // the last point
-        nextPoint = 0;
-        internalUpdateTotal(stakedTotal, 0, nextPoint * _pointPeriod);
-        stakedTotal = 0;
-        break;
+      if (pointTotal > 0) {
+        uint256 totalBefore = stakedTotal;
+        stakedTotal = stakedTotal.sub(pointTotal);
+        internalUpdateTotal(totalBefore, stakedTotal, nextPoint * _pointPeriod);
+        pointTotal = 0;
       }
-
-      uint256 totalBefore = stakedTotal;
-      stakedTotal = stakedTotal.sub(pointTotal);
-      pointTotal = 0;
 
       // look for the next non-zero point
       for (nextPoint++; nextPoint <= maxPoint; nextPoint++) {
@@ -372,8 +376,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
         nextPoint = 0;
         break;
       }
-
-      internalUpdateTotal(totalBefore, stakedTotal, nextPoint * _pointPeriod);
     }
 
     _nextKnownPoint = nextPoint;
