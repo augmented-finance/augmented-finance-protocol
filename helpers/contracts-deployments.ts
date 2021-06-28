@@ -786,7 +786,7 @@ export const deployTeamRewardPool = async (
   withSaveAndVerify(
     await new TeamRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TeamRewardPool,
-    [], // TODO,
+    [],
     verify
   );
 
@@ -801,7 +801,7 @@ export const deployZombieRewardPool = async (
   withSaveAndVerify(
     await new ZombieRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.ZombieRewardPool,
-    [], // TODO,
+    [],
     verify
   );
 
@@ -823,7 +823,7 @@ export const deployTokenWeightedRewardPoolAGF = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAGF,
-    [], // TODO:
+    [],
     verify
   );
 
@@ -834,7 +834,7 @@ export const deployTokenWeightedRewardPoolAGFBoosted = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAGFBoosted,
-    [], // TODO:
+    [],
     verify
   );
 
@@ -845,7 +845,7 @@ export const deployTokenWeightedRewardPoolAGFSeparate = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAGFSeparate,
-    [], // TODO:
+    [],
     verify
   );
 
@@ -856,7 +856,7 @@ export const deployTokenWeightedRewardPoolAG = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAG,
-    [], // TODO:
+    [],
     verify
   );
 
@@ -867,7 +867,7 @@ export const deployTokenWeightedRewardPoolAGBoosted = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAGBoosted,
-    [], // TODO:
+    [],
     verify
   );
 
@@ -878,7 +878,7 @@ export const deployTokenWeightedRewardPoolAGUSDCBoosted = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAGUSDCBoosted,
-    [], // TODO:
+    [],
     verify
   );
 
@@ -889,7 +889,7 @@ export const deployTokenUnweightedRewardPool = async (
   withSaveAndVerify(
     await new TokenUnweightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenUnweightedRewardPool,
-    [], // TODO:
+    [],
     verify
   );
 
