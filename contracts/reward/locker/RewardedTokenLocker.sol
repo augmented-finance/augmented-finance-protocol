@@ -31,12 +31,13 @@ contract RewardedTokenLocker is BaseTokenLocker, ForwardedRewardPool, CalcLinear
 
   constructor(
     IMarketAccessController accessCtl,
+    address underlying,
     uint32 pointPeriod,
     uint32 maxValuePeriod,
     uint256 maxTotalSupply
   )
     public
-    BaseTokenLocker(accessCtl, pointPeriod, maxValuePeriod)
+    BaseTokenLocker(accessCtl, underlying, pointPeriod, maxValuePeriod)
     CalcLinearWeightedReward(maxTotalSupply)
   {}
 

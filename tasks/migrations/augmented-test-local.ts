@@ -4,12 +4,14 @@ import {
   deployAccessController,
   deployAugmentedMigrator,
   deployCompAdapter,
+  deployForwardingRewardPool,
   deployMigratorWeightedRewardPool,
   deployMockAgfToken,
   deployRewardFreezer,
   deployTeamRewardPool,
   deployTokenUnweightedRewardPool,
   deployTokenWeightedRewardPoolAGFSeparate,
+  deployXAGFToken,
   deployZombieAdapter,
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
@@ -25,7 +27,7 @@ import {
   ZTOKEN_ADDRESS,
 } from './defaultTestDeployConfig';
 
-task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
+task('augmented:test-local', 'Deploy Augmented test contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
   .addOptionalParam('cDaiAddress', 'Compound DAI address', CDAI_ADDRESS, types.string)
   .addOptionalParam('zTokenAddress', 'Zombie token address', ZTOKEN_ADDRESS, types.string)
@@ -80,16 +82,16 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
       const ac = await deployAccessController();
       // emergency admin + liquidity admin
       await ac.setEmergencyAdmin(root.address);
-      await ac.grantRoles(root.address, 1 << 5);
-      await ac.grantRoles(slasher.address, 1 << 15);
+      await ac.grantRoles(root.address, (1 << 3) | (1 << 5)); // REWARD_CONFIG_ADMIN | STAKE_ADMIN
+      await ac.grantRoles(slasher.address, 1 << 15); // LIQUIDITY_CONTROLLER
 
       console.log(`#2 deploying: mock AGF`);
       const agfToken = await deployMockAgfToken(
-        [ac.address, 'Reward token updated', 'AGF'],
+        [ac.address, 'Reward token for testing', 'AGF'],
         verify
       );
 
-      console.log(`#3 deploying: RewardController`);
+      console.log(`#3 deploying: RewardFreezer`);
       const rewardFreezer = await deployRewardFreezer([ac.address, agfToken.address], verify);
       await rewardFreezer.admin_setFreezePercentage(0);
 
@@ -131,11 +133,22 @@ task('augmented:test-local', 'Deploy Augmented Migrator contracts.')
         )
       );
 
+      console.log(`#6 deploying: Forwarding Reward Pool + Locker/XAGF`);
+
+      // deploy token weighted reward pool, register in controller, separated pool for math tests
+      const fwdRewardPool = await deployForwardingRewardPool(
+        [rewardFreezer.address, RAY_100, 0],
+        verify
+      );
+      const xagf = await deployXAGFToken([ac.address, agfToken.address, 'Locked AGF', 'xAGF']);
+      await waitForTx(await rewardFreezer.admin_addRewardPool(fwdRewardPool.address));
+      await xagf.setForwardingRewardPool(fwdRewardPool.address);
+      await fwdRewardPool.addRewardProvider(xagf.address, ONE_ADDRESS);
+
       if (process.env.MAINNET_FORK === 'true') {
-        console.log(`#6 deploying: Migrator`);
+        console.log(`#7 deploying: Migrator + Adapters`);
         const migrator = await deployAugmentedMigrator(verify);
 
-        console.log(`#7 deploying: Zombie Adapter`);
         const zAdapter = await deployZombieAdapter([migrator.address, zTokenAddress]);
         const zrp = await deployZombieRewardPool(
           [rewardFreezer.address, [zTokenAddress], [{ rateRay: RAY, limit: RAY }]],

@@ -100,6 +100,7 @@ export enum eContractid {
   TokenWeightedRewardPoolAGBoosted = 'TokenWeightedRewardPoolAGBoosted',
   TokenWeightedRewardPoolAGUSDCBoosted = 'TokenWeightedRewardPoolAGUSDCBoosted',
   TokenUnweightedRewardPool = 'TokenUnweightedRewardPool',
+  ForwardingRewardPool = 'ForwardingRewardPool',
   Migrator = 'Migrator',
   AaveAdapter = 'AaveAdapter',
   CompAdapter = 'CompAdapter',

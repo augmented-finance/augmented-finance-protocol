@@ -19,10 +19,13 @@ contract XAGFTokenV1 is RewardedTokenLocker, VersionedInitializable {
   uint8 private _decimals;
 
   uint256 private constant TOKEN_REVISION = 1;
+  uint32 private constant ONE_PERIOD = 1 weeks;
+  uint32 private constant MAX_PERIOD = 4 * 52 weeks;
+  uint256 private constant MAX_SUPPLY = 10**36;
 
   constructor()
     public
-    RewardedTokenLocker(IMarketAccessController(0), 1 weeks, 4 * 52 weeks, 10**36)
+    RewardedTokenLocker(IMarketAccessController(0), address(0), ONE_PERIOD, MAX_PERIOD, MAX_SUPPLY)
   {
     _initializeERC20(NAME, SYMBOL, DECIMALS);
   }
@@ -59,23 +62,29 @@ contract XAGFTokenV1 is RewardedTokenLocker, VersionedInitializable {
     virtual
     initializerRunAlways(TOKEN_REVISION)
   {
-    _initialize(remoteAcl, NAME, SYMBOL);
+    _initialize(remoteAcl, remoteAcl.getRewardToken(), NAME, SYMBOL, DECIMALS);
   }
 
-  function initialize(
+  function initializeToken(
     IMarketAccessController remoteAcl,
+    address underlying,
     string calldata name_,
-    string calldata symbol_
+    string calldata symbol_,
+    uint8 decimals_
   ) public virtual initializerRunAlways(TOKEN_REVISION) {
-    _initialize(remoteAcl, name_, symbol_);
+    require(underlying != address(0), 'underlying is missing');
+    _initialize(remoteAcl, underlying, name_, symbol_, decimals_);
   }
 
   function _initialize(
     IMarketAccessController remoteAcl,
+    address underlying,
     string memory name_,
-    string memory symbol_
+    string memory symbol_,
+    uint8 decimals_
   ) private {
-    _initializeERC20(name_, symbol_, DECIMALS);
     _remoteAcl = remoteAcl;
+    _initializeERC20(name_, symbol_, decimals_);
+    super._initialize(underlying, ONE_PERIOD, MAX_PERIOD);
   }
 }
