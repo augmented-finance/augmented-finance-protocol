@@ -79,7 +79,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
   const stake = async (s: SignerWithAddress, amount: BigNumberish) => {
     await AGF.connect(root).mintReward(s.address, amount, false);
     await AGF.connect(s).approve(xAGF.address, amount);
-    await xAGF.connect(s).stake(s.address, amount);
+    await xAGF.connect(s).stake(s.address, amount, 0);
   };
 
   it('can not redeem when after unstake block has passed', async () => {

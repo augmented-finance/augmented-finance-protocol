@@ -44,11 +44,10 @@ abstract contract SlashableStakeTokenBase is
   uint32 private _unstakePeriod;
   bool private _redeemPaused;
 
-  event Staked(address from, address to, uint256 amount);
-  event Redeem(address from, address to, uint256 amount, uint256 underlyingAmount);
-  event Cooldown(address user, uint32 at);
-  event Donated(address from, uint256 amount);
-  event Slashed(address to, uint256 amount);
+  event Staked(address indexed from, address indexed to, uint256 amount, uint64 indexed referal);
+  event Redeem(address indexed from, address indexed to, uint256 amount, uint256 underlyingAmount);
+  event Cooldown(address indexed account, uint32 at);
+  event Slashed(address by, address to, uint256 amount);
 
   constructor(
     StakeTokenConfig memory params,
@@ -78,14 +77,19 @@ abstract contract SlashableStakeTokenBase is
     return address(_stakedToken);
   }
 
-  function stake(address to, uint256 underlyingAmount) external override returns (uint256) {
-    internalStake(msg.sender, to, underlyingAmount, true);
+  function stake(
+    address to,
+    uint256 underlyingAmount,
+    uint64 referal
+  ) external override returns (uint256) {
+    internalStake(msg.sender, to, underlyingAmount, referal, true);
   }
 
   function internalStake(
     address from,
     address to,
     uint256 underlyingAmount,
+    uint64 referal,
     bool transferFrom
   ) internal returns (uint256 stakeAmount) {
     require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
@@ -109,7 +113,7 @@ abstract contract SlashableStakeTokenBase is
       );
     }
 
-    emit Staked(from, to, underlyingAmount);
+    emit Staked(from, to, underlyingAmount, referal);
     return stakeAmount;
   }
 
@@ -264,13 +268,8 @@ abstract contract SlashableStakeTokenBase is
     console.log('transferring to destination: ', destination);
     _stakedToken.safeTransfer(destination, amount);
 
-    emit Slashed(destination, amount);
+    emit Slashed(msg.sender, destination, amount);
     return amount;
-  }
-
-  function donate(uint256 amount) external {
-    _stakedToken.safeTransferFrom(msg.sender, address(this), amount);
-    emit Donated(msg.sender, amount);
   }
 
   function getMaxSlashablePercentage() external view override returns (uint256) {

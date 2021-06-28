@@ -65,7 +65,7 @@ contract StakedAgfV1 is SlashableStakeTokenBase, VersionedInitializable, IReward
       return (IRewardMinter(getUnderlying()), account);
     }
 
-    internalStake(msg.sender, account, amount, false);
+    internalStake(msg.sender, account, amount, 0, false);
     return (IRewardMinter(getUnderlying()), address(this));
   }
 }
