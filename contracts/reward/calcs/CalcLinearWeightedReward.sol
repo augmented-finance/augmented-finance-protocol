@@ -64,6 +64,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     // the rate stays in RAY, but is weighted now vs _totalSupplyMax
     if (currentTick != lastAt) {
       lastRate = lastRate.mul(_totalSupplyMax.div(_totalSupply));
+      console.log('internalRateUpdated_1a', lastRate, _totalSupplyMax, _totalSupply);
       _accumRate = _accumRate.add(lastRate.mul(currentTick - lastAt));
     }
     console.log('internalRateUpdated_2', _accumRate);
@@ -86,6 +87,15 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     return rateUpdated;
   }
 
+  function internalGetLastAccumRate() internal view returns (uint256) {
+    return _accumRate;
+  }
+
+  function internalGetAccumHistory(uint32 at) internal view virtual returns (uint256) {
+    require(at >= getRateUpdatedAt(), 'lookback for accumulated rate');
+    return _accumRate;
+  }
+
   function internalCalcRateAndReward(
     RewardEntry memory entry,
     uint256 lastAccumRate,
@@ -102,11 +112,10 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
   {
     uint256 weightedRate;
 
-    if (_totalSupply == 0) {
-      adjRate = _accumRate;
-    } else {
+    adjRate = internalGetAccumHistory(currentTick);
+    if (_totalSupply > 0) {
       weightedRate = getLinearRate().mul(_totalSupplyMax.div(_totalSupply));
-      adjRate = _accumRate.add(weightedRate.mul(currentTick - getRateUpdatedAt()));
+      adjRate = adjRate.add(weightedRate.mul(currentTick - getRateUpdatedAt()));
     }
     weightedRate = adjRate.sub(lastAccumRate);
 

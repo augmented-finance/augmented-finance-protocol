@@ -41,7 +41,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   uint256 private _stakedTotal;
   uint256 private _extraRate;
   ExcessAccum private _excessAccum;
-  uint256 private _excessRatio;
 
   mapping(uint32 => Point) _pointTotal;
 
@@ -96,8 +95,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     _underlyingToken = IERC20(underlying);
     _pointPeriod = pointPeriod;
     _maxValuePeriod = maxValuePeriod;
-    _excessRatio = WadRayMath.RAY.div(uint256(10)**underlyingDecimals);
-    console.log('_initialize', _excessRatio, underlyingDecimals, uint256(10)**underlyingDecimals);
+    // _excessRatio = WadRayMath.RAY.div(uint256(10)**underlyingDecimals);
   }
 
   function UNDERLYING_ASSET_ADDRESS() external view returns (address) {
@@ -192,7 +190,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     }
 
     _balances[to] = userBalance;
-    internalUpdateTotal(totalBefore, _stakedTotal, uint32(block.timestamp));
+    internalUpdateTotal(totalBefore, _stakedTotal, 0);
     setStakeBalance(to, uint224(stakeAmount));
 
     emit Locked(
@@ -363,17 +361,18 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
     (uint32 fromPoint, uint32 tillPoint, uint32 maxPoint) = getScanRange(currentPoint);
 
-    _updateEntered = true;
-    {
-      if (tillPoint > 0) {
-        walkPoints(fromPoint, tillPoint, maxPoint);
+    if (tillPoint > 0) {
+      _updateEntered = true;
+      {
+        walkPoints(
+          fromPoint,
+          tillPoint,
+          maxPoint,
+          _lastUpdateTS / _pointPeriod < block.timestamp / _pointPeriod
+        );
       }
-
-      if (_lastUpdateTS / _pointPeriod < block.timestamp / _pointPeriod) {
-        internalApplyExcess();
-      }
+      _updateEntered = false;
     }
-    _updateEntered = false;
 
     _lastUpdateTS = uint32(block.timestamp);
     return currentPoint;
@@ -382,24 +381,27 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   function walkPoints(
     uint32 nextPoint,
     uint32 tillPoint,
-    uint32 maxPoint
+    uint32 maxPoint,
+    bool applyExcess
   ) private {
-    uint256 stakedTotal = _stakedTotal;
-    uint256 extraRate = _extraRate;
-
     Point memory delta = _pointTotal[nextPoint];
 
     for (; nextPoint <= tillPoint; ) {
       if (delta.rateDelta > 0) {
-        uint256 rateBefore = extraRate;
-        extraRate = extraRate.sub(delta.rateDelta);
-        internalExtraRateUpdated(rateBefore, extraRate, nextPoint * _pointPeriod);
+        uint256 rateBefore = _extraRate;
+        _extraRate = _extraRate.sub(delta.rateDelta);
+        internalExtraRateUpdated(rateBefore, _extraRate, nextPoint * _pointPeriod);
       }
 
       if (delta.stakeDelta > 0) {
-        uint256 totalBefore = stakedTotal;
-        stakedTotal = stakedTotal.sub(delta.stakeDelta);
-        internalUpdateTotal(totalBefore, stakedTotal, nextPoint * _pointPeriod);
+        uint256 totalBefore = _stakedTotal;
+        _stakedTotal = _stakedTotal.sub(delta.stakeDelta);
+        internalUpdateTotal(totalBefore, _stakedTotal, nextPoint * _pointPeriod);
+      }
+
+      if (applyExcess) {
+        applyExcess = false;
+        internalApplyExcess(nextPoint);
       }
 
       bool found = false;
@@ -423,8 +425,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     if (nextPoint == 0 || nextPoint > _lastKnownPoint) {
       _lastKnownPoint = nextPoint;
     }
-    _stakedTotal = stakedTotal;
-    _extraRate = extraRate;
   }
 
   modifier notPaused() {
@@ -472,38 +472,37 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return _extraRate;
   }
 
-  function internalApplyExcess() private {
+  function internalApplyExcess(uint32 currentPt) private {
     ExcessAccum memory acc = _excessAccum;
 
     console.log('internalApplyExcess', acc.excessAmount, acc.sinceCount, acc.sinceTotal);
-    console.log('internalApplyExcess _excessRatio', _excessRatio);
 
     if (acc.sinceCount == 0) {
       return;
     }
     _excessAccum.sinceCount = 0;
 
-    if (_excessRatio == 0) {
-      return;
+    uint32 expiresIn = uint32(acc.sinceTotal / acc.sinceCount);
+
+    console.log('internalApplyExcess expiry', expiresIn, currentPt);
+
+    if (expiresIn > _maxValuePeriod) {
+      expiresIn = _maxValuePeriod / _pointPeriod;
+    } else {
+      expiresIn = uint32(expiresIn + (_pointPeriod >> 1)) / _pointPeriod;
+      if (expiresIn == 0) {
+        expiresIn = 1;
+      }
     }
 
-    uint32 expiresAt = uint32(acc.sinceTotal / acc.sinceCount);
-    if (expiresAt > _maxValuePeriod) {
-      expiresAt = _maxValuePeriod;
-    }
+    console.log('internalApplyExcess expiresIn', expiresIn);
 
-    console.log('internalApplyExcess expiry', expiresAt);
-
-    expiresAt = uint32(block.timestamp + expiresAt + _pointPeriod - 1) / _pointPeriod;
-    console.log('internalApplyExcess expiresAt', expiresAt);
-
-    uint256 excessRateIncrement =
-      uint256(acc.excessAmount).mul(_excessRatio) / (expiresAt * _pointPeriod - block.timestamp);
+    uint256 excessRateIncrement = uint256(acc.excessAmount) / (expiresIn * _pointPeriod);
     console.log(
       'internalApplyExcess excessRateIncrement',
       excessRateIncrement,
-      uint256(acc.excessAmount).mul(_excessRatio),
-      (expiresAt * _pointPeriod - block.timestamp)
+      uint256(acc.excessAmount),
+      expiresIn * _pointPeriod
     );
 
     if (excessRateIncrement == 0) {
@@ -512,6 +511,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
     uint256 rateAfter = _extraRate.add(excessRateIncrement);
 
+    uint32 expiresAt = currentPt + expiresIn;
     console.log('internalApplyExcess_2', _extraRate, excessRateIncrement, expiresAt);
 
     excessRateIncrement = excessRateIncrement.add(_pointTotal[expiresAt].rateDelta);
@@ -526,7 +526,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       _lastKnownPoint = expiresAt;
     }
 
-    internalExtraRateUpdated(_extraRate, rateAfter, uint32(block.timestamp));
+    internalExtraRateUpdated(_extraRate, rateAfter, expiresAt * _pointPeriod);
     _extraRate = rateAfter;
   }
 
@@ -555,10 +555,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     console.log('internalAddExcess', acc.excessAmount, acc.sinceCount, acc.sinceTotal);
 
     _excessAccum = acc;
-  }
-
-  function internalSetExcessRatio(uint256 excessRatio) internal {
-    _excessRatio = excessRatio;
   }
 
   function internalExtraRateUpdated(

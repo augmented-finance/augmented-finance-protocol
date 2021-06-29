@@ -9,7 +9,6 @@ import 'hardhat/console.sol';
 
 abstract contract CalcLinearRateReward {
   using SafeMath for uint256;
-  using WadRayMath for uint256;
 
   mapping(address => RewardEntry) private _rewards;
   uint256 private _rate;

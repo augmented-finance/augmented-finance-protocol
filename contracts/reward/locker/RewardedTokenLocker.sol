@@ -32,6 +32,8 @@ contract RewardedTokenLocker is
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
+  mapping(uint32 => uint256) private _accumHistory;
+
   constructor(
     IMarketAccessController accessCtl,
     address underlying,
@@ -78,7 +80,6 @@ contract RewardedTokenLocker is
     if (current > expiry) {
       current = expiry;
     }
-    // TODO need to pre-calc total?
     return super.doCalcRewardAt(holder, current);
   }
 
@@ -98,15 +99,11 @@ contract RewardedTokenLocker is
       return super.doGetRewardAt(holder, current);
     }
 
-    (amount, since) = super.doCalcRewardAt(holder, expiry);
+    (amount, since) = super.doGetRewardAt(holder, expiry);
     super.internalRemoveReward(holder);
 
     return (amount, since);
   }
-
-  // function getLinearRate() internal view override returns (uint256) {
-  //   return super.getLinearRate().add(internalGetExtraRate());
-  // }
 
   function getRewardRate() external view override returns (uint256) {
     return super.getLinearRate().sub(internalGetExtraRate());
@@ -124,12 +121,20 @@ contract RewardedTokenLocker is
     console.log('internalExtraRateUpdated', rateBefore, rateAfter, at);
 
     if (rateBefore > rateAfter) {
-      super.setLinearRateAt(super.getLinearRate().sub(rateBefore.sub(rateAfter)), at);
+      rateAfter = super.getLinearRate().sub(rateBefore.sub(rateAfter));
+    } else if (rateBefore < rateAfter) {
+      rateAfter = super.getLinearRate().add(rateAfter.sub(rateBefore));
+    } else {
       return;
     }
-    if (rateBefore < rateAfter) {
-      super.setLinearRateAt(super.getLinearRate().add(rateAfter.sub(rateBefore)), at);
+
+    if (at == 0) {
+      super.setLinearRateAt(rateAfter, getCurrentTick());
+      return;
     }
+
+    super.setLinearRateAt(rateAfter, at);
+    _accumHistory[at] = super.internalGetLastAccumRate() + 1;
   }
 
   function getCurrentTick() internal view override returns (uint32) {
@@ -141,14 +146,30 @@ contract RewardedTokenLocker is
     uint256 totalAfter,
     uint32 at
   ) internal override {
+    if (at == 0) {
+      super.doUpdateTotalSupplyAt(totalAfter, getCurrentTick());
+      return;
+    }
+
     super.doUpdateTotalSupplyAt(totalAfter, at);
+    _accumHistory[at] = super.internalGetLastAccumRate() + 1;
   }
 
   function receiveBoostExcess(uint256 amount, uint32 since) external override onlyForwarder {
+    internalUpdate(false);
     internalAddExcess(amount, since);
   }
 
-  function setExcessRatio(uint256 excessRatio) public onlyRewardAdmin {
-    internalSetExcessRatio(excessRatio);
+  // function setExcessRatio(uint256 excessRatio) public onlyRewardAdmin {
+  //   internalSetExcessRatio(excessRatio);
+  // }
+
+  function internalGetAccumHistory(uint32 at) internal view override returns (uint256 accum) {
+    if (at >= getRateUpdatedAt()) {
+      return super.internalGetLastAccumRate();
+    }
+    accum = _accumHistory[at];
+    require(accum > 0, 'unknown history point');
+    return accum - 1;
   }
 }
