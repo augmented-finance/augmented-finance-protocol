@@ -9,10 +9,11 @@ import {IRewardController, AllocationMode} from '../interfaces/IRewardController
 import {ControlledRewardPool} from './ControlledRewardPool.sol';
 import {IForwardedRewardPool} from '../interfaces/IForwardedRewardPool.sol';
 import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
+import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
 
 import 'hardhat/console.sol';
 
-contract ForwardingRewardPool is IForwardingRewardPool, ControlledRewardPool {
+contract ForwardingRewardPool is IForwardingRewardPool, IBoostExcessReceiver, ControlledRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -82,8 +83,16 @@ contract ForwardingRewardPool is IForwardingRewardPool, ControlledRewardPool {
     uint256 allocated,
     uint32 since,
     AllocationMode mode
-  ) external override {
-    require(msg.sender == address(_provider), 'unknown provider');
+  ) external override onlyProvider {
     internalAllocateReward(holder, allocated, since, mode);
+  }
+
+  modifier onlyProvider() {
+    require(msg.sender == address(_provider), 'unknown provider');
+    _;
+  }
+
+  function receiveBoostExcess(uint256 amount, uint32 since) external override onlyProvider {
+    IBoostExcessReceiver(address(_provider)).receiveBoostExcess(amount, since);
   }
 }

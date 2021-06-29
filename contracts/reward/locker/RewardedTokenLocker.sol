@@ -32,9 +32,6 @@ contract RewardedTokenLocker is
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
-  uint256 private _rate;
-  uint32 private _lastRateUpdate;
-
   constructor(
     IMarketAccessController accessCtl,
     address underlying,
