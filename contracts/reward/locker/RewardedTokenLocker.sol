@@ -16,12 +16,18 @@ import {ForwardedRewardPool} from '../pools/ForwardedRewardPool.sol';
 import {CalcLinearWeightedReward} from '../calcs/CalcLinearWeightedReward.sol';
 import {AllocationMode} from '../interfaces/IRewardController.sol';
 import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
+import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
 
 import {Errors} from '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
-contract RewardedTokenLocker is BaseTokenLocker, ForwardedRewardPool, CalcLinearWeightedReward {
+contract RewardedTokenLocker is
+  BaseTokenLocker,
+  ForwardedRewardPool,
+  CalcLinearWeightedReward,
+  IBoostExcessReceiver
+{
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
@@ -83,7 +89,7 @@ contract RewardedTokenLocker is BaseTokenLocker, ForwardedRewardPool, CalcLinear
     override
     returns (uint256 amount, uint32 since)
   {
-    internalUpdate(false, true);
+    internalUpdate(true);
 
     uint32 expiry = expiryOf(holder);
     if (expiry == 0) {
@@ -115,8 +121,13 @@ contract RewardedTokenLocker is BaseTokenLocker, ForwardedRewardPool, CalcLinear
   function internalUpdateTotal(
     uint256,
     uint256 totalAfter,
+    uint256,
     uint32 at
   ) internal override {
     super.doUpdateTotalSupplyAt(totalAfter, at);
+  }
+
+  function receiveBoostExcess(uint256 amount, uint32 since) external override onlyForwarder {
+    internalAddExcess(amount, since);
   }
 }

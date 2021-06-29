@@ -27,15 +27,29 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   IERC20 private _underlyingToken;
   uint256 private _underlyingTotal;
 
+  struct Point {
+    uint128 stakeDelta;
+    uint128 rateDelta;
+  }
+
+  struct ExcessAccum {
+    uint128 excessAmount;
+    uint64 sinceTotal;
+    uint32 sinceCount;
+  }
+
   uint256 private _stakedTotal;
-  mapping(uint32 => uint256) _pointTotal;
+  uint256 private _excessRate;
+  ExcessAccum private _excessAccum;
+
+  mapping(uint32 => Point) _pointTotal;
 
   uint32 private constant _maxDurationPoints = 255;
   uint32 private _maxValuePeriod; // = 208 weeks; // 4 * 52, must be less than _maxDurationPoints
   uint32 private _pointPeriod;
   uint32 private _nextKnownPoint;
-  // uint32 private _lastKnownPoint;
-  uint32 private _updateTS;
+  uint32 private _lastKnownPoint;
+  uint32 private _lastUpdateTS;
 
   bool private _updateEntered;
   bool private _paused;
@@ -85,10 +99,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return address(_underlyingToken);
   }
 
-  function pointOfTS(uint32 ts) private view returns (uint32) {
-    return uint32(ts / _pointPeriod);
-  }
-
   function lock(
     uint256 underlyingAmount,
     uint32 duration,
@@ -118,14 +128,14 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     require(to != address(0));
     require(underlyingAmount > 0);
 
-    uint32 currentPoint = internalUpdate(true, true);
+    uint32 currentPoint = internalUpdate(true);
 
     _underlyingToken.safeTransferFrom(from, address(this), underlyingAmount);
 
     UserBalance memory userBalance = _balances[to];
 
     {
-      uint32 endPoint = pointOfTS(uint32(block.timestamp + duration + (_pointPeriod >> 1)));
+      uint32 endPoint = uint32(block.timestamp + duration + (_pointPeriod >> 1)) / _pointPeriod;
       require(endPoint <= currentPoint + _maxDurationPoints);
 
       (stakeAmount, ) = getStakeBalance(to);
@@ -135,7 +145,9 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
       if (userBalance.endPoint > currentPoint) {
         _stakedTotal = _stakedTotal.sub(stakeAmount);
-        _pointTotal[userBalance.endPoint] = _pointTotal[userBalance.endPoint].sub(stakeAmount);
+        _pointTotal[userBalance.endPoint].stakeDelta = uint128(
+          uint256(_pointTotal[userBalance.endPoint].stakeDelta).sub(stakeAmount)
+        );
 
         if (userBalance.endPoint < endPoint) {
           userBalance.endPoint = endPoint;
@@ -159,15 +171,19 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     require(stakeAmount <= type(uint224).max);
 
     _stakedTotal = _stakedTotal.add(stakeAmount);
-    _pointTotal[userBalance.endPoint] = _pointTotal[userBalance.endPoint].add(stakeAmount);
+    {
+      uint256 stakeDelta = uint256(_pointTotal[userBalance.endPoint].stakeDelta).add(stakeAmount);
+      require(stakeDelta <= type(uint128).max);
+      _pointTotal[userBalance.endPoint].stakeDelta = uint128(stakeDelta);
+    }
 
     if (_nextKnownPoint > userBalance.endPoint || _nextKnownPoint == 0) {
       _nextKnownPoint = userBalance.endPoint;
     }
 
-    // if (_lastKnownPoint < userBalance.endPoint || _lastKnownPoint == 0) {
-    //   _lastKnownPoint = userBalance.endPoint;
-    // }
+    if (_lastKnownPoint < userBalance.endPoint || _lastKnownPoint == 0) {
+      _lastKnownPoint = userBalance.endPoint;
+    }
 
     _balances[to] = userBalance;
     setStakeBalance(to, uint224(stakeAmount));
@@ -183,18 +199,22 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return stakeAmount;
   }
 
-  function balanceOf(address account) external view override returns (uint256 stakeAmount) {
+  function internalBalanceOf(address account)
+    internal
+    view
+    returns (uint256 stakeAmount, uint32 endPointTS)
+  {
     (stakeAmount, ) = getStakeBalance(account);
     if (stakeAmount == 0) {
-      return 0;
+      return (0, 0);
     }
 
-    uint32 endPointTS = _balances[account].endPoint * _pointPeriod;
+    endPointTS = _balances[account].endPoint * _pointPeriod;
     if (endPointTS <= block.timestamp) {
-      return 0;
+      return (0, 0);
     }
 
-    return stakeAmount;
+    return (stakeAmount, endPointTS);
 
     // uint32 tsDelta = endPointTS - uint32(block.timestamp);
     // if (tsDelta == 0) {
@@ -208,6 +228,11 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     //   return 0;
     // }
     // return uint256(userBalance.stakeAmount).sub(balanceDecay);
+  }
+
+  function balanceOf(address account) external view virtual override returns (uint256 stakeAmount) {
+    (stakeAmount, ) = internalBalanceOf(account);
+    return stakeAmount;
   }
 
   function balanceOfUnderlying(address account) external view returns (uint256) {
@@ -239,7 +264,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   }
 
   function internalRedeem(address from, address to) private returns (uint256 underlyingAmount) {
-    uint32 currentPoint = internalUpdate(false, true);
+    uint32 currentPoint = internalUpdate(true);
     UserBalance memory userBalance = _balances[from];
 
     if (userBalance.underlyingAmount == 0 || userBalance.endPoint > currentPoint) {
@@ -256,7 +281,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   }
 
   function update() public {
-    internalUpdate(false, false);
+    internalUpdate(false);
   }
 
   function getScanRange(uint32 currentPoint)
@@ -274,10 +299,11 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       return (fromPoint, 0, 0);
     }
 
-    maxPoint = pointOfTS(_updateTS) + _maxDurationPoints;
-    // if (_lastKnownPoint > 0) {
-    //   maxPoint = _lastKnownPoint;
-    // }
+    maxPoint = _lastKnownPoint;
+    if (maxPoint == 0) {
+      // shouldn't happen, but as a precaution
+      maxPoint = uint32(_lastUpdateTS / _pointPeriod) + _maxDurationPoints + 1;
+    }
 
     if (maxPoint > currentPoint) {
       tillPoint = currentPoint;
@@ -293,7 +319,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   }
 
   function totalSupply() external view override returns (uint256 totalSupply_) {
-    (uint32 fromPoint, uint32 tillPoint, ) = getScanRange(pointOfTS(uint32(block.timestamp)));
+    (uint32 fromPoint, uint32 tillPoint, ) = getScanRange(uint32(block.timestamp / _pointPeriod));
 
     totalSupply_ = _stakedTotal;
 
@@ -304,70 +330,45 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     }
 
     for (; fromPoint <= tillPoint; fromPoint++) {
-      uint256 pointTotal = _pointTotal[fromPoint];
-      if (pointTotal == 0) {
+      uint256 stakeDelta = _pointTotal[fromPoint].stakeDelta;
+      if (stakeDelta == 0) {
         continue;
       }
-      if (totalSupply_ == pointTotal) {
+      if (totalSupply_ == stakeDelta) {
         return 0;
       }
-      totalSupply_ = totalSupply_.sub(pointTotal);
+      totalSupply_ = totalSupply_.sub(stakeDelta);
     }
 
     return totalSupply_;
-
-    // if (totalSupply_ == 0) {
-    //   return 0;
-    // }
-
-    // for (tillPoint = currentPoint + 1; tillPoint <= maxPoint; tillPoint++) {
-    //   pointTotal = _pointTotal[tillPoint];
-    //   if (pointTotal > 0) {
-    //     break;
-    //   }
-    // }
-
-    // if (pointTotal == 0) {
-    //   return 0;
-    // }
-
-    // uint256 totalDecay = pointTotal.mul((tillPoint - lastPoint)*_pointPeriod).div(tillPoint*_pointPeriod - block.timestamp);
-    // if (totalDecay >= totalSupply_) {
-    //   return 0;
-    // }
-    // return totalSupply_.sub(totalDecay);
   }
 
-  function internalUpdate(bool updateTS, bool preventReentry)
-    internal
-    returns (uint32 currentPoint)
-  {
-    currentPoint = pointOfTS(uint32(block.timestamp));
+  function internalUpdate(bool preventReentry) internal returns (uint32 currentPoint) {
+    currentPoint = uint32(block.timestamp / _pointPeriod);
 
     if (_updateEntered) {
       require(!preventReentry, 're-entry to stake or to redeem');
       return currentPoint;
     }
-    if (_updateTS == block.timestamp) {
+    if (_lastUpdateTS == uint32(block.timestamp)) {
       return currentPoint;
     }
 
     (uint32 fromPoint, uint32 tillPoint, uint32 maxPoint) = getScanRange(currentPoint);
 
-    if (updateTS) {
-      _updateTS = uint32(block.timestamp);
-    }
-
-    if (tillPoint == 0) {
-      return currentPoint;
-    }
-
     _updateEntered = true;
     {
-      walkPoints(fromPoint, tillPoint, maxPoint);
+      if (tillPoint > 0) {
+        walkPoints(fromPoint, tillPoint, maxPoint);
+      }
+
+      if (_lastUpdateTS / _pointPeriod < block.timestamp / _pointPeriod) {
+        internalApplyExcess();
+      }
     }
     _updateEntered = false;
 
+    _lastUpdateTS = uint32(block.timestamp);
     return currentPoint;
   }
 
@@ -377,38 +378,47 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     uint32 maxPoint
   ) private {
     uint256 stakedTotal = _stakedTotal;
-    uint256 pointTotal = _pointTotal[nextPoint];
+    uint256 excessRate = _excessRate;
+
+    Point memory delta = _pointTotal[nextPoint];
 
     for (; nextPoint <= tillPoint; ) {
-      if (pointTotal > 0) {
+      if (delta.stakeDelta > 0) {
         uint256 totalBefore = stakedTotal;
-        stakedTotal = stakedTotal.sub(pointTotal);
+        stakedTotal = stakedTotal.sub(delta.stakeDelta);
+        excessRate = excessRate.sub(delta.rateDelta);
 
-        console.log('internalUpdateTotal', totalBefore, stakedTotal, nextPoint * _pointPeriod);
-        internalUpdateTotal(totalBefore, stakedTotal, nextPoint * _pointPeriod);
-        pointTotal = 0;
+        // console.log('internalUpdateTotal', totalBefore, stakedTotal, nextPoint * _pointPeriod);
+        internalUpdateTotal(totalBefore, stakedTotal, excessRate, nextPoint * _pointPeriod);
+      } else if (delta.rateDelta > 0) {
+        excessRate = excessRate.sub(delta.rateDelta);
+        // console.log('internalUpdateTotal', stakedTotal, stakedTotal, nextPoint * _pointPeriod);
+        internalUpdateTotal(stakedTotal, stakedTotal, excessRate, nextPoint * _pointPeriod);
       }
 
+      bool found = false;
       // look for the next non-zero point
       for (nextPoint++; nextPoint <= maxPoint; nextPoint++) {
-        pointTotal = _pointTotal[nextPoint];
-        if (pointTotal > 0) {
+        delta = _pointTotal[nextPoint];
+        if (delta.stakeDelta > 0 || delta.rateDelta > 0) {
+          found = true;
           break;
         }
       }
-
-      if (pointTotal == 0) {
-        // reached the limit
-        nextPoint = 0;
-        break;
+      if (found) {
+        continue;
       }
+
+      nextPoint = 0;
+      break;
     }
 
     _nextKnownPoint = nextPoint;
-    // if (nextPoint == 0 || nextPoint > _lastKnownPoint) {
-    //   _lastKnownPoint = nextPoint;
-    // }
+    if (nextPoint == 0 || nextPoint > _lastKnownPoint) {
+      _lastKnownPoint = nextPoint;
+    }
     _stakedTotal = stakedTotal;
+    _excessRate = excessRate;
   }
 
   modifier notPaused() {
@@ -463,6 +473,61 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   function internalUpdateTotal(
     uint256 totalBefore,
     uint256 totalAfter,
+    uint256 excessRate,
     uint32 at
   ) internal virtual;
+
+  function internalApplyExcess() private {
+    ExcessAccum memory acc = _excessAccum;
+    if (acc.sinceCount == 0) {
+      return;
+    }
+    _excessAccum.sinceCount = 0;
+
+    uint32 expiresAt = uint32(acc.sinceTotal / acc.sinceCount);
+    if (expiresAt > _maxValuePeriod) {
+      expiresAt = _maxValuePeriod;
+    }
+
+    expiresAt = uint32(block.timestamp + expiresAt + _pointPeriod - 1) / _pointPeriod;
+    uint256 excessRateIncrement = acc.excessAmount / (expiresAt * _pointPeriod - block.timestamp);
+    if (excessRateIncrement == 0) {
+      return;
+    }
+
+    uint256 excessRate = _excessRate.add(excessRateIncrement);
+
+    excessRateIncrement = excessRateIncrement.add(_pointTotal[expiresAt].rateDelta);
+    require(excessRateIncrement <= type(uint128).max);
+    _pointTotal[expiresAt].rateDelta = uint128(excessRateIncrement);
+
+    if (_nextKnownPoint > expiresAt || _nextKnownPoint == 0) {
+      _nextKnownPoint = expiresAt;
+    }
+
+    if (_lastKnownPoint < expiresAt || _lastKnownPoint == 0) {
+      _lastKnownPoint = expiresAt;
+    }
+
+    internalUpdateTotal(_stakedTotal, _stakedTotal, excessRate, uint32(block.timestamp));
+    _excessRate = excessRate;
+  }
+
+  function internalAddExcess(uint256 amount, uint32 since) internal {
+    ExcessAccum memory acc = _excessAccum;
+    if (acc.sinceCount == 0) {
+      acc.sinceCount = 1;
+      acc.sinceTotal = uint32(block.timestamp - since);
+    } else {
+      require(acc.sinceCount < type(uint32).max);
+      acc.sinceCount++;
+      acc.sinceTotal += uint32(block.timestamp - since);
+      amount = amount.add(acc.excessAmount);
+    }
+
+    require(amount <= type(uint128).max);
+    acc.excessAmount = uint128(amount);
+
+    _excessAccum = acc;
+  }
 }
