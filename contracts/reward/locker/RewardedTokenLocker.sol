@@ -35,12 +35,13 @@ contract RewardedTokenLocker is
   constructor(
     IMarketAccessController accessCtl,
     address underlying,
+    uint8 underlyingDecimals,
     uint32 pointPeriod,
     uint32 maxValuePeriod,
     uint256 maxTotalSupply
   )
     public
-    BaseTokenLocker(accessCtl, underlying, pointPeriod, maxValuePeriod)
+    BaseTokenLocker(accessCtl, underlying, underlyingDecimals, pointPeriod, maxValuePeriod)
     CalcLinearWeightedReward(maxTotalSupply)
   {}
 
@@ -77,7 +78,7 @@ contract RewardedTokenLocker is
     if (current > expiry) {
       current = expiry;
     }
-    // TODO need to pre-calc total
+    // TODO need to pre-calc total?
     return super.doCalcRewardAt(holder, current);
   }
 
@@ -103,12 +104,32 @@ contract RewardedTokenLocker is
     return (amount, since);
   }
 
+  // function getLinearRate() internal view override returns (uint256) {
+  //   return super.getLinearRate().add(internalGetExtraRate());
+  // }
+
   function getRewardRate() external view override returns (uint256) {
-    return super.getLinearRate();
+    return super.getLinearRate().sub(internalGetExtraRate());
   }
 
   function internalSetRewardRate(uint256 rate) internal override {
-    super.setLinearRate(rate);
+    super.setLinearRate(rate.add(internalGetExtraRate()));
+  }
+
+  function internalExtraRateUpdated(
+    uint256 rateBefore,
+    uint256 rateAfter,
+    uint32 at
+  ) internal override {
+    console.log('internalExtraRateUpdated', rateBefore, rateAfter, at);
+
+    if (rateBefore > rateAfter) {
+      super.setLinearRateAt(super.getLinearRate().sub(rateBefore.sub(rateAfter)), at);
+      return;
+    }
+    if (rateBefore < rateAfter) {
+      super.setLinearRateAt(super.getLinearRate().add(rateAfter.sub(rateBefore)), at);
+    }
   }
 
   function getCurrentTick() internal view override returns (uint32) {
@@ -118,7 +139,6 @@ contract RewardedTokenLocker is
   function internalUpdateTotal(
     uint256,
     uint256 totalAfter,
-    uint256,
     uint32 at
   ) internal override {
     super.doUpdateTotalSupplyAt(totalAfter, at);
@@ -126,5 +146,9 @@ contract RewardedTokenLocker is
 
   function receiveBoostExcess(uint256 amount, uint32 since) external override onlyForwarder {
     internalAddExcess(amount, since);
+  }
+
+  function setExcessRatio(uint256 excessRatio) public onlyRewardAdmin {
+    internalSetExcessRatio(excessRatio);
   }
 }

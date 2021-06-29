@@ -83,16 +83,12 @@ contract ForwardingRewardPool is IForwardingRewardPool, IBoostExcessReceiver, Co
     uint256 allocated,
     uint32 since,
     AllocationMode mode
-  ) external override onlyProvider {
+  ) external override {
+    require(msg.sender == address(_provider), 'unknown provider');
     internalAllocateReward(holder, allocated, since, mode);
   }
 
-  modifier onlyProvider() {
-    require(msg.sender == address(_provider), 'unknown provider');
-    _;
-  }
-
-  function receiveBoostExcess(uint256 amount, uint32 since) external override onlyProvider {
+  function receiveBoostExcess(uint256 amount, uint32 since) external override onlyController {
     IBoostExcessReceiver(address(_provider)).receiveBoostExcess(amount, since);
   }
 }

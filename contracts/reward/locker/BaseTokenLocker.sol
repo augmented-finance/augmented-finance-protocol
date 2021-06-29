@@ -39,8 +39,9 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   }
 
   uint256 private _stakedTotal;
-  uint256 private _excessRate;
+  uint256 private _extraRate;
   ExcessAccum private _excessAccum;
+  uint256 private _excessRatio;
 
   mapping(uint32 => Point) _pointTotal;
 
@@ -75,14 +76,16 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   constructor(
     IMarketAccessController accessCtl,
     address underlying,
+    uint8 underlyingDecimals,
     uint32 pointPeriod,
     uint32 maxValuePeriod
   ) public MarketAccessBitmask(accessCtl) {
-    _initialize(underlying, pointPeriod, maxValuePeriod);
+    _initialize(underlying, underlyingDecimals, pointPeriod, maxValuePeriod);
   }
 
   function _initialize(
     address underlying,
+    uint8 underlyingDecimals,
     uint32 pointPeriod,
     uint32 maxValuePeriod
   ) internal {
@@ -93,6 +96,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     _underlyingToken = IERC20(underlying);
     _pointPeriod = pointPeriod;
     _maxValuePeriod = maxValuePeriod;
+    _excessRatio = WadRayMath.RAY.div(uint256(10)**underlyingDecimals);
+    console.log('_initialize', _excessRatio, underlyingDecimals, uint256(10)**underlyingDecimals);
   }
 
   function UNDERLYING_ASSET_ADDRESS() external view returns (address) {
@@ -170,7 +175,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     }
     require(stakeAmount <= type(uint224).max);
 
-    _stakedTotal = _stakedTotal.add(stakeAmount);
+    uint256 totalBefore = _stakedTotal;
+    _stakedTotal = totalBefore.add(stakeAmount);
     {
       uint256 stakeDelta = uint256(_pointTotal[userBalance.endPoint].stakeDelta).add(stakeAmount);
       require(stakeDelta <= type(uint128).max);
@@ -186,6 +192,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     }
 
     _balances[to] = userBalance;
+    internalUpdateTotal(totalBefore, _stakedTotal, uint32(block.timestamp));
     setStakeBalance(to, uint224(stakeAmount));
 
     emit Locked(
@@ -378,22 +385,21 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     uint32 maxPoint
   ) private {
     uint256 stakedTotal = _stakedTotal;
-    uint256 excessRate = _excessRate;
+    uint256 extraRate = _extraRate;
 
     Point memory delta = _pointTotal[nextPoint];
 
     for (; nextPoint <= tillPoint; ) {
+      if (delta.rateDelta > 0) {
+        uint256 rateBefore = extraRate;
+        extraRate = extraRate.sub(delta.rateDelta);
+        internalExtraRateUpdated(rateBefore, extraRate, nextPoint * _pointPeriod);
+      }
+
       if (delta.stakeDelta > 0) {
         uint256 totalBefore = stakedTotal;
         stakedTotal = stakedTotal.sub(delta.stakeDelta);
-        excessRate = excessRate.sub(delta.rateDelta);
-
-        // console.log('internalUpdateTotal', totalBefore, stakedTotal, nextPoint * _pointPeriod);
-        internalUpdateTotal(totalBefore, stakedTotal, excessRate, nextPoint * _pointPeriod);
-      } else if (delta.rateDelta > 0) {
-        excessRate = excessRate.sub(delta.rateDelta);
-        // console.log('internalUpdateTotal', stakedTotal, stakedTotal, nextPoint * _pointPeriod);
-        internalUpdateTotal(stakedTotal, stakedTotal, excessRate, nextPoint * _pointPeriod);
+        internalUpdateTotal(totalBefore, stakedTotal, nextPoint * _pointPeriod);
       }
 
       bool found = false;
@@ -418,7 +424,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       _lastKnownPoint = nextPoint;
     }
     _stakedTotal = stakedTotal;
-    _excessRate = excessRate;
+    _extraRate = extraRate;
   }
 
   modifier notPaused() {
@@ -462,40 +468,51 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     revert('NOT_SUPPORTED');
   }
 
-  function setStakeBalance(address holder, uint224 stakeAmount) internal virtual;
-
-  function getStakeBalance(address holder)
-    internal
-    view
-    virtual
-    returns (uint224 stakeAmount, uint32 startTS);
-
-  function internalUpdateTotal(
-    uint256 totalBefore,
-    uint256 totalAfter,
-    uint256 excessRate,
-    uint32 at
-  ) internal virtual;
+  function internalGetExtraRate() internal view virtual returns (uint256 rate) {
+    return _extraRate;
+  }
 
   function internalApplyExcess() private {
     ExcessAccum memory acc = _excessAccum;
+
+    console.log('internalApplyExcess', acc.excessAmount, acc.sinceCount, acc.sinceTotal);
+    console.log('internalApplyExcess _excessRatio', _excessRatio);
+
     if (acc.sinceCount == 0) {
       return;
     }
     _excessAccum.sinceCount = 0;
+
+    if (_excessRatio == 0) {
+      return;
+    }
 
     uint32 expiresAt = uint32(acc.sinceTotal / acc.sinceCount);
     if (expiresAt > _maxValuePeriod) {
       expiresAt = _maxValuePeriod;
     }
 
+    console.log('internalApplyExcess expiry', expiresAt);
+
     expiresAt = uint32(block.timestamp + expiresAt + _pointPeriod - 1) / _pointPeriod;
-    uint256 excessRateIncrement = acc.excessAmount / (expiresAt * _pointPeriod - block.timestamp);
+    console.log('internalApplyExcess expiresAt', expiresAt);
+
+    uint256 excessRateIncrement =
+      uint256(acc.excessAmount).mul(_excessRatio) / (expiresAt * _pointPeriod - block.timestamp);
+    console.log(
+      'internalApplyExcess excessRateIncrement',
+      excessRateIncrement,
+      uint256(acc.excessAmount).mul(_excessRatio),
+      (expiresAt * _pointPeriod - block.timestamp)
+    );
+
     if (excessRateIncrement == 0) {
       return;
     }
 
-    uint256 excessRate = _excessRate.add(excessRateIncrement);
+    uint256 rateAfter = _extraRate.add(excessRateIncrement);
+
+    console.log('internalApplyExcess_2', _extraRate, excessRateIncrement, expiresAt);
 
     excessRateIncrement = excessRateIncrement.add(_pointTotal[expiresAt].rateDelta);
     require(excessRateIncrement <= type(uint128).max);
@@ -509,25 +526,58 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       _lastKnownPoint = expiresAt;
     }
 
-    internalUpdateTotal(_stakedTotal, _stakedTotal, excessRate, uint32(block.timestamp));
-    _excessRate = excessRate;
+    internalExtraRateUpdated(_extraRate, rateAfter, uint32(block.timestamp));
+    _extraRate = rateAfter;
   }
 
   function internalAddExcess(uint256 amount, uint32 since) internal {
+    if (since == 0 || since >= block.timestamp) {
+      since = 0;
+    } else {
+      since = uint32(block.timestamp - since);
+    }
+
     ExcessAccum memory acc = _excessAccum;
     if (acc.sinceCount == 0) {
       acc.sinceCount = 1;
-      acc.sinceTotal = uint32(block.timestamp - since);
+      acc.sinceTotal = since;
     } else {
-      require(acc.sinceCount < type(uint32).max);
-      acc.sinceCount++;
-      acc.sinceTotal += uint32(block.timestamp - since);
       amount = amount.add(acc.excessAmount);
+      if (since > 0) {
+        require(acc.sinceCount < type(uint32).max);
+        acc.sinceCount++;
+        acc.sinceTotal += since;
+      }
     }
 
     require(amount <= type(uint128).max);
     acc.excessAmount = uint128(amount);
+    console.log('internalAddExcess', acc.excessAmount, acc.sinceCount, acc.sinceTotal);
 
     _excessAccum = acc;
   }
+
+  function internalSetExcessRatio(uint256 excessRatio) internal {
+    _excessRatio = excessRatio;
+  }
+
+  function internalExtraRateUpdated(
+    uint256 rateBefore,
+    uint256 rateAfter,
+    uint32 at
+  ) internal virtual;
+
+  function setStakeBalance(address holder, uint224 stakeAmount) internal virtual;
+
+  function getStakeBalance(address holder)
+    internal
+    view
+    virtual
+    returns (uint224 stakeAmount, uint32 startTS);
+
+  function internalUpdateTotal(
+    uint256 totalBefore,
+    uint256 totalAfter,
+    uint32 at
+  ) internal virtual;
 }

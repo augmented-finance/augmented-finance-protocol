@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
+import {IERC20Details} from '../dependencies/openzeppelin/contracts/IERC20Details.sol';
+
 import {AccessFlags} from '../access/AccessFlags.sol';
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 
@@ -25,7 +27,14 @@ contract XAGFTokenV1 is RewardedTokenLocker, VersionedInitializable {
 
   constructor()
     public
-    RewardedTokenLocker(IMarketAccessController(0), address(0), ONE_PERIOD, MAX_PERIOD, MAX_SUPPLY)
+    RewardedTokenLocker(
+      IMarketAccessController(0),
+      address(0),
+      18,
+      ONE_PERIOD,
+      MAX_PERIOD,
+      MAX_SUPPLY
+    )
   {
     _initializeERC20(NAME, SYMBOL, DECIMALS);
   }
@@ -72,7 +81,6 @@ contract XAGFTokenV1 is RewardedTokenLocker, VersionedInitializable {
     string calldata symbol_,
     uint8 decimals_
   ) public virtual initializerRunAlways(TOKEN_REVISION) {
-    require(underlying != address(0), 'underlying is missing');
     _initialize(remoteAcl, underlying, name_, symbol_, decimals_);
   }
 
@@ -83,8 +91,9 @@ contract XAGFTokenV1 is RewardedTokenLocker, VersionedInitializable {
     string memory symbol_,
     uint8 decimals_
   ) private {
+    require(underlying != address(0), 'underlying is missing');
     _remoteAcl = remoteAcl;
     _initializeERC20(name_, symbol_, decimals_);
-    super._initialize(underlying, ONE_PERIOD, MAX_PERIOD);
+    super._initialize(underlying, IERC20Details(underlying).decimals(), ONE_PERIOD, MAX_PERIOD);
   }
 }

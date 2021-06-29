@@ -53,17 +53,20 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
   }
 
   function internalRateUpdated(uint256 lastRate, uint32 lastAt) internal override {
+    console.log('internalRateUpdated', lastAt, lastRate, _totalSupply);
     if (_totalSupply == 0) {
       return;
     }
 
     uint32 currentTick = getRateUpdatedAt();
+    console.log('internalRateUpdated_1', currentTick, lastRate, _accumRate);
 
     // the rate stays in RAY, but is weighted now vs _totalSupplyMax
     if (currentTick != lastAt) {
       lastRate = lastRate.mul(_totalSupplyMax.div(_totalSupply));
       _accumRate = _accumRate.add(lastRate.mul(currentTick - lastAt));
     }
+    console.log('internalRateUpdated_2', _accumRate);
   }
 
   function internalSetTotalSupply(uint256 totalSupply, uint32 at)

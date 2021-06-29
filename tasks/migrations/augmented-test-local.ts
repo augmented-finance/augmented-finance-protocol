@@ -15,7 +15,7 @@ import {
   deployZombieAdapter,
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
-import { ONE_ADDRESS, RAY, RAY_100 } from '../../helpers/constants';
+import { ONE_ADDRESS, RAY, RAY_100, RAY_PER_WEEK } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
 import {
   ADAI_ADDRESS,
@@ -26,6 +26,7 @@ import {
   stakingUnstakeTicks,
   ZTOKEN_ADDRESS,
 } from './defaultTestDeployConfig';
+import { BigNumber } from 'ethers';
 
 task('augmented:test-local', 'Deploy Augmented test contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
@@ -137,7 +138,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const fwdRewardPool = await deployForwardingRewardPool(
-        [rewardFreezer.address, RAY_100, 0],
+        [rewardFreezer.address, RAY_PER_WEEK, 0],
         verify
       );
       const xagf = await deployXAGFToken([ac.address, agfToken.address, 'Locked AGF', 'xAGF']);

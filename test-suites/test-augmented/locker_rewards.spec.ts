@@ -3,7 +3,12 @@ import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import rawBRE, { ethers } from 'hardhat';
 
-import { getMockAgfToken, getRewardFreezer, getXAgfToken } from '../../helpers/contracts-getters';
+import {
+  getMockAgfToken,
+  getRewardFreezer,
+  getXAgfToken,
+  getForwardingRewardPool,
+} from '../../helpers/contracts-getters';
 
 import { MockAgfToken, RewardFreezer, ForwardingRewardPool, XAGFTokenV1 } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
@@ -12,6 +17,7 @@ import { currentTick, mineToTicks, mineTicks, revertSnapshot, takeSnapshot } fro
 import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
+import { RAY, RAY_100, RAY_PER_WEEK } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -20,7 +26,7 @@ describe('Token locker suite', () => {
   let root: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
-  //  let frp: ForwardingRewardPool;
+  let frp: ForwardingRewardPool;
   let rewardController: RewardFreezer;
   let AGF: MockAgfToken;
   let xAGF: XAGFTokenV1;
@@ -36,7 +42,9 @@ describe('Token locker suite', () => {
     [root, user1, user2] = await ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
     rewardController = await getRewardFreezer();
-    //    frp = await getForwardingRewardPool();
+    rewardController.admin_setFreezePercentage(0);
+
+    frp = await getForwardingRewardPool();
     AGF = await getMockAgfToken();
     xAGF = await getXAgfToken();
 
@@ -193,5 +201,35 @@ describe('Token locker suite', () => {
     expect(await xAGF.balanceOf(user2.address)).eq(0);
     expect(await xAGF.balanceOfUnderlying(user2.address)).eq(0);
     expect(await xAGF.totalOfUnderlying()).eq(0);
+  });
+
+  it.skip('reward recycling', async () => {
+    const defaultPeriod = 3 * WEEK;
+
+    await AGF.connect(root).mintReward(root.address, defaultStkAmount, false);
+    await AGF.connect(root).approve(xAGF.address, defaultStkAmount);
+
+    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod * 2, 0);
+    await xAGF.connect(user2).lock(defaultStkAmount, defaultPeriod, 0);
+
+    await frp.connect(root).receiveBoostExcess(RAY_PER_WEEK, 0); // 0 => 1 wad distributed over 1 week or less
+    await mineTicks(defaultPeriod / 2);
+
+    await xAGF.connect(root).lock(defaultStkAmount, defaultPeriod, 0);
+
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+    await mineToTicks(lockInfo.availableSince);
+
+    // rewardController.connect(user1).claimReward();
+    // rewardController.connect(user2).claimReward();
+    // rewardController.connect(root).claimReward();
+
+    // console.log('user1', (await AGF.balanceOf(user1.address)).toString());
+    // console.log('user2', (await AGF.balanceOf(user2.address)).toString());
+    // console.log('root', (await AGF.balanceOf(root.address)).toString());
+
+    // expect(await AGF.balanceOf(user1.address)).eq(defaultStkAmount + defaultStkAmount / 2);
+    // expect(await AGF.balanceOf(user2.address)).eq(defaultStkAmount * 2 + defaultStkAmount / 2);
+    // expect(await AGF.balanceOf(root.address)).eq(defaultStkAmount);
   });
 });
