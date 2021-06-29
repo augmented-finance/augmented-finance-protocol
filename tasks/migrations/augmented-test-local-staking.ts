@@ -20,7 +20,7 @@ import {
 } from './defaultTestDeployConfig';
 import { getAGTokenByName } from '../../helpers/contracts-getters';
 
-task('augmented:test-local-staking', 'Deploy staking contracts')
+task('augmented:test-local-staking', 'Deploy staking test contracts')
   .addOptionalParam(
     'stakeCooldownTicks',
     'staking cooldown blocks',

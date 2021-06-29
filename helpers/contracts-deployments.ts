@@ -12,7 +12,12 @@ import {
   eEthereumNetwork,
   tStringTokenBigUnits,
 } from './types';
-import { MintableERC20, RewardBoosterFactory } from '../types';
+import {
+  ForwardingRewardPoolFactory,
+  MintableERC20,
+  RewardBoosterFactory,
+  XAGFTokenV1Factory,
+} from '../types';
 import { MockContract } from 'ethereum-waffle';
 import { getReservesConfigByPool } from './configuration';
 import { getFirstSigner } from './contracts-getters';
@@ -755,6 +760,20 @@ export const deployRewardBooster = async (
     verify
   );
 
+export const deployXAGFToken = async (
+  args: [tEthereumAddress, tEthereumAddress, string, string],
+  verify?: boolean
+) => {
+  const instance = await withSaveAndVerify(
+    await new XAGFTokenV1Factory(await getFirstSigner()).deploy(),
+    eContractid.XAGFToken,
+    [],
+    verify
+  );
+  await instance.initializeToken(args[0], args[1], args[2], args[3], 18);
+  return instance;
+};
+
 export const deployRewardFreezer = async (
   args: [tEthereumAddress, tEthereumAddress],
   verify?: boolean
@@ -778,7 +797,7 @@ export const deployTeamRewardPool = async (
   withSaveAndVerify(
     await new TeamRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TeamRewardPool,
-    [], // TODO,
+    [],
     verify
   );
 
@@ -793,7 +812,7 @@ export const deployZombieRewardPool = async (
   withSaveAndVerify(
     await new ZombieRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.ZombieRewardPool,
-    [], // TODO,
+    [],
     verify
   );
 
@@ -815,7 +834,7 @@ export const deployTokenWeightedRewardPoolAGF = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAGF,
-    [], // TODO:
+    [],
     verify
   );
 
@@ -826,7 +845,7 @@ export const deployTokenWeightedRewardPoolAGFBoosted = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAGFBoosted,
-    [], // TODO:
+    [],
     verify
   );
 
@@ -837,7 +856,7 @@ export const deployTokenWeightedRewardPoolAGFSeparate = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAGFSeparate,
-    [], // TODO:
+    [],
     verify
   );
 
@@ -848,7 +867,7 @@ export const deployTokenWeightedRewardPoolAG = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAG,
-    [], // TODO:
+    [],
     verify
   );
 
@@ -859,7 +878,7 @@ export const deployTokenWeightedRewardPoolAGBoosted = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAGBoosted,
-    [], // TODO:
+    [],
     verify
   );
 
@@ -870,7 +889,7 @@ export const deployTokenWeightedRewardPoolAGUSDCBoosted = async (
   withSaveAndVerify(
     await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenWeightedRewardPoolAGUSDCBoosted,
-    [], // TODO:
+    [],
     verify
   );
 
@@ -881,7 +900,18 @@ export const deployTokenUnweightedRewardPool = async (
   withSaveAndVerify(
     await new TokenUnweightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TokenUnweightedRewardPool,
-    [], // TODO:
+    [],
+    verify
+  );
+
+export const deployForwardingRewardPool = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new ForwardingRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.ForwardingRewardPool,
+    [],
     verify
   );
 

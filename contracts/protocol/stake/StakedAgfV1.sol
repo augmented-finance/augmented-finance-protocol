@@ -12,11 +12,7 @@ import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
  * @title StakedAgfV1
  * @notice Staked AGF token
  **/
-contract StakedAgfV1 is
-  SlashableStakeTokenBase, // VotingToken,
-  VersionedInitializable,
-  IRewardMinter
-{
+contract StakedAgfV1 is SlashableStakeTokenBase, VersionedInitializable, IRewardMinter {
   string internal constant NAME = 'Staked AGF';
   string internal constant SYMBOL = 'stkAGF';
   uint32 internal constant COOLDOWN_BLOCKS = 100;
@@ -69,11 +65,7 @@ contract StakedAgfV1 is
       return (IRewardMinter(getUnderlying()), account);
     }
 
-    internalStake(msg.sender, account, amount, false);
+    internalStake(msg.sender, account, amount, 0, false);
     return (IRewardMinter(getUnderlying()), address(this));
-  }
-
-  function rewardTotalSupply() external view override returns (uint256) {
-    return IRewardMinter(getUnderlying()).rewardTotalSupply();
   }
 }

@@ -5,7 +5,11 @@ import {IDerivedToken} from '../../../interfaces/IDerivedToken.sol';
 import {IEmergencyAccess} from '../../../interfaces/IEmergencyAccess.sol';
 
 interface IStakeToken is IDerivedToken {
-  function stake(address to, uint256 underlyingAmount) external returns (uint256 stakeAmount);
+  function stake(
+    address to,
+    uint256 underlyingAmount,
+    uint64 referal
+  ) external returns (uint256 stakeAmount);
 
   function redeem(address to, uint256 maxStakeAmount) external returns (uint256 stakeAmount);
 

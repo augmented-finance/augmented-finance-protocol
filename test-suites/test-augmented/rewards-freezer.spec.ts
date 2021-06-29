@@ -1,7 +1,7 @@
 import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
-import { makeSuite, TestEnv } from '../test-augmented/helpers/make-suite';
+import { makeSuite, TestEnv } from './helpers/make-suite';
 import { waitForTx } from '../../helpers/misc-utils';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import rawBRE, { ethers } from 'hardhat';
@@ -16,7 +16,6 @@ import {
 import { AGFToken, RewardFreezer } from '../../types';
 import { ONE_ADDRESS, RAY, ZERO_ADDRESS } from '../../helpers/constants';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
-import { getCurrentBlock } from '../../helpers/contracts-helpers';
 
 chai.use(solidity);
 const { expect } = chai;

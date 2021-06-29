@@ -45,6 +45,8 @@ import {
   DepositToken,
   TokenWeightedRewardPoolFactory,
   RewardBoosterFactory,
+  ForwardingRewardPoolFactory,
+  XAGFTokenV1Factory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -406,6 +408,12 @@ export const getAgfToken = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getXAgfToken = async (address?: tEthereumAddress) =>
+  await XAGFTokenV1Factory.connect(
+    address || (await getDb().get(`${eContractid.XAGFToken}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
 export const getZombieAdapter = async (address?: tEthereumAddress) =>
   await ZombieAdapterFactory.connect(
     address ||
@@ -438,6 +446,14 @@ export const getZombieRewardPool = async (address?: tEthereumAddress) =>
   await ZombieRewardPoolFactory.connect(
     address ||
       (await getDb().get(`${eContractid.ZombieRewardPool}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
+export const getForwardingRewardPool = async (address?: tEthereumAddress) =>
+  await ForwardingRewardPoolFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.ForwardingRewardPool}.${DRE.network.name}`).value())
+        .address,
     await getFirstSigner()
   );
 
