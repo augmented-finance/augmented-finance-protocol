@@ -15,6 +15,7 @@ import { currentTick, revertSnapshot, takeSnapshot } from '../test-augmented/uti
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { applyDepositPlanAndClaimAll, TestInfo } from '../test_utils';
 import { ONE_ADDRESS } from '../../helpers/constants';
+import { deflateSync } from 'zlib';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -245,9 +246,11 @@ describe('Token weighted reward pool tests', () => {
     expect(reward).to.be.approximately(1000, rewardPrecision, 'reward is wrong');
   });
 
-  it('weights check, user1 is static, user2 changes balance', async () => { 
+  it('weights check, user1 is static, user2 changes balance, small step', async () => { 
+    const UNIT = 1e9;
+    const STEP = 50;
     const ti = {
-      TotalRewardTicks: 30,
+      TotalRewardTicks: 6*STEP,
       UserBalanceChanges: [
         {
           Signer: user1,
@@ -255,53 +258,53 @@ describe('Token weighted reward pool tests', () => {
           TokenAddress: ONE_ADDRESS,
           TicksFromStart: 0,
           AmountDepositedBefore: 0,
-          AmountDeposited: 1000000,
-          TotalAmountDeposited: 1000000,
+          AmountDeposited: UNIT,
+          TotalAmountDeposited: UNIT,
         },
         {
           Signer: user2,
           Pool: wrp,
           TokenAddress: ONE_ADDRESS,
-          TicksFromStart: 5,
+          TicksFromStart: STEP,
           AmountDepositedBefore: 0,
-          AmountDeposited: 1000000,
-          TotalAmountDeposited: 2000000,
+          AmountDeposited: UNIT,
+          TotalAmountDeposited: 2*UNIT,
         },
         {
           Signer: user2,
           Pool: wrp,
           TokenAddress: ONE_ADDRESS,
-          TicksFromStart: 10,
-          AmountDepositedBefore: 1000000,
-          AmountDeposited: 3000000,
-          TotalAmountDeposited: 4000000,
+          TicksFromStart: 2*STEP,
+          AmountDepositedBefore: UNIT,
+          AmountDeposited: 3*UNIT,
+          TotalAmountDeposited: 4*UNIT,
         },
         {
           Signer: user2,
           Pool: wrp,
           TokenAddress: ONE_ADDRESS,
-          TicksFromStart: 15,
-          AmountDepositedBefore: 3000000,
-          AmountDeposited: 2000000,
-          TotalAmountDeposited: 3000000,
+          TicksFromStart: 3*STEP,
+          AmountDepositedBefore: 3*UNIT,
+          AmountDeposited: 2*UNIT,
+          TotalAmountDeposited: 3*UNIT,
         },
         {
           Signer: user2,
           Pool: wrp,
           TokenAddress: ONE_ADDRESS,
-          TicksFromStart: 20,
-          AmountDepositedBefore: 2000000,
-          AmountDeposited: 1000000,
-          TotalAmountDeposited: 2000000,
+          TicksFromStart: 4*STEP,
+          AmountDepositedBefore: 2*UNIT,
+          AmountDeposited: UNIT,
+          TotalAmountDeposited: 2*UNIT,
         },
         {
           Signer: user2,
           Pool: wrp,
           TokenAddress: ONE_ADDRESS,
-          TicksFromStart: 25,
-          AmountDepositedBefore: 1000000,
+          TicksFromStart: 5*STEP,
+          AmountDepositedBefore: UNIT,
           AmountDeposited: 0,
-          TotalAmountDeposited: 1000000,
+          TotalAmountDeposited: UNIT,
         },
       ],
       TicksToMeltdown: 0,
@@ -311,16 +314,18 @@ describe('Token weighted reward pool tests', () => {
     await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
 
-    const expected1 = 100*5 + 50*5 + 25*5 + 33*5 + 50*5 + 100*(5-1); // -1 is because of the last tick is spent to claim for user2
-    expect((await agf.balanceOf(user1.address)).toNumber()).to.be.approximately(expected1, 1.5, 'reward is wrong');
+    const expected1 = (100 + 50 + 25 + 33.33 + 50)*STEP + 100*(STEP-1); // -1 is because of the last tick is spent to claim for user2
+    expect((await agf.balanceOf(user1.address)).toNumber()).to.be.approximately(expected1, STEP/3, 'reward is wrong');
 
-    const expected2 = 0 + 50*5 + 75*5 + 66*5 + 50*5 + 0; 
-    expect((await agf.balanceOf(user2.address)).toNumber()).to.be.approximately(expected2, 1.5, 'reward is wrong');
+    const expected2 = (0 + 50 + 75 + 66.66 + 50 + 0)*STEP; 
+    expect((await agf.balanceOf(user2.address)).toNumber()).to.be.approximately(expected2, STEP/3, 'reward is wrong');
   });
 
-  it('weights check, both users change balances', async () => { 
+  it('weights check, both users change balances, large step', async () => { 
+    const UNIT = 1e9;
+    const STEP = 60*60*24;
     const ti = {
-      TotalRewardTicks: 20,
+      TotalRewardTicks: 4*STEP,
       UserBalanceChanges: [
         {
           Signer: user1,
@@ -328,35 +333,35 @@ describe('Token weighted reward pool tests', () => {
           TokenAddress: ONE_ADDRESS,
           TicksFromStart: 0,
           AmountDepositedBefore: 0,
-          AmountDeposited: 1000000,
-          TotalAmountDeposited: 1000000,
+          AmountDeposited: UNIT,
+          TotalAmountDeposited: UNIT,
         },
         {
           Signer: user2,
           Pool: wrp,
           TokenAddress: ONE_ADDRESS,
-          TicksFromStart: 5,
+          TicksFromStart: STEP,
           AmountDepositedBefore: 0,
-          AmountDeposited: 2000000,
-          TotalAmountDeposited: 3000000,
+          AmountDeposited: 2*UNIT,
+          TotalAmountDeposited: 3*UNIT,
         },
         {
           Signer: user1,
           Pool: wrp,
           TokenAddress: ONE_ADDRESS,
-          TicksFromStart: 10,
-          AmountDepositedBefore: 1000000,
-          AmountDeposited: 2000000,
-          TotalAmountDeposited: 4000000,
+          TicksFromStart: 2*STEP,
+          AmountDepositedBefore: UNIT,
+          AmountDeposited: 2*UNIT,
+          TotalAmountDeposited: 4*UNIT,
         },
         {
           Signer: user2,
           Pool: wrp,
           TokenAddress: ONE_ADDRESS,
-          TicksFromStart: 15,
-          AmountDepositedBefore: 2000000,
+          TicksFromStart: 3*STEP,
+          AmountDepositedBefore: 2*UNIT,
           AmountDeposited: 0,
-          TotalAmountDeposited: 2000000,
+          TotalAmountDeposited: 2*UNIT,
         },
       ],
       TicksToMeltdown: 0,
@@ -366,10 +371,10 @@ describe('Token weighted reward pool tests', () => {
     await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
 
-    const expected1 = 100*5 + 33*5 + 50*5 + 100*(5-1); // -1 is because of the last tick is spent to claim for user2
-    expect((await agf.balanceOf(user1.address)).toNumber()).to.be.approximately(expected1, 1.5, 'reward is wrong');
+    const expected1 = (100 + 33.33 + 50) * STEP + 100*(STEP-1); // -1 is because of the last tick is spent to claim for user2
+    expect((await agf.balanceOf(user1.address)).toNumber()).to.be.approximately(expected1, STEP/3, 'reward is wrong');
 
-    const expected2 = 0 + 66*5 + 50*5 + 0;
-    expect((await agf.balanceOf(user2.address)).toNumber()).to.be.approximately(expected2, 3, 'reward is wrong');
+    const expected2 = (0 + 66.66 + 50 + 0)*STEP;
+    expect((await agf.balanceOf(user2.address)).toNumber()).to.be.approximately(expected2, STEP/3, 'reward is wrong');
   });
 });
