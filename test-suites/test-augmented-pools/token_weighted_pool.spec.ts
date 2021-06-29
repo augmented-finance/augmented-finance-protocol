@@ -244,4 +244,132 @@ describe('Token weighted reward pool tests', () => {
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(1000, rewardPrecision, 'reward is wrong');
   });
+
+  it('weights check, user1 is static, user2 changes balance', async () => { 
+    const ti = {
+      TotalRewardTicks: 30,
+      UserBalanceChanges: [
+        {
+          Signer: user1,
+          Pool: wrp,
+          TokenAddress: ONE_ADDRESS,
+          TicksFromStart: 0,
+          AmountDepositedBefore: 0,
+          AmountDeposited: 1000000,
+          TotalAmountDeposited: 1000000,
+        },
+        {
+          Signer: user2,
+          Pool: wrp,
+          TokenAddress: ONE_ADDRESS,
+          TicksFromStart: 5,
+          AmountDepositedBefore: 0,
+          AmountDeposited: 1000000,
+          TotalAmountDeposited: 2000000,
+        },
+        {
+          Signer: user2,
+          Pool: wrp,
+          TokenAddress: ONE_ADDRESS,
+          TicksFromStart: 10,
+          AmountDepositedBefore: 1000000,
+          AmountDeposited: 3000000,
+          TotalAmountDeposited: 4000000,
+        },
+        {
+          Signer: user2,
+          Pool: wrp,
+          TokenAddress: ONE_ADDRESS,
+          TicksFromStart: 15,
+          AmountDepositedBefore: 3000000,
+          AmountDeposited: 2000000,
+          TotalAmountDeposited: 3000000,
+        },
+        {
+          Signer: user2,
+          Pool: wrp,
+          TokenAddress: ONE_ADDRESS,
+          TicksFromStart: 20,
+          AmountDepositedBefore: 2000000,
+          AmountDeposited: 1000000,
+          TotalAmountDeposited: 2000000,
+        },
+        {
+          Signer: user2,
+          Pool: wrp,
+          TokenAddress: ONE_ADDRESS,
+          TicksFromStart: 25,
+          AmountDepositedBefore: 1000000,
+          AmountDeposited: 0,
+          TotalAmountDeposited: 1000000,
+        },
+      ],
+      TicksToMeltdown: 0,
+      FreezePercentage: 0,
+    } as TestInfo;
+    await rc.admin_setFreezePercentage(ti.FreezePercentage);
+    await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
+    await applyDepositPlanAndClaimAll(ti, rc);
+
+    const expected1 = 100*5 + 50*5 + 25*5 + 33*5 + 50*5 + 100*(5-1); // -1 is because of the last tick is spent to claim for user2
+    expect((await agf.balanceOf(user1.address)).toNumber()).to.be.approximately(expected1, 1.5, 'reward is wrong');
+
+    const expected2 = 0 + 50*5 + 75*5 + 66*5 + 50*5 + 0; 
+    expect((await agf.balanceOf(user2.address)).toNumber()).to.be.approximately(expected2, 1.5, 'reward is wrong');
+  });
+
+  it('weights check, both users change balances', async () => { 
+    const ti = {
+      TotalRewardTicks: 20,
+      UserBalanceChanges: [
+        {
+          Signer: user1,
+          Pool: wrp,
+          TokenAddress: ONE_ADDRESS,
+          TicksFromStart: 0,
+          AmountDepositedBefore: 0,
+          AmountDeposited: 1000000,
+          TotalAmountDeposited: 1000000,
+        },
+        {
+          Signer: user2,
+          Pool: wrp,
+          TokenAddress: ONE_ADDRESS,
+          TicksFromStart: 5,
+          AmountDepositedBefore: 0,
+          AmountDeposited: 2000000,
+          TotalAmountDeposited: 3000000,
+        },
+        {
+          Signer: user1,
+          Pool: wrp,
+          TokenAddress: ONE_ADDRESS,
+          TicksFromStart: 10,
+          AmountDepositedBefore: 1000000,
+          AmountDeposited: 2000000,
+          TotalAmountDeposited: 4000000,
+        },
+        {
+          Signer: user2,
+          Pool: wrp,
+          TokenAddress: ONE_ADDRESS,
+          TicksFromStart: 15,
+          AmountDepositedBefore: 2000000,
+          AmountDeposited: 0,
+          TotalAmountDeposited: 2000000,
+        },
+      ],
+      TicksToMeltdown: 0,
+      FreezePercentage: 0,
+    } as TestInfo;
+    await rc.admin_setFreezePercentage(ti.FreezePercentage);
+    await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
+    await applyDepositPlanAndClaimAll(ti, rc);
+
+    const expected1 = 100*5 + 33*5 + 50*5 + 100*(5-1); // -1 is because of the last tick is spent to claim for user2
+    expect((await agf.balanceOf(user1.address)).toNumber()).to.be.approximately(expected1, 1.5, 'reward is wrong');
+
+    const expected2 = 0 + 66*5 + 50*5 + 0;
+    expect((await agf.balanceOf(user2.address)).toNumber()).to.be.approximately(expected2, 3, 'reward is wrong');
+  });
 });
