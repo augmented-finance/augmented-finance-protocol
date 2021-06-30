@@ -18,6 +18,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
 
   uint256 private _totalSupplyMax;
   uint256 private constant minBitReserve = 32;
+  uint256 private constant valueScale = 1e9; // WadRayMath.WAD_RAY_RATIO;
 
   constructor(uint256 maxTotalSupply) public {
     require(maxTotalSupply > 0, 'max total supply is unknown');
@@ -25,7 +26,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     uint256 maxSupplyBits = BitUtils.bitLength(maxTotalSupply);
     require(maxSupplyBits + minBitReserve < 256, 'max total supply is too high');
 
-    _totalSupplyMax = (1 << maxSupplyBits) - 1;
+    _totalSupplyMax = maxTotalSupply; // (1 << maxSupplyBits) - 1;
   }
 
   function doUpdateTotalSupplyDiff(uint256 oldSupply, uint256 newSupply) internal returns (bool) {
@@ -110,36 +111,55 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
       uint32 since
     )
   {
-    uint256 weightedRate;
-
     adjRate = internalGetAccumHistory(currentTick);
     if (_totalSupply > 0) {
-      weightedRate = getLinearRate().mul(_totalSupplyMax.div(_totalSupply));
+      uint256 weightedRate = getLinearRate().mul(_totalSupplyMax.div(_totalSupply));
       adjRate = adjRate.add(weightedRate.mul(currentTick - getRateUpdatedAt()));
     }
-    weightedRate = adjRate.sub(lastAccumRate);
-
-    if (weightedRate == 0) {
+    if (adjRate == lastAccumRate) {
       return (adjRate, 0, entry.lastUpdate);
     }
 
-    // ATTN! TODO Prevent overflow checks here
-    uint256 x = entry.rewardBase * weightedRate;
-    if (x / weightedRate == entry.rewardBase) {
+    uint256 v = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _totalSupplyMax);
+    return (adjRate, v.div(valueScale), entry.lastUpdate);
+  }
+
+  function mulDiv(
+    uint256 a,
+    uint256 mul,
+    uint256 div
+  ) internal pure returns (uint256) {
+    if (div == 1) {
+      return a.mul(mul);
+    }
+
+    // ATTN! Ignore overflow checks here
+    uint256 x = a * mul;
+
+    if (x == 0) {
+      return 0;
+    }
+    if (x / mul == a) {
       // the easy way - no overflow
-      return (adjRate, (x / _totalSupplyMax) / WadRayMath.RAY, entry.lastUpdate);
+      return x.div(div);
     }
 
     // the hard way - numbers are too large for one-hit, so do it by chunks
-    uint256 remainingBits =
-      minBitReserve + uint256(256 - minBitReserve).sub(BitUtils.bitLength(weightedRate));
-    uint256 baseMask = (1 << remainingBits) - 1;
+
+    if (a < mul) {
+      (a, mul) = (mul, a);
+    }
+
+    uint8 bitLen = uint8(256 - BitUtils.bitLength(mul)); // bitLength will be > 1
+
+    uint256 baseMask = (uint256(1) << bitLen) - 1;
     uint256 shiftedBits = 0;
 
-    for (x = entry.rewardBase; x > 0; x >>= remainingBits) {
-      allocated = allocated.add((((x & baseMask) * weightedRate) / _totalSupplyMax) << shiftedBits);
-      shiftedBits += remainingBits;
+    uint256 r;
+    for (x = a; x > 0; x >>= bitLen) {
+      r = r.add((((x & baseMask) * mul) / div) << shiftedBits);
+      shiftedBits += bitLen;
     }
-    return (adjRate, allocated / WadRayMath.RAY, entry.lastUpdate);
+    return r;
   }
 }

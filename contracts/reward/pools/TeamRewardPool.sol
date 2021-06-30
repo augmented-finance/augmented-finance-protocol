@@ -33,7 +33,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     _;
   }
 
-  function getRate() public view override returns (uint256) {
+  function internalGetRate() internal view override returns (uint256) {
     return super.getLinearRate();
   }
 

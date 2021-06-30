@@ -231,6 +231,8 @@ describe('Token locker suite', () => {
     await AGF.connect(root).mintReward(root.address, defaultStkAmount, false);
     await AGF.connect(root).approve(xAGF.address, defaultStkAmount);
 
+    const rateBase = await xAGF.getRewardRate();
+
     await xAGF.connect(user1).lock(defaultStkAmount, 6 * WEEK, 0);
     const startedAt = await currentTick();
     const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
@@ -238,11 +240,11 @@ describe('Token locker suite', () => {
     await xAGF.connect(user2).lock(defaultStkAmount * 2, 6 * WEEK, 0);
     const total12 = await xAGF.totalSupply();
 
-    expect(await xAGF.getRewardRate()).eq(RAY);
+    expect(await xAGF.getRewardRate()).eq(rateBase);
 
-    await frp.connect(root).receiveBoostExcess(RAY_10000, 0); // RAY_10000 will be distributed over 1 week or less
+    await frp.connect(root).receiveBoostExcess(rateBase.mul(10000), 0); // 10000 will be distributed over 1 week or less
 
-    expect(await xAGF.getRewardRate()).eq(RAY);
+    expect(await xAGF.getRewardRate()).eq(rateBase);
 
     await mineTicks(3 * WEEK);
 

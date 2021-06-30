@@ -42,11 +42,11 @@ contract ForwardingRewardPool is IForwardingRewardPool, IBoostExcessReceiver, Co
     if (address(_provider) != provider || provider == address(0)) {
       return;
     }
-    _pausedRate = uint224(_provider.getRewardRate());
+    _pausedRate = _provider.getRewardRate();
     _provider = IForwardedRewardPool(0);
   }
 
-  function getRate() public view override returns (uint256) {
+  function internalGetRate() internal view override returns (uint256) {
     if (_provider != IForwardedRewardPool(0)) {
       return _provider.getRewardRate();
     }
@@ -61,7 +61,7 @@ contract ForwardingRewardPool is IForwardingRewardPool, IBoostExcessReceiver, Co
       _provider.setRewardRate(rate);
       return;
     }
-    _pausedRate = uint224(rate);
+    _pausedRate = rate;
   }
 
   function internalCalcReward(address holder) internal view override returns (uint256, uint32) {

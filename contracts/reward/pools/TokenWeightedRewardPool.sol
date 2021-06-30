@@ -25,7 +25,7 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
     CalcLinearWeightedReward(maxTotalSupply)
   {}
 
-  function getRate() public view override returns (uint256) {
+  function internalGetRate() internal view override returns (uint256) {
     return super.getLinearRate();
   }
 

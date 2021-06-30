@@ -123,7 +123,7 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
 
   function internalSetRate(uint256) internal override {}
 
-  function getRate() public view override returns (uint256) {
+  function internalGetRate() internal view override returns (uint256) {
     return 0;
   }
 }

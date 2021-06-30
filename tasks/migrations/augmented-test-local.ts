@@ -105,7 +105,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const tokenWeightedRewardPoolSeparate = await deployTokenWeightedRewardPoolAGFSeparate(
-        [rewardFreezer.address, RAY_100, 0, RAY_100],
+        [rewardFreezer.address, 1e11, 0, RAY_100],
         verify
       );
       await waitForTx(
@@ -138,7 +138,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const fwdRewardPool = await deployForwardingRewardPool(
-        [rewardFreezer.address, RAY, 0],
+        [rewardFreezer.address, 1e9, 0],
         verify
       );
       const xagf = await deployXAGFToken([ac.address, agfToken.address, 'Locked AGF', 'xAGF']);

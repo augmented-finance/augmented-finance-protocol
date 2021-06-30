@@ -18,7 +18,8 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   IRewardController internal _controller;
 
-  uint224 internal _pausedRate;
+  uint256 internal _pausedRate;
+  uint224 internal _rateScale;
   uint16 private _baselinePercentage;
   bool private _paused;
 
@@ -26,11 +27,12 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     IRewardController controller,
     uint256 initialRate,
     uint16 baselinePercentage
-  ) public {
+  ) public // uint224 rateScale
+  {
     require(address(controller) != address(0), 'controller is required');
     _controller = controller;
-
-    require(initialRate <= type(uint224).max, 'excessive initialRate value');
+    // require(rateScale > 0, 'rate scale is required');
+    _rateScale = uint224(WadRayMath.RAY); // rateScale;
 
     if (initialRate != 0 && baselinePercentage == 0) {
       _baselinePercentage = NO_BASELINE;
@@ -38,7 +40,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
       _baselinePercentage = baselinePercentage;
     }
 
-    internalSetRate(uint224(initialRate));
+    internalSetRate(initialRate);
   }
 
   function updateBaseline(uint256 baseline)
@@ -49,10 +51,10 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     returns (bool hasBaseline, uint256 appliedRate)
   {
     if (_baselinePercentage == NO_BASELINE) {
-      return (false, getRate());
+      return (false, internalGetRate().rayDiv(_rateScale));
     }
     appliedRate = baseline.percentMul(_baselinePercentage);
-    setRate(appliedRate);
+    _setRate(appliedRate);
     return (true, appliedRate);
   }
 
@@ -66,10 +68,6 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     internalSetRate(0);
   }
 
-  //  function internalDisableBaseline() internal virtual {}
-
-  //  function internalDisableRate() internal virtual;
-
   function setBaselinePercentage(uint16 factor) external override onlyRateController {
     internalSetBaselinePercentage(factor);
   }
@@ -79,17 +77,23 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _baselinePercentage = factor;
   }
 
-  function setRate(uint256 rate) public virtual override onlyRateController {
-    require(rate <= type(uint224).max, 'excessive rate value');
-
-    if (isPaused()) {
-      _pausedRate = uint224(rate);
-      return;
-    }
-    internalSetRate(rate);
+  function setRate(uint256 rate) external override onlyRateController {
+    _setRate(rate);
   }
 
-  function getRate() public view virtual returns (uint256);
+  function _setRate(uint256 rate) private {
+    if (isPaused()) {
+      _pausedRate = rate;
+      return;
+    }
+    internalSetRate(rate.rayMul(_rateScale));
+  }
+
+  function getRate() external view returns (uint256) {
+    return internalGetRate().rayDiv(_rateScale);
+  }
+
+  function internalGetRate() internal view virtual returns (uint256);
 
   function internalSetRate(uint256 rate) internal virtual;
 
@@ -107,7 +111,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   function internalPause(bool paused) internal virtual {
     if (paused) {
-      _pausedRate = uint224(getRate());
+      _pausedRate = internalGetRate();
       internalSetRate(0);
       return;
     }
