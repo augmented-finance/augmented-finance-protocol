@@ -199,8 +199,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     view
     returns (
       uint256 stakeAmount,
-      uint32 endPointTS,
-      uint32 startTS
+      uint32 startTS,
+      uint32 endTS
     )
   {
     (stakeAmount, startTS) = getStakeBalance(account);
@@ -208,12 +208,12 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       return (0, 0, 0);
     }
 
-    endPointTS = _balances[account].endPoint * _pointPeriod;
-    if (endPointTS <= block.timestamp) {
+    endTS = _balances[account].endPoint * _pointPeriod;
+    if (endTS <= block.timestamp) {
       return (0, 0, 0);
     }
 
-    return (stakeAmount, endPointTS, startTS);
+    return (stakeAmount, startTS, endTS);
   }
 
   function balanceOf(address account) external view virtual override returns (uint256 stakeAmount) {

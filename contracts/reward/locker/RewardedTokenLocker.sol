@@ -68,6 +68,7 @@ contract RewardedTokenLocker is
   function calcReward(address holder)
     external
     view
+    virtual
     override
     returns (uint256 amount, uint32 since)
   {
@@ -84,6 +85,7 @@ contract RewardedTokenLocker is
 
   function internalClaimReward(address holder, uint256 limit)
     internal
+    virtual
     override
     returns (uint256 amount, uint32 since)
   {
