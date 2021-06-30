@@ -26,7 +26,7 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
     IRewardController controller,
     address[] memory tokens,
     TokenReward[] memory rewards
-  ) public ControlledRewardPool(controller, 0, NO_BASELINE) {
+  ) public ControlledRewardPool(controller, 0, NO_SCALE, NO_BASELINE) {
     require(tokens.length == rewards.length, 'inconsistent length');
 
     for (uint256 i = 0; i < tokens.length; i++) {
@@ -123,7 +123,7 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
 
   function internalSetRate(uint256) internal override {}
 
-  function getRate() public view override returns (uint256) {
+  function internalGetRate() internal view override returns (uint256) {
     return 0;
   }
 }

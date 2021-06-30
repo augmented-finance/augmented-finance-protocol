@@ -9,7 +9,6 @@ import 'hardhat/console.sol';
 
 abstract contract CalcLinearRateReward {
   using SafeMath for uint256;
-  using WadRayMath for uint256;
 
   mapping(address => RewardEntry) private _rewards;
   uint256 private _rate;
@@ -23,15 +22,18 @@ abstract contract CalcLinearRateReward {
   }
 
   function setLinearRate(uint256 rate) internal {
+    setLinearRateAt(rate, getCurrentTick());
+  }
+
+  function setLinearRateAt(uint256 rate, uint32 at) internal {
     if (_rate == rate) {
       return;
     }
     uint256 prevRate = _rate;
     uint32 prevTick = _lastRateUpdateAt;
-    uint32 currentTick = getCurrentTick();
-
-    internalMarkRateUpdate(currentTick);
+    internalMarkRateUpdate(at);
     _rate = rate;
+    console.log('setLinearRateAt', _rate, prevRate, prevTick);
     internalRateUpdated(prevRate, prevTick);
   }
 

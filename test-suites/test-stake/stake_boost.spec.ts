@@ -13,7 +13,7 @@ import {
 } from '../../helpers/contracts-getters';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { CFG, stakingCooldownTicks } from '../../tasks/migrations/defaultTestDeployConfig';
-import { mineTicks, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
+import { currentTick, mineTicks, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import {
   DepositToken,
   MockAgfToken,
@@ -22,6 +22,7 @@ import {
   TokenWeightedRewardPool,
 } from '../../types';
 import { applyDepositPlanAndClaimAll, TestInfo } from '../test_utils';
+import { min } from 'underscore';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -113,7 +114,7 @@ describe('Staking with boosting', () => {
     const basicAmount = ti.TotalRewardTicks;
 
     await applyDepositPlanAndClaimAll(ti, rb);
-    expect(await AGF.balanceOf(user1.address)).to.eq(basicAmount - 1);
+    expect(await AGF.balanceOf(user1.address)).to.eq(basicAmount);
   });
 
   it('multiple deposits for work', async () => {
@@ -150,59 +151,29 @@ describe('Staking with boosting', () => {
       ],
     } as TestInfo;
 
-    // basic work of the deposit
-    const basicAmount = ti.TotalRewardTicks;
-    const boostAmount = ti.TotalRewardTicks;
+    const boostAmount = ti.TotalRewardTicks + 2; 
+    const basicAmount1 = ti.TotalRewardTicks + 1;
+    const basicAmount2 = ti.TotalRewardTicks;
 
     await applyDepositPlanAndClaimAll(ti, rb);
-    const numberOfWorkingPools = 2;
     expect(await AGF.balanceOf(user1.address)).to.eq(
-      boostAmount * numberOfWorkingPools + basicAmount
+      basicAmount1 + basicAmount2 + + min([boostAmount, basicAmount1 + basicAmount2])
     );
   });
 
   it('can stake AGF to xAGF, deposit agDAI for 20 blocks, receive boost reward', async () => {
-    await rpAGF.handleBalanceUpdate(
-      xAGF.address,
-      user1.address,
-      0,
-      defaultStkAmount,
-      defaultStkAmount
-    );
     const ti = {
       TotalRewardTicks: 20,
       UserBalanceChanges: [
         {
           Signer: user1,
-          Pool: rpAGDAI,
-          TokenAddress: agDAI.address,
+          Pool: rpAGF,
+          TokenAddress: xAGF.address,
           TicksFromStart: 0,
           AmountDepositedBefore: 0,
-          AmountDeposited: 10000,
-          TotalAmountDeposited: 10000,
+          AmountDeposited: defaultStkAmount,
+          TotalAmountDeposited: defaultStkAmount,
         },
-      ],
-    } as TestInfo;
-
-    // basic work of the deposit - deposit is added one block after the stake
-    const basicAmount = ti.TotalRewardTicks - 2;
-    const boostAmount = ti.TotalRewardTicks;
-
-    await applyDepositPlanAndClaimAll(ti, rb);
-    expect(await AGF.balanceOf(user1.address)).to.eq(boostAmount + basicAmount);
-  });
-
-  it('deposit agDAI for 10 blocks, redeem, wait 10 blocks and still get full reward', async () => {
-    await rpAGF.handleBalanceUpdate(
-      xAGF.address,
-      user1.address,
-      0,
-      defaultStkAmount,
-      defaultStkAmount
-    );
-    const ti = {
-      TotalRewardTicks: 10,
-      UserBalanceChanges: [
         {
           Signer: user1,
           Pool: rpAGDAI,
@@ -214,23 +185,55 @@ describe('Staking with boosting', () => {
         },
       ],
     } as TestInfo;
-    // basic work of the deposit - deposit is added one block after the stake
-    const basicAmount = ti.TotalRewardTicks - 2;
-    const boostAmount = ti.TotalRewardTicks;
+
+    const boostAmount = ti.TotalRewardTicks + 1;
+    const basicAmount = ti.TotalRewardTicks;
+
     await applyDepositPlanAndClaimAll(ti, rb);
+    expect(await AGF.balanceOf(user1.address)).to.eq(basicAmount + min([boostAmount, basicAmount]));
+  });
+
+  it('deposit agDAI for 10 blocks, redeem, wait 10 blocks and still get full reward', async () => {
+    const ti = {
+      TotalRewardTicks: 10,
+      UserBalanceChanges: [
+        {
+          Signer: user1,
+          Pool: rpAGF,
+          TokenAddress: xAGF.address,
+          TicksFromStart: 0,
+          AmountDepositedBefore: 0,
+          AmountDeposited: defaultStkAmount,
+          TotalAmountDeposited: defaultStkAmount,
+        },
+        {
+          Signer: user1,
+          Pool: rpAGDAI,
+          TokenAddress: agDAI.address,
+          TicksFromStart: 0,
+          AmountDepositedBefore: 0,
+          AmountDeposited: 10000,
+          TotalAmountDeposited: 10000,
+        },
+      ],
+    } as TestInfo;
+    const boostAmount = ti.TotalRewardTicks + 1;
+    const basicAmount = ti.TotalRewardTicks;
+    await applyDepositPlanAndClaimAll(ti, rb);
+
+    expect(await AGF.balanceOf(user1.address)).to.eq(basicAmount + min([boostAmount, basicAmount]));
+    const startPostClaim = await currentTick();
 
     // simulate a successful redeem
     await rpAGF.handleBalanceUpdate(xAGF.address, user1.address, defaultStkAmount, 0, 0);
 
-    const blocksWithoutStaking = 10;
-    // one block is consumed by the next claimReward()
-    await mineTicks(blocksWithoutStaking - 1);
-    await rb.connect(user1).claimReward();
+    await mineTicks(10);
 
-    const rewardPerBlock = 1; // deposit gives gives 1 agf per block
+    await rb.connect(user1).claimReward();
+    const blocksWithoutStaking = (await currentTick()) - startPostClaim;
 
     expect(await AGF.balanceOf(user1.address)).to.eq(
-      boostAmount + basicAmount + blocksWithoutStaking * rewardPerBlock
+      basicAmount + blocksWithoutStaking + min([boostAmount, basicAmount + blocksWithoutStaking])
     );
   });
 });

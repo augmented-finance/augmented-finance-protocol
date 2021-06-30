@@ -19,9 +19,10 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   constructor(
     IRewardController controller,
     uint256 initialRate,
+    uint224 rateScale,
     uint16 baselinePercentage,
     address teamManager
-  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
+  ) public ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage) {
     _teamManager = teamManager;
   }
 
@@ -33,7 +34,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     _;
   }
 
-  function getRate() public view override returns (uint256) {
+  function internalGetRate() internal view override returns (uint256) {
     return super.getLinearRate();
   }
 

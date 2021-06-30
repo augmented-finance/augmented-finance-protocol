@@ -25,7 +25,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     uint256 maxSupplyBits = BitUtils.bitLength(maxTotalSupply);
     require(maxSupplyBits + minBitReserve < 256, 'max total supply is too high');
 
-    _totalSupplyMax = (1 << maxSupplyBits) - 1;
+    _totalSupplyMax = maxTotalSupply; // (1 << maxSupplyBits) - 1;
   }
 
   function doUpdateTotalSupplyDiff(uint256 oldSupply, uint256 newSupply) internal returns (bool) {
@@ -53,17 +53,21 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
   }
 
   function internalRateUpdated(uint256 lastRate, uint32 lastAt) internal override {
+    console.log('internalRateUpdated', lastAt, lastRate, _totalSupply);
     if (_totalSupply == 0) {
       return;
     }
 
     uint32 currentTick = getRateUpdatedAt();
+    console.log('internalRateUpdated_1', currentTick, lastRate, _accumRate);
 
     // the rate stays in RAY, but is weighted now vs _totalSupplyMax
     if (currentTick != lastAt) {
       lastRate = lastRate.mul(_totalSupplyMax.div(_totalSupply));
+      console.log('internalRateUpdated_1a', lastRate, _totalSupplyMax, _totalSupply);
       _accumRate = _accumRate.add(lastRate.mul(currentTick - lastAt));
     }
+    console.log('internalRateUpdated_2', _accumRate);
   }
 
   function internalSetTotalSupply(uint256 totalSupply, uint32 at)
@@ -83,6 +87,15 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     return rateUpdated;
   }
 
+  function internalGetLastAccumRate() internal view returns (uint256) {
+    return _accumRate;
+  }
+
+  function internalGetAccumHistory(uint32 at) internal view virtual returns (uint256) {
+    require(at >= getRateUpdatedAt(), 'lookback for accumulated rate');
+    return _accumRate;
+  }
+
   function internalCalcRateAndReward(
     RewardEntry memory entry,
     uint256 lastAccumRate,
@@ -97,37 +110,55 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
       uint32 since
     )
   {
-    uint256 weightedRate;
-
-    if (_totalSupply == 0) {
-      adjRate = _accumRate;
-    } else {
-      weightedRate = getLinearRate().mul(_totalSupplyMax.div(_totalSupply));
-      adjRate = _accumRate.add(weightedRate.mul(currentTick - getRateUpdatedAt()));
+    adjRate = internalGetAccumHistory(currentTick);
+    if (_totalSupply > 0) {
+      uint256 weightedRate = getLinearRate().mul(_totalSupplyMax.div(_totalSupply));
+      adjRate = adjRate.add(weightedRate.mul(currentTick - getRateUpdatedAt()));
     }
-    weightedRate = adjRate.sub(lastAccumRate);
-
-    if (weightedRate == 0) {
+    if (adjRate == lastAccumRate) {
       return (adjRate, 0, entry.lastUpdate);
     }
 
-    // ATTN! TODO Prevent overflow checks here
-    uint256 x = entry.rewardBase * weightedRate;
-    if (x / weightedRate == entry.rewardBase) {
+    uint256 v = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _totalSupplyMax);
+    return (adjRate, v.div(WadRayMath.RAY), entry.lastUpdate);
+  }
+
+  function mulDiv(
+    uint256 a,
+    uint256 mul,
+    uint256 div
+  ) internal pure returns (uint256) {
+    if (div == 1) {
+      return a.mul(mul);
+    }
+
+    // ATTN! Ignore overflow checks here
+    uint256 x = a * mul;
+
+    if (x == 0) {
+      return 0;
+    }
+    if (x / mul == a) {
       // the easy way - no overflow
-      return (adjRate, (x / _totalSupplyMax) / WadRayMath.RAY, entry.lastUpdate);
+      return x.div(div);
     }
 
     // the hard way - numbers are too large for one-hit, so do it by chunks
-    uint256 remainingBits =
-      minBitReserve + uint256(256 - minBitReserve).sub(BitUtils.bitLength(weightedRate));
-    uint256 baseMask = (1 << remainingBits) - 1;
+
+    if (a < mul) {
+      (a, mul) = (mul, a);
+    }
+
+    uint8 bitLen = uint8(256 - BitUtils.bitLength(mul)); // bitLength will be > 1
+
+    uint256 baseMask = (uint256(1) << bitLen) - 1;
     uint256 shiftedBits = 0;
 
-    for (x = entry.rewardBase; x > 0; x >>= remainingBits) {
-      allocated = allocated.add((((x & baseMask) * weightedRate) / _totalSupplyMax) << shiftedBits);
-      shiftedBits += remainingBits;
+    uint256 r;
+    for (x = a; x > 0; x >>= bitLen) {
+      r = r.add((((x & baseMask) * mul) / div) << shiftedBits);
+      shiftedBits += bitLen;
     }
-    return (adjRate, allocated / WadRayMath.RAY, entry.lastUpdate);
+    return r;
   }
 }

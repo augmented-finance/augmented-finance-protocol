@@ -9,7 +9,7 @@ import {BaseRewardController} from './BaseRewardController.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {IRewardPool} from './interfaces/IRewardPool.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
-import {IBoostExcesser} from './interfaces/IBoostExcesser.sol';
+import {IBoostExcessReceiver} from './interfaces/IBoostExcessReceiver.sol';
 
 import 'hardhat/console.sol';
 
@@ -159,8 +159,10 @@ contract RewardBooster is BaseRewardController {
       delete (_boostRewards[holder]);
     }
 
+    uint32 boostSince;
     if (_boostPool != IManagedRewardPool(0)) {
-      (uint256 boost_, ) = _boostPool.claimRewardFor(holder);
+      uint256 boost_;
+      (boost_, boostSince) = _boostPool.claimRewardFor(holder);
       boost = boost.add(boost_);
     }
 
@@ -170,7 +172,7 @@ contract RewardBooster is BaseRewardController {
       claimableAmount = claimableAmount.add(boost);
     } else {
       claimableAmount = claimableAmount.add(boostLimit);
-      internalStoreBoostExcess(boost - boostLimit);
+      internalStoreBoostExcess(boost - boostLimit, boostSince);
     }
 
     return claimableAmount;
@@ -246,7 +248,7 @@ contract RewardBooster is BaseRewardController {
     _workRewards[holder] = workReward;
   }
 
-  function internalStoreBoostExcess(uint256 boostExcess) private {
+  function internalStoreBoostExcess(uint256 boostExcess, uint32 since) private {
     if (_boostExcessDelegate == address(0)) {
       return;
     }
@@ -256,6 +258,6 @@ contract RewardBooster is BaseRewardController {
       return;
     }
 
-    IBoostExcesser(_boostExcessDelegate).storeBoostExcess(boostExcess);
+    IBoostExcessReceiver(_boostExcessDelegate).receiveBoostExcess(boostExcess, since);
   }
 }

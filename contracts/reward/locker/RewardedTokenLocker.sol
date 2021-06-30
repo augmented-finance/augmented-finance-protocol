@@ -16,18 +16,23 @@ import {ForwardedRewardPool} from '../pools/ForwardedRewardPool.sol';
 import {CalcLinearWeightedReward} from '../calcs/CalcLinearWeightedReward.sol';
 import {AllocationMode} from '../interfaces/IRewardController.sol';
 import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
+import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
 
 import {Errors} from '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
-contract RewardedTokenLocker is BaseTokenLocker, ForwardedRewardPool, CalcLinearWeightedReward {
+contract RewardedTokenLocker is
+  BaseTokenLocker,
+  ForwardedRewardPool,
+  CalcLinearWeightedReward,
+  IBoostExcessReceiver
+{
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
-  uint256 private _rate;
-  uint32 private _lastRateUpdate;
+  mapping(uint32 => uint256) private _accumHistory;
 
   constructor(
     IMarketAccessController accessCtl,
@@ -74,7 +79,6 @@ contract RewardedTokenLocker is BaseTokenLocker, ForwardedRewardPool, CalcLinear
     if (current > expiry) {
       current = expiry;
     }
-    // TODO need to pre-calc total
     return super.doCalcRewardAt(holder, current);
   }
 
@@ -83,7 +87,7 @@ contract RewardedTokenLocker is BaseTokenLocker, ForwardedRewardPool, CalcLinear
     override
     returns (uint256 amount, uint32 since)
   {
-    internalUpdate(false, true);
+    internalUpdate(true);
 
     uint32 expiry = expiryOf(holder);
     if (expiry == 0) {
@@ -94,18 +98,43 @@ contract RewardedTokenLocker is BaseTokenLocker, ForwardedRewardPool, CalcLinear
       return super.doGetRewardAt(holder, current);
     }
 
-    (amount, since) = super.doCalcRewardAt(holder, expiry);
+    (amount, since) = super.doGetRewardAt(holder, expiry);
     super.internalRemoveReward(holder);
 
     return (amount, since);
   }
 
   function getRewardRate() external view override returns (uint256) {
-    return super.getLinearRate();
+    return super.getLinearRate().sub(internalGetExtraRate());
   }
 
   function internalSetRewardRate(uint256 rate) internal override {
-    super.setLinearRate(rate);
+    internalUpdate(false);
+    super.setLinearRate(rate.add(internalGetExtraRate()));
+  }
+
+  function internalExtraRateUpdated(
+    uint256 rateBefore,
+    uint256 rateAfter,
+    uint32 at
+  ) internal override {
+    console.log('internalExtraRateUpdated', rateBefore, rateAfter, at);
+
+    if (rateBefore > rateAfter) {
+      rateAfter = super.getLinearRate().sub(rateBefore.sub(rateAfter));
+    } else if (rateBefore < rateAfter) {
+      rateAfter = super.getLinearRate().add(rateAfter.sub(rateBefore));
+    } else {
+      return;
+    }
+
+    if (at == 0) {
+      super.setLinearRateAt(rateAfter, getCurrentTick());
+      return;
+    }
+
+    super.setLinearRateAt(rateAfter, at);
+    _accumHistory[at] = super.internalGetLastAccumRate() + 1;
   }
 
   function getCurrentTick() internal view override returns (uint32) {
@@ -117,6 +146,26 @@ contract RewardedTokenLocker is BaseTokenLocker, ForwardedRewardPool, CalcLinear
     uint256 totalAfter,
     uint32 at
   ) internal override {
+    if (at == 0) {
+      super.doUpdateTotalSupplyAt(totalAfter, getCurrentTick());
+      return;
+    }
+
     super.doUpdateTotalSupplyAt(totalAfter, at);
+    _accumHistory[at] = super.internalGetLastAccumRate() + 1;
+  }
+
+  function receiveBoostExcess(uint256 amount, uint32 since) external override onlyForwarder {
+    internalUpdate(false);
+    internalAddExcess(amount, since);
+  }
+
+  function internalGetAccumHistory(uint32 at) internal view override returns (uint256 accum) {
+    if (isCompletedPast(at)) {
+      accum = _accumHistory[at];
+      require(accum > 0, 'unknown history point');
+      return accum - 1;
+    }
+    return super.internalGetLastAccumRate();
   }
 }

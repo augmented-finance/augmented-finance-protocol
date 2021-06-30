@@ -9,10 +9,11 @@ import {IRewardController, AllocationMode} from '../interfaces/IRewardController
 import {ControlledRewardPool} from './ControlledRewardPool.sol';
 import {IForwardedRewardPool} from '../interfaces/IForwardedRewardPool.sol';
 import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
+import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
 
 import 'hardhat/console.sol';
 
-contract ForwardingRewardPool is IForwardingRewardPool, ControlledRewardPool {
+contract ForwardingRewardPool is IForwardingRewardPool, IBoostExcessReceiver, ControlledRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -22,8 +23,9 @@ contract ForwardingRewardPool is IForwardingRewardPool, ControlledRewardPool {
   constructor(
     IRewardController controller,
     uint256 initialRate,
+    uint224 rateScale,
     uint16 baselinePercentage
-  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {}
+  ) public ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage) {}
 
   function addRewardProvider(address provider, address) external virtual override onlyController {
     require(provider != address(0), 'provider is required');
@@ -41,11 +43,11 @@ contract ForwardingRewardPool is IForwardingRewardPool, ControlledRewardPool {
     if (address(_provider) != provider || provider == address(0)) {
       return;
     }
-    _pausedRate = uint224(_provider.getRewardRate());
+    _pausedRate = _provider.getRewardRate();
     _provider = IForwardedRewardPool(0);
   }
 
-  function getRate() public view override returns (uint256) {
+  function internalGetRate() internal view override returns (uint256) {
     if (_provider != IForwardedRewardPool(0)) {
       return _provider.getRewardRate();
     }
@@ -60,7 +62,7 @@ contract ForwardingRewardPool is IForwardingRewardPool, ControlledRewardPool {
       _provider.setRewardRate(rate);
       return;
     }
-    _pausedRate = uint224(rate);
+    _pausedRate = rate;
   }
 
   function internalCalcReward(address holder) internal view override returns (uint256, uint32) {
@@ -85,5 +87,9 @@ contract ForwardingRewardPool is IForwardingRewardPool, ControlledRewardPool {
   ) external override {
     require(msg.sender == address(_provider), 'unknown provider');
     internalAllocateReward(holder, allocated, since, mode);
+  }
+
+  function receiveBoostExcess(uint256 amount, uint32 since) external override onlyController {
+    IBoostExcessReceiver(address(_provider)).receiveBoostExcess(amount, since);
   }
 }

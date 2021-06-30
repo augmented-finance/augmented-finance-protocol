@@ -17,16 +17,17 @@ contract MigratorWeightedRewardPool is BaseTokenDiffRewardPool, CalcLinearWeight
   constructor(
     IRewardController controller,
     uint256 initialRate,
+    uint224 rateScale,
     uint16 baselinePercentage,
     uint256 maxTotalSupply,
     address token
   )
     public
-    BaseTokenDiffRewardPool(controller, initialRate, baselinePercentage, token)
+    BaseTokenDiffRewardPool(controller, initialRate, rateScale, baselinePercentage, token)
     CalcLinearWeightedReward(maxTotalSupply)
   {}
 
-  function getRate() public view override returns (uint256) {
+  function internalGetRate() internal view override returns (uint256) {
     return super.getLinearRate();
   }
 

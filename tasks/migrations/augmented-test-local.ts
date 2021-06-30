@@ -15,7 +15,7 @@ import {
   deployZombieAdapter,
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
-import { ONE_ADDRESS, RAY, RAY_100 } from '../../helpers/constants';
+import { ONE_ADDRESS, RAY, RAY_100, RAY_PER_WEEK } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
 import {
   ADAI_ADDRESS,
@@ -26,6 +26,7 @@ import {
   stakingUnstakeTicks,
   ZTOKEN_ADDRESS,
 } from './defaultTestDeployConfig';
+import { BigNumber } from 'ethers';
 
 task('augmented:test-local', 'Deploy Augmented test contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
@@ -97,14 +98,14 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       // deploy linear pool, register in controller
       const linearUnweightedRewardPool = await deployTokenUnweightedRewardPool(
-        [rewardFreezer.address, RAY, 0],
+        [rewardFreezer.address, RAY, RAY, 0],
         verify
       );
       await waitForTx(await rewardFreezer.admin_addRewardPool(linearUnweightedRewardPool.address));
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const tokenWeightedRewardPoolSeparate = await deployTokenWeightedRewardPoolAGFSeparate(
-        [rewardFreezer.address, RAY_100, 0, RAY_100],
+        [rewardFreezer.address, RAY_100, RAY, 0, RAY_100],
         verify
       );
       await waitForTx(
@@ -114,7 +115,13 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       console.log(`#4 deploying: Team Reward Pool`);
       const teamRewardPool = await deployTeamRewardPool(
-        [rewardFreezer.address, teamRewardInitialRate, teamRewardBaselinePercentage, root.address],
+        [
+          rewardFreezer.address,
+          teamRewardInitialRate,
+          RAY,
+          teamRewardBaselinePercentage,
+          root.address,
+        ],
         verify
       );
       await waitForTx(await rewardFreezer.admin_addRewardPool(teamRewardPool.address));
@@ -137,7 +144,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const fwdRewardPool = await deployForwardingRewardPool(
-        [rewardFreezer.address, RAY_100, 0],
+        [rewardFreezer.address, RAY, RAY, 0],
         verify
       );
       const xagf = await deployXAGFToken([ac.address, agfToken.address, 'Locked AGF', 'xAGF']);
@@ -163,9 +170,9 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
         console.log(`#8 deploying: Aave Adapter`);
         const aaveAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
         const underlyingToken = await aaveAdapter.UNDERLYING_ASSET_ADDRESS();
-        console.log(`underlying deployment: ${underlyingToken}`);
+        console.log(`underlying for deployment: ${underlyingToken}`);
         const arp = await deployMigratorWeightedRewardPool(
-          [rewardFreezer.address, RAY, 0, RAY_100, underlyingToken],
+          [rewardFreezer.address, RAY, RAY, 0, RAY_100, underlyingToken],
           verify
         );
 
@@ -180,7 +187,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
           verify
         );
         const crp = await deployMigratorWeightedRewardPool(
-          [rewardFreezer.address, RAY, 0, RAY_100, DAI_ADDRESS],
+          [rewardFreezer.address, RAY, RAY, 0, RAY_100, DAI_ADDRESS],
           verify
         );
 
