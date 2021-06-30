@@ -818,7 +818,14 @@ export const deployZombieRewardPool = async (
   );
 
 export const deployMigratorWeightedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, tEthereumAddress],
+  args: [
+    tEthereumAddress,
+    BigNumberish,
+    BigNumberish,
+    BigNumberish,
+    BigNumberish,
+    tEthereumAddress
+  ],
   verify?: boolean
 ) =>
   withSaveAndVerify(

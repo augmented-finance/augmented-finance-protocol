@@ -170,9 +170,9 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
         console.log(`#8 deploying: Aave Adapter`);
         const aaveAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
         const underlyingToken = await aaveAdapter.UNDERLYING_ASSET_ADDRESS();
-        console.log(`underlying deployment: ${underlyingToken}`);
+        console.log(`underlying for deployment: ${underlyingToken}`);
         const arp = await deployMigratorWeightedRewardPool(
-          [rewardFreezer.address, RAY, 0, RAY_100, underlyingToken],
+          [rewardFreezer.address, RAY, RAY, 0, RAY_100, underlyingToken],
           verify
         );
 
@@ -187,7 +187,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
           verify
         );
         const crp = await deployMigratorWeightedRewardPool(
-          [rewardFreezer.address, RAY, 0, RAY_100, DAI_ADDRESS],
+          [rewardFreezer.address, RAY, RAY, 0, RAY_100, DAI_ADDRESS],
           verify
         );
 

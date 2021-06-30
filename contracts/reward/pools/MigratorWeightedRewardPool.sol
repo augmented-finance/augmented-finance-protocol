@@ -17,8 +17,8 @@ contract MigratorWeightedRewardPool is BaseTokenDiffRewardPool, CalcLinearWeight
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint16 baselinePercentage,
     uint224 rateScale,
+    uint16 baselinePercentage,
     uint256 maxTotalSupply,
     address token
   )
