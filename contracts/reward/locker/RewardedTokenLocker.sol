@@ -161,11 +161,11 @@ contract RewardedTokenLocker is
   }
 
   function internalGetAccumHistory(uint32 at) internal view override returns (uint256 accum) {
-    if (at >= getRateUpdatedAt()) {
-      return super.internalGetLastAccumRate();
+    if (isCompletedPast(at)) {
+      accum = _accumHistory[at];
+      require(accum > 0, 'unknown history point');
+      return accum - 1;
     }
-    accum = _accumHistory[at];
-    require(accum > 0, 'unknown history point');
-    return accum - 1;
+    return super.internalGetLastAccumRate();
   }
 }

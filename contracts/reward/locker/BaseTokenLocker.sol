@@ -279,6 +279,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     internalUpdate(false);
   }
 
+  function isCompletedPast(uint32 at) internal view returns (bool) {
+    return at <= (_lastUpdateTS / _pointPeriod) * _pointPeriod;
+  }
+
   function getScanRange(uint32 currentPoint)
     private
     view
