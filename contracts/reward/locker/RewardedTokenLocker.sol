@@ -110,6 +110,7 @@ contract RewardedTokenLocker is
   }
 
   function internalSetRewardRate(uint256 rate) internal override {
+    internalUpdate(false);
     super.setLinearRate(rate.add(internalGetExtraRate()));
   }
 

@@ -238,7 +238,11 @@ describe('Token locker suite', () => {
     await xAGF.connect(user2).lock(defaultStkAmount * 2, 6 * WEEK, 0);
     const total12 = await xAGF.totalSupply();
 
+    expect(await xAGF.getRewardRate()).eq(RAY);
+
     await frp.connect(root).receiveBoostExcess(RAY_10000, 0); // RAY_10000 will be distributed over 1 week or less
+
+    expect(await xAGF.getRewardRate()).eq(RAY);
 
     await mineTicks(3 * WEEK);
 
