@@ -68,16 +68,14 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   constructor(
     IMarketAccessController accessCtl,
     address underlying,
-    uint8 underlyingDecimals,
     uint32 pointPeriod,
     uint32 maxValuePeriod
   ) public MarketAccessBitmask(accessCtl) {
-    _initialize(underlying, underlyingDecimals, pointPeriod, maxValuePeriod);
+    _initialize(underlying, pointPeriod, maxValuePeriod);
   }
 
   function _initialize(
     address underlying,
-    uint8 underlyingDecimals,
     uint32 pointPeriod,
     uint32 maxValuePeriod
   ) internal {
@@ -88,7 +86,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     _underlyingToken = IERC20(underlying);
     _pointPeriod = pointPeriod;
     _maxValuePeriod = maxValuePeriod;
-    // _excessRatio = WadRayMath.RAY.div(uint256(10)**underlyingDecimals);
   }
 
   function UNDERLYING_ASSET_ADDRESS() external view returns (address) {

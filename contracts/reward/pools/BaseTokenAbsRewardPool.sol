@@ -21,8 +21,9 @@ abstract contract BaseTokenAbsRewardPool is ControlledRewardPool, IRewardPool {
   constructor(
     IRewardController controller,
     uint256 initialRate,
+    uint224 rateScale,
     uint16 baselinePercentage
-  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {}
+  ) public ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage) {}
 
   function handleBalanceUpdate(
     address,

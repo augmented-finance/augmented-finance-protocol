@@ -98,14 +98,14 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       // deploy linear pool, register in controller
       const linearUnweightedRewardPool = await deployTokenUnweightedRewardPool(
-        [rewardFreezer.address, RAY, 0],
+        [rewardFreezer.address, RAY, RAY, 0],
         verify
       );
       await waitForTx(await rewardFreezer.admin_addRewardPool(linearUnweightedRewardPool.address));
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const tokenWeightedRewardPoolSeparate = await deployTokenWeightedRewardPoolAGFSeparate(
-        [rewardFreezer.address, 1e11, 0, RAY_100],
+        [rewardFreezer.address, RAY_100, RAY, 0, RAY_100],
         verify
       );
       await waitForTx(
@@ -115,7 +115,13 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       console.log(`#4 deploying: Team Reward Pool`);
       const teamRewardPool = await deployTeamRewardPool(
-        [rewardFreezer.address, teamRewardInitialRate, teamRewardBaselinePercentage, root.address],
+        [
+          rewardFreezer.address,
+          teamRewardInitialRate,
+          RAY,
+          teamRewardBaselinePercentage,
+          root.address,
+        ],
         verify
       );
       await waitForTx(await rewardFreezer.admin_addRewardPool(teamRewardPool.address));
@@ -138,7 +144,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const fwdRewardPool = await deployForwardingRewardPool(
-        [rewardFreezer.address, 1e9, 0],
+        [rewardFreezer.address, RAY, RAY, 0],
         verify
       );
       const xagf = await deployXAGFToken([ac.address, agfToken.address, 'Locked AGF', 'xAGF']);

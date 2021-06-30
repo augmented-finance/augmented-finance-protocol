@@ -18,7 +18,6 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
 
   uint256 private _totalSupplyMax;
   uint256 private constant minBitReserve = 32;
-  uint256 private constant valueScale = 1e9; // WadRayMath.WAD_RAY_RATIO;
 
   constructor(uint256 maxTotalSupply) public {
     require(maxTotalSupply > 0, 'max total supply is unknown');
@@ -121,7 +120,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     }
 
     uint256 v = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _totalSupplyMax);
-    return (adjRate, v.div(valueScale), entry.lastUpdate);
+    return (adjRate, v.div(WadRayMath.RAY), entry.lastUpdate);
   }
 
   function mulDiv(

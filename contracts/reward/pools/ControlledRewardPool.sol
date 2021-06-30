@@ -15,6 +15,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   using PercentageMath for uint256;
 
   uint16 internal constant NO_BASELINE = type(uint16).max;
+  uint224 internal constant NO_SCALE = 1e27; // WadRayMath.RAY
 
   IRewardController internal _controller;
 
@@ -26,13 +27,11 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   constructor(
     IRewardController controller,
     uint256 initialRate,
+    uint224 rateScale,
     uint16 baselinePercentage
-  ) public // uint224 rateScale
-  {
+  ) public {
     require(address(controller) != address(0), 'controller is required');
     _controller = controller;
-    // require(rateScale > 0, 'rate scale is required');
-    _rateScale = uint224(WadRayMath.RAY); // rateScale;
 
     if (initialRate != 0 && baselinePercentage == 0) {
       _baselinePercentage = NO_BASELINE;
@@ -40,6 +39,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
       _baselinePercentage = baselinePercentage;
     }
 
+    internalSetRateScale(rateScale);
     internalSetRate(initialRate);
   }
 
@@ -91,6 +91,20 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   function getRate() external view returns (uint256) {
     return internalGetRate().rayDiv(_rateScale);
+  }
+
+  function internalSetRateScale(uint256 rateScale) private {
+    require(rateScale > 0, 'rate scale is required');
+    require(rateScale <= type(uint224).max, 'rate scale is excessive');
+    _rateScale = uint224(rateScale);
+  }
+
+  function setRateScale(uint256 rateScale) external override onlyRateController {
+    internalSetRateScale(rateScale);
+  }
+
+  function getRateScale() external view returns (uint256) {
+    return _rateScale;
   }
 
   function internalGetRate() internal view virtual returns (uint256);

@@ -34,7 +34,7 @@ contract PermitRewardPool is ControlledRewardPool {
     IRewardController controller,
     uint256 rewardLimit,
     string memory rewardPoolName
-  ) public ControlledRewardPool(controller, 0, NO_BASELINE) {
+  ) public ControlledRewardPool(controller, 0, NO_SCALE, NO_BASELINE) {
     require(rewardLimit > 0, 'reward limit is required');
     _rewardLimit = rewardLimit;
     _rewardPoolName = rewardPoolName;

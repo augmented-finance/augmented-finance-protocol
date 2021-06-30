@@ -12,7 +12,9 @@ interface IManagedRewardPool is IEmergencyAccess {
 
   function disableRewardPool() external;
 
-  function setRate(uint256 rate) external;
+  function setRate(uint256) external;
+
+  function setRateScale(uint256) external;
 
   function claimRewardFor(address holder) external returns (uint256 amount, uint32 since);
 

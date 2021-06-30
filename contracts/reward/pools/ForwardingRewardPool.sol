@@ -23,8 +23,9 @@ contract ForwardingRewardPool is IForwardingRewardPool, IBoostExcessReceiver, Co
   constructor(
     IRewardController controller,
     uint256 initialRate,
+    uint224 rateScale,
     uint16 baselinePercentage
-  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {}
+  ) public ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage) {}
 
   function addRewardProvider(address provider, address) external virtual override onlyController {
     require(provider != address(0), 'provider is required');

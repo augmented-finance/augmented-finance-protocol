@@ -17,11 +17,12 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
   constructor(
     IRewardController controller,
     uint256 initialRate,
+    uint224 rateScale,
     uint16 baselinePercentage,
     uint256 maxTotalSupply
   )
     public
-    BaseTokenAbsRewardPool(controller, initialRate, baselinePercentage)
+    BaseTokenAbsRewardPool(controller, initialRate, rateScale, baselinePercentage)
     CalcLinearWeightedReward(maxTotalSupply)
   {}
 

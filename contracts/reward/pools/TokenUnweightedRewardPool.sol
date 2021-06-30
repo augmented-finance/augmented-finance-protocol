@@ -16,8 +16,9 @@ contract TokenUnweightedRewardPool is BaseTokenAbsRewardPool, CalcLinearUnweight
   constructor(
     IRewardController controller,
     uint256 initialRate,
+    uint224 rateScale,
     uint16 baselinePercentage
-  ) public BaseTokenAbsRewardPool(controller, initialRate, baselinePercentage) {}
+  ) public BaseTokenAbsRewardPool(controller, initialRate, rateScale, baselinePercentage) {}
 
   function internalGetRate() internal view override returns (uint256) {
     return super.getLinearRate();

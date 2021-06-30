@@ -37,13 +37,12 @@ contract RewardedTokenLocker is
   constructor(
     IMarketAccessController accessCtl,
     address underlying,
-    uint8 underlyingDecimals,
     uint32 pointPeriod,
     uint32 maxValuePeriod,
     uint256 maxTotalSupply
   )
     public
-    BaseTokenLocker(accessCtl, underlying, underlyingDecimals, pointPeriod, maxValuePeriod)
+    BaseTokenLocker(accessCtl, underlying, pointPeriod, maxValuePeriod)
     CalcLinearWeightedReward(maxTotalSupply)
   {}
 
@@ -160,10 +159,6 @@ contract RewardedTokenLocker is
     internalUpdate(false);
     internalAddExcess(amount, since);
   }
-
-  // function setExcessRatio(uint256 excessRatio) public onlyRewardAdmin {
-  //   internalSetExcessRatio(excessRatio);
-  // }
 
   function internalGetAccumHistory(uint32 at) internal view override returns (uint256 accum) {
     if (at >= getRateUpdatedAt()) {
