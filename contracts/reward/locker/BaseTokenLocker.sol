@@ -197,36 +197,27 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   function internalBalanceOf(address account)
     internal
     view
-    returns (uint256 stakeAmount, uint32 endPointTS)
+    returns (
+      uint256 stakeAmount,
+      uint32 endPointTS,
+      uint32 startTS
+    )
   {
-    (stakeAmount, ) = getStakeBalance(account);
+    (stakeAmount, startTS) = getStakeBalance(account);
     if (stakeAmount == 0) {
-      return (0, 0);
+      return (0, 0, 0);
     }
 
     endPointTS = _balances[account].endPoint * _pointPeriod;
     if (endPointTS <= block.timestamp) {
-      return (0, 0);
+      return (0, 0, 0);
     }
 
-    return (stakeAmount, endPointTS);
-
-    // uint32 tsDelta = endPointTS - uint32(block.timestamp);
-    // if (tsDelta == 0) {
-    //   return userBalance.stakeAmount;
-    // }
-
-    // uint256 balanceDecay = uint256(userBalance.stakeAmount).mul(tsDelta).
-    //   div(userBalance.endPoint * _pointPeriod - userBalance.startTS);
-
-    // if (balanceDecay >= userBalance.stakeAmount) {
-    //   return 0;
-    // }
-    // return uint256(userBalance.stakeAmount).sub(balanceDecay);
+    return (stakeAmount, endPointTS, startTS);
   }
 
   function balanceOf(address account) external view virtual override returns (uint256 stakeAmount) {
-    (stakeAmount, ) = internalBalanceOf(account);
+    (stakeAmount, , ) = internalBalanceOf(account);
     return stakeAmount;
   }
 

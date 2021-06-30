@@ -42,7 +42,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     super.setLinearRate(newRate);
   }
 
-  function internalGetReward(address holder) internal override returns (uint256, uint32) {
+  function internalGetReward(address holder, uint256) internal override returns (uint256, uint32) {
     if (!isUnlocked(getCurrentTick())) {
       return (0, 0);
     }

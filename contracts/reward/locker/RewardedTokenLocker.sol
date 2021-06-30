@@ -82,7 +82,7 @@ contract RewardedTokenLocker is
     return super.doCalcRewardAt(holder, current);
   }
 
-  function internalClaimReward(address holder)
+  function internalClaimReward(address holder, uint256 limit)
     internal
     override
     returns (uint256 amount, uint32 since)
@@ -95,12 +95,16 @@ contract RewardedTokenLocker is
     }
     uint32 current = getCurrentTick();
     if (current < expiry) {
-      return super.doGetRewardAt(holder, current);
+      (amount, since) = super.doGetRewardAt(holder, current);
+    } else {
+      (amount, since) = super.doGetRewardAt(holder, expiry);
+      super.internalRemoveReward(holder);
     }
 
-    (amount, since) = super.doGetRewardAt(holder, expiry);
-    super.internalRemoveReward(holder);
-
+    if (amount > limit) {
+      internalAddExcess(amount - limit, since);
+      return (limit, since);
+    }
     return (amount, since);
   }
 
