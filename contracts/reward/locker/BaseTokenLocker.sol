@@ -32,15 +32,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     uint128 rateDelta;
   }
 
-  struct ExcessAccum {
-    uint128 excessAmount;
-    uint64 sinceTotal;
-    uint32 sinceCount;
-  }
-
   uint256 private _stakedTotal;
   uint256 private _extraRate;
-  ExcessAccum private _excessAccum;
 
   mapping(uint32 => Point) _pointTotal;
 
@@ -360,16 +353,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     }
 
     (uint32 fromPoint, uint32 tillPoint, uint32 maxPoint) = getScanRange(currentPoint);
-
     if (tillPoint > 0) {
       _updateEntered = true;
       {
-        walkPoints(
-          fromPoint,
-          tillPoint,
-          maxPoint,
-          _lastUpdateTS / _pointPeriod < block.timestamp / _pointPeriod
-        );
+        walkPoints(fromPoint, tillPoint, maxPoint);
       }
       _updateEntered = false;
     }
@@ -381,8 +368,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   function walkPoints(
     uint32 nextPoint,
     uint32 tillPoint,
-    uint32 maxPoint,
-    bool applyExcess
+    uint32 maxPoint
   ) private {
     Point memory delta = _pointTotal[nextPoint];
 
@@ -397,11 +383,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
         uint256 totalBefore = _stakedTotal;
         _stakedTotal = _stakedTotal.sub(delta.stakeDelta);
         internalUpdateTotal(totalBefore, _stakedTotal, nextPoint * _pointPeriod);
-      }
-
-      if (applyExcess) {
-        applyExcess = false;
-        internalApplyExcess(nextPoint);
       }
 
       bool found = false;
@@ -472,89 +453,47 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return _extraRate;
   }
 
-  function internalApplyExcess(uint32 currentPt) private {
-    ExcessAccum memory acc = _excessAccum;
-
-    console.log('internalApplyExcess', acc.excessAmount, acc.sinceCount, acc.sinceTotal);
-
-    if (acc.sinceCount == 0) {
-      return;
-    }
-    _excessAccum.sinceCount = 0;
-
-    uint32 expiresIn = uint32(acc.sinceTotal / acc.sinceCount);
-
-    console.log('internalApplyExcess expiry', expiresIn, currentPt);
-
-    if (expiresIn > _maxValuePeriod) {
-      expiresIn = _maxValuePeriod / _pointPeriod;
+  function internalAddExcess(uint256 amount, uint32 since) internal {
+    uint32 expiresAt;
+    if (since == 0 || since >= block.timestamp) {
+      expiresAt = uint32(block.timestamp + 1);
     } else {
-      expiresIn = uint32(expiresIn + (_pointPeriod >> 1)) / _pointPeriod;
-      if (expiresIn == 0) {
-        expiresIn = 1;
+      expiresAt = uint32(block.timestamp - since);
+      if (expiresAt > _maxValuePeriod) {
+        expiresAt = _maxValuePeriod;
       }
+      expiresAt = uint32(block.timestamp + expiresAt);
     }
 
-    console.log('internalApplyExcess expiresIn', expiresIn);
+    uint32 expiryPt = uint32(expiresAt + _pointPeriod - 1) / _pointPeriod;
+    expiresAt = expiryPt * _pointPeriod;
 
-    uint256 excessRateIncrement = uint256(acc.excessAmount) / (expiresIn * _pointPeriod);
-    console.log(
-      'internalApplyExcess excessRateIncrement',
-      excessRateIncrement,
-      uint256(acc.excessAmount),
-      expiresIn * _pointPeriod
-    );
+    console.log('internalAddExcess', amount, since);
+    console.log('internalAddExcess_1', expiresAt, expiryPt);
+
+    uint256 excessRateIncrement = amount / (expiresAt - block.timestamp);
+    console.log('internalAddExcess_2', excessRateIncrement, expiresAt - block.timestamp);
 
     if (excessRateIncrement == 0) {
       return;
     }
 
-    uint256 rateAfter = _extraRate.add(excessRateIncrement);
+    uint256 rateBefore = _extraRate;
+    _extraRate = rateBefore.add(excessRateIncrement);
 
-    uint32 expiresAt = currentPt + expiresIn;
-    console.log('internalApplyExcess_2', _extraRate, excessRateIncrement, expiresAt);
-
-    excessRateIncrement = excessRateIncrement.add(_pointTotal[expiresAt].rateDelta);
+    excessRateIncrement = excessRateIncrement.add(_pointTotal[expiryPt].rateDelta);
     require(excessRateIncrement <= type(uint128).max);
-    _pointTotal[expiresAt].rateDelta = uint128(excessRateIncrement);
+    _pointTotal[expiryPt].rateDelta = uint128(excessRateIncrement);
 
-    if (_nextKnownPoint > expiresAt || _nextKnownPoint == 0) {
-      _nextKnownPoint = expiresAt;
+    if (_nextKnownPoint > expiryPt || _nextKnownPoint == 0) {
+      _nextKnownPoint = expiryPt;
     }
 
-    if (_lastKnownPoint < expiresAt || _lastKnownPoint == 0) {
-      _lastKnownPoint = expiresAt;
+    if (_lastKnownPoint < expiryPt || _lastKnownPoint == 0) {
+      _lastKnownPoint = expiryPt;
     }
 
-    internalExtraRateUpdated(_extraRate, rateAfter, expiresAt * _pointPeriod);
-    _extraRate = rateAfter;
-  }
-
-  function internalAddExcess(uint256 amount, uint32 since) internal {
-    if (since == 0 || since >= block.timestamp) {
-      since = 0;
-    } else {
-      since = uint32(block.timestamp - since);
-    }
-
-    ExcessAccum memory acc = _excessAccum;
-    if (acc.sinceCount == 0) {
-      acc.sinceCount = 1;
-      acc.sinceTotal = since;
-    } else {
-      amount = amount.add(acc.excessAmount);
-      if (since > 0) {
-        require(acc.sinceCount < type(uint32).max);
-        acc.sinceCount++;
-        acc.sinceTotal += since;
-      }
-    }
-
-    require(amount <= type(uint128).max);
-    acc.excessAmount = uint128(amount);
-    console.log('internalAddExcess', acc.excessAmount, acc.sinceCount, acc.sinceTotal);
-
-    _excessAccum = acc;
+    internalExtraRateUpdated(rateBefore, _extraRate, 0);
   }
 
   function internalExtraRateUpdated(

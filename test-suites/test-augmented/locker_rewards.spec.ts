@@ -227,7 +227,7 @@ describe('Token locker suite', () => {
     expect(rewards.toNumber()).approximately(lockInfo.availableSince - startedAt, 2);
   });
 
-  it.skip('2 users share excess, 3rd user misses it', async () => {
+  it('2 users share excess, 3rd user misses it', async () => {
     await AGF.connect(root).mintReward(root.address, defaultStkAmount, false);
     await AGF.connect(root).approve(xAGF.address, defaultStkAmount);
 
@@ -240,7 +240,7 @@ describe('Token locker suite', () => {
 
     await frp.connect(root).receiveBoostExcess(RAY_10000, 0); // RAY_10000 will be distributed over 1 week or less
 
-    //    await mineTicks(3 * WEEK);
+    await mineTicks(3 * WEEK);
 
     await xAGF.connect(root).lock(defaultStkAmount, 2 * WEEK, 0);
     const startedAt2 = await currentTick();
@@ -257,7 +257,7 @@ describe('Token locker suite', () => {
     const reward2 = await AGF.balanceOf(user2.address);
     const reward3 = await AGF.balanceOf(root.address);
 
-    expect(reward2.toNumber()).approximately(reward1.toNumber() * 2, 10); // user2 gets 2x more including the excess of 10000
+    expect(reward2.toNumber()).approximately(reward1.toNumber() * 2, 5); // user2 gets 2x more including a portion of the excess of 10000
 
     const fullRun = lockInfo.availableSince - startedAt;
     const rewards = reward1.add(reward2).add(reward3);
