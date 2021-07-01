@@ -34,6 +34,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
   uint256 private _stakedTotal;
   uint256 private _extraRate;
+  uint256 private _excessAccum;
 
   mapping(uint32 => Point) _pointTotal;
 
@@ -48,7 +49,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   bool private _paused;
 
   struct UserBalance {
-    uint224 underlyingAmount;
+    uint192 underlyingAmount;
+    uint32 startTS;
     uint32 endPoint;
   }
 
@@ -128,10 +130,12 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     UserBalance memory userBalance = _balances[to];
 
     {
+      userBalance.startTS = uint32(block.timestamp);
+
       uint32 endPoint = uint32(block.timestamp + duration + (_pointPeriod >> 1)) / _pointPeriod;
       require(endPoint <= currentPoint + _maxDurationPoints);
 
-      (stakeAmount, ) = getStakeBalance(to);
+      stakeAmount = getStakeBalance(to);
 
       _underlyingTotal = _underlyingTotal.add(underlyingAmount);
       underlyingAmount = underlyingAmount.add(userBalance.underlyingAmount);
@@ -151,8 +155,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       }
     }
 
-    require(underlyingAmount <= type(uint224).max);
-    userBalance.underlyingAmount = uint224(underlyingAmount);
+    require(underlyingAmount <= type(uint192).max);
+    userBalance.underlyingAmount = uint192(underlyingAmount);
 
     uint256 adjDuration = uint256(userBalance.endPoint * _pointPeriod).sub(block.timestamp);
     console.log('internalLock', underlyingAmount, adjDuration, _maxValuePeriod);
@@ -194,42 +198,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return stakeAmount;
   }
 
-  function internalBalanceOf(address account)
-    internal
-    view
-    returns (uint256 stakeAmount, uint32 endPointTS)
-  {
-    (stakeAmount, ) = getStakeBalance(account);
-    if (stakeAmount == 0) {
-      return (0, 0);
-    }
-
-    endPointTS = _balances[account].endPoint * _pointPeriod;
-    if (endPointTS <= block.timestamp) {
-      return (0, 0);
-    }
-
-    return (stakeAmount, endPointTS);
-
-    // uint32 tsDelta = endPointTS - uint32(block.timestamp);
-    // if (tsDelta == 0) {
-    //   return userBalance.stakeAmount;
-    // }
-
-    // uint256 balanceDecay = uint256(userBalance.stakeAmount).mul(tsDelta).
-    //   div(userBalance.endPoint * _pointPeriod - userBalance.startTS);
-
-    // if (balanceDecay >= userBalance.stakeAmount) {
-    //   return 0;
-    // }
-    // return uint256(userBalance.stakeAmount).sub(balanceDecay);
-  }
-
-  function balanceOf(address account) external view virtual override returns (uint256 stakeAmount) {
-    (stakeAmount, ) = internalBalanceOf(account);
-    return stakeAmount;
-  }
-
   function balanceOfUnderlying(address account) external view returns (uint256) {
     return _balances[account].underlyingAmount;
   }
@@ -246,8 +214,12 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return (underlying, _balances[account].endPoint * _pointPeriod);
   }
 
-  function expiryOf(address account) internal view returns (uint32 availableSince) {
-    return _balances[account].endPoint * _pointPeriod;
+  function expiryOf(address account)
+    internal
+    view
+    returns (uint32 lockedSince, uint32 availableSince)
+  {
+    return (_balances[account].startTS, _balances[account].endPoint * _pointPeriod);
   }
 
   /**
@@ -315,6 +287,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
   function totalOfUnderlying() external view returns (uint256) {
     return _underlyingTotal;
+  }
+
+  function internalTotalSupply() internal view returns (uint256) {
+    return _stakedTotal;
   }
 
   function totalSupply() external view override returns (uint256 totalSupply_) {
@@ -469,11 +445,19 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     uint32 expiryPt = uint32(expiresAt + _pointPeriod - 1) / _pointPeriod;
     expiresAt = expiryPt * _pointPeriod;
 
-    console.log('internalAddExcess', amount, since);
+    console.log('internalAddExcess', amount, since, _excessAccum);
     console.log('internalAddExcess_1', expiresAt, expiryPt);
 
+    amount += _excessAccum;
     uint256 excessRateIncrement = amount / (expiresAt - block.timestamp);
-    console.log('internalAddExcess_2', excessRateIncrement, expiresAt - block.timestamp);
+    _excessAccum = amount - excessRateIncrement * (expiresAt - block.timestamp);
+
+    console.log(
+      'internalAddExcess_2',
+      excessRateIncrement,
+      expiresAt - block.timestamp,
+      _excessAccum
+    );
 
     if (excessRateIncrement == 0) {
       return;
@@ -505,11 +489,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
   function setStakeBalance(address holder, uint224 stakeAmount) internal virtual;
 
-  function getStakeBalance(address holder)
-    internal
-    view
-    virtual
-    returns (uint224 stakeAmount, uint32 startTS);
+  function getStakeBalance(address holder) internal view virtual returns (uint224 stakeAmount);
 
   function internalUpdateTotal(
     uint256 totalBefore,

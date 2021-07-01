@@ -72,9 +72,13 @@ contract ForwardingRewardPool is IForwardingRewardPool, IBoostExcessReceiver, Co
     return (0, 0);
   }
 
-  function internalGetReward(address holder) internal override returns (uint256, uint32) {
+  function internalGetReward(address holder, uint256 limit)
+    internal
+    override
+    returns (uint256, uint32)
+  {
     if (_provider != IForwardedRewardPool(0)) {
-      return _provider.claimReward(holder);
+      return _provider.claimReward(holder, limit);
     }
     return (0, 0);
   }

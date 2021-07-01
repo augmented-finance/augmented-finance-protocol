@@ -36,7 +36,7 @@ contract ZombieRewardPool is ControlledRewardPool, IRewardPool {
     }
   }
 
-  function internalGetReward(address) internal override returns (uint256, uint32) {
+  function internalGetReward(address, uint256) internal override returns (uint256, uint32) {
     return (0, 0);
   }
 

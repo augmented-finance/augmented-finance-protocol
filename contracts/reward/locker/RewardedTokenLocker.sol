@@ -50,28 +50,31 @@ contract RewardedTokenLocker is
     internalSetForwarder(forwarder);
   }
 
-  function setStakeBalance(address holder, uint224 stakeAmount) internal override {
+  function setStakeBalance(address holder, uint224 stakeAmount) internal virtual override {
     (uint256 allocated, uint32 since, AllocationMode mode) = doUpdateReward(holder, 0, stakeAmount);
     super.internalAllocateReward(holder, allocated, since, mode);
   }
 
-  function getStakeBalance(address holder)
-    internal
-    view
-    override
-    returns (uint224 stakeAmount, uint32 startTS)
-  {
-    RewardEntry memory entry = getRewardEntry(holder);
-    return (entry.rewardBase, entry.lastUpdate);
+  function getStakeBalance(address holder) internal view override returns (uint224) {
+    return getRewardEntry(holder).rewardBase;
+  }
+
+  function balanceOf(address account) external view virtual override returns (uint256 stakeAmount) {
+    (, uint32 expiry) = expiryOf(account);
+    if (getCurrentTick() >= expiry) {
+      return 0;
+    }
+    return getStakeBalance(account);
   }
 
   function calcReward(address holder)
     external
     view
+    virtual
     override
     returns (uint256 amount, uint32 since)
   {
-    uint32 expiry = expiryOf(holder);
+    (, uint32 expiry) = expiryOf(holder);
     if (expiry == 0) {
       return (0, 0);
     }
@@ -82,25 +85,30 @@ contract RewardedTokenLocker is
     return super.doCalcRewardAt(holder, current);
   }
 
-  function internalClaimReward(address holder)
+  function internalClaimReward(address holder, uint256 limit)
     internal
+    virtual
     override
     returns (uint256 amount, uint32 since)
   {
     internalUpdate(true);
 
-    uint32 expiry = expiryOf(holder);
+    (, uint32 expiry) = expiryOf(holder);
     if (expiry == 0) {
       return (0, 0);
     }
     uint32 current = getCurrentTick();
     if (current < expiry) {
-      return super.doGetRewardAt(holder, current);
+      (amount, since) = super.doGetRewardAt(holder, current);
+    } else {
+      (amount, since) = super.doGetRewardAt(holder, expiry);
+      super.internalRemoveReward(holder);
     }
 
-    (amount, since) = super.doGetRewardAt(holder, expiry);
-    super.internalRemoveReward(holder);
-
+    if (amount > limit) {
+      internalAddExcess(amount - limit, since);
+      return (limit, since);
+    }
     return (amount, since);
   }
 

@@ -23,16 +23,16 @@ abstract contract ForwardedRewardPool is IForwardedRewardPool {
     _;
   }
 
-  function claimReward(address holder)
+  function claimReward(address holder, uint256 limit)
     external
     override
     onlyForwarder
     returns (uint256 amount, uint32 since)
   {
-    return internalClaimReward(holder);
+    return internalClaimReward(holder, limit);
   }
 
-  function internalClaimReward(address holder)
+  function internalClaimReward(address holder, uint256 limit)
     internal
     virtual
     returns (uint256 amount, uint32 since);

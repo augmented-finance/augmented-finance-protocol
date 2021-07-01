@@ -145,7 +145,7 @@ contract RewardBooster is BaseRewardController {
       }
 
       IManagedRewardPool pool = getPool(i);
-      (uint256 amount_, ) = pool.claimRewardFor(holder);
+      (uint256 amount_, ) = pool.claimRewardFor(holder, type(uint256).max);
       if (amount_ == 0) {
         continue;
       }
@@ -162,7 +162,17 @@ contract RewardBooster is BaseRewardController {
     uint32 boostSince;
     if (_boostPool != IManagedRewardPool(0)) {
       uint256 boost_;
-      (boost_, boostSince) = _boostPool.claimRewardFor(holder);
+
+      if (_mintExcess || _boostExcessDelegate != address(_boostPool)) {
+        (boost_, boostSince) = _boostPool.claimRewardFor(holder, type(uint256).max);
+      } else {
+        uint256 boostLimit_;
+        if (boostLimit > boost) {
+          boostLimit_ = boostLimit - boost;
+        }
+        (boost_, boostSince) = _boostPool.claimRewardFor(holder, boostLimit_);
+      }
+
       boost = boost.add(boost_);
     }
 

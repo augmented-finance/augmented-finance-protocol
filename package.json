@@ -46,6 +46,7 @@
     "test:augmented:token-weighted-pool": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented-pools/token_weighted_pool.spec.ts",
     "test:augmented:rewards": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/rewards-freezer.spec.ts",
     "test:augmented:locker": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/locker_rewards.spec.ts",
+    "test:augmented:decay": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/locker_decay.spec.ts",
     "test:augmented:team-rewards": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/team_rewards.spec.ts",
     "test:augmented:zombie-rewards": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/zombie_pool_rewards.spec.ts",
     "test:augmented:pausable": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/pausable-augmented.spec.ts",

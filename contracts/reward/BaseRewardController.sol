@@ -50,7 +50,7 @@ abstract contract BaseRewardController is
   function admin_addRewardPool(IManagedRewardPool pool) external override onlyOwner {
     require(address(pool) != address(0), 'reward pool required');
     require(_poolMask[address(pool)] == 0, 'already registered');
-    pool.claimRewardFor(address(this)); // access check
+    pool.claimRewardFor(address(this), 0); // access check
     require(_poolList.length <= 255, 'too many pools');
 
     uint256 poolMask = 1 << _poolList.length;
@@ -249,11 +249,11 @@ abstract contract BaseRewardController is
     mask = getClaimMask(holder, mask);
     claimableAmount = internalClaimAndMintReward(holder, mask);
 
+    console.log('RewardsClaimed', claimableAmount);
     if (claimableAmount > 0) {
       internalMint(receiver, claimableAmount, false);
       emit RewardsClaimed(holder, receiver, claimableAmount);
     }
-    console.log('RewardsClaimed', claimableAmount);
     return claimableAmount;
   }
 
