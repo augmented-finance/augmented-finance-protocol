@@ -47,7 +47,7 @@ abstract contract BaseRewardController is
   event RewardsAllocated(address indexed user, uint256 amount);
   event RewardsClaimed(address indexed user, address indexed to, uint256 amount);
 
-  function admin_addRewardPool(IManagedRewardPool pool) external override onlyOwner {
+  function admin_addRewardPool(IManagedRewardPool pool) external override onlyConfigurator {
     require(address(pool) != address(0), 'reward pool required');
     require(_poolMask[address(pool)] == 0, 'already registered');
     pool.claimRewardFor(address(this), 0); // access check
@@ -59,7 +59,7 @@ abstract contract BaseRewardController is
     _poolList.push(pool);
   }
 
-  function admin_removeRewardPool(IManagedRewardPool pool) external override onlyOwner {
+  function admin_removeRewardPool(IManagedRewardPool pool) external override onlyConfigurator {
     require(address(pool) != address(0), 'reward pool required');
     uint256 mask = _poolMask[address(pool)];
     if (mask == 0) {
@@ -89,18 +89,18 @@ abstract contract BaseRewardController is
     address pool,
     address provider,
     address token
-  ) external onlyOwner {
+  ) external onlyConfigurator {
     IManagedRewardPool(pool).addRewardProvider(provider, token);
   }
 
-  function admin_removeRewardProvider(address pool, address provider) external onlyOwner {
+  function admin_removeRewardProvider(address pool, address provider) external onlyConfigurator {
     IManagedRewardPool(pool).removeRewardProvider(provider);
   }
 
   function updateBaseline(uint256 baseline)
     external
     override
-    onlyOwner
+    onlyRateController
     returns (uint256 totalRate)
   {
     (totalRate, _baselineMask) = internalUpdateBaseline(baseline, _baselineMask);
@@ -132,7 +132,7 @@ abstract contract BaseRewardController is
     return (totalRate, baselineMask);
   }
 
-  function admin_setRewardMinter(IRewardMinter minter) external override onlyOwner {
+  function admin_setRewardMinter(IRewardMinter minter) external override onlyConfigurator {
     _rewardMinter = minter;
   }
 
@@ -215,18 +215,31 @@ abstract contract BaseRewardController is
 
   function isRateController(address addr) public view override returns (bool) {
     if (!hasRemoteAcl()) {
-      return addr == address(this);
+      return addr == address(this) || addr == owner();
     }
     return acl_hasAllOf(addr, AccessFlags.REWARD_RATE_ADMIN);
   }
 
+  modifier onlyRateController {
+    require(isRateController(msg.sender), 'only configurator');
+    _;
+  }
+
   function isConfigurator(address addr) public view override returns (bool) {
-    return addr == owner();
+    if (!hasRemoteAcl()) {
+      return addr == address(this) || addr == owner();
+    }
+    return addr == owner() || acl_hasAllOf(addr, AccessFlags.REWARD_CONFIG_ADMIN);
+  }
+
+  modifier onlyConfigurator {
+    require(isConfigurator(msg.sender), 'only configurator');
+    _;
   }
 
   function isEmergencyAdmin(address addr) public view override returns (bool) {
     if (!hasRemoteAcl()) {
-      return addr == address(this);
+      return addr == address(this) || addr == owner();
     }
     return acl_hasAllOf(addr, AccessFlags.EMERGENCY_ADMIN);
   }
@@ -251,10 +264,19 @@ abstract contract BaseRewardController is
 
     console.log('RewardsClaimed', claimableAmount);
     if (claimableAmount > 0) {
-      internalMint(receiver, claimableAmount, false);
+      internalClaimed(holder, receiver, claimableAmount);
       emit RewardsClaimed(holder, receiver, claimableAmount);
     }
     return claimableAmount;
+  }
+
+  function internalClaimed(
+    address holder,
+    address mintTo,
+    uint256 amount
+  ) internal virtual {
+    holder;
+    internalMint(mintTo, amount, false);
   }
 
   function internalMint(

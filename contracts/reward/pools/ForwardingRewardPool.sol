@@ -10,10 +10,16 @@ import {ControlledRewardPool} from './ControlledRewardPool.sol';
 import {IForwardedRewardPool} from '../interfaces/IForwardedRewardPool.sol';
 import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
 import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
+import '../interfaces/IAutolocker.sol';
 
 import 'hardhat/console.sol';
 
-contract ForwardingRewardPool is IForwardingRewardPool, IBoostExcessReceiver, ControlledRewardPool {
+contract ForwardingRewardPool is
+  IForwardingRewardPool,
+  IBoostExcessReceiver,
+  IAutolocker,
+  ControlledRewardPool
+{
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -95,5 +101,16 @@ contract ForwardingRewardPool is IForwardingRewardPool, IBoostExcessReceiver, Co
 
   function receiveBoostExcess(uint256 amount, uint32 since) external override onlyController {
     IBoostExcessReceiver(address(_provider)).receiveBoostExcess(amount, since);
+  }
+
+  function applyAutolock(
+    address account,
+    uint256 amount,
+    AutolockMode mode,
+    uint32 lockDuration,
+    uint224 param
+  ) external override onlyController returns (address receiver, uint256 lockAmount) {
+    return
+      IAutolocker(address(_provider)).applyAutolock(account, amount, mode, lockDuration, param);
   }
 }

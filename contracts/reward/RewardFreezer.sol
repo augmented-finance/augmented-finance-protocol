@@ -29,12 +29,12 @@ contract RewardFreezer is BasicRewardController {
     BasicRewardController(accessController, rewardMinter)
   {}
 
-  function admin_setFreezePercentage(uint32 freezePortion) external onlyOwner {
+  function admin_setFreezePercentage(uint32 freezePortion) external onlyConfigurator {
     require(freezePortion <= PercentageMath.ONE, 'max is 10000 (100%)');
     _unfrozenPortion = PercentageMath.ONE - freezePortion;
   }
 
-  function admin_setMeltDownAt(uint32 at) external onlyOwner {
+  function admin_setMeltDownAt(uint32 at) external onlyConfigurator {
     require(_meltdownAt == 0 || _meltdownAt > block.timestamp);
     _meltdownAt = at;
   }

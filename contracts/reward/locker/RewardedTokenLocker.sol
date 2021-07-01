@@ -17,6 +17,7 @@ import {CalcLinearWeightedReward} from '../calcs/CalcLinearWeightedReward.sol';
 import {AllocationMode} from '../interfaces/IRewardController.sol';
 import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
 import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
+import '../interfaces/IAutolocker.sol';
 
 import {Errors} from '../../tools/Errors.sol';
 
@@ -26,7 +27,8 @@ contract RewardedTokenLocker is
   BaseTokenLocker,
   ForwardedRewardPool,
   CalcLinearWeightedReward,
-  IBoostExcessReceiver
+  IBoostExcessReceiver,
+  IAutolocker
 {
   using SafeMath for uint256;
   using WadRayMath for uint256;
@@ -175,5 +177,20 @@ contract RewardedTokenLocker is
       return accum - 1;
     }
     return super.internalGetLastAccumRate();
+  }
+
+  function applyAutolock(
+    address account,
+    uint256 amount,
+    AutolockMode mode,
+    uint32 lockDuration,
+    uint224 param
+  ) external override onlyForwarder returns (address receiver, uint256 lockAmount) {
+    account;
+    amount;
+    mode;
+    lockDuration;
+    param;
+    return (address(0), 0);
   }
 }

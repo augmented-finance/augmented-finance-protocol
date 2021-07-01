@@ -10,6 +10,7 @@ import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {IRewardPool} from './interfaces/IRewardPool.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IBoostExcessReceiver} from './interfaces/IBoostExcessReceiver.sol';
+import './interfaces/IAutolocker.sol';
 
 import 'hardhat/console.sol';
 
@@ -54,7 +55,7 @@ contract RewardBooster is BaseRewardController {
   function setBoostFactor(address pool, uint32 pctFactor) external {
     require(
       isConfigurator(msg.sender) || isRateController(msg.sender),
-      'only owner or rate controller are allowed'
+      'only owner, configurator or rate controller are allowed'
     );
     require(getPoolMask(pool) != 0, 'unknown pool');
     require(pool != address(_boostPool), 'factor for the boost pool');
@@ -65,7 +66,7 @@ contract RewardBooster is BaseRewardController {
     return uint32(_boostFactor[pool]);
   }
 
-  function setBoostPoolRateUpdateMode(BoostPoolRateUpdateMode mode) external onlyOwner {
+  function setBoostPoolRateUpdateMode(BoostPoolRateUpdateMode mode) external onlyConfigurator {
     _boostRateMode = mode;
   }
 
@@ -92,7 +93,7 @@ contract RewardBooster is BaseRewardController {
     return (totalRate, baselineMask);
   }
 
-  function setBoostPool(address pool) external onlyOwner {
+  function setBoostPool(address pool) external onlyConfigurator {
     if (pool == address(0)) {
       _boostPoolMask = 0;
     } else {
@@ -109,7 +110,7 @@ contract RewardBooster is BaseRewardController {
     return address(_boostPool);
   }
 
-  function setBoostExcessTarget(address target, bool mintExcess) external onlyOwner {
+  function setBoostExcessTarget(address target, bool mintExcess) external onlyConfigurator {
     _boostExcessDelegate = target;
     _mintExcess = mintExcess && (target != address(0));
   }
@@ -269,5 +270,160 @@ contract RewardBooster is BaseRewardController {
     }
 
     IBoostExcessReceiver(_boostExcessDelegate).receiveBoostExcess(boostExcess, since);
+  }
+
+  struct AutolockEntry {
+    uint224 param;
+    AutolockMode mode;
+    uint8 lockDuration;
+  }
+
+  mapping(address => AutolockEntry) private _autolocks;
+  AutolockEntry private _defaultAutolock;
+
+  function disableAutolocks() external {
+    require(
+      isConfigurator(msg.sender) || isRateController(msg.sender),
+      'only owner, configurator or rate controller are allowed'
+    );
+    _defaultAutolock = AutolockEntry(0, AutolockMode.Default, 0);
+  }
+
+  function setDefaultAutolock(
+    AutolockMode mode,
+    uint32 lockDuration,
+    uint224 param
+  ) external {
+    require(
+      isConfigurator(msg.sender) || isRateController(msg.sender),
+      'only owner, configurator or rate controller are allowed'
+    );
+    require(mode > AutolockMode.Default);
+
+    _defaultAutolock = AutolockEntry(param, mode, fromDuration(lockDuration));
+  }
+
+  function fromDuration(uint32 lockDuration) private pure returns (uint8) {
+    require(lockDuration % 1 weeks == 0, 'duration must be in weeks');
+    uint256 v = lockDuration / 1 weeks;
+    require(v <= 4 * 52, 'duration must be less than 209 weeks');
+    return uint8(v);
+  }
+
+  function autolockProlongate(uint32 minLockDuration) external {
+    _autolocks[msg.sender] = AutolockEntry(
+      0,
+      AutolockMode.Prolongate,
+      fromDuration(minLockDuration)
+    );
+  }
+
+  function autolockAccumulateUnderlying(uint256 maxAmount, uint32 lockDuration) external {
+    require(maxAmount > 0, 'max amount is required');
+    if (maxAmount > type(uint224).max) {
+      maxAmount = type(uint224).max;
+    }
+
+    _autolocks[msg.sender] = AutolockEntry(
+      uint224(maxAmount),
+      AutolockMode.AccumulateUnderlying,
+      fromDuration(lockDuration)
+    );
+  }
+
+  function autolockAccumulateTill(uint256 timestamp, uint32 lockDuration) external {
+    require(timestamp > block.timestamp, 'future timestamp is required');
+    if (timestamp > type(uint224).max) {
+      timestamp = type(uint224).max;
+    }
+    _autolocks[msg.sender] = AutolockEntry(
+      uint224(timestamp),
+      AutolockMode.AccumulateTill,
+      fromDuration(lockDuration)
+    );
+  }
+
+  function autolockKeepUpBalance(uint256 minAmount, uint32 lockDuration) external {
+    require(minAmount > 0, 'min amount is required');
+    if (minAmount > type(uint224).max) {
+      minAmount = type(uint224).max;
+    }
+    _autolocks[msg.sender] = AutolockEntry(
+      uint224(minAmount),
+      AutolockMode.KeepUpBalance,
+      fromDuration(lockDuration)
+    );
+  }
+
+  function autolockStop() external {
+    _autolocks[msg.sender] = AutolockEntry(0, AutolockMode.Stop, 0);
+  }
+
+  function autolockOf(address account)
+    public
+    view
+    returns (
+      AutolockMode mode,
+      uint32 lockDuration,
+      uint256 param
+    )
+  {
+    AutolockEntry memory entry = _autolocks[account];
+    if (entry.mode == AutolockMode.Default) {
+      entry = _defaultAutolock;
+    }
+    return (entry.mode, entry.lockDuration * 1 weeks, entry.param);
+  }
+
+  function applyAutolock(
+    address holder,
+    uint256 amount,
+    AutolockEntry memory entry
+  ) private returns (uint256) {
+    (address receiver, uint256 lockAmount) =
+      IAutolocker(address(_boostPool)).applyAutolock(
+        holder,
+        amount,
+        entry.mode,
+        entry.lockDuration * 1 weeks,
+        entry.param
+      );
+
+    if (receiver != address(0) && lockAmount > 0) {
+      internalMint(receiver, lockAmount, true);
+      return amount.sub(lockAmount);
+    }
+
+    return amount;
+  }
+
+  function internalClaimed(
+    address holder,
+    address mintTo,
+    uint256 amount
+  ) internal override {
+    if (address(_boostPool) == address(0)) {
+      internalMint(mintTo, amount, false);
+      return;
+    }
+
+    AutolockEntry memory entry = _autolocks[holder];
+    if (entry.mode == AutolockMode.Stop || _defaultAutolock.mode == AutolockMode.Default) {
+      internalMint(mintTo, amount, false);
+      return;
+    }
+
+    if (entry.mode == AutolockMode.Default) {
+      entry = _defaultAutolock;
+      if (entry.mode == AutolockMode.Stop) {
+        internalMint(mintTo, amount, false);
+        return;
+      }
+    }
+
+    amount = applyAutolock(holder, amount, entry);
+    if (amount > 0) {
+      internalMint(mintTo, amount, false);
+    }
   }
 }
