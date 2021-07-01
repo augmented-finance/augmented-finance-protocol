@@ -55,14 +55,20 @@ contract RewardedTokenLocker is
     super.internalAllocateReward(holder, allocated, since, mode);
   }
 
-  function getStakeBalance(address holder)
-    internal
-    view
-    override
-    returns (uint224 stakeAmount, uint32 startTS)
-  {
-    RewardEntry memory entry = getRewardEntry(holder);
-    return (entry.rewardBase, entry.lastUpdate);
+  function getStakeBalance(address holder) internal view override returns (uint224) {
+    return getRewardEntry(holder).rewardBase;
+  }
+
+  function balanceOf(address account) external view virtual override returns (uint256 stakeAmount) {
+    (, uint32 expiry) = expiryOf(account);
+    if (expiry == 0) {
+      return 0;
+    }
+    uint32 current = getCurrentTick();
+    if (current > expiry) {
+      current = expiry;
+    }
+    return getRewardEntry(account).rewardBase;
   }
 
   function calcReward(address holder)
@@ -72,7 +78,7 @@ contract RewardedTokenLocker is
     override
     returns (uint256 amount, uint32 since)
   {
-    uint32 expiry = expiryOf(holder);
+    (, uint32 expiry) = expiryOf(holder);
     if (expiry == 0) {
       return (0, 0);
     }
@@ -91,7 +97,7 @@ contract RewardedTokenLocker is
   {
     internalUpdate(true);
 
-    uint32 expiry = expiryOf(holder);
+    (, uint32 expiry) = expiryOf(holder);
     if (expiry == 0) {
       return (0, 0);
     }
