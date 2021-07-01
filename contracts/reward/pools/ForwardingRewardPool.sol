@@ -109,7 +109,16 @@ contract ForwardingRewardPool is
     AutolockMode mode,
     uint32 lockDuration,
     uint224 param
-  ) external override onlyController returns (address receiver, uint256 lockAmount) {
+  )
+    external
+    override
+    onlyController
+    returns (
+      address receiver,
+      uint256 lockAmount,
+      bool stop
+    )
+  {
     return
       IAutolocker(address(_provider)).applyAutolock(account, amount, mode, lockDuration, param);
   }

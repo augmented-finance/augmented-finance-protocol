@@ -287,6 +287,7 @@ contract RewardBooster is BaseRewardController {
       'only owner, configurator or rate controller are allowed'
     );
     _defaultAutolock = AutolockEntry(0, AutolockMode.Default, 0);
+    emit RewardAutolockConfigured(address(this), AutolockMode.Default, 0, 0);
   }
 
   function setDefaultAutolock(
@@ -301,6 +302,7 @@ contract RewardBooster is BaseRewardController {
     require(mode > AutolockMode.Default);
 
     _defaultAutolock = AutolockEntry(param, mode, fromDuration(lockDuration));
+    emit RewardAutolockConfigured(address(this), mode, lockDuration, param);
   }
 
   function fromDuration(uint32 lockDuration) private pure returns (uint8) {
@@ -310,12 +312,25 @@ contract RewardBooster is BaseRewardController {
     return uint8(v);
   }
 
+  event RewardAutolockConfigured(
+    address indexed account,
+    AutolockMode mode,
+    uint32 lockDuration,
+    uint224 param
+  );
+
+  function _setAutolock(
+    address account,
+    AutolockMode mode,
+    uint32 lockDuration,
+    uint224 param
+  ) private {
+    _autolocks[account] = AutolockEntry(param, mode, fromDuration(lockDuration));
+    emit RewardAutolockConfigured(account, mode, lockDuration, param);
+  }
+
   function autolockProlongate(uint32 minLockDuration) external {
-    _autolocks[msg.sender] = AutolockEntry(
-      0,
-      AutolockMode.Prolongate,
-      fromDuration(minLockDuration)
-    );
+    _setAutolock(msg.sender, AutolockMode.Prolongate, minLockDuration, 0);
   }
 
   function autolockAccumulateUnderlying(uint256 maxAmount, uint32 lockDuration) external {
@@ -324,11 +339,7 @@ contract RewardBooster is BaseRewardController {
       maxAmount = type(uint224).max;
     }
 
-    _autolocks[msg.sender] = AutolockEntry(
-      uint224(maxAmount),
-      AutolockMode.AccumulateUnderlying,
-      fromDuration(lockDuration)
-    );
+    _setAutolock(msg.sender, AutolockMode.AccumulateUnderlying, lockDuration, uint224(maxAmount));
   }
 
   function autolockAccumulateTill(uint256 timestamp, uint32 lockDuration) external {
@@ -336,27 +347,25 @@ contract RewardBooster is BaseRewardController {
     if (timestamp > type(uint224).max) {
       timestamp = type(uint224).max;
     }
-    _autolocks[msg.sender] = AutolockEntry(
-      uint224(timestamp),
-      AutolockMode.AccumulateTill,
-      fromDuration(lockDuration)
-    );
+    _setAutolock(msg.sender, AutolockMode.AccumulateTill, lockDuration, uint224(timestamp));
   }
 
   function autolockKeepUpBalance(uint256 minAmount, uint32 lockDuration) external {
     require(minAmount > 0, 'min amount is required');
+    require(lockDuration > 0, 'lock duration is required');
+
     if (minAmount > type(uint224).max) {
       minAmount = type(uint224).max;
     }
-    _autolocks[msg.sender] = AutolockEntry(
-      uint224(minAmount),
-      AutolockMode.KeepUpBalance,
-      fromDuration(lockDuration)
-    );
+    _setAutolock(msg.sender, AutolockMode.KeepUpBalance, lockDuration, uint224(minAmount));
+  }
+
+  function autolockDefault() external {
+    _setAutolock(msg.sender, AutolockMode.Default, 0, 0);
   }
 
   function autolockStop() external {
-    _autolocks[msg.sender] = AutolockEntry(0, AutolockMode.Stop, 0);
+    _setAutolock(msg.sender, AutolockMode.Stop, 0, 0);
   }
 
   function autolockOf(address account)
@@ -380,7 +389,7 @@ contract RewardBooster is BaseRewardController {
     uint256 amount,
     AutolockEntry memory entry
   ) private returns (uint256) {
-    (address receiver, uint256 lockAmount) =
+    (address receiver, uint256 lockAmount, bool stop) =
       IAutolocker(address(_boostPool)).applyAutolock(
         holder,
         amount,
@@ -388,6 +397,10 @@ contract RewardBooster is BaseRewardController {
         entry.lockDuration * 1 weeks,
         entry.param
       );
+
+    if (stop) {
+      _setAutolock(msg.sender, AutolockMode.Stop, 0, 0);
+    }
 
     if (receiver != address(0) && lockAmount > 0) {
       internalMint(receiver, lockAmount, true);

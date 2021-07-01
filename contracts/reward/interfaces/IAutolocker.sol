@@ -10,5 +10,14 @@ interface IAutolocker {
     AutolockMode mode,
     uint32 lockDuration,
     uint224 param
-  ) external returns (address receiver, uint256 lockAmount);
+  )
+    external
+    returns (
+      address receiver,
+      uint256 lockAmount,
+      bool completed
+    );
+
+  event RewardAutolocked(address indexed account, uint256 amount, AutolockMode mode);
+  event RewardAutolockFailed(address indexed account, AutolockMode mode, uint256 error);
 }
