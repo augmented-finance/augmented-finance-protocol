@@ -284,9 +284,7 @@ abstract contract BaseRewardController is
     uint256 amount,
     bool serviceAccount
   ) internal {
-    for (IRewardMinter minter = _rewardMinter; minter != IRewardMinter(0); ) {
-      (minter, mintTo) = minter.mintReward(mintTo, amount, serviceAccount);
-    }
+    _rewardMinter.mintReward(mintTo, amount, serviceAccount);
   }
 
   function internalClaimAndMintReward(address holder, uint256 mask)
