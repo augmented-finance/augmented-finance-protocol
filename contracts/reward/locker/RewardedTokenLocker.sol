@@ -61,14 +61,10 @@ contract RewardedTokenLocker is
 
   function balanceOf(address account) external view virtual override returns (uint256 stakeAmount) {
     (, uint32 expiry) = expiryOf(account);
-    if (expiry == 0) {
+    if (getCurrentTick() >= expiry) {
       return 0;
     }
-    uint32 current = getCurrentTick();
-    if (current > expiry) {
-      current = expiry;
-    }
-    return getRewardEntry(account).rewardBase;
+    return getStakeBalance(account);
   }
 
   function calcReward(address holder)

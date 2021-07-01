@@ -39,18 +39,13 @@ contract DecayingTokenLocker is RewardedTokenLocker {
 
   function balanceOf(address account) external view virtual override returns (uint256) {
     (uint32 startTS, uint32 endTS) = expiryOf(account);
-
-    if (endTS == 0) {
-      return 0;
-    }
     uint32 current = getCurrentTick();
-    if (current > endTS) {
-      current = endTS;
+    if (current >= endTS) {
+      return 0;
     }
 
     uint256 stakeAmount = getStakeBalance(account);
-
-    uint256 stakeDecayed = stakeAmount.mul(endTS - uint32(block.timestamp)).div(endTS - startTS);
+    uint256 stakeDecayed = stakeAmount.mul(endTS - current).div(endTS - startTS);
 
     if (stakeDecayed >= stakeAmount) {
       return stakeAmount;
