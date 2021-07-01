@@ -16,6 +16,7 @@ import {
   ForwardingRewardPoolFactory,
   MintableERC20,
   RewardBoosterFactory,
+  RewardedTokenLockerFactory,
   XAGFTokenV1Factory,
 } from '../types';
 import { MockContract } from 'ethereum-waffle';
@@ -69,6 +70,7 @@ import {
   ZombieRewardPoolFactory,
   ZombieAdapterFactory,
   MigratorWeightedRewardPoolFactory,
+  DecayingTokenLockerFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -774,6 +776,28 @@ export const deployXAGFToken = async (
   return instance;
 };
 
+export const deployTokenLocker = async (
+  args: [tEthereumAddress, tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
+  await withSaveAndVerify(
+    await new RewardedTokenLockerFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TokenLocker,
+    [],
+    verify
+  );
+
+export const deployDecayingTokenLocker = async (
+  args: [tEthereumAddress, tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
+  await withSaveAndVerify(
+    await new DecayingTokenLockerFactory(await getFirstSigner()).deploy(...args),
+    eContractid.DecayingTokenLocker,
+    [],
+    verify
+  );
+
 export const deployRewardFreezer = async (
   args: [tEthereumAddress, tEthereumAddress],
   verify?: boolean
@@ -919,6 +943,17 @@ export const deployForwardingRewardPool = async (
   withSaveAndVerify(
     await new ForwardingRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.ForwardingRewardPool,
+    [],
+    verify
+  );
+
+export const deployForwardingRewardPoolDecay = async (
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new ForwardingRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.ForwardingRewardPoolDecay,
     [],
     verify
   );

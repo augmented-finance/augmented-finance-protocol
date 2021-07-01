@@ -6,18 +6,32 @@ import rawBRE, { ethers } from 'hardhat';
 import {
   getMockAgfToken,
   getRewardFreezer,
-  getXAgfToken,
+  getTokenLocker,
   getForwardingRewardPool,
 } from '../../helpers/contracts-getters';
 
-import { MockAgfToken, RewardFreezer, ForwardingRewardPool, XAGFTokenV1 } from '../../types';
+import {
+  MockAgfToken,
+  RewardFreezer,
+  ForwardingRewardPool,
+  XAGFTokenV1,
+  RewardedTokenLocker,
+} from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { waitForTx } from '../../helpers/misc-utils';
 import { currentTick, mineToTicks, mineTicks, revertSnapshot, takeSnapshot } from './utils';
 import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
-import { RAY, RAY_100, RAY_10000, RAY_PER_WEEK } from '../../helpers/constants';
+import {
+  MAX_LOCKER_PERIOD,
+  RAY,
+  RAY_100,
+  RAY_10000,
+  RAY_PER_WEEK,
+  DAY,
+  WEEK,
+} from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -29,13 +43,11 @@ describe('Token locker suite', () => {
   let frp: ForwardingRewardPool;
   let rewardController: RewardFreezer;
   let AGF: MockAgfToken;
-  let xAGF: XAGFTokenV1;
+  let xAGF: RewardedTokenLocker;
   let blkBeforeDeploy;
   const defaultStkAmount = 1e9;
-  const DAY = 60 * 60 * 24;
-  const WEEK = DAY * 7;
   const MIN_PERIOD = WEEK;
-  const MAX_PERIOD = 4 * 52 * WEEK;
+  const MAX_PERIOD = MAX_LOCKER_PERIOD;
 
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
@@ -46,7 +58,7 @@ describe('Token locker suite', () => {
 
     frp = await getForwardingRewardPool();
     AGF = await getMockAgfToken();
-    xAGF = await getXAgfToken();
+    xAGF = await getTokenLocker();
 
     await AGF.connect(root).mintReward(user1.address, defaultStkAmount, false);
     await AGF.connect(user1).approve(xAGF.address, defaultStkAmount);

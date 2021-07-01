@@ -9,13 +9,13 @@ import {
   deployMockAgfToken,
   deployRewardFreezer,
   deployTeamRewardPool,
+  deployTokenLocker,
   deployTokenUnweightedRewardPool,
   deployTokenWeightedRewardPoolAGFSeparate,
-  deployXAGFToken,
   deployZombieAdapter,
   deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
-import { ONE_ADDRESS, RAY, RAY_100, RAY_PER_WEEK } from '../../helpers/constants';
+import { MAX_LOCKER_PERIOD, ONE_ADDRESS, RAY, RAY_100, WEEK } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
 import {
   ADAI_ADDRESS,
@@ -140,17 +140,23 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
         )
       );
 
-      console.log(`#6 deploying: Forwarding Reward Pool + Locker/XAGF`);
+      console.log(`#6 deploying: RewardedTokenLocker + Forwarding Reward Pool`);
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const fwdRewardPool = await deployForwardingRewardPool(
         [rewardFreezer.address, RAY, RAY, 0],
         verify
       );
-      const xagf = await deployXAGFToken([ac.address, agfToken.address, 'Locked AGF', 'xAGF']);
+      const basicLocker = await deployTokenLocker([
+        ac.address,
+        agfToken.address,
+        WEEK,
+        MAX_LOCKER_PERIOD,
+        RAY_100,
+      ]);
       await waitForTx(await rewardFreezer.admin_addRewardPool(fwdRewardPool.address));
-      await xagf.setForwardingRewardPool(fwdRewardPool.address);
-      await fwdRewardPool.addRewardProvider(xagf.address, ONE_ADDRESS);
+      await basicLocker.setForwardingRewardPool(fwdRewardPool.address);
+      await fwdRewardPool.addRewardProvider(basicLocker.address, ONE_ADDRESS);
 
       if (process.env.MAINNET_FORK === 'true') {
         console.log(`#7 deploying: Migrator + Adapters`);

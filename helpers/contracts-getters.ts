@@ -47,6 +47,8 @@ import {
   RewardBoosterFactory,
   ForwardingRewardPoolFactory,
   XAGFTokenV1Factory,
+  RewardedTokenLockerFactory,
+  DecayingTokenLockerFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -408,6 +410,20 @@ export const getAgfToken = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getTokenLocker = async (address?: tEthereumAddress) =>
+  await RewardedTokenLockerFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.TokenLocker}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
+export const getDecayingTokenLocker = async (address?: tEthereumAddress) =>
+  await DecayingTokenLockerFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.DecayingTokenLocker}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );
+
 export const getXAgfToken = async (address?: tEthereumAddress) =>
   await XAGFTokenV1Factory.connect(
     address || (await getDb().get(`${eContractid.XAGFToken}.${DRE.network.name}`).value()).address,
@@ -453,6 +469,14 @@ export const getForwardingRewardPool = async (address?: tEthereumAddress) =>
   await ForwardingRewardPoolFactory.connect(
     address ||
       (await getDb().get(`${eContractid.ForwardingRewardPool}.${DRE.network.name}`).value())
+        .address,
+    await getFirstSigner()
+  );
+
+export const getForwardingRewardPoolDecay = async (address?: tEthereumAddress) =>
+  await ForwardingRewardPoolFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.ForwardingRewardPoolDecay}.${DRE.network.name}`).value())
         .address,
     await getFirstSigner()
   );

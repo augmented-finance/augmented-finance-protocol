@@ -3,16 +3,16 @@ import BigNumber from 'bignumber.js';
 // ----------------
 // MATH
 // ----------------
+export const DAY = 60 * 60 * 24;
+export const WEEK = 7 * DAY;
+export const MAX_LOCKER_PERIOD = 4 * 52 * WEEK;
 export const PERCENTAGE_FACTOR = '10000';
 export const HALF_PERCENTAGE = '5000';
 export const PERC_100 = Number(PERCENTAGE_FACTOR);
 export const WAD = Math.pow(10, 18).toString();
 export const HALF_WAD = new BigNumber(WAD).multipliedBy(0.5).toString();
 export const RAY = new BigNumber(10).exponentiatedBy(27).toFixed();
-export const RAY_PER_WEEK = new BigNumber(10)
-  .exponentiatedBy(27)
-  .dividedBy(60 * 60 * 24 * 7)
-  .toFixed(0);
+export const RAY_PER_WEEK = new BigNumber(10).exponentiatedBy(27).dividedBy(WEEK).toFixed(0);
 export const HALF_RAY = new BigNumber(RAY).multipliedBy(0.5).toFixed();
 export const WAD_RAY_RATIO = Math.pow(10, 9).toString();
 export const oneEther = new BigNumber(Math.pow(10, 18));

@@ -7,6 +7,7 @@ import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import {BitUtils} from '../../tools/math/BitUtils.sol';
 
 import {AccessFlags} from '../../access/AccessFlags.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
@@ -38,16 +39,21 @@ contract DecayingTokenLocker is RewardedTokenLocker {
 
   function balanceOf(address account) external view virtual override returns (uint256) {
     (uint256 stakeAmount, uint32 startTS, uint32 endTS) = internalBalanceOf(account);
+    console.log('balanceOf', stakeAmount, startTS, endTS);
+
     if (stakeAmount == 0) {
       return 0;
     }
 
-    uint256 balanceDecay =
+    console.log('balanceOf', block.timestamp, endTS - uint32(block.timestamp), endTS - startTS);
+
+    uint256 stakeDecayed =
       uint256(stakeAmount).mul(endTS - uint32(block.timestamp)).div(endTS - startTS);
-    if (balanceDecay >= stakeAmount) {
-      return 0;
+
+    if (stakeDecayed >= stakeAmount) {
+      return stakeAmount;
     }
-    return uint256(stakeAmount).sub(balanceDecay);
+    return stakeDecayed;
   }
 
   function calcReward(address holder)
@@ -71,7 +77,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       return (0, 0);
     }
 
-    amount = amount.rayMul(calcDecay(startTS, endTS, since, current));
+    amount = amount.rayMul(WadRayMath.RAY - calcDecayForReward(startTS, endTS, since, current));
     if (amount == 0) {
       return (0, 0);
     }
@@ -79,13 +85,45 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return (amount, since);
   }
 
-  function calcDecay(
+  /// @notice Calculates an approximation of a range integral of the linear decay
+  /// @param startTS start of the decay interval (beginning of a lock)
+  /// @param endTS start of the decay interval (ending of a lock)
+  /// @param since start of an integration range
+  /// @param current end of an integration range
+  /// @return Decayed portion [RAY..0] of reward, result = 0 means no decay
+  function calcDecayForReward(
     uint32 startTS,
     uint256 endTS,
     uint32 since,
     uint32 current
-  ) private pure returns (uint256) {
-    return WadRayMath.RAY.mul((endTS << 1) - since - current).div((endTS - startTS) << 1);
+  ) public pure returns (uint256) {
+    require(startTS < endTS);
+    require(startTS <= since);
+    require(current <= endTS);
+    require(since <= current);
+    return
+      ((uint256(since - startTS) + (current - startTS)) * WadRayMath.halfRAY) / (endTS - startTS);
+  }
+
+  /// @notice Calculates an approximation of a range integral of the linear decay
+  /// @param startTS start of the decay interval and of integration range (beginning of a lock)
+  /// @param endTS start of the decay interval (ending of a lock)
+  /// @param at end of an integration range
+  /// @return Decayed portion [RAY..0] of reward, result = 0 means no decay
+  function calcRewardCompensatedDecay(
+    uint32 startTS,
+    uint256 endTS,
+    uint32 at
+  ) public pure returns (uint256) {
+    // linear decay component
+    uint256 v0 = ((at - startTS) * WadRayMath.RAY) / (endTS - startTS);
+
+    // logariphmic decay component
+    // bitLength provides a cheap alternative of log(x) when x is expanded to 256 bits
+    uint256 u = type(uint256).max / (endTS - startTS);
+    uint256 v1 = (BitUtils.bitLength(u * (at - startTS)) * WadRayMath.RAY) / 255;
+
+    return (v0 + v1) >> 2;
   }
 
   function internalClaimReward(address holder, uint256 limit)
@@ -115,7 +153,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     }
 
     uint256 maxAmount = amount;
-    amount = amount.rayMul(calcDecay(startTS, endTS, since, current));
+    amount = amount.rayMul(WadRayMath.RAY - calcDecayForReward(startTS, endTS, since, current));
 
     if (amount > limit) {
       amount = limit;

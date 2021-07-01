@@ -64,7 +64,7 @@ describe('Staking with boosting', () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  it('no boost if no staking', async () => {
+  it('no boost or rewards', async () => {
     await mineTicks(stakingCooldownTicks);
     await rb.connect(user1).claimReward();
     expect(await AGF.balanceOf(user1.address)).to.eq(0);
