@@ -6,7 +6,14 @@ import {
   deployForwardingRewardPoolDecay,
   deployDecayingTokenLocker,
 } from '../../helpers/contracts-deployments';
-import { MAX_LOCKER_PERIOD, ONE_ADDRESS, RAY, RAY_100, WEEK } from '../../helpers/constants';
+import {
+  MAX_LOCKER_PERIOD,
+  ONE_ADDRESS,
+  RAY,
+  RAY_100,
+  RAY_10000,
+  WEEK,
+} from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
 
 task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
@@ -34,7 +41,7 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
 
     // deploy token weighted reward pool, register in controller, separated pool for math tests
     const fwdRewardPoolDecay = await deployForwardingRewardPoolDecay(
-      [rewardBooster.address, RAY, RAY, 0],
+      [rewardBooster.address, RAY_10000, RAY, 0],
       verify
     );
     const decayLocker = await deployDecayingTokenLocker([

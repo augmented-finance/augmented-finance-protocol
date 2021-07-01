@@ -50,7 +50,7 @@ contract RewardedTokenLocker is
     internalSetForwarder(forwarder);
   }
 
-  function setStakeBalance(address holder, uint224 stakeAmount) internal override {
+  function setStakeBalance(address holder, uint224 stakeAmount) internal virtual override {
     (uint256 allocated, uint32 since, AllocationMode mode) = doUpdateReward(holder, 0, stakeAmount);
     super.internalAllocateReward(holder, allocated, since, mode);
   }

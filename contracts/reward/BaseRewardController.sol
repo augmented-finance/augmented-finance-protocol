@@ -249,11 +249,11 @@ abstract contract BaseRewardController is
     mask = getClaimMask(holder, mask);
     claimableAmount = internalClaimAndMintReward(holder, mask);
 
+    console.log('RewardsClaimed', claimableAmount);
     if (claimableAmount > 0) {
       internalMint(receiver, claimableAmount, false);
       emit RewardsClaimed(holder, receiver, claimableAmount);
     }
-    console.log('RewardsClaimed', claimableAmount);
     return claimableAmount;
   }
 

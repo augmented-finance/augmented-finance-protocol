@@ -81,7 +81,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       calcCompensatedDecay(
         holder,
         decayAmount,
-        getStakeBalance(holder),
+        0,
         calcDecayTimeCompensation(startTS, endTS, since, current)
       );
 
@@ -90,43 +90,6 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     }
 
     return (amount, since);
-  }
-
-  /// @notice Calculates a range integral of the linear decay
-  /// @param startTS start of the decay interval (beginning of a lock)
-  /// @param endTS start of the decay interval (ending of a lock)
-  /// @param since start of an integration range
-  /// @param current end of an integration range
-  /// @return Decayed portion [RAY..0] of reward, result = 0 means no decay
-  function calcDecayForReward(
-    uint32 startTS,
-    uint256 endTS,
-    uint32 since,
-    uint32 current
-  ) public pure returns (uint256) {
-    require(startTS < endTS);
-    require(startTS <= since);
-    require(current <= endTS);
-    require(since <= current);
-    return
-      ((uint256(since - startTS) + (current - startTS)) * WadRayMath.halfRAY) / (endTS - startTS);
-  }
-
-  /// @notice Calculates an approximate decay compensation to equalize outcomes from multiple intermediate claims vs one final claim do to excess redistribution
-  /// @param startTS start of the decay interval (beginning of a lock)
-  /// @param endTS start of the decay interval (ending of a lock)
-  /// @param since timestamp of a previous claim or start of the decay interval
-  /// @param current timestamp of a new claim
-  /// @return Compensation portion [RAY..0] of reward, result = 0 means no compensation
-  function calcDecayTimeCompensation(
-    uint32 startTS,
-    uint256 endTS,
-    uint32 since,
-    uint32 current
-  ) public pure returns (uint256) {
-    uint256 u = type(uint256).max / (endTS - startTS);
-    // bitLength provides a cheap alternative of log(x) when x is expanded to 256 bits
-    return ((255 - BitUtils.bitLength(u * (current - since))) * WadRayMath.RAY) / 255;
   }
 
   function internalClaimReward(address holder, uint256 limit)
@@ -150,8 +113,10 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       current = endTS;
       (maxAmount, since) = super.doGetRewardAt(holder, current);
       stakeAmount = super.internalRemoveReward(holder);
+      console.log('internalClaimReward (last)', holder, maxAmount, since);
     } else {
       (maxAmount, since) = super.doGetRewardAt(holder, current);
+      console.log('internalClaimReward', holder, maxAmount, since);
     }
 
     if (maxAmount == 0) {
@@ -160,8 +125,9 @@ contract DecayingTokenLocker is RewardedTokenLocker {
 
     uint256 decayAmount = maxAmount.rayMul(calcDecayForReward(startTS, endTS, since, current));
 
-    if (limit + decayAmount <= maxAmount) {
+    if (limit <= maxAmount && limit + decayAmount <= maxAmount) {
       amount = limit;
+      console.log('internalClaimReward (limit below decay)', decayAmount, limit);
     } else {
       amount =
         maxAmount -
@@ -172,12 +138,21 @@ contract DecayingTokenLocker is RewardedTokenLocker {
           calcDecayTimeCompensation(startTS, endTS, since, current)
         );
 
+      console.log(
+        'internalClaimReward (compensated)',
+        amount,
+        decayAmount,
+        decayAmount - (maxAmount - amount)
+      );
+
       if (amount > limit) {
+        console.log('internalClaimReward (limit applied)', limit);
         amount = limit;
       }
     }
 
     if (maxAmount > amount) {
+      console.log('internalClaimReward (excess)', maxAmount - amount);
       internalAddExcess(maxAmount - amount, since);
     }
 
@@ -188,12 +163,87 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return (amount, since);
   }
 
+  function setStakeBalance(address holder, uint224 stakeAmount) internal virtual override {
+    (uint32 startTS, uint32 endTS) = expiryOf(holder);
+    (uint256 amount, uint32 since, AllocationMode mode) = doUpdateReward(holder, 0, stakeAmount);
+
+    if (amount > 0) {
+      uint256 maxAmount = amount;
+
+      uint32 current = getCurrentTick();
+      uint256 decayAmount = maxAmount.rayMul(calcDecayForReward(startTS, endTS, since, current));
+
+      amount =
+        maxAmount -
+        calcCompensatedDecay(
+          holder,
+          decayAmount,
+          stakeAmount,
+          calcDecayTimeCompensation(startTS, endTS, since, current)
+        );
+
+      if (maxAmount > amount) {
+        internalAddExcess(maxAmount - amount, since);
+      }
+    }
+
+    super.internalAllocateReward(holder, amount, since, mode);
+  }
+
+  /// @notice Calculates a range integral of the linear decay
+  /// @param startTS start of the decay interval (beginning of a lock)
+  /// @param endTS start of the decay interval (ending of a lock)
+  /// @param since start of an integration range
+  /// @param current end of an integration range
+  /// @return Decayed portion [RAY..0] of reward, result = 0 means no decay
+  function calcDecayForReward(
+    uint32 startTS,
+    uint32 endTS,
+    uint32 since,
+    uint32 current
+  ) public pure returns (uint256) {
+    require(startTS < endTS);
+    require(startTS <= since);
+    require(current <= endTS);
+    require(since <= current);
+    return
+      ((uint256(since - startTS) + (current - startTS)) * WadRayMath.halfRAY) / (endTS - startTS);
+  }
+
+  /// @notice Calculates an approximate decay compensation to equalize outcomes from multiple intermediate claims vs one final claim due to excess redistribution
+  /// @param startTS start of the decay interval (beginning of a lock)
+  /// @param endTS start of the decay interval (ending of a lock)
+  /// @param since timestamp of a previous claim or start of the decay interval
+  /// @param current timestamp of a new claim
+  /// @return Compensation portion [RAY..0] of reward, result = 0 means no compensation
+  function calcDecayTimeCompensation(
+    uint32 startTS,
+    uint32 endTS,
+    uint32 since,
+    uint32 current
+  ) public pure returns (uint256) {
+    // parabolic approximation
+    return ((uint256(current - since)**2) * WadRayMath.RAY) / (uint256(endTS - startTS)**2);
+
+    // uint32 width = endTS - startTS;
+    // // logariphmic component to give a large compensation for longer distance between (since) and (current)
+    // // bitLength provides a cheap alternative of log(x) when x is expanded to more bits
+    // uint256 v = (255 - BitUtils.bitLength((type(uint256).max / width) * (width - (current - since)))) * WadRayMath.RAY / 255;
+    // v *= 7;
+
+    // // linear component to give a small non-zero compensation for smaller distance between (since) and (current)
+    // v += uint256(current - since) * WadRayMath.RAY / width;
+
+    // return v>>3;
+  }
+
   function calcCompensatedDecay(
     address holder,
     uint256 decayAmount,
     uint256 stakeAmount,
     uint256 compensationRatio
   ) public view returns (uint256) {
+    console.log('calcCompensatedDecay', decayAmount, stakeAmount, compensationRatio);
     if (decayAmount == 0 || compensationRatio == 0) {
       return decayAmount;
     }
@@ -208,7 +258,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     }
 
     if (stakedTotal > stakeAmount) {
-      compensationRatio *= stakeAmount / stakedTotal;
+      compensationRatio = (compensationRatio * stakeAmount) / stakedTotal;
     }
 
     if (compensationRatio >= WadRayMath.RAY) {

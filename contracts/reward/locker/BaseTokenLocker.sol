@@ -34,6 +34,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
   uint256 private _stakedTotal;
   uint256 private _extraRate;
+  uint256 private _excessAccum;
 
   mapping(uint32 => Point) _pointTotal;
 
@@ -444,11 +445,19 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     uint32 expiryPt = uint32(expiresAt + _pointPeriod - 1) / _pointPeriod;
     expiresAt = expiryPt * _pointPeriod;
 
-    console.log('internalAddExcess', amount, since);
+    console.log('internalAddExcess', amount, since, _excessAccum);
     console.log('internalAddExcess_1', expiresAt, expiryPt);
 
+    amount += _excessAccum;
     uint256 excessRateIncrement = amount / (expiresAt - block.timestamp);
-    console.log('internalAddExcess_2', excessRateIncrement, expiresAt - block.timestamp);
+    _excessAccum = amount - excessRateIncrement * (expiresAt - block.timestamp);
+
+    console.log(
+      'internalAddExcess_2',
+      excessRateIncrement,
+      expiresAt - block.timestamp,
+      _excessAccum
+    );
 
     if (excessRateIncrement == 0) {
       return;
