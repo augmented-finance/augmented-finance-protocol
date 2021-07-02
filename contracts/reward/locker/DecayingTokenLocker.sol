@@ -37,7 +37,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     RewardedTokenLocker(accessCtl, underlying, pointPeriod, maxValuePeriod, maxTotalSupply)
   {}
 
-  function balanceOf(address account) external view virtual override returns (uint256) {
+  function balanceOf(address account) public view virtual override returns (uint256) {
     (uint32 startTS, uint32 endTS) = expiryOf(account);
     uint32 current = getCurrentTick();
     if (current >= endTS) {
@@ -64,8 +64,11 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       return (0, 0);
     }
 
+    uint256 stakeAmount;
     uint32 current = getCurrentTick();
     if (current >= endTS) {
+      // this is to emulate claimReward using calcCompensatedDecay when a balance has expired
+      stakeAmount = getStakeBalance(holder);
       current = endTS;
     }
 
@@ -81,7 +84,8 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       calcCompensatedDecay(
         holder,
         decayAmount,
-        0,
+        stakeAmount,
+        totalSupply(),
         calcDecayTimeCompensation(startTS, endTS, since, current)
       );
 
@@ -113,10 +117,8 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       current = endTS;
       (maxAmount, since) = super.doGetRewardAt(holder, current);
       stakeAmount = super.internalRemoveReward(holder);
-      console.log('internalClaimReward (last)', holder, maxAmount, since);
     } else {
       (maxAmount, since) = super.doGetRewardAt(holder, current);
-      console.log('internalClaimReward', holder, maxAmount, since);
     }
 
     if (maxAmount == 0) {
@@ -135,12 +137,13 @@ contract DecayingTokenLocker is RewardedTokenLocker {
           holder,
           decayAmount,
           stakeAmount,
+          internalCurrentTotalSupply(),
           calcDecayTimeCompensation(startTS, endTS, since, current)
         );
 
       console.log(
         'internalClaimReward (compensated)',
-        amount,
+        maxAmount,
         decayAmount,
         decayAmount - (maxAmount - amount)
       );
@@ -179,6 +182,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
           holder,
           decayAmount,
           stakeAmount,
+          internalCurrentTotalSupply(),
           calcDecayTimeCompensation(startTS, endTS, since, current)
         );
 
@@ -241,6 +245,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     address holder,
     uint256 decayAmount,
     uint256 stakeAmount,
+    uint256 stakedTotal,
     uint256 compensationRatio
   ) public view returns (uint256) {
     console.log('calcCompensatedDecay', decayAmount, stakeAmount, compensationRatio);
@@ -248,7 +253,6 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       return decayAmount;
     }
 
-    uint256 stakedTotal = internalTotalSupply();
     if (stakeAmount == 0) {
       // is included in the total
       stakeAmount = getStakeBalance(holder);

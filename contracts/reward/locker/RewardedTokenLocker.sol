@@ -17,6 +17,7 @@ import {CalcLinearWeightedReward} from '../calcs/CalcLinearWeightedReward.sol';
 import {AllocationMode} from '../interfaces/IRewardController.sol';
 import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
 import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
+import '../interfaces/IAutolocker.sol';
 
 import {Errors} from '../../tools/Errors.sol';
 
@@ -26,7 +27,8 @@ contract RewardedTokenLocker is
   BaseTokenLocker,
   ForwardedRewardPool,
   CalcLinearWeightedReward,
-  IBoostExcessReceiver
+  IBoostExcessReceiver,
+  IAutolocker
 {
   using SafeMath for uint256;
   using WadRayMath for uint256;
@@ -59,7 +61,7 @@ contract RewardedTokenLocker is
     return getRewardEntry(holder).rewardBase;
   }
 
-  function balanceOf(address account) external view virtual override returns (uint256 stakeAmount) {
+  function balanceOf(address account) public view virtual override returns (uint256 stakeAmount) {
     (, uint32 expiry) = expiryOf(account);
     if (getCurrentTick() >= expiry) {
       return 0;
@@ -175,5 +177,94 @@ contract RewardedTokenLocker is
       return accum - 1;
     }
     return super.internalGetLastAccumRate();
+  }
+
+  function applyAutolock(
+    address account,
+    uint256 amount,
+    AutolockMode mode,
+    uint32 lockDuration,
+    uint224 param
+  )
+    external
+    override
+    onlyForwarder
+    returns (
+      address, /* receiver */
+      uint256, /* lockAmount */
+      bool stop
+    )
+  {
+    uint256 recoverableError;
+    if (mode == AutolockMode.Prolongate) {
+      // full amount is locked
+    } else if (mode == AutolockMode.AccumulateTill) {
+      // full amount is locked
+      if (block.timestamp >= param) {
+        stop = true;
+        amount = 0;
+      }
+    } else if (mode == AutolockMode.AccumulateUnderlying) {
+      (amount, stop) = calcAutolockUnderlying(amount, balanceOfUnderlying(account), param);
+    } else if (mode == AutolockMode.KeepUpBalance) {
+      if (lockDuration == 0) {
+        // shouldn't happen
+        stop = true;
+        amount = 0;
+      } else {
+        // it never stops unless the lock expires
+        amount = calcAutolockKeepUp(amount, balanceOf(account), param, lockDuration);
+      }
+    } else {
+      return (address(0), 0, false);
+    }
+
+    if (amount == 0) {
+      return (address(0), 0, stop);
+    }
+
+    // NB! the tokens are NOT received here and must be minted to this locker directly
+    (, recoverableError) = internalLock(address(this), account, amount, lockDuration, 0, false);
+
+    if (recoverableError != 0) {
+      emit RewardAutolockFailed(account, mode, recoverableError);
+      return (address(0), 0, true);
+    }
+
+    return (address(this), amount, stop);
+  }
+
+  function calcAutolockUnderlying(
+    uint256 amount,
+    uint256 balance,
+    uint256 limit
+  ) private pure returns (uint256, bool) {
+    if (balance >= limit) {
+      return (0, true);
+    }
+    limit -= balance;
+
+    if (amount > limit) {
+      return (limit, true);
+    }
+    return (amount, amount == limit);
+  }
+
+  function calcAutolockKeepUp(
+    uint256 amount,
+    uint256 balance,
+    uint256 limit,
+    uint32 lockDuration
+  ) private view returns (uint256) {
+    if (balance >= limit) {
+      return 0;
+    }
+
+    limit = convertLockedToUnderlying(limit - balance, lockDuration);
+
+    if (amount > limit) {
+      return limit;
+    }
+    return amount;
   }
 }

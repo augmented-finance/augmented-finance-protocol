@@ -20,7 +20,7 @@ interface ILendingPool is IEmergencyAccess {
     address user,
     address indexed onBehalfOf,
     uint256 amount,
-    uint64 indexed referral
+    uint256 indexed referral
   );
 
   /**
@@ -50,7 +50,7 @@ interface ILendingPool is IEmergencyAccess {
     uint256 amount,
     uint256 borrowRateMode,
     uint256 borrowRate,
-    uint64 indexed referral
+    uint256 indexed referral
   );
 
   /**
@@ -103,7 +103,7 @@ interface ILendingPool is IEmergencyAccess {
    * @param asset The address of the asset being flash borrowed
    * @param amount The amount flash borrowed
    * @param premium The fee flash borrowed
-   * @param referralCode The referral code used
+   * @param referral The referral code used
    **/
   event FlashLoan(
     address indexed target,
@@ -111,7 +111,7 @@ interface ILendingPool is IEmergencyAccess {
     address indexed asset,
     uint256 amount,
     uint256 premium,
-    uint64 referralCode
+    uint256 referral
   );
 
   /**
@@ -176,14 +176,14 @@ interface ILendingPool is IEmergencyAccess {
    * @param onBehalfOf The address that will receive the aTokens, same as msg.sender if the user
    *   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens
    *   is a different wallet
-   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
+   * @param referral Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
    **/
   function deposit(
     address asset,
     uint256 amount,
     address onBehalfOf,
-    uint64 referralCode
+    uint256 referral
   ) external;
 
   /**
@@ -212,7 +212,7 @@ interface ILendingPool is IEmergencyAccess {
    * @param asset The address of the underlying asset to borrow
    * @param amount The amount to be borrowed
    * @param interestRateMode The interest rate mode at which the user wants to borrow: 1 for Stable, 2 for Variable
-   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
+   * @param referral Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
    * @param onBehalfOf Address of the user who will receive the debt. Should be the address of the borrower itself
    * calling the function if he wants to borrow against his own collateral, or the address of the credit delegator
@@ -222,7 +222,7 @@ interface ILendingPool is IEmergencyAccess {
     address asset,
     uint256 amount,
     uint256 interestRateMode,
-    uint64 referralCode,
+    uint256 referral,
     address onBehalfOf
   ) external;
 
@@ -303,7 +303,7 @@ interface ILendingPool is IEmergencyAccess {
    *   2 -> Open debt at variable rate for the value of the amount flash-borrowed to the `onBehalfOf` address
    * @param onBehalfOf The address  that will receive the debt in the case of using on `modes` 1 or 2
    * @param params Variadic packed params to pass to the receiver as extra information
-   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
+   * @param referral Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
    **/
   function flashLoan(
@@ -313,7 +313,7 @@ interface ILendingPool is IEmergencyAccess {
     uint256[] calldata modes,
     address onBehalfOf,
     bytes calldata params,
-    uint64 referralCode
+    uint256 referral
   ) external;
 
   /**

@@ -22,7 +22,7 @@ abstract contract BasicRewardController is BaseRewardController {
   function internalClaimAndMintReward(address holder, uint256 mask)
     internal
     override
-    returns (uint256 claimableAmount)
+    returns (uint256 claimableAmount, uint256 delayedAmount)
   {
     uint32 since = 0;
     uint256 amountSince = 0;
@@ -44,7 +44,9 @@ abstract contract BasicRewardController is BaseRewardController {
       }
 
       if (amountSince > 0) {
-        claimableAmount = claimableAmount.add(internalClaimByCall(holder, amountSince, since));
+        (uint256 ca, uint256 da) = internalClaimByCall(holder, amountSince, since);
+        claimableAmount = claimableAmount.add(ca);
+        delayedAmount = delayedAmount.add(da);
         incremental = true;
       }
       amountSince = amount_;
@@ -52,10 +54,12 @@ abstract contract BasicRewardController is BaseRewardController {
     }
 
     if (amountSince > 0 || !incremental) {
-      claimableAmount = claimableAmount.add(internalClaimByCall(holder, amountSince, since));
+      (uint256 ca, uint256 da) = internalClaimByCall(holder, amountSince, since);
+      claimableAmount = claimableAmount.add(ca);
+      delayedAmount = delayedAmount.add(da);
     }
 
-    return claimableAmount;
+    return (claimableAmount, delayedAmount);
   }
 
   function internalCalcClaimableReward(address holder, uint256 mask)
@@ -106,7 +110,7 @@ abstract contract BasicRewardController is BaseRewardController {
     address holder,
     uint256 allocated,
     uint32 since
-  ) internal virtual returns (uint256 amount);
+  ) internal virtual returns (uint256 claimableAmount, uint256 delayedAmount);
 
   function internalCalcByCall(
     address holder,

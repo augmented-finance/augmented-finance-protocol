@@ -44,7 +44,7 @@ abstract contract SlashableStakeTokenBase is
   uint32 private _unstakePeriod;
   bool private _redeemPaused;
 
-  event Staked(address indexed from, address indexed to, uint256 amount, uint64 indexed referal);
+  event Staked(address indexed from, address indexed to, uint256 amount, uint256 indexed referal);
   event Redeem(address indexed from, address indexed to, uint256 amount, uint256 underlyingAmount);
   event Cooldown(address indexed account, uint32 at);
   event Slashed(address by, address to, uint256 amount);
@@ -80,16 +80,16 @@ abstract contract SlashableStakeTokenBase is
   function stake(
     address to,
     uint256 underlyingAmount,
-    uint64 referal
+    uint256 referral
   ) external override returns (uint256) {
-    internalStake(msg.sender, to, underlyingAmount, referal, true);
+    internalStake(msg.sender, to, underlyingAmount, referral, true);
   }
 
   function internalStake(
     address from,
     address to,
     uint256 underlyingAmount,
-    uint64 referal,
+    uint256 referral,
     bool transferFrom
   ) internal returns (uint256 stakeAmount) {
     require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
@@ -113,7 +113,7 @@ abstract contract SlashableStakeTokenBase is
       );
     }
 
-    emit Staked(from, to, underlyingAmount, referal);
+    emit Staked(from, to, underlyingAmount, referral);
     return stakeAmount;
   }
 

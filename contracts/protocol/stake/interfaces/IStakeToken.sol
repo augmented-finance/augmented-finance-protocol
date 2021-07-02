@@ -8,7 +8,7 @@ interface IStakeToken is IDerivedToken {
   function stake(
     address to,
     uint256 underlyingAmount,
-    uint64 referal
+    uint256 referral
   ) external returns (uint256 stakeAmount);
 
   function redeem(address to, uint256 maxStakeAmount) external returns (uint256 stakeAmount);

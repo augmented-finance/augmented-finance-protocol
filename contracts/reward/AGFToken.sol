@@ -64,9 +64,8 @@ contract AGFToken is
     address account,
     uint256 amount,
     bool
-  ) external override aclHas(AccessFlags.REWARD_MINT) returns (IRewardMinter, address) {
+  ) external override aclHas(AccessFlags.REWARD_MINT) {
     _mint(account, amount);
-    return (IRewardMinter(0), address(0));
   }
 
   function burn(address account, uint256 amount) external aclHas(AccessFlags.REWARD_BURN) {
