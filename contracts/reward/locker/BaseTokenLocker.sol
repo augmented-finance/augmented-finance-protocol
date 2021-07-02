@@ -359,7 +359,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return _underlyingToken.balanceOf(address(this));
   }
 
-  function internalTotalSupply() internal view returns (uint256) {
+  function internalCurrentTotalSupply() internal view returns (uint256) {
     return _stakedTotal;
   }
 

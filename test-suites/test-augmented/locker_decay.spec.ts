@@ -225,6 +225,7 @@ describe('Token decaying locker suite', () => {
     await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod, 0);
     await xAGF.connect(user2).lock(defaultStkAmount, defaultPeriod, 0);
     const lockTick = await currentTick();
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
 
     let lastBalance = BigNumber.from(0);
     let lastIncrement = BigNumber.from(0);
@@ -248,6 +249,8 @@ describe('Token decaying locker suite', () => {
       const expectedLongClaim = await rewardController.claimableReward(user1.address);
       expect(newBalance.toNumber()).lte(expectedLongClaim.claimable.toNumber());
     }
+
+    mineToTicks(lockInfo.availableSince);
 
     const expectedLongClaim = await rewardController.claimableReward(user1.address);
     await rewardController.connect(user1).claimReward();
@@ -273,6 +276,7 @@ describe('Token decaying locker suite', () => {
     await xAGF.connect(user2).lock(defaultStkAmount, defaultPeriod, 0);
     await xAGF.connect(root).lock(defaultStkAmount * 10, defaultPeriod * 52, 0);
     const lockTick = await currentTick();
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
 
     let lastBalance = BigNumber.from(0);
     let lastIncrement = BigNumber.from(0);
@@ -296,6 +300,8 @@ describe('Token decaying locker suite', () => {
       const expectedLongClaim = await rewardController.claimableReward(user1.address);
       expect(newBalance.toNumber()).lte(expectedLongClaim.claimable.toNumber());
     }
+
+    mineToTicks(lockInfo.availableSince);
 
     const expectedLongClaim = await rewardController.claimableReward(user1.address);
     await rewardController.connect(user1).claimReward();
