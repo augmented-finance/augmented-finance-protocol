@@ -108,6 +108,16 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return stakeAmount;
   }
 
+  function lockExtend(uint32 duration) external returns (uint256) {
+    require(duration > 0, 'ZERO_DURATION');
+
+    (uint256 stakeAmount, uint256 recoverableError) =
+      internalLock(msg.sender, msg.sender, 0, duration, 0, false);
+
+    revertOnError(recoverableError);
+    return stakeAmount;
+  }
+
   function allowAdd(address to, bool allow) external {
     _allowAdd[msg.sender][to] = allow;
   }
