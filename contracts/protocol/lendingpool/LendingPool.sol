@@ -108,14 +108,14 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
    * @param onBehalfOf The address that will receive the aTokens, same as msg.sender if the user
    *   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens
    *   is a different wallet
-   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
+   * @param referral Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
    **/
   function deposit(
     address asset,
     uint256 amount,
     address onBehalfOf,
-    uint64 referralCode
+    uint256 referral
   ) external override whenNotPaused {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
@@ -135,7 +135,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
       emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
     }
 
-    emit Deposit(asset, msg.sender, onBehalfOf, amount, referralCode);
+    emit Deposit(asset, msg.sender, onBehalfOf, amount, referral);
   }
 
   /**
@@ -202,7 +202,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
    * @param asset The address of the underlying asset to borrow
    * @param amount The amount to be borrowed
    * @param interestRateMode The interest rate mode at which the user wants to borrow: 1 for Stable, 2 for Variable
-   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
+   * @param referral Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
    * @param onBehalfOf Address of the user who will receive the debt. Should be the address of the borrower itself
    * calling the function if he wants to borrow against his own collateral, or the address of the credit delegator
@@ -212,7 +212,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     address asset,
     uint256 amount,
     uint256 interestRateMode,
-    uint64 referralCode,
+    uint256 referral,
     address onBehalfOf
   ) external override whenNotPaused {
     DataTypes.ReserveData storage reserve = _reserves[asset];
@@ -225,7 +225,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
         amount,
         interestRateMode,
         reserve.aTokenAddress,
-        referralCode,
+        referral,
         true
       )
     );
@@ -469,7 +469,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     uint256 currentPremium;
     uint256 currentAmountPlusPremium;
     address onBehalfOf;
-    uint64 referralCode;
+    uint256 referral;
     uint8 i;
   }
 
@@ -487,7 +487,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
    *   2 -> Open debt at variable rate for the value of the amount flash-borrowed to the `onBehalfOf` address
    * @param onBehalfOf The address  that will receive the debt in the case of using on `modes` 1 or 2
    * @param params Variadic packed params to pass to the receiver as extra information
-   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
+   * @param referral Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
    **/
   function flashLoan(
@@ -497,11 +497,11 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     uint256[] calldata modes,
     address onBehalfOf,
     bytes calldata params,
-    uint64 referralCode
+    uint256 referral
   ) external override whenNotPaused {
     FlashLoanLocalVars memory vars;
     vars.receiver = IFlashLoanReceiver(receiverAddress);
-    vars.referralCode = referralCode;
+    vars.referral = referral;
     vars.onBehalfOf = onBehalfOf;
 
     _flashLoan(vars, assets, amounts, modes, params, _flashLoanPremiumPct);
@@ -514,11 +514,11 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     uint256[] calldata modes,
     address onBehalfOf,
     bytes calldata params,
-    uint64 referralCode
+    uint256 referral
   ) external whenNotPaused onlySponsoredLoan {
     FlashLoanLocalVars memory vars;
     vars.receiver = IFlashLoanReceiver(receiverAddress);
-    vars.referralCode = referralCode;
+    vars.referral = referral;
     vars.onBehalfOf = onBehalfOf;
 
     _flashLoan(vars, assets, amounts, modes, params, 0);
@@ -607,7 +607,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
             vars.currentAmount,
             modes[vars.i],
             vars.currentATokenAddress,
-            vars.referralCode,
+            vars.referral,
             false
           )
         );
@@ -618,7 +618,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
         vars.currentAsset,
         vars.currentAmount,
         vars.currentPremium,
-        vars.referralCode
+        vars.referral
       );
     }
   }
@@ -929,7 +929,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     uint256 amount;
     uint256 interestRateMode;
     address aTokenAddress;
-    uint64 referralCode;
+    uint256 referral;
     bool releaseUnderlying;
   }
 
@@ -1006,7 +1006,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
       DataTypes.InterestRateMode(vars.interestRateMode) == DataTypes.InterestRateMode.STABLE
         ? currentStableRate
         : reserve.currentVariableBorrowRate,
-      vars.referralCode
+      vars.referral
     );
   }
 

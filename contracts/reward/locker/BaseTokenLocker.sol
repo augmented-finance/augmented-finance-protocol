@@ -63,7 +63,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     uint256 underlyingAmount,
     uint256 amount,
     uint32 indexed expiry,
-    uint64 indexed referal
+    uint256 indexed referral
   );
   event Redeemed(address indexed from, address indexed to, uint256 underlyingAmount);
 
@@ -97,11 +97,11 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   function lock(
     uint256 underlyingAmount,
     uint32 duration,
-    uint64 referal
+    uint256 referral
   ) external returns (uint256) {
     require(duration >= _pointPeriod);
     (uint256 stakeAmount, uint256 recoverableError) =
-      internalLock(msg.sender, msg.sender, underlyingAmount, duration, referal, true);
+      internalLock(msg.sender, msg.sender, underlyingAmount, duration, referral, true);
     require(recoverableError == 0, 'UNKNOWN_RECOVERABLE_ERROR');
     return stakeAmount;
   }
@@ -126,7 +126,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     address to,
     uint256 underlyingAmount,
     uint32 duration,
-    uint64 referal,
+    uint256 referral,
     bool transfer
   ) internal returns (uint256 stakeAmount, uint256 recoverableError) {
     require(from != address(0));
@@ -207,7 +207,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       underlyingAmount,
       stakeAmount,
       userBalance.endPoint * _pointPeriod,
-      referal
+      referral
     );
     return (stakeAmount, 0);
   }
