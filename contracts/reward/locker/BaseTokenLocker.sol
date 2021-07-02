@@ -25,7 +25,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   using SafeERC20 for IERC20;
 
   IERC20 private _underlyingToken;
-  uint256 private _underlyingTotal;
 
   struct Point {
     uint128 stakeDelta;
@@ -99,10 +98,13 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     uint32 duration,
     uint256 referral
   ) external returns (uint256) {
-    require(duration >= _pointPeriod);
+    require(underlyingAmount > 0, 'ZERO_UNDERLYING');
+    require(duration > 0, 'ZERO_DURATION');
+
     (uint256 stakeAmount, uint256 recoverableError) =
       internalLock(msg.sender, msg.sender, underlyingAmount, duration, referral, true);
-    require(recoverableError == 0, 'UNKNOWN_RECOVERABLE_ERROR');
+
+    revertOnError(recoverableError);
     return stakeAmount;
   }
 
@@ -111,82 +113,127 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   }
 
   function lockAdd(address to, uint256 underlyingAmount) external returns (uint256) {
+    require(underlyingAmount > 0, 'ZERO_UNDERLYING');
     require(_allowAdd[to][msg.sender], 'ADD_TO_LOCK_RESTRICTED');
+
     (uint256 stakeAmount, uint256 recoverableError) =
       internalLock(msg.sender, to, underlyingAmount, 0, 0, true);
-    require(recoverableError != 1, 'NOTHING_IS_LOCKED');
-    require(recoverableError == 0, 'UNKNOWN_RECOVERABLE_ERROR');
+
+    revertOnError(recoverableError);
     return stakeAmount;
   }
 
   uint256 private constant LOCK_ERR_NOTHING_IS_LOCKED = 1;
+  uint256 private constant LOCK_ERR_DURATION_IS_TOO_LARGE = 2;
+  uint256 private constant LOCK_ERR_UNDERLYING_OVERFLOW = 3;
+  uint256 private constant LOCK_ERR_LOCK_OVERFLOW = 4;
+
+  function revertOnError(uint256 recoverableError) private pure {
+    require(recoverableError != LOCK_ERR_LOCK_OVERFLOW, 'LOCK_ERR_LOCK_OVERFLOW');
+    require(recoverableError != LOCK_ERR_UNDERLYING_OVERFLOW, 'LOCK_ERR_UNDERLYING_OVERFLOW');
+    require(recoverableError != LOCK_ERR_DURATION_IS_TOO_LARGE, 'LOCK_ERR_DURATION_IS_TOO_LARGE');
+    require(recoverableError != LOCK_ERR_NOTHING_IS_LOCKED, 'NOTHING_IS_LOCKED');
+    require(recoverableError == 0, 'UNKNOWN_RECOVERABLE_ERROR');
+  }
 
   function internalLock(
     address from,
     address to,
-    uint256 underlyingAmount,
+    uint256 underlyingTransfer,
     uint32 duration,
     uint256 referral,
     bool transfer
   ) internal returns (uint256 stakeAmount, uint256 recoverableError) {
-    require(from != address(0));
-    require(to != address(0));
-    require(underlyingAmount > 0);
+    require(from != address(0), 'ZERO_FROM');
+    require(to != address(0), 'ZERO_TO');
 
     uint32 currentPoint = internalUpdate(true);
-
-    if (transfer) {
-      _underlyingToken.safeTransferFrom(from, address(this), underlyingAmount);
-    }
+    uint256 totalBefore = _stakedTotal;
 
     UserBalance memory userBalance = _balances[to];
+    userBalance.startTS = uint32(block.timestamp);
 
     {
-      userBalance.startTS = uint32(block.timestamp);
+      // ======== ATTN! DO NOT APPLY STATE CHANGES STARTING FROM HERE ========
+      {
+        // ATTN! Should be no overflow checks here
+        uint256 underlyingBalance = underlyingTransfer + userBalance.underlyingAmount;
 
-      uint32 endPoint = uint32(block.timestamp + duration + (_pointPeriod >> 1)) / _pointPeriod;
-      require(endPoint <= currentPoint + _maxDurationPoints);
-
-      stakeAmount = getStakeBalance(to);
-
-      _underlyingTotal = _underlyingTotal.add(underlyingAmount);
-      underlyingAmount = underlyingAmount.add(userBalance.underlyingAmount);
-
-      if (userBalance.endPoint > currentPoint) {
-        _stakedTotal = _stakedTotal.sub(stakeAmount);
-        _pointTotal[userBalance.endPoint].stakeDelta = uint128(
-          uint256(_pointTotal[userBalance.endPoint].stakeDelta).sub(stakeAmount)
-        );
-
-        if (userBalance.endPoint < endPoint) {
-          userBalance.endPoint = endPoint;
+        if (underlyingBalance < underlyingTransfer || underlyingBalance > type(uint192).max) {
+          console.log(
+            'underlyingBalance',
+            underlyingTransfer,
+            userBalance.underlyingAmount,
+            underlyingBalance
+          );
+          return (0, LOCK_ERR_UNDERLYING_OVERFLOW);
+        } else if (underlyingBalance == 0) {
+          return (0, LOCK_ERR_NOTHING_IS_LOCKED);
         }
-      } else if (duration > 0) {
-        userBalance.endPoint = endPoint;
-      } else {
-        return (0, LOCK_ERR_NOTHING_IS_LOCKED);
-        // require(duration > 0, 'NOTHING_IS_LOCKED');
+        userBalance.underlyingAmount = uint192(underlyingBalance);
       }
+
+      uint32 newEndPoint;
+      if (duration < _pointPeriod) {
+        // at least 1 full week is required
+        newEndPoint = 1 + (uint32(userBalance.startTS + _pointPeriod - 1) / _pointPeriod);
+      } else {
+        newEndPoint = uint32(userBalance.startTS + duration + (_pointPeriod >> 1)) / _pointPeriod;
+      }
+
+      if (newEndPoint > currentPoint + _maxDurationPoints) {
+        return (0, LOCK_ERR_DURATION_IS_TOO_LARGE);
+      }
+
+      uint256 prevStake;
+      if (userBalance.endPoint > currentPoint) {
+        prevStake = getStakeBalance(to);
+
+        if (userBalance.endPoint > newEndPoint) {
+          newEndPoint = userBalance.endPoint;
+        }
+      } else if (duration == 0) {
+        return (0, LOCK_ERR_NOTHING_IS_LOCKED);
+      }
+
+      {
+        uint256 adjDuration = uint256(newEndPoint * _pointPeriod).sub(userBalance.startTS);
+        if (adjDuration < _maxValuePeriod) {
+          stakeAmount = uint256(userBalance.underlyingAmount).mul(adjDuration).div(_maxValuePeriod);
+        } else {
+          stakeAmount = userBalance.underlyingAmount;
+        }
+      }
+
+      // ATTN! Should be no overflow checks here
+      uint256 newStakeDelta = stakeAmount + _pointTotal[newEndPoint].stakeDelta;
+
+      if (newStakeDelta < stakeAmount || newStakeDelta > type(uint128).max) {
+        return (0, LOCK_ERR_LOCK_OVERFLOW);
+      }
+
+      // ======== ATTN! "DO NOT APPLY STATE CHANGES" ENDS HERE ========
+
+      if (prevStake > 0) {
+        if (userBalance.endPoint == newEndPoint) {
+          newStakeDelta = newStakeDelta.sub(prevStake);
+        } else {
+          _pointTotal[userBalance.endPoint].stakeDelta = uint128(
+            uint256(_pointTotal[userBalance.endPoint].stakeDelta).sub(prevStake)
+          );
+        }
+        _stakedTotal = _stakedTotal.sub(prevStake);
+      }
+
+      userBalance.endPoint = newEndPoint;
+
+      // range check is done above
+      _pointTotal[newEndPoint].stakeDelta = uint128(newStakeDelta);
+      _stakedTotal = _stakedTotal.add(stakeAmount);
     }
 
-    require(underlyingAmount <= type(uint192).max);
-    userBalance.underlyingAmount = uint192(underlyingAmount);
-
-    uint256 adjDuration = uint256(userBalance.endPoint * _pointPeriod).sub(block.timestamp);
-    console.log('internalLock', underlyingAmount, adjDuration, _maxValuePeriod);
-    if (adjDuration < _maxValuePeriod) {
-      stakeAmount = underlyingAmount.mul(adjDuration).div(_maxValuePeriod);
-    } else {
-      stakeAmount = underlyingAmount;
-    }
-    require(stakeAmount <= type(uint224).max);
-
-    uint256 totalBefore = _stakedTotal;
-    _stakedTotal = totalBefore.add(stakeAmount);
-    {
-      uint256 stakeDelta = uint256(_pointTotal[userBalance.endPoint].stakeDelta).add(stakeAmount);
-      require(stakeDelta <= type(uint128).max);
-      _pointTotal[userBalance.endPoint].stakeDelta = uint128(stakeDelta);
+    if (transfer) {
+      _underlyingToken.safeTransferFrom(from, address(this), underlyingTransfer);
     }
 
     if (_nextKnownPoint > userBalance.endPoint || _nextKnownPoint == 0) {
@@ -204,7 +251,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     emit Locked(
       from,
       to,
-      underlyingAmount,
+      userBalance.underlyingAmount,
       stakeAmount,
       userBalance.endPoint * _pointPeriod,
       referral
@@ -254,7 +301,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
     delete (_balances[from]);
 
-    _underlyingTotal = _underlyingTotal.sub(userBalance.underlyingAmount);
     _underlyingToken.safeTransfer(to, userBalance.underlyingAmount);
 
     emit Redeemed(from, to, userBalance.underlyingAmount);
@@ -300,14 +346,14 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   }
 
   function totalOfUnderlying() external view returns (uint256) {
-    return _underlyingTotal;
+    return _underlyingToken.balanceOf(address(this));
   }
 
   function internalTotalSupply() internal view returns (uint256) {
     return _stakedTotal;
   }
 
-  function totalSupply() external view override returns (uint256 totalSupply_) {
+  function totalSupply() public view override returns (uint256 totalSupply_) {
     (uint32 fromPoint, uint32 tillPoint, ) = getScanRange(uint32(block.timestamp / _pointPeriod));
 
     totalSupply_ = _stakedTotal;
@@ -364,6 +410,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     Point memory delta = _pointTotal[nextPoint];
 
     for (; nextPoint <= tillPoint; ) {
+      console.log('walkPoints', nextPoint, nextPoint * _pointPeriod);
+
       if (delta.rateDelta > 0) {
         uint256 rateBefore = _extraRate;
         _extraRate = _extraRate.sub(delta.rateDelta);
