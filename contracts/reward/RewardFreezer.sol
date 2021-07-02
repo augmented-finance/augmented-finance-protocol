@@ -45,7 +45,7 @@ contract RewardFreezer is BasicRewardController {
     address,
     uint32 since
   ) internal override {
-    allocated = internalApplyAllocated(holder, allocated, since, uint32(block.timestamp));
+    (allocated, ) = internalApplyAllocated(holder, allocated, since, uint32(block.timestamp));
     if (allocated > 0) {
       _claimableRewards[holder] = _claimableRewards[holder].add(allocated);
     }
@@ -55,16 +55,21 @@ contract RewardFreezer is BasicRewardController {
     address holder,
     uint256 allocated,
     uint32 since
-  ) internal override returns (uint256 amount) {
-    amount = internalApplyAllocated(holder, allocated, since, uint32(block.timestamp));
+  ) internal override returns (uint256 claimableAmount, uint256 delayedAmount) {
+    (claimableAmount, delayedAmount) = internalApplyAllocated(
+      holder,
+      allocated,
+      since,
+      uint32(block.timestamp)
+    );
 
     uint256 claimableReward = _claimableRewards[holder];
     if (claimableReward > 0) {
-      amount = amount.add(claimableReward);
+      claimableAmount = claimableAmount.add(claimableReward);
       delete (_claimableRewards[holder]);
     }
 
-    return amount;
+    return (claimableAmount, delayedAmount);
   }
 
   enum FrozenRewardState {NotRead, Read, Updated, Remove}
@@ -147,7 +152,9 @@ contract RewardFreezer is BasicRewardController {
     uint256 allocated,
     uint32 since,
     uint32 current
-  ) private returns (uint256) {
+  ) private returns (uint256, uint256) {
+    uint256 frozenBefore = _frozenRewards[holder].frozenReward;
+
     (uint256 amount, uint256 frozenReward, FrozenRewardState state) =
       internalCalcAllocated(holder, allocated, since, current, false);
 
@@ -158,7 +165,14 @@ contract RewardFreezer is BasicRewardController {
     } else if (state == FrozenRewardState.Remove) {
       delete (_frozenRewards[holder]);
     }
-    return amount;
+
+    if (frozenBefore < frozenReward) {
+      frozenReward = frozenReward - frozenBefore;
+    } else {
+      frozenReward = 0;
+    }
+
+    return (amount, frozenReward);
   }
 
   function calcUnfrozen(
@@ -182,8 +196,10 @@ contract RewardFreezer is BasicRewardController {
     uint256 allocated,
     uint32 since,
     bool incremental
-  ) internal view override returns (uint256 claimableAmount, uint256 frozenAmount) {
-    (claimableAmount, frozenAmount, ) = internalCalcAllocated(
+  ) internal view override returns (uint256 claimableAmount, uint256 frozenReward) {
+    uint256 frozenBefore = _frozenRewards[holder].frozenReward;
+
+    (claimableAmount, frozenReward, ) = internalCalcAllocated(
       holder,
       allocated,
       since,
@@ -191,6 +207,12 @@ contract RewardFreezer is BasicRewardController {
       incremental
     );
 
-    return (claimableAmount, frozenAmount);
+    if (frozenBefore < frozenReward) {
+      frozenReward = frozenReward - frozenBefore;
+    } else {
+      frozenReward = 0;
+    }
+
+    return (claimableAmount, frozenReward);
   }
 }

@@ -144,16 +144,25 @@ abstract contract BaseRewardController is
     return address(_rewardMinter);
   }
 
-  function claimReward() external override notPaused returns (uint256 amount) {
+  function claimReward() external override notPaused returns (uint256 claimed, uint256 extra) {
     return _claimReward(msg.sender, ~uint256(0), msg.sender);
   }
 
-  function claimRewardTo(address receiver) external override notPaused returns (uint256) {
+  function claimRewardTo(address receiver)
+    external
+    override
+    notPaused
+    returns (uint256 claimed, uint256 extra)
+  {
     require(receiver != address(0), 'receiver is required');
     return _claimReward(msg.sender, ~uint256(0), receiver);
   }
 
-  function claimRewardFor(address holder, uint256 mask) external notPaused returns (uint256) {
+  function claimRewardFor(address holder, uint256 mask)
+    external
+    notPaused
+    returns (uint256 claimed, uint256 extra)
+  {
     require(holder != address(0), 'holder is required');
     return _claimReward(holder, mask, holder);
   }
@@ -258,25 +267,26 @@ abstract contract BaseRewardController is
     address holder,
     uint256 mask,
     address receiver
-  ) private returns (uint256 claimableAmount) {
+  ) private returns (uint256 claimed, uint256 extra) {
     mask = getClaimMask(holder, mask);
-    claimableAmount = internalClaimAndMintReward(holder, mask);
+    (claimed, extra) = internalClaimAndMintReward(holder, mask);
 
-    console.log('RewardsClaimed', claimableAmount);
-    if (claimableAmount > 0) {
-      internalClaimed(holder, receiver, claimableAmount);
-      emit RewardsClaimed(holder, receiver, claimableAmount);
+    console.log('RewardsClaimed', claimed);
+    if (claimed > 0) {
+      extra += internalClaimed(holder, receiver, claimed);
+      emit RewardsClaimed(holder, receiver, claimed);
     }
-    return claimableAmount;
+    return (claimed, extra);
   }
 
   function internalClaimed(
     address holder,
     address mintTo,
     uint256 amount
-  ) internal virtual {
+  ) internal virtual returns (uint256) {
     holder;
     internalMint(mintTo, amount, false);
+    return 0;
   }
 
   function internalMint(
@@ -290,7 +300,7 @@ abstract contract BaseRewardController is
   function internalClaimAndMintReward(address holder, uint256 mask)
     internal
     virtual
-    returns (uint256 claimableAmount);
+    returns (uint256 claimed, uint256 extra);
 
   function _calcReward(address holder, uint256 mask)
     private

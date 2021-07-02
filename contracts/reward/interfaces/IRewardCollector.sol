@@ -7,9 +7,9 @@ import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
 import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
 
 interface IRewardCollector {
-  function claimReward() external returns (uint256 amount);
+  function claimReward() external returns (uint256 claimed, uint256 extra);
 
-  function claimRewardTo(address receiver) external returns (uint256 amount);
+  function claimRewardTo(address receiver) external returns (uint256 claimed, uint256 extra);
 
   function balanceOf(address holder) external view returns (uint256);
 

@@ -128,7 +128,7 @@ contract RewardBooster is BaseRewardController {
   function internalClaimAndMintReward(address holder, uint256 mask)
     internal
     override
-    returns (uint256 claimableAmount)
+    returns (uint256 claimableAmount, uint256)
   {
     uint256 boostLimit;
     (claimableAmount, boostLimit) = (
@@ -186,7 +186,7 @@ contract RewardBooster is BaseRewardController {
       internalStoreBoostExcess(boost - boostLimit, boostSince);
     }
 
-    return claimableAmount;
+    return (claimableAmount, 0);
   }
 
   function internalCalcClaimableReward(address holder, uint256 mask)
@@ -404,39 +404,38 @@ contract RewardBooster is BaseRewardController {
 
     if (receiver != address(0) && lockAmount > 0) {
       internalMint(receiver, lockAmount, true);
-      return amount.sub(lockAmount);
+      return lockAmount;
     }
-
-    return amount;
+    return 0;
   }
 
   function internalClaimed(
     address holder,
     address mintTo,
     uint256 amount
-  ) internal override {
+  ) internal override returns (uint256 lockAmount) {
     if (address(_boostPool) == address(0)) {
       internalMint(mintTo, amount, false);
-      return;
+      return 0;
     }
 
     AutolockEntry memory entry = _autolocks[holder];
     if (entry.mode == AutolockMode.Stop || _defaultAutolock.mode == AutolockMode.Default) {
       internalMint(mintTo, amount, false);
-      return;
+      return 0;
     }
 
     if (entry.mode == AutolockMode.Default) {
       entry = _defaultAutolock;
       if (entry.mode == AutolockMode.Stop) {
         internalMint(mintTo, amount, false);
-        return;
+        return 0;
       }
     }
 
-    amount = applyAutolock(holder, amount, entry);
-    if (amount > 0) {
-      internalMint(mintTo, amount, false);
-    }
+    lockAmount = applyAutolock(holder, amount, entry);
+    internalMint(mintTo, amount.sub(lockAmount), false);
+
+    return lockAmount;
   }
 }
