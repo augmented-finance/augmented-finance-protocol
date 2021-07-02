@@ -1,12 +1,12 @@
 {
   "name": "@augmentedfinance/protocol-v1",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "Augmented Protocol smart contracts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "./dist/**/*",
-    "./dist/*"
+    "/dist/**/*",
+    "/dist/*"
   ],
   "scripts": {
     "run-env": "npm i && tail -f /dev/null",
