@@ -39,7 +39,7 @@ import {
 chai.use(solidity);
 const { expect } = chai;
 
-describe.skip('Token decaying locker suite', () => {
+describe('Token decaying locker suite', () => {
   let root: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
