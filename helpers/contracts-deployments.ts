@@ -17,6 +17,7 @@ import {
   MintableERC20,
   RewardBoosterFactory,
   RewardedTokenLockerFactory,
+  UiPoolDataProvider,
   XAGFTokenV1Factory,
 } from '../types';
 import { MockContract } from 'ethereum-waffle';
@@ -77,11 +78,19 @@ import {
   registerContractInJsonDb,
   linkBytecode,
   insertContractAddressInDb,
+  deployContract,
 } from './contracts-helpers';
 import { StableAndVariableTokensHelperFactory } from '../types';
 import { MintableDelegationERC20 } from '../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { LendingPoolLibraryAddresses } from '../types/LendingPoolFactory';
+
+export const deployUiPoolDataProvider = async (verify?: boolean) => {
+  const id = eContractid.UiPoolDataProvider;
+  const args: string[] = [];
+  const instance = await deployContract<UiPoolDataProvider>(id, args);
+  return withSaveAndVerify(instance, eContractid.UiPoolDataProvider, args, verify);
+};
 
 const readArtifact = async (id: string) => {
   return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
