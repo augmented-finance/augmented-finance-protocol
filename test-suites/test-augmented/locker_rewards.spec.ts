@@ -318,7 +318,7 @@ describe('Token locker suite', () => {
     await xAGF.connect(user1).lock(defaultStkAmount / 2, WEEK, 0);
     let lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
 
-    await mineToTicks(lockInfo.availableSince - 1);
+    await mineToTicks(lockInfo.availableSince);
     const expectedReward = (await rewardController.connect(user1).claimableReward(user1.address))
       .claimable;
     await mineTicks(WEEK * 2);
