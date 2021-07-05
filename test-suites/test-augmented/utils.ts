@@ -76,8 +76,7 @@ export const mineToTicks = async (amount: number): Promise<number> => {
   await advanceBlock(amount - 1);
   await mineBlocks(1);
   const blkAfter = await ethers.provider.getBlock('latest');
-  const d = blkAfter.timestamp - blkBefore.timestamp;
-  if (blkBefore.timestamp + amount <= blkAfter.timestamp) {
+  if (blkBefore.timestamp + amount >= blkAfter.timestamp) {
     return blkAfter.timestamp - blkBefore.timestamp;
   }
 
