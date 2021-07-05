@@ -102,7 +102,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     override
     returns (uint256 amount, uint32 since)
   {
-    internalUpdate(true);
+    internalUpdate(true, 0);
 
     (uint32 startTS, uint32 endTS) = expiryOf(holder);
     if (endTS == 0) {
@@ -166,32 +166,31 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return (amount, since);
   }
 
-  function setStakeBalance(address holder, uint224 stakeAmount) internal virtual override {
+  function pushStakeBalance(address holder, uint32 at) internal virtual override {
+    (uint256 amount, uint32 since) = doGetRewardAt(holder, at);
+    if (amount == 0) {
+      return;
+    }
     (uint32 startTS, uint32 endTS) = expiryOf(holder);
-    (uint256 amount, uint32 since, AllocationMode mode) = doUpdateReward(holder, 0, stakeAmount);
+    uint256 maxAmount = amount;
 
-    if (amount > 0) {
-      uint256 maxAmount = amount;
+    uint256 decayAmount = maxAmount.rayMul(calcDecayForReward(startTS, endTS, since, at));
 
-      uint32 current = getCurrentTick();
-      uint256 decayAmount = maxAmount.rayMul(calcDecayForReward(startTS, endTS, since, current));
+    amount =
+      maxAmount -
+      calcCompensatedDecay(
+        holder,
+        decayAmount,
+        0,
+        internalCurrentTotalSupply(),
+        calcDecayTimeCompensation(startTS, endTS, since, at)
+      );
 
-      amount =
-        maxAmount -
-        calcCompensatedDecay(
-          holder,
-          decayAmount,
-          stakeAmount,
-          internalCurrentTotalSupply(),
-          calcDecayTimeCompensation(startTS, endTS, since, current)
-        );
-
-      if (maxAmount > amount) {
-        internalAddExcess(maxAmount - amount, since);
-      }
+    if (maxAmount > amount) {
+      internalAddExcess(maxAmount - amount, since);
     }
 
-    super.internalAllocateReward(holder, amount, since, mode);
+    super.internalAllocateReward(holder, amount, since, AllocationMode.Push);
   }
 
   /// @notice Calculates a range integral of the linear decay
@@ -215,6 +214,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
   }
 
   /// @notice Calculates an approximate decay compensation to equalize outcomes from multiple intermediate claims vs one final claim due to excess redistribution
+  /// @dev There is no checks as it is invoked only after calcDecayForReward
   /// @param startTS start of the decay interval (beginning of a lock)
   /// @param endTS start of the decay interval (ending of a lock)
   /// @param since timestamp of a previous claim or start of the decay interval

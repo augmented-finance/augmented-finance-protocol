@@ -59,7 +59,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   event Locked(
     address from,
     address indexed to,
-    uint256 underlyingAmount,
+    uint256 underlyingAmountAdded,
+    uint256 underlyingAmountTotal,
     uint256 amount,
     uint32 indexed expiry,
     uint256 indexed referral
@@ -99,7 +100,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     uint256 referral
   ) external returns (uint256) {
     require(underlyingAmount > 0, 'ZERO_UNDERLYING');
-    require(duration > 0, 'ZERO_DURATION');
+    //    require(duration > 0, 'ZERO_DURATION');
 
     (uint256 stakeAmount, uint256 recoverableError) =
       internalLock(msg.sender, msg.sender, underlyingAmount, duration, referral, true);
@@ -157,7 +158,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     require(from != address(0), 'ZERO_FROM');
     require(to != address(0), 'ZERO_TO');
 
-    uint32 currentPoint = internalUpdate(true);
+    uint32 currentPoint = internalUpdate(true, 0);
     uint256 totalBefore = _stakedTotal;
 
     UserBalance memory userBalance = _balances[to];
@@ -170,12 +171,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
         uint256 underlyingBalance = underlyingTransfer + userBalance.underlyingAmount;
 
         if (underlyingBalance < underlyingTransfer || underlyingBalance > type(uint192).max) {
-          console.log(
-            'underlyingBalance',
-            underlyingTransfer,
-            userBalance.underlyingAmount,
-            underlyingBalance
-          );
           return (0, LOCK_ERR_UNDERLYING_OVERFLOW);
         } else if (underlyingBalance == 0) {
           return (0, LOCK_ERR_NOTHING_IS_LOCKED);
@@ -224,6 +219,11 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
       // ======== ATTN! "DO NOT APPLY STATE CHANGES" ENDS HERE ========
 
+      if (userBalance.endPoint <= currentPoint) {
+        // sum up rewards for the previous balance
+        pushStakeBalance(to, userBalance.endPoint * _pointPeriod);
+      }
+
       if (prevStake > 0) {
         if (userBalance.endPoint == newEndPoint) {
           newStakeDelta = newStakeDelta.sub(prevStake);
@@ -261,6 +261,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     emit Locked(
       from,
       to,
+      underlyingTransfer,
       userBalance.underlyingAmount,
       stakeAmount,
       userBalance.endPoint * _pointPeriod,
@@ -302,12 +303,15 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   }
 
   function internalRedeem(address from, address to) private returns (uint256 underlyingAmount) {
-    uint32 currentPoint = internalUpdate(true);
+    uint32 currentPoint = internalUpdate(true, 0);
     UserBalance memory userBalance = _balances[from];
 
     if (userBalance.underlyingAmount == 0 || userBalance.endPoint > currentPoint) {
       return 0;
     }
+
+    pushStakeBalance(from, userBalance.endPoint * _pointPeriod);
+    unsetStakeBalance(from);
 
     delete (_balances[from]);
 
@@ -317,15 +321,15 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return userBalance.underlyingAmount;
   }
 
-  function update() public {
-    internalUpdate(false);
+  function update(uint256 scanLimit) public {
+    internalUpdate(false, scanLimit);
   }
 
   function isCompletedPast(uint32 at) internal view returns (bool) {
     return at <= (_lastUpdateTS / _pointPeriod) * _pointPeriod;
   }
 
-  function getScanRange(uint32 currentPoint)
+  function getScanRange(uint32 currentPoint, uint256 scanLimit)
     private
     view
     returns (
@@ -346,6 +350,14 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       maxPoint = uint32(_lastUpdateTS / _pointPeriod) + _maxDurationPoints + 1;
     }
 
+    // overflow is treated as no-limit
+    if (scanLimit > 0 && scanLimit + fromPoint > scanLimit) {
+      scanLimit += fromPoint;
+      if (scanLimit < maxPoint) {
+        maxPoint = uint32(scanLimit);
+      }
+    }
+
     if (maxPoint > currentPoint) {
       tillPoint = currentPoint;
     } else {
@@ -364,7 +376,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   }
 
   function totalSupply() public view override returns (uint256 totalSupply_) {
-    (uint32 fromPoint, uint32 tillPoint, ) = getScanRange(uint32(block.timestamp / _pointPeriod));
+    (uint32 fromPoint, uint32 tillPoint, ) =
+      getScanRange(uint32(block.timestamp / _pointPeriod), 0);
 
     totalSupply_ = _stakedTotal;
 
@@ -388,7 +401,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return totalSupply_;
   }
 
-  function internalUpdate(bool preventReentry) internal returns (uint32 currentPoint) {
+  function internalUpdate(bool preventReentry, uint256 scanLimit)
+    internal
+    returns (uint32 currentPoint)
+  {
     currentPoint = uint32(block.timestamp / _pointPeriod);
 
     if (_updateEntered) {
@@ -399,7 +415,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       return currentPoint;
     }
 
-    (uint32 fromPoint, uint32 tillPoint, uint32 maxPoint) = getScanRange(currentPoint);
+    (uint32 fromPoint, uint32 tillPoint, uint32 maxPoint) = getScanRange(currentPoint, scanLimit);
     if (tillPoint > 0) {
       _updateEntered = true;
       {
@@ -420,8 +436,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     Point memory delta = _pointTotal[nextPoint];
 
     for (; nextPoint <= tillPoint; ) {
-      console.log('walkPoints', nextPoint, nextPoint * _pointPeriod);
-
       if (delta.rateDelta > 0) {
         uint256 rateBefore = _extraRate;
         _extraRate = _extraRate.sub(delta.rateDelta);
@@ -559,7 +573,11 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     uint32 at
   ) internal virtual;
 
+  function pushStakeBalance(address holder, uint32 at) internal virtual;
+
   function setStakeBalance(address holder, uint224 stakeAmount) internal virtual;
+
+  function unsetStakeBalance(address holder) internal virtual;
 
   function getStakeBalance(address holder) internal view virtual returns (uint224 stakeAmount);
 

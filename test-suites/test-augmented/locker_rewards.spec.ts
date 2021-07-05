@@ -19,7 +19,14 @@ import {
 } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { waitForTx } from '../../helpers/misc-utils';
-import { currentTick, mineToTicks, mineTicks, revertSnapshot, takeSnapshot } from './utils';
+import {
+  currentTick,
+  mineToTicks,
+  mineTicks,
+  revertSnapshot,
+  takeSnapshot,
+  alignTicks,
+} from './utils';
 import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
@@ -287,5 +294,144 @@ describe('Token locker suite', () => {
       (lockInfo2.availableSince - startedAt2) * balancePortion,
       10
     );
+  });
+
+  it('3 users scattered over 4 years', async () => {
+    const defaultPeriod = WEEK * 52;
+
+    await AGF.connect(root).mintReward(root.address, defaultStkAmount, false);
+    await AGF.connect(root).approve(xAGF.address, defaultStkAmount);
+
+    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod + 3 * defaultPeriod, 0);
+    await xAGF.connect(user2).lock(defaultStkAmount, defaultPeriod + 1 * defaultPeriod, 0);
+    await xAGF.connect(root).lock(defaultStkAmount, defaultPeriod + 2 * defaultPeriod, 0);
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    await mineToTicks(lockInfo.availableSince);
+
+    await xAGF.connect(user1).update(0, { gasLimit: 500000 });
+  });
+
+  it('user gets no reward for inter-lock gap', async () => {
+    await alignTicks(WEEK);
+
+    await xAGF.connect(user1).lock(defaultStkAmount / 2, WEEK, 0);
+    let lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    await mineToTicks(lockInfo.availableSince - 1);
+    const expectedReward = (await rewardController.connect(user1).claimableReward(user1.address))
+      .claimable;
+    await mineTicks(WEEK * 2);
+
+    await xAGF.connect(user1).redeem(user2.address);
+    const expectedReward1 = (await rewardController.connect(user1).claimableReward(user1.address))
+      .claimable;
+    expect(expectedReward1).eq(expectedReward);
+
+    await xAGF.connect(user1).lock(defaultStkAmount / 2, WEEK, 0);
+
+    lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+    expect(lockInfo.underlying).eq(defaultStkAmount / 2);
+
+    await mineToTicks(lockInfo.availableSince);
+
+    const expectedReward2 = (await rewardController.connect(user1).claimableReward(user1.address))
+      .claimable;
+
+    await rewardController.connect(user1).claimReward();
+    const reward1 = await AGF.balanceOf(user1.address);
+    console.log(reward1.toString(), expectedReward.toString(), expectedReward2.toString());
+
+    expect(reward1).eq(expectedReward2);
+    expect(expectedReward.toNumber()).approximately(
+      expectedReward2.sub(expectedReward).toNumber(),
+      1
+    );
+  });
+
+  it('user gets no reward for inter-lock gap without redeem', async () => {
+    await alignTicks(WEEK);
+
+    const halfAmount = defaultStkAmount / 2;
+    await xAGF.connect(user1).lock(halfAmount, WEEK, 0);
+    let lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    await mineToTicks(lockInfo.availableSince);
+    const expectedReward = (await rewardController.connect(user1).claimableReward(user1.address))
+      .claimable;
+    await mineTicks(WEEK * 2);
+
+    await xAGF.connect(user1).lock(halfAmount, WEEK, 0);
+
+    lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+    expect(lockInfo.underlying).eq(halfAmount * 2);
+    await mineToTicks(lockInfo.availableSince);
+
+    const expectedReward2 = (await rewardController.connect(user1).claimableReward(user1.address))
+      .claimable;
+
+    await rewardController.connect(user1).claimReward();
+    const reward1 = await AGF.balanceOf(user1.address);
+
+    expect(reward1).eq(expectedReward2);
+    expect(expectedReward.toNumber()).approximately(
+      expectedReward2.sub(expectedReward).toNumber(),
+      1
+    );
+  });
+
+  it('2 users spread over 4 years, apply partial update', async () => {
+    await xAGF.connect(user1).lock(defaultStkAmount, WEEK, 0);
+    await xAGF.connect(user2).lock(defaultStkAmount, MAX_LOCKER_PERIOD, 0);
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user2.address);
+
+    await mineToTicks(lockInfo.availableSince);
+
+    const gasLimit = 250000;
+    await xAGF
+      .connect(user1)
+      .update(0, { gasLimit: gasLimit })
+      .then(() => expect(() => {}).to.throw('out of gas'))
+      .catch((reason) => {
+        expect(reason.message).contain('out of gas');
+      });
+
+    // do a partial update
+    await xAGF.connect(user1).update(104, { gasLimit: gasLimit });
+
+    await xAGF.connect(user1).update(0, { gasLimit: gasLimit });
+  });
+
+  it('user1 creates then adds to a lock', async () => {
+    await alignTicks(WEEK);
+
+    await xAGF.connect(user1).lock(defaultStkAmount - 1, WEEK * 4, 0);
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    await mineTicks(WEEK * 2);
+    const reward1 = await rewardController.claimableReward(user1.address);
+    expect(reward1.claimable).gt(0);
+
+    const xBalance = await xAGF.balanceOf(user1.address);
+    await xAGF.connect(user1).lock(1, 0, 0);
+    expect((await xAGF.balanceOf(user1.address)).toNumber()).approximately(
+      xBalance.div(2).toNumber(),
+      100
+    );
+
+    const lockInfo2 = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    expect(lockInfo2.underlying).eq(defaultStkAmount);
+    expect(lockInfo2.availableSince).eq(lockInfo.availableSince);
+
+    await mineToTicks(lockInfo.availableSince);
+
+    const reward2 = await rewardController.claimableReward(user1.address);
+    await rewardController.connect(user1).claimReward();
+
+    const balance = await AGF.balanceOf(user1.address);
+    expect(reward2.claimable.toNumber()).approximately(balance.toNumber(), 1);
+
+    expect(reward2.claimable.toNumber()).approximately(reward1.claimable.toNumber(), 10);
   });
 });

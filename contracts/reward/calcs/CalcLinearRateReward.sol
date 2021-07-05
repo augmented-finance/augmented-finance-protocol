@@ -92,7 +92,7 @@ abstract contract CalcLinearRateReward {
 
     if (newBalance == 0) {
       mode = AllocationMode.UnsetPull;
-    } else if (entry.rewardBase == 0) {
+    } else if (entry.lastUpdate == 0) {
       mode = AllocationMode.SetPull;
     } else {
       mode = AllocationMode.Push;
@@ -112,9 +112,46 @@ abstract contract CalcLinearRateReward {
     // console.log('internalUpdateReward: ', adjRate, allocated);
 
     _accumRates[holder] = adjRate;
-    _rewards[holder].rewardBase = uint224(newBalance);
-    _rewards[holder].lastUpdate = currentTick;
+    _rewards[holder] = RewardEntry(uint224(newBalance), currentTick);
     return (allocated, since, mode);
+  }
+
+  function doOverrideReward(
+    address holder,
+    uint256 oldBalance,
+    uint256 newBalance
+  ) internal virtual returns (uint32 since, AllocationMode mode) {
+    require(newBalance <= type(uint224).max, 'balance is too high');
+
+    RewardEntry memory entry = _rewards[holder];
+
+    if (newBalance == 0) {
+      mode = AllocationMode.UnsetPull;
+    } else if (entry.lastUpdate == 0) {
+      mode = AllocationMode.SetPull;
+    } else {
+      mode = AllocationMode.Push;
+    }
+
+    newBalance = internalCalcBalance(entry, oldBalance, newBalance);
+    require(newBalance <= type(uint224).max, 'balance is too high');
+
+    uint32 currentTick = getCurrentTick();
+
+    entry.rewardBase = 0;
+    uint256 adjRate;
+    uint256 allocated;
+
+    (adjRate, allocated, since) = internalCalcRateAndReward(
+      entry,
+      _accumRates[holder],
+      currentTick
+    );
+    require(allocated == 0);
+
+    _accumRates[holder] = adjRate;
+    _rewards[holder] = RewardEntry(uint224(newBalance), currentTick);
+    return (since, mode);
   }
 
   function internalCalcBalance(

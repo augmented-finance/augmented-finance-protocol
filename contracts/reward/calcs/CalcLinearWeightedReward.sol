@@ -91,11 +91,6 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     return _accumRate;
   }
 
-  function internalGetAccumHistory(uint32 at) internal view virtual returns (uint256) {
-    require(at >= getRateUpdatedAt(), 'lookback for accumulated rate');
-    return _accumRate;
-  }
-
   function internalCalcRateAndReward(
     RewardEntry memory entry,
     uint256 lastAccumRate,
@@ -103,6 +98,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
   )
     internal
     view
+    virtual
     override
     returns (
       uint256 adjRate,
@@ -110,12 +106,13 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
       uint32 since
     )
   {
-    adjRate = internalGetAccumHistory(currentTick);
+    adjRate = _accumRate;
+
     if (_totalSupply > 0) {
       uint256 weightedRate = getLinearRate().mul(_totalSupplyMax.div(_totalSupply));
       adjRate = adjRate.add(weightedRate.mul(currentTick - getRateUpdatedAt()));
     }
-    if (adjRate == lastAccumRate) {
+    if (adjRate == lastAccumRate || entry.rewardBase == 0) {
       return (adjRate, 0, entry.lastUpdate);
     }
 
@@ -160,5 +157,9 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
       shiftedBits += bitLen;
     }
     return r;
+  }
+
+  function totalSupplyMax() internal view returns (uint256) {
+    return _totalSupplyMax;
   }
 }
