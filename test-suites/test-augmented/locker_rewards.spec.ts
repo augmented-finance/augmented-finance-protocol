@@ -405,6 +405,7 @@ describe('Token locker suite', () => {
   it('user1 creates then adds to a lock', async () => {
     await alignTicks(WEEK);
 
+    const startedAt = await currentTick();
     await xAGF.connect(user1).lock(defaultStkAmount - 1, WEEK * 4, 0);
     const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
 
@@ -427,11 +428,19 @@ describe('Token locker suite', () => {
     await mineToTicks(lockInfo.availableSince);
 
     const reward2 = await rewardController.claimableReward(user1.address);
+    const passed = (await currentTick()) - startedAt;
+
     await rewardController.connect(user1).claimReward();
+
+    const rate = await frp.getRate();
 
     const balance = await AGF.balanceOf(user1.address);
     expect(reward2.claimable.toNumber()).approximately(balance.toNumber(), 1);
+    expect(balance.toNumber()).approximately(rate.mul(passed).div(RAY).toNumber(), 5);
 
-    expect(reward2.claimable.toNumber()).approximately(reward1.claimable.toNumber(), 10);
+    expect(reward2.claimable.sub(reward1.claimable).toNumber()).approximately(
+      reward1.claimable.toNumber(),
+      10
+    );
   });
 });
