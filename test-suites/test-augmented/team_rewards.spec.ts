@@ -12,7 +12,7 @@ import {
 import { MockAgfToken, RewardFreezer, TeamRewardPool } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { waitForTx } from '../../helpers/misc-utils';
-import { currentTick, mineToTicks, revertSnapshot, takeSnapshot } from './utils';
+import { currentTick, mineTicks, mineToTicks, revertSnapshot, takeSnapshot } from './utils';
 import { PERC_100 } from '../../helpers/constants';
 import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
@@ -146,9 +146,9 @@ describe('Team rewards suite', () => {
     await rewardController.connect(teamMember1).claimReward();
     expect(await agf.balanceOf(teamMember1.address)).to.eq(0);
     await trp.connect(root).setPaused(false);
-    await mineToTicks(REWARD_UNLOCKED_AT + 5);
+    await mineTicks(1);
     await rewardController.connect(teamMember1).claimReward();
-    expect(await agf.balanceOf(teamMember1.address)).to.eq(3);
+    expect(await agf.balanceOf(teamMember1.address)).to.eq(2);
   });
 
   it('one team member with 100% share (0% frozen) claims all', async () => {

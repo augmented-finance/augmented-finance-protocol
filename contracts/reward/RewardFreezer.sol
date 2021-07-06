@@ -213,6 +213,8 @@ contract RewardFreezer is BasicRewardController {
       frozenReward = 0;
     }
 
+    claimableAmount = claimableAmount.add(_claimableRewards[holder]);
+
     return (claimableAmount, frozenReward);
   }
 }
