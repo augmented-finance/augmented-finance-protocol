@@ -51,10 +51,12 @@ contract RewardedTokenLocker is
   }
 
   function internalSyncRate(uint32 at) internal override {
+    console.log('internalSyncRate', at, getExtraRate(), getStakedTotal());
     doSyncRateAt(at);
   }
 
   function internalCheckpoint(uint32 at) internal override {
+    console.log('internalCheckpoint', at, getExtraRate(), getStakedTotal());
     doCheckpoint(at);
   }
 
@@ -68,7 +70,11 @@ contract RewardedTokenLocker is
     internalAllocateReward(holder, amount, since, mode);
   }
 
-  function unsetStakeBalance(address holder, uint32 at, bool interim) internal override virtual {
+  function unsetStakeBalance(
+    address holder,
+    uint32 at,
+    bool interim
+  ) internal virtual override {
     (uint256 amount, uint32 since) = doGetRewardAt(holder, at);
     internalRemoveReward(holder);
     AllocationMode mode = AllocationMode.Push;
@@ -85,15 +91,15 @@ contract RewardedTokenLocker is
     return getRewardEntry(holder).rewardBase;
   }
 
-  function isHistory(uint32 at) internal override view returns(bool) {
+  function isHistory(uint32 at) internal view override returns (bool) {
     return isCompletedPast(at);
   }
 
-  function internalExtraRate() internal override view returns (uint256) {
+  function internalExtraRate() internal view override returns (uint256) {
     return getExtraRate();
   }
 
-  function internalTotalSupply() internal override view returns (uint256) {
+  function internalTotalSupply() internal view override returns (uint256) {
     return getStakedTotal();
   }
 
@@ -150,9 +156,9 @@ contract RewardedTokenLocker is
     return (amount, since);
   }
 
-function getRewardRate() external view override returns (uint256) {
-  return getLinearRate();
-}
+  function getRewardRate() external view override returns (uint256) {
+    return getLinearRate();
+  }
 
   function internalSetRewardRate(uint256 rate) internal override {
     internalUpdate(false, 0);

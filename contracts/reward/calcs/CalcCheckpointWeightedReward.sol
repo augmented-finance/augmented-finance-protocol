@@ -30,8 +30,9 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
   }
 
   function internalTotalSupply() internal view virtual returns (uint256);
+
   function internalExtraRate() internal view virtual returns (uint256);
-  
+
   function doCheckpoint(uint32 at) internal {
     (uint256 lastRate, uint32 lastAt) = getRateAndUpdatedAt();
     internalMarkRateUpdate(at);
@@ -40,21 +41,34 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
     _accumHistory[at] = _accumRate + 1;
   }
 
-  function internalRateUpdated(uint256 lastRate, uint32 lastAt, uint32 at) internal override {
-    // the rate stays in RAY, but is weighted now vs _totalSupplyMax
-    if (at != lastAt) {
-      uint256 totalSupply = internalTotalSupply();
-      if (totalSupply == 0) {
-        return;
-      }
+  function internalRateUpdated(
+    uint256 lastRate,
+    uint32 lastAt,
+    uint32 at
+  ) internal override {
+    // console.log('internalRateUpdated', lastRate, lastAt, at);
 
-      lastRate = lastRate.add(internalExtraRate());
-      lastRate = lastRate.mul(_totalSupplyMax.div(totalSupply));
-      _accumRate = _accumRate.add(lastRate.mul(at - lastAt));
+    if (at == lastAt) {
+      return;
     }
+
+    uint256 totalSupply = internalTotalSupply();
+    // console.log('internalRateUpdated', totalSupply, internalExtraRate(), _totalSupplyMax);
+    // console.log('internalRateUpdated', _accumRate);
+
+    if (totalSupply == 0) {
+      return;
+    }
+
+    lastRate = lastRate.add(internalExtraRate());
+    // the rate stays in RAY, but is weighted now vs _totalSupplyMax
+    lastRate = lastRate.mul(_totalSupplyMax.div(totalSupply));
+    _accumRate = _accumRate.add(lastRate.mul(at - lastAt));
+
+    // console.log('internalRateUpdated', _accumRate);
   }
 
-  function isHistory(uint32 at) internal virtual view returns(bool);
+  function isHistory(uint32 at) internal view virtual returns (bool);
 
   function internalCalcRateAndReward(
     RewardEntry memory entry,
@@ -82,6 +96,7 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
       if (totalSupply > 0) {
         (uint256 rate, uint32 updatedAt) = getRateAndUpdatedAt();
 
+        // console.log('internalCalcRateAndReward', rate, internalExtraRate());
         rate = rate.add(internalExtraRate());
         rate = rate.mul(_totalSupplyMax.div(totalSupply));
         adjRate = adjRate.add(rate.mul(at - updatedAt));

@@ -525,8 +525,9 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     expiry = expiryPt * _pointPeriod;
 
     // console.log('internalAddExcess', amount, since, _excessAccum);
-    // console.log('internalAddExcess_1', expiry, expiryPt);
+    // console.log('internalAddExcess_1', expiry, expiryPt, expiry - at);
 
+    expiry -= at;
     amount += _excessAccum;
     uint256 excessRateIncrement = amount / expiry;
     // if (excessRateIncrement < _extraRate>>10) {
@@ -537,7 +538,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     // console.log(
     //   'internalAddExcess_2',
     //   excessRateIncrement,
-    //   expiresAt - block.timestamp,
+    //   expiry - block.timestamp,
     //   _excessAccum
     // );
 
@@ -546,6 +547,12 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     }
 
     internalSyncRate(at);
+
+    // console.log(
+    //   'internalAddExcess_3',
+    //   _extraRate,
+    //   _extraRate.add(excessRateIncrement)
+    // );
 
     _extraRate = _extraRate.add(excessRateIncrement);
 
@@ -566,7 +573,11 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
   function internalCheckpoint(uint32 at) internal virtual;
 
-  function unsetStakeBalance(address holder, uint32 at, bool interim) internal virtual;
+  function unsetStakeBalance(
+    address holder,
+    uint32 at,
+    bool interim
+  ) internal virtual;
 
   function setStakeBalance(address holder, uint224 stakeAmount) internal virtual;
 
