@@ -52,22 +52,20 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     return internalSetTotalSupply(newSupply, at);
   }
 
-  function internalRateUpdated(uint256 lastRate, uint32 lastAt) internal override {
-    console.log('internalRateUpdated', lastAt, lastRate, _totalSupply);
+  function internalRateUpdated(
+    uint256 lastRate,
+    uint32 lastAt,
+    uint32 at
+  ) internal override {
     if (_totalSupply == 0) {
       return;
     }
 
-    uint32 currentTick = getRateUpdatedAt();
-    console.log('internalRateUpdated_1', currentTick, lastRate, _accumRate);
-
     // the rate stays in RAY, but is weighted now vs _totalSupplyMax
-    if (currentTick != lastAt) {
+    if (at != lastAt) {
       lastRate = lastRate.mul(_totalSupplyMax.div(_totalSupply));
-      console.log('internalRateUpdated_1a', lastRate, _totalSupplyMax, _totalSupply);
-      _accumRate = _accumRate.add(lastRate.mul(currentTick - lastAt));
+      _accumRate = _accumRate.add(lastRate.mul(at - lastAt));
     }
-    console.log('internalRateUpdated_2', _accumRate);
   }
 
   function internalSetTotalSupply(uint256 totalSupply, uint32 at)
@@ -79,7 +77,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     internalMarkRateUpdate(at);
 
     if (lastRate > 0) {
-      internalRateUpdated(lastRate, lastAt);
+      internalRateUpdated(lastRate, lastAt, at);
       rateUpdated = lastAt != at;
     }
 
@@ -94,7 +92,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
   function internalCalcRateAndReward(
     RewardEntry memory entry,
     uint256 lastAccumRate,
-    uint32 currentTick
+    uint32 at
   )
     internal
     view
@@ -109,15 +107,18 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     adjRate = _accumRate;
 
     if (_totalSupply > 0) {
-      uint256 weightedRate = getLinearRate().mul(_totalSupplyMax.div(_totalSupply));
-      adjRate = adjRate.add(weightedRate.mul(currentTick - getRateUpdatedAt()));
+      (uint256 rate, uint32 updatedAt) = getRateAndUpdatedAt();
+
+      rate = rate.mul(_totalSupplyMax.div(_totalSupply));
+      adjRate = adjRate.add(rate.mul(at - updatedAt));
     }
+
     if (adjRate == lastAccumRate || entry.rewardBase == 0) {
-      return (adjRate, 0, entry.lastUpdate);
+      return (adjRate, 0, entry.claimedAt);
     }
 
     uint256 v = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _totalSupplyMax);
-    return (adjRate, v.div(WadRayMath.RAY), entry.lastUpdate);
+    return (adjRate, v.div(WadRayMath.RAY), entry.claimedAt);
   }
 
   function totalSupplyMax() internal view returns (uint256) {

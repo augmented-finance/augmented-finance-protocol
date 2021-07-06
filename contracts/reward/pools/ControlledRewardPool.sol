@@ -89,6 +89,10 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     internalSetRate(rate.rayMul(_rateScale));
   }
 
+  function scaleRate(uint256 rate) internal view returns (uint256) {
+    return rate.rayMul(_rateScale);
+  }
+
   function getRate() external view returns (uint256) {
     return internalGetRate().rayDiv(_rateScale);
   }

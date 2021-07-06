@@ -166,14 +166,53 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return (amount, since);
   }
 
-  function pushStakeBalance(address holder, uint32 at) internal virtual override {
+  function setStakeBalance(address holder, uint224 stakeAmount) internal override {
+    // NB! Actually, total and balance for decay compensation should be taken before the update.
+    // Not doing it will give more to a user who increases balance - so it is better.
+
+    (uint256 amount, uint32 since, AllocationMode mode) =
+      doUpdateReward(
+        holder,
+        0, /* doesn't matter */
+        stakeAmount
+      );
+
+    amount = rewardForBalance(holder, stakeAmount, amount, since, uint32(block.timestamp));
+    internalAllocateReward(holder, amount, since, mode);
+  }
+
+  function unsetStakeBalance(
+    address holder,
+    uint32 at,
+    bool interim
+  ) internal override {
     (uint256 amount, uint32 since) = doGetRewardAt(holder, at);
-    if (amount == 0) {
+    uint256 stakeAmount = internalRemoveReward(holder);
+    AllocationMode mode = AllocationMode.Push;
+
+    if (!interim) {
+      mode = AllocationMode.UnsetPull;
+    } else if (amount == 0) {
       return;
     }
-    (uint32 startTS, uint32 endTS) = expiryOf(holder);
-    uint256 maxAmount = amount;
 
+    amount = rewardForBalance(holder, stakeAmount, amount, since, at);
+    internalAllocateReward(holder, amount, since, mode);
+  }
+
+  function rewardForBalance(
+    address holder,
+    uint256 stakeAmount,
+    uint256 amount,
+    uint32 since,
+    uint32 at
+  ) private returns (uint256) {
+    if (amount == 0) {
+      return 0;
+    }
+    (uint32 startTS, uint32 endTS) = expiryOf(holder);
+
+    uint256 maxAmount = amount;
     uint256 decayAmount = maxAmount.rayMul(calcDecayForReward(startTS, endTS, since, at));
 
     amount =
@@ -181,7 +220,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       calcCompensatedDecay(
         holder,
         decayAmount,
-        0,
+        stakeAmount,
         internalCurrentTotalSupply(),
         calcDecayTimeCompensation(startTS, endTS, since, at)
       );
@@ -189,8 +228,6 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     if (maxAmount > amount) {
       internalAddExcess(maxAmount - amount, since);
     }
-
-    super.internalAllocateReward(holder, amount, since, AllocationMode.Push);
   }
 
   /// @notice Calculates a range integral of the linear decay
