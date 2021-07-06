@@ -21,7 +21,15 @@ import {
 } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { waitForTx } from '../../helpers/misc-utils';
-import { currentTick, mineToTicks, mineTicks, revertSnapshot, takeSnapshot } from './utils';
+import {
+  currentTick,
+  mineToTicks,
+  mineTicks,
+  revertSnapshot,
+  takeSnapshot,
+  mineBlocks,
+  alignTicks,
+} from './utils';
 import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
@@ -35,6 +43,7 @@ import {
   WEEK,
   HALF_RAY,
 } from '../../helpers/constants';
+import { fail } from 'assert';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -183,7 +192,7 @@ describe('Token decaying locker suite', () => {
     expect(await xAGF.totalOfUnderlying()).eq(0);
   });
 
-  it('user sees balance decay', async () => {
+  it('user sees balance decay and redeems after', async () => {
     const defaultPeriod = WEEK * 3;
     const lockTick = await currentTick();
 
@@ -233,6 +242,9 @@ describe('Token decaying locker suite', () => {
     for (let step = DAY, tick = step; tick < defaultPeriod; tick += step) {
       await mineToTicks(tick + lockTick);
 
+      // this call is unnecessary, but it helps to get a proper average gas cost
+      await xAGF.update(0);
+
       const expectedIncrement = await rewardController.claimableReward(user2.address);
       await rewardController.connect(user2).claimReward();
       const newBalance = await AGF.balanceOf(user2.address);
@@ -250,7 +262,7 @@ describe('Token decaying locker suite', () => {
       expect(newBalance.toNumber()).lte(expectedLongClaim.claimable.toNumber());
     }
 
-    mineToTicks(lockInfo.availableSince);
+    await mineToTicks(lockInfo.availableSince);
 
     const expectedLongClaim = await rewardController.claimableReward(user1.address);
     await rewardController.connect(user1).claimReward();
@@ -284,6 +296,9 @@ describe('Token decaying locker suite', () => {
     for (let step = DAY, tick = step; tick < defaultPeriod; tick += step) {
       await mineToTicks(tick + lockTick);
 
+      // this call is unnecessary, but it helps to get a proper average gas cost
+      await xAGF.update(0);
+
       const expectedIncrement = await rewardController.claimableReward(user2.address);
       await rewardController.connect(user2).claimReward();
       const newBalance = await AGF.balanceOf(user2.address);
@@ -301,7 +316,9 @@ describe('Token decaying locker suite', () => {
       expect(newBalance.toNumber()).lte(expectedLongClaim.claimable.toNumber());
     }
 
-    mineToTicks(lockInfo.availableSince);
+    await mineToTicks(lockInfo.availableSince);
+
+    await xAGF.update(0, { gasLimit: 5000000 });
 
     const expectedLongClaim = await rewardController.claimableReward(user1.address);
     await rewardController.connect(user1).claimReward();
@@ -313,7 +330,55 @@ describe('Token decaying locker suite', () => {
     // micro-claims shouldn't give benefits
     const shortClaims = await AGF.balanceOf(user2.address);
     expect(longClaim).gte(shortClaims);
+  });
 
-    // console.log(longClaim.toString(), shortClaims.toString());
+  it('3 users scattered over 4 years', async () => {
+    const defaultPeriod = WEEK * 52;
+
+    await AGF.connect(root).mintReward(root.address, defaultStkAmount, false);
+    await AGF.connect(root).approve(xAGF.address, defaultStkAmount);
+
+    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod + 3 * defaultPeriod, 0);
+    await xAGF.connect(user2).lock(defaultStkAmount, defaultPeriod + 1 * defaultPeriod, 0);
+    await xAGF.connect(root).lock(defaultStkAmount, defaultPeriod + 2 * defaultPeriod, 0);
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    await mineToTicks(lockInfo.availableSince);
+
+    await xAGF.connect(user1).update(0, { gasLimit: 500000 });
+  });
+
+  it('user1 creates then adds to a lock', async () => {
+    await alignTicks(WEEK);
+
+    await xAGF.connect(user1).lock(defaultStkAmount - 1, WEEK * 4, 0);
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    await mineTicks(WEEK * 2);
+    const reward1 = await rewardController.claimableReward(user1.address);
+    expect(reward1.claimable).gt(0);
+
+    const xBalance = await xAGF.balanceOf(user1.address);
+    await xAGF.connect(user1).lock(1, 0, 0);
+    expect((await xAGF.balanceOf(user1.address)).toNumber()).approximately(
+      xBalance.toNumber(),
+      100
+    );
+
+    const lockInfo2 = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    expect(lockInfo2.underlying).eq(defaultStkAmount);
+    expect(lockInfo2.availableSince).eq(lockInfo.availableSince);
+
+    await mineToTicks(lockInfo.availableSince);
+
+    const reward2 = await rewardController.claimableReward(user1.address);
+    await rewardController.connect(user1).claimReward();
+
+    const balance = await AGF.balanceOf(user1.address);
+    expect(reward2.claimable.toNumber()).approximately(balance.toNumber(), 1);
+
+    // this requires lock() to be fixed
+    // expect(reward2.claimable.sub(reward1.claimable)).gt(reward1.claimable);
   });
 });

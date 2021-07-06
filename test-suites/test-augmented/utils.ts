@@ -62,6 +62,11 @@ export const nextToTicks = async (amount: number): Promise<boolean> => {
   return blkBefore.timestamp == amount;
 };
 
+export const alignTicks = async (period: number): Promise<number> => {
+  const ts = (await ethers.provider.getBlock('latest')).timestamp + period - 1;
+  return mineToTicks(ts - (ts % period));
+};
+
 export const mineToTicks = async (amount: number): Promise<number> => {
   const blkBefore = await ethers.provider.getBlock('latest');
   console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} =>${amount}`);
