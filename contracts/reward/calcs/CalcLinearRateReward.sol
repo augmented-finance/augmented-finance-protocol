@@ -4,10 +4,11 @@ pragma solidity ^0.6.12;
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {AllocationMode} from '../interfaces/IRewardController.sol';
+import {CalcBase} from './CalcBase.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract CalcLinearRateReward {
+abstract contract CalcLinearRateReward is CalcBase {
   using SafeMath for uint256;
 
   mapping(address => RewardEntry) private _rewards;

@@ -120,45 +120,6 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     return (adjRate, v.div(WadRayMath.RAY), entry.lastUpdate);
   }
 
-  function mulDiv(
-    uint256 a,
-    uint256 mul,
-    uint256 div
-  ) internal pure returns (uint256) {
-    if (div == 1) {
-      return a.mul(mul);
-    }
-
-    // ATTN! Ignore overflow checks here
-    uint256 x = a * mul;
-
-    if (x == 0) {
-      return 0;
-    }
-    if (x / mul == a) {
-      // the easy way - no overflow
-      return x.div(div);
-    }
-
-    // the hard way - numbers are too large for one-hit, so do it by chunks
-
-    if (a < mul) {
-      (a, mul) = (mul, a);
-    }
-
-    uint8 bitLen = uint8(256 - BitUtils.bitLength(mul)); // bitLength will be > 1
-
-    uint256 baseMask = (uint256(1) << bitLen) - 1;
-    uint256 shiftedBits = 0;
-
-    uint256 r;
-    for (x = a; x > 0; x >>= bitLen) {
-      r = r.add((((x & baseMask) * mul) / div) << shiftedBits);
-      shiftedBits += bitLen;
-    }
-    return r;
-  }
-
   function totalSupplyMax() internal view returns (uint256) {
     return _totalSupplyMax;
   }
