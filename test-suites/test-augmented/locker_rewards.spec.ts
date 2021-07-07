@@ -153,7 +153,7 @@ describe('Token locker suite', () => {
     expect(lockInfoAdded.availableSince).eq(lockInfo.availableSince); // adding funds doesn't move expiry
     expect(lockInfoAdded.underlying).eq(defaultStkAmount + 1);
 
-    expect(await xAGF.totalSupply()).lt(prevSupply);
+    expect(await xAGF.totalSupply()).lte(prevSupply);
 
     await xAGF.connect(user2).lockAdd(user1.address, defaultStkAmount - 1);
 
@@ -176,6 +176,8 @@ describe('Token locker suite', () => {
     await expect(xAGF.connect(user2).lockAdd(user1.address, defaultStkAmount)).to.be.revertedWith(
       'NOTHING_IS_LOCKED'
     );
+
+    await expect(xAGF.connect(user2).lockExtend(WEEK * 4)).to.be.revertedWith('NOTHING_IS_LOCKED');
 
     await xAGF.connect(user1).redeem(user1.address);
 
@@ -416,7 +418,7 @@ describe('Token locker suite', () => {
     const xBalance = await xAGF.balanceOf(user1.address);
     await xAGF.connect(user1).lock(1, 0, 0);
     expect((await xAGF.balanceOf(user1.address)).toNumber()).approximately(
-      xBalance.div(2).toNumber(),
+      xBalance.toNumber(),
       100
     );
 
