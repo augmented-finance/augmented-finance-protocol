@@ -163,8 +163,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     internalSyncRate(uint32(block.timestamp));
 
     UserBalance memory userBalance = _balances[to];
-    userBalance.startTS = uint32(block.timestamp);
 
+    uint256 prevStake;
     {
       // ======== ATTN! DO NOT APPLY STATE CHANGES STARTING FROM HERE ========
       {
@@ -182,24 +182,31 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       uint32 newEndPoint;
       if (duration < _pointPeriod) {
         // at least 1 full week is required
-        newEndPoint = 1 + (uint32(userBalance.startTS + _pointPeriod - 1) / _pointPeriod);
+        newEndPoint = 1 + (uint32(block.timestamp + _pointPeriod - 1) / _pointPeriod);
       } else {
-        newEndPoint = uint32(userBalance.startTS + duration + (_pointPeriod >> 1)) / _pointPeriod;
+        newEndPoint = uint32(block.timestamp + duration + (_pointPeriod >> 1)) / _pointPeriod;
       }
 
       if (newEndPoint > currentPoint + _maxDurationPoints) {
         return (0, LOCK_ERR_DURATION_IS_TOO_LARGE);
       }
 
-      uint256 prevStake;
       if (userBalance.endPoint > currentPoint) {
+        // lock is still valid - reuse it
+        // so keep startTS and use the farest endTS
+        require(userBalance.startTS > 0);
+
         prevStake = getStakeBalance(to);
 
         if (userBalance.endPoint > newEndPoint) {
           newEndPoint = userBalance.endPoint;
         }
       } else if (duration == 0) {
+        // can't add to an expired lock
         return (0, LOCK_ERR_NOTHING_IS_LOCKED);
+      } else {
+        // new lock - new start
+        userBalance.startTS = uint32(block.timestamp);
       }
 
       {
@@ -220,11 +227,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
       // ======== ATTN! "DO NOT APPLY STATE CHANGES" ENDS HERE ========
 
-      if (userBalance.endPoint <= currentPoint) {
-        // sum up rewards for the previous balance
-        unsetStakeBalance(to, userBalance.endPoint * _pointPeriod, true);
-      }
-
       if (prevStake > 0) {
         if (userBalance.endPoint == newEndPoint) {
           newStakeDelta = newStakeDelta.sub(prevStake);
@@ -234,6 +236,12 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
           );
         }
         _stakedTotal = _stakedTotal.sub(prevStake);
+      }
+
+      if (userBalance.endPoint <= currentPoint) {
+        // sum up rewards for the previous balance
+        unsetStakeBalance(to, userBalance.endPoint * _pointPeriod, true);
+        prevStake = 0;
       }
 
       userBalance.endPoint = newEndPoint;
@@ -255,7 +263,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       _lastKnownPoint = userBalance.endPoint;
     }
 
-    setStakeBalance(to, uint224(stakeAmount));
+    if (prevStake != stakeAmount) {
+      setStakeBalance(to, uint224(stakeAmount));
+    }
+
     _balances[to] = userBalance;
 
     emit Locked(

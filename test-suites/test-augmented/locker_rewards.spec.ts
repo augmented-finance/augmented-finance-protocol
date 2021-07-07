@@ -443,4 +443,32 @@ describe('Token locker suite', () => {
       10
     );
   });
+
+  it('no more rewards after expiry', async () => {
+    await xAGF.connect(user1).lock(defaultStkAmount, WEEK * 4, 0);
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    await mineToTicks(lockInfo.availableSince);
+
+    const reward = await rewardController.claimableReward(user1.address);
+
+    await mineToTicks(WEEK);
+
+    const reward1 = await rewardController.claimableReward(user1.address);
+    expect(reward1.claimable).eq(reward.claimable);
+
+    await rewardController.connect(user1).claimReward();
+
+    const balance = await AGF.balanceOf(user1.address);
+    expect(reward.claimable.toNumber()).approximately(balance.toNumber(), 1);
+
+    await mineToTicks(WEEK);
+
+    const reward2 = await rewardController.claimableReward(user1.address);
+    expect(reward2.claimable).eq(0);
+
+    await rewardController.connect(user1).claimReward();
+
+    expect(await AGF.balanceOf(user1.address)).eq(balance);
+  });
 });
