@@ -242,6 +242,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     uint32 since,
     uint32 current
   ) public pure returns (uint256) {
+    require(startTS > 0);
     require(startTS < endTS);
     require(startTS <= since);
     require(current <= endTS);

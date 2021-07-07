@@ -255,8 +255,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       _lastKnownPoint = userBalance.endPoint;
     }
 
-    _balances[to] = userBalance;
     setStakeBalance(to, uint224(stakeAmount));
+    _balances[to] = userBalance;
 
     emit Locked(
       from,
