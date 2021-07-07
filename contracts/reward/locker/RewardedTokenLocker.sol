@@ -13,7 +13,7 @@ import {IMarketAccessController} from '../../access/interfaces/IMarketAccessCont
 
 import {BaseTokenLocker} from './BaseTokenLocker.sol';
 import {ForwardedRewardPool} from '../pools/ForwardedRewardPool.sol';
-import {CalcLinearWeightedReward} from '../calcs/CalcLinearWeightedReward.sol';
+import {CalcCheckpointWeightedReward} from '../calcs/CalcCheckpointWeightedReward.sol';
 import {AllocationMode} from '../interfaces/IRewardController.sol';
 import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
 import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
@@ -26,15 +26,13 @@ import 'hardhat/console.sol';
 contract RewardedTokenLocker is
   BaseTokenLocker,
   ForwardedRewardPool,
-  CalcLinearWeightedReward,
+  CalcCheckpointWeightedReward,
   IBoostExcessReceiver,
   IAutolocker
 {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
-
-  mapping(uint32 => uint256) private _accumHistory;
 
   constructor(
     IMarketAccessController accessCtl,
@@ -45,36 +43,64 @@ contract RewardedTokenLocker is
   )
     public
     BaseTokenLocker(accessCtl, underlying, pointPeriod, maxValuePeriod)
-    CalcLinearWeightedReward(maxTotalSupply)
+    CalcCheckpointWeightedReward(maxTotalSupply)
   {}
 
   function setForwardingRewardPool(IForwardingRewardPool forwarder) public onlyRewardAdmin {
     internalSetForwarder(forwarder);
   }
 
-  function pushStakeBalance(address holder, uint32 at) internal virtual override {
-    (uint256 amount, uint32 since) = doGetRewardAt(holder, at);
-    if (amount > 0) {
-      super.internalAllocateReward(holder, amount, since, AllocationMode.Push);
-    }
+  function internalSyncRate(uint32 at) internal override {
+    console.log('internalSyncRate', at, getExtraRate(), getStakedTotal());
+    doSyncRateAt(at);
   }
 
-  function unsetStakeBalance(address holder) internal virtual override {
-    super.internalRemoveReward(holder);
+  function internalCheckpoint(uint32 at) internal override {
+    console.log('internalCheckpoint', at, getExtraRate(), getStakedTotal());
+    doCheckpoint(at);
   }
 
   function setStakeBalance(address holder, uint224 stakeAmount) internal virtual override {
-    (uint32 since, AllocationMode mode) =
-      doOverrideReward(
+    (uint256 amount, uint32 since, AllocationMode mode) =
+      doUpdateReward(
         holder,
         0, /* doesn't matter */
         stakeAmount
       );
-    super.internalAllocateReward(holder, 0, since, mode);
+    internalAllocateReward(holder, amount, since, mode);
+  }
+
+  function unsetStakeBalance(
+    address holder,
+    uint32 at,
+    bool interim
+  ) internal virtual override {
+    (uint256 amount, uint32 since) = doGetRewardAt(holder, at);
+    internalRemoveReward(holder);
+    AllocationMode mode = AllocationMode.Push;
+
+    if (!interim) {
+      mode = AllocationMode.UnsetPull;
+    } else if (amount == 0) {
+      return;
+    }
+    internalAllocateReward(holder, amount, since, mode);
   }
 
   function getStakeBalance(address holder) internal view override returns (uint224) {
     return getRewardEntry(holder).rewardBase;
+  }
+
+  function isHistory(uint32 at) internal view override returns (bool) {
+    return isCompletedPast(at);
+  }
+
+  function internalExtraRate() internal view override returns (uint256) {
+    return getExtraRate();
+  }
+
+  function internalTotalSupply() internal view override returns (uint256) {
+    return getStakedTotal();
   }
 
   function balanceOf(address account) public view virtual override returns (uint256 stakeAmount) {
@@ -100,7 +126,7 @@ contract RewardedTokenLocker is
     if (current > expiry) {
       current = expiry;
     }
-    return super.doCalcRewardAt(holder, current);
+    return doCalcRewardAt(holder, current);
   }
 
   function internalClaimReward(address holder, uint256 limit)
@@ -117,10 +143,10 @@ contract RewardedTokenLocker is
     }
     uint32 current = getCurrentTick();
     if (current < expiry) {
-      (amount, since) = super.doGetRewardAt(holder, current);
+      (amount, since) = doGetRewardAt(holder, current);
     } else {
-      (amount, since) = super.doGetRewardAt(holder, expiry);
-      super.internalRemoveReward(holder);
+      (amount, since) = doGetRewardAt(holder, expiry);
+      internalRemoveReward(holder);
     }
 
     if (amount > limit) {
@@ -131,90 +157,21 @@ contract RewardedTokenLocker is
   }
 
   function getRewardRate() external view override returns (uint256) {
-    return super.getLinearRate().sub(internalGetExtraRate());
+    return getLinearRate();
   }
 
   function internalSetRewardRate(uint256 rate) internal override {
     internalUpdate(false, 0);
-    super.setLinearRate(rate.add(internalGetExtraRate()));
-  }
-
-  function internalExtraRateUpdated(
-    uint256 rateBefore,
-    uint256 rateAfter,
-    uint32 at
-  ) internal override {
-    console.log('internalExtraRateUpdated', rateBefore, rateAfter, at);
-
-    if (rateBefore > rateAfter) {
-      rateAfter = super.getLinearRate().sub(rateBefore.sub(rateAfter));
-    } else if (rateBefore < rateAfter) {
-      rateAfter = super.getLinearRate().add(rateAfter.sub(rateBefore));
-    } else {
-      return;
-    }
-
-    if (at == 0) {
-      super.setLinearRateAt(rateAfter, getCurrentTick());
-      return;
-    }
-
-    super.setLinearRateAt(rateAfter, at);
-    _accumHistory[at] = super.internalGetLastAccumRate() + 1;
+    setLinearRate(rate);
   }
 
   function getCurrentTick() internal view override returns (uint32) {
     return uint32(block.timestamp);
   }
 
-  function internalUpdateTotal(
-    uint256,
-    uint256 totalAfter,
-    uint32 at
-  ) internal override {
-    if (at == 0) {
-      super.doUpdateTotalSupplyAt(totalAfter, getCurrentTick());
-      return;
-    }
-
-    super.doUpdateTotalSupplyAt(totalAfter, at);
-    _accumHistory[at] = super.internalGetLastAccumRate() + 1;
-  }
-
   function receiveBoostExcess(uint256 amount, uint32 since) external override onlyForwarder {
-    // TODO amount scaling
     internalUpdate(false, 0);
     internalAddExcess(amount, since);
-  }
-
-  function internalCalcRateAndReward(
-    RewardEntry memory entry,
-    uint256 lastAccumRate,
-    uint32 currentTick
-  )
-    internal
-    view
-    virtual
-    override
-    returns (
-      uint256 adjRate,
-      uint256 allocated,
-      uint32 since
-    )
-  {
-    if (!isCompletedPast(currentTick)) {
-      return super.internalCalcRateAndReward(entry, lastAccumRate, currentTick);
-    }
-    adjRate = _accumHistory[currentTick];
-    require(adjRate > 0, 'unknown history point');
-    adjRate--;
-
-    if (adjRate == lastAccumRate || entry.rewardBase == 0) {
-      return (adjRate, 0, entry.lastUpdate);
-    }
-
-    uint256 v = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), totalSupplyMax());
-    return (adjRate, v.div(WadRayMath.RAY), entry.lastUpdate);
   }
 
   function applyAutolock(

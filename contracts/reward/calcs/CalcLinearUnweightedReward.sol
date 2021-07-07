@@ -14,33 +14,34 @@ abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
 
   uint256 private _accumRate;
 
-  function internalRateUpdated(uint256 lastRate, uint32 lastAt) internal override {
-    _accumRate = _accumRate.add(lastRate.mul(getRateUpdatedAt() - lastAt));
+  function internalRateUpdated(
+    uint256 lastRate,
+    uint32 lastAt,
+    uint32 at
+  ) internal override {
+    _accumRate = _accumRate.add(lastRate.mul(at - lastAt));
   }
 
   function internalCalcRateAndReward(
     RewardEntry memory entry,
     uint256 lastAccumRate,
-    uint32 current
+    uint32 at
   )
     internal
     view
     virtual
     override
     returns (
-      uint256 rate,
+      uint256 adjRate,
       uint256 allocated,
       uint32 since
     )
   {
-    // console.log('internalCalcRateAndReward, blocks ', current, getRateUpdatedAt());
+    (uint256 rate, uint32 updatedAt) = getRateAndUpdatedAt();
 
-    uint256 adjRate = _accumRate.add(getLinearRate().mul(current - getRateUpdatedAt()));
+    adjRate = _accumRate.add(rate.mul(at - updatedAt));
     allocated = uint256(entry.rewardBase).rayMul(adjRate.sub(lastAccumRate));
 
-    // console.log('internalCalcRateAndReward, entry ', entry.rewardBase, entry.lastAccumRate);
-    // console.log('internalCalcRateAndReward, result ', adjRate, allocated);
-
-    return (adjRate, allocated, entry.lastUpdate);
+    return (adjRate, allocated, entry.claimedAt);
   }
 }

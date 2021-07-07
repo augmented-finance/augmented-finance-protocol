@@ -377,8 +377,79 @@ describe('Token decaying locker suite', () => {
 
     const balance = await AGF.balanceOf(user1.address);
     expect(reward2.claimable.toNumber()).approximately(balance.toNumber(), 1);
+  });
 
-    // this requires lock() to be fixed
-    // expect(reward2.claimable.sub(reward1.claimable)).gt(reward1.claimable);
+  it('user1 creates then extends a lock', async () => {
+    await alignTicks(WEEK);
+
+    const startedAt = await currentTick();
+    await xAGF.connect(user1).lock(defaultStkAmount, WEEK * 4, 0);
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+    const xBalance = await xAGF.balanceOf(user1.address);
+
+    expect(lockInfo.underlying).eq(defaultStkAmount);
+    expect(lockInfo.availableSince).eq(startedAt + WEEK * 4);
+
+    await mineTicks(WEEK);
+    const reward1 = await rewardController.claimableReward(user1.address);
+    expect(reward1.claimable).gt(0);
+
+    const xBalance1 = await xAGF.balanceOf(user1.address);
+    await xAGF.connect(user1).lockExtend(WEEK * 2); // no effect
+    expect((await xAGF.balanceOf(user1.address)).toNumber()).approximately(
+      xBalance1.toNumber(),
+      100
+    );
+
+    let lockInfo2 = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+    expect(lockInfo2.underlying).eq(defaultStkAmount);
+    expect(lockInfo2.availableSince).eq(lockInfo.availableSince);
+
+    await xAGF.connect(user1).lockExtend(WEEK * 7);
+
+    lockInfo2 = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+    expect(lockInfo2.underlying).eq(defaultStkAmount);
+    expect(lockInfo2.availableSince).eq(startedAt + WEEK * 8);
+
+    const xBalance2 = await xAGF.balanceOf(user1.address);
+    expect(xBalance2.mul(8).div(7).toNumber()).approximately(xBalance.mul(2).toNumber(), 100);
+
+    await mineToTicks(lockInfo2.availableSince);
+
+    const reward2 = await rewardController.claimableReward(user1.address);
+    await rewardController.connect(user1).claimReward();
+
+    const balance = await AGF.balanceOf(user1.address);
+    expect(reward2.claimable.toNumber()).approximately(balance.toNumber(), 1);
+
+    expect(reward2.claimable.sub(reward1.claimable)).gt(reward1.claimable);
+  });
+
+  it('no more rewards after expiry', async () => {
+    await xAGF.connect(user1).lock(defaultStkAmount, WEEK * 4, 0);
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    await mineToTicks(lockInfo.availableSince);
+
+    const reward = await rewardController.claimableReward(user1.address);
+
+    await mineToTicks(WEEK);
+
+    const reward1 = await rewardController.claimableReward(user1.address);
+    expect(reward1.claimable).eq(reward.claimable);
+
+    await rewardController.connect(user1).claimReward();
+
+    const balance = await AGF.balanceOf(user1.address);
+    expect(reward.claimable.toNumber()).approximately(balance.toNumber(), 1);
+
+    await mineToTicks(WEEK);
+
+    const reward2 = await rewardController.claimableReward(user1.address);
+    expect(reward2.claimable).eq(0);
+
+    await rewardController.connect(user1).claimReward();
+
+    expect(await AGF.balanceOf(user1.address)).eq(balance);
   });
 });

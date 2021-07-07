@@ -100,7 +100,7 @@ contract ForwardingRewardPool is
   }
 
   function receiveBoostExcess(uint256 amount, uint32 since) external override onlyController {
-    IBoostExcessReceiver(address(_provider)).receiveBoostExcess(amount, since);
+    IBoostExcessReceiver(address(_provider)).receiveBoostExcess(scaleRate(amount), since);
   }
 
   function applyAutolock(
