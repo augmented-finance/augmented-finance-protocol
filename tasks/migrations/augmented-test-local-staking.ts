@@ -64,7 +64,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
 
       console.log(`#3 deploying: RewardController`);
       const rewardFreezer = await deployRewardFreezer([ac.address, agfToken.address], verify);
-      await rewardFreezer.admin_setFreezePercentage(0);
+      await rewardFreezer.setFreezePercentage(0);
 
       console.log(`#4 Staking`);
       const agDaiToken = await getAGTokenByName('agDAI');
@@ -123,9 +123,9 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       );
       await AGFPoolBooster.connect(root).addRewardProvider(root.address, xAGF.address);
 
-      await boosterController.connect(root).admin_addRewardPool(agDAIPoolBoosted.address);
-      await boosterController.connect(root).admin_addRewardPool(agUSDCPoolBoosted.address);
-      await boosterController.connect(root).admin_addRewardPool(AGFPoolBooster.address);
+      await boosterController.connect(root).addRewardPool(agDAIPoolBoosted.address);
+      await boosterController.connect(root).addRewardPool(agUSDCPoolBoosted.address);
+      await boosterController.connect(root).addRewardPool(AGFPoolBooster.address);
 
       await boosterController.connect(root).setBoostPool(AGFPoolBooster.address);
       // set boost factor for agDAI pool

@@ -94,23 +94,21 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       console.log(`#3 deploying: RewardFreezer`);
       const rewardFreezer = await deployRewardFreezer([ac.address, agfToken.address], verify);
-      await rewardFreezer.admin_setFreezePercentage(0);
+      await rewardFreezer.setFreezePercentage(0);
 
       // deploy linear pool, register in controller
       const linearUnweightedRewardPool = await deployTokenUnweightedRewardPool(
         [rewardFreezer.address, RAY, RAY, 0],
         verify
       );
-      await waitForTx(await rewardFreezer.admin_addRewardPool(linearUnweightedRewardPool.address));
+      await waitForTx(await rewardFreezer.addRewardPool(linearUnweightedRewardPool.address));
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const tokenWeightedRewardPoolSeparate = await deployTokenWeightedRewardPoolAGFSeparate(
         [rewardFreezer.address, RAY_100, RAY, 0, RAY_100],
         verify
       );
-      await waitForTx(
-        await rewardFreezer.admin_addRewardPool(tokenWeightedRewardPoolSeparate.address)
-      );
+      await waitForTx(await rewardFreezer.addRewardPool(tokenWeightedRewardPoolSeparate.address));
       await tokenWeightedRewardPoolSeparate.addRewardProvider(root.address, ONE_ADDRESS);
 
       console.log(`#4 deploying: Team Reward Pool`);
@@ -124,20 +122,16 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
         ],
         verify
       );
-      await waitForTx(await rewardFreezer.admin_addRewardPool(teamRewardPool.address));
+      await waitForTx(await rewardFreezer.addRewardPool(teamRewardPool.address));
 
       console.log(`#5 deploying: Zombie Reward Pool`);
       const zombieRewardPool = await deployZombieRewardPool(
         [rewardFreezer.address, [ONE_ADDRESS], [{ rateRay: RAY, limit: zombieRewardLimit }]],
         verify
       );
-      await waitForTx(await rewardFreezer.admin_addRewardPool(zombieRewardPool.address));
+      await waitForTx(await rewardFreezer.addRewardPool(zombieRewardPool.address));
       await waitForTx(
-        await rewardFreezer.admin_addRewardProvider(
-          zombieRewardPool.address,
-          root.address,
-          ONE_ADDRESS
-        )
+        await rewardFreezer.addRewardProvider(zombieRewardPool.address, root.address, ONE_ADDRESS)
       );
 
       console.log(`#6 deploying: RewardedTokenLocker + Forwarding Reward Pool`);
@@ -154,7 +148,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
         MAX_LOCKER_PERIOD,
         RAY_100,
       ]);
-      await waitForTx(await rewardFreezer.admin_addRewardPool(fwdRewardPool.address));
+      await waitForTx(await rewardFreezer.addRewardPool(fwdRewardPool.address));
       await basicLocker.setForwardingRewardPool(fwdRewardPool.address);
       await fwdRewardPool.addRewardProvider(basicLocker.address, ONE_ADDRESS);
 
@@ -168,10 +162,10 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
           verify
         );
 
-        await migrator.admin_registerAdapter(zAdapter.address);
-        await rewardFreezer.admin_addRewardPool(zrp.address);
+        await migrator.registerAdapter(zAdapter.address);
+        await rewardFreezer.addRewardPool(zrp.address);
         await zrp.addRewardProvider(zAdapter.address, zTokenAddress);
-        await migrator.admin_setRewardPool(zAdapter.address, zrp.address);
+        await migrator.setRewardPool(zAdapter.address, zrp.address);
 
         console.log(`#8 deploying: Aave Adapter`);
         const aaveAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
@@ -182,10 +176,10 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
           verify
         );
 
-        await migrator.admin_registerAdapter(aaveAdapter.address);
-        await rewardFreezer.admin_addRewardPool(arp.address);
+        await migrator.registerAdapter(aaveAdapter.address);
+        await rewardFreezer.addRewardPool(arp.address);
         await arp.addRewardProvider(aaveAdapter.address, underlyingToken);
-        await migrator.admin_setRewardPool(aaveAdapter.address, arp.address);
+        await migrator.setRewardPool(aaveAdapter.address, arp.address);
 
         console.log(`#9 deploying: Compound Adapter`);
         const compAdapter = await deployCompAdapter(
@@ -197,10 +191,10 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
           verify
         );
 
-        await migrator.admin_registerAdapter(compAdapter.address);
-        await rewardFreezer.admin_addRewardPool(crp.address);
+        await migrator.registerAdapter(compAdapter.address);
+        await rewardFreezer.addRewardPool(crp.address);
         await crp.addRewardProvider(compAdapter.address, DAI_ADDRESS);
-        await migrator.admin_setRewardPool(compAdapter.address, crp.address);
+        await migrator.setRewardPool(compAdapter.address, crp.address);
       }
     }
   );

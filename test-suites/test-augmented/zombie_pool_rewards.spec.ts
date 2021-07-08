@@ -41,9 +41,9 @@ describe('Zombie rewards suite', () => {
 
   it('can not register provider with unknown token', async () => {
     const unknownToken = createRandomAddress();
-    await expect(
-      rc.admin_addRewardProvider(zrp.address, root.address, unknownToken)
-    ).to.be.revertedWith('revert unknown token');
+    await expect(rc.addRewardProvider(zrp.address, root.address, unknownToken)).to.be.revertedWith(
+      'revert unknown token'
+    );
   });
 
   it('multiple claims', async () => {
@@ -90,7 +90,7 @@ describe('Zombie rewards suite', () => {
   });
 
   it('can claim with frozen part', async () => {
-    await rc.admin_setFreezePercentage(PERC_100 / 2);
+    await rc.setFreezePercentage(PERC_100 / 2);
     await zrp.handleBalanceUpdate(ONE_ADDRESS, user1.address, 0, defaultReward, overrideStubVar);
     await mineToBlock(20);
     await rc.connect(user1).claimReward();

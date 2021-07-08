@@ -22,11 +22,11 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
     BasicRewardController(accessController, rewardMinter)
   {}
 
-  function admin_setFreezePercentage(uint32 freezePortion) external onlyConfigurator {
+  function setFreezePercentage(uint32 freezePortion) external onlyConfigurator {
     internalSetFreezePercentage(freezePortion);
   }
 
-  function admin_setMeltDownAt(uint32 at) external onlyConfigurator {
+  function setMeltDownAt(uint32 at) external onlyConfigurator {
     internalSetMeltDownAt(at);
   }
 

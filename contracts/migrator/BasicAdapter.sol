@@ -227,11 +227,11 @@ abstract contract BasicAdapter is IMigrationAdapter {
     return (_totalDeposited, _totalMigrated, _totalClaimed, internalIsMigrated());
   }
 
-  function admin_setRewardPool(IBalanceHook rewardPool) external override onlyController {
+  function setRewardPool(IBalanceHook rewardPool) external override onlyController {
     _rewardPool = rewardPool;
   }
 
-  function admin_enableClaims() external override onlyController {
+  function enableClaims() external override onlyController {
     _claimAllowed = true;
   }
 
@@ -247,12 +247,7 @@ abstract contract BasicAdapter is IMigrationAdapter {
     return _controller;
   }
 
-  function admin_migrateAll(ILendableToken targetAsset)
-    external
-    override
-    onlyController
-    notMigrated
-  {
+  function migrateAll(ILendableToken targetAsset) external override onlyController notMigrated {
     internalMigrateAll(targetAsset);
   }
 
@@ -298,11 +293,11 @@ abstract contract BasicAdapter is IMigrationAdapter {
     _targetAsset = targetAsset;
   }
 
-  /// @dev admin_sweepToken allows an owner to handle funds accidentially sent to this contract.
+  /// @dev sweepToken allows an owner to handle funds accidentially sent to this contract.
   /// For safety reasons:
   /// 1. target asset can not be swept after migration as there will be unclaimed funds.
   /// 2. origin and underlying assets can only be swept after migration (residuals).
-  function admin_sweepToken(address token, address to)
+  function sweepToken(address token, address to)
     external
     override
     onlyController
