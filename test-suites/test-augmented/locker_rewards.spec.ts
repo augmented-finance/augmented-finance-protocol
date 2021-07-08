@@ -347,7 +347,7 @@ describe('Token locker suite', () => {
     expect(reward1).eq(expectedReward2);
     expect(expectedReward.toNumber()).approximately(
       expectedReward2.sub(expectedReward).toNumber(),
-      1
+      2
     );
   });
 
