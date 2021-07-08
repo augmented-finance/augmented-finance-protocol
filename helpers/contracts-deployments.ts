@@ -14,6 +14,7 @@ import {
 } from './types';
 import {
   ForwardingRewardPoolFactory,
+  MarketAccessControllerFactory,
   MintableERC20,
   RewardBoosterFactory,
   RewardedTokenLockerFactory,
@@ -32,7 +33,6 @@ import {
   DefaultReserveInterestRateStrategyFactory,
   DelegationAwareDepositTokenFactory,
   InitializableAdminUpgradeabilityProxyFactory,
-  LendingPoolAddressesProviderFactory,
   AddressesProviderRegistryFactory,
   LendingPoolCollateralManagerFactory,
   LendingPoolConfiguratorFactory,
@@ -89,7 +89,7 @@ const readArtifact = async (id: string) => {
 
 export const deployLendingPoolAddressesProvider = async (marketId: string, verify?: boolean) =>
   withSaveAndVerify(
-    await new LendingPoolAddressesProviderFactory(await getFirstSigner()).deploy(marketId),
+    await new MarketAccessControllerFactory(await getFirstSigner()).deploy(marketId),
     eContractid.LendingPoolAddressesProvider,
     [marketId],
     verify

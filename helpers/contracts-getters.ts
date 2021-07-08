@@ -6,7 +6,7 @@ import {
   DefaultReserveInterestRateStrategyFactory,
   GenericLogicFactory,
   InitializableAdminUpgradeabilityProxyFactory,
-  LendingPoolAddressesProviderFactory,
+  MarketAccessControllerFactory,
   AddressesProviderRegistryFactory,
   LendingPoolCollateralManagerFactory,
   LendingPoolConfiguratorFactory,
@@ -58,7 +58,7 @@ import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } fro
 export const getFirstSigner = async () => (await DRE.ethers.getSigners())[0];
 
 export const getLendingPoolAddressesProvider = async (address?: tEthereumAddress) =>
-  await LendingPoolAddressesProviderFactory.connect(
+  await MarketAccessControllerFactory.connect(
     address ||
       (await getDb().get(`${eContractid.LendingPoolAddressesProvider}.${DRE.network.name}`).value())
         .address,
