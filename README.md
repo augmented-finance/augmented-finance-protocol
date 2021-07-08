@@ -12,7 +12,7 @@ The documentation will be published soon. You can check [Gitbook](https://docs.a
 
 ## Security Audit
 
-To be published soon
+To be published soon.
 
 ## Connect with the community
 
