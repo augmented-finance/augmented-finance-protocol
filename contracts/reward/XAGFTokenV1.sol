@@ -4,12 +4,12 @@ pragma solidity ^0.6.12;
 import {AccessFlags} from '../access/AccessFlags.sol';
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 
-import {RewardedTokenLocker} from './locker/RewardedTokenLocker.sol';
+import {DecayingTokenLocker} from './locker/DecayingTokenLocker.sol';
 import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
 
 import 'hardhat/console.sol';
 
-contract XAGFTokenV1 is RewardedTokenLocker, VersionedInitializable {
+contract XAGFTokenV1 is DecayingTokenLocker, VersionedInitializable {
   string internal constant NAME = 'Augmented Finance Locked Reward Token';
   string internal constant SYMBOL = 'xAGF';
   uint8 internal constant DECIMALS = 18;
@@ -25,7 +25,7 @@ contract XAGFTokenV1 is RewardedTokenLocker, VersionedInitializable {
 
   constructor()
     public
-    RewardedTokenLocker(IMarketAccessController(0), address(0), ONE_PERIOD, MAX_PERIOD, MAX_SUPPLY)
+    DecayingTokenLocker(IMarketAccessController(0), address(0), ONE_PERIOD, MAX_PERIOD, MAX_SUPPLY)
   {
     _initializeERC20(NAME, SYMBOL, DECIMALS);
   }
