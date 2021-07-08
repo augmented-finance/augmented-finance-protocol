@@ -98,7 +98,7 @@ contract RewardConfigurator is
     _rewardPools[poolNum].names.push(name);
     _nameToPoolNum[name] = poolNum;
 
-    IManagedRewardController(pool.getRewardController()).admin_addRewardPool(pool);
+    IManagedRewardController(pool.getRewardController()).addRewardPool(pool);
   }
 
   function removeRewardPool(IManagedRewardPool pool) external onlyRewardAdmin returns (bool) {
@@ -161,7 +161,7 @@ contract RewardConfigurator is
       }
       require(minter != address(0), 'incomplete configuration');
     }
-    ctl.admin_setRewardMinter(IRewardMinter(minter));
+    ctl.setRewardMinter(IRewardMinter(minter));
   }
 
   function buildInitStakeData() public onlyRewardAdmin returns (StakeInitData[] memory) {}

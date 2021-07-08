@@ -93,7 +93,7 @@ contract Migrator is Ownable {
     return _adaptersList[adapterIdx - 1];
   }
 
-  function admin_registerAdapter(IMigrationAdapter adapter) public onlyOwner {
+  function registerAdapter(IMigrationAdapter adapter) public onlyOwner {
     address underlying = adapter.UNDERLYING_ASSET_ADDRESS();
     require(IERC20(underlying).totalSupply() > 0, 'valid underlying is required');
 
@@ -108,7 +108,7 @@ contract Migrator is Ownable {
     _underlyings[underlying].push(_adaptersList.length);
   }
 
-  function admin_unregisterAdapter(IMigrationAdapter adapter) public onlyOwner returns (bool) {
+  function unregisterAdapter(IMigrationAdapter adapter) public onlyOwner returns (bool) {
     address origin = adapter.ORIGIN_ASSET_ADDRESS();
     if (_adapters[origin] == 0) {
       return false;
@@ -122,7 +122,7 @@ contract Migrator is Ownable {
     return true;
   }
 
-  function admin_unregisterAdapterForToken(address origin) public onlyOwner returns (bool) {
+  function unregisterAdapterForToken(address origin) public onlyOwner returns (bool) {
     if (_adapters[origin] == 0) {
       return false;
     }
@@ -135,11 +135,11 @@ contract Migrator is Ownable {
     return true;
   }
 
-  function admin_setRewardPool(address adapter, IBalanceHook rewardPool) public onlyOwner {
-    IMigrationAdapter(adapter).admin_setRewardPool(rewardPool);
+  function setRewardPool(address adapter, IBalanceHook rewardPool) public onlyOwner {
+    IMigrationAdapter(adapter).setRewardPool(rewardPool);
   }
 
-  function admin_migrateToToken(ILendableToken target)
+  function migrateToToken(ILendableToken target)
     public
     onlyOwner
     returns (IMigrationAdapter[] memory migrated, uint256 count)
@@ -147,22 +147,22 @@ contract Migrator is Ownable {
     return internalMigrateToToken(target);
   }
 
-  function admin_setHook(IMigratorHook hook) public onlyOwner {
+  function setHook(IMigratorHook hook) public onlyOwner {
     _migrateHook = hook;
   }
 
-  /// @dev admin_sweepToken allows an owner to handle funds accidentially sent to the adapter or migrator contract.
+  /// @dev sweepToken allows an owner to handle funds accidentially sent to the adapter or migrator contract.
   /// When an adapter is swept, following limitations apply for safety reasons:
   /// 1. target asset can not be swept after migration as there will be unclaimed funds.
   /// 2. origin and underlying assets can only be swept after migration (residuals).
   /// Migrator itself can be swept at any moment.
-  function admin_sweepToken(
+  function sweepToken(
     address holder,
     address token,
     address to
   ) external onlyOwner returns (uint256) {
     if (holder != address(this)) {
-      return IMigrationAdapter(holder).admin_sweepToken(token, to);
+      return IMigrationAdapter(holder).sweepToken(token, to);
     }
 
     require(to != address(0), 'valid destination is required');
@@ -195,7 +195,7 @@ contract Migrator is Ownable {
       if (address(adapter) == address(0)) {
         continue;
       }
-      adapter.admin_migrateAll(target);
+      adapter.migrateAll(target);
       migrated[count] = adapter;
       rewardPools[count] = adapter.getRewardPool();
       count++;
@@ -208,7 +208,7 @@ contract Migrator is Ownable {
     return (migrated, count);
   }
 
-  function admin_enableClaims(IMigrationAdapter[] memory migrated) public onlyOwner {
+  function enableClaims(IMigrationAdapter[] memory migrated) public onlyOwner {
     internalEnableClaims(migrated);
   }
 
@@ -217,11 +217,11 @@ contract Migrator is Ownable {
       if (address(migrated[i]) == address(0)) {
         continue;
       }
-      migrated[i].admin_enableClaims();
+      migrated[i].enableClaims();
     }
   }
 
-  function admin_migrateAllThenEnableClaims(ILendableToken[] memory targets)
+  function migrateAllThenEnableClaims(ILendableToken[] memory targets)
     public
     onlyOwner
     returns (uint256 count)

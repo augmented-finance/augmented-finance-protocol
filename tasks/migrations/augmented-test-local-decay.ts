@@ -51,7 +51,7 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
       MAX_LOCKER_PERIOD,
       RAY_100,
     ]);
-    await waitForTx(await rewardBooster.admin_addRewardPool(fwdRewardPoolDecay.address));
+    await waitForTx(await rewardBooster.addRewardPool(fwdRewardPoolDecay.address));
     await decayLocker.setForwardingRewardPool(fwdRewardPoolDecay.address);
     await fwdRewardPoolDecay.addRewardProvider(decayLocker.address, ONE_ADDRESS);
   }

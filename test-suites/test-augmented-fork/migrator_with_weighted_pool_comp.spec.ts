@@ -85,7 +85,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     await mineToBlock((await currentBlock()) + defaultBlocksPassed / 2);
     await m.connect(cDaiWhaleONESigner).withdrawFromMigrate(CDAI_ADDRESS, defaultMigrationAmount);
     console.log(`balance for migrate: ${await m.balanceForMigrate(CDAI_ADDRESS, cDaiWhaleONE)}`);
-    await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
+    await m.connect(root).migrateAllThenEnableClaims([agDaiContract.address]);
     await rc.connect(cDaiWhaleONESigner).claimReward();
     // + one for migrateAll tx
     // TODO: why such result?!
@@ -95,7 +95,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
   it('one deposit, one whale, 10 blocks', async () => {
     await depositToMigrate(cDaiWhaleONESigner, defaultMigrationAmount);
     await mineToBlock((await currentBlock()) + defaultBlocksPassed);
-    await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
+    await m.connect(root).migrateAllThenEnableClaims([agDaiContract.address]);
     await rc.connect(cDaiWhaleONESigner).claimReward();
     // + one for migrateAll tx
     // TODO: why such result?!
@@ -108,7 +108,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     //
     await depositToMigrate(cDaiWhaleONESigner, defaultMigrationAmount);
     await mineToBlock((await currentBlock()) + defaultBlocksPassed);
-    await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
+    await m.connect(root).migrateAllThenEnableClaims([agDaiContract.address]);
     await rc.connect(cDaiWhaleONESigner).claimReward();
     // + one for migrateAll tx
     expect(await agf.balanceOf(cDaiWhaleONE)).to.eq(4);
@@ -120,7 +120,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     //
     await depositToMigrate(cDaiWhaleONESigner, defaultMigrationAmount);
     await mineToBlock((await currentBlock()) + defaultBlocksPassed);
-    await m.connect(root).admin_migrateAllThenEnableClaims([agDaiContract.address]);
+    await m.connect(root).migrateAllThenEnableClaims([agDaiContract.address]);
     await rc.connect(cDaiWhaleONESigner).claimReward();
     // + one for migrateAll tx
     expect(await agf.balanceOf(cDaiWhaleONE)).to.eq(2);

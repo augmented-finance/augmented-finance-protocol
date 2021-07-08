@@ -68,7 +68,7 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
     expect(migratoraDaiBalance).to.eq(defaultMigrationAmount);
 
     await expect(
-      m.connect(root).admin_sweepToken(toAddress, zombieTokenContract.address, zombieWhaleONE)
+      m.connect(root).sweepToken(toAddress, zombieTokenContract.address, zombieWhaleONE)
     ).to.be.revertedWith('origin and underlying can only be swept after migration');
   });
 
@@ -81,7 +81,7 @@ makeSuite('Migrator test suite (Zombie adapter + ZombieRewardPool)', (testEnv: T
       .balanceOf(toAddress);
     expect(migratoraDaiBalance).to.eq(defaultMigrationAmount);
 
-    await m.connect(root).admin_sweepToken(toAddress, zombieTokenContract.address, zombieWhaleONE);
+    await m.connect(root).sweepToken(toAddress, zombieTokenContract.address, zombieWhaleONE);
     const migratoraDaiBalanceAfterSweep = await zombieTokenContract
       .connect(zombieWhale)
       .balanceOf(toAddress);

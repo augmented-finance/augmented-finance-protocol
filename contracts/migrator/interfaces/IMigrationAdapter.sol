@@ -45,13 +45,13 @@ interface IMigrationAdapter is IEmergencyAccess {
 
   function getController() external returns (address);
 
-  function admin_setRewardPool(IBalanceHook rewardPool) external;
+  function setRewardPool(IBalanceHook rewardPool) external;
 
-  function admin_migrateAll(ILendableToken targetAsset) external;
+  function migrateAll(ILendableToken targetAsset) external;
 
-  function admin_enableClaims() external;
+  function enableClaims() external;
 
-  function admin_sweepToken(address token, address to) external returns (uint256);
+  function sweepToken(address token, address to) external returns (uint256);
 
   event DepositedForMigrate(
     address indexed token,

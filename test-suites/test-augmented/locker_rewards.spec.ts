@@ -61,7 +61,7 @@ describe('Token locker suite', () => {
     [root, user1, user2] = await ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
     rewardController = await getRewardFreezer();
-    rewardController.admin_setFreezePercentage(0);
+    rewardController.setFreezePercentage(0);
 
     frp = await getForwardingRewardPool();
     AGF = await getMockAgfToken();

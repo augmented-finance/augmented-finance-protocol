@@ -25,9 +25,9 @@ interface IRewardController {
 interface IManagedRewardController is IEmergencyAccess, IRewardController {
   function updateBaseline(uint256 baseline) external returns (uint256 totalRate);
 
-  function admin_addRewardPool(IManagedRewardPool) external;
+  function addRewardPool(IManagedRewardPool) external;
 
-  function admin_removeRewardPool(IManagedRewardPool) external;
+  function removeRewardPool(IManagedRewardPool) external;
 
-  function admin_setRewardMinter(IRewardMinter) external;
+  function setRewardMinter(IRewardMinter) external;
 }

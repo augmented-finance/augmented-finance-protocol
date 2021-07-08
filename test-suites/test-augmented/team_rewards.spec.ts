@@ -223,7 +223,7 @@ describe('Team rewards suite', () => {
     const userShare = PERC_100;
     const freezePercent = 3333;
 
-    await rewardController.admin_setFreezePercentage(freezePercent);
+    await rewardController.setFreezePercentage(freezePercent);
     await trp.connect(root).updateTeamMember(teamMember1.address, userShare);
 
     const blocksPassed = await mineToTicks(REWARD_UNLOCKED_AT + 1);
@@ -255,7 +255,7 @@ describe('Team rewards suite', () => {
     const userShare = PERC_100;
     const freezePercent = PERC_100;
 
-    await rewardController.admin_setFreezePercentage(freezePercent);
+    await rewardController.setFreezePercentage(freezePercent);
     await trp.connect(root).updateTeamMember(teamMember1.address, userShare);
 
     const blocksPassed = await mineToTicks(REWARD_UNLOCKED_AT + 1);
@@ -287,7 +287,7 @@ describe('Team rewards suite', () => {
     const userShare = PERC_100;
     const freezePercent = 3333;
 
-    await rewardController.admin_setFreezePercentage(freezePercent);
+    await rewardController.setFreezePercentage(freezePercent);
     await trp.connect(root).updateTeamMember(teamMember1.address, userShare);
 
     const blocksPassed = await mineToTicks(REWARD_UNLOCKED_AT + 1);

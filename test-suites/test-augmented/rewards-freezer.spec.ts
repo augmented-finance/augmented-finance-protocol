@@ -44,12 +44,12 @@ describe('Rewards test suite', () => {
 
     const tokenUnweightedRewardPool = await getTokenUnweightedRewardPool();
     // deployer.address is used instead of a token contract
-    await rewardFreezer.admin_addRewardProvider(
+    await rewardFreezer.addRewardProvider(
       tokenUnweightedRewardPool.address,
       deployer.address,
       ONE_ADDRESS
     );
-    await rewardFreezer.admin_setFreezePercentage(0);
+    await rewardFreezer.setFreezePercentage(0);
 
     agf = await getMockAgfToken();
   });
@@ -68,7 +68,7 @@ describe('Rewards test suite', () => {
       .withArgs(user.address, user.address, 2000); // block 12
     expect(await agf.balanceOf(user.address)).to.eq(4000);
 
-    await rewardFreezer.admin_setFreezePercentage(5000); // set 50% // block 13
+    await rewardFreezer.setFreezePercentage(5000); // set 50% // block 13
 
     await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 14
     // +50% of 4k for blocks 13-14, ttl frozen 2k
@@ -81,7 +81,7 @@ describe('Rewards test suite', () => {
     expect(await agf.balanceOf(user.address)).to.eq(8000); // +50% of 2k for block 15, ttl frozen 4k
 
     // immediate meltdown
-    await (await rewardFreezer.admin_setMeltDownAt(1)).wait(1); // block 18
+    await (await rewardFreezer.setMeltDownAt(1)).wait(1); // block 18
     // 9000: +50% of 2k for block 18, ttl frozen 5k
 
     await (

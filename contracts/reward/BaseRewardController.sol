@@ -47,7 +47,7 @@ abstract contract BaseRewardController is
   event RewardsAllocated(address indexed user, uint256 amount);
   event RewardsClaimed(address indexed user, address indexed to, uint256 amount);
 
-  function admin_addRewardPool(IManagedRewardPool pool) external override onlyConfigurator {
+  function addRewardPool(IManagedRewardPool pool) external override onlyConfigurator {
     require(address(pool) != address(0), 'reward pool required');
     require(_poolMask[address(pool)] == 0, 'already registered');
     pool.claimRewardFor(address(this), 0); // access check
@@ -59,7 +59,7 @@ abstract contract BaseRewardController is
     _poolList.push(pool);
   }
 
-  function admin_removeRewardPool(IManagedRewardPool pool) external override onlyConfigurator {
+  function removeRewardPool(IManagedRewardPool pool) external override onlyConfigurator {
     require(address(pool) != address(0), 'reward pool required');
     uint256 mask = _poolMask[address(pool)];
     if (mask == 0) {
@@ -85,7 +85,7 @@ abstract contract BaseRewardController is
 
   function internalOnPoolRemoved(IManagedRewardPool) internal virtual {}
 
-  function admin_addRewardProvider(
+  function addRewardProvider(
     address pool,
     address provider,
     address token
@@ -93,7 +93,7 @@ abstract contract BaseRewardController is
     IManagedRewardPool(pool).addRewardProvider(provider, token);
   }
 
-  function admin_removeRewardProvider(address pool, address provider) external onlyConfigurator {
+  function removeRewardProvider(address pool, address provider) external onlyConfigurator {
     IManagedRewardPool(pool).removeRewardProvider(provider);
   }
 
@@ -132,7 +132,7 @@ abstract contract BaseRewardController is
     return (totalRate, baselineMask);
   }
 
-  function admin_setRewardMinter(IRewardMinter minter) external override onlyConfigurator {
+  function setRewardMinter(IRewardMinter minter) external override onlyConfigurator {
     _rewardMinter = minter;
   }
 
