@@ -23,7 +23,7 @@ contract PermitRewardPool is ControlledRewardPool {
     );
 
   /// @dev spender => next valid nonce to submit with permit()
-  mapping(address => uint256) public _nonces;
+  mapping(address => uint256) private _nonces;
 
   uint256 private _rewardLimit;
   string private _rewardPoolName;
@@ -57,7 +57,11 @@ contract PermitRewardPool is ControlledRewardPool {
     );
   }
 
-  function admin_stopRewards() external onlyController() {
+  function nonceOf(address spender) public view returns (uint256) {
+    return _nonces[spender];
+  }
+
+  function stopRewards() external onlyController() {
     _rewardLimit = 0;
   }
 
@@ -111,7 +115,15 @@ contract PermitRewardPool is ControlledRewardPool {
       return;
     }
     _rewardLimit = _rewardLimit.sub(value, 'insufficient reward pool balance');
-    internalAllocateReward(spender, value, uint32(block.timestamp), AllocationMode.Push);
+    internalPushReward(spender, value, uint32(block.timestamp));
+  }
+
+  function internalPushReward(
+    address holder,
+    uint256 allocated,
+    uint32 since
+  ) internal virtual {
+    internalAllocateReward(holder, allocated, since, AllocationMode.Push);
   }
 
   function internalSetBaselinePercentage(uint16) internal override {
