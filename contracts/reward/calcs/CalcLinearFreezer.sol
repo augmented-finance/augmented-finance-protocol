@@ -19,7 +19,6 @@ abstract contract CalcLinearFreezer is CalcBase {
   }
 
   mapping(address => FrozenReward) private _frozenRewards;
-  mapping(address => uint256) private _claimableRewards;
   uint32 private _meltdownAt;
   uint32 private _unfrozenPortion;
 
@@ -46,11 +45,37 @@ abstract contract CalcLinearFreezer is CalcBase {
     address holder,
     uint256 allocated,
     uint32 since
-  ) internal {
+  )
+    internal
+    returns (
+      uint256,
+      uint32,
+      AllocationMode
+    )
+  {
+    uint256 frozenBefore = _frozenRewards[holder].frozenReward;
+
     (allocated, ) = internalApplyAllocated(holder, allocated, since, uint32(block.timestamp));
-    if (allocated > 0) {
-      _claimableRewards[holder] = _claimableRewards[holder].add(allocated);
+
+    AllocationMode mode = AllocationMode.Push;
+    if (_frozenRewards[holder].frozenReward > 0) {
+      if (frozenBefore == 0) {
+        mode = AllocationMode.SetPull;
+      }
+    } else if (frozenBefore > 0) {
+      mode = AllocationMode.UnsetPull;
     }
+
+    return (allocated, uint32(block.timestamp), mode);
+  }
+
+  function doAllocatedByPool(
+    address holder,
+    uint256 allocated,
+    uint32 since
+  ) internal returns (uint256) {
+    (allocated, ) = internalApplyAllocated(holder, allocated, since, uint32(block.timestamp));
+    return allocated;
   }
 
   function doClaimByPull(
@@ -58,20 +83,7 @@ abstract contract CalcLinearFreezer is CalcBase {
     uint256 allocated,
     uint32 since
   ) internal returns (uint256 claimableAmount, uint256 delayedAmount) {
-    (claimableAmount, delayedAmount) = internalApplyAllocated(
-      holder,
-      allocated,
-      since,
-      uint32(block.timestamp)
-    );
-
-    uint256 claimableReward = _claimableRewards[holder];
-    if (claimableReward > 0) {
-      claimableAmount = claimableAmount.add(claimableReward);
-      delete (_claimableRewards[holder]);
-    }
-
-    return (claimableAmount, delayedAmount);
+    return internalApplyAllocated(holder, allocated, since, uint32(block.timestamp));
   }
 
   enum FrozenRewardState {NotRead, Read, Updated, Remove}
@@ -214,8 +226,6 @@ abstract contract CalcLinearFreezer is CalcBase {
     } else {
       frozenReward = 0;
     }
-
-    claimableAmount = claimableAmount.add(_claimableRewards[holder]);
 
     return (claimableAmount, frozenReward);
   }

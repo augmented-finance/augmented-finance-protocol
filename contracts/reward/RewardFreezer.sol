@@ -15,6 +15,8 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
   using SafeMath for uint256;
   using PercentageMath for uint256;
 
+  mapping(address => uint256) private _claimableRewards;
+
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
     public
     BasicRewardController(accessController, rewardMinter)
@@ -34,7 +36,10 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
     address,
     uint32 since
   ) internal override {
-    doAllocatedByPush(holder, allocated, since);
+    allocated = doAllocatedByPool(holder, allocated, since);
+    if (allocated > 0) {
+      _claimableRewards[holder] = _claimableRewards[holder].add(allocated);
+    }
   }
 
   function internalClaimByCall(
@@ -42,7 +47,15 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
     uint256 allocated,
     uint32 since
   ) internal override returns (uint256 claimableAmount, uint256 delayedAmount) {
-    return doClaimByPull(holder, allocated, since);
+    (claimableAmount, delayedAmount) = doClaimByPull(holder, allocated, since);
+
+    uint256 claimableReward = _claimableRewards[holder];
+    if (claimableReward > 0) {
+      claimableAmount = claimableAmount.add(claimableReward);
+      delete (_claimableRewards[holder]);
+    }
+
+    return (claimableAmount, delayedAmount);
   }
 
   function internalCalcByCall(
@@ -51,6 +64,8 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
     uint32 since,
     bool incremental
   ) internal view override returns (uint256 claimableAmount, uint256 frozenReward) {
-    return doCalcByPull(holder, allocated, since, incremental);
+    (claimableAmount, frozenReward) = doCalcByPull(holder, allocated, since, incremental);
+    claimableAmount = claimableAmount.add(_claimableRewards[holder]);
+    return (claimableAmount, frozenReward);
   }
 }
