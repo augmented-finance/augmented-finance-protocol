@@ -10,7 +10,7 @@ import {CalcLinearFreezer} from '../calcs/CalcLinearFreezer.sol';
 
 import 'hardhat/console.sol';
 
-contract BurnerRewardPool is PermitRewardPool, CalcLinearFreezer {
+contract PermitFreezerRewardPool is PermitRewardPool, CalcLinearFreezer {
   constructor(
     IRewardController controller,
     uint256 rewardLimit,
@@ -49,6 +49,12 @@ contract BurnerRewardPool is PermitRewardPool, CalcLinearFreezer {
     uint256 allocated,
     uint32 since
   ) internal override {
-    doAllocatedByPush(holder, allocated, since);
+    AllocationMode mode;
+    (allocated, since, mode) = doAllocatedByPush(holder, allocated, since);
+
+    if (allocated == 0 && mode == AllocationMode.Push) {
+      return;
+    }
+    internalAllocateReward(holder, allocated, since, mode);
   }
 }
