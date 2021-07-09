@@ -1,11 +1,7 @@
 import { task, types } from 'hardhat/config';
 import {
-  deployAaveAdapter,
   deployAccessController,
-  deployAugmentedMigrator,
-  deployCompAdapter,
   deployForwardingRewardPool,
-  deployMigratorWeightedRewardPool,
   deployMockAgfToken,
   deployRewardController,
   deployTeamRewardPool,
@@ -28,15 +24,8 @@ import { BigNumber } from 'ethers';
 task('augmented:test-local', 'Deploy Augmented test contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
   .addOptionalParam('cDaiAddress', 'Compound DAI address', CDAI_ADDRESS, types.string)
-  .addFlag('withAAVEAdapter', 'deploy with AAVE adapter of aDai')
   .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', RAY, types.string)
   .addOptionalParam('teamRewardBaselinePercentage', 'baseline percentage - bigNumber', 0, types.int)
-  .addOptionalParam(
-    'teamRewardsFreezePercentage',
-    'rewards controller freeze percentage (10k = 100%)',
-    5000,
-    types.int
-  )
   .addOptionalParam('stakeCooldownTicks', 'staking cooldown ticks', stakingCooldownTicks, types.int)
   .addOptionalParam(
     'stakeUnstakeTicks',
@@ -56,10 +45,8 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       {
         aDaiAddress,
         cDaiAddress,
-        withAAVEAdapter,
         teamRewardInitialRate,
         teamRewardBaselinePercentage,
-        teamRewardsFreezePercentage,
         stakeCooldownTicks,
         stakeUnstakeTicks,
         slashingPercentage,
@@ -127,37 +114,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       await fwdRewardPool.addRewardProvider(basicLocker.address, ONE_ADDRESS);
 
       if (process.env.MAINNET_FORK === 'true') {
-        console.log(`#6 deploying: Migrator + Adapters`);
-        const migrator = await deployAugmentedMigrator(verify);
-
-        console.log(`#7 deploying: Aave Adapter`);
-        const aaveAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
-        const underlyingToken = await aaveAdapter.UNDERLYING_ASSET_ADDRESS();
-        console.log(`underlying for deployment: ${underlyingToken}`);
-        const arp = await deployMigratorWeightedRewardPool(
-          [rewardCtl.address, RAY, RAY, 0, RAY_100, underlyingToken],
-          verify
-        );
-
-        await migrator.registerAdapter(aaveAdapter.address);
-        await rewardCtl.addRewardPool(arp.address);
-        await arp.addRewardProvider(aaveAdapter.address, underlyingToken);
-        await migrator.setRewardPool(aaveAdapter.address, arp.address);
-
-        console.log(`#8 deploying: Compound Adapter`);
-        const compAdapter = await deployCompAdapter(
-          [migrator.address, cDaiAddress, DAI_ADDRESS],
-          verify
-        );
-        const crp = await deployMigratorWeightedRewardPool(
-          [rewardCtl.address, RAY, RAY, 0, RAY_100, DAI_ADDRESS],
-          verify
-        );
-
-        await migrator.registerAdapter(compAdapter.address);
-        await rewardCtl.addRewardPool(crp.address);
-        await crp.addRewardProvider(compAdapter.address, DAI_ADDRESS);
-        await migrator.setRewardPool(compAdapter.address, crp.address);
+        // console.log(`#6 deploying: Migrator + Adapters`);
       }
     }
   );
