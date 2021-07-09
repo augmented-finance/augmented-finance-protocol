@@ -9,6 +9,4 @@ interface IRewardConfigurator {
     string stkTokenSymbol;
     uint8 stkTokenDecimals;
   }
-
-  enum RewardType {NoReward, Token, StakeToken}
 }
