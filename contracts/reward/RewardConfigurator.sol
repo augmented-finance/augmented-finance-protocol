@@ -142,28 +142,6 @@ contract RewardConfigurator is
   //   IManagedRewardPool(pool).setRate(rate);
   // }
 
-  function setRewardTarget(RewardType rewardType) public {
-    setRewardTargetOf(getDefaultController(), rewardType);
-  }
-
-  function setRewardTargetOf(IManagedRewardController ctl, RewardType rewardType)
-    public
-    onlyRewardAdmin
-  {
-    address minter;
-    if (rewardType == RewardType.NoReward) {
-      minter = address(0);
-    } else {
-      if (rewardType == RewardType.Token) {
-        minter = _remoteAcl.getRewardToken();
-      } else {
-        minter = _remoteAcl.getRewardStakeToken();
-      }
-      require(minter != address(0), 'incomplete configuration');
-    }
-    ctl.setRewardMinter(IRewardMinter(minter));
-  }
-
   function buildInitStakeData() public onlyRewardAdmin returns (StakeInitData[] memory) {}
 
   // function batchInitStakeTokens(StakeInitData[] memory input) public onlyRewardAdmin {

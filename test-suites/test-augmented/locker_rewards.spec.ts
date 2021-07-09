@@ -5,7 +5,7 @@ import rawBRE, { ethers } from 'hardhat';
 
 import {
   getMockAgfToken,
-  getRewardFreezer,
+  getRewardController,
   getTokenLocker,
   getForwardingRewardPool,
 } from '../../helpers/contracts-getters';
@@ -60,7 +60,7 @@ describe('Token locker suite', () => {
     blkBeforeDeploy = await takeSnapshot();
     [root, user1, user2] = await ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
-    rewardController = await getRewardFreezer();
+    rewardController = await getRewardController();
     rewardController.setFreezePercentage(0);
 
     frp = await getForwardingRewardPool();

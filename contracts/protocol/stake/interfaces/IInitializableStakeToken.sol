@@ -6,7 +6,7 @@ import {StakeTokenConfig} from './StakeTokenConfig.sol';
 
 /**
  * @title IInitializableStakeToken
- * @notice Interface for the initialize function on StakeToken and VotingToken
+ * @notice Interface for the initialize function on StakeToken
  **/
 interface IInitializableStakeToken {
   event Initialized(StakeTokenConfig params, string tokenName, string tokenSymbol, uint8 decimals);

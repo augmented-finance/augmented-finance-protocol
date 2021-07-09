@@ -21,11 +21,11 @@ contract XAGFTokenV1 is DecayingTokenLocker, VersionedInitializable {
   uint256 private constant TOKEN_REVISION = 1;
   uint32 private constant ONE_PERIOD = 1 weeks;
   uint32 private constant MAX_PERIOD = 4 * 52 weeks;
-  uint256 private constant MAX_SUPPLY = 1e36;
+  uint256 private constant WEIGHT_BASE = 1e36;
 
   constructor()
     public
-    DecayingTokenLocker(IMarketAccessController(0), address(0), ONE_PERIOD, MAX_PERIOD, MAX_SUPPLY)
+    DecayingTokenLocker(IMarketAccessController(0), address(0), ONE_PERIOD, MAX_PERIOD, WEIGHT_BASE)
   {
     _initializeERC20(NAME, SYMBOL, DECIMALS);
   }

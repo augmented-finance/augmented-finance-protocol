@@ -16,16 +16,16 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
   uint256 private _accumRate;
   uint256 private _totalSupply;
 
-  uint256 private _totalSupplyMax;
+  uint256 private _maxWeightBase;
   uint256 private constant minBitReserve = 32;
 
-  constructor(uint256 maxTotalSupply) public {
-    require(maxTotalSupply > 0, 'max total supply is unknown');
+  constructor(uint256 maxWeightBase) public {
+    require(maxWeightBase > 0, 'max total supply is unknown');
 
-    uint256 maxSupplyBits = BitUtils.bitLength(maxTotalSupply);
-    require(maxSupplyBits + minBitReserve < 256, 'max total supply is too high');
+    uint256 maxWeightBits = BitUtils.bitLength(maxWeightBase);
+    require(maxWeightBits + minBitReserve < 256, 'max total supply is too high');
 
-    _totalSupplyMax = maxTotalSupply; // (1 << maxSupplyBits) - 1;
+    _maxWeightBase = maxWeightBase; // (1 << maxWeightBits) - 1;
   }
 
   function doUpdateTotalSupplyDiff(uint256 oldSupply, uint256 newSupply) internal returns (bool) {
@@ -61,9 +61,9 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
       return;
     }
 
-    // the rate stays in RAY, but is weighted now vs _totalSupplyMax
+    // the rate stays in RAY, but is weighted now vs _maxWeightBase
     if (at != lastAt) {
-      lastRate = lastRate.mul(_totalSupplyMax.div(_totalSupply));
+      lastRate = lastRate.mul(_maxWeightBase.div(_totalSupply));
       _accumRate = _accumRate.add(lastRate.mul(at - lastAt));
     }
   }
@@ -109,7 +109,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     if (_totalSupply > 0) {
       (uint256 rate, uint32 updatedAt) = getRateAndUpdatedAt();
 
-      rate = rate.mul(_totalSupplyMax.div(_totalSupply));
+      rate = rate.mul(_maxWeightBase.div(_totalSupply));
       adjRate = adjRate.add(rate.mul(at - updatedAt));
     }
 
@@ -117,11 +117,11 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
       return (adjRate, 0, entry.claimedAt);
     }
 
-    uint256 v = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _totalSupplyMax);
+    uint256 v = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _maxWeightBase);
     return (adjRate, v.div(WadRayMath.RAY), entry.claimedAt);
   }
 
   function totalSupplyMax() internal view returns (uint256) {
-    return _totalSupplyMax;
+    return _maxWeightBase;
   }
 }

@@ -140,6 +140,6 @@ export const revertSnapshot = async (id: string) => {
     throw Error('failed to restore snapshot');
   }
   console.log(`snapshot restored: ${id}`);
-  // TODO: after mixing evm_mine and real calls block_number is wrong, why?
+  // after mixing evm_mine and real calls block_number is wrong, why?
   // console.log(`current block after restore: ${await currentBlock()}`);
 };

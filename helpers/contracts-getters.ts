@@ -36,11 +36,9 @@ import {
   MockAgfTokenFactory,
   MockStakedAgfTokenFactory,
   TeamRewardPoolFactory,
-  TokenUnweightedRewardPoolFactory,
+  PermitFreezerRewardPoolFactory,
   AccessControllerFactory,
-  ZombieRewardPoolFactory,
   AaveAdapterFactory,
-  ZombieAdapterFactory,
   CompAdapterFactory,
   DepositToken,
   TokenWeightedRewardPoolFactory,
@@ -430,13 +428,6 @@ export const getXAgfToken = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getZombieAdapter = async (address?: tEthereumAddress) =>
-  await ZombieAdapterFactory.connect(
-    address ||
-      (await getDb().get(`${eContractid.ZombieAdapter}.${DRE.network.name}`).value()).address,
-    await getFirstSigner()
-  );
-
 export const getAaveAdapter = async (address?: tEthereumAddress) =>
   await AaveAdapterFactory.connect(
     address ||
@@ -458,13 +449,6 @@ export const getTeamRewardPool = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getZombieRewardPool = async (address?: tEthereumAddress) =>
-  await ZombieRewardPoolFactory.connect(
-    address ||
-      (await getDb().get(`${eContractid.ZombieRewardPool}.${DRE.network.name}`).value()).address,
-    await getFirstSigner()
-  );
-
 export const getForwardingRewardPool = async (address?: tEthereumAddress) =>
   await ForwardingRewardPoolFactory.connect(
     address ||
@@ -481,10 +465,10 @@ export const getForwardingRewardPoolDecay = async (address?: tEthereumAddress) =
     await getFirstSigner()
   );
 
-export const getRewardFreezer = async (address?: tEthereumAddress) =>
+export const getRewardController = async (address?: tEthereumAddress) =>
   await RewardFreezerFactory.connect(
     address ||
-      (await getDb().get(`${eContractid.RewardFreezer}.${DRE.network.name}`).value()).address,
+      (await getDb().get(`${eContractid.RewardController}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
 
@@ -495,10 +479,10 @@ export const getRewardBooster = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getTokenUnweightedRewardPool = async (address?: tEthereumAddress) =>
-  await TokenUnweightedRewardPoolFactory.connect(
+export const getPermitFreezerRewardPool = async (address?: tEthereumAddress) =>
+  await PermitFreezerRewardPoolFactory.connect(
     address ||
-      (await getDb().get(`${eContractid.TokenUnweightedRewardPool}.${DRE.network.name}`).value())
+      (await getDb().get(`${eContractid.PermitFreezerRewardPool}.${DRE.network.name}`).value())
         .address,
     await getFirstSigner()
   );

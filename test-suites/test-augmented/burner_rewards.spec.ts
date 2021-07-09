@@ -9,8 +9,8 @@ import rawBRE, { ethers } from 'hardhat';
 import {
   getAgfToken,
   getMockAgfToken,
-  getTokenUnweightedRewardPool,
-  getRewardFreezer,
+  getPermitFreezerRewardPool,
+  getRewardController,
 } from '../../helpers/contracts-getters';
 
 import { AGFToken, RewardFreezer } from '../../types';
@@ -27,7 +27,7 @@ describe('Rewards test suite', () => {
   let user2: SignerWithAddress;
   let otherUsers: SignerWithAddress[];
 
-  let rewardFreezer: RewardFreezer;
+  let rewardCtl: RewardFreezer;
   let agf: AGFToken;
 
   before(async () => {
@@ -39,63 +39,57 @@ describe('Rewards test suite', () => {
     console.log(`User address: ${user.address}`);
 
     // TODO each test below needs a separate freezer
-    rewardFreezer = await getRewardFreezer();
-    expect(rewardFreezer.address).to.properAddress;
+    rewardCtl = await getRewardController();
+    expect(rewardCtl.address).to.properAddress;
 
-    const tokenUnweightedRewardPool = await getTokenUnweightedRewardPool();
+    const freezer = await getPermitFreezerRewardPool();
     // deployer.address is used instead of a token contract
-    await rewardFreezer.addRewardProvider(
-      tokenUnweightedRewardPool.address,
-      deployer.address,
-      ONE_ADDRESS
-    );
-    await rewardFreezer.setFreezePercentage(0);
+    // await rewardCtl.addRewardProvider(
+    //   freezer.address,
+    //   deployer.address,
+    //   ONE_ADDRESS
+    // );
+    await rewardCtl.setFreezePercentage(0);
 
     agf = await getMockAgfToken();
   });
 
-  it('Should claim reward', async () => {
-    const tokenUnweightedRewardPool = await getTokenUnweightedRewardPool();
+  it.skip('Should claim reward', async () => {
+    const freezer = await getPermitFreezerRewardPool();
 
     expect(await agf.balanceOf(user.address)).to.eq(0);
 
-    await tokenUnweightedRewardPool.handleBalanceUpdate(ONE_ADDRESS, user.address, 0, 2000, 100000); // block 10
-    await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 11
+    await freezer.handleBalanceUpdate(ONE_ADDRESS, user.address, 0, 2000, 100000); // block 10
+    await (await rewardCtl.connect(user).claimReward()).wait(1); // block 11
     expect(await agf.balanceOf(user.address)).to.eq(2000);
 
-    await expect(rewardFreezer.connect(user).claimReward())
-      .to.emit(rewardFreezer, 'RewardsClaimed')
+    await expect(rewardCtl.connect(user).claimReward())
+      .to.emit(rewardCtl, 'RewardsClaimed')
       .withArgs(user.address, user.address, 2000); // block 12
     expect(await agf.balanceOf(user.address)).to.eq(4000);
 
-    await rewardFreezer.setFreezePercentage(5000); // set 50% // block 13
+    await rewardCtl.setFreezePercentage(5000); // set 50% // block 13
 
-    await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 14
+    await (await rewardCtl.connect(user).claimReward()).wait(1); // block 14
     // +50% of 4k for blocks 13-14, ttl frozen 2k
     expect(await agf.balanceOf(user.address)).to.eq(6000);
 
-    await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 15
+    await (await rewardCtl.connect(user).claimReward()).wait(1); // block 15
     expect(await agf.balanceOf(user.address)).to.eq(7000); // +50% of 2k for block 14, ttl frozen 3k
 
-    await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 16
+    await (await rewardCtl.connect(user).claimReward()).wait(1); // block 16
     expect(await agf.balanceOf(user.address)).to.eq(8000); // +50% of 2k for block 15, ttl frozen 4k
 
     // immediate meltdown
-    await (await rewardFreezer.setMeltDownAt(1)).wait(1); // block 18
+    await (await rewardCtl.setMeltDownAt(1)).wait(1); // block 18
     // 9000: +50% of 2k for block 18, ttl frozen 5k
 
-    await (
-      await tokenUnweightedRewardPool.handleBalanceUpdate(
-        ONE_ADDRESS,
-        user.address,
-        2000,
-        10000,
-        100000
-      )
-    ).wait(1); // block 19
+    await (await freezer.handleBalanceUpdate(ONE_ADDRESS, user.address, 2000, 10000, 100000)).wait(
+      1
+    ); // block 19
     // 11000: +2k for block 19, ttl ex-frozen 5k
 
-    await (await rewardFreezer.connect(user).claimReward()).wait(1); // block 20
+    await (await rewardCtl.connect(user).claimReward()).wait(1); // block 20
     expect(await agf.balanceOf(user.address)).to.eq(26000); // = 10k for block 20 + 11000 + ex-frozen 5k
 
     // todo gradual meltdown
