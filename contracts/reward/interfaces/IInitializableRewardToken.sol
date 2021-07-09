@@ -5,7 +5,7 @@ import {IRemoteAccessBitmask} from '../../access/interfaces/IRemoteAccessBitmask
 
 /**
  * @title IInitializableStakeToken
- * @notice Interface for the initialize function on StakeToken and VotingToken
+ * @notice Interface for the initialize function on StakeToken
  **/
 interface IInitializableRewardToken {
   event Initialized(IRemoteAccessBitmask remoteAcl, string tokenName, string tokenSymbol);
