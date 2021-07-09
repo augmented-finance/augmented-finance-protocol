@@ -67,7 +67,6 @@ import {
   AaveAdapterFactory,
   CompAdapterFactory,
   AccessControllerFactory,
-  MigratorWeightedRewardPoolFactory,
   DecayingTokenLockerFactory,
 } from '../types';
 import {
@@ -824,24 +823,6 @@ export const deployTeamRewardPool = async (
     verify
   );
 
-export const deployMigratorWeightedRewardPool = async (
-  args: [
-    tEthereumAddress,
-    BigNumberish,
-    BigNumberish,
-    BigNumberish,
-    BigNumberish,
-    tEthereumAddress
-  ],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new MigratorWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.MigratorWeightedRewardPool,
-    [],
-    verify
-  );
-
 export const deployTokenWeightedRewardPoolAGF = async (
   args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
@@ -938,36 +919,6 @@ export const deployForwardingRewardPoolDecay = async (
     await new ForwardingRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.ForwardingRewardPoolDecay,
     [],
-    verify
-  );
-
-export const deployAugmentedMigrator = async (verify?: boolean) =>
-  withSaveAndVerify(
-    await new MigratorFactory(await getFirstSigner()).deploy(),
-    eContractid.Migrator,
-    [],
-    verify
-  );
-
-export const deployAaveAdapter = async (
-  args: [tEthereumAddress, tEthereumAddress],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new AaveAdapterFactory(await getFirstSigner()).deploy(...args),
-    eContractid.AaveAdapter,
-    args,
-    verify
-  );
-
-export const deployCompAdapter = async (
-  args: [tEthereumAddress, tEthereumAddress, tEthereumAddress],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new CompAdapterFactory(await getFirstSigner()).deploy(...args),
-    eContractid.CompAdapter,
-    args,
     verify
   );
 

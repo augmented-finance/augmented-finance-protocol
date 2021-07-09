@@ -5,7 +5,6 @@ import {
   deployAugmentedMigrator,
   deployCompAdapter,
   deployForwardingRewardPool,
-  deployMigratorWeightedRewardPool,
   deployMockAgfToken,
   deployRewardController,
   deployTeamRewardPool,
@@ -127,37 +126,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       await fwdRewardPool.addRewardProvider(basicLocker.address, ONE_ADDRESS);
 
       if (process.env.MAINNET_FORK === 'true') {
-        console.log(`#6 deploying: Migrator + Adapters`);
-        const migrator = await deployAugmentedMigrator(verify);
-
-        console.log(`#7 deploying: Aave Adapter`);
-        const aaveAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
-        const underlyingToken = await aaveAdapter.UNDERLYING_ASSET_ADDRESS();
-        console.log(`underlying for deployment: ${underlyingToken}`);
-        const arp = await deployMigratorWeightedRewardPool(
-          [rewardCtl.address, RAY, RAY, 0, RAY_100, underlyingToken],
-          verify
-        );
-
-        await migrator.registerAdapter(aaveAdapter.address);
-        await rewardCtl.addRewardPool(arp.address);
-        await arp.addRewardProvider(aaveAdapter.address, underlyingToken);
-        await migrator.setRewardPool(aaveAdapter.address, arp.address);
-
-        console.log(`#8 deploying: Compound Adapter`);
-        const compAdapter = await deployCompAdapter(
-          [migrator.address, cDaiAddress, DAI_ADDRESS],
-          verify
-        );
-        const crp = await deployMigratorWeightedRewardPool(
-          [rewardCtl.address, RAY, RAY, 0, RAY_100, DAI_ADDRESS],
-          verify
-        );
-
-        await migrator.registerAdapter(compAdapter.address);
-        await rewardCtl.addRewardPool(crp.address);
-        await crp.addRewardProvider(compAdapter.address, DAI_ADDRESS);
-        await migrator.setRewardPool(compAdapter.address, crp.address);
+        // console.log(`#6 deploying: Migrator + Adapters`);
       }
     }
   );
