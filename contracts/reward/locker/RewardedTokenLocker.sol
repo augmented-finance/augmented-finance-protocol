@@ -39,11 +39,11 @@ contract RewardedTokenLocker is
     address underlying,
     uint32 pointPeriod,
     uint32 maxValuePeriod,
-    uint256 maxTotalSupply
+    uint256 maxWeightBase
   )
     public
     BaseTokenLocker(accessCtl, underlying, pointPeriod, maxValuePeriod)
-    CalcCheckpointWeightedReward(maxTotalSupply)
+    CalcCheckpointWeightedReward(maxWeightBase)
   {}
 
   function setForwardingRewardPool(IForwardingRewardPool forwarder) public onlyRewardAdmin {

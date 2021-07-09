@@ -16,7 +16,7 @@ import {
   getMigrator,
   getMintableERC20,
   getMockAgfToken,
-  getRewardFreezer,
+  getRewardController,
 } from '../../helpers/contracts-getters';
 import { Signer } from 'ethers';
 import { Provider } from '@ethersproject/providers';
@@ -66,7 +66,7 @@ makeSuite('Migrator test suite (AAVE adapter + WeightedPool)', (testEnv: TestEnv
     aaveAdapter = await getAaveAdapter();
     m = await getMigrator();
     agf = await getMockAgfToken();
-    rc = await getRewardFreezer();
+    rc = await getRewardController();
   });
 
   afterEach(async () => {

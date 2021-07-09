@@ -5,7 +5,7 @@ import {
   deployMockStakedAgfToken,
   deployMockStakedAgToken,
   deployRewardBooster,
-  deployRewardFreezer,
+  deployRewardController,
   deployTokenWeightedRewardPoolAG,
   deployTokenWeightedRewardPoolAGBoosted,
   deployTokenWeightedRewardPoolAGF,
@@ -63,13 +63,13 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       );
 
       console.log(`#3 deploying: RewardController`);
-      const rewardFreezer = await deployRewardFreezer([ac.address, agfToken.address], verify);
-      await rewardFreezer.setFreezePercentage(0);
+      const rewardCtl = await deployRewardController([ac.address, agfToken.address], verify);
+      await rewardCtl.setFreezePercentage(0);
 
       console.log(`#4 Staking`);
       const agDaiToken = await getAGTokenByName('agDAI');
       const xAGPool = await deployTokenWeightedRewardPoolAG(
-        [rewardFreezer.address, RAY, RAY, 0, RAY_100],
+        [rewardCtl.address, RAY, RAY, 0, RAY_100],
         verify
       );
       const xAG = await deployMockStakedAgToken([
@@ -84,7 +84,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       await xAG.connect(root).setMaxSlashablePercentage(slashingPercentage);
 
       const xAGFPool = await deployTokenWeightedRewardPoolAGF(
-        [rewardFreezer.address, RAY, RAY, 0, RAY_100],
+        [rewardCtl.address, RAY, RAY, 0, RAY_100],
         verify
       );
 

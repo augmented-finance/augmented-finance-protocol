@@ -8,17 +8,12 @@ import {
   getMockAgfToken,
   getMockStakedAgfToken,
   getMockStakedAgToken,
-  getRewardFreezer,
-  getTokenWeightedRewardPoolAG,
-  getTokenWeightedRewardPoolAGF,
 } from '../../helpers/contracts-getters';
 
 import {
   DepositToken,
   MockAgfToken,
   MockStakedAgfToken,
-  RewardFreezer,
-  TokenWeightedRewardPool,
 } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
@@ -39,9 +34,6 @@ describe('Staking', () => {
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
   let slasher: SignerWithAddress;
-  let rpAGF: TokenWeightedRewardPool;
-  let rpAG: TokenWeightedRewardPool;
-  let rc: RewardFreezer;
   let AGF: MockAgfToken;
   let xAGF: MockStakedAgfToken;
   let AG: DepositToken;
@@ -53,15 +45,12 @@ describe('Staking', () => {
     blkBeforeDeploy = await takeSnapshot();
     [root, user1, user2, slasher] = await ethers.getSigners();
     await rawBRE.run('augmented:test-local-staking', CFG);
-    rc = await getRewardFreezer();
 
     AG = await getAGTokenByName('agDAI');
     xAG = await getMockStakedAgToken();
-    rpAG = await getTokenWeightedRewardPoolAG();
 
     AGF = await getMockAgfToken();
     xAGF = await getMockStakedAgfToken();
-    rpAGF = await getTokenWeightedRewardPoolAGF();
   });
 
   afterEach(async () => {

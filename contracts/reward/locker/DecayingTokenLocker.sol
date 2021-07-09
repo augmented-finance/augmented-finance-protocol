@@ -31,11 +31,8 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     address underlying,
     uint32 pointPeriod,
     uint32 maxValuePeriod,
-    uint256 maxTotalSupply
-  )
-    public
-    RewardedTokenLocker(accessCtl, underlying, pointPeriod, maxValuePeriod, maxTotalSupply)
-  {}
+    uint256 maxWeightBase
+  ) public RewardedTokenLocker(accessCtl, underlying, pointPeriod, maxValuePeriod, maxWeightBase) {}
 
   function balanceOf(address account) public view virtual override returns (uint256) {
     (uint32 startTS, uint32 endTS) = expiryOf(account);

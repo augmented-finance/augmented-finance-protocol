@@ -61,14 +61,12 @@ import {
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
   TokenWeightedRewardPoolFactory,
-  TokenUnweightedRewardPoolFactory,
+  PermitFreezerRewardPoolFactory,
   TeamRewardPoolFactory,
   MigratorFactory,
   AaveAdapterFactory,
   CompAdapterFactory,
   AccessControllerFactory,
-  ZombieRewardPoolFactory,
-  ZombieAdapterFactory,
   MigratorWeightedRewardPoolFactory,
   DecayingTokenLockerFactory,
 } from '../types';
@@ -798,13 +796,13 @@ export const deployDecayingTokenLocker = async (
     verify
   );
 
-export const deployRewardFreezer = async (
+export const deployRewardController = async (
   args: [tEthereumAddress, tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await new RewardFreezerFactory(await getFirstSigner()).deploy(...args),
-    eContractid.RewardFreezer,
+    eContractid.RewardController,
     args,
     verify
   );
@@ -822,21 +820,6 @@ export const deployTeamRewardPool = async (
   withSaveAndVerify(
     await new TeamRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TeamRewardPool,
-    [],
-    verify
-  );
-
-export const deployZombieRewardPool = async (
-  args: [
-    controller: string,
-    tokens: string[],
-    rewards: { rateRay: BigNumberish; limit: BigNumberish }[]
-  ],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new ZombieRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.ZombieRewardPool,
     [],
     verify
   );
@@ -925,13 +908,13 @@ export const deployTokenWeightedRewardPoolAGUSDCBoosted = async (
     verify
   );
 
-export const deployTokenUnweightedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+export const deployPermitFreezerRewardPool = async (
+  args: [tEthereumAddress, BigNumberish, string],
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    await new TokenUnweightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.TokenUnweightedRewardPool,
+    await new PermitFreezerRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.PermitFreezerRewardPool,
     [],
     verify
   );
@@ -963,17 +946,6 @@ export const deployAugmentedMigrator = async (verify?: boolean) =>
     await new MigratorFactory(await getFirstSigner()).deploy(),
     eContractid.Migrator,
     [],
-    verify
-  );
-
-export const deployZombieAdapter = async (
-  args: [tEthereumAddress, tEthereumAddress],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new ZombieAdapterFactory(await getFirstSigner()).deploy(...args),
-    eContractid.ZombieAdapter,
-    args,
     verify
   );
 

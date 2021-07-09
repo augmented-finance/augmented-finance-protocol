@@ -5,7 +5,7 @@ import rawBRE, { ethers } from 'hardhat';
 
 import {
   getMockAgfToken,
-  getRewardFreezer,
+  getRewardController,
   getTokenWeightedRewardPoolAGFSeparate,
 } from '../../helpers/contracts-getters';
 
@@ -19,6 +19,8 @@ import { deflateSync } from 'zlib';
 
 chai.use(solidity);
 const { expect } = chai;
+
+//TODO: separate out weighted pool and freezer logic
 
 describe('Token weighted reward pool tests', () => {
   let root: SignerWithAddress;
@@ -36,7 +38,7 @@ describe('Token weighted reward pool tests', () => {
     blkBeforeDeploy = await takeSnapshot();
     [root, user1, user2] = await ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
-    rc = await getRewardFreezer();
+    rc = await getRewardController();
     wrp = await getTokenWeightedRewardPoolAGFSeparate();
     agf = await getMockAgfToken();
   });

@@ -17,16 +17,16 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
   uint256 private _accumRate;
   mapping(uint32 => uint256) private _accumHistory;
 
-  uint256 private _totalSupplyMax;
+  uint256 private _maxWeightBase;
   uint256 private constant minBitReserve = 32;
 
-  constructor(uint256 maxTotalSupply) public {
-    require(maxTotalSupply > 0, 'max total supply is unknown');
+  constructor(uint256 maxWeightBase) public {
+    require(maxWeightBase > 0, 'max total supply is unknown');
 
-    uint256 maxSupplyBits = BitUtils.bitLength(maxTotalSupply);
+    uint256 maxSupplyBits = BitUtils.bitLength(maxWeightBase);
     require(maxSupplyBits + minBitReserve < 256, 'max total supply is too high');
 
-    _totalSupplyMax = maxTotalSupply; // (1 << maxSupplyBits) - 1;
+    _maxWeightBase = maxWeightBase; // (1 << maxSupplyBits) - 1;
   }
 
   function internalTotalSupply() internal view virtual returns (uint256);
@@ -53,7 +53,7 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
     }
 
     uint256 totalSupply = internalTotalSupply();
-    // console.log('internalRateUpdated', totalSupply, internalExtraRate(), _totalSupplyMax);
+    // console.log('internalRateUpdated', totalSupply, internalExtraRate(), _maxWeightBase);
     // console.log('internalRateUpdated', _accumRate);
 
     if (totalSupply == 0) {
@@ -61,8 +61,8 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
     }
 
     lastRate = lastRate.add(internalExtraRate());
-    // the rate stays in RAY, but is weighted now vs _totalSupplyMax
-    lastRate = lastRate.mul(_totalSupplyMax.div(totalSupply));
+    // the rate stays in RAY, but is weighted now vs _maxWeightBase
+    lastRate = lastRate.mul(_maxWeightBase.div(totalSupply));
     _accumRate = _accumRate.add(lastRate.mul(at - lastAt));
 
     // console.log('internalRateUpdated', _accumRate);
@@ -98,7 +98,7 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
 
         // console.log('internalCalcRateAndReward', rate, internalExtraRate());
         rate = rate.add(internalExtraRate());
-        rate = rate.mul(_totalSupplyMax.div(totalSupply));
+        rate = rate.mul(_maxWeightBase.div(totalSupply));
         adjRate = adjRate.add(rate.mul(at - updatedAt));
       }
     }
@@ -107,7 +107,7 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
       return (adjRate, 0, entry.claimedAt);
     }
 
-    uint256 v = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _totalSupplyMax);
+    uint256 v = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _maxWeightBase);
     return (adjRate, v.div(WadRayMath.RAY), entry.claimedAt);
   }
 }

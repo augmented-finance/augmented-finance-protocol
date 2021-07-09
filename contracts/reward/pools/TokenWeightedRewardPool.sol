@@ -19,11 +19,11 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
     uint256 initialRate,
     uint224 rateScale,
     uint16 baselinePercentage,
-    uint256 maxTotalSupply
+    uint256 maxWeightBase
   )
     public
     BaseTokenAbsRewardPool(controller, initialRate, rateScale, baselinePercentage)
-    CalcLinearWeightedReward(maxTotalSupply)
+    CalcLinearWeightedReward(maxWeightBase)
   {}
 
   function internalGetRate() internal view override returns (uint256) {
