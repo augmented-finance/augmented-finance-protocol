@@ -7,16 +7,10 @@ import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializ
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
 import {Errors} from '../tools/Errors.sol';
-import {
-  InitializableImmutableAdminUpgradeabilityProxy
-} from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
 import {IRewardConfigurator} from './interfaces/IRewardConfigurator.sol';
 import {IManagedRewardController} from './interfaces/IRewardController.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IMigratorHook} from '../interfaces/IMigratorHook.sol';
-import {IInitializableStakeToken} from '../protocol/stake/interfaces/IInitializableStakeToken.sol';
-import {StakeTokenConfig} from '../protocol/stake/interfaces/StakeTokenConfig.sol';
-import {ITransferHook} from '../protocol/stake/interfaces/ITransferHook.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
 contract RewardConfigurator is
@@ -141,8 +135,6 @@ contract RewardConfigurator is
   // function overridePoolRate(address pool, uint256 rate) external onlyOwner {
   //   IManagedRewardPool(pool).setRate(rate);
   // }
-
-  function buildInitStakeData() public onlyRewardAdmin returns (StakeInitData[] memory) {}
 
   // function batchInitStakeTokens(StakeInitData[] memory input) public onlyRewardAdmin {
   //   for (uint256 i = 0; i < input.length; i++) {
