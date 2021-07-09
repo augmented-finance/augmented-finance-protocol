@@ -12,8 +12,6 @@ import {
   deployTokenLocker,
   deployTokenUnweightedRewardPool,
   deployTokenWeightedRewardPoolAGFSeparate,
-  deployZombieAdapter,
-  deployZombieRewardPool,
 } from '../../helpers/contracts-deployments';
 import { MAX_LOCKER_PERIOD, ONE_ADDRESS, RAY, RAY_100, WEEK } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
@@ -24,15 +22,12 @@ import {
   slashingDefaultPercentage,
   stakingCooldownTicks,
   stakingUnstakeTicks,
-  ZTOKEN_ADDRESS,
 } from './defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
 
 task('augmented:test-local', 'Deploy Augmented test contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
   .addOptionalParam('cDaiAddress', 'Compound DAI address', CDAI_ADDRESS, types.string)
-  .addOptionalParam('zTokenAddress', 'Zombie token address', ZTOKEN_ADDRESS, types.string)
-  .addFlag('withZombieAdapter', 'deploy with zombie adapter of aDai')
   .addFlag('withAAVEAdapter', 'deploy with AAVE adapter of aDai')
   .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', RAY, types.string)
   .addOptionalParam('teamRewardBaselinePercentage', 'baseline percentage - bigNumber', 0, types.int)
@@ -42,7 +37,6 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
     5000,
     types.int
   )
-  .addOptionalParam('zombieRewardLimit', 'zombie reward limit', 5000, types.int)
   .addOptionalParam('stakeCooldownTicks', 'staking cooldown ticks', stakingCooldownTicks, types.int)
   .addOptionalParam(
     'stakeUnstakeTicks',
@@ -62,13 +56,10 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       {
         aDaiAddress,
         cDaiAddress,
-        zTokenAddress,
-        withZombieAdapter,
         withAAVEAdapter,
         teamRewardInitialRate,
         teamRewardBaselinePercentage,
         teamRewardsFreezePercentage,
-        zombieRewardLimit,
         stakeCooldownTicks,
         stakeUnstakeTicks,
         slashingPercentage,
@@ -124,17 +115,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       );
       await waitForTx(await rewardFreezer.addRewardPool(teamRewardPool.address));
 
-      console.log(`#5 deploying: Zombie Reward Pool`);
-      const zombieRewardPool = await deployZombieRewardPool(
-        [rewardFreezer.address, [ONE_ADDRESS], [{ rateRay: RAY, limit: zombieRewardLimit }]],
-        verify
-      );
-      await waitForTx(await rewardFreezer.addRewardPool(zombieRewardPool.address));
-      await waitForTx(
-        await rewardFreezer.addRewardProvider(zombieRewardPool.address, root.address, ONE_ADDRESS)
-      );
-
-      console.log(`#6 deploying: RewardedTokenLocker + Forwarding Reward Pool`);
+      console.log(`#5 deploying: RewardedTokenLocker + Forwarding Reward Pool`);
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const fwdRewardPool = await deployForwardingRewardPool(
@@ -153,21 +134,10 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       await fwdRewardPool.addRewardProvider(basicLocker.address, ONE_ADDRESS);
 
       if (process.env.MAINNET_FORK === 'true') {
-        console.log(`#7 deploying: Migrator + Adapters`);
+        console.log(`#6 deploying: Migrator + Adapters`);
         const migrator = await deployAugmentedMigrator(verify);
 
-        const zAdapter = await deployZombieAdapter([migrator.address, zTokenAddress]);
-        const zrp = await deployZombieRewardPool(
-          [rewardFreezer.address, [zTokenAddress], [{ rateRay: RAY, limit: RAY }]],
-          verify
-        );
-
-        await migrator.registerAdapter(zAdapter.address);
-        await rewardFreezer.addRewardPool(zrp.address);
-        await zrp.addRewardProvider(zAdapter.address, zTokenAddress);
-        await migrator.setRewardPool(zAdapter.address, zrp.address);
-
-        console.log(`#8 deploying: Aave Adapter`);
+        console.log(`#7 deploying: Aave Adapter`);
         const aaveAdapter = await deployAaveAdapter([migrator.address, aDaiAddress], verify);
         const underlyingToken = await aaveAdapter.UNDERLYING_ASSET_ADDRESS();
         console.log(`underlying for deployment: ${underlyingToken}`);
@@ -181,7 +151,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
         await arp.addRewardProvider(aaveAdapter.address, underlyingToken);
         await migrator.setRewardPool(aaveAdapter.address, arp.address);
 
-        console.log(`#9 deploying: Compound Adapter`);
+        console.log(`#8 deploying: Compound Adapter`);
         const compAdapter = await deployCompAdapter(
           [migrator.address, cDaiAddress, DAI_ADDRESS],
           verify
