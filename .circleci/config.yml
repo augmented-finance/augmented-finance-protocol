@@ -25,7 +25,6 @@ jobs:
       - run: yarn run test:augmented:utils
       - run: yarn run test:augmented:pools
       - run: yarn run test
-      - run: yarn run test:main:augmented:migrator-zombie
       - run: yarn run test:main:augmented:migrator-aave
       - run: yarn run test:main:augmented:migrator-comp
       - run: yarn run test:augmented:stake
