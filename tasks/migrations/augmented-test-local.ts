@@ -1,9 +1,6 @@
 import { task, types } from 'hardhat/config';
 import {
-  deployAaveAdapter,
   deployAccessController,
-  deployAugmentedMigrator,
-  deployCompAdapter,
   deployForwardingRewardPool,
   deployMockAgfToken,
   deployRewardController,
@@ -27,15 +24,8 @@ import { BigNumber } from 'ethers';
 task('augmented:test-local', 'Deploy Augmented test contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
   .addOptionalParam('cDaiAddress', 'Compound DAI address', CDAI_ADDRESS, types.string)
-  .addFlag('withAAVEAdapter', 'deploy with AAVE adapter of aDai')
   .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', RAY, types.string)
   .addOptionalParam('teamRewardBaselinePercentage', 'baseline percentage - bigNumber', 0, types.int)
-  .addOptionalParam(
-    'teamRewardsFreezePercentage',
-    'rewards controller freeze percentage (10k = 100%)',
-    5000,
-    types.int
-  )
   .addOptionalParam('stakeCooldownTicks', 'staking cooldown ticks', stakingCooldownTicks, types.int)
   .addOptionalParam(
     'stakeUnstakeTicks',
@@ -55,10 +45,8 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       {
         aDaiAddress,
         cDaiAddress,
-        withAAVEAdapter,
         teamRewardInitialRate,
         teamRewardBaselinePercentage,
-        teamRewardsFreezePercentage,
         stakeCooldownTicks,
         stakeUnstakeTicks,
         slashingPercentage,
