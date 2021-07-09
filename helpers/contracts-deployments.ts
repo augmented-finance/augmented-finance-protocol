@@ -796,13 +796,13 @@ export const deployDecayingTokenLocker = async (
     verify
   );
 
-export const deployRewardFreezer = async (
+export const deployRewardController = async (
   args: [tEthereumAddress, tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await new RewardFreezerFactory(await getFirstSigner()).deploy(...args),
-    eContractid.RewardFreezer,
+    eContractid.RewardController,
     args,
     verify
   );

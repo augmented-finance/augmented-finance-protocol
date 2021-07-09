@@ -3,7 +3,7 @@ import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import rawBRE, { ethers } from 'hardhat';
 
-import { getRewardFreezer } from '../../helpers/contracts-getters';
+import { getRewardController } from '../../helpers/contracts-getters';
 
 import { RewardFreezer } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
@@ -21,7 +21,7 @@ describe('Augmented pausable suite', () => {
   beforeEach(async () => {
     [root, user1, user2] = await ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
-    rc = await getRewardFreezer();
+    rc = await getRewardController();
   });
 
   it('can pause/unpause reward controller', async () => {

@@ -465,10 +465,10 @@ export const getForwardingRewardPoolDecay = async (address?: tEthereumAddress) =
     await getFirstSigner()
   );
 
-export const getRewardFreezer = async (address?: tEthereumAddress) =>
+export const getRewardController = async (address?: tEthereumAddress) =>
   await RewardFreezerFactory.connect(
     address ||
-      (await getDb().get(`${eContractid.RewardFreezer}.${DRE.network.name}`).value()).address,
+      (await getDb().get(`${eContractid.RewardController}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
 

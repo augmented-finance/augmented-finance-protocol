@@ -88,7 +88,7 @@ export enum eContractid {
 
   AGFToken = 'AGFToken',
   XAGFToken = 'XAGFToken',
-  RewardFreezer = 'RewardFreezer',
+  RewardController = 'RewardController',
   RewardBooster = 'RewardBooster',
   TokenLocker = 'TokenLocker',
   DecayingTokenLocker = 'DecayingTokenLocker',
