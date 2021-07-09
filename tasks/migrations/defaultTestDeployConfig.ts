@@ -22,7 +22,6 @@ export const CFG = {
   cDaiAddress: CDAI_ADDRESS,
   teamRewardInitialRate: RAY,
   teamRewardBaselinePercentage: 0,
-  teamRewardsFreezePercentage: 0,
   stakingCooldownTicks,
   stakingUnstakeTicks,
 };

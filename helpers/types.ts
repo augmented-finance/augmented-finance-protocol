@@ -93,7 +93,6 @@ export enum eContractid {
   TokenLocker = 'TokenLocker',
   DecayingTokenLocker = 'DecayingTokenLocker',
   TeamRewardPool = 'TeamRewardPool',
-  MigratorWeightedRewardPool = 'MigratorWeightedRewardPool',
   TokenWeightedRewardPoolAGFSeparate = 'TokenWeightedRewardPoolAGFSeparate',
   TokenWeightedRewardPoolAGF = 'TokenWeightedRewardPoolAGF',
   TokenWeightedRewardPoolAGFBoosted = 'TokenWeightedRewardPoolAGFBoosted',
@@ -103,9 +102,6 @@ export enum eContractid {
   PermitFreezerRewardPool = 'PermitFreezerRewardPool',
   ForwardingRewardPool = 'ForwardingRewardPool',
   ForwardingRewardPoolDecay = 'ForwardingRewardPoolDecay',
-  Migrator = 'Migrator',
-  AaveAdapter = 'AaveAdapter',
-  CompAdapter = 'CompAdapter',
   AccessController = 'AccessController',
 }
 
