@@ -61,7 +61,7 @@ import {
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
   TokenWeightedRewardPoolFactory,
-  TokenUnweightedRewardPoolFactory,
+  PermitFreezerRewardPoolFactory,
   TeamRewardPoolFactory,
   MigratorFactory,
   AaveAdapterFactory,
@@ -908,13 +908,13 @@ export const deployTokenWeightedRewardPoolAGUSDCBoosted = async (
     verify
   );
 
-export const deployTokenUnweightedRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+export const deployPermitFreezerRewardPool = async (
+  args: [tEthereumAddress, BigNumberish, string],
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    await new TokenUnweightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.TokenUnweightedRewardPool,
+    await new PermitFreezerRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.PermitFreezerRewardPool,
     [],
     verify
   );

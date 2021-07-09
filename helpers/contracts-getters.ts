@@ -36,7 +36,7 @@ import {
   MockAgfTokenFactory,
   MockStakedAgfTokenFactory,
   TeamRewardPoolFactory,
-  TokenUnweightedRewardPoolFactory,
+  PermitFreezerRewardPoolFactory,
   AccessControllerFactory,
   AaveAdapterFactory,
   CompAdapterFactory,
@@ -479,10 +479,10 @@ export const getRewardBooster = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getTokenUnweightedRewardPool = async (address?: tEthereumAddress) =>
-  await TokenUnweightedRewardPoolFactory.connect(
+export const getPermitFreezerRewardPool = async (address?: tEthereumAddress) =>
+  await PermitFreezerRewardPoolFactory.connect(
     address ||
-      (await getDb().get(`${eContractid.TokenUnweightedRewardPool}.${DRE.network.name}`).value())
+      (await getDb().get(`${eContractid.PermitFreezerRewardPool}.${DRE.network.name}`).value())
         .address,
     await getFirstSigner()
   );

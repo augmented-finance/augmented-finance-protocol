@@ -10,7 +10,7 @@ import {
   deployRewardController,
   deployTeamRewardPool,
   deployTokenLocker,
-  deployTokenUnweightedRewardPool,
+  deployPermitFreezerRewardPool,
   deployTokenWeightedRewardPoolAGFSeparate,
 } from '../../helpers/contracts-deployments';
 import { MAX_LOCKER_PERIOD, ONE_ADDRESS, RAY, RAY_100, WEEK } from '../../helpers/constants';
@@ -87,12 +87,11 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       const rewardCtl = await deployRewardController([ac.address, agfToken.address], verify);
       await rewardCtl.setFreezePercentage(0);
 
-      // deploy linear pool, register in controller
-      const linearUnweightedRewardPool = await deployTokenUnweightedRewardPool(
-        [rewardCtl.address, RAY, RAY, 0],
+      const freezerRewardPool = await deployPermitFreezerRewardPool(
+        [rewardCtl.address, RAY, 'burners'],
         verify
       );
-      await waitForTx(await rewardCtl.addRewardPool(linearUnweightedRewardPool.address));
+      await waitForTx(await rewardCtl.addRewardPool(freezerRewardPool.address));
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const tokenWeightedRewardPoolSeparate = await deployTokenWeightedRewardPoolAGFSeparate(
