@@ -20,6 +20,8 @@ import { deflateSync } from 'zlib';
 chai.use(solidity);
 const { expect } = chai;
 
+//TODO: separate out weighted pool and freezer logic
+
 describe('Token weighted reward pool tests', () => {
   let root: SignerWithAddress;
   let user1: SignerWithAddress;
