@@ -32,14 +32,11 @@ import {
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
   AGFTokenFactory,
-  MigratorFactory,
   MockAgfTokenFactory,
   MockStakedAgfTokenFactory,
   TeamRewardPoolFactory,
   PermitFreezerRewardPoolFactory,
   AccessControllerFactory,
-  AaveAdapterFactory,
-  CompAdapterFactory,
   DepositToken,
   TokenWeightedRewardPoolFactory,
   RewardBoosterFactory,
@@ -428,20 +425,6 @@ export const getXAgfToken = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getAaveAdapter = async (address?: tEthereumAddress) =>
-  await AaveAdapterFactory.connect(
-    address ||
-      (await getDb().get(`${eContractid.AaveAdapter}.${DRE.network.name}`).value()).address,
-    await getFirstSigner()
-  );
-
-export const getCompAdapter = async (address?: tEthereumAddress) =>
-  await CompAdapterFactory.connect(
-    address ||
-      (await getDb().get(`${eContractid.CompAdapter}.${DRE.network.name}`).value()).address,
-    await getFirstSigner()
-  );
-
 export const getTeamRewardPool = async (address?: tEthereumAddress) =>
   await TeamRewardPoolFactory.connect(
     address ||
@@ -551,12 +534,6 @@ export const getAccessController = async (address?: tEthereumAddress) =>
   await AccessControllerFactory.connect(
     address ||
       (await getDb().get(`${eContractid.AccessController}.${DRE.network.name}`).value()).address,
-    await getFirstSigner()
-  );
-
-export const getMigrator = async (address?: tEthereumAddress) =>
-  await MigratorFactory.connect(
-    address || (await getDb().get(`${eContractid.Migrator}.${DRE.network.name}`).value()).address,
     await getFirstSigner()
   );
 

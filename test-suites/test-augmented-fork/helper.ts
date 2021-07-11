@@ -1,10 +1,5 @@
 import rawBRE, { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { DepositToken } from '../../types';
-import { getAToken, getProtocolDataProvider } from '../../helpers/contracts-getters';
-
-export const defaultMigrationAmount = 1000;
-export const defaultReferral = 101;
 
 export const impersonateAndGetSigner = async (addr: string): Promise<SignerWithAddress> => {
   await rawBRE.network.provider.request({
