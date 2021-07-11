@@ -9,7 +9,7 @@ import {ControlledRewardPool} from './ControlledRewardPool.sol';
 
 import 'hardhat/console.sol';
 
-contract PermitRewardPool is ControlledRewardPool {
+abstract contract BasePermitRewardPool is ControlledRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
@@ -17,13 +17,10 @@ contract PermitRewardPool is ControlledRewardPool {
   bytes32 public DOMAIN_SEPARATOR;
   bytes32 internal constant EIP712_DOMAIN =
     keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
-  bytes32 public constant CLAIM_TYPEHASH =
-    keccak256(
-      'ClaimReward(address provider,address spender,uint256 value,uint256 nonce,uint256 deadline)'
-    );
+  bytes32 public CLAIM_TYPEHASH;
 
   /// @dev spender => next valid nonce to submit with permit()
-  mapping(address => uint256) private _nonces;
+  mapping(address => uint256) public _nonces;
 
   uint256 private _rewardLimit;
   string private _rewardPoolName;
@@ -55,11 +52,11 @@ contract PermitRewardPool is ControlledRewardPool {
         address(this)
       )
     );
+
+    CLAIM_TYPEHASH = getClaimTypeHash();
   }
 
-  function nonceOf(address spender) public view returns (uint256) {
-    return _nonces[spender];
-  }
+  function getClaimTypeHash() internal pure virtual returns (bytes32);
 
   function stopRewards() external onlyController() {
     _rewardLimit = 0;
@@ -83,40 +80,34 @@ contract PermitRewardPool is ControlledRewardPool {
     delete (_providers[provider]);
   }
 
-  function claimRewardByPermit(
+  function doClaimRewardByPermit(
     address provider,
     address spender,
+    address to,
     uint256 value,
-    uint256 deadline,
+    uint256 at,
+    bytes32 encodedHash,
+    uint256 currentValidNonce,
     uint8 v,
     bytes32 r,
     bytes32 s
-  ) external notPaused {
-    require(provider != address(0), 'provider is required');
+  ) internal {
+    require(provider != address(0), 'INVALID_PROVIDER');
     require(_providers[provider], 'INVALID_PROVIDER');
-    require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
     require(_rewardLimit >= value, 'INSUFFICIENT_FUNDS');
-    uint256 currentValidNonce = _nonces[spender];
-    bytes32 digest =
-      keccak256(
-        abi.encodePacked(
-          '\x19\x01',
-          DOMAIN_SEPARATOR,
-          keccak256(
-            abi.encode(CLAIM_TYPEHASH, provider, spender, value, currentValidNonce, deadline)
-          )
-        )
-      );
+    bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, encodedHash));
 
     require(provider == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
-    _nonces[spender] = currentValidNonce.add(1);
 
+    _nonces[spender] = internalCheckNonce(currentValidNonce, at);
     if (value == 0) {
       return;
     }
     _rewardLimit = _rewardLimit.sub(value, 'insufficient reward pool balance');
-    internalPushReward(spender, value, uint32(block.timestamp));
+    internalPushReward(to, value, uint32(block.timestamp));
   }
+
+  function internalCheckNonce(uint256 nonce, uint256 at) internal virtual returns (uint256);
 
   function internalPushReward(
     address holder,

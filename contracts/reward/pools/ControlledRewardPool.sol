@@ -6,6 +6,8 @@ import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {IManagedRewardPool} from '../interfaces/IManagedRewardPool.sol';
+import {AccessFlags} from '../../access/AccessFlags.sol';
+import {AccessHelper} from '../../access/AccessHelper.sol';
 
 import 'hardhat/console.sol';
 
@@ -185,6 +187,18 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   modifier onlyEmergencyAdmin() {
     require(_controller.isEmergencyAdmin(msg.sender), 'only emergency admin is allowed');
+    _;
+  }
+
+  modifier onlyRefAdmin() {
+    require(
+      AccessHelper.hasAllOf(
+        _controller.getAccessController(),
+        msg.sender,
+        AccessFlags.REFERRAL_ADMIN
+      ),
+      'only referral admin is allowed'
+    );
     _;
   }
 

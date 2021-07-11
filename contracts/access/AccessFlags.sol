@@ -11,6 +11,7 @@ library AccessFlags {
   uint256 public constant REWARD_CONFIG_ADMIN = 1 << 3;
   uint256 public constant REWARD_RATE_ADMIN = 1 << 4;
   uint256 public constant STAKE_ADMIN = 1 << 5;
+  uint256 public constant REFERRAL_ADMIN = 1 << 6;
 
   uint256 public constant LIQUIDITY_CONTROLLER = 1 << 15; // can slash & pause stakes
 
@@ -31,6 +32,8 @@ library AccessFlags {
   uint256 public constant REWARD_CONFIGURATOR = 1 << 25; // use proxy
 
   uint256 public constant STAKE_CONFIGURATOR = 1 << 26; // use proxy
+
+  uint256 public constant REF_REGISTRY = 1 << 27;
 
   // any other roles - use range [32..]
   // these roles can be assigned to multiple addresses
