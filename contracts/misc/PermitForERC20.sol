@@ -10,7 +10,7 @@ abstract contract PermitForERC20 {
     keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
 
   /// @dev owner => next valid nonce to submit with permit()
-  mapping(address => uint256) public _nonces;
+  mapping(address => uint256) private _nonces;
 
   constructor() public {
     _initializeDomainSeparator();
@@ -33,6 +33,10 @@ abstract contract PermitForERC20 {
         address(this)
       )
     );
+  }
+
+  function nonceOf(address owner) public view returns (uint256) {
+    return _nonces[owner];
   }
 
   /**

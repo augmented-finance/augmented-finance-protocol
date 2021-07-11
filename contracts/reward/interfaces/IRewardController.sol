@@ -4,6 +4,7 @@ pragma solidity ^0.6.12;
 import {IManagedRewardPool} from './IManagedRewardPool.sol';
 import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
 import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
+import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 
 enum AllocationMode {Push, SetPull, UnsetPull}
 
@@ -20,6 +21,8 @@ interface IRewardController {
   function isConfigurator(address) external view returns (bool);
 
   function isEmergencyAdmin(address) external view returns (bool);
+
+  function getAccessController() external view returns (IMarketAccessController);
 }
 
 interface IManagedRewardController is IEmergencyAccess, IRewardController {

@@ -47,6 +47,10 @@ abstract contract BaseRewardController is
   event RewardsAllocated(address indexed user, uint256 amount);
   event RewardsClaimed(address indexed user, address indexed to, uint256 amount);
 
+  function getAccessController() public view override returns (IMarketAccessController) {
+    return _remoteAcl;
+  }
+
   function addRewardPool(IManagedRewardPool pool) external override onlyConfigurator {
     require(address(pool) != address(0), 'reward pool required');
     require(_poolMask[address(pool)] == 0, 'already registered');
