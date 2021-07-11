@@ -2,25 +2,21 @@ import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { makeSuite, TestEnv } from '../test-augmented/helpers/make-suite';
 import {
-  AaveAdapter,
   DepositToken,
-  Migrator,
   MintableERC20,
   MockAgfToken,
   RewardFreezer,
 } from '../../types';
 import rawBRE, { ethers } from 'hardhat';
 import {
-  getAaveAdapter,
   getAGTokenByName,
-  getMigrator,
   getMintableERC20,
   getMockAgfToken,
   getRewardController,
 } from '../../helpers/contracts-getters';
 import { Signer } from 'ethers';
 import { Provider } from '@ethersproject/providers';
-import { defaultMigrationAmount, defaultReferral, impersonateAndGetSigner } from './helper';
+import { impersonateAndGetSigner } from './helper';
 import { currentBlock, mineToBlock, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import {
   ADAI_ADDRESS,
@@ -36,8 +32,6 @@ const { expect } = chai;
 makeSuite('Fork test suite', (testEnv: TestEnv) => {
   let blkBeforeDeploy;
 
-  let m: Migrator;
-  let aaveAdapter: AaveAdapter;
   let agf: MockAgfToken;
   let rc: RewardFreezer;
   let root: Provider | Signer | string;
@@ -46,8 +40,6 @@ makeSuite('Fork test suite', (testEnv: TestEnv) => {
   let aDaiWhaleONESigner: Provider | Signer | string;
   let aDaiWhaleTWOSigner: Provider | Signer | string;
   let aDaiWhaleTHREESigner: Provider | Signer | string;
-
-  const defaultBlocksPassed = 10;
 
   before(async () => {
     [root] = await ethers.getSigners();
@@ -63,8 +55,6 @@ makeSuite('Fork test suite', (testEnv: TestEnv) => {
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
     await rawBRE.run('augmented:test-local', CFG);
-    aaveAdapter = await getAaveAdapter();
-    m = await getMigrator();
     agf = await getMockAgfToken();
     rc = await getRewardController();
   });
