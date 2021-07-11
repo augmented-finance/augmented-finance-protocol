@@ -404,4 +404,11 @@ abstract contract SlashableStakeTokenBase is
   function UNSTAKE_PERIOD() external view returns (uint256) {
     return _unstakePeriod;
   }
+
+  function initializedWithConfig() external view override returns (StakeTokenConfig memory params) {
+    params.stakeController = _remoteAcl;
+    params.stakedToken = _stakedToken;
+    params.cooldownPeriod = _cooldownPeriod;
+    params.unstakePeriod = _unstakePeriod;
+  }
 }
