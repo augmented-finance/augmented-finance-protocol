@@ -12,7 +12,7 @@ library AccessFlags {
   uint256 public constant REWARD_RATE_ADMIN = 1 << 4;
   uint256 public constant STAKE_ADMIN = 1 << 5;
 
-  uint256 public constant LIQUIDITY_CONTROLLER = 1 << 15;
+  uint256 public constant LIQUIDITY_CONTROLLER = 1 << 15; // can slash & pause stakes
 
   // singletons - use range [16..32]
   // these roles can ONLY be assigned to a single address
@@ -30,12 +30,13 @@ library AccessFlags {
   uint256 public constant REWARD_CONTROLLER = 1 << 24;
   uint256 public constant REWARD_CONFIGURATOR = 1 << 25; // use proxy
 
+  uint256 public constant STAKE_CONFIGURATOR = 1 << 26; // use proxy
+
   // any other roles - use range [32..]
   // these roles can be assigned to multiple addresses
 
   uint256 public constant REWARD_MINT = 1 << 32;
   uint256 public constant REWARD_BURN = 1 << 33;
 
-  // uint256 public constant REWARD_SUSPEND_USER = 1 << 34;
   uint256 public constant POOL_SPONSORED_LOAN_USER = 1 << 35;
 }

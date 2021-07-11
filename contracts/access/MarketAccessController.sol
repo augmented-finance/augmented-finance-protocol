@@ -148,6 +148,10 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
     return getAddress(AccessFlags.REWARD_CONFIGURATOR);
   }
 
+  function getStakeConfigurator() external view override returns (address) {
+    return getAddress(AccessFlags.STAKE_CONFIGURATOR);
+  }
+
   function setRewardTokenImpl(address addr) external override onlyOwner {
     setAddressAsProxy(AccessFlags.REWARD_TOKEN, addr);
   }
@@ -162,5 +166,9 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
 
   function setRewardConfiguratorImpl(address addr) external override {
     setAddressAsProxy(AccessFlags.REWARD_CONFIGURATOR, addr);
+  }
+
+  function setStakeConfiguratorImpl(address addr) external override {
+    setAddressAsProxy(AccessFlags.STAKE_CONFIGURATOR, addr);
   }
 }
