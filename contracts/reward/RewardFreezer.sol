@@ -11,6 +11,7 @@ import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
 import 'hardhat/console.sol';
 
+// TODO: remove after refactoring of tests
 contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
   using SafeMath for uint256;
   using PercentageMath for uint256;

@@ -126,7 +126,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
 
     if (limit <= maxAmount && limit + decayAmount <= maxAmount) {
       amount = limit;
-      console.log('internalClaimReward (limit below decay)', decayAmount, limit);
+      // console.log('internalClaimReward (limit below decay)', decayAmount, limit);
     } else {
       amount =
         maxAmount -
@@ -138,21 +138,21 @@ contract DecayingTokenLocker is RewardedTokenLocker {
           calcDecayTimeCompensation(startTS, endTS, since, current)
         );
 
-      console.log(
-        'internalClaimReward (compensated)',
-        maxAmount,
-        decayAmount,
-        decayAmount - (maxAmount - amount)
-      );
+      // console.log(
+      //   'internalClaimReward (compensated)',
+      //   maxAmount,
+      //   decayAmount,
+      //   decayAmount - (maxAmount - amount)
+      // );
 
       if (amount > limit) {
-        console.log('internalClaimReward (limit applied)', limit);
+        // console.log('internalClaimReward (limit applied)', limit);
         amount = limit;
       }
     }
 
     if (maxAmount > amount) {
-      console.log('internalClaimReward (excess)', maxAmount - amount);
+      // console.log('internalClaimReward (excess)', maxAmount - amount);
       internalAddExcess(maxAmount - amount, since);
     }
 
@@ -283,7 +283,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     uint256 stakedTotal,
     uint256 compensationRatio
   ) public view returns (uint256) {
-    console.log('calcCompensatedDecay', decayAmount, stakeAmount, compensationRatio);
+    // console.log('calcCompensatedDecay', decayAmount, stakeAmount, compensationRatio);
     if (decayAmount == 0 || compensationRatio == 0) {
       return decayAmount;
     }
