@@ -13,7 +13,7 @@ contract LibTestUtils {
   using WadRayMath for uint256;
 
   function TestLinearInterest(uint256 rate, uint256 ts) public view returns (uint256) {
-    console.log('block ts:', ts);
+    // console.log('block ts:', ts);
     uint256 res = MathUtils.calculateLinearInterest(rate, uint40(ts));
     return res;
   }
