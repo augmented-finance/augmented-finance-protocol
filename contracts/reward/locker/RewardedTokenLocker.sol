@@ -51,12 +51,12 @@ contract RewardedTokenLocker is
   }
 
   function internalSyncRate(uint32 at) internal override {
-    console.log('internalSyncRate', at, getExtraRate(), getStakedTotal());
+    // console.log('internalSyncRate', at, getExtraRate(), getStakedTotal());
     doSyncRateAt(at);
   }
 
   function internalCheckpoint(uint32 at) internal override {
-    console.log('internalCheckpoint', at, getExtraRate(), getStakedTotal());
+    // console.log('internalCheckpoint', at, getExtraRate(), getStakedTotal());
     doCheckpoint(at);
   }
 
