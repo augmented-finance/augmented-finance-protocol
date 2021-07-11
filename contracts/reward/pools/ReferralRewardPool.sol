@@ -39,7 +39,7 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry {
     bytes32 r,
     bytes32 s
   ) external notPaused {
-    uint256 currentValidNonce = nonceOf(spender);
+    uint256 currentValidNonce = _nonces[spender];
     require(issuedAt > currentValidNonce, 'EXPIRED_ISSUANCE');
     require(value > _claimLimit, 'EXCESSIVE_VALUE');
     require(uint32(issuedAt) == issuedAt);

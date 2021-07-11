@@ -41,7 +41,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     bytes32 r,
     bytes32 s
   ) external notPaused {
-    uint256 currentValidNonce = nonceOf(spender);
+    uint256 currentValidNonce = _nonces[spender];
 
     bytes32 encodedHash =
       keccak256(abi.encode(CLAIM_TYPEHASH, provider, spender, value, currentValidNonce, deadline));

@@ -20,7 +20,7 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
   bytes32 public CLAIM_TYPEHASH;
 
   /// @dev spender => next valid nonce to submit with permit()
-  mapping(address => uint256) private _nonces;
+  mapping(address => uint256) public _nonces;
 
   uint256 private _rewardLimit;
   string private _rewardPoolName;
@@ -57,10 +57,6 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
   }
 
   function getClaimTypeHash() internal pure virtual returns (bytes32);
-
-  function nonceOf(address spender) public view returns (uint256) {
-    return _nonces[spender];
-  }
 
   function stopRewards() external onlyController() {
     _rewardLimit = 0;
