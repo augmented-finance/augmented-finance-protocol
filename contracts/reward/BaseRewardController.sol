@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {BitUtils} from '../tools/math/BitUtils.sol';
 
@@ -17,7 +16,6 @@ import {IRewardCollector} from './interfaces/IRewardCollector.sol';
 import 'hardhat/console.sol';
 
 abstract contract BaseRewardController is
-  Ownable,
   IRewardCollector,
   MarketAccessBitmask,
   IManagedRewardController
@@ -228,7 +226,7 @@ abstract contract BaseRewardController is
 
   function isRateController(address addr) public view override returns (bool) {
     if (!hasRemoteAcl()) {
-      return addr == address(this) || addr == owner();
+      return addr == address(this);
     }
     return acl_hasAllOf(addr, AccessFlags.REWARD_RATE_ADMIN);
   }
@@ -240,9 +238,9 @@ abstract contract BaseRewardController is
 
   function isConfigurator(address addr) public view override returns (bool) {
     if (!hasRemoteAcl()) {
-      return addr == address(this) || addr == owner();
+      return addr == address(this);
     }
-    return addr == owner() || acl_hasAllOf(addr, AccessFlags.REWARD_CONFIG_ADMIN);
+    return acl_hasAllOf(addr, AccessFlags.REWARD_CONFIG_ADMIN);
   }
 
   modifier onlyConfigurator {
@@ -252,7 +250,7 @@ abstract contract BaseRewardController is
 
   function isEmergencyAdmin(address addr) public view override returns (bool) {
     if (!hasRemoteAcl()) {
-      return addr == address(this) || addr == owner();
+      return addr == address(this);
     }
     return acl_hasAllOf(addr, AccessFlags.EMERGENCY_ADMIN);
   }
