@@ -439,6 +439,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     uint256 debtToCover,
     bool receiveAToken
   ) external override whenNotPaused {
+    require(!_liquidationDisabled, Errors.LP_LIQUIDATION_DISABLED);
     address collateralManager = _addressesProvider.getLendingPoolCollateralManager();
 
     //solium-disable-next-line
@@ -499,6 +500,8 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     bytes calldata params,
     uint256 referral
   ) external override whenNotPaused {
+    require(!_flashloanDisabled, Errors.LP_FLASH_LOAN_RESTRICTED);
+
     FlashLoanLocalVars memory vars;
     vars.receiver = IFlashLoanReceiver(receiverAddress);
     vars.referral = referral;
@@ -780,7 +783,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     return _addressesProvider;
   }
 
-  function isPoolAdmin(address addr) external view override returns (bool) {
+  function isPoolAdmin(address addr) public view override returns (bool) {
     return _addressesProvider.isPoolAdmin(addr);
   }
 
@@ -1034,5 +1037,26 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
 
       _reservesCount = uint8(reservesCount) + 1;
     }
+  }
+
+  modifier onlyPoolAdmin {
+    require(isPoolAdmin(msg.sender), Errors.CALLER_NOT_POOL_ADMIN);
+    _;
+  }
+
+  function enableFlashLoan(bool enable) external onlyPoolAdmin {
+    _flashloanDisabled = !enable;
+  }
+
+  function enableLiquidation(bool enable) external onlyPoolAdmin {
+    _liquidationDisabled = !enable;
+  }
+
+  function isFlashLoanEnabled() external view returns (bool) {
+    return !_flashloanDisabled;
+  }
+
+  function isLiquidationEnabled() external view returns (bool) {
+    return !_flashloanDisabled;
   }
 }
