@@ -107,6 +107,9 @@ library Errors {
   string public constant LP_INVALID_PERCENTAGE = '82'; // 'Percentage can't be more than 100%'
   string public constant LP_IS_NOT_SPONSORED_LOAN = '83';
   string public constant CALLER_NOT_REWARD_ADMIN = '84';
+  string public constant LP_FLASH_LOAN_RESTRICTED = '85';
+  string public constant CT_PUMP_DUMP_PROTECTION = '86';
+  string public constant LP_LIQUIDATION_DISABLED = '87';
 
   enum CollateralManagerErrors {
     NO_ERROR,
