@@ -4,7 +4,6 @@ pragma solidity ^0.6.12;
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-// import {AccessBitmask} from '../../access/AccessBitmask.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {IForwardedRewardPool} from '../interfaces/IForwardedRewardPool.sol';
 import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
