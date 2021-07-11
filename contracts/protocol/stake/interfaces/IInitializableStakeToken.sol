@@ -17,4 +17,6 @@ interface IInitializableStakeToken {
     string calldata symbol,
     uint8 decimals
   ) external;
+
+  function initializedWithConfig() external view returns (StakeTokenConfig memory params);
 }
