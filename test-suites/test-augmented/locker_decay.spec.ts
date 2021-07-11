@@ -250,16 +250,20 @@ describe('Token decaying locker suite', () => {
       const newBalance = await AGF.balanceOf(user2.address);
       const newIncrement = newBalance.sub(lastBalance);
 
-      console.log(tick, newBalance.toString(), newIncrement.toString()); //, expectedLongBalance.claimable.toString());
+      // console.log(tick, newBalance.toString(), newIncrement.toString()); //, expectedLongBalance.claimable.toString());
+
+      const expectedLongClaim = await rewardController.claimableReward(user1.address);
+      expect(newBalance.toNumber()).lte(expectedLongClaim.claimable.toNumber());
+
       expect(newIncrement.toNumber()).approximately(expectedIncrement.claimable.toNumber(), 10000); // +/- 1 tick rate
       if (tick > step) {
+        if (newIncrement.eq(0) && tick > defaultPeriod / 2) {
+          break;
+        }
         expect(newIncrement).lt(lastIncrement);
       }
       lastBalance = newBalance;
       lastIncrement = newIncrement;
-
-      const expectedLongClaim = await rewardController.claimableReward(user1.address);
-      expect(newBalance.toNumber()).lte(expectedLongClaim.claimable.toNumber());
     }
 
     await mineToTicks(lockInfo.availableSince);
@@ -304,16 +308,20 @@ describe('Token decaying locker suite', () => {
       const newBalance = await AGF.balanceOf(user2.address);
       const newIncrement = newBalance.sub(lastBalance);
 
-      console.log(tick, newBalance.toString(), newIncrement.toString()); //, expectedLongBalance.claimable.toString());
+      // console.log(tick, newBalance.toString(), newIncrement.toString()); //, expectedLongBalance.claimable.toString());
+
+      const expectedLongClaim = await rewardController.claimableReward(user1.address);
+      expect(newBalance.toNumber()).lte(expectedLongClaim.claimable.toNumber());
+
       expect(newIncrement.toNumber()).approximately(expectedIncrement.claimable.toNumber(), 100); // +/- 10% of tick rate
       if (tick > step) {
+        if (newIncrement.eq(0) && tick > defaultPeriod / 2) {
+          break;
+        }
         expect(newIncrement).lt(lastIncrement);
       }
       lastBalance = newBalance;
       lastIncrement = newIncrement;
-
-      const expectedLongClaim = await rewardController.claimableReward(user1.address);
-      expect(newBalance.toNumber()).lte(expectedLongClaim.claimable.toNumber());
     }
 
     await mineToTicks(lockInfo.availableSince);
