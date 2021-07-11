@@ -116,7 +116,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     uint256 amount,
     address onBehalfOf,
     uint256 referral
-  ) external override whenNotPaused {
+  ) external override whenNotPaused notFlashloaning {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateDeposit(reserve, amount);
@@ -214,7 +214,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     uint256 interestRateMode,
     uint256 referral,
     address onBehalfOf
-  ) external override whenNotPaused {
+  ) external override whenNotPaused notFlashloaning {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     _executeBorrow(
@@ -439,6 +439,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     uint256 debtToCover,
     bool receiveAToken
   ) external override whenNotPaused {
+    require(!_liquidationDisabled, Errors.LP_LIQUIDATION_DISABLED);
     address collateralManager = _addressesProvider.getLendingPoolCollateralManager();
 
     //solium-disable-next-line
@@ -499,12 +500,17 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     bytes calldata params,
     uint256 referral
   ) external override whenNotPaused {
+    require(!_flashloanDisabled, Errors.LP_FLASH_LOAN_RESTRICTED);
+
     FlashLoanLocalVars memory vars;
     vars.receiver = IFlashLoanReceiver(receiverAddress);
     vars.referral = referral;
     vars.onBehalfOf = onBehalfOf;
 
+    require(_nestedFlashLoanCalls < type(uint8).max, Errors.LP_FLASH_LOAN_RESTRICTED);
+    _nestedFlashLoanCalls++;
     _flashLoan(vars, assets, amounts, modes, params, _flashLoanPremiumPct);
+    _nestedFlashLoanCalls--;
   }
 
   function sponsoredFlashLoan(
@@ -521,7 +527,10 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     vars.referral = referral;
     vars.onBehalfOf = onBehalfOf;
 
+    require(_nestedFlashLoanCalls < type(uint8).max, Errors.LP_FLASH_LOAN_RESTRICTED);
+    _nestedFlashLoanCalls++;
     _flashLoan(vars, assets, amounts, modes, params, 0);
+    _nestedFlashLoanCalls--;
   }
 
   function _flashLoan(
@@ -621,6 +630,11 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
         vars.referral
       );
     }
+  }
+
+  modifier notFlashloaning() {
+    require(_nestedFlashLoanCalls == 0, Errors.LP_FLASH_LOAN_RESTRICTED);
+    _;
   }
 
   /**
@@ -769,7 +783,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     return _addressesProvider;
   }
 
-  function isPoolAdmin(address addr) external view override returns (bool) {
+  function isPoolAdmin(address addr) public view override returns (bool) {
     return _addressesProvider.isPoolAdmin(addr);
   }
 
@@ -1023,5 +1037,26 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
 
       _reservesCount = uint8(reservesCount) + 1;
     }
+  }
+
+  modifier onlyPoolAdmin {
+    require(isPoolAdmin(msg.sender), Errors.CALLER_NOT_POOL_ADMIN);
+    _;
+  }
+
+  function enableFlashLoan(bool enable) external onlyPoolAdmin {
+    _flashloanDisabled = !enable;
+  }
+
+  function enableLiquidation(bool enable) external onlyPoolAdmin {
+    _liquidationDisabled = !enable;
+  }
+
+  function isFlashLoanEnabled() external view returns (bool) {
+    return !_flashloanDisabled;
+  }
+
+  function isLiquidationEnabled() external view returns (bool) {
+    return !_flashloanDisabled;
   }
 }
