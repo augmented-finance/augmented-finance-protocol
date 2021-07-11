@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {ERC20} from '../../../dependencies/openzeppelin/contracts/ERC20.sol';
-import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {
-  IGovernancePowerDelegationToken
-} from '../../../interfaces/IGovernancePowerDelegationToken.sol';
+import {ERC20} from '../../dependencies/openzeppelin/contracts/ERC20.sol';
+import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {IGovernancePowerDelegationToken} from '../interfaces/IGovernancePowerDelegationToken.sol';
 
 /**
  * @notice implementation of the delegatable voting token
