@@ -116,7 +116,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     uint256 amount,
     address onBehalfOf,
     uint256 referral
-  ) external override whenNotPaused {
+  ) external override whenNotPaused notFlashloaning {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateDeposit(reserve, amount);
@@ -504,7 +504,10 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     vars.referral = referral;
     vars.onBehalfOf = onBehalfOf;
 
+    require(_nestedFlashLoanCalls < type(uint8).max, Errors.LP_FLASH_LOAN_RESTRICTED);
+    _nestedFlashLoanCalls++;
     _flashLoan(vars, assets, amounts, modes, params, _flashLoanPremiumPct);
+    _nestedFlashLoanCalls--;
   }
 
   function sponsoredFlashLoan(
@@ -521,7 +524,10 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     vars.referral = referral;
     vars.onBehalfOf = onBehalfOf;
 
+    require(_nestedFlashLoanCalls < type(uint8).max, Errors.LP_FLASH_LOAN_RESTRICTED);
+    _nestedFlashLoanCalls++;
     _flashLoan(vars, assets, amounts, modes, params, 0);
+    _nestedFlashLoanCalls--;
   }
 
   function _flashLoan(
@@ -621,6 +627,11 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
         vars.referral
       );
     }
+  }
+
+  modifier notFlashloaning() {
+    require(_nestedFlashLoanCalls == 0, Errors.LP_FLASH_LOAN_RESTRICTED);
+    _;
   }
 
   /**
