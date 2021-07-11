@@ -63,9 +63,6 @@ import {
   TokenWeightedRewardPoolFactory,
   PermitFreezerRewardPoolFactory,
   TeamRewardPoolFactory,
-  MigratorFactory,
-  AaveAdapterFactory,
-  CompAdapterFactory,
   AccessControllerFactory,
   DecayingTokenLockerFactory,
 } from '../types';

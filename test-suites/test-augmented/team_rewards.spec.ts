@@ -148,7 +148,7 @@ describe('Team rewards suite', () => {
     await trp.connect(root).setPaused(false);
     await mineTicks(1);
     await rewardController.connect(teamMember1).claimReward();
-    expect(await agf.balanceOf(teamMember1.address)).to.eq(2);
+    expect(await agf.balanceOf(teamMember1.address)).to.within(2, 3);
   });
 
   it('one team member with 100% share (0% frozen) claims all', async () => {
