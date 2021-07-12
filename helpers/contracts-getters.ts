@@ -55,7 +55,7 @@ export const getFirstSigner = async () => (await DRE.ethers.getSigners())[0];
 export const getLendingPoolAddressesProvider = async (address?: tEthereumAddress) =>
   await MarketAccessControllerFactory.connect(
     address ||
-      (await getDb().get(`${eContractid.LendingPoolAddressesProvider}.${DRE.network.name}`).value())
+      (await getDb().get(`${eContractid.MarketAccessController}.${DRE.network.name}`).value())
         .address,
     await getFirstSigner()
   );
