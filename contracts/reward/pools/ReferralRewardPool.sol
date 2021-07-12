@@ -70,6 +70,6 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry {
   }
 
   function registerShortCode(uint32 shortRefCode, address to) public onlyRefAdmin {
-    internalRegisterShortCode(shortRefCode, to);
+    internalRegisterCode(shortRefCode, to);
   }
 }
