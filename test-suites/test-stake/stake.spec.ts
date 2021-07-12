@@ -24,7 +24,7 @@ import {
 } from '../../tasks/migrations/defaultTestDeployConfig';
 import { mineTicks, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import { BigNumberish } from 'ethers';
-import { VL_INVALID_AMOUNT } from '../../helpers/contract_errors';
+import { ProtocolErrors } from '../../helpers/types';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -89,7 +89,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
 
   it('error when redeeming if amount is zero', async () => {
     await expect(xAGF.connect(user1).redeem(user1.address, 0)).to.be.revertedWith(
-      VL_INVALID_AMOUNT
+      ProtocolErrors.VL_INVALID_AMOUNT
     );
   });
 
