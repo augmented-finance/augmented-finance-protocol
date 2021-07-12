@@ -12,7 +12,7 @@ import {
   getProtocolDataProvider,
   getAToken,
   getATokensAndRatesHelper,
-  getLendingPoolAddressesProvider,
+  getMarketAddressController,
   getLendingPoolConfiguratorProxy,
   getStableAndVariableTokensHelper,
 } from './contracts-getters';
@@ -59,7 +59,7 @@ export const initReservesByHelper = async (
   let gasUsage = BigNumber.from('0');
   const stableAndVariableDeployer = await getStableAndVariableTokensHelper();
 
-  const addressProvider = await getLendingPoolAddressesProvider();
+  const addressProvider = await getMarketAddressController();
 
   // CHUNK CONFIGURATION
   const initChunks = 1;
@@ -277,7 +277,7 @@ export const configureReservesByHelper = async (
   helpers: ProtocolDataProvider,
   admin: tEthereumAddress
 ) => {
-  const addressProvider = await getLendingPoolAddressesProvider();
+  const addressProvider = await getMarketAddressController();
   const atokenAndRatesDeployer = await getATokensAndRatesHelper();
   const tokens: string[] = [];
   const symbols: string[] = [];
@@ -392,7 +392,7 @@ export const initTokenReservesByHelper = async (
   );
 
   const addressProvider = await (
-    await getLendingPoolAddressesProvider(addressesProviderAddress)
+    await getMarketAddressController(addressesProviderAddress)
   ).connect(signer);
   const protocolDataProvider = await (await getProtocolDataProvider(dataProviderAddress)).connect(
     signer
@@ -577,7 +577,7 @@ export const initTokenReservesByHelper = async (
   const configurator = await getLendingPoolConfiguratorProxy();
   //await waitForTx(await addressProvider.setPoolAdmin(admin));
 
-  console.log(`- Reserves initialization in ${chunkedInitInputParams.length} txs`);
+  console.log(`- Token reserves initialization in ${chunkedInitInputParams.length} txs`);
   for (let chunkIndex = 0; chunkIndex < chunkedInitInputParams.length; chunkIndex++) {
     const tx3 = await waitForTx(
       await configurator.batchInitReserve(chunkedInitInputParams[chunkIndex])

@@ -7,7 +7,7 @@ import { initTokenReservesByHelper } from '../../helpers/init-helpers';
 import { exit } from 'process';
 import {
   getFirstSigner,
-  getLendingPoolAddressesProvider,
+  getMarketAddressController,
   getAddressesProviderRegistry,
 } from '../../helpers/contracts-getters';
 import { Signer } from 'ethers';
@@ -37,7 +37,7 @@ task('full:initialize-tokens', 'Initialize lending pool configuration.')
 
       const providers = await providerRegistry.getAddressesProvidersList();
 
-      const addressesProvider = await getLendingPoolAddressesProvider(providers[0]); // Checks first provider
+      const addressesProvider = await getMarketAddressController(providers[0]); // Checks first provider
 
       const admin = await addressesProvider.getPoolAdmin();
       if (!reserveAssets) {
