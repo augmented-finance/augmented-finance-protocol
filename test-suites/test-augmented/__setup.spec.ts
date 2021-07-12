@@ -222,7 +222,6 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
     SymbolPrefix,
     admin,
     treasuryAddress,
-    ZERO_ADDRESS,
     false
   );
 

@@ -53,7 +53,6 @@ export const initReservesByHelper = async (
   symbolPrefix: string,
   admin: tEthereumAddress,
   treasuryAddress: tEthereumAddress,
-  incentivesController: tEthereumAddress,
   verify: boolean
 ): Promise<BigNumber> => {
   let gasUsage = BigNumber.from('0');
@@ -186,6 +185,12 @@ export const initReservesByHelper = async (
     }
 
     reserveInitDecimals.push(reserveDecimals);
+
+    if (tokenAddresses[symbol] == undefined) {
+      console.log('Asset ', symbol, ' is missing in ', tokenAddresses);
+      throw 'asset is missing: ' + symbol;
+    }
+
     reserveTokens.push(tokenAddresses[symbol]);
     reserveSymbols.push(symbol);
   }

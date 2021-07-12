@@ -65,7 +65,6 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
       SymbolPrefix,
       admin,
       treasuryAddress,
-      ZERO_ADDRESS,
       verify
     );
     await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, testHelpers, admin);
