@@ -33,13 +33,15 @@ library AccessFlags {
 
   uint256 public constant STAKE_CONFIGURATOR = 1 << 26; // use proxy
 
-  uint256 public constant REF_REGISTRY = 1 << 27;
+  uint256 public constant REFERRAL_REGISTRY = 1 << 27;
 
-  // any other roles - use range [32..]
+  uint256 public constant WETH_GATEWAY = 1 << 28;
+
+  // any other roles - use range [64..]
   // these roles can be assigned to multiple addresses
 
-  uint256 public constant REWARD_MINT = 1 << 32;
-  uint256 public constant REWARD_BURN = 1 << 33;
+  uint256 public constant REWARD_MINT = 1 << 64;
+  uint256 public constant REWARD_BURN = 1 << 65;
 
-  uint256 public constant POOL_SPONSORED_LOAN_USER = 1 << 35;
+  uint256 public constant POOL_SPONSORED_LOAN_USER = 1 << 66;
 }

@@ -22,10 +22,7 @@ import { waitForTx, filterMapBy } from '../../helpers/misc-utils';
 import { configureReservesByHelper, initReservesByHelper } from '../../helpers/init-helpers';
 import { getAllTokenAddresses } from '../../helpers/mock-helpers';
 import { ZERO_ADDRESS } from '../../helpers/constants';
-import {
-  getAllMockedTokens,
-  getLendingPoolAddressesProvider,
-} from '../../helpers/contracts-getters';
+import { getAllMockedTokens, getMarketAddressController } from '../../helpers/contracts-getters';
 import { insertContractAddressInDb } from '../../helpers/contracts-helpers';
 
 task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
@@ -36,7 +33,7 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
     const {
-      ATokenNamePrefix,
+      DepositTokenNamePrefix,
       StableDebtTokenNamePrefix,
       VariableDebtTokenNamePrefix,
       SymbolPrefix,
@@ -45,7 +42,7 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     const mockTokens = await getAllMockedTokens();
     const allTokenAddresses = getAllTokenAddresses(mockTokens);
 
-    const addressesProvider = await getLendingPoolAddressesProvider();
+    const addressesProvider = await getMarketAddressController();
 
     const protoPoolReservesAddresses = <{ [symbol: string]: tEthereumAddress }>(
       filterMapBy(allTokenAddresses, (key: string) => !key.includes('UNI_'))
@@ -62,13 +59,12 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     await initReservesByHelper(
       reservesParams,
       protoPoolReservesAddresses,
-      ATokenNamePrefix,
+      DepositTokenNamePrefix,
       StableDebtTokenNamePrefix,
       VariableDebtTokenNamePrefix,
       SymbolPrefix,
       admin,
       treasuryAddress,
-      ZERO_ADDRESS,
       verify
     );
     await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, testHelpers, admin);
@@ -97,5 +93,4 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     if (gateWay !== '') {
       await authorizeWETHGateway(gateWay, lendingPoolAddress);
     }
-    console.log('AAAAA');
   });

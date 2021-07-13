@@ -1,11 +1,24 @@
 import { task } from 'hardhat/config';
+import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { deployAddressesProviderRegistry } from '../../helpers/contracts-deployments';
+import { eNetwork } from '../../helpers/types';
+import { loadPoolConfig } from '../../helpers/configuration';
+import { isAddress } from 'ethers/lib/utils';
+import { isZeroAddress } from 'ethereumjs-util';
+import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 
 task('full:deploy-address-provider-registry', 'Deploy address provider registry')
   .addFlag('verify', 'Verify contracts at Etherscan')
-  .setAction(async ({ verify }, DRE) => {
+  .setAction(async ({ verify, pool }, DRE) => {
     await DRE.run('set-DRE');
 
-    const contract = await deployAddressesProviderRegistry(verify);
-    console.log('Registry Address:', contract.address);
+    const network = <eNetwork>DRE.network.name;
+    const poolConfig = loadPoolConfig(pool);
+
+    let providerRegistryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
+
+    if (falsyOrZeroAddress(providerRegistryAddress)) {
+      const contract = await deployAddressesProviderRegistry(verify);
+      console.log('Deployed Registry Address:', contract.address);
+    }
   });

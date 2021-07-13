@@ -14,12 +14,12 @@ import {
 } from '../../helpers/configuration';
 import { getWETHGateway } from '../../helpers/contracts-getters';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
-import { notFalsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
 import { exit } from 'process';
 import {
   getProtocolDataProvider,
-  getLendingPoolAddressesProvider,
+  getMarketAddressController,
 } from '../../helpers/contracts-getters';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 
@@ -32,7 +32,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       const network = <eNetwork>localBRE.network.name;
       const poolConfig = loadPoolConfig(pool);
       const {
-        ATokenNamePrefix,
+        DepositTokenNamePrefix,
         StableDebtTokenNamePrefix,
         VariableDebtTokenNamePrefix,
         SymbolPrefix,
@@ -44,7 +44,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
 
       const reserveAssets = await getParamPerNetwork(ReserveAssets, network);
 
-      const addressesProvider = await getLendingPoolAddressesProvider();
+      const addressesProvider = await getMarketAddressController();
 
       const testHelpers = await getProtocolDataProvider();
 
@@ -59,13 +59,12 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       await initReservesByHelper(
         ReservesConfig,
         reserveAssets,
-        ATokenNamePrefix,
+        DepositTokenNamePrefix,
         StableDebtTokenNamePrefix,
         VariableDebtTokenNamePrefix,
         SymbolPrefix,
         admin,
         treasuryAddress,
-        ZERO_ADDRESS,
         verify
       );
       await configureReservesByHelper(ReservesConfig, reserveAssets, testHelpers, admin);
@@ -73,7 +72,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
         LendingPoolCollateralManager,
         network
       );
-      if (!notFalsyOrZeroAddress(collateralManagerAddress)) {
+      if (falsyOrZeroAddress(collateralManagerAddress)) {
         const collateralManager = await deployLendingPoolCollateralManager(verify);
         collateralManagerAddress = collateralManager.address;
       }
@@ -92,7 +91,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       const lendingPoolAddress = await addressesProvider.getLendingPool();
 
       let gateWay = getParamPerNetwork(WethGateway, network);
-      if (!notFalsyOrZeroAddress(gateWay)) {
+      if (falsyOrZeroAddress(gateWay)) {
         gateWay = (await getWETHGateway()).address;
       }
       await authorizeWETHGateway(gateWay, lendingPoolAddress);

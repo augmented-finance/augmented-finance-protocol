@@ -13,7 +13,7 @@ import {
 } from '../../helpers/configuration';
 import {
   getOracleRouter,
-  getLendingPoolAddressesProvider,
+  getMarketAddressController,
   getLendingRateOracle,
   getPairsTokenAggregator,
 } from '../../helpers/contracts-getters';
@@ -34,7 +34,7 @@ task('full:deploy-oracles', 'Deploy oracles for dev enviroment')
         ChainlinkAggregator,
       } = poolConfig as ICommonConfiguration;
       const lendingRateOracles = getLendingRateOracles(poolConfig);
-      const addressesProvider = await getLendingPoolAddressesProvider();
+      const addressesProvider = await getMarketAddressController();
       const admin = await getGenesisPoolAdmin(poolConfig);
       const oracleRouterAddress = getParamPerNetwork(poolConfig.OracleRouter, network);
       const lendingRateOracleAddress = getParamPerNetwork(poolConfig.LendingRateOracle, network);

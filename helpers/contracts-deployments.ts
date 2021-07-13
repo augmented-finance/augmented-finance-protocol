@@ -84,7 +84,7 @@ const readArtifact = async (id: string) => {
 export const deployLendingPoolAddressesProvider = async (marketId: string, verify?: boolean) =>
   withSaveAndVerify(
     await new MarketAccessControllerFactory(await getFirstSigner()).deploy(marketId),
-    eContractid.LendingPoolAddressesProvider,
+    eContractid.MarketAccessController,
     [marketId],
     verify
   );
@@ -637,7 +637,7 @@ export const deployMockAgfToken = async (
 };
 
 export const deployMockStakedAgToken = async (
-  args: [tEthereumAddress, tEthereumAddress, string, string, number, number, tEthereumAddress],
+  args: [tEthereumAddress, tEthereumAddress, string, string, number, number],
   verify?: boolean
 ) => {
   const instance = await withSaveAndVerify(
@@ -652,7 +652,6 @@ export const deployMockStakedAgToken = async (
       stakedToken: args[1],
       cooldownPeriod: args[4],
       unstakePeriod: args[5],
-      governance: args[6],
     },
     args[2],
     args[3],
@@ -663,7 +662,7 @@ export const deployMockStakedAgToken = async (
 };
 
 export const deployMockStakedAgfToken = async (
-  args: [tEthereumAddress, tEthereumAddress, string, string, number, number, tEthereumAddress],
+  args: [tEthereumAddress, tEthereumAddress, string, string, number, number],
   verify?: boolean
 ) => {
   const instance = await withSaveAndVerify(
@@ -678,7 +677,6 @@ export const deployMockStakedAgfToken = async (
       stakedToken: args[1],
       cooldownPeriod: args[4],
       unstakePeriod: args[5],
-      governance: args[6],
     },
     args[2],
     args[3],

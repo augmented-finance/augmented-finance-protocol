@@ -12,7 +12,7 @@ import {
   getProtocolDataProvider,
   getAToken,
   getATokensAndRatesHelper,
-  getLendingPoolAddressesProvider,
+  getMarketAddressController,
   getLendingPoolConfiguratorProxy,
   getStableAndVariableTokensHelper,
 } from './contracts-getters';
@@ -47,19 +47,18 @@ export const chooseATokenDeployment = (id: eContractid) => {
 export const initReservesByHelper = async (
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
-  aTokenNamePrefix: string,
+  depositTokenNamePrefix: string,
   stableDebtTokenNamePrefix: string,
   variableDebtTokenNamePrefix: string,
   symbolPrefix: string,
   admin: tEthereumAddress,
   treasuryAddress: tEthereumAddress,
-  incentivesController: tEthereumAddress,
   verify: boolean
 ): Promise<BigNumber> => {
   let gasUsage = BigNumber.from('0');
   const stableAndVariableDeployer = await getStableAndVariableTokensHelper();
 
-  const addressProvider = await getLendingPoolAddressesProvider();
+  const addressProvider = await getMarketAddressController();
 
   // CHUNK CONFIGURATION
   const initChunks = 1;
@@ -186,6 +185,12 @@ export const initReservesByHelper = async (
     }
 
     reserveInitDecimals.push(reserveDecimals);
+
+    if (tokenAddresses[symbol] == undefined) {
+      console.log('Asset ', symbol, ' is missing in ', tokenAddresses);
+      throw 'asset is missing: ' + symbol;
+    }
+
     reserveTokens.push(tokenAddresses[symbol]);
     reserveSymbols.push(symbol);
   }
@@ -209,7 +214,7 @@ export const initReservesByHelper = async (
       treasury: treasuryAddress,
       incentivesController: ZERO_ADDRESS,
       underlyingAssetName: reserveSymbols[i],
-      aTokenName: `${aTokenNamePrefix} ${reserveSymbols[i]}`,
+      aTokenName: `${depositTokenNamePrefix} ${reserveSymbols[i]}`,
       aTokenSymbol: `ag${symbolPrefix}${reserveSymbols[i]}`,
       variableDebtTokenName: `${variableDebtTokenNamePrefix} ${symbolPrefix}${reserveSymbols[i]}`,
       variableDebtTokenSymbol: `variableDebt${symbolPrefix}${reserveSymbols[i]}`,
@@ -277,7 +282,7 @@ export const configureReservesByHelper = async (
   helpers: ProtocolDataProvider,
   admin: tEthereumAddress
 ) => {
-  const addressProvider = await getLendingPoolAddressesProvider();
+  const addressProvider = await getMarketAddressController();
   const atokenAndRatesDeployer = await getATokensAndRatesHelper();
   const tokens: string[] = [];
   const symbols: string[] = [];
@@ -392,7 +397,7 @@ export const initTokenReservesByHelper = async (
   );
 
   const addressProvider = await (
-    await getLendingPoolAddressesProvider(addressesProviderAddress)
+    await getMarketAddressController(addressesProviderAddress)
   ).connect(signer);
   const protocolDataProvider = await (await getProtocolDataProvider(dataProviderAddress)).connect(
     signer
@@ -577,7 +582,7 @@ export const initTokenReservesByHelper = async (
   const configurator = await getLendingPoolConfiguratorProxy();
   //await waitForTx(await addressProvider.setPoolAdmin(admin));
 
-  console.log(`- Reserves initialization in ${chunkedInitInputParams.length} txs`);
+  console.log(`- Token reserves initialization in ${chunkedInitInputParams.length} txs`);
   for (let chunkIndex = 0; chunkIndex < chunkedInitInputParams.length; chunkIndex++) {
     const tx3 = await waitForTx(
       await configurator.batchInitReserve(chunkedInitInputParams[chunkIndex])

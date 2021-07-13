@@ -37,7 +37,7 @@ export enum LendingPools {
 }
 
 export enum eContractid {
-  LendingPoolAddressesProvider = 'LendingPoolAddressesProvider',
+  MarketAccessController = 'MarketAccessController',
   MintableERC20 = 'MintableERC20',
   MintableDelegationERC20 = 'MintableDelegationERC20',
   AddressesProviderRegistry = 'AddressesProviderRegistry',
@@ -351,7 +351,7 @@ export interface ILendingRate {
 
 export interface ICommonConfiguration {
   MarketId: string;
-  ATokenNamePrefix: string;
+  DepositTokenNamePrefix: string;
   StableDebtTokenNamePrefix: string;
   VariableDebtTokenNamePrefix: string;
   SymbolPrefix: string;

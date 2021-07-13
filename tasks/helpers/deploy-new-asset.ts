@@ -4,7 +4,7 @@ import { getTreasuryAddress } from '../../helpers/configuration';
 import * as marketConfigs from '../../markets/augmented';
 import * as reserveConfigs from '../../markets/augmented/reservesConfigs';
 import { chooseATokenDeployment } from '../../helpers/init-helpers';
-import { getLendingPoolAddressesProvider } from './../../helpers/contracts-getters';
+import { getMarketAddressController } from './../../helpers/contracts-getters';
 import {
   deployDefaultReserveInterestRateStrategy,
   deployStableDebtToken,
@@ -43,7 +43,7 @@ WRONG RESERVE ASSET SETUP:
     const reserveAssetAddress =
       marketConfigs.AugmentedConfig.ReserveAssets[localBRE.network.name][symbol];
     const deployCustomAToken = chooseATokenDeployment(strategyParams.aTokenImpl);
-    const addressProvider = await getLendingPoolAddressesProvider(
+    const addressProvider = await getMarketAddressController(
       LENDING_POOL_ADDRESS_PROVIDER[network]
     );
     const poolAddress = await addressProvider.getLendingPool();
