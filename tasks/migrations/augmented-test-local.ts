@@ -20,6 +20,7 @@ import {
   stakingUnstakeTicks,
 } from './defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
+import { AccessFlags } from '../../helpers/access-flags';
 
 task('augmented:test-local', 'Deploy Augmented test contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
@@ -61,8 +62,8 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       const ac = await deployAccessController();
       // emergency admin + liquidity admin
       await ac.setEmergencyAdmin(root.address);
-      await ac.grantRoles(root.address, (1 << 3) | (1 << 5)); // REWARD_CONFIG_ADMIN | STAKE_ADMIN
-      await ac.grantRoles(slasher.address, 1 << 15); // LIQUIDITY_CONTROLLER
+      await ac.grantRoles(root.address, AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN);
+      await ac.grantRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
       console.log(`#2 deploying: mock AGF`);
       const agfToken = await deployMockAgfToken(

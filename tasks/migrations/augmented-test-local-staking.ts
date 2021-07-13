@@ -28,6 +28,7 @@ import {
   stakingUnstakeTicks,
 } from './defaultTestDeployConfig';
 import { getAGTokenByName } from '../../helpers/contracts-getters';
+import { AccessFlags } from '../../helpers/access-flags';
 
 task('augmented:test-local-staking', 'Deploy staking test contracts')
   .addOptionalParam(
@@ -53,8 +54,14 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       const ac = await deployAccessController();
       // emergency admin + liquidity admin
       await ac.setEmergencyAdmin(root.address);
-      await ac.grantRoles(root.address, (1 << 5) | (1 << 25) | (1 << 24) | (1 << 27) | (1 << 3));
-      await ac.grantRoles(slasher.address, 1 << 15);
+      await ac.grantRoles(
+        root.address,
+        AccessFlags.STAKE_ADMIN ||
+          AccessFlags.REWARD_CONFIG_ADMIN ||
+          AccessFlags.REWARD_CONFIGURATOR ||
+          AccessFlags.STAKE_CONFIGURATOR
+      );
+      await ac.grantRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
       console.log(`#2 deploying: mock AGF`);
       const agfToken = await deployMockAgfToken(
