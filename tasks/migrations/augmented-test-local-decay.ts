@@ -26,7 +26,7 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
     const ac = await deployAccessController();
     // emergency admin + liquidity admin
     await ac.setEmergencyAdmin(root.address);
-    await ac.grantRoles(root.address, AccessFlags.REWARD_CONFIG_ADMIN || AccessFlags.STAKE_ADMIN);
+    await ac.grantRoles(root.address, AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN);
     await ac.grantRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
     console.log(`#2 deploying: mock AGF`);

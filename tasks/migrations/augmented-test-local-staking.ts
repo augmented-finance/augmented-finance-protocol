@@ -56,10 +56,10 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       await ac.setEmergencyAdmin(root.address);
       await ac.grantRoles(
         root.address,
-        AccessFlags.STAKE_ADMIN ||
-          AccessFlags.REWARD_CONFIG_ADMIN ||
-          AccessFlags.REWARD_CONFIGURATOR ||
-          AccessFlags.STAKE_CONFIGURATOR ||
+        AccessFlags.STAKE_ADMIN |
+          AccessFlags.REWARD_CONFIG_ADMIN |
+          AccessFlags.REWARD_CONFIGURATOR |
+          AccessFlags.STAKE_CONFIGURATOR |
           AccessFlags.REWARD_CONTROLLER
       );
       await ac.grantRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
@@ -72,7 +72,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
 
       console.log(`#3 deploying: RewardController`);
       const rewardCtl = await deployRewardController([ac.address, agfToken.address], verify);
-      await rewardCtl.setFreezePercentage(0);
+      await rewardCtl.connect(root).setFreezePercentage(0);
 
       console.log(`#4 Staking`);
       const agDaiToken = await getAGTokenByName('agDAI');
