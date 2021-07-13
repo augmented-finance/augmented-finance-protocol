@@ -67,18 +67,17 @@ task(
     } else {
       signer = DRE.ethers.provider.getSigner(providerRegistryOwner);
     }
-    // 1. Address Provider Registry instance
-    const addressesProviderRegistry = (
-      await getAddressesProviderRegistry(providerRegistryAddress)
-    ).connect(signer);
-
-    console.log('Registry Address', addressesProviderRegistry.address);
 
     // 2. Deploy address provider and set genesis manager
     const addressesProvider = await deployLendingPoolAddressesProvider(MarketId, verify);
 
     // DISABLE SEC. 3 FOR GOVERNANCE USE!
     // 3. Set the provider at the Registry
+    const addressesProviderRegistry = (
+      await getAddressesProviderRegistry(providerRegistryAddress)
+    ).connect(signer);
+
+    console.log('Registry Address', addressesProviderRegistry.address);
     await waitForTx(
       await addressesProviderRegistry.registerAddressesProvider(
         addressesProvider.address,

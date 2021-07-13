@@ -9,5 +9,11 @@ import {MarketAccessController} from '../../access/MarketAccessController.sol';
  * - Acting also as factory of proxies and admin of those, so with right to change its implementations
  **/
 contract LendingPoolAddressesProvider is MarketAccessController {
+  string private _foo;
+
+  function getFoo() external view returns (string memory) {
+    return _foo;
+  }
+
   constructor(string memory marketId) public MarketAccessController(marketId) {}
 }

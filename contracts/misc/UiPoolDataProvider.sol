@@ -155,6 +155,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         }
       }
     }
-    return (reservesData, userReservesData, oracle.getAssetPrice(MOCK_USD_ADDRESS));
+    uint256 usdPrice = 219400068118;
+    return (reservesData, userReservesData, usdPrice);
   }
 }
