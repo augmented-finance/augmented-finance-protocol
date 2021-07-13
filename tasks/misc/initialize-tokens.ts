@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames, getTreasuryAddress } from '../../helpers/configuration';
 import { eEthereumNetwork, eNetwork, ICommonConfiguration } from '../../helpers/types';
-import { waitForTx } from '../../helpers/misc-utils';
+import { getSigner, waitForTx } from '../../helpers/misc-utils';
 import { initTokenReservesByHelper } from '../../helpers/init-helpers';
 import { exit } from 'process';
 import {
@@ -49,17 +49,13 @@ task('full:initialize-tokens', 'Initialize lending pool configuration.')
           method: 'hardhat_impersonateAccount',
           params: [providerRegistryOwner],
         });
-        signer = DRE.ethers.provider.getSigner(providerRegistryOwner);
         const user = await getFirstSigner();
         await waitForTx(
-          await user.sendTransaction({ to: await signer.getAddress(), value: parseEther('10') })
+          await user.sendTransaction({ to: providerRegistryOwner, value: parseEther('10') })
         );
-
-        const balance = await signer.getBalance();
-        console.log('signer balance', formatEther(balance));
-      } else {
-        signer = DRE.ethers.provider.getSigner(providerRegistryOwner);
       }
+      signer = getSigner(providerRegistryOwner);
+      console.log('signer balance', formatEther(await signer.getBalance()));
 
       // Init unitilialized reserves
       await initTokenReservesByHelper(

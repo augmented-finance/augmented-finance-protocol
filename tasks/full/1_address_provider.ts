@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { deployLendingPoolAddressesProvider } from '../../helpers/contracts-deployments';
-import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, getSigner, waitForTx } from '../../helpers/misc-utils';
 import {
   ConfigNames,
   loadPoolConfig,
@@ -53,12 +53,11 @@ task('full:deploy-address-provider', 'Deploy address provider for prod enviromen
         method: 'hardhat_impersonateAccount',
         params: [providerRegistryOwner],
       });
-      signer = DRE.ethers.provider.getSigner(providerRegistryOwner);
       const firstAccount = await getFirstSigner();
       await firstAccount.sendTransaction({ value: parseEther('10'), to: providerRegistryOwner });
-    } else {
-      signer = DRE.ethers.provider.getSigner(providerRegistryOwner);
     }
+    signer = getSigner(providerRegistryOwner);
+
     // 1. Address Provider Registry instance
     const addressesProviderRegistry = (
       await getAddressesProviderRegistry(providerRegistryAddress)

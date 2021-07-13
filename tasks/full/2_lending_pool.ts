@@ -7,7 +7,7 @@ import {
   deployStableAndVariableTokensHelper,
 } from '../../helpers/contracts-deployments';
 import { eContractid, eNetwork } from '../../helpers/types';
-import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, getTenderlyDashboardLink, waitForTx } from '../../helpers/misc-utils';
 import {
   getMarketAddressController,
   getLendingPool,
@@ -80,10 +80,7 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
       );
     } catch (error) {
       if (DRE.network.name.includes('tenderly')) {
-        const transactionLink = `https://dashboard.tenderly.co/${DRE.config.tenderly.username}/${
-          DRE.config.tenderly.project
-        }/fork/${DRE.tenderlyNetwork.getFork()}/simulation/${DRE.tenderlyNetwork.getHead()}`;
-        console.error('Check tx error:', transactionLink);
+        console.error('Check tx error:', getTenderlyDashboardLink());
       }
       throw error;
     }

@@ -3,7 +3,12 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { deployOracleRouter, deployLendingRateOracle } from '../../helpers/contracts-deployments';
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
 import { ICommonConfiguration, eNetwork, SymbolMap } from '../../helpers/types';
-import { waitForTx, notFalsyOrZeroAddress } from '../../helpers/misc-utils';
+import {
+  waitForTx,
+  notFalsyOrZeroAddress,
+  getSigner,
+  getTenderlyDashboardLink,
+} from '../../helpers/misc-utils';
 import {
   ConfigNames,
   loadPoolConfig,
@@ -52,7 +57,7 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
       if (notFalsyOrZeroAddress(oracleRouterAddress)) {
         oracleRouter = await await getOracleRouter(oracleRouterAddress);
         const owner = await oracleRouter.owner();
-        const signer = DRE.ethers.provider.getSigner(owner);
+        const signer = getSigner(owner);
 
         oracleRouter = await (await getOracleRouter(oracleRouterAddress)).connect(signer);
         await waitForTx(await oracleRouter.setAssetSources(tokens, aggregators));
@@ -68,9 +73,7 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
         : await deployLendingRateOracle(verify);
       const { USD, ...tokensAddressesWithoutUsd } = tokensToWatch;
 
-      lendingRateOracle = lendingRateOracle.connect(
-        DRE.ethers.provider.getSigner(await lendingRateOracle.owner())
-      );
+      lendingRateOracle = lendingRateOracle.connect(getSigner(await lendingRateOracle.owner()));
       // This must be done any time a new market is created I believe
       //if (!lendingRateOracleAddress) {
       await setInitialMarketRatesInRatesOracleByHelper(
@@ -86,10 +89,7 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
       await waitForTx(await addressesProvider.setLendingRateOracle(lendingRateOracle.address));
     } catch (error) {
       if (DRE.network.name.includes('tenderly')) {
-        const transactionLink = `https://dashboard.tenderly.co/${DRE.config.tenderly.username}/${
-          DRE.config.tenderly.project
-        }/fork/${DRE.tenderlyNetwork.getFork()}/simulation/${DRE.tenderlyNetwork.getHead()}`;
-        console.error('Check tx error:', transactionLink);
+        console.error('Check tx error:', getTenderlyDashboardLink());
       }
       throw error;
     }

@@ -118,3 +118,12 @@ export const notFalsyOrZeroAddress = (address: tEthereumAddress | null | undefin
 export const falsyOrZeroAddress = (address: tEthereumAddress | null | undefined): boolean => {
   return !notFalsyOrZeroAddress(address);
 };
+
+export const getSigner = (address: tEthereumAddress | string | undefined) =>
+  DRE.ethers.provider.getSigner(address);
+
+export const getTenderlyDashboardLink = () => {
+  return `https://dashboard.tenderly.co/${DRE.config.tenderly.username}/${
+    DRE.config.tenderly.project
+  }/fork/${DRE.tenderlyNetwork.getFork()}/simulation/${DRE.tenderlyNetwork.getHead()}`;
+};
