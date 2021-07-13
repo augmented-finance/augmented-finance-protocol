@@ -301,12 +301,21 @@ contract AccessController is Ownable, IManagedAccessController {
   }
 
   function addImplementation(string calldata id, address addr) public override {
+    require(addImplementationOpt(id, addr) == addr, 'conflicting implementations');
+  }
+
+  function addImplementationOpt(string calldata id, address addr)
+    public
+    override
+    onlyOwner
+    returns (address)
+  {
     require(addr != address(0), 'implementation is required');
     address a = _implementations[id];
-    if (a == addr) {
-      return;
+    if (a != address(0)) {
+      return a;
     }
-    require(a == address(0), 'conflicting implementations');
     _implementations[id] = addr;
+    return addr;
   }
 }
