@@ -52,10 +52,10 @@ import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } fro
 
 export const getFirstSigner = async () => (await DRE.ethers.getSigners())[0];
 
-export const getLendingPoolAddressesProvider = async (address?: tEthereumAddress) =>
+export const getMarketAddressController = async (address?: tEthereumAddress) =>
   await MarketAccessControllerFactory.connect(
     address ||
-      (await getDb().get(`${eContractid.LendingPoolAddressesProvider}.${DRE.network.name}`).value())
+      (await getDb().get(`${eContractid.MarketAccessController}.${DRE.network.name}`).value())
         .address,
     await getFirstSigner()
   );
@@ -187,7 +187,9 @@ export const getPairsTokenAggregator = (
   },
   aggregatorsAddresses: { [tokenSymbol: string]: tEthereumAddress }
 ): [string[], string[]] => {
+  console.log(allAssetsAddresses);
   const { ETH, USD, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
+  console.log(assetsAddressesWithoutEth);
 
   const pairs = Object.entries(assetsAddressesWithoutEth).map(([tokenSymbol, tokenAddress]) => {
     //if (true/*tokenSymbol !== 'WETH' && tokenSymbol !== 'ETH' && tokenSymbol !== 'LpWETH'*/) {

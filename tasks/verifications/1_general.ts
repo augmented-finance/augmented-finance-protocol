@@ -12,7 +12,7 @@ import {
   getProtocolDataProvider,
   getAddressById,
   getLendingPool,
-  getLendingPoolAddressesProvider,
+  getMarketAddressController,
   getAddressesProviderRegistry,
   getLendingPoolCollateralManager,
   getLendingPoolCollateralManagerImpl,
@@ -47,7 +47,7 @@ task('verify:general', 'Verify contracts at Etherscan')
     const treasuryAddress = await getTreasuryAddress(poolConfig);
 
     const registryAddress = getParamPerNetwork(ProviderRegistry, network);
-    const addressesProvider = await getLendingPoolAddressesProvider();
+    const addressesProvider = await getMarketAddressController();
     const addressesProviderRegistry = notFalsyOrZeroAddress(registryAddress)
       ? await getAddressesProviderRegistry(registryAddress)
       : await getAddressesProviderRegistry();

@@ -79,7 +79,6 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
         'xAG',
         stakeCooldownTicks,
         stakeUnstakeTicks,
-        ZERO_ADDRESS,
       ]);
       await xAG.connect(root).setMaxSlashablePercentage(slashingPercentage);
 
@@ -95,7 +94,6 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
         'xAGF',
         stakeCooldownTicks,
         stakeUnstakeTicks,
-        ZERO_ADDRESS,
       ]);
       await xAGF.connect(root).setMaxSlashablePercentage(slashingPercentage);
 

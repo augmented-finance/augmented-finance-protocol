@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { deployLendingPoolAddressesProvider } from '../../helpers/contracts-deployments';
-import { notFalsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import {
   ConfigNames,
   loadPoolConfig,
@@ -36,20 +36,16 @@ task(
     let providerRegistryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
     let providerRegistryOwner = getParamPerNetwork(poolConfig.ProviderRegistryOwner, network);
 
-    if (
-      !providerRegistryAddress ||
-      !isAddress(providerRegistryAddress) ||
-      isZeroAddress(providerRegistryAddress)
-    ) {
+    if (falsyOrZeroAddress(providerRegistryAddress)) {
       providerRegistryAddress = await getAddressById('AddressesProviderRegistry');
       // throw Error('config.ProviderRegistry is missing or is not an address.');
+
+      if (!falsyOrZeroAddress(providerRegistryOwner)) {
+        throw Error('config.RegistryOwner is set while config.ProviderRegistry is not an address.');
+      }
     }
 
-    if (
-      !providerRegistryOwner ||
-      !isAddress(providerRegistryOwner) ||
-      isZeroAddress(providerRegistryOwner)
-    ) {
+    if (falsyOrZeroAddress(providerRegistryOwner)) {
       // throw Error('config.ProviderRegistryOwner is missing or is not an address.');
       providerRegistryOwner = (await getFirstSigner()).address;
     }
@@ -76,7 +72,6 @@ task(
     // 2. Deploy address provider and set genesis manager
     const addressesProvider = await deployLendingPoolAddressesProvider(MarketId, verify);
 
-    // DISABLE SEC. 3 FOR GOVERNANCE USE!
     // 3. Set the provider at the Registry
     await waitForTx(
       await addressesProviderRegistry.registerAddressesProvider(

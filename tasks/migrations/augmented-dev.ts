@@ -15,7 +15,7 @@ task('augmented:dev', 'Deploy development enviroment')
       checkVerification();
     }
 
-    console.log('Migration started\n');
+    console.log('Deployment started\n');
 
     console.log('1. Deploy mock tokens');
     await localBRE.run('dev:deploy-mock-tokens', { verify });
@@ -32,6 +32,6 @@ task('augmented:dev', 'Deploy development enviroment')
     console.log('5. Initialize lending pool');
     await localBRE.run('dev:initialize-lending-pool', { verify, pool: POOL_NAME });
 
-    console.log('\nFinished migration');
+    console.log('\nFinished deployment');
     printContracts();
   });

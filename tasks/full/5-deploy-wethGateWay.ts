@@ -20,6 +20,7 @@ task(`full-deploy-weth-gateway`, `Deploys the ${CONTRACT_NAME} contract`)
       throw new Error('INVALID_CHAIN_ID');
     }
     let gateWay = getParamPerNetwork(WethGateway, network);
+
     if (gateWay === '') {
       const wethGateWay = await deployWETHGateway([Weth], verify);
       console.log(`${CONTRACT_NAME}.address`, wethGateWay.address);

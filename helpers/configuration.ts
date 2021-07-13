@@ -16,8 +16,6 @@ import AugmentedConfig from '../markets/augmented';
 
 export enum ConfigNames {
   Commons = 'Commons',
-  Aave = 'Aave',
-  Matic = 'Matic',
   Augmented = 'Augmented',
 }
 
