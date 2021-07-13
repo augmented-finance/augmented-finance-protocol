@@ -34,6 +34,8 @@ interface IManagedAccessController is IAccessController {
 
   function addImplementation(string calldata id, address addr) external;
 
+  function addImplementationOpt(string calldata id, address addr) external returns (address);
+
   function setAddressAsProxy(uint256 id, address impl) external;
 
   function setAddressAsProxyWithInit(
