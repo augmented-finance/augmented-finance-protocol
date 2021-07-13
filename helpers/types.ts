@@ -351,7 +351,7 @@ export interface ILendingRate {
 
 export interface ICommonConfiguration {
   MarketId: string;
-  ATokenNamePrefix: string;
+  DepositTokenNamePrefix: string;
   StableDebtTokenNamePrefix: string;
   VariableDebtTokenNamePrefix: string;
   SymbolPrefix: string;

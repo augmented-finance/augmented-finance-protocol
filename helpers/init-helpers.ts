@@ -47,7 +47,7 @@ export const chooseATokenDeployment = (id: eContractid) => {
 export const initReservesByHelper = async (
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
-  aTokenNamePrefix: string,
+  depositTokenNamePrefix: string,
   stableDebtTokenNamePrefix: string,
   variableDebtTokenNamePrefix: string,
   symbolPrefix: string,
@@ -214,7 +214,7 @@ export const initReservesByHelper = async (
       treasury: treasuryAddress,
       incentivesController: ZERO_ADDRESS,
       underlyingAssetName: reserveSymbols[i],
-      aTokenName: `${aTokenNamePrefix} ${reserveSymbols[i]}`,
+      aTokenName: `${depositTokenNamePrefix} ${reserveSymbols[i]}`,
       aTokenSymbol: `ag${symbolPrefix}${reserveSymbols[i]}`,
       variableDebtTokenName: `${variableDebtTokenNamePrefix} ${symbolPrefix}${reserveSymbols[i]}`,
       variableDebtTokenSymbol: `variableDebt${symbolPrefix}${reserveSymbols[i]}`,

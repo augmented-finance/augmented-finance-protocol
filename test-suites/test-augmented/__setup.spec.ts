@@ -206,7 +206,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const config = loadPoolConfig(ConfigNames.Augmented);
 
   const {
-    ATokenNamePrefix,
+    DepositTokenNamePrefix,
     StableDebtTokenNamePrefix,
     VariableDebtTokenNamePrefix,
     SymbolPrefix,
@@ -216,7 +216,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   await initReservesByHelper(
     reservesParams,
     allReservesAddresses,
-    ATokenNamePrefix,
+    DepositTokenNamePrefix,
     StableDebtTokenNamePrefix,
     VariableDebtTokenNamePrefix,
     SymbolPrefix,
