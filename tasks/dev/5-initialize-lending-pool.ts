@@ -93,5 +93,4 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     if (gateWay !== '') {
       await authorizeWETHGateway(gateWay, lendingPoolAddress);
     }
-    console.log('AAAAA');
   });
