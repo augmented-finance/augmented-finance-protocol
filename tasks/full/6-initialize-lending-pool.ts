@@ -3,16 +3,8 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import {
   deployLendingPoolCollateralManager,
   deployWalletBalancerProvider,
-  deployWETHGateway,
-  authorizeWETHGateway,
 } from '../../helpers/contracts-deployments';
-import {
-  loadPoolConfig,
-  ConfigNames,
-  getWethAddress,
-  getTreasuryAddress,
-} from '../../helpers/configuration';
-import { getWETHGateway } from '../../helpers/contracts-getters';
+import { loadPoolConfig, ConfigNames, getTreasuryAddress } from '../../helpers/configuration';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
@@ -21,7 +13,6 @@ import {
   getProtocolDataProvider,
   getMarketAddressController,
 } from '../../helpers/contracts-getters';
-import { ZERO_ADDRESS } from '../../helpers/constants';
 
 task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -39,7 +30,6 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
         ReserveAssets,
         ReservesConfig,
         LendingPoolCollateralManager,
-        WethGateway,
       } = poolConfig as ICommonConfiguration;
 
       const reserveAssets = await getParamPerNetwork(ReserveAssets, network);
@@ -87,14 +77,6 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       );
 
       await deployWalletBalancerProvider(verify);
-
-      const lendingPoolAddress = await addressesProvider.getLendingPool();
-
-      let gateWay = getParamPerNetwork(WethGateway, network);
-      if (falsyOrZeroAddress(gateWay)) {
-        gateWay = (await getWETHGateway()).address;
-      }
-      await authorizeWETHGateway(gateWay, lendingPoolAddress);
     } catch (err) {
       console.error(err);
       exit(1);

@@ -20,10 +20,7 @@ import { Signer, BigNumber } from 'ethers';
 import { parse } from 'path';
 //import BigNumber from 'bignumber.js';
 
-task(
-  'full:deploy-address-provider',
-  'Deploy address provider, registry and fee provider for dev enviroment'
-)
+task('full:deploy-address-provider', 'Deploy address provider for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE) => {

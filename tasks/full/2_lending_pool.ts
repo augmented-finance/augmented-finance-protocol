@@ -7,7 +7,7 @@ import {
   deployStableAndVariableTokensHelper,
 } from '../../helpers/contracts-deployments';
 import { eContractid, eNetwork } from '../../helpers/types';
-import { notFalsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import {
   getMarketAddressController,
   getLendingPool,
@@ -16,7 +16,7 @@ import {
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 
-task('full:deploy-lending-pool', 'Deploy lending pool for dev enviroment')
+task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE: HardhatRuntimeEnvironment) => {
@@ -30,7 +30,7 @@ task('full:deploy-lending-pool', 'Deploy lending pool for dev enviroment')
 
       // Reuse/deploy lending pool implementation
       let lendingPoolImplAddress = getParamPerNetwork(LendingPool, network);
-      if (!notFalsyOrZeroAddress(lendingPoolImplAddress)) {
+      if (falsyOrZeroAddress(lendingPoolImplAddress)) {
         console.log('\tDeploying new lending pool implementation & libraries...');
         const lendingPoolImpl = await deployLendingPool(verify);
         lendingPoolImplAddress = lendingPoolImpl.address;
@@ -47,7 +47,7 @@ task('full:deploy-lending-pool', 'Deploy lending pool for dev enviroment')
       // Reuse/deploy lending pool configurator
       let lendingPoolConfiguratorImplAddress = getParamPerNetwork(LendingPoolConfigurator, network);
 
-      if (!notFalsyOrZeroAddress(lendingPoolConfiguratorImplAddress)) {
+      if (falsyOrZeroAddress(lendingPoolConfiguratorImplAddress)) {
         console.log('\tDeploying new configurator implementation...');
         const lendingPoolConfiguratorImpl = await deployLendingPoolConfigurator(verify);
         lendingPoolConfiguratorImplAddress = lendingPoolConfiguratorImpl.address;

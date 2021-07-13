@@ -1,19 +1,23 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
-import { deployWETHGateway } from '../../helpers/contracts-deployments';
+import { authorizeWETHGateway, deployWETHGateway } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
+import { getMarketAddressController } from '../../helpers/contracts-getters';
+import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { AccessFlags } from '../../helpers/access-flags';
 
 const CONTRACT_NAME = 'WETHGateway';
 
-task(`full-deploy-weth-gateway`, `Deploys the ${CONTRACT_NAME} contract`)
+task(`full-deploy-weth-gateway`, `Deploys the ${CONTRACT_NAME} contract for prod enviroment`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .addFlag('verify', `Verify ${CONTRACT_NAME} contract via Etherscan API.`)
   .setAction(async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const Weth = await getWethAddress(poolConfig);
+    const addressesProvider = await getMarketAddressController();
+
     const { WethGateway } = poolConfig;
 
     if (!localBRE.network.config.chainId) {
@@ -22,10 +26,23 @@ task(`full-deploy-weth-gateway`, `Deploys the ${CONTRACT_NAME} contract`)
     let gateWay = getParamPerNetwork(WethGateway, network);
 
     if (gateWay === '') {
-      const wethGateWay = await deployWETHGateway([Weth], verify);
-      console.log(`${CONTRACT_NAME}.address`, wethGateWay.address);
-      console.log(`\tFinished ${CONTRACT_NAME} deployment`);
+      const Weth = await getWethAddress(poolConfig);
+      if (falsyOrZeroAddress(Weth)) {
+        throw 'WETH address is missing';
+      }
+
+      const impl = await deployWETHGateway([Weth], verify);
+
+      console.log(`Deployed ${CONTRACT_NAME}.address`, impl.address);
+      gateWay = impl.address;
     } else {
-      console.log(`Weth gateway already deployed. Address: ${gateWay}`);
+      console.log(`${CONTRACT_NAME} already deployed: ${gateWay}`);
     }
+
+    await waitForTx(await addressesProvider.setAddress(AccessFlags.WETH_GATEWAY, gateWay));
+
+    const lendingPoolAddress = await addressesProvider.getLendingPool();
+    await authorizeWETHGateway(gateWay, lendingPoolAddress);
+
+    console.log(`\tFinished ${CONTRACT_NAME} deployment`);
   });

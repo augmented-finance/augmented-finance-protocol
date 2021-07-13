@@ -19,7 +19,7 @@ import {
 } from '../../helpers/contracts-getters';
 import { OracleRouter } from '../../types';
 
-task('full:deploy-oracles', 'Deploy oracles for dev enviroment')
+task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE) => {
