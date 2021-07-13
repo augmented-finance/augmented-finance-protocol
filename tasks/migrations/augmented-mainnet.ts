@@ -18,7 +18,7 @@ task('augmented:mainnet', 'Deploy development enviroment')
     console.log('Deployment started\n');
 
     console.log('0. Deploy address provider registry');
-    await DRE.run('full:deploy-address-provider-registry');
+    await DRE.run('full:deploy-address-provider-registry', { pool: POOL_NAME });
 
     console.log('1. Deploy address provider');
     await DRE.run('full:deploy-address-provider', { pool: POOL_NAME });
