@@ -5,6 +5,7 @@ import { eNetwork } from '../../helpers/types';
 import { loadPoolConfig } from '../../helpers/configuration';
 import { isAddress } from 'ethers/lib/utils';
 import { isZeroAddress } from 'ethereumjs-util';
+import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 
 task('full:deploy-address-provider-registry', 'Deploy address provider registry')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -16,11 +17,7 @@ task('full:deploy-address-provider-registry', 'Deploy address provider registry'
 
     let providerRegistryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
 
-    if (
-      !providerRegistryAddress ||
-      !isAddress(providerRegistryAddress) ||
-      isZeroAddress(providerRegistryAddress)
-    ) {
+    if (falsyOrZeroAddress(providerRegistryAddress)) {
       const contract = await deployAddressesProviderRegistry(verify);
       console.log('Deployed Registry Address:', contract.address);
     }

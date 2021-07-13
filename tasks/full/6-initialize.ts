@@ -14,7 +14,7 @@ import {
 } from '../../helpers/configuration';
 import { getWETHGateway } from '../../helpers/contracts-getters';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
-import { notFalsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
 import { exit } from 'process';
 import {
@@ -72,7 +72,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
         LendingPoolCollateralManager,
         network
       );
-      if (!notFalsyOrZeroAddress(collateralManagerAddress)) {
+      if (falsyOrZeroAddress(collateralManagerAddress)) {
         const collateralManager = await deployLendingPoolCollateralManager(verify);
         collateralManagerAddress = collateralManager.address;
       }
@@ -91,7 +91,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       const lendingPoolAddress = await addressesProvider.getLendingPool();
 
       let gateWay = getParamPerNetwork(WethGateway, network);
-      if (!notFalsyOrZeroAddress(gateWay)) {
+      if (falsyOrZeroAddress(gateWay)) {
         gateWay = (await getWETHGateway()).address;
       }
       await authorizeWETHGateway(gateWay, lendingPoolAddress);

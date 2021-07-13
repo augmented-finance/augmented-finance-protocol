@@ -114,3 +114,7 @@ export const notFalsyOrZeroAddress = (address: tEthereumAddress | null | undefin
   }
   return isAddress(address) && !isZeroAddress(address);
 };
+
+export const falsyOrZeroAddress = (address: tEthereumAddress | null | undefined): boolean => {
+  return !notFalsyOrZeroAddress(address);
+};
