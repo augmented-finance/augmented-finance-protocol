@@ -103,6 +103,8 @@ export enum eContractid {
   ForwardingRewardPool = 'ForwardingRewardPool',
   ForwardingRewardPoolDecay = 'ForwardingRewardPoolDecay',
   AccessController = 'AccessController',
+
+  StakeConfiguratorImpl = 'StakeConfiguratorImpl',
 }
 
 /*

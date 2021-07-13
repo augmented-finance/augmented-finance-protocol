@@ -65,6 +65,7 @@ import {
   TeamRewardPoolFactory,
   AccessControllerFactory,
   DecayingTokenLockerFactory,
+  StakeConfiguratorFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -922,5 +923,13 @@ export const deployAccessController = async (verify?: boolean) =>
     await new AccessControllerFactory(await getFirstSigner()).deploy(),
     eContractid.AccessController,
     [],
+    verify
+  );
+
+export const deployStakeConfiguratorImpl = async (args: [tEthereumAddress], verify?: boolean) =>
+  withSaveAndVerify(
+    await new StakeConfiguratorFactory(await getFirstSigner()).deploy(),
+    eContractid.StakeConfiguratorImpl,
+    args,
     verify
   );

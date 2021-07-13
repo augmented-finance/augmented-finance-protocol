@@ -38,12 +38,15 @@ task('augmented:mainnet', 'Deploy development enviroment')
     console.log('6. Initialize lending pool');
     await DRE.run('full:initialize-lending-pool', { pool: POOL_NAME });
 
+    console.log('7. Deploy StakeConfigurator');
+    await DRE.run('full:deploy-stake-configurator', { pool: POOL_NAME });
+
     if (verify) {
       printContracts();
-      console.log('7. Veryfing contracts');
+      console.log('N-1. Veryfing contracts');
       await DRE.run('verify:general', { all: true, pool: POOL_NAME });
 
-      console.log('8. Veryfing aTokens and debtTokens');
+      console.log('N. Veryfing depositTokens and debtTokens');
       await DRE.run('verify:tokens', { pool: POOL_NAME });
     }
 
