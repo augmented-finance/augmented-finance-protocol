@@ -59,7 +59,8 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
         AccessFlags.STAKE_ADMIN ||
           AccessFlags.REWARD_CONFIG_ADMIN ||
           AccessFlags.REWARD_CONFIGURATOR ||
-          AccessFlags.STAKE_CONFIGURATOR
+          AccessFlags.STAKE_CONFIGURATOR ||
+          AccessFlags.REWARD_CONTROLLER
       );
       await ac.grantRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
