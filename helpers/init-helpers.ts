@@ -14,7 +14,7 @@ import {
   getLendingPoolConfiguratorProxy,
   getStableAndVariableTokensHelper,
 } from './contracts-getters';
-import { rawInsertContractAddressInDb } from './contracts-helpers';
+import { registerContractInJsonDb } from './contracts-helpers';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
 import {
   deployDefaultReserveInterestRateStrategy,
@@ -148,12 +148,12 @@ export const initReservesByHelper = async (
         stableRateSlope1,
         stableRateSlope2,
       ];
-      strategyAddresses[strategy.name] = (
-        await deployDefaultReserveInterestRateStrategy(rateStrategies[strategy.name], verify)
-      ).address;
-      // This causes the last strategy to be printed twice, once under "DefaultReserveInterestRateStrategy"
-      // and once under the actual `strategyASSET` key.
-      rawInsertContractAddressInDb(strategy.name, strategyAddresses[strategy.name]);
+      const strategyContract = await deployDefaultReserveInterestRateStrategy(
+        rateStrategies[strategy.name],
+        verify
+      );
+      strategyAddresses[strategy.name] = strategyContract.address;
+      registerContractInJsonDb(strategy.name, strategyContract);
     }
     strategyAddressPerAsset[symbol] = strategyAddresses[strategy.name];
     console.log('Strategy address for asset %s: %s', symbol, strategyAddressPerAsset[symbol]);
@@ -210,7 +210,9 @@ export const initReservesByHelper = async (
   const chunkedSymbols = chunk(reserveSymbols, initChunks);
   const chunkedInitInputParams = chunk(initInputParams, initChunks);
 
-  const configurator = await getLendingPoolConfiguratorProxy(await addressProvider.getLendingPoolConfigurator());
+  const configurator = await getLendingPoolConfiguratorProxy(
+    await addressProvider.getLendingPoolConfigurator()
+  );
   //await waitForTx(await addressProvider.setPoolAdmin(admin));
 
   console.log(`- Reserves initialization in ${chunkedInitInputParams.length} txs`);

@@ -23,7 +23,6 @@ import { configureReservesByHelper, initReservesByHelper } from '../../helpers/i
 import { getAllTokenAddresses } from '../../helpers/mock-helpers';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import { getAllMockedTokens, getMarketAddressController } from '../../helpers/contracts-getters';
-import { insertContractAddressInDb } from '../../helpers/contracts-helpers';
 
 task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -81,14 +80,8 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
       addressesProvider.address,
       verify
     );
-    await insertContractAddressInDb(
-      eContractid.MockFlashLoanReceiver,
-      mockFlashLoanReceiver.address
-    );
 
     await deployWalletBalancerProvider(verify);
-
-    await insertContractAddressInDb(eContractid.ProtocolDataProvider, testHelpers.address);
 
     const lendingPoolAddress = await addressesProvider.getLendingPool();
     const gateWay = await getParamPerNetwork(WethGateway, network);

@@ -1,10 +1,6 @@
 import rawBRE from 'hardhat';
 import { MockContract } from 'ethereum-waffle';
-import {
-  insertContractAddressInDb,
-  getEthersSigners,
-  registerContractInJsonDb,
-} from '../../helpers/contracts-helpers';
+import { getEthersSigners, registerContractInJsonDb } from '../../helpers/contracts-helpers';
 import {
   deployLendingPoolAddressesProvider,
   deployMintableERC20,
@@ -188,7 +184,6 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const testHelpers = await deployProtocolDataProvider(addressesProvider.address);
 
-  await insertContractAddressInDb(eContractid.ProtocolDataProvider, testHelpers.address);
   const admin = await deployer.getAddress();
 
   console.log('Initialize configuration');

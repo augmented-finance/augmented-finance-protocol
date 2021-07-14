@@ -12,7 +12,6 @@ import {
   getLendingPoolProxy,
   getLendingPoolConfiguratorProxy,
 } from '../../helpers/contracts-getters';
-import { insertContractAddressInDb } from '../../helpers/contracts-helpers';
 
 task('dev:deploy-lending-pool', 'Deploy lending pool for dev enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')

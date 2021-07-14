@@ -1,5 +1,4 @@
 import { task } from 'hardhat/config';
-import { getParamPerNetwork, insertContractAddressInDb } from '../../helpers/contracts-helpers';
 import {
   deployATokensAndRatesHelper,
   deployLendingPoolConfiguratorImpl,
