@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {ILendingRateOracle} from '../../interfaces/ILendingRateOracle.sol';
+import '../../interfaces/ILendingRateOracle.sol';
 import {Ownable} from '../../dependencies/openzeppelin/contracts/Ownable.sol';
 
-contract LendingRateOracle is ILendingRateOracle, Ownable {
+contract LendingRateOracle is ILendingRateOracle, IManagedLendingRateOracle, Ownable {
   mapping(address => uint256) borrowRates;
   mapping(address => uint256) liquidityRates;
 
@@ -14,6 +14,18 @@ contract LendingRateOracle is ILendingRateOracle, Ownable {
 
   function setMarketBorrowRate(address _asset, uint256 _rate) external override onlyOwner {
     borrowRates[_asset] = _rate;
+  }
+
+  function setMarketBorrowRates(address[] calldata assets, uint256[] calldata rates)
+    external
+    override
+    onlyOwner
+  {
+    require(assets.length == rates.length, 'array lengths different');
+
+    for (uint256 i = 0; i < assets.length; i++) {
+      borrowRates[assets[i]] = rates[i];
+    }
   }
 
   function getMarketLiquidityRate(address _asset) external view returns (uint256) {

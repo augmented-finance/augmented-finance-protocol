@@ -83,7 +83,7 @@ export const getPriceOracle = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getAToken = async (address?: tEthereumAddress) =>
+export const getDepositToken = async (address?: tEthereumAddress) =>
   await DepositTokenFactory.connect(
     address ||
       (await getDb().get(`${eContractid.DepositToken}.${DRE.network.name}`).value()).address,
@@ -545,7 +545,7 @@ export const getAGTokenByName = async (name: string): Promise<DepositToken> => {
   // console.log(`all deposit tokens: ${tokens}`);
   const addrByName = tokens.filter((v) => v.symbol === name)[0].tokenAddress;
   // console.log(`deposit token addr by name ${name}: ${addrByName}`);
-  return await getAToken(addrByName);
+  return await getDepositToken(addrByName);
 };
 
 export const getStakeConfiguratorImpl = async (address?: tEthereumAddress) =>

@@ -53,7 +53,7 @@ WRONG RESERVE ASSET SETUP:
         poolAddress,
         reserveAssetAddress,
         treasuryAddress,
-        `Augmented interest bearing ${symbol}`,
+        `Augmented interest ${symbol}`,
         `ag${symbol}`,
       ],
       verify
@@ -62,7 +62,7 @@ WRONG RESERVE ASSET SETUP:
       [
         poolAddress,
         reserveAssetAddress,
-        `Augmented stable debt bearing ${symbol}`,
+        `Augmented stable debt ${symbol}`,
         `stableDebt${symbol}`,
       ],
       verify
@@ -71,7 +71,7 @@ WRONG RESERVE ASSET SETUP:
       [
         poolAddress,
         reserveAssetAddress,
-        `Augmented variable debt bearing ${symbol}`,
+        `Augmented variable debt ${symbol}`,
         `variableDebt${symbol}`,
       ],
       verify
@@ -89,8 +89,8 @@ WRONG RESERVE ASSET SETUP:
       verify
     );
     console.log(`
-    New interest bearing asset deployed on ${network}:
-    Interest bearing a${symbol} address: ${aToken.address}
+    New asset deployed on ${network}:
+    Deposit ag${symbol} address: ${aToken.address}
     Variable Debt variableDebt${symbol} address: ${variableDebt.address}
     Stable Debt stableDebt${symbol} address: ${stableDebt.address}
     Strategy Implementation for ${symbol} address: ${rates.address}

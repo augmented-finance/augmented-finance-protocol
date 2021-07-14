@@ -4,7 +4,7 @@ import {
   getLendingRateOracle,
   getIErc20Detailed,
   getMintableERC20,
-  getAToken,
+  getDepositToken,
   getStableDebtToken,
   getVariableDebtToken,
 } from '../../../../helpers/contracts-getters';
@@ -121,7 +121,7 @@ const getATokenUserData = async (
   const aTokenAddress: string = (await helpersContract.getReserveTokensAddresses(reserve))
     .aTokenAddress;
 
-  const aToken = await getAToken(aTokenAddress);
+  const aToken = await getDepositToken(aTokenAddress);
 
   const scaledBalance = await aToken.scaledBalanceOf(user);
   return scaledBalance.toString();

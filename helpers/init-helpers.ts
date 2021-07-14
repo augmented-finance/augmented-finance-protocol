@@ -10,7 +10,7 @@ import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, DRE, getDb, waitForTx } from './misc-utils';
 import {
   getProtocolDataProvider,
-  getAToken,
+  getDepositToken,
   getATokensAndRatesHelper,
   getMarketAddressController,
   getLendingPoolConfiguratorProxy,
@@ -473,7 +473,7 @@ export const initTokenReservesByHelper = async (
         [
           poolAddress,
           tokenAddresses[symbol],
-          `Aave stable debt bearing ${symbol}`,
+          `Augmented stable debt ${symbol}`,
           `stableDebt${symbol}`,
         ],
         verify
@@ -485,7 +485,7 @@ export const initTokenReservesByHelper = async (
         [
           poolAddress,
           tokenAddresses[symbol],
-          `Aave variable debt bearing ${symbol}`,
+          `Augmented variable debt ${symbol}`,
           `variableDebt${symbol}`,
         ],
         verify
@@ -502,8 +502,8 @@ export const initTokenReservesByHelper = async (
           poolAddress,
           tokenAddresses[symbol],
           treasuryAddress,
-          `Aave interest bearing ${symbol}`,
-          `a${symbol}`,
+          `Augmented deposit ${symbol}`,
+          `ag${symbol}`,
         ],
         verify
       );
@@ -565,11 +565,11 @@ export const initTokenReservesByHelper = async (
       treasury: treasuryAddress,
       incentivesController: ZERO_ADDRESS,
       underlyingAssetName: reserveSymbols[i],
-      aTokenName: `Aave interest bearing ${reserveSymbols[i]}`,
-      aTokenSymbol: `a${reserveSymbols[i]}`,
-      variableDebtTokenName: `Aave variable debt bearing ${reserveSymbols[i]}`,
+      aTokenName: `Augmented deposit ${reserveSymbols[i]}`,
+      aTokenSymbol: `ag${reserveSymbols[i]}`,
+      variableDebtTokenName: `Augmented  variable debt ${reserveSymbols[i]}`,
       variableDebtTokenSymbol: `variableDebt${reserveSymbols[i]}`,
-      stableDebtTokenName: `Aave stable debt bearing ${reserveSymbols[i]}`,
+      stableDebtTokenName: `Augmented stable debt ${reserveSymbols[i]}`,
       stableDebtTokenSymbol: `stableDebt${reserveSymbols[i]}`,
       params: '0x10',
     });
@@ -599,7 +599,7 @@ export const initTokenReservesByHelper = async (
 
 // Function deprecated
 const isErc20SymbolCorrect = async (token: tEthereumAddress, symbol: string) => {
-  const erc20 = await getAToken(token); // using aToken for ERC20 interface
+  const erc20 = await getDepositToken(token); // using aToken for ERC20 interface
   const erc20Symbol = await erc20.symbol();
   return symbol === erc20Symbol;
 };

@@ -4,7 +4,7 @@ import {
   getLendingPool,
   getMarketAddressController,
   getProtocolDataProvider,
-  getAToken,
+  getDepositToken,
   getMintableERC20,
   getLendingPoolConfiguratorProxy,
   getPriceOracle,
@@ -145,8 +145,8 @@ export async function initializeMakeSuite() {
     process.exit(1);
   }
 
-  testEnv.aDai = await getAToken(aDaiAddress);
-  testEnv.aWETH = await getAToken(aWEthAddress);
+  testEnv.aDai = await getDepositToken(aDaiAddress);
+  testEnv.aWETH = await getDepositToken(aWEthAddress);
 
   testEnv.dai = await getMintableERC20(daiAddress);
   testEnv.usdc = await getMintableERC20(usdcAddress);

@@ -141,7 +141,7 @@ task('verify:general', 'Verify contracts at Etherscan')
         lendingPoolAddress,
         UNI,
         treasuryAddress,
-        'Aave interest bearing UNI',
+        'Aave interest UNI',
         'aUNI',
         ZERO_ADDRESS,
       ]);

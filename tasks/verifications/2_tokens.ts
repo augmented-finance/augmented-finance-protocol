@@ -90,27 +90,27 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
 
       const stableDebt = await getAddressById(`stableDebt${token}`);
       const variableDebt = await getAddressById(`variableDebt${token}`);
-      const aToken = await getAddressById(`a${token}`);
+      const aToken = await getAddressById(`ag${token}`);
 
       if (aToken) {
-        console.log('\n- Verifying aToken...\n');
+        console.log('\n- Verifying agToken...\n');
         await verifyContract(aToken, [
           lendingPoolProxy.address,
           tokenAddress,
           treasuryAddress,
-          `Aave interest bearing ${token}`,
-          `a${token}`,
+          `Augmented interest ${token}`,
+          `ag${token}`,
           ZERO_ADDRESS,
         ]);
       } else {
-        console.error(`Skipping aToken verify for ${token}. Missing address at JSON DB.`);
+        console.error(`Skipping agToken verify for ${token}. Missing address at JSON DB.`);
       }
       if (stableDebt) {
         console.log('\n- Verifying StableDebtToken...\n');
         await verifyContract(stableDebt, [
           lendingPoolProxy.address,
           tokenAddress,
-          `Aave stable debt bearing ${token}`,
+          `Augmented stable debt ${token}`,
           `stableDebt${token}`,
           ZERO_ADDRESS,
         ]);
@@ -122,7 +122,7 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
         await verifyContract(variableDebt, [
           lendingPoolProxy.address,
           tokenAddress,
-          `Aave variable debt bearing ${token}`,
+          `Augmented variable debt ${token}`,
           `variableDebt${token}`,
           ZERO_ADDRESS,
         ]);
