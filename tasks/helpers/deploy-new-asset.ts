@@ -1,6 +1,5 @@
 import { task } from 'hardhat/config';
 import { eEthereumNetwork } from '../../helpers/types';
-import { getTreasuryAddress } from '../../helpers/configuration';
 import * as marketConfigs from '../../markets/augmented';
 import * as reserveConfigs from '../../markets/augmented/reservesConfigs';
 import { chooseATokenDeployment } from '../../helpers/init-helpers';
@@ -47,7 +46,7 @@ WRONG RESERVE ASSET SETUP:
       LENDING_POOL_ADDRESS_PROVIDER[network]
     );
     const poolAddress = await addressProvider.getLendingPool();
-    const treasuryAddress = await getTreasuryAddress(marketConfigs.AugmentedConfig);
+    const treasuryAddress = await addressProvider.getTreasury();
     const aToken = await deployCustomAToken(
       [
         poolAddress,
@@ -59,12 +58,7 @@ WRONG RESERVE ASSET SETUP:
       verify
     );
     const stableDebt = await deployStableDebtToken(
-      [
-        poolAddress,
-        reserveAssetAddress,
-        `Augmented stable debt ${symbol}`,
-        `stableDebt${symbol}`,
-      ],
+      [poolAddress, reserveAssetAddress, `Augmented stable debt ${symbol}`, `stableDebt${symbol}`],
       verify
     );
     const variableDebt = await deployVariableDebtToken(

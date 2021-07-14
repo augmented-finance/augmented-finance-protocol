@@ -106,6 +106,7 @@ export enum eContractid {
 
   StakeConfiguratorImpl = 'StakeConfiguratorImpl',
   StakeTokenImpl = 'StakeTokenImpl',
+  TreasuryImpl = 'TreasuryImpl',
 }
 
 /*
@@ -383,7 +384,6 @@ export interface ICommonConfiguration {
   ATokenDomainSeparator: iParamsPerNetwork<string>;
   WETH: iParamsPerNetwork<tEthereumAddress>;
   WethGateway: iParamsPerNetwork<tEthereumAddress>;
-  ReserveFactorTreasuryAddress: iParamsPerNetwork<tEthereumAddress>;
 
   StakeParams: IStakeParams;
 }

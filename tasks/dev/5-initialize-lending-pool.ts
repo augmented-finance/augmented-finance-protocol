@@ -6,19 +6,19 @@ import {
   deployProtocolDataProvider,
   deployWETHGateway,
   authorizeWETHGateway,
+  deployTreasuryImpl,
 } from '../../helpers/contracts-deployments';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { eNetwork } from '../../helpers/types';
 import {
   ConfigNames,
   getReservesConfigByPool,
-  getTreasuryAddress,
   getWethAddress,
   loadPoolConfig,
 } from '../../helpers/configuration';
 
 import { tEthereumAddress, LendingPools, eContractid } from '../../helpers/types';
-import { waitForTx, filterMapBy } from '../../helpers/misc-utils';
+import { waitForTx, filterMapBy, falsyOrZeroAddress } from '../../helpers/misc-utils';
 import { configureReservesByHelper, initReservesByHelper } from '../../helpers/init-helpers';
 import { getAllTokenAddresses } from '../../helpers/mock-helpers';
 import { ZERO_ADDRESS } from '../../helpers/constants';
@@ -54,7 +54,10 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
 
     const admin = await addressesProvider.getPoolAdmin();
 
-    const treasuryAddress = await getTreasuryAddress(poolConfig);
+    const treasuryImpl = await deployTreasuryImpl();
+    addressesProvider.addImplementation('Treasury', treasuryImpl.address);
+    addressesProvider.setTreasuryImpl(treasuryImpl.address);
+    const treasuryAddress = treasuryImpl.address;
 
     await initReservesByHelper(
       reservesParams,

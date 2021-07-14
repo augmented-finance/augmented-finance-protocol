@@ -1,12 +1,7 @@
 import { error } from 'console';
 import { zeroAddress } from 'ethereumjs-util';
 import { task } from 'hardhat/config';
-import {
-  loadPoolConfig,
-  ConfigNames,
-  getWethAddress,
-  getTreasuryAddress,
-} from '../../helpers/configuration';
+import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getProtocolDataProvider,
@@ -44,7 +39,6 @@ task('verify:general', 'Verify contracts at Etherscan')
       LendingPool,
       WethGateway,
     } = poolConfig as ICommonConfiguration;
-    const treasuryAddress = await getTreasuryAddress(poolConfig);
 
     const registryAddress = getParamPerNetwork(ProviderRegistry, network);
     const addressesProvider = await getMarketAddressController();
@@ -130,6 +124,8 @@ task('verify:general', 'Verify contracts at Etherscan')
     // Proxy collateral manager
     console.log('\n- Verifying  Lending Pool Collateral Manager Proxy...\n');
     await verifyContract(lendingPoolCollateralManagerAddress, []);
+
+    const treasuryAddress = await addressesProvider.getTreasury();
 
     // DelegatedAwareAToken
     console.log('\n- Verifying DelegatedAwareAToken...\n');

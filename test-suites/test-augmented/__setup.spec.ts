@@ -27,16 +27,12 @@ import {
   deployUniswapRepayAdapter,
   deployFlashLiquidationAdapter,
   authorizeWETHGateway,
+  deployTreasuryImpl,
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
 import { TokenContractId, eContractid, tEthereumAddress, LendingPools } from '../../helpers/types';
 import { MintableERC20 } from '../../types';
-import {
-  ConfigNames,
-  getReservesConfigByPool,
-  getTreasuryAddress,
-  loadPoolConfig,
-} from '../../helpers/configuration';
+import { ConfigNames, getReservesConfigByPool, loadPoolConfig } from '../../helpers/configuration';
 import { initializeMakeSuite } from './helpers/make-suite';
 
 import {
@@ -44,7 +40,7 @@ import {
   deployAllMockAggregators,
   setInitialMarketRatesInRatesOracleByHelper,
 } from '../../helpers/oracles-helpers';
-import { DRE, waitForTx } from '../../helpers/misc-utils';
+import { DRE, falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
 import AugmentedConfig from '../../markets/augmented';
 import { ZERO_ADDRESS } from '../../helpers/constants';
@@ -211,7 +207,11 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
     VariableDebtTokenNamePrefix,
     SymbolPrefix,
   } = config;
-  const treasuryAddress = await getTreasuryAddress(config);
+
+  const treasuryImpl = await deployTreasuryImpl();
+  addressesProvider.addImplementation('Treasury', treasuryImpl.address);
+  addressesProvider.setTreasuryImpl(treasuryImpl.address);
+  const treasuryAddress = treasuryImpl.address;
 
   await initReservesByHelper(
     reservesParams,

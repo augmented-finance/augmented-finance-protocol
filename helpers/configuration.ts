@@ -80,13 +80,6 @@ export const getEmergencyAdmin = async (
   return addressList[addressIndex];
 };
 
-export const getTreasuryAddress = async (
-  config: ICommonConfiguration
-): Promise<tEthereumAddress> => {
-  const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  return getParamPerNetwork(config.ReserveFactorTreasuryAddress, <eNetwork>currentNetwork);
-};
-
 export const getATokenDomainSeparatorPerNetwork = (
   network: eNetwork,
   config: ICommonConfiguration

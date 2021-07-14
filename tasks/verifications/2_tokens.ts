@@ -1,10 +1,5 @@
 import { task } from 'hardhat/config';
-import {
-  loadPoolConfig,
-  ConfigNames,
-  getWethAddress,
-  getTreasuryAddress,
-} from '../../helpers/configuration';
+import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getAddressById,
@@ -25,7 +20,6 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
     const network = localDRE.network.name as eNetwork;
     const poolConfig = loadPoolConfig(pool);
     const { ReserveAssets, ReservesConfig } = poolConfig as ICommonConfiguration;
-    const treasuryAddress = await getTreasuryAddress(poolConfig);
 
     const addressesProvider = await getMarketAddressController();
     const lendingPoolProxy = LendingPoolFactory.connect(
@@ -91,6 +85,8 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
       const stableDebt = await getAddressById(`stableDebt${token}`);
       const variableDebt = await getAddressById(`variableDebt${token}`);
       const aToken = await getAddressById(`ag${token}`);
+
+      const treasuryAddress = await addressesProvider.getTreasury();
 
       if (aToken) {
         console.log('\n- Verifying agToken...\n');

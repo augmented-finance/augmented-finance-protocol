@@ -2,9 +2,10 @@ import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import {
   deployLendingPoolCollateralManager,
+  deployTreasuryImpl,
   deployWalletBalancerProvider,
 } from '../../helpers/contracts-deployments';
-import { loadPoolConfig, ConfigNames, getTreasuryAddress } from '../../helpers/configuration';
+import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
@@ -44,7 +45,11 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       }
 
       console.log('|||||=======||||', reserveAssets);
-      const treasuryAddress = await getTreasuryAddress(poolConfig);
+
+      const treasuryImpl = await deployTreasuryImpl();
+      addressesProvider.addImplementation('Treasury', treasuryImpl.address);
+      addressesProvider.setTreasuryImpl(treasuryImpl.address);
+      const treasuryAddress = treasuryImpl.address;
 
       await initReservesByHelper(
         ReservesConfig,

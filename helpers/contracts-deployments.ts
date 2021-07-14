@@ -19,6 +19,7 @@ import {
   RewardBoosterFactory,
   RewardedTokenLockerFactory,
   StakeTokenFactory,
+  TreasuryFactory,
   XAGFTokenV1Factory,
 } from '../types';
 import { MockContract } from 'ethereum-waffle';
@@ -928,18 +929,26 @@ export const deployAccessController = async (verify?: boolean) =>
     verify
   );
 
-export const deployStakeConfiguratorImpl = async (args: [], verify?: boolean) =>
+export const deployStakeConfiguratorImpl = async (verify?: boolean) =>
   withSaveAndVerify(
     await new StakeConfiguratorFactory(await getFirstSigner()).deploy(),
     eContractid.StakeConfiguratorImpl,
-    args,
+    [],
     verify
   );
 
-export const deployStakeTokenImpl = async (args: [], verify?: boolean) =>
+export const deployStakeTokenImpl = async (verify?: boolean) =>
   withSaveAndVerify(
     await new StakeTokenFactory(await getFirstSigner()).deploy(),
     eContractid.StakeTokenImpl,
-    args,
+    [],
+    verify
+  );
+
+export const deployTreasuryImpl = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await new TreasuryFactory(await getFirstSigner()).deploy(),
+    eContractid.TreasuryImpl,
+    [],
     verify
   );

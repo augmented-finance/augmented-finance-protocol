@@ -8,7 +8,7 @@ import { ICommonConfiguration, eEthereumNetwork, StakeMode } from '../../helpers
 
 export const CommonsConfig: ICommonConfiguration = {
   MarketId: 'Commons',
-  DepositTokenNamePrefix: 'Augmented depost',
+  DepositTokenNamePrefix: 'Augmented deposit',
   StableDebtTokenNamePrefix: 'Augmented stable debt',
   VariableDebtTokenNamePrefix: 'Augmented variable debt',
   StakeTokenNamePrefix: 'Augmented stake',
@@ -310,15 +310,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.main]: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
     [eEthereumNetwork.tenderlyMain]: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
   },
-  ReserveFactorTreasuryAddress: {
-    [eEthereumNetwork.coverage]: ZERO_ADDRESS,
-    [eEthereumNetwork.hardhat]: ZERO_ADDRESS,
-    [eEthereumNetwork.kovan]: ZERO_ADDRESS,
-    [eEthereumNetwork.ropsten]: ZERO_ADDRESS,
-    [eEthereumNetwork.rinkeby]: ZERO_ADDRESS,
-    [eEthereumNetwork.main]: ZERO_ADDRESS,
-    [eEthereumNetwork.tenderlyMain]: ZERO_ADDRESS,
-  },
+
   StakeParams: {
     MaxSlashBP: 3000, // 30%
     CooldownPeriod: 2 * DAY,
