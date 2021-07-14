@@ -41,6 +41,9 @@ task('augmented:mainnet', 'Deploy development enviroment')
     console.log('7. Deploy StakeConfigurator');
     await DRE.run('full:deploy-stake-configurator', { pool: POOL_NAME });
 
+    console.log('8. Deploy and initialize stake tokens');
+    await DRE.run('full:init-stake-tokens', { pool: POOL_NAME });
+
     if (verify) {
       printContracts();
       console.log('N-1. Veryfing contracts');

@@ -105,6 +105,7 @@ export enum eContractid {
   AccessController = 'AccessController',
 
   StakeConfiguratorImpl = 'StakeConfiguratorImpl',
+  StakeTokenImpl = 'StakeTokenImpl',
 }
 
 /*
@@ -356,6 +357,8 @@ export interface ICommonConfiguration {
   DepositTokenNamePrefix: string;
   StableDebtTokenNamePrefix: string;
   VariableDebtTokenNamePrefix: string;
+  StakeTokenNamePrefix: string;
+
   SymbolPrefix: string;
   ProviderId: number;
   ProtocolGlobalParams: IProtocolGlobalConfig;
@@ -381,6 +384,8 @@ export interface ICommonConfiguration {
   WETH: iParamsPerNetwork<tEthereumAddress>;
   WethGateway: iParamsPerNetwork<tEthereumAddress>;
   ReserveFactorTreasuryAddress: iParamsPerNetwork<tEthereumAddress>;
+
+  StakeParams: IStakeParams;
 }
 
 export interface IAugmentedConfiguration extends ICommonConfiguration {
@@ -392,3 +397,16 @@ export interface ITokenAddress {
 }
 
 export type PoolConfiguration = ICommonConfiguration | IAugmentedConfiguration;
+
+export interface IStakeParams {
+  MaxSlashBP: number;
+  CooldownPeriod: number;
+  UnstakePeriod: number;
+  StakeToken: iAugmentedPoolAssets<StakeMode>;
+}
+
+export enum StakeMode {
+  noStake,
+  stakeAg,
+  stakeRaw,
+}

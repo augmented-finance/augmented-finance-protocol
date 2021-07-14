@@ -44,13 +44,13 @@ import {
   XAGFTokenV1Factory,
   RewardedTokenLockerFactory,
   DecayingTokenLockerFactory,
+  StakeConfiguratorFactory,
+  StakeTokenFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
-import { DRE, getDb } from './misc-utils';
+import { DRE, getDb, getFirstSigner } from './misc-utils';
 import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } from './types';
-
-export const getFirstSigner = async () => (await DRE.ethers.getSigners())[0];
 
 export const getMarketAddressController = async (address?: tEthereumAddress) =>
   await MarketAccessControllerFactory.connect(
@@ -547,3 +547,18 @@ export const getAGTokenByName = async (name: string): Promise<DepositToken> => {
   // console.log(`deposit token addr by name ${name}: ${addrByName}`);
   return await getAToken(addrByName);
 };
+
+export const getStakeConfiguratorImpl = async (address?: tEthereumAddress) =>
+  await StakeConfiguratorFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.StakeConfiguratorImpl}.${DRE.network.name}`).value())
+        .address,
+    await getFirstSigner()
+  );
+
+export const getStakeTokenImpl = async (address?: tEthereumAddress) =>
+  await StakeTokenFactory.connect(
+    address ||
+      (await getDb().get(`${eContractid.StakeTokenImpl}.${DRE.network.name}`).value()).address,
+    await getFirstSigner()
+  );

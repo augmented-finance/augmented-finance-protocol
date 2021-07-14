@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
-import { oneEther, oneRay, RAY, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES } from '../../helpers/constants';
-import { ICommonConfiguration, eEthereumNetwork } from '../../helpers/types';
+import { oneEther, oneRay, RAY, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY } from '../../helpers/constants';
+import { ICommonConfiguration, eEthereumNetwork, StakeMode } from '../../helpers/types';
 
 // ----------------
 // PROTOCOL GLOBAL PARAMS
@@ -8,9 +8,10 @@ import { ICommonConfiguration, eEthereumNetwork } from '../../helpers/types';
 
 export const CommonsConfig: ICommonConfiguration = {
   MarketId: 'Commons',
-  DepositTokenNamePrefix: 'Augmented interest bearing',
-  StableDebtTokenNamePrefix: 'Augmented stable debt bearing',
-  VariableDebtTokenNamePrefix: 'Augmented variable debt bearing',
+  DepositTokenNamePrefix: 'Augmented depost',
+  StableDebtTokenNamePrefix: 'Augmented stable debt',
+  VariableDebtTokenNamePrefix: 'Augmented variable debt',
+  StakeTokenNamePrefix: 'Augmented stake',
   SymbolPrefix: '',
   ProviderId: 0, // Overriden in index.ts
   ProtocolGlobalParams: {
@@ -318,4 +319,19 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.main]: '0x464c71f6c2f760dda6093dcb91c24c39e5d6e18c',
     [eEthereumNetwork.tenderlyMain]: '0x464c71f6c2f760dda6093dcb91c24c39e5d6e18c',
   },
+  StakeParams: {
+    MaxSlashBP: 3000, // 30%
+    CooldownPeriod: 2 * DAY,
+    UnstakePeriod: DAY,
+    StakeToken: {
+      AAVE: StakeMode.noStake,
+      LINK: StakeMode.noStake,
+
+      DAI:  StakeMode.stakeAg,
+      USDC: StakeMode.stakeAg,
+      USDT: StakeMode.stakeAg,
+      WBTC: StakeMode.stakeAg,
+      WETH: StakeMode.stakeAg,
+    }
+  }
 };
