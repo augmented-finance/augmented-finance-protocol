@@ -9,7 +9,6 @@ import {
   DefaultReserveInterestRateStrategy
 } from '../protocol/lendingpool/DefaultReserveInterestRateStrategy.sol';
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
-import {StringLib} from './StringLib.sol';
 
 import {IPriceOracleProvider} from '../interfaces/IPriceOracleProvider.sol';
 
