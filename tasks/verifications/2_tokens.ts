@@ -9,9 +9,7 @@ import {
 } from '../../helpers/contracts-getters';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { verifyContract } from '../../helpers/etherscan-verification';
-import { getFirstSigner } from '../../helpers/misc-utils';
 import { eNetwork, ICommonConfiguration, IReserveParams } from '../../helpers/types';
-import { LendingPoolConfiguratorFactory, LendingPoolFactory } from '../../types';
 
 task('verify:tokens', 'Deploy oracles for dev enviroment')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
@@ -19,7 +17,7 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
     await localDRE.run('set-DRE');
     const network = localDRE.network.name as eNetwork;
     const poolConfig = loadPoolConfig(pool);
-    const { ReserveAssets, ReservesConfig } = poolConfig as ICommonConfiguration;
+    const { ReserveAssets, ReservesConfig, Names } = poolConfig as ICommonConfiguration;
 
     const addressesProvider = await getMarketAddressController();
     const lendingPoolProxy = await getLendingPoolProxy(await addressesProvider.getLendingPool());
@@ -62,8 +60,8 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
       console.log(`\n- Verifying  Debt Token proxy...\n`);
       await verifyContract(variableDebtTokenAddress, [lendingPoolConfigurator.address]);
 
-      // Proxy aToken
-      console.log('\n- Verifying aToken proxy...\n');
+      // Proxy Deposit Token
+      console.log('\n- Verifying Deposit Token proxy...\n');
       await verifyContract(aTokenAddress, [lendingPoolConfigurator.address]);
 
       // Strategy Rate
@@ -78,9 +76,13 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
         stableRateSlope2,
       ]);
 
-      const stableDebt = await getAddressById(`stableDebt${token}`);
-      const variableDebt = await getAddressById(`variableDebt${token}`);
-      const aToken = await getAddressById(`ag${token}`);
+      const depositSymbol = `${Names.DepositSymbolPrefix}${token}`;
+      const stableDebtSymbol = `${Names.StableDebtSymbolPrefix}${token}`;
+      const variableDebtSymbol = `${Names.DepositSymbolPrefix}${token}`;
+
+      const aToken = await getAddressById(depositSymbol);
+      const stableDebt = await getAddressById(stableDebtSymbol);
+      const variableDebt = await getAddressById(variableDebtSymbol);
 
       const treasuryAddress = await addressesProvider.getTreasury();
 
@@ -90,8 +92,8 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
           lendingPoolProxy.address,
           tokenAddress,
           treasuryAddress,
-          `Augmented interest ${token}`,
-          `ag${token}`,
+          `${Names.DepositTokenNamePrefix} ${token}`,
+          depositSymbol,
           ZERO_ADDRESS,
         ]);
       } else {
@@ -102,8 +104,8 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
         await verifyContract(stableDebt, [
           lendingPoolProxy.address,
           tokenAddress,
-          `Augmented stable debt ${token}`,
-          `stableDebt${token}`,
+          `${Names.StableDebtTokenNamePrefix} ${token}`,
+          stableDebtSymbol,
           ZERO_ADDRESS,
         ]);
       } else {
@@ -114,8 +116,8 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
         await verifyContract(variableDebt, [
           lendingPoolProxy.address,
           tokenAddress,
-          `Augmented variable debt ${token}`,
-          `variableDebt${token}`,
+          `${Names.VariableDebtTokenNamePrefix} ${token}`,
+          variableDebtSymbol,
           ZERO_ADDRESS,
         ]);
       } else {

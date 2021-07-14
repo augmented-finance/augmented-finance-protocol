@@ -17,6 +17,8 @@ const LENDING_POOL_ADDRESS_PROVIDER = {
   kovan: '0x652B2937Efd0B5beA1c8d54293FC1289672AFC6b',
 };
 
+const names = marketConfigs.AugmentedConfig.Names;
+
 const isSymbolValid = (symbol: string, network: eEthereumNetwork) =>
   Object.keys(reserveConfigs).includes('strategy' + symbol) &&
   marketConfigs.AugmentedConfig.ReserveAssets[network][symbol] &&
@@ -47,13 +49,13 @@ WRONG RESERVE ASSET SETUP:
     );
     const poolAddress = await addressProvider.getLendingPool();
     const treasuryAddress = await addressProvider.getTreasury();
-    const aToken = await deployDepositToken(
+    const depositToken = await deployDepositToken(
       [
         poolAddress,
         reserveAssetAddress,
         treasuryAddress,
-        `Augmented interest ${symbol}`,
-        `ag${symbol}`,
+        `${names.DepositTokenNamePrefix} ${symbol}`,
+        `${names.DepositSymbolPrefix}${symbol}`,
       ],
       verify
     );
@@ -62,8 +64,8 @@ WRONG RESERVE ASSET SETUP:
         poolAddress,
         reserveAssetAddress,
         treasuryAddress,
-        `Augmented stable debt ${symbol}`,
-        `stableDebt${symbol}`,
+        `${names.StableDebtTokenNamePrefix} ${symbol}`,
+        `${names.StableDebtSymbolPrefix}${symbol}`,
       ],
       verify
     );
@@ -72,8 +74,8 @@ WRONG RESERVE ASSET SETUP:
         poolAddress,
         reserveAssetAddress,
         treasuryAddress,
-        `Augmented variable debt ${symbol}`,
-        `variableDebt${symbol}`,
+        `${names.VariableDebtTokenNamePrefix} ${symbol}`,
+        `${names.VariableDebtSymbolPrefix}${symbol}`,
       ],
       verify
     );
@@ -90,10 +92,10 @@ WRONG RESERVE ASSET SETUP:
       verify
     );
     console.log(`
-    New asset deployed on ${network}:
-    Deposit ag${symbol} address: ${aToken.address}
-    Variable Debt variableDebt${symbol} address: ${variableDebt.address}
-    Stable Debt stableDebt${symbol} address: ${stableDebt.address}
+    New asset ${symbol} deployed on ${network}:
+    Deposit address: ${depositToken.address}
+    Variable Debt address: ${variableDebt.address}
+    Stable Debt address: ${stableDebt.address}
     Strategy Implementation for ${symbol} address: ${rates.address}
     `);
   });

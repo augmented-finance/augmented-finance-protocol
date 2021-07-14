@@ -23,14 +23,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       await localBRE.run('set-DRE');
       const network = <eNetwork>localBRE.network.name;
       const poolConfig = loadPoolConfig(pool);
-      const {
-        DepositTokenNamePrefix,
-        StableDebtTokenNamePrefix,
-        VariableDebtTokenNamePrefix,
-        SymbolPrefix,
-        ReserveAssets,
-        ReservesConfig,
-      } = poolConfig as ICommonConfiguration;
+      const { Names, ReserveAssets, ReservesConfig } = poolConfig as ICommonConfiguration;
 
       const reserveAssets = await getParamPerNetwork(ReserveAssets, network);
 
@@ -53,10 +46,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       await initReservesByHelper(
         ReservesConfig,
         reserveAssets,
-        DepositTokenNamePrefix,
-        StableDebtTokenNamePrefix,
-        VariableDebtTokenNamePrefix,
-        SymbolPrefix,
+        Names,
         admin,
         treasuryAddress,
         verify

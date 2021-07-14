@@ -31,13 +31,7 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const {
-      DepositTokenNamePrefix,
-      StableDebtTokenNamePrefix,
-      VariableDebtTokenNamePrefix,
-      SymbolPrefix,
-      WethGateway,
-    } = poolConfig;
+    const { Names, WethGateway } = poolConfig;
     const mockTokens = await getAllMockedTokens();
     const allTokenAddresses = getAllTokenAddresses(mockTokens);
 
@@ -61,10 +55,7 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     await initReservesByHelper(
       reservesParams,
       protoPoolReservesAddresses,
-      DepositTokenNamePrefix,
-      StableDebtTokenNamePrefix,
-      VariableDebtTokenNamePrefix,
-      SymbolPrefix,
+      Names,
       admin,
       treasuryAddress,
       verify

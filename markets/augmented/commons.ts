@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { oneEther, oneRay, RAY, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY } from '../../helpers/constants';
+import { oneEther, oneRay, RAY, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames } from '../../helpers/constants';
 import { ICommonConfiguration, eEthereumNetwork, StakeMode } from '../../helpers/types';
 
 // ----------------
@@ -8,11 +8,7 @@ import { ICommonConfiguration, eEthereumNetwork, StakeMode } from '../../helpers
 
 export const CommonsConfig: ICommonConfiguration = {
   MarketId: 'Commons',
-  DepositTokenNamePrefix: 'Augmented deposit',
-  StableDebtTokenNamePrefix: 'Augmented stable debt',
-  VariableDebtTokenNamePrefix: 'Augmented variable debt',
-  StakeTokenNamePrefix: 'Augmented stake',
-  SymbolPrefix: '',
+  Names: DefaultTokenNames,
   ProviderId: 0, // Overriden in index.ts
   ProtocolGlobalParams: {
     TokenDistributorPercentageBase: '10000',

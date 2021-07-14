@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { ITokenNames } from './types';
 
 // ----------------
 // MATH
@@ -44,4 +45,23 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   WETH: oneEther.toFixed(),
   WBTC: oneEther.multipliedBy('47.332685').toFixed(),
   USD: '5848466240000000',
+};
+
+export const DefaultTokenNames: ITokenNames = {
+  DepositTokenNamePrefix: 'Augmented deposit',
+  StableDebtTokenNamePrefix: 'Augmented stable debt',
+  VariableDebtTokenNamePrefix: 'Augmented debt',
+  StakeTokenNamePrefix: 'Augmented stake',
+
+  SymbolPrefix: '',
+  DepositSymbolPrefix: 'ag',
+  StableDebtSymbolPrefix: 'ags',
+  VariableDebtSymbolPrefix: 'agv',
+  StakeSymbolPrefix: 'x',
+
+  RewardTokenName: 'Augmented reward',
+  RewardTokenSymbol: 'AGF',
+
+  RewardStakeTokenName: 'Augmented booster',
+  RewardStakeTokenSymbol: 'xAGF',
 };

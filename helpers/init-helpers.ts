@@ -4,6 +4,7 @@ import {
   eNetwork,
   iMultiPoolsAssets,
   IReserveParams,
+  ITokenNames,
   tEthereumAddress,
 } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
@@ -39,10 +40,7 @@ export const chooseDepositTokenDeployment = (id: eContractid) => {
 export const initReservesByHelper = async (
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
-  depositTokenNamePrefix: string,
-  stableDebtTokenNamePrefix: string,
-  variableDebtTokenNamePrefix: string,
-  symbolPrefix: string,
+  names: ITokenNames,
   admin: tEthereumAddress,
   treasuryAddress: tEthereumAddress,
   verify: boolean
@@ -91,9 +89,8 @@ export const initReservesByHelper = async (
   let rateStrategies: Record<string, typeof strategyRates> = {};
   let strategyAddresses: Record<string, tEthereumAddress> = {};
   let strategyAddressPerAsset: Record<string, string> = {};
-  let aTokenType: Record<string, string> = {};
+  let depositTokenType: Record<string, boolean> = {};
   let delegationAwareATokenImplementationAddress = '';
-  let aTokenImplementationAddress = '';
   let stableDebtTokenImplementationAddress = '';
   let variableDebtTokenImplementationAddress = '';
 
@@ -107,8 +104,7 @@ export const initReservesByHelper = async (
     variableDebtTokenImplementationAddress = event?.args?.variableToken;
   });
 
-  const aTokenImplementation = await deployDepositTokenImpl(verify);
-  aTokenImplementationAddress = aTokenImplementation.address;
+  const depositTokenImplementationAddress = (await deployDepositTokenImpl(verify)).address;
 
   const delegatedAwareReserves = Object.entries(reservesParams).filter(
     ([_, { aTokenImpl }]) => aTokenImpl === eContractid.DelegationAwareDepositTokenImpl
@@ -159,10 +155,10 @@ export const initReservesByHelper = async (
     console.log('Strategy address for asset %s: %s', symbol, strategyAddressPerAsset[symbol]);
 
     if (aTokenImpl === eContractid.DepositTokenImpl) {
-      aTokenType[symbol] = 'generic';
+      depositTokenType[symbol] = false;
       console.log('---- generic:', symbol);
     } else if (aTokenImpl === eContractid.DelegationAwareDepositTokenImpl) {
-      aTokenType[symbol] = 'delegation aware';
+      depositTokenType[symbol] = true;
       console.log('---- delegation aware:', symbol);
     }
 
@@ -178,30 +174,40 @@ export const initReservesByHelper = async (
   }
 
   for (let i = 0; i < reserveSymbols.length; i++) {
-    let aTokenToUse: string;
-    if (aTokenType[reserveSymbols[i]] === 'generic') {
-      aTokenToUse = aTokenImplementationAddress;
-      console.log('=-= generic:', reserveSymbols[i], aTokenToUse);
+    let tokenToUse: string;
+    if (!depositTokenType[reserveSymbols[i]]) {
+      tokenToUse = depositTokenImplementationAddress;
+      console.log('=-= generic:', reserveSymbols[i], tokenToUse);
     } else {
-      aTokenToUse = delegationAwareATokenImplementationAddress;
+      tokenToUse = delegationAwareATokenImplementationAddress;
+    }
+
+    const reserveSymbol = reserveSymbols[i];
+    let symbolPrefix = names.SymbolPrefix;
+    if (symbolPrefix == '' && reserveSymbol[0] >= 'a' && reserveSymbol[0] <= 'z') {
+      symbolPrefix = '_';
     }
 
     initInputParams.push({
-      aTokenImpl: aTokenToUse,
+      aTokenImpl: tokenToUse,
       stableDebtTokenImpl: stableDebtTokenImplementationAddress,
       variableDebtTokenImpl: variableDebtTokenImplementationAddress,
       underlyingAssetDecimals: reserveInitDecimals[i],
-      interestRateStrategyAddress: strategyAddressPerAsset[reserveSymbols[i]],
+      interestRateStrategyAddress: strategyAddressPerAsset[reserveSymbol],
       underlyingAsset: reserveTokens[i],
       treasury: treasuryAddress,
       incentivesController: ZERO_ADDRESS,
-      underlyingAssetName: reserveSymbols[i],
-      aTokenName: `${depositTokenNamePrefix} ${reserveSymbols[i]}`,
-      aTokenSymbol: `ag${symbolPrefix}${reserveSymbols[i]}`,
-      variableDebtTokenName: `${variableDebtTokenNamePrefix} ${symbolPrefix}${reserveSymbols[i]}`,
-      variableDebtTokenSymbol: `variableDebt${symbolPrefix}${reserveSymbols[i]}`,
-      stableDebtTokenName: `${stableDebtTokenNamePrefix} ${reserveSymbols[i]}`,
-      stableDebtTokenSymbol: `stableDebt${symbolPrefix}${reserveSymbols[i]}`,
+      underlyingAssetName: reserveSymbol,
+
+      aTokenName: `${names.DepositTokenNamePrefix} ${reserveSymbol}`,
+      aTokenSymbol: `${names.DepositSymbolPrefix}${symbolPrefix}${reserveSymbol}`,
+
+      variableDebtTokenName: `${names.VariableDebtTokenNamePrefix} ${reserveSymbol}`,
+      variableDebtTokenSymbol: `${names.VariableDebtSymbolPrefix}${symbolPrefix}${reserveSymbol}`,
+
+      stableDebtTokenName: `${names.StableDebtTokenNamePrefix} ${reserveSymbol}`,
+      stableDebtTokenSymbol: `${names.StableDebtSymbolPrefix}${symbolPrefix}${reserveSymbol}`,
+
       params: '0x10',
     });
   }

@@ -190,12 +190,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const config = loadPoolConfig(ConfigNames.Augmented);
 
-  const {
-    DepositTokenNamePrefix,
-    StableDebtTokenNamePrefix,
-    VariableDebtTokenNamePrefix,
-    SymbolPrefix,
-  } = config;
+  const { Names } = config;
 
   const treasuryImpl = await deployTreasuryImpl();
   addressesProvider.addImplementation('Treasury', treasuryImpl.address);
@@ -205,10 +200,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   await initReservesByHelper(
     reservesParams,
     allReservesAddresses,
-    DepositTokenNamePrefix,
-    StableDebtTokenNamePrefix,
-    VariableDebtTokenNamePrefix,
-    SymbolPrefix,
+    Names,
     admin,
     treasuryAddress,
     false

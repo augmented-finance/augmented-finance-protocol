@@ -344,13 +344,10 @@ export interface ILendingRate {
 
 export interface ICommonConfiguration {
   MarketId: string;
-  DepositTokenNamePrefix: string;
-  StableDebtTokenNamePrefix: string;
-  VariableDebtTokenNamePrefix: string;
-  StakeTokenNamePrefix: string;
-
-  SymbolPrefix: string;
   ProviderId: number;
+
+  Names: ITokenNames;
+
   ProtocolGlobalParams: IProtocolGlobalConfig;
   Mocks: IMocksConfig;
   ProviderRegistry: iParamsPerNetwork<tEthereumAddress | undefined>;
@@ -394,4 +391,22 @@ export enum StakeMode {
   noStake,
   stakeAg,
   stakeRaw,
+}
+
+export interface ITokenNames {
+  DepositTokenNamePrefix: string;
+  StableDebtTokenNamePrefix: string;
+  VariableDebtTokenNamePrefix: string;
+  StakeTokenNamePrefix: string;
+
+  SymbolPrefix: string;
+  DepositSymbolPrefix: string;
+  StableDebtSymbolPrefix: string;
+  VariableDebtSymbolPrefix: string;
+  StakeSymbolPrefix: string;
+
+  RewardTokenName: string;
+  RewardStakeTokenName: string;
+  RewardTokenSymbol: string;
+  RewardStakeTokenSymbol: string;
 }
