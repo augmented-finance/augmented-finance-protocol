@@ -18,5 +18,13 @@ interface IInitializableStakeToken {
     uint8 decimals
   ) external;
 
-  function initializedWithConfig() external view returns (StakeTokenConfig memory params);
+  function initializedWith()
+    external
+    view
+    returns (
+      StakeTokenConfig memory params,
+      string memory name,
+      string memory symbol,
+      uint8 decimals
+    );
 }

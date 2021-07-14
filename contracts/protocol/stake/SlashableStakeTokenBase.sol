@@ -408,11 +408,22 @@ abstract contract SlashableStakeTokenBase is
     return _unstakePeriod;
   }
 
-  function initializedWithConfig() external view override returns (StakeTokenConfig memory params) {
+  function initializedWith()
+    external
+    view
+    override
+    returns (
+      StakeTokenConfig memory params,
+      string memory name_,
+      string memory symbol_,
+      uint8 decimals_
+    )
+  {
     params.stakeController = _remoteAcl;
     params.stakedToken = _stakedToken;
     params.cooldownPeriod = _cooldownPeriod;
     params.unstakePeriod = _unstakePeriod;
     params.maxSlashable = _maxSlashablePercentage;
+    return (params, name(), symbol(), decimals());
   }
 }

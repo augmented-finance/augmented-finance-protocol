@@ -11,8 +11,8 @@ interface IStakeConfigurator {
     string stkTokenSymbol;
     uint32 cooldownPeriod;
     uint32 unstakePeriod;
+    uint16 maxSlashable;
     uint8 stkTokenDecimals;
-    uint8 maxSlashable;
   }
 
   struct UpdateStakeTokenData {

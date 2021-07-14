@@ -7,10 +7,14 @@ import {
   deployStakeTokenImpl,
 } from '../../helpers/contracts-deployments';
 import { eNetwork, ICommonConfiguration, StakeMode } from '../../helpers/types';
-import { getIErc20Detailed, getLendingPoolProxy, getMarketAddressController, getStakeConfiguratorImpl } from '../../helpers/contracts-getters';
-import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import {
+  getIErc20Detailed,
+  getLendingPoolProxy,
+  getMarketAddressController,
+  getStakeConfiguratorImpl,
+} from '../../helpers/contracts-getters';
+import { chunk, falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
-import { StakeConfiguratorFactory } from '../../types';
 import { BigNumberish } from 'ethers';
 
 const CONTRACT_NAME = 'StakeToken';
@@ -26,10 +30,8 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
       const addressesProvider = await getMarketAddressController();
       const impl = await deployStakeTokenImpl(verify);
       await waitForTx(await addressesProvider.addImplementation(`${CONTRACT_NAME}`, impl.address));
-      
-      const {
-        ReserveAssets,
-      } = poolConfig as ICommonConfiguration;
+
+      const { ReserveAssets, Names } = poolConfig as ICommonConfiguration;
 
       const reserveAssets = getParamPerNetwork(ReserveAssets, network);
       const lendingPool = await getLendingPoolProxy(await addressesProvider.getLendingPool());
@@ -43,6 +45,8 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
         stkTokenDecimals: BigNumberish;
         maxSlashable: BigNumberish;
       }[] = [];
+      let initSymbols: string[] = [];
+
       const stakeParams = poolConfig.StakeParams;
       const stakeTokens = Object.entries(stakeParams.StakeToken);
       for (const [tokenName, mode] of stakeTokens) {
@@ -50,30 +54,73 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
           continue;
         }
         let asset = reserveAssets[tokenName];
+
         if (asset && mode == StakeMode.stakeAg) {
           const reserveData = await lendingPool.getReserveData(asset);
           asset = reserveData.aTokenAddress;
         }
-
         if (falsyOrZeroAddress(asset)) {
           console.log('Stake asset is missing:', tokenName, mode);
           continue;
         }
 
         const assetDetailed = await getIErc20Detailed(asset);
+        const symbol = await assetDetailed.symbol();
+        const decimals = await assetDetailed.decimals();
 
+        let symbolPrefix = '';
+        let stakePrefix = '';
+
+        if (mode != StakeMode.stakeAg) {
+          stakePrefix = Names.DepositSymbolPrefix;
+          symbolPrefix = Names.SymbolPrefix;
+          if (symbolPrefix == '' && symbol[0] >= 'a' && symbol[0] <= 'z') {
+            symbolPrefix = '_';
+          }
+        }
+
+        initSymbols.push(symbol);
         initParams.push({
-          stakeTokenImpl : impl.address,
-          stakedToken : asset,
-          stkTokenName : '',
-          stkTokenSymbol : '',
-          stkTokenDecimals : await assetDetailed.decimals(),
-          cooldownPeriod : stakeParams.CooldownPeriod,
-          unstakePeriod : stakeParams.UnstakePeriod,
-          maxSlashable : stakeParams.MaxSlashBP,
+          stakeTokenImpl: impl.address,
+          stakedToken: asset,
+          stkTokenName: `${Names.StakeTokenNamePrefix} ${tokenName}`,
+          stkTokenSymbol: `${Names.StakeSymbolPrefix}${stakePrefix}${symbolPrefix}${symbol}`,
+          stkTokenDecimals: decimals,
+          cooldownPeriod: stakeParams.CooldownPeriod,
+          unstakePeriod: stakeParams.UnstakePeriod,
+          maxSlashable: stakeParams.MaxSlashBP,
         });
-      };
-      const stakeConfigurator = await getStakeConfiguratorImpl(await addressesProvider.getStakeConfigurator());
+      }
+
+      // CHUNK CONFIGURATION
+      const initChunks = 1;
+
+      const chunkedParams = chunk(initParams, initChunks);
+      const chunkedSymbols = chunk(initSymbols, initChunks);
+
+      const stakeConfigurator = await getStakeConfiguratorImpl(
+        await addressesProvider.getStakeConfigurator()
+      );
+      await waitForTx(
+        await addressesProvider.grantRoles(
+          (await getFirstSigner()).address,
+          AccessFlags.STAKE_ADMIN
+        )
+      );
+
+      console.log(`- Stakes initialization in ${chunkedParams.length} txs`);
+      for (let chunkIndex = 0; chunkIndex < chunkedParams.length; chunkIndex++) {
+        const param = chunkedParams[chunkIndex];
+        console.log(param);
+        const tx3 = await waitForTx(
+          await stakeConfigurator.batchInitStakeTokens(param, {
+            gasLimit: 5000000,
+          })
+        );
+
+        console.log(`  - Stake(s) ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
+        console.log('    * gasUsed', tx3.gasUsed.toString());
+      }
 
       stakeConfigurator.batchInitStakeTokens(initParams);
 
