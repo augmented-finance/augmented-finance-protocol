@@ -2,11 +2,10 @@ import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames, getTreasuryAddress } from '../../helpers/configuration';
 import { eEthereumNetwork, eNetwork, ICommonConfiguration } from '../../helpers/types';
-import { getSigner, waitForTx } from '../../helpers/misc-utils';
+import { getFirstSigner, getSigner, waitForTx } from '../../helpers/misc-utils';
 import { initTokenReservesByHelper } from '../../helpers/init-helpers';
 import { exit } from 'process';
 import {
-  getFirstSigner,
   getMarketAddressController,
   getAddressesProviderRegistry,
 } from '../../helpers/contracts-getters';

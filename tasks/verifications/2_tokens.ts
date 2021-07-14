@@ -8,13 +8,13 @@ import {
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getAddressById,
-  getFirstSigner,
   getLendingPool,
   getMarketAddressController,
   getLendingPoolConfiguratorProxy,
 } from '../../helpers/contracts-getters';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { verifyContract } from '../../helpers/etherscan-verification';
+import { getFirstSigner } from '../../helpers/misc-utils';
 import { eNetwork, ICommonConfiguration, IReserveParams } from '../../helpers/types';
 import { LendingPoolConfiguratorFactory, LendingPoolFactory } from '../../types';
 
