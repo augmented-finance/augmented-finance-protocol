@@ -80,11 +80,6 @@ export const getEmergencyAdmin = async (
   return addressList[addressIndex];
 };
 
-export const getATokenDomainSeparatorPerNetwork = (
-  network: eNetwork,
-  config: ICommonConfiguration
-): tEthereumAddress => getParamPerNetwork<tEthereumAddress>(config.ATokenDomainSeparator, network);
-
 export const getWethAddress = async (config: ICommonConfiguration) => {
   const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
   const wethAddress = getParamPerNetwork(config.WETH, <eNetwork>currentNetwork);

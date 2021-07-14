@@ -1,7 +1,6 @@
 import { evmRevert, evmSnapshot, DRE } from '../../../helpers/misc-utils';
 import { Signer } from 'ethers';
 import {
-  getLendingPool,
   getMarketAddressController,
   getProtocolDataProvider,
   getDepositToken,
@@ -14,6 +13,7 @@ import {
   getUniswapLiquiditySwapAdapter,
   getUniswapRepayAdapter,
   getFlashLiquidationAdapter,
+  getLendingPoolProxy,
 } from '../../../helpers/contracts-getters';
 import { eEthereumNetwork, tEthereumAddress } from '../../../helpers/types';
 import { LendingPool } from '../../../types/LendingPool';
@@ -109,11 +109,6 @@ export async function initializeMakeSuite() {
     });
   }
   testEnv.deployer = deployer;
-  testEnv.pool = await getLendingPool();
-
-  testEnv.configurator = await getLendingPoolConfiguratorProxy();
-
-  testEnv.addressesProvider = await getMarketAddressController();
 
   if (process.env.MAINNET_FORK === 'true') {
     testEnv.registry = await getAddressesProviderRegistry(
@@ -121,8 +116,17 @@ export async function initializeMakeSuite() {
     );
   } else {
     testEnv.registry = await getAddressesProviderRegistry();
-    testEnv.oracle = await getPriceOracle();
   }
+
+  testEnv.addressesProvider = await getMarketAddressController();
+  // testEnv.registry.getAddressesProviderByAddress(address);
+
+  testEnv.oracle = await getPriceOracle(await testEnv.addressesProvider.getPriceOracle());
+
+  testEnv.pool = await getLendingPoolProxy(await testEnv.addressesProvider.getLendingPool());
+  testEnv.configurator = await getLendingPoolConfiguratorProxy(
+    await testEnv.addressesProvider.getLendingPoolConfigurator()
+  );
 
   testEnv.helpersContract = await getProtocolDataProvider();
 

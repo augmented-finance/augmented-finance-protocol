@@ -3,9 +3,9 @@ import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/confi
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getAddressById,
-  getLendingPool,
   getMarketAddressController,
   getLendingPoolConfiguratorProxy,
+  getLendingPoolProxy,
 } from '../../helpers/contracts-getters';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { verifyContract } from '../../helpers/etherscan-verification';
@@ -22,14 +22,10 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
     const { ReserveAssets, ReservesConfig } = poolConfig as ICommonConfiguration;
 
     const addressesProvider = await getMarketAddressController();
-    const lendingPoolProxy = LendingPoolFactory.connect(
-      await addressesProvider.getLendingPool(),
-      await getFirstSigner()
-    );
+    const lendingPoolProxy = await getLendingPoolProxy(await addressesProvider.getLendingPool());
 
-    const lendingPoolConfigurator = LendingPoolConfiguratorFactory.connect(
-      await addressesProvider.getLendingPoolConfigurator(),
-      await getFirstSigner()
+    const lendingPoolConfigurator = await getLendingPoolConfiguratorProxy(
+      await addressesProvider.getLendingPoolConfigurator()
     );
 
     const configs = Object.entries(ReservesConfig) as [string, IReserveParams][];

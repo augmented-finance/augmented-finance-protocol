@@ -38,37 +38,23 @@ export enum LendingPools {
 
 export enum eContractid {
   MarketAccessController = 'MarketAccessController',
-  MintableERC20 = 'MintableERC20',
-  MintableDelegationERC20 = 'MintableDelegationERC20',
   AddressesProviderRegistry = 'AddressesProviderRegistry',
-  LendingPoolParametersProvider = 'LendingPoolParametersProvider',
-  LendingPoolConfigurator = 'LendingPoolConfigurator',
   ValidationLogic = 'ValidationLogic',
   ReserveLogic = 'ReserveLogic',
   GenericLogic = 'GenericLogic',
-  LendingPool = 'LendingPool',
   PriceOracle = 'PriceOracle',
-  Proxy = 'Proxy',
   MockAggregator = 'MockAggregator',
   LendingRateOracle = 'LendingRateOracle',
   OracleRouter = 'OracleRouter',
-  DefaultReserveInterestRateStrategy = 'DefaultReserveInterestRateStrategy',
-  LendingPoolCollateralManager = 'LendingPoolCollateralManager',
-  InitializableAdminUpgradeabilityProxy = 'InitializableAdminUpgradeabilityProxy',
   MockFlashLoanReceiver = 'MockFlashLoanReceiver',
   WalletBalanceProvider = 'WalletBalanceProvider',
-  DepositToken = 'DepositToken',
   MockDepositToken = 'MockDepositToken',
-  DelegationAwareDepositToken = 'DelegationAwareDepositToken',
   MockStableDebtToken = 'MockStableDebtToken',
   MockVariableDebtToken = 'MockVariableDebtToken',
   MockAgfToken = 'MockAgfToken',
   MockStakedAgfToken = 'MockStakedAgfToken',
   MockStakedAgToken = 'MockStakedAgToken',
   ProtocolDataProvider = 'ProtocolDataProvider',
-  IERC20Detailed = 'IERC20Detailed',
-  StableDebtToken = 'StableDebtToken',
-  VariableDebtToken = 'VariableDebtToken',
   FeeProvider = 'FeeProvider',
   TokenDistributor = 'TokenDistributor',
   StableAndVariableTokensHelper = 'StableAndVariableTokensHelper',
@@ -78,6 +64,9 @@ export enum eContractid {
   WETH = 'WETH',
   WETHMocked = 'WETHMocked',
   SelfdestructTransferMock = 'SelfdestructTransferMock',
+
+  DepositTokenImpl = 'DepositTokenImpl',
+  DelegationAwareDepositTokenImpl = 'DelegationAwareDepositTokenImpl',
   LendingPoolImpl = 'LendingPoolImpl',
   LendingPoolConfiguratorImpl = 'LendingPoolConfiguratorImpl',
   LendingPoolCollateralManagerImpl = 'LendingPoolCollateralManagerImpl',
@@ -366,9 +355,6 @@ export interface ICommonConfiguration {
   Mocks: IMocksConfig;
   ProviderRegistry: iParamsPerNetwork<tEthereumAddress | undefined>;
   ProviderRegistryOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
-  LendingPoolCollateralManager: iParamsPerNetwork<tEthereumAddress>;
-  LendingPoolConfigurator: iParamsPerNetwork<tEthereumAddress>;
-  LendingPool: iParamsPerNetwork<tEthereumAddress>;
   LendingRateOracleRatesCommon: iMultiPoolsAssets<IMarketRates>;
   LendingRateOracle: iParamsPerNetwork<tEthereumAddress>;
   TokenDistributor: iParamsPerNetwork<tEthereumAddress>;
@@ -381,7 +367,6 @@ export interface ICommonConfiguration {
   EmergencyAdminIndex: number;
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;
-  ATokenDomainSeparator: iParamsPerNetwork<string>;
   WETH: iParamsPerNetwork<tEthereumAddress>;
   WethGateway: iParamsPerNetwork<tEthereumAddress>;
 

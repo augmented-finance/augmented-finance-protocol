@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 import { eEthereumNetwork } from '../../helpers/types';
 import * as marketConfigs from '../../markets/augmented';
 import * as reserveConfigs from '../../markets/augmented/reservesConfigs';
-import { chooseATokenDeployment } from '../../helpers/init-helpers';
+import { chooseDepositTokenDeployment } from '../../helpers/init-helpers';
 import { getMarketAddressController } from './../../helpers/contracts-getters';
 import {
   deployDefaultReserveInterestRateStrategy,
@@ -41,13 +41,13 @@ WRONG RESERVE ASSET SETUP:
     const strategyParams = reserveConfigs['strategy' + symbol];
     const reserveAssetAddress =
       marketConfigs.AugmentedConfig.ReserveAssets[localBRE.network.name][symbol];
-    const deployCustomAToken = chooseATokenDeployment(strategyParams.aTokenImpl);
+    const deployDepositToken = chooseDepositTokenDeployment(strategyParams.aTokenImpl);
     const addressProvider = await getMarketAddressController(
       LENDING_POOL_ADDRESS_PROVIDER[network]
     );
     const poolAddress = await addressProvider.getLendingPool();
     const treasuryAddress = await addressProvider.getTreasury();
-    const aToken = await deployCustomAToken(
+    const aToken = await deployDepositToken(
       [
         poolAddress,
         reserveAssetAddress,
@@ -58,13 +58,20 @@ WRONG RESERVE ASSET SETUP:
       verify
     );
     const stableDebt = await deployStableDebtToken(
-      [poolAddress, reserveAssetAddress, `Augmented stable debt ${symbol}`, `stableDebt${symbol}`],
+      [
+        poolAddress,
+        reserveAssetAddress,
+        treasuryAddress,
+        `Augmented stable debt ${symbol}`,
+        `stableDebt${symbol}`,
+      ],
       verify
     );
     const variableDebt = await deployVariableDebtToken(
       [
         poolAddress,
         reserveAssetAddress,
+        treasuryAddress,
         `Augmented variable debt ${symbol}`,
         `variableDebt${symbol}`,
       ],

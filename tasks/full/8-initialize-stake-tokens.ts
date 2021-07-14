@@ -7,7 +7,7 @@ import {
   deployStakeTokenImpl,
 } from '../../helpers/contracts-deployments';
 import { eNetwork, ICommonConfiguration, StakeMode } from '../../helpers/types';
-import { getLendingPool, getMarketAddressController } from '../../helpers/contracts-getters';
+import { getLendingPoolProxy, getMarketAddressController } from '../../helpers/contracts-getters';
 import { waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { StakeConfiguratorFactory } from '../../types';
@@ -30,7 +30,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
       //         ReserveAssets,
       //       } = poolConfig as ICommonConfiguration;
       //       const reserveAssets = getParamPerNetwork(ReserveAssets, network);
-      //       const lendingPool = await getLendingPool(await addressesProvider.getLendingPool());
+      //       const lendingPool = await getLendingPoolProxy(await addressesProvider.getLendingPool());
       //       let initParams: {
       //         stakeTokenImpl: string;
       //         stakedToken: string;

@@ -1,12 +1,12 @@
 import { task } from 'hardhat/config';
 import {
-  deployLendingPoolCollateralManager,
   deployMockFlashLoanReceiver,
   deployWalletBalancerProvider,
   deployProtocolDataProvider,
   deployWETHGateway,
   authorizeWETHGateway,
   deployTreasuryImpl,
+  deployLendingPoolCollateralManagerImpl,
 } from '../../helpers/contracts-deployments';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { eNetwork } from '../../helpers/types';
@@ -72,7 +72,7 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     );
     await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, testHelpers, admin);
 
-    const collateralManager = await deployLendingPoolCollateralManager(verify);
+    const collateralManager = await deployLendingPoolCollateralManagerImpl(verify);
     await waitForTx(
       await addressesProvider.setLendingPoolCollateralManager(collateralManager.address)
     );

@@ -33,7 +33,6 @@ import {
   OracleRouterFactory,
   DefaultReserveInterestRateStrategyFactory,
   DelegationAwareDepositTokenFactory,
-  InitializableAdminUpgradeabilityProxyFactory,
   AddressesProviderRegistryFactory,
   LendingPoolCollateralManagerFactory,
   LendingPoolConfiguratorFactory,
@@ -72,7 +71,7 @@ import {
   withSaveAndVerify,
   registerContractInJsonDb,
   linkBytecode,
-  insertContractAddressInDb,
+  withVerify,
 } from './contracts-helpers';
 import { StableAndVariableTokensHelperFactory } from '../types';
 import { MintableDelegationERC20 } from '../types';
@@ -99,21 +98,13 @@ export const deployAddressesProviderRegistry = async (verify?: boolean) =>
     verify
   );
 
-export const deployLendingPoolConfigurator = async (verify?: boolean) => {
-  const lendingPoolConfiguratorImpl = await new LendingPoolConfiguratorFactory(
-    await getFirstSigner()
-  ).deploy();
-  await insertContractAddressInDb(
+export const deployLendingPoolConfiguratorImpl = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await new LendingPoolConfiguratorFactory(await getFirstSigner()).deploy(),
     eContractid.LendingPoolConfiguratorImpl,
-    lendingPoolConfiguratorImpl.address
-  );
-  return withSaveAndVerify(
-    lendingPoolConfiguratorImpl,
-    eContractid.LendingPoolConfigurator,
     [],
     verify
   );
-};
 
 export const deployReserveLogicLibrary = async (verify?: boolean) =>
   withSaveAndVerify(
@@ -186,11 +177,14 @@ export const deployAaveLibraries = async (
   };
 };
 
-export const deployLendingPool = async (verify?: boolean) => {
+export const deployLendingPoolImpl = async (verify?: boolean) => {
   const libraries = await deployAaveLibraries(verify);
-  const lendingPoolImpl = await new LendingPoolFactory(libraries, await getFirstSigner()).deploy();
-  await insertContractAddressInDb(eContractid.LendingPoolImpl, lendingPoolImpl.address);
-  return withSaveAndVerify(lendingPoolImpl, eContractid.LendingPool, [], verify);
+  return withSaveAndVerify(
+    await new LendingPoolFactory(libraries, await getFirstSigner()).deploy(),
+    eContractid.LendingPoolImpl,
+    [],
+    verify
+  );
 };
 
 export const deployPriceOracle = async (verify?: boolean) =>
@@ -228,26 +222,10 @@ export const deployOracleRouter = async (
     verify
   );
 
-export const deployLendingPoolCollateralManager = async (verify?: boolean) => {
-  const collateralManagerImpl = await new LendingPoolCollateralManagerFactory(
-    await getFirstSigner()
-  ).deploy();
-  await insertContractAddressInDb(
-    eContractid.LendingPoolCollateralManagerImpl,
-    collateralManagerImpl.address
-  );
-  return withSaveAndVerify(
-    collateralManagerImpl,
-    eContractid.LendingPoolCollateralManager,
-    [],
-    verify
-  );
-};
-
-export const deployInitializableAdminUpgradeabilityProxy = async (verify?: boolean) =>
+export const deployLendingPoolCollateralManagerImpl = async (verify?: boolean) =>
   withSaveAndVerify(
-    await new InitializableAdminUpgradeabilityProxyFactory(await getFirstSigner()).deploy(),
-    eContractid.InitializableAdminUpgradeabilityProxy,
+    await new LendingPoolCollateralManagerFactory(await getFirstSigner()).deploy(),
+    eContractid.LendingPoolCollateralManagerImpl,
     [],
     verify
   );
@@ -286,9 +264,9 @@ export const deployMintableERC20 = async (
   args: [string, string, string],
   verify?: boolean
 ): Promise<MintableERC20> =>
-  withSaveAndVerify(
+  withVerify(
     await new MintableERC20Factory(await getFirstSigner()).deploy(...args),
-    eContractid.MintableERC20,
+    'MintableERC20',
     args,
     verify
   );
@@ -297,92 +275,25 @@ export const deployMintableDelegationERC20 = async (
   args: [string, string, string],
   verify?: boolean
 ): Promise<MintableDelegationERC20> =>
-  withSaveAndVerify(
+  withVerify(
     await new MintableDelegationERC20Factory(await getFirstSigner()).deploy(...args),
-    eContractid.MintableDelegationERC20,
+    'MintableDelegationERC20',
     args,
     verify
   );
+
 export const deployDefaultReserveInterestRateStrategy = async (
   args: [tEthereumAddress, string, string, string, string, string, string],
   verify: boolean
 ) =>
-  withSaveAndVerify(
+  withVerify(
     await new DefaultReserveInterestRateStrategyFactory(await getFirstSigner()).deploy(...args),
-    eContractid.DefaultReserveInterestRateStrategy,
+    'DefaultReserveInterestRateStrategy',
     args,
     verify
   );
 
 export const deployStableDebtToken = async (
-  args: [tEthereumAddress, tEthereumAddress, string, string],
-  verify: boolean
-) => {
-  const instance = await withSaveAndVerify(
-    await new StableDebtTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.StableDebtToken,
-    [],
-    verify
-  );
-
-  await instance.initialize(
-    {
-      pool: args[0],
-      treasury: ZERO_ADDRESS,
-      underlyingAsset: args[1],
-    },
-    args[2],
-    args[3],
-    '18',
-    '0x10'
-  );
-
-  return instance;
-};
-
-export const deployVariableDebtToken = async (
-  args: [tEthereumAddress, tEthereumAddress, string, string],
-  verify: boolean
-) => {
-  const instance = await withSaveAndVerify(
-    await new VariableDebtTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.VariableDebtToken,
-    [],
-    verify
-  );
-
-  await instance.initialize(
-    {
-      pool: args[0],
-      treasury: ZERO_ADDRESS,
-      underlyingAsset: args[1],
-    },
-    args[2],
-    args[3],
-    '18',
-    '0x10'
-  );
-
-  return instance;
-};
-
-export const deployGenericStableDebtToken = async () =>
-  withSaveAndVerify(
-    await new StableDebtTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.StableDebtToken,
-    [],
-    false
-  );
-
-export const deployGenericVariableDebtToken = async () =>
-  withSaveAndVerify(
-    await new VariableDebtTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.VariableDebtToken,
-    [],
-    false
-  );
-
-export const deployGenericDepositToken = async (
   [poolAddress, underlyingAssetAddress, treasuryAddress, name, symbol]: [
     tEthereumAddress,
     tEthereumAddress,
@@ -392,9 +303,9 @@ export const deployGenericDepositToken = async (
   ],
   verify: boolean
 ) => {
-  const instance = await withSaveAndVerify(
-    await new DepositTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.DepositToken,
+  const instance = await withVerify(
+    await new StableDebtTokenFactory(await getFirstSigner()).deploy(),
+    'VariableDebtToken',
     [],
     verify
   );
@@ -414,13 +325,69 @@ export const deployGenericDepositToken = async (
   return instance;
 };
 
-export const deployGenericDepositTokenImpl = async (verify: boolean) =>
-  withSaveAndVerify(
-    await new DepositTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.DepositToken,
+export const deployVariableDebtToken = async (
+  [poolAddress, underlyingAssetAddress, treasuryAddress, name, symbol]: [
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    string,
+    string
+  ],
+  verify: boolean
+) => {
+  const instance = await withVerify(
+    await new VariableDebtTokenFactory(await getFirstSigner()).deploy(),
+    'VariableDebtToken',
     [],
     verify
   );
+
+  await instance.initialize(
+    {
+      pool: poolAddress,
+      treasury: treasuryAddress,
+      underlyingAsset: underlyingAssetAddress,
+    },
+    name,
+    symbol,
+    '18',
+    '0x10'
+  );
+
+  return instance;
+};
+
+export const deployDepositToken = async (
+  [poolAddress, underlyingAssetAddress, treasuryAddress, name, symbol]: [
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    string,
+    string
+  ],
+  verify: boolean
+) => {
+  const instance = await withVerify(
+    await new DepositTokenFactory(await getFirstSigner()).deploy(),
+    'DepositToken',
+    [],
+    verify
+  );
+
+  await instance.initialize(
+    {
+      pool: poolAddress,
+      treasury: treasuryAddress,
+      underlyingAsset: underlyingAssetAddress,
+    },
+    name,
+    symbol,
+    '18',
+    '0x10'
+  );
+
+  return instance;
+};
 
 export const deployDelegationAwareDepositToken = async (
   [pool, underlyingAssetAddress, treasuryAddress, name, symbol]: [
@@ -432,9 +399,9 @@ export const deployDelegationAwareDepositToken = async (
   ],
   verify: boolean
 ) => {
-  const instance = await withSaveAndVerify(
+  const instance = await withVerify(
     await new DelegationAwareDepositTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.DelegationAwareDepositToken,
+    'DelegationAwareDepositToken',
     [],
     verify
   );
@@ -454,10 +421,18 @@ export const deployDelegationAwareDepositToken = async (
   return instance;
 };
 
+export const deployDepositTokenImpl = async (verify: boolean) =>
+  withSaveAndVerify(
+    await new DepositTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.DepositTokenImpl,
+    [],
+    verify
+  );
+
 export const deployDelegationAwareDepositTokenImpl = async (verify: boolean) =>
   withSaveAndVerify(
     await new DelegationAwareDepositTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.DelegationAwareDepositToken,
+    eContractid.DelegationAwareDepositTokenImpl,
     [],
     verify
   );
@@ -544,7 +519,7 @@ export const deployMockStableDebtToken = async (
   args: [tEthereumAddress, tEthereumAddress, string, string, string],
   verify?: boolean
 ) => {
-  const instance = await withSaveAndVerify(
+  const instance = await withVerify(
     await new MockStableDebtTokenFactory(await getFirstSigner()).deploy(),
     eContractid.MockStableDebtToken,
     [],
@@ -578,7 +553,7 @@ export const deployMockVariableDebtToken = async (
   args: [tEthereumAddress, tEthereumAddress, string, string, string],
   verify?: boolean
 ) => {
-  const instance = await withSaveAndVerify(
+  const instance = await withVerify(
     await new MockVariableDebtTokenFactory(await getFirstSigner()).deploy(),
     eContractid.MockVariableDebtToken,
     [],
@@ -604,7 +579,7 @@ export const deployMockDepositToken = async (
   args: [tEthereumAddress, tEthereumAddress, tEthereumAddress, string, string, string],
   verify?: boolean
 ) => {
-  const instance = await withSaveAndVerify(
+  const instance = await withVerify(
     await new MockDepositTokenFactory(await getFirstSigner()).deploy(),
     eContractid.MockDepositToken,
     [],

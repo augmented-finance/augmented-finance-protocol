@@ -9,8 +9,6 @@ import {
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, DRE, getDb, waitForTx } from './misc-utils';
 import {
-  getProtocolDataProvider,
-  getDepositToken,
   getATokensAndRatesHelper,
   getMarketAddressController,
   getLendingPoolConfiguratorProxy,
@@ -22,22 +20,16 @@ import {
   deployDefaultReserveInterestRateStrategy,
   deployDelegationAwareDepositToken,
   deployDelegationAwareDepositTokenImpl,
-  deployGenericDepositToken,
-  deployGenericDepositTokenImpl,
-  deployGenericStableDebtToken,
-  deployGenericVariableDebtToken,
-  deployStableDebtToken,
-  deployVariableDebtToken,
+  deployDepositToken,
+  deployDepositTokenImpl,
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
-import { isZeroAddress } from 'ethereumjs-util';
-import { DefaultReserveInterestRateStrategy, DelegationAwareDepositToken } from '../types';
 
-export const chooseATokenDeployment = (id: eContractid) => {
+export const chooseDepositTokenDeployment = (id: eContractid) => {
   switch (id) {
-    case eContractid.DepositToken:
-      return deployGenericDepositToken;
-    case eContractid.DelegationAwareDepositToken:
+    case eContractid.DepositTokenImpl:
+      return deployDepositToken;
+    case eContractid.DelegationAwareDepositTokenImpl:
       return deployDelegationAwareDepositToken;
     default:
       throw Error(`Missing aToken deployment script for: ${id}`);
@@ -113,34 +105,24 @@ export const initReservesByHelper = async (
   tx1.events?.forEach((event, index) => {
     stableDebtTokenImplementationAddress = event?.args?.stableToken;
     variableDebtTokenImplementationAddress = event?.args?.variableToken;
-    rawInsertContractAddressInDb(`stableDebtTokenImpl`, stableDebtTokenImplementationAddress);
-    rawInsertContractAddressInDb(`variableDebtTokenImpl`, variableDebtTokenImplementationAddress);
   });
-  //gasUsage = gasUsage.add(tx1.gasUsed);
-  // stableDebtTokenImplementationAddress = await (await deployGenericStableDebtToken()).address;
-  // variableDebtTokenImplementationAddress = await (await deployGenericVariableDebtToken()).address;
 
-  const aTokenImplementation = await deployGenericDepositTokenImpl(verify);
+  const aTokenImplementation = await deployDepositTokenImpl(verify);
   aTokenImplementationAddress = aTokenImplementation.address;
-  rawInsertContractAddressInDb(`aTokenImpl`, aTokenImplementationAddress);
 
   const delegatedAwareReserves = Object.entries(reservesParams).filter(
-    ([_, { aTokenImpl }]) => aTokenImpl === eContractid.DelegationAwareDepositToken
+    ([_, { aTokenImpl }]) => aTokenImpl === eContractid.DelegationAwareDepositTokenImpl
   ) as [string, IReserveParams][];
 
   if (delegatedAwareReserves.length > 0) {
     const delegationAwareATokenImplementation = await deployDelegationAwareDepositTokenImpl(verify);
     delegationAwareATokenImplementationAddress = delegationAwareATokenImplementation.address;
-    rawInsertContractAddressInDb(
-      `delegationAwareATokenImpl`,
-      delegationAwareATokenImplementationAddress
-    );
   }
 
   const reserves = Object.entries(reservesParams).filter(
     ([_, { aTokenImpl }]) =>
-      aTokenImpl === eContractid.DelegationAwareDepositToken ||
-      aTokenImpl === eContractid.DepositToken
+      aTokenImpl === eContractid.DelegationAwareDepositTokenImpl ||
+      aTokenImpl === eContractid.DepositTokenImpl
   ) as [string, IReserveParams][];
 
   for (let [symbol, params] of reserves) {
@@ -176,10 +158,10 @@ export const initReservesByHelper = async (
     strategyAddressPerAsset[symbol] = strategyAddresses[strategy.name];
     console.log('Strategy address for asset %s: %s', symbol, strategyAddressPerAsset[symbol]);
 
-    if (aTokenImpl === eContractid.DepositToken) {
+    if (aTokenImpl === eContractid.DepositTokenImpl) {
       aTokenType[symbol] = 'generic';
       console.log('---- generic:', symbol);
-    } else if (aTokenImpl === eContractid.DelegationAwareDepositToken) {
+    } else if (aTokenImpl === eContractid.DelegationAwareDepositTokenImpl) {
       aTokenType[symbol] = 'delegation aware';
       console.log('---- delegation aware:', symbol);
     }
@@ -228,7 +210,7 @@ export const initReservesByHelper = async (
   const chunkedSymbols = chunk(reserveSymbols, initChunks);
   const chunkedInitInputParams = chunk(initInputParams, initChunks);
 
-  const configurator = await getLendingPoolConfiguratorProxy();
+  const configurator = await getLendingPoolConfiguratorProxy(await addressProvider.getLendingPoolConfigurator());
   //await waitForTx(await addressProvider.setPoolAdmin(admin));
 
   console.log(`- Reserves initialization in ${chunkedInitInputParams.length} txs`);

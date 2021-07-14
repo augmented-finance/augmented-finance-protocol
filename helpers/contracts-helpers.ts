@@ -30,6 +30,7 @@ export const registerContractInJsonDb = async (contractId: string, contractInsta
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
   if (MAINNET_FORK || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
     console.log(`*** ${contractId} ***\n`);
+    console.log(`Class: ${(<any>contractInstance).constructor.name}`);
     console.log(`Network: ${currentNetwork}`);
     console.log(`tx: ${contractInstance.deployTransaction.hash}`);
     console.log(`contract address: ${contractInstance.address}`);
@@ -56,6 +57,7 @@ export const insertContractAddressInDb = async (id: eContractid, address: tEther
     .write();
 
 export const rawInsertContractAddressInDb = async (id: string, address: tEthereumAddress) =>
+  
   await getDb()
     .set(`${id}.${DRE.network.name}`, {
       address,
@@ -111,10 +113,28 @@ export const withSaveAndVerify = async <ContractType extends Contract>(
   return instance;
 };
 
-export const getContract = async <ContractType extends Contract>(
-  contractName: string,
-  address: string
-): Promise<ContractType> => (await DRE.ethers.getContractAt(contractName, address)) as ContractType;
+export const withVerify = async <ContractType extends Contract>(
+  instance: ContractType,
+  id: string,
+  args: (string | string[])[],
+  verify?: boolean
+): Promise<ContractType> => {
+  await waitForTx(instance.deployTransaction);
+  if (usingTenderly()) {
+    console.log();
+    console.log('Doing Tenderly contract verification of', id);
+    await (DRE as any).tenderlyNetwork.verify({
+      name: id,
+      address: instance.address,
+    });
+    console.log(`Verified ${id} at Tenderly!`);
+    console.log();
+  }
+  if (verify) {
+    await verifyContract(instance.address, args);
+  }
+  return instance;
+};
 
 export const linkBytecode = (artifact: Artifact, libraries: any) => {
   let bytecode = artifact.bytecode;
