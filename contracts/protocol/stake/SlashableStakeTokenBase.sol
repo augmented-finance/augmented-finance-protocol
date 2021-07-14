@@ -39,9 +39,9 @@ abstract contract SlashableStakeTokenBase is
 
   mapping(address => uint32) private _stakersCooldowns;
 
-  uint256 private _maxSlashablePercentage;
   uint32 private _cooldownPeriod;
   uint32 private _unstakePeriod;
+  uint16 private _maxSlashablePercentage;
   bool private _redeemPaused;
 
   event Staked(address indexed from, address indexed to, uint256 amount, uint256 indexed referal);
@@ -62,14 +62,17 @@ abstract contract SlashableStakeTokenBase is
     _remoteAcl = params.stakeController;
     _stakedToken = params.stakedToken;
     _cooldownPeriod = params.cooldownPeriod;
+
     if (params.unstakePeriod == 0) {
       _unstakePeriod = 10;
     } else {
       _unstakePeriod = params.unstakePeriod;
     }
 
-    if (_maxSlashablePercentage == 0) {
-      _maxSlashablePercentage = 30 * PercentageMath.PCT;
+    if (params.maxSlashable >= PercentageMath.ONE) {
+      _maxSlashablePercentage = PercentageMath.ONE;
+    } else {
+      _maxSlashablePercentage = params.maxSlashable;
     }
   }
 
@@ -272,17 +275,17 @@ abstract contract SlashableStakeTokenBase is
     return amount;
   }
 
-  function getMaxSlashablePercentage() external view override returns (uint256) {
+  function getMaxSlashablePercentage() external view override returns (uint16) {
     return _maxSlashablePercentage;
   }
 
-  function setMaxSlashablePercentage(uint256 percentageInRay)
+  function setMaxSlashablePercentage(uint16 slashPct)
     external
     override
     aclHas(AccessFlags.STAKE_ADMIN)
   {
-    require(percentageInRay <= PercentageMath.ONE, 'STK_EXCESSIVE_SLASH_PCT');
-    _maxSlashablePercentage = percentageInRay;
+    require(slashPct <= PercentageMath.ONE, 'STK_EXCESSIVE_SLASH_PCT');
+    _maxSlashablePercentage = slashPct;
   }
 
   function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod)
@@ -410,5 +413,6 @@ abstract contract SlashableStakeTokenBase is
     params.stakedToken = _stakedToken;
     params.cooldownPeriod = _cooldownPeriod;
     params.unstakePeriod = _unstakePeriod;
+    params.maxSlashable = _maxSlashablePercentage;
   }
 }

@@ -1,5 +1,5 @@
 import { BigNumberish, Contract } from 'ethers';
-import { DRE } from './misc-utils';
+import { DRE, getContractFactory, getFirstSigner } from './misc-utils';
 import {
   tEthereumAddress,
   eContractid,
@@ -18,11 +18,11 @@ import {
   MintableERC20,
   RewardBoosterFactory,
   RewardedTokenLockerFactory,
+  StakeTokenFactory,
   XAGFTokenV1Factory,
 } from '../types';
 import { MockContract } from 'ethereum-waffle';
 import { getReservesConfigByPool } from './configuration';
-import { getFirstSigner } from './contracts-getters';
 import { ZERO_ADDRESS } from './constants';
 import {
   ProtocolDataProviderFactory,
@@ -129,7 +129,7 @@ export const deployGenericLogic = async (reserveLogic: Contract, verify?: boolea
     [eContractid.ReserveLogic]: reserveLogic.address,
   });
 
-  const genericLogicFactory = await DRE.ethers.getContractFactory(
+  const genericLogicFactory = await getContractFactory(
     genericLogicArtifact.abi,
     linkedGenericLogicByteCode
   );
@@ -150,7 +150,7 @@ export const deployValidationLogic = async (
     [eContractid.GenericLogic]: genericLogic.address,
   });
 
-  const validationLogicFactory = await DRE.ethers.getContractFactory(
+  const validationLogicFactory = await getContractFactory(
     validationLogicArtifact.abi,
     linkedValidationLogicByteCode
   );
@@ -653,6 +653,7 @@ export const deployMockStakedAgToken = async (
       stakedToken: args[1],
       cooldownPeriod: args[4],
       unstakePeriod: args[5],
+      maxSlashable: 3000, // 30%
     },
     args[2],
     args[3],
@@ -678,6 +679,7 @@ export const deployMockStakedAgfToken = async (
       stakedToken: args[1],
       cooldownPeriod: args[4],
       unstakePeriod: args[5],
+      maxSlashable: 3000, // 30%
     },
     args[2],
     args[3],
@@ -926,10 +928,18 @@ export const deployAccessController = async (verify?: boolean) =>
     verify
   );
 
-export const deployStakeConfiguratorImpl = async (args: [tEthereumAddress], verify?: boolean) =>
+export const deployStakeConfiguratorImpl = async (args: [], verify?: boolean) =>
   withSaveAndVerify(
     await new StakeConfiguratorFactory(await getFirstSigner()).deploy(),
     eContractid.StakeConfiguratorImpl,
+    args,
+    verify
+  );
+
+export const deployStakeTokenImpl = async (args: [], verify?: boolean) =>
+  withSaveAndVerify(
+    await new StakeTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.StakeTokenImpl,
     args,
     verify
   );

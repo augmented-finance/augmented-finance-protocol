@@ -140,7 +140,8 @@ contract StakeConfigurator is
         _remoteAcl,
         IERC20(input.stakedToken),
         input.cooldownPeriod,
-        input.unstakePeriod
+        input.unstakePeriod,
+        input.maxSlashable
       );
 
     bytes memory params =

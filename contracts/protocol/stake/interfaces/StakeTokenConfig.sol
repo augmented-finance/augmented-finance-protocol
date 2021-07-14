@@ -9,4 +9,5 @@ struct StakeTokenConfig {
   IERC20 stakedToken;
   uint32 cooldownPeriod;
   uint32 unstakePeriod;
+  uint16 maxSlashable;
 }

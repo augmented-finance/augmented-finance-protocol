@@ -127,3 +127,8 @@ export const getTenderlyDashboardLink = () => {
     DRE.config.tenderly.project
   }/fork/${DRE.tenderlyNetwork.getFork()}/simulation/${DRE.tenderlyNetwork.getHead()}`;
 };
+
+export const getFirstSigner = async () => (await DRE.ethers.getSigners())[0];
+
+export const getContractFactory = async (abi: any[], bytecode: string) =>
+  await DRE.ethers.getContractFactory(abi, bytecode);
