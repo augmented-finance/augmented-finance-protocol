@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { checkVerification } from '../../helpers/etherscan-verification';
 import { ConfigNames } from '../../helpers/configuration';
-import { printContracts } from '../../helpers/misc-utils';
+import { getFirstSigner, printContracts } from '../../helpers/misc-utils';
 
 task('augmented:dev', 'Deploy development enviroment')
   .addOptionalParam('verify', 'Verify contracts at Etherscan')
@@ -33,5 +33,5 @@ task('augmented:dev', 'Deploy development enviroment')
     await localBRE.run('dev:initialize-lending-pool', { verify, pool: POOL_NAME });
 
     console.log('\nFinished deployment');
-    printContracts();
+    printContracts((await getFirstSigner()).address);
   });

@@ -2,10 +2,9 @@ import { Contract, Signer, utils, ethers, BigNumberish } from 'ethers';
 import { signTypedData_v4 } from 'eth-sig-util';
 import { fromRpcSig, ECDSASignature } from 'ethereumjs-util';
 import BigNumber from 'bignumber.js';
-import { getDb, DRE, waitForTx } from './misc-utils';
+import { DRE, logContractInJsonDb, waitForTx } from './misc-utils';
 import {
   tEthereumAddress,
-  eContractid,
   tStringTokenSmallUnits,
   eEthereumNetwork,
   LendingPools,
@@ -13,7 +12,6 @@ import {
   iParamsPerPool,
   ePolygonNetwork,
   eNetwork,
-  iParamsPerNetworkAll,
   iEthereumParamsPerNetwork,
   iPolygonParamsPerNetwork,
 } from './types';
@@ -26,27 +24,7 @@ import { usingTenderly } from './tenderly-utils';
 export type MockTokenMap = { [symbol: string]: MintableERC20 };
 
 export const registerContractInJsonDb = async (contractId: string, contractInstance: Contract) => {
-  const currentNetwork = DRE.network.name;
-  const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-  if (MAINNET_FORK || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
-    console.log(`*** ${contractId} ***\n`);
-    console.log(`Class: ${(<any>contractInstance).constructor.name}`);
-    console.log(`Network: ${currentNetwork}`);
-    console.log(`tx: ${contractInstance.deployTransaction.hash}`);
-    console.log(`contract address: ${contractInstance.address}`);
-    console.log(`deployer address: ${contractInstance.deployTransaction.from}`);
-    console.log(`gas price: ${contractInstance.deployTransaction.gasPrice}`);
-    console.log(`gas used: ${contractInstance.deployTransaction.gasLimit}`);
-    console.log(`\n******`);
-    console.log();
-  }
-
-  await getDb()
-    .set(`${contractId}.${currentNetwork}`, {
-      address: contractInstance.address,
-      deployer: contractInstance.deployTransaction.from,
-    })
-    .write();
+  logContractInJsonDb(contractId, contractInstance, true);
 };
 
 export const getEthersSigners = async (): Promise<Signer[]> =>
@@ -70,7 +48,7 @@ export const deployContract = async <ContractType extends Contract>(
     ...args
   )) as ContractType;
   await waitForTx(contract.deployTransaction);
-  await registerContractInJsonDb(<eContractid>contractName, contract);
+  await registerContractInJsonDb(contractName, contract);
   return contract;
 };
 
@@ -105,6 +83,8 @@ export const withVerify = async <ContractType extends Contract>(
   verify?: boolean
 ): Promise<ContractType> => {
   await waitForTx(instance.deployTransaction);
+  logContractInJsonDb(id, instance, false);
+
   if (usingTenderly()) {
     console.log();
     console.log('Doing Tenderly contract verification of', id);
