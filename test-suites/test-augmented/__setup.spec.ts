@@ -1,19 +1,12 @@
 import rawBRE from 'hardhat';
 import { MockContract } from 'ethereum-waffle';
-import {
-  insertContractAddressInDb,
-  getEthersSigners,
-  registerContractInJsonDb,
-} from '../../helpers/contracts-helpers';
+import { getEthersSigners, registerContractInJsonDb } from '../../helpers/contracts-helpers';
 import {
   deployLendingPoolAddressesProvider,
   deployMintableERC20,
   deployAddressesProviderRegistry,
-  deployLendingPoolConfigurator,
-  deployLendingPool,
   deployPriceOracle,
   deployOracleRouter,
-  deployLendingPoolCollateralManager,
   deployMockFlashLoanReceiver,
   deployWalletBalancerProvider,
   deployProtocolDataProvider,
@@ -27,16 +20,15 @@ import {
   deployUniswapRepayAdapter,
   deployFlashLiquidationAdapter,
   authorizeWETHGateway,
+  deployTreasuryImpl,
+  deployLendingPoolConfiguratorImpl,
+  deployLendingPoolImpl,
+  deployLendingPoolCollateralManagerImpl,
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
 import { TokenContractId, eContractid, tEthereumAddress, LendingPools } from '../../helpers/types';
 import { MintableERC20 } from '../../types';
-import {
-  ConfigNames,
-  getReservesConfigByPool,
-  getTreasuryAddress,
-  loadPoolConfig,
-} from '../../helpers/configuration';
+import { ConfigNames, getReservesConfigByPool, loadPoolConfig } from '../../helpers/configuration';
 import { initializeMakeSuite } from './helpers/make-suite';
 
 import {
@@ -44,12 +36,12 @@ import {
   deployAllMockAggregators,
   setInitialMarketRatesInRatesOracleByHelper,
 } from '../../helpers/oracles-helpers';
-import { DRE, waitForTx } from '../../helpers/misc-utils';
+import { DRE, falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
 import AugmentedConfig from '../../markets/augmented';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
-  getLendingPool,
+  getLendingPoolProxy,
   getLendingPoolConfiguratorProxy,
   getPairsTokenAggregator,
 } from '../../helpers/contracts-getters';
@@ -112,25 +104,19 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
     await addressesProviderRegistry.registerAddressesProvider(addressesProvider.address, 1)
   );
 
-  const lendingPoolImpl = await deployLendingPool();
+  const lendingPoolImpl = await deployLendingPoolImpl();
 
   await waitForTx(await addressesProvider.setLendingPoolImpl(lendingPoolImpl.address));
 
   const lendingPoolAddress = await addressesProvider.getLendingPool();
-  const lendingPoolProxy = await getLendingPool(lendingPoolAddress);
+  const lendingPoolProxy = await getLendingPoolProxy(lendingPoolAddress);
 
-  await insertContractAddressInDb(eContractid.LendingPool, lendingPoolProxy.address);
-
-  const lendingPoolConfiguratorImpl = await deployLendingPoolConfigurator();
+  const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl();
   await waitForTx(
     await addressesProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address)
   );
   const lendingPoolConfiguratorProxy = await getLendingPoolConfiguratorProxy(
     await addressesProvider.getLendingPoolConfigurator()
-  );
-  await insertContractAddressInDb(
-    eContractid.LendingPoolConfigurator,
-    lendingPoolConfiguratorProxy.address
   );
 
   // Deploy deployment helpers
@@ -198,28 +184,23 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const testHelpers = await deployProtocolDataProvider(addressesProvider.address);
 
-  await insertContractAddressInDb(eContractid.ProtocolDataProvider, testHelpers.address);
   const admin = await deployer.getAddress();
 
   console.log('Initialize configuration');
 
   const config = loadPoolConfig(ConfigNames.Augmented);
 
-  const {
-    DepositTokenNamePrefix,
-    StableDebtTokenNamePrefix,
-    VariableDebtTokenNamePrefix,
-    SymbolPrefix,
-  } = config;
-  const treasuryAddress = await getTreasuryAddress(config);
+  const { Names } = config;
+
+  const treasuryImpl = await deployTreasuryImpl();
+  addressesProvider.addImplementation('Treasury', treasuryImpl.address);
+  addressesProvider.setTreasuryImpl(treasuryImpl.address);
+  const treasuryAddress = treasuryImpl.address;
 
   await initReservesByHelper(
     reservesParams,
     allReservesAddresses,
-    DepositTokenNamePrefix,
-    StableDebtTokenNamePrefix,
-    VariableDebtTokenNamePrefix,
-    SymbolPrefix,
+    Names,
     admin,
     treasuryAddress,
     false
@@ -227,9 +208,9 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   await configureReservesByHelper(reservesParams, allReservesAddresses, testHelpers, admin);
 
-  const collateralManager = await deployLendingPoolCollateralManager();
+  const collateralManagerImpl = await deployLendingPoolCollateralManagerImpl();
   await waitForTx(
-    await addressesProvider.setLendingPoolCollateralManager(collateralManager.address)
+    await addressesProvider.setLendingPoolCollateralManager(collateralManagerImpl.address)
   );
   await deployMockFlashLoanReceiver(addressesProvider.address);
 

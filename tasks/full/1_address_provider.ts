@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { deployLendingPoolAddressesProvider } from '../../helpers/contracts-deployments';
-import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, getFirstSigner, getSigner, waitForTx } from '../../helpers/misc-utils';
 import {
   ConfigNames,
   loadPoolConfig,
@@ -9,21 +9,14 @@ import {
   getEmergencyAdmin,
 } from '../../helpers/configuration';
 import { eNetwork } from '../../helpers/types';
-import {
-  getFirstSigner,
-  getAddressesProviderRegistry,
-  getAddressById,
-} from '../../helpers/contracts-getters';
+import { getAddressesProviderRegistry, getAddressById } from '../../helpers/contracts-getters';
 import { formatEther, isAddress, parseEther } from 'ethers/lib/utils';
 import { isZeroAddress } from 'ethereumjs-util';
 import { Signer, BigNumber } from 'ethers';
 import { parse } from 'path';
 //import BigNumber from 'bignumber.js';
 
-task(
-  'full:deploy-address-provider',
-  'Deploy address provider, registry and fee provider for dev enviroment'
-)
+task('full:deploy-address-provider', 'Deploy address provider for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE) => {
@@ -56,12 +49,11 @@ task(
         method: 'hardhat_impersonateAccount',
         params: [providerRegistryOwner],
       });
-      signer = DRE.ethers.provider.getSigner(providerRegistryOwner);
       const firstAccount = await getFirstSigner();
       await firstAccount.sendTransaction({ value: parseEther('10'), to: providerRegistryOwner });
-    } else {
-      signer = DRE.ethers.provider.getSigner(providerRegistryOwner);
     }
+    signer = getSigner(providerRegistryOwner);
+
     // 1. Address Provider Registry instance
     const addressesProviderRegistry = (
       await getAddressesProviderRegistry(providerRegistryAddress)

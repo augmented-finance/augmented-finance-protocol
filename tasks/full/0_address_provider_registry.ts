@@ -7,7 +7,10 @@ import { isAddress } from 'ethers/lib/utils';
 import { isZeroAddress } from 'ethereumjs-util';
 import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 
-task('full:deploy-address-provider-registry', 'Deploy address provider registry')
+task(
+  'full:deploy-address-provider-registry',
+  'Deploy address provider registry for prod enviroment'
+)
   .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(async ({ verify, pool }, DRE) => {
     await DRE.run('set-DRE');

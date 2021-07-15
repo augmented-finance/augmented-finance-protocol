@@ -15,6 +15,7 @@ import {
   WEEK,
 } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
+import { AccessFlags } from '../../helpers/access-flags';
 
 task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
   async ({ verify }, localBRE) => {
@@ -25,8 +26,8 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
     const ac = await deployAccessController();
     // emergency admin + liquidity admin
     await ac.setEmergencyAdmin(root.address);
-    await ac.grantRoles(root.address, (1 << 3) | (1 << 5)); // REWARD_CONFIG_ADMIN | STAKE_ADMIN
-    await ac.grantRoles(slasher.address, 1 << 15); // LIQUIDITY_CONTROLLER
+    await ac.grantRoles(root.address, AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN);
+    await ac.grantRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
     console.log(`#2 deploying: mock AGF`);
     const agfToken = await deployMockAgfToken(

@@ -29,6 +29,7 @@
     "test-scenarios": "npx hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/scenario.spec.ts",
     "test-liquidate": "hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/liquidation-token.spec.ts",
     "test-liquidate-underlying": "hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/liquidation-underlying.spec.ts",
+    "test-delegation": "hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/deposit-delegation.spec.ts",
     "test-configurator": "hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/configurator.spec.ts",
     "test-transfers": "hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/deposit-transfer.spec.ts",
     "test-permit": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/deposit-permit.spec.ts",
@@ -62,7 +63,6 @@
     "augmented:main": "hardhat augmented:mainnet",
     "aave:fork:main": "npm run compile && MAINNET_FORK=true hardhat augmented:mainnet",
     "aave:main:full:migration": "npm run compile && npm run hardhat:main -- augmented:mainnet --verify",
-    "aave:main:full:initialize": "npm run compile && MAINNET_FORK=true hardhat full:initialize-tokens --pool Augmented",
     "prettier:check": "npx prettier -c 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'",
     "prettier:write": "prettier --write 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'",
 
@@ -86,11 +86,6 @@
     "print-config:fork:mainnet": "MAINNET_FORK=true hardhat print-config:fork",
     "print-config:kovan": "hardhat --network kovan print-config --pool Augmented --data-provider 0xA1901785c29cBd48bfA74e46b67C736b26054fa4",
     
-    "main:fork:initialize-tokens": "npm run compile && MAINNET_FORK=true hardhat full:initialize-tokens --pool Augmented",
-    
-    "main:initialize-tokens": "npm run compile && hardhat --network main full:initialize-tokens --pool Augmented",
-    "kovan:initialize-tokens": "npm run compile && hardhat --network kovan full:initialize-tokens --pool Augmented",
-
     "external:deploy-asset-kovan": "npm run compile && hardhat --network kovan external:deploy-new-asset --symbol ${SYMBOL} --verify",
     "external:deploy-asset-main": "npm run compile && hardhat --network main external:deploy-new-asset --symbol ${SYMBOL} --verify"
   },

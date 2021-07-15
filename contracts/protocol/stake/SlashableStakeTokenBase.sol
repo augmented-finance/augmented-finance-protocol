@@ -39,15 +39,23 @@ abstract contract SlashableStakeTokenBase is
 
   mapping(address => uint32) private _stakersCooldowns;
 
-  uint256 private _maxSlashablePercentage;
   uint32 private _cooldownPeriod;
   uint32 private _unstakePeriod;
+  uint16 private _maxSlashablePercentage;
   bool private _redeemPaused;
 
   event Staked(address indexed from, address indexed to, uint256 amount, uint256 indexed referal);
-  event Redeem(address indexed from, address indexed to, uint256 amount, uint256 underlyingAmount);
-  event Cooldown(address indexed account, uint32 at);
+  event Redeemed(
+    address indexed from,
+    address indexed to,
+    uint256 amount,
+    uint256 underlyingAmount
+  );
+  event CooldownStarted(address indexed account, uint32 at);
   event Slashed(address by, address to, uint256 amount);
+
+  event MaxSlashUpdated(address by, uint16 maxSlash);
+  event CooldownUpdated(address by, uint32 cooldownPeriod, uint32 unstakePeriod);
 
   constructor(
     StakeTokenConfig memory params,
@@ -62,14 +70,17 @@ abstract contract SlashableStakeTokenBase is
     _remoteAcl = params.stakeController;
     _stakedToken = params.stakedToken;
     _cooldownPeriod = params.cooldownPeriod;
+
     if (params.unstakePeriod == 0) {
       _unstakePeriod = 10;
     } else {
       _unstakePeriod = params.unstakePeriod;
     }
 
-    if (_maxSlashablePercentage == 0) {
-      _maxSlashablePercentage = 30 * PercentageMath.PCT;
+    if (params.maxSlashable >= PercentageMath.ONE) {
+      _maxSlashablePercentage = PercentageMath.ONE;
+    } else {
+      _maxSlashablePercentage = params.maxSlashable;
     }
   }
 
@@ -212,7 +223,7 @@ abstract contract SlashableStakeTokenBase is
 
     IERC20(_stakedToken).safeTransfer(to, underlyingAmount);
 
-    emit Redeem(from, to, stakeAmount, underlyingAmount);
+    emit Redeemed(from, to, stakeAmount, underlyingAmount);
     return (stakeAmount, underlyingAmount);
   }
 
@@ -227,7 +238,7 @@ abstract contract SlashableStakeTokenBase is
     // console.log('block.timestamp: ', block.timestamp);
 
     _stakersCooldowns[msg.sender] = uint32(block.timestamp);
-    emit Cooldown(msg.sender, uint32(block.timestamp));
+    emit CooldownStarted(msg.sender, uint32(block.timestamp));
   }
 
   /**
@@ -272,17 +283,18 @@ abstract contract SlashableStakeTokenBase is
     return amount;
   }
 
-  function getMaxSlashablePercentage() external view override returns (uint256) {
+  function getMaxSlashablePercentage() external view override returns (uint16) {
     return _maxSlashablePercentage;
   }
 
-  function setMaxSlashablePercentage(uint256 percentageInRay)
+  function setMaxSlashablePercentage(uint16 slashPct)
     external
     override
     aclHas(AccessFlags.STAKE_ADMIN)
   {
-    require(percentageInRay <= PercentageMath.ONE, 'STK_EXCESSIVE_SLASH_PCT');
-    _maxSlashablePercentage = percentageInRay;
+    require(slashPct <= PercentageMath.ONE, 'STK_EXCESSIVE_SLASH_PCT');
+    _maxSlashablePercentage = slashPct;
+    emit MaxSlashUpdated(msg.sender, slashPct);
   }
 
   function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod)
@@ -292,6 +304,7 @@ abstract contract SlashableStakeTokenBase is
   {
     _cooldownPeriod = cooldownPeriod;
     _unstakePeriod = unstakePeriod;
+    emit CooldownUpdated(msg.sender, cooldownPeriod, unstakePeriod);
   }
 
   function isRedeemable() external view override returns (bool) {
@@ -405,10 +418,22 @@ abstract contract SlashableStakeTokenBase is
     return _unstakePeriod;
   }
 
-  function initializedWithConfig() external view override returns (StakeTokenConfig memory params) {
+  function initializedWith()
+    external
+    view
+    override
+    returns (
+      StakeTokenConfig memory params,
+      string memory name_,
+      string memory symbol_,
+      uint8 decimals_
+    )
+  {
     params.stakeController = _remoteAcl;
     params.stakedToken = _stakedToken;
     params.cooldownPeriod = _cooldownPeriod;
     params.unstakePeriod = _unstakePeriod;
+    params.maxSlashable = _maxSlashablePercentage;
+    return (params, name(), symbol(), decimals());
   }
 }

@@ -1,22 +1,15 @@
 import { task } from 'hardhat/config';
-import {
-  loadPoolConfig,
-  ConfigNames,
-  getWethAddress,
-  getTreasuryAddress,
-} from '../../helpers/configuration';
+import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getAddressById,
-  getFirstSigner,
-  getLendingPool,
   getMarketAddressController,
   getLendingPoolConfiguratorProxy,
+  getLendingPoolProxy,
 } from '../../helpers/contracts-getters';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { verifyContract } from '../../helpers/etherscan-verification';
 import { eNetwork, ICommonConfiguration, IReserveParams } from '../../helpers/types';
-import { LendingPoolConfiguratorFactory, LendingPoolFactory } from '../../types';
 
 task('verify:tokens', 'Deploy oracles for dev enviroment')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
@@ -24,18 +17,13 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
     await localDRE.run('set-DRE');
     const network = localDRE.network.name as eNetwork;
     const poolConfig = loadPoolConfig(pool);
-    const { ReserveAssets, ReservesConfig } = poolConfig as ICommonConfiguration;
-    const treasuryAddress = await getTreasuryAddress(poolConfig);
+    const { ReserveAssets, ReservesConfig, Names } = poolConfig as ICommonConfiguration;
 
     const addressesProvider = await getMarketAddressController();
-    const lendingPoolProxy = LendingPoolFactory.connect(
-      await addressesProvider.getLendingPool(),
-      await getFirstSigner()
-    );
+    const lendingPoolProxy = await getLendingPoolProxy(await addressesProvider.getLendingPool());
 
-    const lendingPoolConfigurator = LendingPoolConfiguratorFactory.connect(
-      await addressesProvider.getLendingPoolConfigurator(),
-      await getFirstSigner()
+    const lendingPoolConfigurator = await getLendingPoolConfiguratorProxy(
+      await addressesProvider.getLendingPoolConfigurator()
     );
 
     const configs = Object.entries(ReservesConfig) as [string, IReserveParams][];
@@ -72,8 +60,8 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
       console.log(`\n- Verifying  Debt Token proxy...\n`);
       await verifyContract(variableDebtTokenAddress, [lendingPoolConfigurator.address]);
 
-      // Proxy aToken
-      console.log('\n- Verifying aToken proxy...\n');
+      // Proxy Deposit Token
+      console.log('\n- Verifying Deposit Token proxy...\n');
       await verifyContract(aTokenAddress, [lendingPoolConfigurator.address]);
 
       // Strategy Rate
@@ -88,30 +76,36 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
         stableRateSlope2,
       ]);
 
-      const stableDebt = await getAddressById(`stableDebt${token}`);
-      const variableDebt = await getAddressById(`variableDebt${token}`);
-      const aToken = await getAddressById(`a${token}`);
+      const depositSymbol = `${Names.DepositSymbolPrefix}${token}`;
+      const stableDebtSymbol = `${Names.StableDebtSymbolPrefix}${token}`;
+      const variableDebtSymbol = `${Names.DepositSymbolPrefix}${token}`;
+
+      const aToken = await getAddressById(depositSymbol);
+      const stableDebt = await getAddressById(stableDebtSymbol);
+      const variableDebt = await getAddressById(variableDebtSymbol);
+
+      const treasuryAddress = await addressesProvider.getTreasury();
 
       if (aToken) {
-        console.log('\n- Verifying aToken...\n');
+        console.log('\n- Verifying agToken...\n');
         await verifyContract(aToken, [
           lendingPoolProxy.address,
           tokenAddress,
           treasuryAddress,
-          `Aave interest bearing ${token}`,
-          `a${token}`,
+          `${Names.DepositTokenNamePrefix} ${token}`,
+          depositSymbol,
           ZERO_ADDRESS,
         ]);
       } else {
-        console.error(`Skipping aToken verify for ${token}. Missing address at JSON DB.`);
+        console.error(`Skipping agToken verify for ${token}. Missing address at JSON DB.`);
       }
       if (stableDebt) {
         console.log('\n- Verifying StableDebtToken...\n');
         await verifyContract(stableDebt, [
           lendingPoolProxy.address,
           tokenAddress,
-          `Aave stable debt bearing ${token}`,
-          `stableDebt${token}`,
+          `${Names.StableDebtTokenNamePrefix} ${token}`,
+          stableDebtSymbol,
           ZERO_ADDRESS,
         ]);
       } else {
@@ -122,8 +116,8 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
         await verifyContract(variableDebt, [
           lendingPoolProxy.address,
           tokenAddress,
-          `Aave variable debt bearing ${token}`,
-          `variableDebt${token}`,
+          `${Names.VariableDebtTokenNamePrefix} ${token}`,
+          variableDebtSymbol,
           ZERO_ADDRESS,
         ]);
       } else {

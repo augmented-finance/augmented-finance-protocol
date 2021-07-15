@@ -2,10 +2,9 @@ import { Contract, Signer, utils, ethers, BigNumberish } from 'ethers';
 import { signTypedData_v4 } from 'eth-sig-util';
 import { fromRpcSig, ECDSASignature } from 'ethereumjs-util';
 import BigNumber from 'bignumber.js';
-import { getDb, DRE, waitForTx } from './misc-utils';
+import { DRE, logContractInJsonDb, waitForTx } from './misc-utils';
 import {
   tEthereumAddress,
-  eContractid,
   tStringTokenSmallUnits,
   eEthereumNetwork,
   LendingPools,
@@ -13,7 +12,6 @@ import {
   iParamsPerPool,
   ePolygonNetwork,
   eNetwork,
-  iParamsPerNetworkAll,
   iEthereumParamsPerNetwork,
   iPolygonParamsPerNetwork,
 } from './types';
@@ -26,41 +24,8 @@ import { usingTenderly } from './tenderly-utils';
 export type MockTokenMap = { [symbol: string]: MintableERC20 };
 
 export const registerContractInJsonDb = async (contractId: string, contractInstance: Contract) => {
-  const currentNetwork = DRE.network.name;
-  const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-  if (MAINNET_FORK || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
-    console.log(`*** ${contractId} ***\n`);
-    console.log(`Network: ${currentNetwork}`);
-    console.log(`tx: ${contractInstance.deployTransaction.hash}`);
-    console.log(`contract address: ${contractInstance.address}`);
-    console.log(`deployer address: ${contractInstance.deployTransaction.from}`);
-    console.log(`gas price: ${contractInstance.deployTransaction.gasPrice}`);
-    console.log(`gas used: ${contractInstance.deployTransaction.gasLimit}`);
-    console.log(`\n******`);
-    console.log();
-  }
-
-  await getDb()
-    .set(`${contractId}.${currentNetwork}`, {
-      address: contractInstance.address,
-      deployer: contractInstance.deployTransaction.from,
-    })
-    .write();
+  logContractInJsonDb(contractId, contractInstance, true);
 };
-
-export const insertContractAddressInDb = async (id: eContractid, address: tEthereumAddress) =>
-  await getDb()
-    .set(`${id}.${DRE.network.name}`, {
-      address,
-    })
-    .write();
-
-export const rawInsertContractAddressInDb = async (id: string, address: tEthereumAddress) =>
-  await getDb()
-    .set(`${id}.${DRE.network.name}`, {
-      address,
-    })
-    .write();
 
 export const getEthersSigners = async (): Promise<Signer[]> =>
   await Promise.all(await DRE.ethers.getSigners());
@@ -83,7 +48,7 @@ export const deployContract = async <ContractType extends Contract>(
     ...args
   )) as ContractType;
   await waitForTx(contract.deployTransaction);
-  await registerContractInJsonDb(<eContractid>contractName, contract);
+  await registerContractInJsonDb(contractName, contract);
   return contract;
 };
 
@@ -111,10 +76,30 @@ export const withSaveAndVerify = async <ContractType extends Contract>(
   return instance;
 };
 
-export const getContract = async <ContractType extends Contract>(
-  contractName: string,
-  address: string
-): Promise<ContractType> => (await DRE.ethers.getContractAt(contractName, address)) as ContractType;
+export const withVerify = async <ContractType extends Contract>(
+  instance: ContractType,
+  id: string,
+  args: (string | string[])[],
+  verify?: boolean
+): Promise<ContractType> => {
+  await waitForTx(instance.deployTransaction);
+  logContractInJsonDb(id, instance, false);
+
+  if (usingTenderly()) {
+    console.log();
+    console.log('Doing Tenderly contract verification of', id);
+    await (DRE as any).tenderlyNetwork.verify({
+      name: id,
+      address: instance.address,
+    });
+    console.log(`Verified ${id} at Tenderly!`);
+    console.log();
+  }
+  if (verify) {
+    await verifyContract(instance.address, args);
+  }
+  return instance;
+};
 
 export const linkBytecode = (artifact: Artifact, libraries: any) => {
   let bytecode = artifact.bytecode;
