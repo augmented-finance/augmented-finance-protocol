@@ -102,6 +102,9 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     if (i == 0) {
       return false;
     }
+
+    emit StakeTokenRemoved(_entries[i].token, underlying);
+
     delete (_underlyings[underlying]);
     delete (_entries[i]);
     return true;
@@ -116,6 +119,8 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
 
     _entries[i] = TokenEntry(token);
     _underlyings[underlying] = i;
+
+    emit StakeTokenAdded(token, underlying);
   }
 
   function batchInitStakeTokens(InitStakeTokenData[] memory input)
@@ -147,9 +152,11 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
       );
 
     token = address(_remoteAcl.createProxy(address(this), input.stakeTokenImpl, params));
-    dataOf(token);
+
+    emit StakeTokenInitialized(token, input);
+
     _addStakeToken(token, input.stakedToken);
-    // TODO: emit StakeTokenInitialized(...);
+
     return token;
   }
 
@@ -170,10 +177,12 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
 
     IProxy(input.token).upgradeToAndCall(input.stakeTokenImpl, params);
 
-    // TODO: emit StakeTokenUpgraded(...);
+    emit StakeTokenUpgraded(input.token, input);
   }
 }
 
+/// @notice A helper to let StakeConfigurator to access methods of stake tokens
+/// @dev Proxy default behavior denies its admin to access implementation's methods
 contract StakeConfiguratorBypass {
   function dataOf(address stakeToken)
     public

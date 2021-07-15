@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {StakeTokenConfig} from './StakeTokenConfig.sol';
 
@@ -29,4 +30,12 @@ interface IStakeConfigurator {
     uint8 stkTokenDecimals;
     StakeTokenConfig config;
   }
+
+  event StakeTokenInitialized(address indexed token, InitStakeTokenData data);
+
+  event StakeTokenUpgraded(address indexed token, UpdateStakeTokenData data);
+
+  event StakeTokenAdded(address indexed token, address indexed underlying);
+
+  event StakeTokenRemoved(address indexed token, address indexed underlying);
 }

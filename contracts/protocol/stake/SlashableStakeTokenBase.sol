@@ -45,9 +45,17 @@ abstract contract SlashableStakeTokenBase is
   bool private _redeemPaused;
 
   event Staked(address indexed from, address indexed to, uint256 amount, uint256 indexed referal);
-  event Redeem(address indexed from, address indexed to, uint256 amount, uint256 underlyingAmount);
-  event Cooldown(address indexed account, uint32 at);
+  event Redeemed(
+    address indexed from,
+    address indexed to,
+    uint256 amount,
+    uint256 underlyingAmount
+  );
+  event CooldownStarted(address indexed account, uint32 at);
   event Slashed(address by, address to, uint256 amount);
+
+  event MaxSlashUpdated(address by, uint16 maxSlash);
+  event CooldownUpdated(address by, uint32 cooldownPeriod, uint32 unstakePeriod);
 
   constructor(
     StakeTokenConfig memory params,
@@ -215,7 +223,7 @@ abstract contract SlashableStakeTokenBase is
 
     IERC20(_stakedToken).safeTransfer(to, underlyingAmount);
 
-    emit Redeem(from, to, stakeAmount, underlyingAmount);
+    emit Redeemed(from, to, stakeAmount, underlyingAmount);
     return (stakeAmount, underlyingAmount);
   }
 
@@ -230,7 +238,7 @@ abstract contract SlashableStakeTokenBase is
     // console.log('block.timestamp: ', block.timestamp);
 
     _stakersCooldowns[msg.sender] = uint32(block.timestamp);
-    emit Cooldown(msg.sender, uint32(block.timestamp));
+    emit CooldownStarted(msg.sender, uint32(block.timestamp));
   }
 
   /**
@@ -286,6 +294,7 @@ abstract contract SlashableStakeTokenBase is
   {
     require(slashPct <= PercentageMath.ONE, 'STK_EXCESSIVE_SLASH_PCT');
     _maxSlashablePercentage = slashPct;
+    emit MaxSlashUpdated(msg.sender, slashPct);
   }
 
   function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod)
@@ -295,6 +304,7 @@ abstract contract SlashableStakeTokenBase is
   {
     _cooldownPeriod = cooldownPeriod;
     _unstakePeriod = unstakePeriod;
+    emit CooldownUpdated(msg.sender, cooldownPeriod, unstakePeriod);
   }
 
   function isRedeemable() external view override returns (bool) {
