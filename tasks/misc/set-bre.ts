@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { DRE, setDRE } from '../../helpers/misc-utils';
+import { cleanupJsonDb, DRE, setDRE } from '../../helpers/misc-utils';
 import { EthereumNetworkNames } from '../../helpers/types';
 import { usingTenderly } from '../../helpers/tenderly-utils';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
@@ -37,6 +37,7 @@ task(`set-DRE`, `Inits the DRE, to have access to all the plugins' objects`).set
     }
 
     setDRE(_DRE);
+    cleanupJsonDb(_DRE.network.name);
     return _DRE;
   }
 );

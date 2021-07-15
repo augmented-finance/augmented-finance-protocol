@@ -48,10 +48,10 @@ import {
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
-import { getFirstSigner, getAddressFromJsonDb } from './misc-utils';
+import { getFirstSigner, getFromJsonDb } from './misc-utils';
 import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } from './types';
 
-const getAddr = async (id: eContractid) => (await getAddressFromJsonDb(id)).address;
+const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
 
 export const getMarketAddressController = async (address?: tEthereumAddress) =>
   MarketAccessControllerFactory.connect(
@@ -107,7 +107,7 @@ export const getMockedTokens = async (config: PoolConfiguration) => {
   const tokens: MockTokenMap = await tokenSymbols.reduce<Promise<MockTokenMap>>(
     async (acc, tokenSymbol) => {
       const accumulator = await acc;
-      const address = (await getAddressFromJsonDb(tokenSymbol.toUpperCase())).address;
+      const address = (await getFromJsonDb(tokenSymbol.toUpperCase())).address;
       accumulator[tokenSymbol] = await getMintableERC20(address);
       return Promise.resolve(acc);
     },
@@ -120,7 +120,7 @@ export const getAllMockedTokens = async () => {
   const tokens: MockTokenMap = await Object.keys(TokenContractId).reduce<Promise<MockTokenMap>>(
     async (acc, tokenSymbol) => {
       const accumulator = await acc;
-      const address = (await getAddressFromJsonDb(tokenSymbol.toUpperCase())).address;
+      const address = (await getFromJsonDb(tokenSymbol.toUpperCase())).address;
       accumulator[tokenSymbol] = await getMintableERC20(address);
       return Promise.resolve(acc);
     },
@@ -267,7 +267,7 @@ export const getWalletProvider = async (address?: tEthereumAddress) =>
   );
 
 export const getAddressById = async (id: string): Promise<tEthereumAddress | undefined> =>
-  (await getAddressFromJsonDb(id))?.address || undefined;
+  (await getFromJsonDb(id))?.address || undefined;
 
 export const getOracleRouter = async (address?: tEthereumAddress) =>
   OracleRouterFactory.connect(

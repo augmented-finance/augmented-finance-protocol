@@ -111,24 +111,19 @@ export const getContractFactory = async (abi: any[], bytecode: string) =>
   await DRE.ethers.getContractFactory(abi, bytecode);
 
 interface DbNamedEntry {
-  [network: string]: {
-    deployer: string;
-    address: string;
-  };
+  deployer: string;
+  address: string;
+  count: number;
 }
 
 interface DbLogEntry {
-  [network: string]: {
-    [address: string]: {
-      id: string;
-    };
-  };
+  id: string;
+  deployer: string;
 }
 
-export const cleanupJsonDb = async () => {
-  const currentNetwork = DRE.network.name;
+export const cleanupJsonDb = async (currentNetwork: string) => {
   const db = getDb();
-  //  db.get
+  await db.set(`${currentNetwork}`, {}).write();
 };
 
 export const logContractInJsonDb = async (
@@ -155,20 +150,27 @@ export const logContractInJsonDb = async (
   }
 
   await db
-    .set(`${deployer}.log.${currentNetwork}.${contractInstance.address}`, {
+    .set(`${currentNetwork}.log.${contractInstance.address}`, {
       id: contractId,
+      deployer: deployer,
     })
     .write();
 
   if (register) {
+    const node = `${currentNetwork}.named.${contractId}`;
+    const count = (await db.get(node).value())?.count || 0;
     await db
-      .set(`${contractId}.${currentNetwork}`, {
+      .set(`${currentNetwork}.named.${contractId}`, {
         address: contractInstance.address,
         deployer: deployer,
+        count: count + 1,
       })
       .write();
   }
 };
+
+export const getFromJsonDb = async (id: string) =>
+  await getDb().get(`${DRE.network.name}.named.${id}`).value();
 
 export const printContracts = (deployer: string) => {
   const currentNetwork = DRE.network.name;
@@ -177,21 +179,16 @@ export const printContracts = (deployer: string) => {
   console.log('Contracts deployed at', currentNetwork, 'by', deployer);
   console.log('---------------------------------');
 
-  const entries = Object.entries<DbNamedEntry>(db.getState()).filter(
-    ([_k, value]) => !!value[currentNetwork]
-  );
+  const entries = Object.entries<DbNamedEntry>(db.get(`${currentNetwork}.named`).value());
+  const logEntries = Object.entries<DbLogEntry>(db.get(`${currentNetwork}.log`).value());
 
-  const logEntries = Object.entries<DbLogEntry>(
-    db.get(`${deployer}.log.${currentNetwork}`).value()
-  );
-
-  const contractsPrint = entries.map(
-    ([key, value]: [string, DbNamedEntry]) => `${key}: ${value[currentNetwork].address}`
-  );
+  const contractsPrint = entries.map(([key, value]: [string, DbNamedEntry]) => {
+    if (value.count > 1) {
+      return `${key}: N=${value.count}`;
+    }
+    return `${key}: ${value.address}`;
+  });
 
   console.log('N# Contracts:', entries.length, '/', logEntries.length);
   console.log(contractsPrint.join('\n'), '\n');
 };
-
-export const getAddressFromJsonDb = async (id: string) =>
-  await getDb().get(`${id}.${DRE.network.name}`).value();

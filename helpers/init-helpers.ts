@@ -8,7 +8,7 @@ import {
   tEthereumAddress,
 } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
-import { chunk, DRE, getDb, waitForTx } from './misc-utils';
+import { chunk, waitForTx } from './misc-utils';
 import {
   getATokensAndRatesHelper,
   getMarketAddressController,
