@@ -3,13 +3,16 @@ import { exit } from 'process';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
 import {
-  deploydeployRewardTokenImpl,
+  deployRewardTokenImpl,
   deployRewardBooster,
   deployRewardConfiguratorImpl,
   deployStakeConfiguratorImpl,
 } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
-import { getMarketAddressController } from '../../helpers/contracts-getters';
+import {
+  getMarketAddressController,
+  getRewardConfiguratorProxy,
+} from '../../helpers/contracts-getters';
 import { waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { MarketAccessController } from '../../types';
@@ -24,37 +27,40 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts for prod envirome
       const poolConfig = loadPoolConfig(pool);
       const addressesProvider = await getMarketAddressController();
 
-      await waitForTx(
-        await addressesProvider.setRewardTokenImpl(
-          await deployContractImpl(
-            addressesProvider,
-            'AGFToken',
-            await deploydeployRewardTokenImpl(verify)
-          )
-        )
-      );
+      // await waitForTx(
+      //   await addressesProvider.setRewardTokenImpl(
+      //     await deployContractImpl(
+      //       addressesProvider,
+      //       'AGFToken',
+      //       await deploydeployRewardTokenImpl(verify)
+      //     )
+      //   )
+      // );
 
-      const agfAddr = await addressesProvider.getRewardToken();
+      //       await waitForTx(
+      //         await addressesProvider.setRewardConfiguratorImpl(
+      //           await deployContractImpl(
+      //             addressesProvider,
+      //             'RewardConfigurator',
+      //             await deployRewardConfiguratorImpl(verify)
+      //           )
+      //         )
+      //       );
 
-      await waitForTx(
-        await addressesProvider.setRewardController(
-          await deployContractImpl(
-            addressesProvider,
-            'RewardBooster',
-            await deployRewardBooster([addressesProvider.address, agfAddr], verify)
-          )
-        )
-      );
+      //       const configurator = await getRewardConfiguratorProxy(await addressesProvider.getRewardConfigurator());
+      // //      configurator
 
-      await waitForTx(
-        await addressesProvider.setRewardConfiguratorImpl(
-          await deployContractImpl(
-            addressesProvider,
-            'RewardConfigurator',
-            await deployRewardConfiguratorImpl(verify)
-          )
-        )
-      );
+      //       const agfAddr = await addressesProvider.getRewardToken();
+
+      //       await waitForTx(
+      //         await addressesProvider.setRewardController(
+      //           await deployContractImpl(
+      //             addressesProvider,
+      //             'RewardBooster',
+      //             await deployRewardBooster([addressesProvider.address, agfAddr], verify)
+      //           )
+      //         )
+      //       );
     } catch (err) {
       console.error(err);
       exit(1);

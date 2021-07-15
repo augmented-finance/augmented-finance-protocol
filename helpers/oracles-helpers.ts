@@ -8,10 +8,10 @@ import {
 } from './types';
 
 import { LendingRateOracle } from '../types/LendingRateOracle';
-import { PriceOracle } from '../types/PriceOracle';
 import { MockAggregator } from '../types/MockAggregator';
 import { deployMockAggregator } from './contracts-deployments';
 import { chunk, waitForTx } from './misc-utils';
+import { MockPriceOracle } from '../types';
 
 export const setInitialMarketRatesInRatesOracleByHelper = async (
   marketRates: iMultiPoolsAssets<IMarketRates>,
@@ -56,7 +56,7 @@ export const setInitialMarketRatesInRatesOracleByHelper = async (
 export const setInitialAssetPricesInOracle = async (
   prices: iAssetBase<tEthereumAddress>,
   assetsAddresses: iAssetBase<tEthereumAddress>,
-  priceOracleInstance: PriceOracle
+  priceOracleInstance: MockPriceOracle
 ) => {
   for (const [assetSymbol, price] of Object.entries(prices) as [string, string][]) {
     console.log('Trying for ', assetsAddresses, assetSymbol);
@@ -74,7 +74,7 @@ export const setInitialAssetPricesInOracle = async (
 export const setAssetPricesInOracle = async (
   prices: SymbolMap<string>,
   assetsAddresses: SymbolMap<tEthereumAddress>,
-  priceOracleInstance: PriceOracle
+  priceOracleInstance: MockPriceOracle
 ) => {
   for (const [assetSymbol, price] of Object.entries(prices) as [string, string][]) {
     const assetAddressIndex = Object.keys(assetsAddresses).findIndex(

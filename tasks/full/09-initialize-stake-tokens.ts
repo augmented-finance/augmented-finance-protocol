@@ -131,8 +131,6 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
         console.log('    * gasUsed', tx3.gasUsed.toString());
       }
 
-      stakeConfigurator.batchInitStakeTokens(initParams);
-
       console.log(`${CONTRACT_NAME}.address`, impl.address);
       console.log(`\tFinished ${CONTRACT_NAME} deployment`);
     } catch (err) {

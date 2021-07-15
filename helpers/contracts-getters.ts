@@ -16,7 +16,6 @@ import {
   MockStableDebtTokenFactory,
   MockVariableDebtTokenFactory,
   MockUniswapV2Router02Factory,
-  MockPriceOracleFactory,
   ReserveLogicFactory,
   StableDebtTokenFactory,
   UniswapLiquiditySwapAdapterFactory,
@@ -42,6 +41,8 @@ import {
   DecayingTokenLockerFactory,
   StakeConfiguratorFactory,
   StakeTokenFactory,
+  RewardConfiguratorFactory,
+  MockPriceOracleFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -80,6 +81,9 @@ export const getMintableERC20 = async (address: tEthereumAddress) =>
 
 export const getIErc20Detailed = async (address: tEthereumAddress) =>
   IERC20DetailedFactory.connect(address, await getFirstSigner());
+
+export const getRewardConfiguratorProxy = async (address: tEthereumAddress) =>
+  RewardConfiguratorFactory.connect(address, await getFirstSigner());
 
 export const getProtocolDataProvider = async (address?: tEthereumAddress) =>
   ProtocolDataProviderFactory.connect(

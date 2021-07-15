@@ -894,7 +894,7 @@ export const deployRewardConfiguratorImpl = async (verify?: boolean) =>
     verify
   );
 
-export const deploydeployRewardTokenImpl = async (verify?: boolean) =>
+export const deployRewardTokenImpl = async (verify?: boolean) =>
   withSaveAndVerify(
     await new AGFTokenV1Factory(await getFirstSigner()).deploy(),
     eContractid.RewardTokenImpl,
