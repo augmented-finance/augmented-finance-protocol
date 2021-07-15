@@ -16,9 +16,8 @@ import {
   MockStableDebtTokenFactory,
   MockVariableDebtTokenFactory,
   MockUniswapV2Router02Factory,
-  PriceOracleFactory,
+  MockPriceOracleFactory,
   ReserveLogicFactory,
-  SelfdestructTransferFactory,
   StableDebtTokenFactory,
   UniswapLiquiditySwapAdapterFactory,
   UniswapRepayAdapterFactory,
@@ -64,8 +63,8 @@ export const getLendingPoolConfiguratorProxy = async (address: tEthereumAddress)
 export const getLendingPoolProxy = async (address: tEthereumAddress) =>
   LendingPoolFactory.connect(address, await getFirstSigner());
 
-export const getPriceOracle = async (address: tEthereumAddress) =>
-  PriceOracleFactory.connect(address, await getFirstSigner());
+export const getMockPriceOracle = async (address: tEthereumAddress) =>
+  MockPriceOracleFactory.connect(address, await getFirstSigner());
 
 export const getDepositToken = async (address: tEthereumAddress) =>
   DepositTokenFactory.connect(address, await getFirstSigner());
@@ -216,12 +215,6 @@ export const getMockStakedAgfToken = async (address?: tEthereumAddress) =>
 export const getMockStakedAgToken = async (address?: tEthereumAddress) =>
   MockStakedAgfTokenFactory.connect(
     address || (await getAddr(eContractid.MockStakedAgToken)),
-    await getFirstSigner()
-  );
-
-export const getSelfdestructTransferMock = async (address?: tEthereumAddress) =>
-  SelfdestructTransferFactory.connect(
-    address || (await getAddr(eContractid.SelfdestructTransferMock)),
     await getFirstSigner()
   );
 

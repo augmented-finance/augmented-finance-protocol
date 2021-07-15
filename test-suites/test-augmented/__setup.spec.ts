@@ -5,7 +5,7 @@ import {
   deployMarketAccessController,
   deployMintableERC20,
   deployAddressesProviderRegistry,
-  deployPriceOracle,
+  deployMockPriceOracle,
   deployOracleRouter,
   deployMockFlashLoanReceiver,
   deployWalletBalancerProvider,
@@ -115,7 +115,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
     await addressProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address)
   );
 
-  const fallbackOracle = await deployPriceOracle();
+  const fallbackOracle = await deployMockPriceOracle();
   await waitForTx(await fallbackOracle.setEthUsdPrice(MOCK_USD_PRICE_IN_WEI));
   await setInitialAssetPricesInOracle(
     ALL_ASSETS_INITIAL_PRICES,

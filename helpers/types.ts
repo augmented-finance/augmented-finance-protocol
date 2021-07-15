@@ -42,7 +42,7 @@ export enum eContractid {
   ValidationLogic = 'ValidationLogic',
   ReserveLogic = 'ReserveLogic',
   GenericLogic = 'GenericLogic',
-  PriceOracle = 'PriceOracle',
+  MockPriceOracle = 'MockPriceOracle',
   MockAggregator = 'MockAggregator',
   LendingRateOracle = 'LendingRateOracle',
   OracleRouter = 'OracleRouter',
@@ -60,7 +60,6 @@ export enum eContractid {
   WETHGateway = 'WETHGateway',
   WETH = 'WETH',
   WETHMocked = 'WETHMocked',
-  SelfdestructTransferMock = 'SelfdestructTransferMock',
 
   DepositTokenImpl = 'DepositTokenImpl',
   DelegationAwareDepositTokenImpl = 'DelegationAwareDepositTokenImpl',

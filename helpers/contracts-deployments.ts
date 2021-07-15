@@ -44,7 +44,7 @@ import {
   MockStableDebtTokenFactory,
   MockVariableDebtTokenFactory,
   MockUniswapV2Router02Factory,
-  PriceOracleFactory,
+  MockPriceOracleFactory,
   ReserveLogicFactory,
   SelfdestructTransferFactory,
   StableDebtTokenFactory,
@@ -181,10 +181,10 @@ export const deployLendingPoolImpl = async (verify?: boolean) => {
   );
 };
 
-export const deployPriceOracle = async (verify?: boolean) =>
+export const deployMockPriceOracle = async (verify?: boolean) =>
   withSaveAndVerify(
-    await new PriceOracleFactory(await getFirstSigner()).deploy(),
-    eContractid.PriceOracle,
+    await new MockPriceOracleFactory(await getFirstSigner()).deploy(),
+    eContractid.MockPriceOracle,
     [],
     verify
   );
@@ -654,9 +654,9 @@ export const deployMockStakedAgfToken = async (
 };
 
 export const deploySelfdestructTransferMock = async (verify?: boolean) =>
-  withSaveAndVerify(
+  withVerify(
     await new SelfdestructTransferFactory(await getFirstSigner()).deploy(),
-    eContractid.SelfdestructTransferMock,
+    'SelfdestructTransfer',
     [],
     verify
   );
