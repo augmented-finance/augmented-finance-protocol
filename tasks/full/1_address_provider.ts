@@ -14,6 +14,7 @@ import { formatEther, isAddress, parseEther } from 'ethers/lib/utils';
 import { isZeroAddress } from 'ethereumjs-util';
 import { Signer, BigNumber } from 'ethers';
 import { parse } from 'path';
+import { AccessFlags } from '../../helpers/access-flags';
 //import BigNumber from 'bignumber.js';
 
 task('full:deploy-address-provider', 'Deploy address provider for prod enviroment')
@@ -62,21 +63,31 @@ task('full:deploy-address-provider', 'Deploy address provider for prod enviromen
     console.log('Registry Address', addressesProviderRegistry.address);
 
     // 2. Deploy address provider and set genesis manager
-    const addressesProvider = await deployLendingPoolAddressesProvider(MarketId, verify);
+    const addressProvider = await deployLendingPoolAddressesProvider(MarketId, verify);
 
     // 3. Set the provider at the Registry
     await waitForTx(
-      await addressesProviderRegistry.registerAddressesProvider(
-        addressesProvider.address,
-        ProviderId
-      )
+      await addressesProviderRegistry.registerAddressesProvider(addressProvider.address, ProviderId)
     );
 
     // 4. Set pool admins
 
-    await waitForTx(await addressesProvider.setPoolAdmin(await getGenesisPoolAdmin(poolConfig)));
-    await waitForTx(await addressesProvider.setEmergencyAdmin(await getEmergencyAdmin(poolConfig)));
+    await waitForTx(
+      await addressProvider.grantRoles(
+        await getGenesisPoolAdmin(poolConfig),
+        AccessFlags.POOL_ADMIN
+      )
+    );
+    await waitForTx(
+      await addressProvider.grantRoles(
+        await getEmergencyAdmin(poolConfig),
+        AccessFlags.EMERGENCY_ADMIN
+      )
+    );
 
-    console.log('Pool Admin', await addressesProvider.getPoolAdmin());
-    console.log('Emergency Admin', await addressesProvider.getEmergencyAdmin());
+    console.log('Pool Admin(s)', await addressProvider.roleActiveGrantees(AccessFlags.POOL_ADMIN));
+    console.log(
+      'Emergency Admin(s)',
+      await addressProvider.roleActiveGrantees(AccessFlags.EMERGENCY_ADMIN)
+    );
   });

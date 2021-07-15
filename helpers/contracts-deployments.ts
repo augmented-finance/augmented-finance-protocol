@@ -9,14 +9,13 @@ import {
   iMultiPoolsAssets,
   IReserveParams,
   PoolConfiguration,
-  eEthereumNetwork,
-  tStringTokenBigUnits,
 } from './types';
 import {
   ForwardingRewardPoolFactory,
   MarketAccessControllerFactory,
   MintableERC20,
   RewardBoosterFactory,
+  RewardConfiguratorFactory,
   RewardedTokenLockerFactory,
   StakeTokenFactory,
   TreasuryFactory,
@@ -28,7 +27,7 @@ import { ZERO_ADDRESS } from './constants';
 import {
   ProtocolDataProviderFactory,
   DepositTokenFactory,
-  AGFTokenFactory,
+  AGFTokenV1Factory,
   ATokensAndRatesHelperFactory,
   OracleRouterFactory,
   DefaultReserveInterestRateStrategyFactory,
@@ -714,14 +713,6 @@ export const deployFlashLiquidationAdapter = async (
     verify
   );
 
-export const deployAGFToken = async (verify?: boolean) =>
-  withSaveAndVerify(
-    await new AGFTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.AGFToken,
-    [],
-    verify
-  );
-
 export const deployRewardBooster = async (
   args: [tEthereumAddress, tEthereumAddress],
   verify?: boolean
@@ -732,20 +723,6 @@ export const deployRewardBooster = async (
     [],
     verify
   );
-
-export const deployXAGFToken = async (
-  args: [tEthereumAddress, tEthereumAddress, string, string],
-  verify?: boolean
-) => {
-  const instance = await withSaveAndVerify(
-    await new XAGFTokenV1Factory(await getFirstSigner()).deploy(),
-    eContractid.XAGFToken,
-    [],
-    verify
-  );
-  await instance.initializeToken(args[0], args[1], args[2], args[3], 18);
-  return instance;
-};
 
 export const deployTokenLocker = async (
   args: [tEthereumAddress, tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
@@ -927,3 +904,33 @@ export const deployTreasuryImpl = async (verify?: boolean) =>
     [],
     verify
   );
+
+export const deployRewardConfiguratorImpl = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await new RewardConfiguratorFactory(await getFirstSigner()).deploy(),
+    eContractid.RewardConfiguratorImpl,
+    [],
+    verify
+  );
+
+export const deploydeployRewardTokenImpl = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await new AGFTokenV1Factory(await getFirstSigner()).deploy(),
+    eContractid.RewardTokenImpl,
+    [],
+    verify
+  );
+
+export const deployXAGFToken = async (
+  args: [tEthereumAddress, tEthereumAddress, string, string],
+  verify?: boolean
+) => {
+  const instance = await withSaveAndVerify(
+    await new XAGFTokenV1Factory(await getFirstSigner()).deploy(),
+    eContractid.XAGFToken,
+    [],
+    verify
+  );
+  await instance.initializeToken(args[0], args[1], args[2], args[3], 18);
+  return instance;
+};

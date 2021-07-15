@@ -96,6 +96,9 @@ export enum eContractid {
   StakeConfiguratorImpl = 'StakeConfiguratorImpl',
   StakeTokenImpl = 'StakeTokenImpl',
   TreasuryImpl = 'TreasuryImpl',
+
+  RewardConfiguratorImpl = 'RewardConfiguratorImpl',
+  RewardTokenImpl = 'RewardTokenImpl',
 }
 
 /*

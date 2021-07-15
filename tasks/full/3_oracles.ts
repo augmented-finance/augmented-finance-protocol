@@ -40,7 +40,6 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
       } = poolConfig as ICommonConfiguration;
       const lendingRateOracles = getLendingRateOracles(poolConfig);
       const addressesProvider = await getMarketAddressController();
-      const admin = await getGenesisPoolAdmin(poolConfig);
       const oracleRouterAddress = getParamPerNetwork(poolConfig.OracleRouter, network);
       const lendingRateOracleAddress = getParamPerNetwork(poolConfig.LendingRateOracle, network);
       const fallbackOracleAddress = await getParamPerNetwork(FallbackOracle, network);
@@ -79,8 +78,7 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
       await setInitialMarketRatesInRatesOracleByHelper(
         lendingRateOracles,
         tokensAddressesWithoutUsd,
-        lendingRateOracle,
-        admin
+        lendingRateOracle
       );
       //}
       console.log('ORACLES: %s and %s', oracleRouter.address, lendingRateOracle.address);

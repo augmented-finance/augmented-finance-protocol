@@ -45,8 +45,6 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
 
     const reservesParams = getReservesConfigByPool(LendingPools.augmented);
 
-    const admin = await addressesProvider.getPoolAdmin();
-
     const treasuryImpl = await deployTreasuryImpl();
     addressesProvider.addImplementation('Treasury', treasuryImpl.address);
     addressesProvider.setTreasuryImpl(treasuryImpl.address);
@@ -56,11 +54,10 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
       reservesParams,
       protoPoolReservesAddresses,
       Names,
-      admin,
       treasuryAddress,
       verify
     );
-    await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, testHelpers, admin);
+    await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, testHelpers);
 
     const collateralManager = await deployLendingPoolCollateralManagerImpl(verify);
     await waitForTx(

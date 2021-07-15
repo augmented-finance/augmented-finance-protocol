@@ -25,6 +25,7 @@ import {
   deployDepositTokenImpl,
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
+import { AccessFlags } from './access-flags';
 
 export const chooseDepositTokenDeployment = (id: eContractid) => {
   switch (id) {
@@ -41,7 +42,6 @@ export const initReservesByHelper = async (
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
   names: ITokenNames,
-  admin: tEthereumAddress,
   treasuryAddress: tEthereumAddress,
   verify: boolean
 ): Promise<BigNumber> => {
@@ -219,7 +219,6 @@ export const initReservesByHelper = async (
   const configurator = await getLendingPoolConfiguratorProxy(
     await addressProvider.getLendingPoolConfigurator()
   );
-  //await waitForTx(await addressProvider.setPoolAdmin(admin));
 
   console.log(`- Reserves initialization in ${chunkedInitInputParams.length} txs`);
   for (let chunkIndex = 0; chunkIndex < chunkedInitInputParams.length; chunkIndex++) {
@@ -269,8 +268,7 @@ export const getPairsTokenAggregator = (
 export const configureReservesByHelper = async (
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
-  helpers: ProtocolDataProvider,
-  admin: tEthereumAddress
+  helpers: ProtocolDataProvider
 ) => {
   const addressProvider = await getMarketAddressController();
   const atokenAndRatesDeployer = await getATokensAndRatesHelper();
@@ -338,8 +336,10 @@ export const configureReservesByHelper = async (
     stableRatesEnabled.push(stableBorrowRateEnabled);
   }
   if (tokens.length) {
-    // Set aTokenAndRatesDeployer as temporal admin
-    await waitForTx(await addressProvider.setPoolAdmin(atokenAndRatesDeployer.address));
+    // Set aTokenAndRatesDeployer as a temporary admin
+    await waitForTx(
+      await addressProvider.grantRoles(atokenAndRatesDeployer.address, AccessFlags.POOL_ADMIN)
+    );
 
     // Deploy init per chunks
     const enableChunks = 1;
@@ -355,8 +355,8 @@ export const configureReservesByHelper = async (
       );
       console.log(`  - Init for: ${chunkedSymbols[chunkIndex].join(', ')}`);
     }
-    // Set deployer back as admin
-    console.log('Set deployer back as admin: ', admin);
-    await waitForTx(await addressProvider.setPoolAdmin(admin));
+    await waitForTx(
+      await addressProvider.revokeRoles(atokenAndRatesDeployer.address, AccessFlags.POOL_ADMIN)
+    );
   }
 };

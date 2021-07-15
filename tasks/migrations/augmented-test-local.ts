@@ -61,9 +61,11 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       console.log(`#1 deploying: Access Controller`);
       const ac = await deployAccessController();
       // emergency admin + liquidity admin
-      await ac.setEmergencyAdmin(root.address);
-      await ac.grantRoles(root.address, AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN);
-      await ac.grantRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
+      await ac.grantRoles(
+        root.address,
+        AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN | AccessFlags.EMERGENCY_ADMIN
+      );
+      await ac.grantAnyRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
       console.log(`#2 deploying: mock AGF`);
       const agfToken = await deployMockAgfToken(

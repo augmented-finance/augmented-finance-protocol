@@ -31,7 +31,6 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
 
       const testHelpers = await getProtocolDataProvider();
 
-      const admin = await addressesProvider.getPoolAdmin();
       if (!reserveAssets) {
         throw 'Reserve assets is undefined. Check ReserveAssets configuration at config directory';
       }
@@ -43,15 +42,8 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       addressesProvider.setTreasuryImpl(treasuryImpl.address);
       const treasuryAddress = treasuryImpl.address;
 
-      await initReservesByHelper(
-        ReservesConfig,
-        reserveAssets,
-        Names,
-        admin,
-        treasuryAddress,
-        verify
-      );
-      await configureReservesByHelper(ReservesConfig, reserveAssets, testHelpers, admin);
+      await initReservesByHelper(ReservesConfig, reserveAssets, Names, treasuryAddress, verify);
+      await configureReservesByHelper(ReservesConfig, reserveAssets, testHelpers);
 
       const collateralManager = await deployLendingPoolCollateralManagerImpl(verify);
       const collateralManagerAddress = collateralManager.address;

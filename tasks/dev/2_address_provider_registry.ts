@@ -1,4 +1,5 @@
 import { task } from 'hardhat/config';
+import { AccessFlags } from '../../helpers/access-flags';
 import {
   deployLendingPoolAddressesProvider,
   deployAddressesProviderRegistry,
@@ -16,14 +17,12 @@ task(
 
     const admin = await (await localBRE.ethers.getSigners())[0].getAddress();
 
-    const addressesProvider = await deployLendingPoolAddressesProvider(
-      AugmentedConfig.MarketId,
-      verify
-    );
-    await waitForTx(await addressesProvider.setPoolAdmin(admin));
+    const marketId = AugmentedConfig.MarketId;
+    const addressProvider = await deployLendingPoolAddressesProvider(marketId, verify);
+    await waitForTx(await addressProvider.grantRoles(admin, AccessFlags.POOL_ADMIN));
 
     const addressesProviderRegistry = await deployAddressesProviderRegistry(verify);
     await waitForTx(
-      await addressesProviderRegistry.registerAddressesProvider(addressesProvider.address, 1)
+      await addressesProviderRegistry.registerAddressesProvider(addressProvider.address, marketId)
     );
   });

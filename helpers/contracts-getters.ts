@@ -30,7 +30,7 @@ import {
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
-  AGFTokenFactory,
+  AGFTokenV1Factory,
   MockAgfTokenFactory,
   MockStakedAgfTokenFactory,
   TeamRewardPoolFactory,
@@ -300,7 +300,10 @@ export const getFlashLiquidationAdapter = async (address?: tEthereumAddress) =>
   );
 
 export const getAgfToken = async (address?: tEthereumAddress) =>
-  AGFTokenFactory.connect(address || (await getAddr(eContractid.AGFToken)), await getFirstSigner());
+  AGFTokenV1Factory.connect(
+    address || (await getAddr(eContractid.AGFToken)),
+    await getFirstSigner()
+  );
 
 export const getTokenLocker = async (address?: tEthereumAddress) =>
   RewardedTokenLockerFactory.connect(
@@ -311,12 +314,6 @@ export const getTokenLocker = async (address?: tEthereumAddress) =>
 export const getDecayingTokenLocker = async (address?: tEthereumAddress) =>
   DecayingTokenLockerFactory.connect(
     address || (await getAddr(eContractid.DecayingTokenLocker)),
-    await getFirstSigner()
-  );
-
-export const getXAgfToken = async (address?: tEthereumAddress) =>
-  XAGFTokenV1Factory.connect(
-    address || (await getAddr(eContractid.XAGFToken)),
     await getFirstSigner()
   );
 
@@ -416,5 +413,11 @@ export const getStakeConfiguratorImpl = async (address?: tEthereumAddress) =>
 export const getStakeTokenImpl = async (address?: tEthereumAddress) =>
   StakeTokenFactory.connect(
     address || (await getAddr(eContractid.StakeTokenImpl)),
+    await getFirstSigner()
+  );
+
+export const getXAgfToken = async (address?: tEthereumAddress) =>
+  XAGFTokenV1Factory.connect(
+    address || (await getAddr(eContractid.XAGFToken)),
     await getFirstSigner()
   );

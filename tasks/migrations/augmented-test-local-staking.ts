@@ -52,17 +52,16 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
 
       console.log(`#1 deploying: Access Controller`);
       const ac = await deployAccessController();
-      // emergency admin + liquidity admin
-      await ac.setEmergencyAdmin(root.address);
-      await ac.grantRoles(
+      await ac.grantAnyRoles(
         root.address,
-        AccessFlags.STAKE_ADMIN |
+        AccessFlags.EMERGENCY_ADMIN |
+          AccessFlags.STAKE_ADMIN |
           AccessFlags.REWARD_CONFIG_ADMIN |
           AccessFlags.REWARD_CONFIGURATOR |
           AccessFlags.STAKE_CONFIGURATOR |
           AccessFlags.REWARD_CONTROLLER
       );
-      await ac.grantRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
+      await ac.grantAnyRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
       console.log(`#2 deploying: mock AGF`);
       const agfToken = await deployMockAgfToken(

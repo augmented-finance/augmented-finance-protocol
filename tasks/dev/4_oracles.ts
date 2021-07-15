@@ -41,7 +41,6 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
       return prev;
     }, defaultTokenList);
     const addressesProvider = await getMarketAddressController();
-    const admin = await addressesProvider.getPoolAdmin();
 
     const fallbackOracle = await deployPriceOracle(verify);
     await waitForTx(await fallbackOracle.setEthUsdPrice(MockUsdPriceInWei));
@@ -73,7 +72,6 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
     await setInitialMarketRatesInRatesOracleByHelper(
       LendingRateOracleRatesCommon,
       allReservesAddresses,
-      lendingRateOracle,
-      admin
+      lendingRateOracle
     );
   });

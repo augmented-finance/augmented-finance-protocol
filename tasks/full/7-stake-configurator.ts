@@ -24,7 +24,7 @@ task(`full:deploy-stake-configurator`, `Deploys the ${CONTRACT_NAME} contract fo
       await waitForTx(await addressesProvider.addImplementation(`${CONTRACT_NAME}`, impl.address));
       await waitForTx(await addressesProvider.setStakeConfiguratorImpl(impl.address));
 
-      console.log(`${CONTRACT_NAME}.address`, impl.address, AccessFlags.STAKE_CONFIGURATOR);
+      console.log(`${CONTRACT_NAME}.address`, impl.address);
       console.log(`\tFinished ${CONTRACT_NAME} deployment`);
     } catch (err) {
       console.error(err);

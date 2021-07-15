@@ -48,10 +48,6 @@ interface IManagedMarketAccessController is IMarketAccessController {
 
   function setLendingPoolCollateralManager(address) external;
 
-  function getPoolAdmin() external view returns (address);
-
-  function setPoolAdmin(address) external;
-
   function setPriceOracle(address) external;
 
   function setLendingRateOracle(address) external;

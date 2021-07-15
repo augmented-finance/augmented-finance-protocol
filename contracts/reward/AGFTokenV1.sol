@@ -12,7 +12,7 @@ import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.
 
 import 'hardhat/console.sol';
 
-contract AGFToken is
+contract AGFTokenV1 is
   RewardToken,
   RemoteAccessBitmask,
   VersionedInitializable,
@@ -64,7 +64,7 @@ contract AGFToken is
     address account,
     uint256 amount,
     bool
-  ) external override aclHas(AccessFlags.REWARD_MINT) {
+  ) external override aclAnyOf(AccessFlags.REWARD_MINT | AccessFlags.REWARD_CONTROLLER) {
     _mint(account, amount);
   }
 

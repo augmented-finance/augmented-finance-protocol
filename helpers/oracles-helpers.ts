@@ -17,8 +17,7 @@ import { getStableAndVariableTokensHelper } from './contracts-getters';
 export const setInitialMarketRatesInRatesOracleByHelper = async (
   marketRates: iMultiPoolsAssets<IMarketRates>,
   assetsAddresses: { [x: string]: tEthereumAddress },
-  lendingRateOracleInstance: LendingRateOracle,
-  admin: tEthereumAddress
+  lendingRateOracleInstance: LendingRateOracle
 ) => {
   const stableAndVariableTokenHelper = await getStableAndVariableTokensHelper();
   const assetAddresses: string[] = [];
@@ -44,6 +43,7 @@ export const setInitialMarketRatesInRatesOracleByHelper = async (
   const chunkedRates = chunk(borrowRates, ratesChunks);
   const chunkedSymbols = chunk(symbols, ratesChunks);
 
+  const prevOwner = await lendingRateOracleInstance.owner();
   // Set helper as owner
   await waitForTx(
     await lendingRateOracleInstance.transferOwnership(stableAndVariableTokenHelper.address)
@@ -62,7 +62,10 @@ export const setInitialMarketRatesInRatesOracleByHelper = async (
   }
   // Set back ownership
   await waitForTx(
-    await stableAndVariableTokenHelper.setOracleOwnership(lendingRateOracleInstance.address, admin)
+    await stableAndVariableTokenHelper.setOracleOwnership(
+      lendingRateOracleInstance.address,
+      prevOwner
+    )
   );
 };
 
@@ -72,9 +75,8 @@ export const setInitialAssetPricesInOracle = async (
   priceOracleInstance: PriceOracle
 ) => {
   for (const [assetSymbol, price] of Object.entries(prices) as [string, string][]) {
+    console.log('Trying for ', assetsAddresses, assetSymbol);
 
-    console.log("Trying for ", assetsAddresses, assetSymbol);
-    
     const assetAddressIndex = Object.keys(assetsAddresses).findIndex(
       (value) => value === assetSymbol
     );

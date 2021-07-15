@@ -28,6 +28,11 @@ contract AccessController is Ownable, IManagedAccessController {
 
   mapping(string => address) private _implementations;
 
+  constructor() public {
+    _singletons = AccessFlags.SINGLETONS;
+    _nonSingletons = AccessFlags.ROLES;
+  }
+
   function queryAccessControlMask(address addr, uint256 filter)
     external
     view
@@ -41,9 +46,16 @@ contract AccessController is Ownable, IManagedAccessController {
     return flags & filter;
   }
 
-  function grantRoles(address addr, uint256 flags) external onlyOwner returns (uint256) {
+  function grantRoles(address addr, uint256 flags) public onlyOwner returns (uint256) {
     require(_singletons & flags == 0, 'singleton should use setAddress');
+    _grantRoles(addr, flags);
+  }
 
+  function grantAnyRoles(address addr, uint256 flags) public onlyOwner returns (uint256) {
+    _grantRoles(addr, flags);
+  }
+
+  function _grantRoles(address addr, uint256 flags) private returns (uint256) {
     uint256 m = _masks[addr];
     flags &= ~m;
     if (flags == 0) {
@@ -73,17 +85,17 @@ contract AccessController is Ownable, IManagedAccessController {
     return _revokeRoles(addr, flags);
   }
 
-  function _revokeRoles(address addr, uint256 flags) private returns (uint256) {
+  function revokeAllRoles(address addr) external onlyOwner returns (uint256) {
     uint256 m = _masks[addr];
-    if (m & flags != 0) {
-      m &= ~flags;
-      _masks[addr] = m;
+    if (m == 0) {
+      return 0;
     }
-    return m;
-  }
+    delete (_masks[addr]);
 
-  function revokeRolesFromAll(uint256 flags, uint256 limit) external onlyOwner returns (bool) {
-    require(_singletons & flags == 0, 'singleton should use setAddress');
+    uint256 flags = m & _singletons;
+    if (flags == 0) {
+      return m;
+    }
 
     for (uint8 i = 0; i <= 255; i++) {
       uint256 mask = uint256(1) << i;
@@ -93,32 +105,109 @@ contract AccessController is Ownable, IManagedAccessController {
         }
         continue;
       }
+      if (_addresses[mask] == addr) {
+        delete (_addresses[mask]);
+      }
+    }
+
+    return m;
+  }
+
+  function _revokeRoles(address addr, uint256 flags) private returns (uint256) {
+    uint256 m = _masks[addr];
+    if (m & flags != 0) {
+      m &= ~flags;
+      _masks[addr] = m;
+    }
+    return m;
+  }
+
+  function revokeRolesFromAll(uint256 flags, uint256 limit) public onlyOwner returns (bool all) {
+    all = true;
+
+    for (uint8 i = 0; i <= 255; i++) {
+      uint256 mask = uint256(1) << i;
+      if (mask & flags == 0) {
+        if (mask > flags) {
+          break;
+        }
+        continue;
+      }
+      if (mask & _singletons != 0) {
+        delete (_addresses[mask]);
+      }
+
+      if (!all) {
+        continue;
+      }
+
       address[] storage grantees = _grantees[mask];
       for (uint256 j = grantees.length; j > 0; ) {
         j--;
         if (limit == 0) {
-          return false;
+          all = false;
+          break;
         }
         limit--;
         _revokeRoles(grantees[j], mask);
         grantees.pop();
       }
     }
-    return true;
+    return all;
   }
 
   function roleGrantees(uint256 id) external view returns (address[] memory addrList) {
+    require(id.isPowerOf2nz(), 'only one role is allowed');
+
     if (_singletons & id == 0) {
-      require(id.isPowerOf2nz(), 'only one role is allowed');
       return _grantees[id];
     }
 
-    address addr = getAddress(id);
-    if (addr != address(0)) {
-      addrList = new address[](1);
-      addrList[0] = addr;
+    address singleton = _addresses[id];
+    if (singleton == address(0)) {
+      return _grantees[id];
+    }
+
+    address[] storage grantees = _grantees[id];
+
+    addrList = new address[](1 + grantees.length);
+    addrList[0] = singleton;
+    for (uint256 i = 1; i < addrList.length; i++) {
+      addrList[i] = grantees[i - 1];
     }
     return addrList;
+  }
+
+  function roleActiveGrantees(uint256 id)
+    external
+    view
+    returns (address[] memory addrList, uint256 count)
+  {
+    require(id.isPowerOf2nz(), 'only one role is allowed');
+
+    address addr;
+    if (_singletons & id != 0) {
+      addr = _addresses[id];
+    }
+
+    address[] storage grantees = _grantees[id];
+
+    if (addr == address(0)) {
+      addrList = new address[](grantees.length);
+    } else {
+      addrList = new address[](1 + grantees.length);
+      addrList[0] = addr;
+      count++;
+    }
+
+    for (uint256 i = 0; i < grantees.length; i++) {
+      addr = grantees[i];
+      if (_masks[addr] & id != 0) {
+        addrList[count] = addr;
+        count++;
+      }
+    }
+    return (addrList, count);
   }
 
   /**
@@ -138,6 +227,7 @@ contract AccessController is Ownable, IManagedAccessController {
     if (_singletons & id == 0) {
       require(_nonSingletons & id == 0, 'id is not a singleton');
       _singletons |= id;
+      console.log('_internalSetAddress', newAddress, id);
     }
 
     address prev = _addresses[id];
@@ -171,15 +261,6 @@ contract AccessController is Ownable, IManagedAccessController {
 
   function isEmergencyAdmin(address addr) external view override returns (bool) {
     return isAddress(AccessFlags.EMERGENCY_ADMIN, addr);
-  }
-
-  function getEmergencyAdmin() external view override returns (address) {
-    return getAddress(AccessFlags.EMERGENCY_ADMIN);
-  }
-
-  function setEmergencyAdmin(address emergencyAdmin) external override onlyOwner {
-    _internalSetAddress(AccessFlags.EMERGENCY_ADMIN, emergencyAdmin);
-    emit EmergencyAdminUpdated(emergencyAdmin);
   }
 
   function markProxies(uint256 id) external onlyOwner {

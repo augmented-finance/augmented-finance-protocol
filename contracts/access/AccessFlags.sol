@@ -15,9 +15,10 @@ library AccessFlags {
 
   uint256 public constant LIQUIDITY_CONTROLLER = 1 << 15; // can slash & pause stakes
 
-  // singletons - use range [16..32]
+  // singletons - use range [16..64]
   // these roles can ONLY be assigned to a single address
-  uint256 public constant SINGLETONS = ((uint256(1) << 32) - 1) & ~((uint256(1) << 16) - 1);
+  uint256 public constant ROLES = (uint256(1) << 16) - 1;
+  uint256 public constant SINGLETONS = ((uint256(1) << 64) - 1) & ~ROLES;
 
   uint256 public constant LENDING_POOL = 1 << 16; // use proxy
   uint256 public constant LENDING_POOL_CONFIGURATOR = 1 << 17; // use proxy
