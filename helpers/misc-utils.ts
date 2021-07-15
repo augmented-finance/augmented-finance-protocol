@@ -5,7 +5,7 @@ import FileSync from 'lowdb/adapters/FileSync';
 import { WAD } from './constants';
 import { Contract, Wallet, ContractTransaction } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { eContractid, tEthereumAddress } from './types';
+import { tEthereumAddress } from './types';
 import { isAddress } from 'ethers/lib/utils';
 import { isZeroAddress } from 'ethereumjs-util';
 
@@ -14,7 +14,7 @@ export const toWad = (value: string | number) => new BigNumber(value).times(WAD)
 export const bnToBigNumber = (amount: BN): BigNumber => new BigNumber(<any>amount);
 export const stringToBigNumber = (amount: string): BigNumber => new BigNumber(amount);
 
-export const getDb = () => low(new FileSync('./deployed-contracts.json'));
+const getDb = () => low(new FileSync('./deployed-contracts.json'));
 
 export let DRE: HardhatRuntimeEnvironment;
 
