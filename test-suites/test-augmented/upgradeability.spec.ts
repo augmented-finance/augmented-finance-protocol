@@ -5,7 +5,7 @@ import { deployContract, getContract } from '../../helpers/contracts-helpers';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getAgfToken,
-  getAToken,
+  getDepositToken,
   getMockStableDebtToken,
   getMockVariableDebtToken,
   getStableDebtToken,
@@ -32,7 +32,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       pool.address,
       dai.address,
       ZERO_ADDRESS,
-      'Interest bearing DAI updated',
+      'Deposit DAI updated',
       'aDAI',
       '0x10',
     ]);
@@ -40,7 +40,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     const stableDebtTokenInstance = await deployMockStableDebtToken([
       pool.address,
       dai.address,
-      'Stable debt bearing DAI updated',
+      'Stable debt DAI updated',
       'stableDebtDAI',
       '0x10',
     ]);
@@ -48,7 +48,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     const variableDebtTokenInstance = await deployMockVariableDebtToken([
       pool.address,
       dai.address,
-      'Variable debt bearing DAI updated',
+      'Variable debt DAI updated',
       'variableDebtDAI',
       '0x10',
     ]);
@@ -65,10 +65,10 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     newAgfTokenAddress = agfTokenInstance.address;
   });
 
-  it('Tries to update the DAI Atoken implementation with a different address than the lendingPoolManager', async () => {
+  it('Tries to update the DAI agToken implementation with a different address than the lendingPoolManager', async () => {
     const { dai, configurator, users } = testEnv;
 
-    const newImpl = await getAToken(newATokenAddress);
+    const newImpl = await getDepositToken(newATokenAddress);
     const name = await newImpl.name();
     const symbol = await newImpl.symbol();
 
@@ -97,7 +97,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
   it('Upgrades the DAI Atoken implementation ', async () => {
     const { dai, configurator, aDai } = testEnv;
 
-    const newImpl = await getAToken(newATokenAddress);
+    const newImpl = await getDepositToken(newATokenAddress);
     const name = await newImpl.name();
     const symbol = await newImpl.symbol();
     const revision = await newImpl.REVISION();
@@ -262,7 +262,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       implementation: newVariableTokenAddress,
       params: '0x10',
     };
-    //const name = await (await getAToken(newATokenAddress)).name();
+    //const name = await (await getDepositToken(newATokenAddress)).name();
 
     await configurator.updateVariableDebtToken(updateDebtTokenInput);
 

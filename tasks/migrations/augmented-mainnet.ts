@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { checkVerification } from '../../helpers/etherscan-verification';
 import { ConfigNames } from '../../helpers/configuration';
-import { printContracts } from '../../helpers/misc-utils';
+import { getFirstSigner, printContracts } from '../../helpers/misc-utils';
 import { usingTenderly } from '../../helpers/tenderly-utils';
 
 task('augmented:mainnet', 'Deploy development enviroment')
@@ -38,12 +38,18 @@ task('augmented:mainnet', 'Deploy development enviroment')
     console.log('6. Initialize lending pool');
     await DRE.run('full:initialize-lending-pool', { pool: POOL_NAME });
 
+    console.log('7. Deploy StakeConfigurator');
+    await DRE.run('full:deploy-stake-configurator', { pool: POOL_NAME });
+
+    console.log('8. Deploy and initialize stake tokens');
+    await DRE.run('full:init-stake-tokens', { pool: POOL_NAME });
+
     if (verify) {
-      printContracts();
-      console.log('7. Veryfing contracts');
+      printContracts((await getFirstSigner()).address);
+      console.log('N-1. Veryfing contracts');
       await DRE.run('verify:general', { all: true, pool: POOL_NAME });
 
-      console.log('8. Veryfing aTokens and debtTokens');
+      console.log('N. Veryfing depositTokens and debtTokens');
       await DRE.run('verify:tokens', { pool: POOL_NAME });
     }
 
@@ -54,6 +60,7 @@ task('augmented:mainnet', 'Deploy development enviroment')
       console.log('- Head', postDeployHead);
       console.log('- Fork', postDeployFork);
     }
+
     console.log('\nFinished deployment');
-    printContracts();
+    printContracts((await getFirstSigner()).address);
   });

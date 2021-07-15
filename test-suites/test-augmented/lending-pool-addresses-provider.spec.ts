@@ -5,7 +5,7 @@ import { ProtocolErrors } from '../../helpers/types';
 import { ethers } from 'ethers';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
-import { deployLendingPool } from '../../helpers/contracts-deployments';
+import { deployLendingPoolImpl } from '../../helpers/contracts-deployments';
 
 const { utils } = ethers;
 
@@ -46,7 +46,7 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
 
     const currentAddressesProviderOwner = users[1];
 
-    const mockLendingPool = await deployLendingPool();
+    const mockLendingPool = await deployLendingPoolImpl();
     const proxiedAddressId = 1 << 62;
 
     const proxiedAddressSetReceipt = await waitForTx(

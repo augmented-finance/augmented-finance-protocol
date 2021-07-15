@@ -19,7 +19,7 @@ import { getReserveAddressFromSymbol, getReserveData, getUserData } from './util
 
 import { convertToCurrencyDecimals } from '../../../helpers/contracts-helpers';
 import {
-  getAToken,
+  getDepositToken,
   getMintableERC20,
   getStableDebtToken,
   getVariableDebtToken,
@@ -725,7 +725,7 @@ const getDataBeforeAction = async (
   const reserve = await getReserveAddressFromSymbol(reserveSymbol);
 
   const { reserveData, userData } = await getContractsData(reserve, user, testEnv);
-  const aTokenInstance = await getAToken(reserveData.aTokenAddress);
+  const aTokenInstance = await getDepositToken(reserveData.aTokenAddress);
   return {
     reserve,
     reserveData,

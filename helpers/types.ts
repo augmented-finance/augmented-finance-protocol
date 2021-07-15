@@ -38,37 +38,23 @@ export enum LendingPools {
 
 export enum eContractid {
   MarketAccessController = 'MarketAccessController',
-  MintableERC20 = 'MintableERC20',
-  MintableDelegationERC20 = 'MintableDelegationERC20',
   AddressesProviderRegistry = 'AddressesProviderRegistry',
-  LendingPoolParametersProvider = 'LendingPoolParametersProvider',
-  LendingPoolConfigurator = 'LendingPoolConfigurator',
   ValidationLogic = 'ValidationLogic',
   ReserveLogic = 'ReserveLogic',
   GenericLogic = 'GenericLogic',
-  LendingPool = 'LendingPool',
   PriceOracle = 'PriceOracle',
-  Proxy = 'Proxy',
   MockAggregator = 'MockAggregator',
   LendingRateOracle = 'LendingRateOracle',
   OracleRouter = 'OracleRouter',
-  DefaultReserveInterestRateStrategy = 'DefaultReserveInterestRateStrategy',
-  LendingPoolCollateralManager = 'LendingPoolCollateralManager',
-  InitializableAdminUpgradeabilityProxy = 'InitializableAdminUpgradeabilityProxy',
   MockFlashLoanReceiver = 'MockFlashLoanReceiver',
   WalletBalanceProvider = 'WalletBalanceProvider',
-  DepositToken = 'DepositToken',
   MockDepositToken = 'MockDepositToken',
-  DelegationAwareDepositToken = 'DelegationAwareDepositToken',
   MockStableDebtToken = 'MockStableDebtToken',
   MockVariableDebtToken = 'MockVariableDebtToken',
   MockAgfToken = 'MockAgfToken',
   MockStakedAgfToken = 'MockStakedAgfToken',
   MockStakedAgToken = 'MockStakedAgToken',
   ProtocolDataProvider = 'ProtocolDataProvider',
-  IERC20Detailed = 'IERC20Detailed',
-  StableDebtToken = 'StableDebtToken',
-  VariableDebtToken = 'VariableDebtToken',
   FeeProvider = 'FeeProvider',
   TokenDistributor = 'TokenDistributor',
   StableAndVariableTokensHelper = 'StableAndVariableTokensHelper',
@@ -78,6 +64,9 @@ export enum eContractid {
   WETH = 'WETH',
   WETHMocked = 'WETHMocked',
   SelfdestructTransferMock = 'SelfdestructTransferMock',
+
+  DepositTokenImpl = 'DepositTokenImpl',
+  DelegationAwareDepositTokenImpl = 'DelegationAwareDepositTokenImpl',
   LendingPoolImpl = 'LendingPoolImpl',
   LendingPoolConfiguratorImpl = 'LendingPoolConfiguratorImpl',
   LendingPoolCollateralManagerImpl = 'LendingPoolCollateralManagerImpl',
@@ -103,6 +92,10 @@ export enum eContractid {
   ForwardingRewardPool = 'ForwardingRewardPool',
   ForwardingRewardPoolDecay = 'ForwardingRewardPoolDecay',
   AccessController = 'AccessController',
+
+  StakeConfiguratorImpl = 'StakeConfiguratorImpl',
+  StakeTokenImpl = 'StakeTokenImpl',
+  TreasuryImpl = 'TreasuryImpl',
 }
 
 /*
@@ -351,18 +344,14 @@ export interface ILendingRate {
 
 export interface ICommonConfiguration {
   MarketId: string;
-  DepositTokenNamePrefix: string;
-  StableDebtTokenNamePrefix: string;
-  VariableDebtTokenNamePrefix: string;
-  SymbolPrefix: string;
   ProviderId: number;
+
+  Names: ITokenNames;
+
   ProtocolGlobalParams: IProtocolGlobalConfig;
   Mocks: IMocksConfig;
   ProviderRegistry: iParamsPerNetwork<tEthereumAddress | undefined>;
   ProviderRegistryOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
-  LendingPoolCollateralManager: iParamsPerNetwork<tEthereumAddress>;
-  LendingPoolConfigurator: iParamsPerNetwork<tEthereumAddress>;
-  LendingPool: iParamsPerNetwork<tEthereumAddress>;
   LendingRateOracleRatesCommon: iMultiPoolsAssets<IMarketRates>;
   LendingRateOracle: iParamsPerNetwork<tEthereumAddress>;
   TokenDistributor: iParamsPerNetwork<tEthereumAddress>;
@@ -375,10 +364,10 @@ export interface ICommonConfiguration {
   EmergencyAdminIndex: number;
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;
-  ATokenDomainSeparator: iParamsPerNetwork<string>;
   WETH: iParamsPerNetwork<tEthereumAddress>;
   WethGateway: iParamsPerNetwork<tEthereumAddress>;
-  ReserveFactorTreasuryAddress: iParamsPerNetwork<tEthereumAddress>;
+
+  StakeParams: IStakeParams;
 }
 
 export interface IAugmentedConfiguration extends ICommonConfiguration {
@@ -390,3 +379,34 @@ export interface ITokenAddress {
 }
 
 export type PoolConfiguration = ICommonConfiguration | IAugmentedConfiguration;
+
+export interface IStakeParams {
+  MaxSlashBP: number;
+  CooldownPeriod: number;
+  UnstakePeriod: number;
+  StakeToken: iAugmentedPoolAssets<StakeMode>;
+}
+
+export enum StakeMode {
+  noStake,
+  stakeAg,
+  stakeRaw,
+}
+
+export interface ITokenNames {
+  DepositTokenNamePrefix: string;
+  StableDebtTokenNamePrefix: string;
+  VariableDebtTokenNamePrefix: string;
+  StakeTokenNamePrefix: string;
+
+  SymbolPrefix: string;
+  DepositSymbolPrefix: string;
+  StableDebtSymbolPrefix: string;
+  VariableDebtSymbolPrefix: string;
+  StakeSymbolPrefix: string;
+
+  RewardTokenName: string;
+  RewardStakeTokenName: string;
+  RewardTokenSymbol: string;
+  RewardStakeTokenSymbol: string;
+}

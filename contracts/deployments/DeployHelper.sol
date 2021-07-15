@@ -11,12 +11,10 @@ import {
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 
 import {IPriceOracleProvider} from '../interfaces/IPriceOracleProvider.sol';
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 
-contract ATokensAndRatesHelper is Ownable {
-  address payable private pool;
-  address private addressesProvider;
-  address private poolConfigurator;
-  event deployedContracts(address aToken, address strategy);
+contract DeployHelper is Ownable {
+  event deployedContract(uint256 index, address a);
 
   struct InitDeploymentInput {
     address asset;
@@ -32,23 +30,16 @@ contract ATokensAndRatesHelper is Ownable {
     bool stableBorrowingEnabled;
   }
 
-  constructor(
-    address payable _pool,
-    address _addressesProvider,
-    address _poolConfigurator
-  ) public {
-    pool = _pool;
-    addressesProvider = _addressesProvider;
-    poolConfigurator = _poolConfigurator;
-  }
-
-  function initDeployment(InitDeploymentInput[] calldata inputParams) external onlyOwner {
+  function deployRateStrategies(
+    IPriceOracleProvider provider,
+    InitDeploymentInput[] calldata inputParams
+  ) external onlyOwner {
     for (uint256 i = 0; i < inputParams.length; i++) {
-      emit deployedContracts(
-        address(new DepositToken()),
+      emit deployedContract(
+        i,
         address(
           new DefaultReserveInterestRateStrategy(
-            IPriceOracleProvider(addressesProvider),
+            provider,
             inputParams[i].rates[0],
             inputParams[i].rates[1],
             inputParams[i].rates[2],
@@ -61,8 +52,13 @@ contract ATokensAndRatesHelper is Ownable {
     }
   }
 
-  function configureReserves(ConfigureReserveInput[] calldata inputParams) external onlyOwner {
-    LendingPoolConfigurator configurator = LendingPoolConfigurator(poolConfigurator);
+  function configureReserves(
+    IMarketAccessController provider,
+    ConfigureReserveInput[] calldata inputParams
+  ) external onlyOwner {
+    LendingPoolConfigurator configurator =
+      LendingPoolConfigurator(provider.getLendingPoolConfigurator());
+
     for (uint256 i = 0; i < inputParams.length; i++) {
       configurator.configureReserveAsCollateral(
         inputParams[i].asset,

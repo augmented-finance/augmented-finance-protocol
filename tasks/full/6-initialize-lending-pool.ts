@@ -1,18 +1,11 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import {
-  deployLendingPoolCollateralManager,
+  deployLendingPoolCollateralManagerImpl,
+  deployTreasuryImpl,
   deployWalletBalancerProvider,
-  deployWETHGateway,
-  authorizeWETHGateway,
 } from '../../helpers/contracts-deployments';
-import {
-  loadPoolConfig,
-  ConfigNames,
-  getWethAddress,
-  getTreasuryAddress,
-} from '../../helpers/configuration';
-import { getWETHGateway } from '../../helpers/contracts-getters';
+import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
@@ -21,7 +14,6 @@ import {
   getProtocolDataProvider,
   getMarketAddressController,
 } from '../../helpers/contracts-getters';
-import { ZERO_ADDRESS } from '../../helpers/constants';
 
 task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -31,16 +23,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       await localBRE.run('set-DRE');
       const network = <eNetwork>localBRE.network.name;
       const poolConfig = loadPoolConfig(pool);
-      const {
-        DepositTokenNamePrefix,
-        StableDebtTokenNamePrefix,
-        VariableDebtTokenNamePrefix,
-        SymbolPrefix,
-        ReserveAssets,
-        ReservesConfig,
-        LendingPoolCollateralManager,
-        WethGateway,
-      } = poolConfig as ICommonConfiguration;
+      const { Names, ReserveAssets, ReservesConfig } = poolConfig as ICommonConfiguration;
 
       const reserveAssets = await getParamPerNetwork(ReserveAssets, network);
 
@@ -54,28 +37,24 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       }
 
       console.log('|||||=======||||', reserveAssets);
-      const treasuryAddress = await getTreasuryAddress(poolConfig);
+
+      const treasuryImpl = await deployTreasuryImpl();
+      addressesProvider.addImplementation('Treasury', treasuryImpl.address);
+      addressesProvider.setTreasuryImpl(treasuryImpl.address);
+      const treasuryAddress = treasuryImpl.address;
 
       await initReservesByHelper(
         ReservesConfig,
         reserveAssets,
-        DepositTokenNamePrefix,
-        StableDebtTokenNamePrefix,
-        VariableDebtTokenNamePrefix,
-        SymbolPrefix,
+        Names,
         admin,
         treasuryAddress,
         verify
       );
       await configureReservesByHelper(ReservesConfig, reserveAssets, testHelpers, admin);
-      let collateralManagerAddress = await getParamPerNetwork(
-        LendingPoolCollateralManager,
-        network
-      );
-      if (falsyOrZeroAddress(collateralManagerAddress)) {
-        const collateralManager = await deployLendingPoolCollateralManager(verify);
-        collateralManagerAddress = collateralManager.address;
-      }
+
+      const collateralManager = await deployLendingPoolCollateralManagerImpl(verify);
+      const collateralManagerAddress = collateralManager.address;
       // Seems unnecessary to register the collateral manager in the JSON db
 
       console.log(
@@ -87,14 +66,6 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       );
 
       await deployWalletBalancerProvider(verify);
-
-      const lendingPoolAddress = await addressesProvider.getLendingPool();
-
-      let gateWay = getParamPerNetwork(WethGateway, network);
-      if (falsyOrZeroAddress(gateWay)) {
-        gateWay = (await getWETHGateway()).address;
-      }
-      await authorizeWETHGateway(gateWay, lendingPoolAddress);
     } catch (err) {
       console.error(err);
       exit(1);
