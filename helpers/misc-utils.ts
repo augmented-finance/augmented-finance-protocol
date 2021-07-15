@@ -5,7 +5,7 @@ import FileSync from 'lowdb/adapters/FileSync';
 import { WAD } from './constants';
 import { Contract, Wallet, ContractTransaction } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { tEthereumAddress } from './types';
+import { eContractid, tEthereumAddress } from './types';
 import { isAddress } from 'ethers/lib/utils';
 import { isZeroAddress } from 'ethereumjs-util';
 
@@ -85,21 +85,6 @@ export const chunk = <T>(arr: Array<T>, chunkSize: number): Array<Array<T>> => {
   );
 };
 
-interface DbNamedEntry {
-  [network: string]: {
-    deployer: string;
-    address: string;
-  };
-}
-
-interface DbLogEntry {
-  [network: string]: {
-    [address: string]: {
-      id: string;
-    };
-  };
-}
-
 export const notFalsyOrZeroAddress = (address: tEthereumAddress | null | undefined): boolean => {
   if (!address) {
     return false;
@@ -125,6 +110,27 @@ export const getFirstSigner = async () => (await DRE.ethers.getSigners())[0];
 export const getContractFactory = async (abi: any[], bytecode: string) =>
   await DRE.ethers.getContractFactory(abi, bytecode);
 
+interface DbNamedEntry {
+  [network: string]: {
+    deployer: string;
+    address: string;
+  };
+}
+
+interface DbLogEntry {
+  [network: string]: {
+    [address: string]: {
+      id: string;
+    };
+  };
+}
+
+export const cleanupJsonDb = async () => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+  //  db.get
+};
+
 export const logContractInJsonDb = async (
   contractId: string,
   contractInstance: Contract,
@@ -134,27 +140,18 @@ export const logContractInJsonDb = async (
   const db = getDb();
   const deployer = contractInstance.deployTransaction.from;
 
-  if (register) {
-    const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-    if (MAINNET_FORK || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
-      console.log(`*** ${contractId} ***\n`);
-      console.log(`Class: ${(<any>contractInstance).constructor.name}`);
-      console.log(`Network: ${currentNetwork}`);
-      console.log(`tx: ${contractInstance.deployTransaction.hash}`);
-      console.log(`contract address: ${contractInstance.address}`);
-      console.log(`deployer address: ${contractInstance.deployTransaction.from}`);
-      console.log(`gas price: ${contractInstance.deployTransaction.gasPrice}`);
-      console.log(`gas used: ${contractInstance.deployTransaction.gasLimit}`);
-      console.log(`\n******`);
-      console.log();
-    }
-
-    await db
-      .set(`${contractId}.${currentNetwork}`, {
-        address: contractInstance.address,
-        deployer: deployer,
-      })
-      .write();
+  const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+  if (MAINNET_FORK || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
+    console.log(`*** ${contractId} ***\n`);
+    console.log(`Class: ${(<any>contractInstance).constructor.name}`);
+    console.log(`Network: ${currentNetwork}`);
+    console.log(`tx: ${contractInstance.deployTransaction.hash}`);
+    console.log(`contract address: ${contractInstance.address}`);
+    console.log(`deployer address: ${contractInstance.deployTransaction.from}`);
+    console.log(`gas price: ${contractInstance.deployTransaction.gasPrice}`);
+    console.log(`gas used: ${contractInstance.deployTransaction.gasLimit}`);
+    console.log(`\n******`);
+    console.log();
   }
 
   await db
@@ -162,6 +159,15 @@ export const logContractInJsonDb = async (
       id: contractId,
     })
     .write();
+
+  if (register) {
+    await db
+      .set(`${contractId}.${currentNetwork}`, {
+        address: contractInstance.address,
+        deployer: deployer,
+      })
+      .write();
+  }
 };
 
 export const printContracts = (deployer: string) => {
@@ -186,3 +192,6 @@ export const printContracts = (deployer: string) => {
   console.log('N# Contracts:', entries.length, '/', logEntries.length);
   console.log(contractsPrint.join('\n'), '\n');
 };
+
+export const getAddressFromJsonDb = async (id: string) =>
+  await getDb().get(`${id}.${DRE.network.name}`).value();
