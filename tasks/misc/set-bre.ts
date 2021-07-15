@@ -37,7 +37,6 @@ task(`set-DRE`, `Inits the DRE, to have access to all the plugins' objects`).set
     }
 
     setDRE(_DRE);
-    cleanupJsonDb(_DRE.network.name);
     return _DRE;
   }
 );
