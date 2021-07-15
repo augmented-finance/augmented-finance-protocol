@@ -19,7 +19,7 @@ import {
   stakingCooldownTicks,
   stakingUnstakeTicks,
 } from './defaultTestDeployConfig';
-import { AccessFlags } from '../../helpers/access-flags';
+import { AccessFlags, ACCESS_REWARD_MINT } from '../../helpers/access-flags';
 
 task('augmented:test-local', 'Deploy Augmented test contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
@@ -64,6 +64,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
         root.address,
         AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN | AccessFlags.EMERGENCY_ADMIN
       );
+      await ac.grantRoles(root.address, ACCESS_REWARD_MINT);
       await ac.grantAnyRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
       console.log(`#2 deploying: mock AGF`);
@@ -75,7 +76,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       console.log(`#3 deploying: RewardFreezer`);
       const rewardCtl = await deployRewardController([ac.address, agfToken.address], verify);
       await rewardCtl.setFreezePercentage(0);
-      await ac.setRewardController(rewardCtl.address);
+      await ac.grantAnyRoles(rewardCtl.address, ACCESS_REWARD_MINT);
 
       const freezerRewardPool = await deployPermitFreezerRewardPool(
         [rewardCtl.address, RAY, 'burners'],

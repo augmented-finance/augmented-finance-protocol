@@ -23,7 +23,6 @@ import {
   deployVariableDebtTokenImpl,
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
-import { AccessFlags } from './access-flags';
 
 export const chooseDepositTokenDeployment = (id: eContractid) => {
   switch (id) {
@@ -321,28 +320,26 @@ export const configureReservesByHelper = async (
     reserveFactors.push(reserveFactor);
     stableRatesEnabled.push(stableBorrowRateEnabled);
   }
-  if (tokens.length) {
-    // Set aTokenAndRatesDeployer as a temporary admin
-    await waitForTx(
-      await addressProvider.grantRoles(atokenAndRatesDeployer.address, AccessFlags.POOL_ADMIN)
-    );
+  if (!tokens.length) {
+    return;
+  }
 
-    // Deploy init per chunks
-    const enableChunks = 1;
-    const chunkedSymbols = chunk(symbols, enableChunks);
-    const chunkedInputParams = chunk(inputParams, enableChunks);
+  const configurator = await getLendingPoolConfiguratorProxy(
+    await addressProvider.getLendingPoolConfigurator()
+  );
 
-    console.log(`- Configure reserves in ${chunkedInputParams.length} txs`);
-    for (let chunkIndex = 0; chunkIndex < chunkedInputParams.length; chunkIndex++) {
-      await waitForTx(
-        await atokenAndRatesDeployer.configureReserves(chunkedInputParams[chunkIndex], {
-          gasLimit: 5000000,
-        })
-      );
-      console.log(`  - Init for: ${chunkedSymbols[chunkIndex].join(', ')}`);
-    }
+  // Deploy init per chunks
+  const enableChunks = 1;
+  const chunkedSymbols = chunk(symbols, enableChunks);
+  const chunkedInputParams = chunk(inputParams, enableChunks);
+
+  console.log(`- Configure reserves with ${chunkedInputParams.length} txs`);
+  for (let chunkIndex = 0; chunkIndex < chunkedInputParams.length; chunkIndex++) {
     await waitForTx(
-      await addressProvider.revokeRoles(atokenAndRatesDeployer.address, AccessFlags.POOL_ADMIN)
+      await configurator.configureReserves(chunkedInputParams[chunkIndex], {
+        gasLimit: 5000000,
+      })
     );
+    console.log(`  - Configured for: ${chunkedSymbols[chunkIndex].join(', ')}`);
   }
 };

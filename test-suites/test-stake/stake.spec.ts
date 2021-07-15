@@ -26,7 +26,6 @@ import {
 import { mineTicks, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import { BigNumberish } from 'ethers';
 import { ProtocolErrors } from '../../helpers/types';
-import { ACCESS_REWARD_MINT } from '../../helpers/access-flags';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -53,9 +52,6 @@ describe('Staking', () => {
 
     AGF = await getMockAgfToken();
     xAGF = await getMockStakedAgfToken();
-
-    const ac = await getMarketAddressController();
-    await ac.grantRoles(root.address, ACCESS_REWARD_MINT);
   });
 
   afterEach(async () => {

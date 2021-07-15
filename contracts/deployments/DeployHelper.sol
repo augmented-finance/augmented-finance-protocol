@@ -21,15 +21,6 @@ contract DeployHelper is Ownable {
     uint256[6] rates;
   }
 
-  struct ConfigureReserveInput {
-    address asset;
-    uint256 baseLTV;
-    uint256 liquidationThreshold;
-    uint256 liquidationBonus;
-    uint256 reserveFactor;
-    bool stableBorrowingEnabled;
-  }
-
   function deployRateStrategies(
     IPriceOracleProvider provider,
     InitDeploymentInput[] calldata inputParams
@@ -49,29 +40,6 @@ contract DeployHelper is Ownable {
           )
         )
       );
-    }
-  }
-
-  function configureReserves(
-    IMarketAccessController provider,
-    ConfigureReserveInput[] calldata inputParams
-  ) external onlyOwner {
-    LendingPoolConfigurator configurator =
-      LendingPoolConfigurator(provider.getLendingPoolConfigurator());
-
-    for (uint256 i = 0; i < inputParams.length; i++) {
-      configurator.configureReserveAsCollateral(
-        inputParams[i].asset,
-        inputParams[i].baseLTV,
-        inputParams[i].liquidationThreshold,
-        inputParams[i].liquidationBonus
-      );
-
-      configurator.enableBorrowingOnReserve(
-        inputParams[i].asset,
-        inputParams[i].stableBorrowingEnabled
-      );
-      configurator.setReserveFactor(inputParams[i].asset, inputParams[i].reserveFactor);
     }
   }
 }

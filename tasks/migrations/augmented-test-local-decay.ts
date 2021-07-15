@@ -15,7 +15,7 @@ import {
   WEEK,
 } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
-import { AccessFlags } from '../../helpers/access-flags';
+import { AccessFlags, ACCESS_REWARD_MINT } from '../../helpers/access-flags';
 
 task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
   async ({ verify }, localBRE) => {
@@ -29,6 +29,7 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
       root.address,
       AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN | AccessFlags.EMERGENCY_ADMIN
     );
+    await ac.grantRoles(root.address, ACCESS_REWARD_MINT);
     await ac.grantAnyRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
     console.log(`#2 deploying: mock AGF`);
@@ -39,6 +40,7 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
 
     console.log(`#3 deploying: RewardBooster`);
     const rewardBooster = await deployRewardBooster([ac.address, agfToken.address], verify);
+    await ac.setRewardController(rewardBooster.address);
 
     console.log(`#5 deploying: DecayingTokenLocker + ForwardingRewardPool for RewardBooster`);
 

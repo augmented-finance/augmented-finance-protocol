@@ -916,10 +916,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
    */
   function setPaused(bool val) external override {
     require(
-      _addressesProvider.hasAnyOf(
-        msg.sender,
-        AccessFlags.EMERGENCY_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR
-      ),
+      _addressesProvider.hasAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN),
       Errors.CALLER_NOT_EMERGENCY_ADMIN
     );
 
