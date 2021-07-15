@@ -21,7 +21,9 @@ task(`full:deploy-stake-configurator`, `Deploys the ${CONTRACT_NAME} contract fo
       const addressesProvider = await getMarketAddressController();
 
       const impl = await deployStakeConfiguratorImpl(verify);
-      await waitForTx(await addressesProvider.addImplementation(`${CONTRACT_NAME}`, impl.address));
+      await waitForTx(
+        await addressesProvider.addImplementation(`${CONTRACT_NAME}V1`, impl.address)
+      );
       await waitForTx(await addressesProvider.setStakeConfiguratorImpl(impl.address));
 
       console.log(`${CONTRACT_NAME}.address`, impl.address);

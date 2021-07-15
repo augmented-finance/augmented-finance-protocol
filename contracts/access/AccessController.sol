@@ -281,7 +281,11 @@ contract AccessController is Ownable, IManagedAccessController {
    * @param implementationAddress The address of the new implementation
    */
   function setAddressAsProxy(uint256 id, address implementationAddress) public override onlyOwner {
-    _updateImpl(id, implementationAddress);
+    _updateImpl(
+      id,
+      implementationAddress,
+      abi.encodeWithSignature('initialize(address)', address(this))
+    );
     emit AddressSet(id, implementationAddress, true);
   }
 
@@ -290,43 +294,24 @@ contract AccessController is Ownable, IManagedAccessController {
     address implementationAddress,
     bytes calldata params
   ) public override onlyOwner {
-    _updateCustomImpl(id, implementationAddress, params);
+    _updateImpl(id, implementationAddress, params);
     emit AddressSet(id, implementationAddress, true);
   }
 
   /**
    * @dev Internal function to update the implementation of a specific proxied component of the protocol
    * - If there is no proxy registered in the given `id`, it creates the proxy setting `newAdress`
-   *   as implementation and calls the initialize() function on the proxy
-   * - If there is already a proxy registered, it just updates the implementation to `newAddress` and
-   *   calls the initialize() function via upgradeToAndCall() in the proxy
+   *   as implementation and calls a function on the proxy.
+   * - If there is already a proxy registered, it updates the implementation to `newAddress` by
+   *   the upgradeToAndCall() of the proxy.
    * @param id The id of the proxy to be updated
    * @param newAddress The address of the new implementation
+   * @param params The address of the new implementation
    **/
-  function _updateImpl(uint256 id, address newAddress) private {
-    require(id.isPowerOf2nz(), 'invalid singleton id');
-    address payable proxyAddress = payable(getAddress(id));
-
-    bytes memory params = abi.encodeWithSignature('initialize(address)', address(this));
-
-    if (proxyAddress != address(0)) {
-      InitializableImmutableAdminUpgradeabilityProxy(proxyAddress).upgradeToAndCall(
-        newAddress,
-        params
-      );
-      return;
-    }
-
-    proxyAddress = payable(_createProxy(address(this), newAddress, params));
-    _internalSetAddress(id, proxyAddress);
-    _proxies |= id;
-    emit ProxyCreated(id, proxyAddress);
-  }
-
-  function _updateCustomImpl(
+  function _updateImpl(
     uint256 id,
     address newAddress,
-    bytes calldata params
+    bytes memory params
   ) private {
     require(id.isPowerOf2nz(), 'invalid singleton id');
     address payable proxyAddress = payable(getAddress(id));
@@ -339,7 +324,7 @@ contract AccessController is Ownable, IManagedAccessController {
       return;
     }
 
-    proxyAddress = payable(address(createProxy(address(this), newAddress, params)));
+    proxyAddress = payable(address(_createProxy(address(this), newAddress, params)));
     _internalSetAddress(id, proxyAddress);
     _proxies |= id;
     emit ProxyCreated(id, proxyAddress);
@@ -361,12 +346,7 @@ contract AccessController is Ownable, IManagedAccessController {
     address implAddress,
     bytes calldata params
   ) public override returns (IProxy) {
-    require(implAddress != address(0), 'implementation is required');
-
-    InitializableImmutableAdminUpgradeabilityProxy proxy =
-      new InitializableImmutableAdminUpgradeabilityProxy(adminAddress);
-    proxy.initialize(implAddress, params);
-    return proxy;
+    return _createProxy(adminAddress, implAddress, params);
   }
 
   function createProxyByName(

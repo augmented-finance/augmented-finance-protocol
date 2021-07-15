@@ -138,7 +138,6 @@ export const logContractInJsonDb = async (
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
   if (MAINNET_FORK || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
     console.log(`*** ${contractId} ***\n`);
-    console.log(`Class: ${(<any>contractInstance).constructor.name}`);
     console.log(`Network: ${currentNetwork}`);
     console.log(`tx: ${contractInstance.deployTransaction.hash}`);
     console.log(`contract address: ${contractInstance.address}`);

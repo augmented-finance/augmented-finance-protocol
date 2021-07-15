@@ -8,8 +8,9 @@ import {
   deployRewardConfiguratorImpl,
   deployStakeConfiguratorImpl,
 } from '../../helpers/contracts-deployments';
-import { eNetwork } from '../../helpers/types';
+import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import {
+  getAgfToken,
   getMarketAddressController,
   getRewardConfiguratorProxy,
 } from '../../helpers/contracts-getters';
@@ -25,42 +26,60 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts for prod envirome
       await localBRE.run('set-DRE');
       const network = <eNetwork>localBRE.network.name;
       const poolConfig = loadPoolConfig(pool);
+      const { Names } = poolConfig as ICommonConfiguration;
+
       const addressesProvider = await getMarketAddressController();
 
-      // await waitForTx(
-      //   await addressesProvider.setRewardTokenImpl(
-      //     await deployContractImpl(
-      //       addressesProvider,
-      //       'AGFToken',
-      //       await deploydeployRewardTokenImpl(verify)
-      //     )
-      //   )
-      // );
+      await waitForTx(
+        await addressesProvider.setRewardConfiguratorImpl(
+          await deployContractImpl(
+            addressesProvider,
+            'RewardConfiguratorV1',
+            await deployRewardConfiguratorImpl(verify)
+          )
+        )
+      );
 
-      //       await waitForTx(
-      //         await addressesProvider.setRewardConfiguratorImpl(
-      //           await deployContractImpl(
-      //             addressesProvider,
-      //             'RewardConfigurator',
-      //             await deployRewardConfiguratorImpl(verify)
-      //           )
-      //         )
-      //       );
+      const configurator = await getRewardConfiguratorProxy(
+        await addressesProvider.getRewardConfigurator()
+      );
 
-      //       const configurator = await getRewardConfiguratorProxy(await addressesProvider.getRewardConfigurator());
-      // //      configurator
+      const agfInitData = await configurator.buildRewardTokenInitData(
+        Names.RewardTokenName,
+        Names.RewardTokenSymbol,
+        18
+      );
+      await waitForTx(
+        await addressesProvider.setAddressAsProxyWithInit(
+          AccessFlags.REWARD_TOKEN,
+          await deployContractImpl(
+            addressesProvider,
+            'AGFTokenV1',
+            await deployRewardTokenImpl(verify)
+          ),
+          agfInitData
+        )
+      );
 
-      //       const agfAddr = await addressesProvider.getRewardToken();
+      const agf = await getAgfToken(await addressesProvider.getRewardToken());
 
-      //       await waitForTx(
-      //         await addressesProvider.setRewardController(
-      //           await deployContractImpl(
-      //             addressesProvider,
-      //             'RewardBooster',
-      //             await deployRewardBooster([addressesProvider.address, agfAddr], verify)
-      //           )
-      //         )
-      //       );
+      console.log(
+        'AGF token: ',
+        agf.address,
+        await agf.name(),
+        await agf.symbol(),
+        await agf.decimals()
+      );
+
+      await waitForTx(
+        await addressesProvider.setRewardController(
+          await deployContractImpl(
+            addressesProvider,
+            'RewardBooster',
+            await deployRewardBooster([addressesProvider.address, agf.address], verify)
+          )
+        )
+      );
     } catch (err) {
       console.error(err);
       exit(1);
