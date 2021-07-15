@@ -333,6 +333,7 @@ abstract contract BaseRewardController is
 
   function setPaused(bool paused) public override onlyEmergencyAdmin {
     _paused = paused;
+    emit EmergencyPaused(msg.sender, address(this), paused);
   }
 
   function isPaused() public view override returns (bool) {

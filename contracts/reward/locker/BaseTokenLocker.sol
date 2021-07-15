@@ -11,6 +11,7 @@ import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {AccessFlags} from '../../access/AccessFlags.sol';
 import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
+import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
 
 import {ForwardedRewardPool} from '../pools/ForwardedRewardPool.sol';
 import {CalcLinearRateReward} from '../calcs/CalcLinearRateReward.sol';
@@ -19,7 +20,7 @@ import {Errors} from '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
+abstract contract BaseTokenLocker is IERC20, IEmergencyAccess, MarketAccessBitmask {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
@@ -483,11 +484,12 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return !_paused;
   }
 
-  function setPaused(bool paused) external onlyEmergencyAdmin {
+  function setPaused(bool paused) external override onlyEmergencyAdmin {
     _paused = paused;
+    emit EmergencyPaused(msg.sender, address(this), paused);
   }
 
-  function isPaused() external view returns (bool) {
+  function isPaused() external view override returns (bool) {
     return _paused;
   }
 

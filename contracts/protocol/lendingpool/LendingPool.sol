@@ -929,6 +929,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     } else {
       emit Unpaused();
     }
+    emit EmergencyPaused(msg.sender, address(this), val);
   }
 
   function setFlashLoanPremium(uint16 premium) external onlyLendingPoolConfigurator {
