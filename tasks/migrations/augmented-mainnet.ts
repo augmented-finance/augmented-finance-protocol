@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { checkVerification } from '../../helpers/etherscan-verification';
 import { ConfigNames } from '../../helpers/configuration';
-import { getFirstSigner, printContracts } from '../../helpers/misc-utils';
+import { cleanupJsonDb, getFirstSigner, printContracts } from '../../helpers/misc-utils';
 import { usingTenderly } from '../../helpers/tenderly-utils';
 
 task('augmented:mainnet', 'Deploy development enviroment')
@@ -9,6 +9,7 @@ task('augmented:mainnet', 'Deploy development enviroment')
   .setAction(async ({ verify }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
     await DRE.run('set-DRE');
+    await cleanupJsonDb(DRE.network.name);
 
     // Prevent loss of gas verifying all the needed ENVs for Etherscan verification
     if (verify) {
@@ -17,31 +18,31 @@ task('augmented:mainnet', 'Deploy development enviroment')
 
     console.log('Deployment started\n');
 
-    console.log('0. Deploy address provider registry');
+    console.log('1. Deploy address provider registry');
     await DRE.run('full:deploy-address-provider-registry', { pool: POOL_NAME });
 
-    console.log('1. Deploy address provider');
+    console.log('2. Deploy address provider');
     await DRE.run('full:deploy-address-provider', { pool: POOL_NAME });
 
-    console.log('2. Deploy lending pool');
+    console.log('3. Deploy lending pool');
     await DRE.run('full:deploy-lending-pool', { pool: POOL_NAME });
 
-    console.log('3. Deploy oracles');
+    console.log('4. Deploy oracles');
     await DRE.run('full:deploy-oracles', { pool: POOL_NAME });
 
-    console.log('4. Deploy Data Provider');
+    console.log('5. Deploy Data Provider');
     await DRE.run('full:data-provider', { pool: POOL_NAME });
 
-    console.log('5. Deploy WETH Gateway');
+    console.log('6. Deploy WETH Gateway');
     await DRE.run('full-deploy-weth-gateway', { pool: POOL_NAME });
 
-    console.log('6. Initialize lending pool');
+    console.log('7. Initialize lending pool');
     await DRE.run('full:initialize-lending-pool', { pool: POOL_NAME });
 
-    console.log('7. Deploy StakeConfigurator');
+    console.log('8. Deploy StakeConfigurator');
     await DRE.run('full:deploy-stake-configurator', { pool: POOL_NAME });
 
-    console.log('8. Deploy and initialize stake tokens');
+    console.log('9. Deploy and initialize stake tokens');
     await DRE.run('full:init-stake-tokens', { pool: POOL_NAME });
 
     if (verify) {

@@ -14,7 +14,7 @@ export const toWad = (value: string | number) => new BigNumber(value).times(WAD)
 export const bnToBigNumber = (amount: BN): BigNumber => new BigNumber(<any>amount);
 export const stringToBigNumber = (amount: string): BigNumber => new BigNumber(amount);
 
-export const getDb = () => low(new FileSync('./deployed-contracts.json'));
+const getDb = () => low(new FileSync('./deployed-contracts.json'));
 
 export let DRE: HardhatRuntimeEnvironment;
 
@@ -85,21 +85,6 @@ export const chunk = <T>(arr: Array<T>, chunkSize: number): Array<Array<T>> => {
   );
 };
 
-interface DbNamedEntry {
-  [network: string]: {
-    deployer: string;
-    address: string;
-  };
-}
-
-interface DbLogEntry {
-  [network: string]: {
-    [address: string]: {
-      id: string;
-    };
-  };
-}
-
 export const notFalsyOrZeroAddress = (address: tEthereumAddress | null | undefined): boolean => {
   if (!address) {
     return false;
@@ -125,6 +110,22 @@ export const getFirstSigner = async () => (await DRE.ethers.getSigners())[0];
 export const getContractFactory = async (abi: any[], bytecode: string) =>
   await DRE.ethers.getContractFactory(abi, bytecode);
 
+interface DbNamedEntry {
+  deployer: string;
+  address: string;
+  count: number;
+}
+
+interface DbLogEntry {
+  id: string;
+  deployer: string;
+}
+
+export const cleanupJsonDb = async (currentNetwork: string) => {
+  const db = getDb();
+  await db.set(`${currentNetwork}`, {}).write();
+};
+
 export const logContractInJsonDb = async (
   contractId: string,
   contractInstance: Contract,
@@ -134,35 +135,42 @@ export const logContractInJsonDb = async (
   const db = getDb();
   const deployer = contractInstance.deployTransaction.from;
 
-  if (register) {
-    const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-    if (MAINNET_FORK || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
-      console.log(`*** ${contractId} ***\n`);
-      console.log(`Class: ${(<any>contractInstance).constructor.name}`);
-      console.log(`Network: ${currentNetwork}`);
-      console.log(`tx: ${contractInstance.deployTransaction.hash}`);
-      console.log(`contract address: ${contractInstance.address}`);
-      console.log(`deployer address: ${contractInstance.deployTransaction.from}`);
-      console.log(`gas price: ${contractInstance.deployTransaction.gasPrice}`);
-      console.log(`gas used: ${contractInstance.deployTransaction.gasLimit}`);
-      console.log(`\n******`);
-      console.log();
-    }
-
-    await db
-      .set(`${contractId}.${currentNetwork}`, {
-        address: contractInstance.address,
-        deployer: deployer,
-      })
-      .write();
+  const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+  if (MAINNET_FORK || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
+    console.log(`*** ${contractId} ***\n`);
+    console.log(`Class: ${(<any>contractInstance).constructor.name}`);
+    console.log(`Network: ${currentNetwork}`);
+    console.log(`tx: ${contractInstance.deployTransaction.hash}`);
+    console.log(`contract address: ${contractInstance.address}`);
+    console.log(`deployer address: ${contractInstance.deployTransaction.from}`);
+    console.log(`gas price: ${contractInstance.deployTransaction.gasPrice}`);
+    console.log(`gas used: ${contractInstance.deployTransaction.gasLimit}`);
+    console.log(`\n******`);
+    console.log();
   }
 
   await db
-    .set(`${deployer}.log.${currentNetwork}.${contractInstance.address}`, {
+    .set(`${currentNetwork}.log.${contractInstance.address}`, {
       id: contractId,
+      deployer: deployer,
     })
     .write();
+
+  if (register) {
+    const node = `${currentNetwork}.named.${contractId}`;
+    const count = (await db.get(node).value())?.count || 0;
+    await db
+      .set(`${currentNetwork}.named.${contractId}`, {
+        address: contractInstance.address,
+        deployer: deployer,
+        count: count + 1,
+      })
+      .write();
+  }
 };
+
+export const getFromJsonDb = async (id: string) =>
+  await getDb().get(`${DRE.network.name}.named.${id}`).value();
 
 export const printContracts = (deployer: string) => {
   const currentNetwork = DRE.network.name;
@@ -171,17 +179,15 @@ export const printContracts = (deployer: string) => {
   console.log('Contracts deployed at', currentNetwork, 'by', deployer);
   console.log('---------------------------------');
 
-  const entries = Object.entries<DbNamedEntry>(db.getState()).filter(
-    ([_k, value]) => !!value[currentNetwork]
-  );
+  const entries = Object.entries<DbNamedEntry>(db.get(`${currentNetwork}.named`).value());
+  const logEntries = Object.entries<DbLogEntry>(db.get(`${currentNetwork}.log`).value());
 
-  const logEntries = Object.entries<DbLogEntry>(
-    db.get(`${deployer}.log.${currentNetwork}`).value()
-  );
-
-  const contractsPrint = entries.map(
-    ([key, value]: [string, DbNamedEntry]) => `${key}: ${value[currentNetwork].address}`
-  );
+  const contractsPrint = entries.map(([key, value]: [string, DbNamedEntry]) => {
+    if (value.count > 1) {
+      return `${key}: N=${value.count}`;
+    }
+    return `${key}: ${value.address}`;
+  });
 
   console.log('N# Contracts:', entries.length, '/', logEntries.length);
   console.log(contractsPrint.join('\n'), '\n');

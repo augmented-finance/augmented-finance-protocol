@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { DRE, setDRE } from '../../helpers/misc-utils';
+import { cleanupJsonDb, DRE, setDRE } from '../../helpers/misc-utils';
 import { EthereumNetworkNames } from '../../helpers/types';
 import { usingTenderly } from '../../helpers/tenderly-utils';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
