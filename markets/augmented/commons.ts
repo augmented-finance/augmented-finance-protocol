@@ -11,7 +11,6 @@ export const CommonsConfig: ICommonConfiguration = {
   Names: DefaultTokenNames,
   ProviderId: 0, // Overriden in index.ts
   ProtocolGlobalParams: {
-    TokenDistributorPercentageBase: '10000',
     MockUsdPriceInWei: '5848466240000000',
     UsdAddress: '0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96',
     NilAddress: '0x0000000000000000000000000000000000000000',
@@ -106,15 +105,6 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.ropsten]: '',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
-    [eEthereumNetwork.tenderlyMain]: '',
-  },
-  TokenDistributor: {
-    [eEthereumNetwork.coverage]: '',
-    [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.kovan]: '',
-    [eEthereumNetwork.ropsten]: '',
-    [eEthereumNetwork.rinkeby]: '',
-    [eEthereumNetwork.main]: '', // '0xe3d9988f676457123c5fd01297605efdd0cba1ae',
     [eEthereumNetwork.tenderlyMain]: '',
   },
   OracleRouter: {

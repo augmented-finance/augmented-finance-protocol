@@ -1,10 +1,10 @@
 import { task, types } from 'hardhat/config';
 import {
-  deployAccessController,
   deployMockAgfToken,
   deployRewardBooster,
   deployForwardingRewardPoolDecay,
   deployDecayingTokenLocker,
+  deployMarketAccessController,
 } from '../../helpers/contracts-deployments';
 import {
   MAX_LOCKER_PERIOD,
@@ -23,7 +23,7 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
     const [root, user1, user2, slasher] = await localBRE.ethers.getSigners();
 
     console.log(`#1 deploying: Access Controller`);
-    const ac = await deployAccessController();
+    const ac = await deployMarketAccessController('marketId');
     // emergency admin + liquidity admin
     await ac.grantRoles(
       root.address,

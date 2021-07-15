@@ -2,7 +2,7 @@ import rawBRE from 'hardhat';
 import { MockContract } from 'ethereum-waffle';
 import { getEthersSigners, registerContractInJsonDb } from '../../helpers/contracts-helpers';
 import {
-  deployLendingPoolAddressesProvider,
+  deployMarketAccessController,
   deployMintableERC20,
   deployAddressesProviderRegistry,
   deployPriceOracle,
@@ -11,8 +11,6 @@ import {
   deployWalletBalancerProvider,
   deployProtocolDataProvider,
   deployLendingRateOracle,
-  deployStableAndVariableTokensHelper,
-  deployATokensAndRatesHelper,
   deployWETHGateway,
   deployWETHMocked,
   deployMockUniswapRouter,
@@ -89,7 +87,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const mockTokens = await deployAllMockTokens(deployer);
   console.log('Deployed mocks');
-  const addressProvider = await deployLendingPoolAddressesProvider(AugmentedConfig.MarketId);
+  const addressProvider = await deployMarketAccessController(AugmentedConfig.MarketId);
   await waitForTx(
     await addressProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN)
   );
@@ -111,23 +109,11 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   await waitForTx(await addressProvider.setLendingPoolImpl(lendingPoolImpl.address));
 
   const lendingPoolAddress = await addressProvider.getLendingPool();
-  const lendingPoolProxy = await getLendingPoolProxy(lendingPoolAddress);
 
   const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl();
   await waitForTx(
     await addressProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address)
   );
-  const lendingPoolConfiguratorProxy = await getLendingPoolConfiguratorProxy(
-    await addressProvider.getLendingPoolConfigurator()
-  );
-
-  // Deploy deployment helpers
-  await deployStableAndVariableTokensHelper([lendingPoolProxy.address, addressProvider.address]);
-  await deployATokensAndRatesHelper([
-    lendingPoolProxy.address,
-    addressProvider.address,
-    lendingPoolConfiguratorProxy.address,
-  ]);
 
   const fallbackOracle = await deployPriceOracle();
   await waitForTx(await fallbackOracle.setEthUsdPrice(MOCK_USD_PRICE_IN_WEI));

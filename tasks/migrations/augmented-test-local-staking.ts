@@ -1,6 +1,6 @@
 import { task, types } from 'hardhat/config';
 import {
-  deployAccessController,
+  deployMarketAccessController,
   deployMockAgfToken,
   deployMockStakedAgfToken,
   deployMockStakedAgToken,
@@ -51,7 +51,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       const [root, user1, user2, slasher, excessReceiverUser] = await localBRE.ethers.getSigners();
 
       console.log(`#1 deploying: Access Controller`);
-      const ac = await deployAccessController();
+      const ac = await deployMarketAccessController('marketId');
       await ac.grantAnyRoles(
         root.address,
         AccessFlags.EMERGENCY_ADMIN |
@@ -72,6 +72,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       console.log(`#3 deploying: RewardController`);
       const rewardCtl = await deployRewardController([ac.address, agfToken.address], verify);
       await rewardCtl.connect(root).setFreezePercentage(0);
+      await ac.setRewardController(rewardCtl.address);
 
       console.log(`#4 Staking`);
       const agDaiToken = await getAGTokenByName('agDAI');

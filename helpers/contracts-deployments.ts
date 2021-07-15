@@ -10,6 +10,9 @@ import {
   IReserveParams,
   PoolConfiguration,
 } from './types';
+import { MockContract } from 'ethereum-waffle';
+import { getReservesConfigByPool } from './configuration';
+import { ZERO_ADDRESS } from './constants';
 import {
   ForwardingRewardPoolFactory,
   MarketAccessControllerFactory,
@@ -20,15 +23,9 @@ import {
   StakeTokenFactory,
   TreasuryFactory,
   XAGFTokenV1Factory,
-} from '../types';
-import { MockContract } from 'ethereum-waffle';
-import { getReservesConfigByPool } from './configuration';
-import { ZERO_ADDRESS } from './constants';
-import {
   ProtocolDataProviderFactory,
   DepositTokenFactory,
   AGFTokenV1Factory,
-  ATokensAndRatesHelperFactory,
   OracleRouterFactory,
   DefaultReserveInterestRateStrategyFactory,
   DelegationAwareDepositTokenFactory,
@@ -62,9 +59,9 @@ import {
   TokenWeightedRewardPoolFactory,
   PermitFreezerRewardPoolFactory,
   TeamRewardPoolFactory,
-  AccessControllerFactory,
   DecayingTokenLockerFactory,
   StakeConfiguratorFactory,
+  MintableDelegationERC20,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -72,8 +69,6 @@ import {
   linkBytecode,
   withVerify,
 } from './contracts-helpers';
-import { StableAndVariableTokensHelperFactory } from '../types';
-import { MintableDelegationERC20 } from '../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { LendingPoolLibraryAddresses } from '../types/LendingPoolFactory';
 
@@ -81,7 +76,7 @@ const readArtifact = async (id: string) => {
   return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
 };
 
-export const deployLendingPoolAddressesProvider = async (marketId: string, verify?: boolean) =>
+export const deployMarketAccessController = async (marketId: string, verify?: boolean) =>
   withSaveAndVerify(
     await new MarketAccessControllerFactory(await getFirstSigner()).deploy(marketId),
     eContractid.MarketAccessController,
@@ -420,6 +415,22 @@ export const deployDelegationAwareDepositToken = async (
   return instance;
 };
 
+export const deployStableDebtTokenImpl = async (verify: boolean) =>
+  withSaveAndVerify(
+    await new StableDebtTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.StableDebtTokenImpl,
+    [],
+    verify
+  );
+
+export const deployVariableDebtTokenImpl = async (verify: boolean) =>
+  withSaveAndVerify(
+    await new VariableDebtTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.VariableDebtTokenImpl,
+    [],
+    verify
+  );
+
 export const deployDepositTokenImpl = async (verify: boolean) =>
   withSaveAndVerify(
     await new DepositTokenFactory(await getFirstSigner()).deploy(),
@@ -475,28 +486,6 @@ export const deployMockTokens = async (config: PoolConfiguration, verify?: boole
   }
   return tokens;
 };
-
-export const deployStableAndVariableTokensHelper = async (
-  args: [tEthereumAddress, tEthereumAddress],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new StableAndVariableTokensHelperFactory(await getFirstSigner()).deploy(...args),
-    eContractid.StableAndVariableTokensHelper,
-    args,
-    verify
-  );
-
-export const deployATokensAndRatesHelper = async (
-  args: [tEthereumAddress, tEthereumAddress, tEthereumAddress],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new ATokensAndRatesHelperFactory(await getFirstSigner()).deploy(...args),
-    eContractid.ATokensAndRatesHelper,
-    args,
-    verify
-  );
 
 export const deployWETHGateway = async (args: [tEthereumAddress], verify?: boolean) =>
   withSaveAndVerify(
@@ -869,14 +858,6 @@ export const deployForwardingRewardPoolDecay = async (
   withSaveAndVerify(
     await new ForwardingRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.ForwardingRewardPoolDecay,
-    [],
-    verify
-  );
-
-export const deployAccessController = async (verify?: boolean) =>
-  withSaveAndVerify(
-    await new AccessControllerFactory(await getFirstSigner()).deploy(),
-    eContractid.AccessController,
     [],
     verify
   );

@@ -8,14 +8,12 @@ import {
   getForwardingRewardPoolDecay,
   getRewardBooster,
   getDecayingTokenLocker,
+  getMarketAddressController,
 } from '../../helpers/contracts-getters';
 
 import {
   MockAgfToken,
-  RewardFreezer,
   ForwardingRewardPool,
-  XAGFTokenV1,
-  RewardedTokenLocker,
   RewardBooster,
   DecayingTokenLocker,
 } from '../../types';
@@ -27,23 +25,12 @@ import {
   mineTicks,
   revertSnapshot,
   takeSnapshot,
-  mineBlocks,
   alignTicks,
 } from './utils';
-import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
-import {
-  MAX_LOCKER_PERIOD,
-  RAY,
-  RAY_100,
-  RAY_10000,
-  RAY_PER_WEEK,
-  DAY,
-  WEEK,
-  HALF_RAY,
-} from '../../helpers/constants';
-import { fail } from 'assert';
+import { MAX_LOCKER_PERIOD, RAY, DAY, WEEK, HALF_RAY } from '../../helpers/constants';
+import { ACCESS_REWARD_MINT } from '../../helpers/access-flags';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -70,6 +57,9 @@ describe('Token decaying locker suite', () => {
     frp = await getForwardingRewardPoolDecay();
     AGF = await getMockAgfToken();
     xAGF = await getDecayingTokenLocker();
+
+    const ac = await getMarketAddressController();
+    await ac.grantRoles(root.address, ACCESS_REWARD_MINT);
 
     await AGF.connect(root).mintReward(user1.address, defaultStkAmount, false);
     await AGF.connect(user1).approve(xAGF.address, defaultStkAmount);

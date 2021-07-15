@@ -56,9 +56,6 @@ export enum eContractid {
   MockStakedAgToken = 'MockStakedAgToken',
   ProtocolDataProvider = 'ProtocolDataProvider',
   FeeProvider = 'FeeProvider',
-  TokenDistributor = 'TokenDistributor',
-  StableAndVariableTokensHelper = 'StableAndVariableTokensHelper',
-  ATokensAndRatesHelper = 'ATokensAndRatesHelper',
   UiPoolDataProvider = 'UiPoolDataProvider',
   WETHGateway = 'WETHGateway',
   WETH = 'WETH',
@@ -67,6 +64,8 @@ export enum eContractid {
 
   DepositTokenImpl = 'DepositTokenImpl',
   DelegationAwareDepositTokenImpl = 'DelegationAwareDepositTokenImpl',
+  StableDebtTokenImpl = 'StableDebtTokenImpl',
+  VariableDebtTokenImpl = 'VariableDebtTokenImpl',
   LendingPoolImpl = 'LendingPoolImpl',
   LendingPoolConfiguratorImpl = 'LendingPoolConfiguratorImpl',
   LendingPoolCollateralManagerImpl = 'LendingPoolCollateralManagerImpl',
@@ -91,7 +90,6 @@ export enum eContractid {
   PermitFreezerRewardPool = 'PermitFreezerRewardPool',
   ForwardingRewardPool = 'ForwardingRewardPool',
   ForwardingRewardPoolDecay = 'ForwardingRewardPoolDecay',
-  AccessController = 'AccessController',
 
   StakeConfiguratorImpl = 'StakeConfiguratorImpl',
   StakeTokenImpl = 'StakeTokenImpl',
@@ -325,7 +323,6 @@ export interface ObjectString {
 }
 
 export interface IProtocolGlobalConfig {
-  TokenDistributorPercentageBase: string;
   MockUsdPriceInWei: string;
   UsdAddress: tEthereumAddress;
   NilAddress: tEthereumAddress;
@@ -357,7 +354,6 @@ export interface ICommonConfiguration {
   ProviderRegistryOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
   LendingRateOracleRatesCommon: iMultiPoolsAssets<IMarketRates>;
   LendingRateOracle: iParamsPerNetwork<tEthereumAddress>;
-  TokenDistributor: iParamsPerNetwork<tEthereumAddress>;
   OracleRouter: iParamsPerNetwork<tEthereumAddress>;
   FallbackOracle: iParamsPerNetwork<tEthereumAddress>;
   ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;

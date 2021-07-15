@@ -1,7 +1,6 @@
 import {
   ProtocolDataProviderFactory,
   DepositTokenFactory,
-  ATokensAndRatesHelperFactory,
   OracleRouterFactory,
   GenericLogicFactory,
   InitializableAdminUpgradeabilityProxyFactory,
@@ -20,7 +19,6 @@ import {
   PriceOracleFactory,
   ReserveLogicFactory,
   SelfdestructTransferFactory,
-  StableAndVariableTokensHelperFactory,
   StableDebtTokenFactory,
   UniswapLiquiditySwapAdapterFactory,
   UniswapRepayAdapterFactory,
@@ -173,18 +171,6 @@ export const getReserveLogic = async (address?: tEthereumAddress) =>
 export const getGenericLogic = async (address?: tEthereumAddress) =>
   GenericLogicFactory.connect(
     address || (await getAddr(eContractid.GenericLogic)),
-    await getFirstSigner()
-  );
-
-export const getStableAndVariableTokensHelper = async (address?: tEthereumAddress) =>
-  StableAndVariableTokensHelperFactory.connect(
-    address || (await getAddr(eContractid.StableAndVariableTokensHelper)),
-    await getFirstSigner()
-  );
-
-export const getATokensAndRatesHelper = async (address?: tEthereumAddress) =>
-  ATokensAndRatesHelperFactory.connect(
-    address || (await getAddr(eContractid.ATokensAndRatesHelper)),
     await getFirstSigner()
   );
 
@@ -389,9 +375,9 @@ export const getTokenWeightedRewardPoolAGUSDCBoosted = async (address?: tEthereu
     await getFirstSigner()
   );
 
-export const getAccessController = async (address?: tEthereumAddress) =>
+export const getMarketAccessController = async (address?: tEthereumAddress) =>
   AccessControllerFactory.connect(
-    address || (await getAddr(eContractid.AccessController)),
+    address || (await getAddr(eContractid.MarketAccessController)),
     await getFirstSigner()
   );
 

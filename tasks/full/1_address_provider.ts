@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { deployLendingPoolAddressesProvider } from '../../helpers/contracts-deployments';
+import { deployMarketAccessController } from '../../helpers/contracts-deployments';
 import { falsyOrZeroAddress, getFirstSigner, getSigner, waitForTx } from '../../helpers/misc-utils';
 import {
   ConfigNames,
@@ -63,7 +63,7 @@ task('full:deploy-address-provider', 'Deploy address provider for prod enviromen
     console.log('Registry Address', addressesProviderRegistry.address);
 
     // 2. Deploy address provider and set genesis manager
-    const addressProvider = await deployLendingPoolAddressesProvider(MarketId, verify);
+    const addressProvider = await deployMarketAccessController(MarketId, verify);
 
     // 3. Set the provider at the Registry
     await waitForTx(

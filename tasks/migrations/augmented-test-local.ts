@@ -1,6 +1,6 @@
 import { task, types } from 'hardhat/config';
 import {
-  deployAccessController,
+  deployMarketAccessController,
   deployForwardingRewardPool,
   deployMockAgfToken,
   deployRewardController,
@@ -19,7 +19,6 @@ import {
   stakingCooldownTicks,
   stakingUnstakeTicks,
 } from './defaultTestDeployConfig';
-import { BigNumber } from 'ethers';
 import { AccessFlags } from '../../helpers/access-flags';
 
 task('augmented:test-local', 'Deploy Augmented test contracts.')
@@ -59,7 +58,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       const [root, user1, user2, slasher] = await localBRE.ethers.getSigners();
 
       console.log(`#1 deploying: Access Controller`);
-      const ac = await deployAccessController();
+      const ac = await deployMarketAccessController('marketId');
       // emergency admin + liquidity admin
       await ac.grantRoles(
         root.address,
@@ -76,6 +75,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       console.log(`#3 deploying: RewardFreezer`);
       const rewardCtl = await deployRewardController([ac.address, agfToken.address], verify);
       await rewardCtl.setFreezePercentage(0);
+      await ac.setRewardController(rewardCtl.address);
 
       const freezerRewardPool = await deployPermitFreezerRewardPool(
         [rewardCtl.address, RAY, 'burners'],

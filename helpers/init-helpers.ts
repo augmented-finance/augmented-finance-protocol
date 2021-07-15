@@ -9,12 +9,7 @@ import {
 } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, waitForTx } from './misc-utils';
-import {
-  getATokensAndRatesHelper,
-  getMarketAddressController,
-  getLendingPoolConfiguratorProxy,
-  getStableAndVariableTokensHelper,
-} from './contracts-getters';
+import { getMarketAddressController, getLendingPoolConfiguratorProxy } from './contracts-getters';
 import { registerContractInJsonDb } from './contracts-helpers';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
 import {
@@ -23,6 +18,9 @@ import {
   deployDelegationAwareDepositTokenImpl,
   deployDepositToken,
   deployDepositTokenImpl,
+  deployStableDebtToken,
+  deployStableDebtTokenImpl,
+  deployVariableDebtTokenImpl,
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
 import { AccessFlags } from './access-flags';
@@ -46,7 +44,6 @@ export const initReservesByHelper = async (
   verify: boolean
 ): Promise<BigNumber> => {
   let gasUsage = BigNumber.from('0');
-  const stableAndVariableDeployer = await getStableAndVariableTokensHelper();
 
   const addressProvider = await getMarketAddressController();
 
@@ -91,18 +88,9 @@ export const initReservesByHelper = async (
   let strategyAddressPerAsset: Record<string, string> = {};
   let depositTokenType: Record<string, boolean> = {};
   let delegationAwareATokenImplementationAddress = '';
-  let stableDebtTokenImplementationAddress = '';
-  let variableDebtTokenImplementationAddress = '';
 
-  // NOT WORKING ON MATIC, DEPLOYING INDIVIDUAL IMPLs INSTEAD
-  const tx1 = await waitForTx(
-    await stableAndVariableDeployer.initDeployment([ZERO_ADDRESS], ['1'])
-  );
-  console.log(tx1.events);
-  tx1.events?.forEach((event, index) => {
-    stableDebtTokenImplementationAddress = event?.args?.stableToken;
-    variableDebtTokenImplementationAddress = event?.args?.variableToken;
-  });
+  const stableDebtTokenImpl = await deployStableDebtTokenImpl(verify);
+  const variableDebtTokenImpl = await deployVariableDebtTokenImpl(verify);
 
   const depositTokenImplementationAddress = (await deployDepositTokenImpl(verify)).address;
 
@@ -190,8 +178,8 @@ export const initReservesByHelper = async (
 
     initInputParams.push({
       aTokenImpl: tokenToUse,
-      stableDebtTokenImpl: stableDebtTokenImplementationAddress,
-      variableDebtTokenImpl: variableDebtTokenImplementationAddress,
+      stableDebtTokenImpl: stableDebtTokenImpl.address,
+      variableDebtTokenImpl: variableDebtTokenImpl.address,
       underlyingAssetDecimals: reserveInitDecimals[i],
       interestRateStrategyAddress: strategyAddressPerAsset[reserveSymbol],
       underlyingAsset: reserveTokens[i],
@@ -271,7 +259,6 @@ export const configureReservesByHelper = async (
   helpers: ProtocolDataProvider
 ) => {
   const addressProvider = await getMarketAddressController();
-  const atokenAndRatesDeployer = await getATokensAndRatesHelper();
   const tokens: string[] = [];
   const symbols: string[] = [];
   const baseLTVA: string[] = [];
@@ -300,7 +287,6 @@ export const configureReservesByHelper = async (
     },
   ] of Object.entries(reservesParams) as [string, IReserveParams][]) {
     if (baseLTVAsCollateral === '-1') continue;
-    // if (assetSymbol !== 'DAI') continue;
 
     const assetAddressIndex = Object.keys(tokenAddresses).findIndex(
       (value) => value === assetSymbol
@@ -350,7 +336,7 @@ export const configureReservesByHelper = async (
     for (let chunkIndex = 0; chunkIndex < chunkedInputParams.length; chunkIndex++) {
       await waitForTx(
         await atokenAndRatesDeployer.configureReserves(chunkedInputParams[chunkIndex], {
-          gasLimit: 7000000,
+          gasLimit: 5000000,
         })
       );
       console.log(`  - Init for: ${chunkedSymbols[chunkIndex].join(', ')}`);
