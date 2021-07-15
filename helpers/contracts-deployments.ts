@@ -596,7 +596,12 @@ export const deployMockAgfToken = async (
     verify
   );
 
-  await instance['initialize(address,string,string)'](args[0], args[1], args[2]);
+  await instance['initialize((address,string,string,uint8))']({
+    remoteAcl: args[0],
+    name: args[1],
+    symbol: args[2],
+    decimals: 18,
+  });
 
   return instance;
 };
