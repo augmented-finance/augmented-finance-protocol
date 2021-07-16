@@ -62,6 +62,7 @@ import {
   DecayingTokenLockerFactory,
   StakeConfiguratorFactory,
   MintableDelegationERC20,
+  TokenWeightedRewardPoolV1Factory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -903,6 +904,14 @@ export const deployRewardTokenImpl = async (verify?: boolean) =>
   withSaveAndVerify(
     await new AGFTokenV1Factory(await getFirstSigner()).deploy(),
     eContractid.RewardTokenImpl,
+    [],
+    verify
+  );
+
+export const deployTokenWeightedRewardPoolImpl = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await new TokenWeightedRewardPoolV1Factory(await getFirstSigner()).deploy(),
+    eContractid.TokenWeightedRewardPoolImpl,
     [],
     verify
   );

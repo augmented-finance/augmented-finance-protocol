@@ -15,7 +15,6 @@ export const CommonsConfig: ICommonConfiguration = {
     UsdAddress: '0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96',
     NilAddress: '0x0000000000000000000000000000000000000000',
     OneAddress: '0x0000000000000000000000000000000000000001',
-    AaveReferral: '0',
   },
 
   // ----------------
@@ -264,14 +263,31 @@ export const CommonsConfig: ICommonConfiguration = {
     CooldownPeriod: 2 * DAY,
     UnstakePeriod: DAY,
     StakeToken: {
-      AAVE: StakeMode.noStake,
-      LINK: StakeMode.noStake,
-
       DAI:  StakeMode.stakeAg,
       USDC: StakeMode.stakeAg,
       USDT: StakeMode.stakeAg,
       WBTC: StakeMode.stakeAg,
       WETH: StakeMode.stakeAg,
+    }
+  },
+
+  RewardParams : {
+    InitialRate: 10,
+    TokenPools: {
+      DAI:   {
+        Share: {
+          deposit: 100,
+          vDebt:   200,
+          stake:   500,
+        }
+      },
+      USDC:   {
+        Share: {
+          deposit: 1000,
+          vDebt:   1200,
+          stake:   1500,
+        }
+      },
     }
   }
 };

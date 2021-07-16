@@ -29,6 +29,10 @@ contract MarketAccessBitmask {
     return _remoteAcl.hasAllOf(subject, flags);
   }
 
+  function acl_hasAnyOf(address subject, uint256 flags) internal view returns (bool) {
+    return _remoteAcl.hasAnyOf(subject, flags);
+  }
+
   modifier aclHas(uint256 flags) virtual {
     require(_remoteAcl.hasAllOf(msg.sender, flags), 'access is restricted');
     _;
@@ -71,8 +75,11 @@ contract MarketAccessBitmask {
 
   modifier onlyRewardAdmin {
     require(
-      _remoteAcl.hasAllOf(msg.sender, AccessFlags.REWARD_CONFIG_ADMIN),
-      Errors.CALLER_NOT_REWARD_ADMIN
+      _remoteAcl.hasAnyOf(
+        msg.sender,
+        AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR
+      ),
+      Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
     );
     _;
   }

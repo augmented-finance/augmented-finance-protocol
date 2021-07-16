@@ -26,7 +26,7 @@ import chai from 'chai';
 // @ts-ignore
 import bignumberChai from 'chai-bignumber';
 import { almostEqual } from './almost-equal';
-import { PriceOracle } from '../../../types/PriceOracle';
+import { MockPriceOracle } from '../../../types/MockPriceOracle';
 import { AddressesProviderRegistry } from '../../../types/AddressesProviderRegistry';
 import { getEthersSigners } from '../../../helpers/contracts-helpers';
 import { UniswapLiquiditySwapAdapter } from '../../../types/UniswapLiquiditySwapAdapter';
@@ -53,7 +53,7 @@ export interface TestEnv {
   users: SignerWithAddress[];
   pool: LendingPool;
   configurator: LendingPoolConfigurator;
-  oracle: PriceOracle;
+  oracle: MockPriceOracle;
   helpersContract: ProtocolDataProvider;
   weth: WETH9Mocked;
   aWETH: DepositToken;
@@ -80,7 +80,7 @@ const testEnv: TestEnv = {
   pool: {} as LendingPool,
   configurator: {} as LendingPoolConfigurator,
   helpersContract: {} as ProtocolDataProvider,
-  oracle: {} as PriceOracle,
+  oracle: {} as MockPriceOracle,
   weth: {} as WETH9Mocked,
   aWETH: {} as DepositToken,
   dai: {} as MintableERC20,
@@ -143,9 +143,11 @@ export async function initializeMakeSuite() {
   const wethAddress = reservesTokens.find((token) => token.symbol === 'WETH')?.tokenAddress;
 
   if (!aDaiAddress || !aWEthAddress) {
+    console.log('Required test tokens are missing');
     process.exit(1);
   }
   if (!daiAddress || !usdcAddress || !aaveAddress || !wethAddress) {
+    console.log('Required test tokens are missing');
     process.exit(1);
   }
 

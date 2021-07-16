@@ -32,6 +32,15 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     uint224 rateScale,
     uint16 baselinePercentage
   ) public {
+    _initialize(controller, initialRate, rateScale, baselinePercentage);
+  }
+
+  function _initialize(
+    IRewardController controller,
+    uint256 initialRate,
+    uint224 rateScale,
+    uint16 baselinePercentage
+  ) internal virtual {
     require(address(controller) != address(0), 'controller is required');
     _controller = controller;
 
@@ -177,6 +186,11 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   modifier onlyController() {
     require(isController(msg.sender), 'only controller is allowed');
+    _;
+  }
+
+  modifier onlyConfigurator() {
+    require(_controller.isConfigurator(msg.sender), 'only configurator is allowed');
     _;
   }
 

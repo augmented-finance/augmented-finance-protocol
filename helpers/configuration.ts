@@ -12,7 +12,7 @@ import { DRE, filterMapBy } from './misc-utils';
 import { tEthereumAddress } from './types';
 import { getParamPerNetwork } from './contracts-helpers';
 import { deployWETHMocked } from './contracts-deployments';
-import AugmentedConfig from '../markets/augmented';
+import { AugmentedConfig } from '../markets/augmented';
 
 export enum ConfigNames {
   Commons = 'Commons',
