@@ -41,7 +41,10 @@ contract AccessController is Ownable, IManagedAccessController {
   }
 
   modifier onlyAdmin {
-    require(_msgSender() == owner() || _msgSender() == _tempAdmin, 'caller is not the owner');
+    require(
+      _msgSender() == owner() || _msgSender() == _tempAdmin,
+      'Ownable: caller is not the owner'
+    );
     _;
   }
 
