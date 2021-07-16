@@ -218,7 +218,6 @@ export interface iAssetBase<T> {
   WBTC: T;
   USD: T;
   AAVE: T;
-  LINK: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, 'ETH'>;
@@ -233,7 +232,7 @@ export type PickOpt<T, K extends keyof T> = {
   [P in K]?: T[P];
 };
 
-type augmentedAssets = 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH';
+type augmentedAssets = 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH' | 'AAVE';
 
 export type iAugmentedPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, augmentedAssets>;
 export type iAugmentedPoolAssetsOpt<T> = PickOpt<iAssetsWithoutUSD<T>, augmentedAssets>;
@@ -244,7 +243,6 @@ export type iAssetAggregatorBase<T> = iAssetsWithoutETH<T>;
 
 export const TokenContractId: iAssetBase<string> = {
   AAVE: 'AAVE',
-  LINK: 'LINK',
 
   WETH: 'WETH',
   DAI: 'DAI',
@@ -339,7 +337,6 @@ export interface IProtocolGlobalConfig {
   UsdAddress: tEthereumAddress;
   NilAddress: tEthereumAddress;
   OneAddress: tEthereumAddress;
-  AaveReferral: string;
 }
 
 export interface IMocksConfig {

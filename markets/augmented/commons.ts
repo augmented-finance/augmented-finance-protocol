@@ -15,7 +15,6 @@ export const CommonsConfig: ICommonConfiguration = {
     UsdAddress: '0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96',
     NilAddress: '0x0000000000000000000000000000000000000000',
     OneAddress: '0x0000000000000000000000000000000000000001',
-    AaveReferral: '0',
   },
 
   // ----------------

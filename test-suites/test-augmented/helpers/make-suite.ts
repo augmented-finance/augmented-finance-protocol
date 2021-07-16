@@ -143,9 +143,11 @@ export async function initializeMakeSuite() {
   const wethAddress = reservesTokens.find((token) => token.symbol === 'WETH')?.tokenAddress;
 
   if (!aDaiAddress || !aWEthAddress) {
+    console.log('Required test tokens are missing');
     process.exit(1);
   }
   if (!daiAddress || !usdcAddress || !aaveAddress || !wethAddress) {
+    console.log('Required test tokens are missing');
     process.exit(1);
   }
 
