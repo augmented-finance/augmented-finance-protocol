@@ -46,7 +46,6 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     const reservesParams = getReservesConfigByPool(LendingPools.augmented);
 
     const treasuryImpl = await deployTreasuryImpl();
-    addressesProvider.addImplementation('Treasury', treasuryImpl.address);
     addressesProvider.setTreasuryImpl(treasuryImpl.address);
     const treasuryAddress = treasuryImpl.address;
 
@@ -58,16 +57,6 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
       verify
     );
     await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, testHelpers);
-
-    const collateralManager = await deployLendingPoolCollateralManagerImpl(verify);
-    await waitForTx(
-      await addressesProvider.setLendingPoolCollateralManager(collateralManager.address)
-    );
-
-    const mockFlashLoanReceiver = await deployMockFlashLoanReceiver(
-      addressesProvider.address,
-      verify
-    );
 
     await deployWalletBalancerProvider(verify);
 

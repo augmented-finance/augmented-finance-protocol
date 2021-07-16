@@ -41,8 +41,7 @@ task(`full-deploy-weth-gateway`, `Deploys the ${CONTRACT_NAME} contract for prod
 
     await waitForTx(await addressesProvider.setAddress(AccessFlags.WETH_GATEWAY, gateWay));
 
-    const lendingPoolAddress = await addressesProvider.getLendingPool();
-    await authorizeWETHGateway(gateWay, lendingPoolAddress);
+    await authorizeWETHGateway(gateWay, await addressesProvider.getLendingPool());
 
     console.log(`\tFinished ${CONTRACT_NAME} deployment`);
   });

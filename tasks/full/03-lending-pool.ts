@@ -1,5 +1,6 @@
 import { task } from 'hardhat/config';
 import {
+  deployLendingPoolCollateralManagerImpl,
   deployLendingPoolConfiguratorImpl,
   deployLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
@@ -43,6 +44,15 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
       console.log(
         '\tSetting lending pool configurator implementation with address:',
         lendingPoolConfiguratorImplAddress
+      );
+
+      const collateralManager = await deployLendingPoolCollateralManagerImpl(verify);
+      console.log(
+        '\tSetting lending pool collateral manager implementation with address',
+        collateralManager.address
+      );
+      await waitForTx(
+        await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address)
       );
 
       // Set lending pool conf impl to Address Provider

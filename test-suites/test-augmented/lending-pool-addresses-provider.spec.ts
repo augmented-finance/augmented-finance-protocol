@@ -21,7 +21,6 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
       addressesProvider.setMarketId,
       addressesProvider.setLendingPoolImpl,
       addressesProvider.setLendingPoolConfiguratorImpl,
-      addressesProvider.setLendingPoolCollateralManager,
       addressesProvider.setPriceOracle,
       addressesProvider.setLendingRateOracle,
     ]) {

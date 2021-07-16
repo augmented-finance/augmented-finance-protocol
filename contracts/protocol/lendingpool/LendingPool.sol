@@ -27,6 +27,7 @@ import {ReserveConfiguration} from '../libraries/configuration/ReserveConfigurat
 import {UserConfiguration} from '../libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
+import {ILendingPoolCollateralManager} from '../../interfaces/ILendingPoolCollateralManager.sol';
 
 /**
  * @title LendingPool contract
@@ -440,11 +441,10 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     bool receiveAToken
   ) external override whenNotPaused {
     require(!_liquidationDisabled, Errors.LP_LIQUIDATION_DISABLED);
-    address collateralManager = _addressesProvider.getLendingPoolCollateralManager();
 
     //solium-disable-next-line
     (bool success, bytes memory result) =
-      collateralManager.delegatecall(
+      _collateralManager.delegatecall(
         abi.encodeWithSignature(
           'liquidationCall(address,address,address,uint256,bool)',
           collateralAsset,
@@ -783,10 +783,6 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     return _addressesProvider;
   }
 
-  function isPoolAdmin(address addr) public view override returns (bool) {
-    return _addressesProvider.isPoolAdmin(addr);
-  }
-
   /**
    * @dev Returns the percentage of available liquidity that can be borrowed at once at stable rate
    */
@@ -1037,8 +1033,26 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
   }
 
   modifier onlyPoolAdmin {
-    require(isPoolAdmin(msg.sender), Errors.CALLER_NOT_POOL_ADMIN);
+    require(_addressesProvider.isPoolAdmin(msg.sender), Errors.CALLER_NOT_POOL_ADMIN);
     _;
+  }
+
+  /**
+   * @dev Returns the address of the LendingPoolCollateralManager. Since the manager is used
+   * through delegateCall within the LendingPool contract
+   * @return The address of the LendingPoolCollateralManager
+   **/
+
+  function getLendingPoolCollateralManager() external view override returns (address) {
+    return _collateralManager;
+  }
+
+  /**
+   * @dev Updates the address of the LendingPoolCollateralManager
+   * @param manager The new LendingPoolCollateralManager address
+   **/
+  function setLendingPoolCollateralManager(address manager) external override onlyPoolAdmin {
+    _collateralManager = manager;
   }
 
   function enableFlashLoan(bool enable) external onlyPoolAdmin {

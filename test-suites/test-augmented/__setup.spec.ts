@@ -109,6 +109,16 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   await waitForTx(await addressProvider.setLendingPoolImpl(lendingPoolImpl.address));
 
   const lendingPoolAddress = await addressProvider.getLendingPool();
+  const lendingPoolProxy = await getLendingPoolProxy(lendingPoolAddress);
+
+  const collateralManager = await deployLendingPoolCollateralManagerImpl();
+  console.log(
+    '\tSetting lending pool collateral manager implementation with address',
+    collateralManager.address
+  );
+  await waitForTx(
+    await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address)
+  );
 
   const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl();
   await waitForTx(
@@ -178,7 +188,6 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const { Names } = config;
 
   const treasuryImpl = await deployTreasuryImpl();
-  addressProvider.addImplementation('Treasury', treasuryImpl.address);
   addressProvider.setTreasuryImpl(treasuryImpl.address);
   const treasuryAddress = treasuryImpl.address;
 
@@ -186,10 +195,6 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   await configureReservesByHelper(reservesParams, allReservesAddresses, testHelpers);
 
-  const collateralManagerImpl = await deployLendingPoolCollateralManagerImpl();
-  await waitForTx(
-    await addressProvider.setLendingPoolCollateralManager(collateralManagerImpl.address)
-  );
   await deployMockFlashLoanReceiver(addressProvider.address);
 
   const mockUniswapRouter = await deployMockUniswapRouter();
