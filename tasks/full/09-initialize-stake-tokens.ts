@@ -29,9 +29,6 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
       const poolConfig = loadPoolConfig(pool);
       const addressesProvider = await getMarketAddressController();
       const impl = await deployStakeTokenImpl(verify);
-      await waitForTx(
-        await addressesProvider.addImplementation(`${CONTRACT_NAME}V1`, impl.address)
-      );
 
       const { ReserveAssets, Names } = poolConfig as ICommonConfiguration;
 

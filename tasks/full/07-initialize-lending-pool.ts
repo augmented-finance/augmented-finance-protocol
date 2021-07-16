@@ -38,24 +38,11 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       console.log('|||||=======||||', reserveAssets);
 
       const treasuryImpl = await deployTreasuryImpl();
-      addressesProvider.addImplementation('Treasury', treasuryImpl.address);
       addressesProvider.setTreasuryImpl(treasuryImpl.address);
       const treasuryAddress = treasuryImpl.address;
 
       await initReservesByHelper(ReservesConfig, reserveAssets, Names, treasuryAddress, verify);
       await configureReservesByHelper(ReservesConfig, reserveAssets, testHelpers);
-
-      const collateralManager = await deployLendingPoolCollateralManagerImpl(verify);
-      const collateralManagerAddress = collateralManager.address;
-      // Seems unnecessary to register the collateral manager in the JSON db
-
-      console.log(
-        '\tSetting lending pool collateral manager implementation with address',
-        collateralManagerAddress
-      );
-      await waitForTx(
-        await addressesProvider.setLendingPoolCollateralManager(collateralManagerAddress)
-      );
 
       await deployWalletBalancerProvider(verify);
     } catch (err) {

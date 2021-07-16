@@ -22,7 +22,7 @@ library AccessFlags {
 
   uint256 public constant LENDING_POOL = 1 << 16; // use proxy
   uint256 public constant LENDING_POOL_CONFIGURATOR = 1 << 17; // use proxy
-  uint256 public constant LENDING_POOL_COLLATERAL_MANAGER = 1 << 18;
+
   uint256 public constant PRICE_ORACLE = 1 << 19;
   uint256 public constant LENDING_RATE_ORACLE = 1 << 20;
   uint256 public constant TREASURY = 1 << 21; // use proxy

@@ -13,7 +13,7 @@ export enum AccessFlags {
 
   LENDING_POOL = 1 << 16, // use proxy
   LENDING_POOL_CONFIGURATOR = 1 << 17, // use proxy
-  LENDING_POOL_COLLATERAL_MANAGER = 1 << 18,
+
   PRICE_ORACLE = 1 << 19,
   LENDING_RATE_ORACLE = 1 << 20,
   TREASURY = 1 << 21, // use proxy

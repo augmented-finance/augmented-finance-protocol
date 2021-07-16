@@ -93,7 +93,6 @@ export const deployContractImpl = async (
 ) => {
   const implAddr: string = impl.address;
 
-  await ac.addImplementation(contractName, implAddr);
   console.log(`${contractName}.address: `, implAddr);
   console.log(`\tFinished ${contractName} deployment`);
   return implAddr;
