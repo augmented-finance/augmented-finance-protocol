@@ -218,6 +218,7 @@ export interface iAssetBase<T> {
   WBTC: T;
   USD: T;
   AAVE: T;
+  LINK: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, 'ETH'>;
@@ -232,7 +233,7 @@ export type PickOpt<T, K extends keyof T> = {
   [P in K]?: T[P];
 };
 
-type augmentedAssets = 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH' | 'AAVE';
+type augmentedAssets = 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH';
 
 export type iAugmentedPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, augmentedAssets>;
 export type iAugmentedPoolAssetsOpt<T> = PickOpt<iAssetsWithoutUSD<T>, augmentedAssets>;
@@ -243,6 +244,7 @@ export type iAssetAggregatorBase<T> = iAssetsWithoutETH<T>;
 
 export const TokenContractId: iAssetBase<string> = {
   AAVE: 'AAVE',
+  LINK: 'LINK',
 
   WETH: 'WETH',
   DAI: 'DAI',
@@ -381,7 +383,7 @@ export interface ICommonConfiguration {
 }
 
 export interface IAugmentedConfiguration extends ICommonConfiguration {
-  ReservesConfig: iAugmentedPoolAssets<IReserveParams>;
+  //  ReservesConfig: iAugmentedPoolAssets<IReserveParams>;
 }
 
 export interface ITokenAddress {

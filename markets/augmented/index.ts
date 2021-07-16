@@ -9,6 +9,7 @@ import {
   strategyAAVE,
   strategyWBTC,
   strategyWETH,
+  strategyLINK,
 } from './reservesConfigs';
 
 // ----------------
@@ -21,6 +22,7 @@ export const AugmentedConfig: IAugmentedConfiguration = {
   ProviderId: 1,
   ReservesConfig: {
     AAVE: strategyAAVE,
+    LINK: strategyLINK,
     DAI: strategyDAI,
     USDC: strategyUSDC,
     USDT: strategyUSDT,

@@ -39,6 +39,7 @@ export const AAVE_REFERRAL = '0';
 export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   AAVE: oneEther.multipliedBy('0.003620948469').toFixed(),
   DAI: oneEther.multipliedBy('0.00369068412860').toFixed(),
+  LINK: oneEther.multipliedBy('0.009955').toFixed(),
   USDC: oneEther.multipliedBy('0.00367714136416').toFixed(),
   USDT: oneEther.multipliedBy('0.00369068412860').toFixed(),
   WETH: oneEther.toFixed(),
