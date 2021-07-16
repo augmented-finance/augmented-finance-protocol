@@ -7,7 +7,6 @@ import {
   strategyUSDC,
   strategyUSDT,
   strategyAAVE,
-  strategyLINK,
   strategyWBTC,
   strategyWETH,
 } from './reservesConfigs';
