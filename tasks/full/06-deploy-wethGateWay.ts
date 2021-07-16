@@ -18,14 +18,13 @@ task(`full-deploy-weth-gateway`, `Deploys the ${CONTRACT_NAME} contract for prod
     const poolConfig = loadPoolConfig(pool);
     const addressesProvider = await getMarketAddressController();
 
-    const { WethGateway } = poolConfig;
-
     if (!localBRE.network.config.chainId) {
       throw new Error('INVALID_CHAIN_ID');
     }
-    let gateWay = getParamPerNetwork(WethGateway, network);
 
-    if (gateWay === '') {
+    let gateWay = await addressesProvider.getAddress(AccessFlags.WETH_GATEWAY);
+
+    if (falsyOrZeroAddress(gateWay)) {
       const Weth = await getWethAddress(poolConfig);
       if (falsyOrZeroAddress(Weth)) {
         throw 'WETH address is missing';

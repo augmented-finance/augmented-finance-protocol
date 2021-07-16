@@ -23,6 +23,7 @@ import { configureReservesByHelper, initReservesByHelper } from '../../helpers/i
 import { getAllTokenAddresses } from '../../helpers/mock-helpers';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import { getAllMockedTokens, getMarketAddressController } from '../../helpers/contracts-getters';
+import { AccessFlags } from '../../helpers/access-flags';
 
 task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -31,7 +32,7 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const { Names, WethGateway } = poolConfig;
+    const { Names } = poolConfig;
     const mockTokens = await getAllMockedTokens();
     const allTokenAddresses = getAllTokenAddresses(mockTokens);
 
@@ -61,9 +62,6 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     await deployWalletBalancerProvider(verify);
 
     const lendingPoolAddress = await addressesProvider.getLendingPool();
-    const gateWay = await getParamPerNetwork(WethGateway, network);
-
-    if (gateWay !== '') {
-      await authorizeWETHGateway(gateWay, lendingPoolAddress);
-    }
+    const gateWay = await addressesProvider.getAddress(AccessFlags.WETH_GATEWAY);
+    await authorizeWETHGateway(gateWay, lendingPoolAddress);
   });
