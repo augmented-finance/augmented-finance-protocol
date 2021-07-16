@@ -134,6 +134,10 @@ const buidlerConfig: HardhatUserConfig = {
       })),
       forking: mainnetFork,
     },
+    docker: {
+      url: 'http://hardhat-node:8545',
+      chainId: BUIDLEREVM_CHAINID,
+    },
     buidlerevm_docker: {
       hardfork: 'istanbul',
       blockGasLimit: 9500000,
