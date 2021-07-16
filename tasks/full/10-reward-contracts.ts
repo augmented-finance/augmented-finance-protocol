@@ -32,7 +32,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts for prod envirome
 
       await waitForTx(
         await addressesProvider.setRewardConfiguratorImpl(
-          await deployContractImpl(
+          await deployedContractImpl(
             addressesProvider,
             'RewardConfiguratorV1',
             await deployRewardConfiguratorImpl(verify)
@@ -52,7 +52,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts for prod envirome
       await waitForTx(
         await addressesProvider.setAddressAsProxyWithInit(
           AccessFlags.REWARD_TOKEN,
-          await deployContractImpl(
+          await deployedContractImpl(
             addressesProvider,
             'AGFTokenV1',
             await deployRewardTokenImpl(verify)
@@ -73,7 +73,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts for prod envirome
 
       await waitForTx(
         await addressesProvider.setRewardController(
-          await deployContractImpl(
+          await deployedContractImpl(
             addressesProvider,
             'RewardBooster',
             await deployRewardBooster([addressesProvider.address, agf.address], verify)
@@ -86,14 +86,12 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts for prod envirome
     }
   });
 
-export const deployContractImpl = async (
+export const deployedContractImpl = async (
   ac: MarketAccessController,
   contractName: string,
   impl: any
 ) => {
   const implAddr: string = impl.address;
-
-  console.log(`${contractName}.address: `, implAddr);
-  console.log(`\tFinished ${contractName} deployment`);
+  console.log(`Deployed ${contractName}: `, implAddr);
   return implAddr;
 };

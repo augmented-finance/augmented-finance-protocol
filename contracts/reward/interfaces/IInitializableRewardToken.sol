@@ -4,13 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {IRemoteAccessBitmask} from '../../access/interfaces/IRemoteAccessBitmask.sol';
 
-/**
- * @title IInitializableStakeToken
- * @notice Interface for the initialize function on StakeToken
- **/
 interface IInitializableRewardToken {
-  event Initialized(IRemoteAccessBitmask remoteAcl, string tokenName, string tokenSymbol);
-
   struct InitData {
     IRemoteAccessBitmask remoteAcl;
     string name;
@@ -18,5 +12,5 @@ interface IInitializableRewardToken {
     uint8 decimals;
   }
 
-  function initialize(InitData calldata) external;
+  function initialize(InitData memory) external;
 }

@@ -28,7 +28,9 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
       const network = <eNetwork>localBRE.network.name;
       const poolConfig = loadPoolConfig(pool);
       const addressesProvider = await getMarketAddressController();
+
       const impl = await deployStakeTokenImpl(verify);
+      console.log(`Deployed ${CONTRACT_NAME}.address`, impl.address);
 
       const { ReserveAssets, Names } = poolConfig as ICommonConfiguration;
 
@@ -51,9 +53,8 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
       let initSymbols: string[] = [];
 
       const stakeParams = poolConfig.StakeParams;
-      const stakeTokens = Object.entries(stakeParams.StakeToken);
-      for (const [tokenName, mode] of stakeTokens) {
-        if (mode == StakeMode.noStake) {
+      for (const [tokenName, mode] of Object.entries(stakeParams.StakeToken)) {
+        if (mode == undefined) {
           continue;
         }
         let asset = reserveAssets[tokenName];
@@ -76,9 +77,9 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
         }
 
         const assetDetailed = await getIErc20Detailed(asset);
-        const symbol = await assetDetailed.symbol();
         const decimals = await assetDetailed.decimals();
 
+        const symbol = tokenName; // await assetDetailed.symbol();
         let symbolPrefix = '';
         let stakePrefix = '';
 
@@ -129,9 +130,6 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
         console.log(`  - Stake(s) ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
         console.log('    * gasUsed', tx3.gasUsed.toString());
       }
-
-      console.log(`${CONTRACT_NAME}.address`, impl.address);
-      console.log(`\tFinished ${CONTRACT_NAME} deployment`);
     } catch (err) {
       console.error(err);
       exit(1);

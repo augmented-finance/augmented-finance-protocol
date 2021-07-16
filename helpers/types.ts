@@ -86,6 +86,8 @@ export enum eContractid {
   TokenWeightedRewardPoolAG = 'TokenWeightedRewardPoolAG',
   TokenWeightedRewardPoolAGBoosted = 'TokenWeightedRewardPoolAGBoosted',
   TokenWeightedRewardPoolAGUSDCBoosted = 'TokenWeightedRewardPoolAGUSDCBoosted',
+
+  TokenWeightedRewardPool = 'TokenWeightedRewardPool',
   PermitFreezerRewardPool = 'PermitFreezerRewardPool',
   ForwardingRewardPool = 'ForwardingRewardPool',
   ForwardingRewardPoolDecay = 'ForwardingRewardPoolDecay',
@@ -96,6 +98,7 @@ export enum eContractid {
 
   RewardConfiguratorImpl = 'RewardConfiguratorImpl',
   RewardTokenImpl = 'RewardTokenImpl',
+  TokenWeightedRewardPoolImpl = 'TokenWeightedRewardPoolImpl',
 }
 
 /*
@@ -222,25 +225,35 @@ export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, 'ETH'>;
 
 export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, 'USD'>;
 
-export type iAugmentedPoolAssets<T> = Pick<
-  iAssetsWithoutUSD<T>,
-  'AAVE' | 'LINK' | 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH'
->;
+export type RecordOpt<K extends keyof any, T> = {
+  [P in K]?: T;
+};
+
+export type PickOpt<T, K extends keyof T> = {
+  [P in K]?: T[P];
+};
+
+type augmentedAssets = 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH';
+
+export type iAugmentedPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, augmentedAssets>;
+export type iAugmentedPoolAssetsOpt<T> = PickOpt<iAssetsWithoutUSD<T>, augmentedAssets>;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iAugmentedPoolAssets<T>;
 
 export type iAssetAggregatorBase<T> = iAssetsWithoutETH<T>;
 
-export enum TokenContractId {
-  DAI = 'DAI',
-  AAVE = 'AAVE',
-  WETH = 'WETH',
-  USDC = 'USDC',
-  USDT = 'USDT',
-  WBTC = 'WBTC',
-  LINK = 'LINK',
-  USD = 'USD',
-}
+export const TokenContractId: iAssetBase<string> = {
+  AAVE: 'AAVE',
+  LINK: 'LINK',
+
+  WETH: 'WETH',
+  DAI: 'DAI',
+  USDC: 'USDC',
+  USDT: 'USDT',
+  WBTC: 'WBTC',
+
+  USD: 'USD',
+};
 
 export interface IReserveParams extends IReserveBorrowParams, IReserveCollateralParams {
   aTokenImpl: eContractid;
@@ -366,6 +379,8 @@ export interface ICommonConfiguration {
   WethGateway: iParamsPerNetwork<tEthereumAddress>;
 
   StakeParams: IStakeParams;
+
+  RewardParams: IRewardParams;
 }
 
 export interface IAugmentedConfiguration extends ICommonConfiguration {
@@ -382,11 +397,10 @@ export interface IStakeParams {
   MaxSlashBP: number;
   CooldownPeriod: number;
   UnstakePeriod: number;
-  StakeToken: iAugmentedPoolAssets<StakeMode>;
+  StakeToken: iAugmentedPoolAssetsOpt<StakeMode>;
 }
 
 export enum StakeMode {
-  noStake,
   stakeAg,
   stakeRaw,
 }
@@ -407,4 +421,21 @@ export interface ITokenNames {
   RewardStakeTokenName: string;
   RewardTokenSymbol: string;
   RewardStakeTokenSymbol: string;
+}
+
+export interface IRewardParams {
+  InitialRate: number;
+  TokenPools: iAugmentedPoolAssetsOpt<ITokenRewardPoolParams>;
+}
+
+export interface ITokenTypes<T> {
+  deposit?: T;
+  vDebt?: T;
+  sDebt?: T;
+  stake?: T;
+}
+
+export interface ITokenRewardPoolParams {
+  Share: ITokenTypes<number>;
+  Scale?: number;
 }

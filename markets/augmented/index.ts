@@ -21,8 +21,6 @@ export const AugmentedConfig: IAugmentedConfiguration = {
   MarketId: 'Augmented genesis market',
   ProviderId: 1,
   ReservesConfig: {
-    AAVE: strategyAAVE,
-    LINK: strategyLINK,
     DAI: strategyDAI,
     USDC: strategyUSDC,
     USDT: strategyUSDT,

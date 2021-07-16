@@ -14,6 +14,7 @@ import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.so
 import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
 import {IProxy} from '../../tools/upgradeability/IProxy.sol';
 import {AccessFlags} from '../../access/AccessFlags.sol';
+import {ProxyOwner} from '../../tools/upgradeability/ProxyOwner.sol';
 
 contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStakeConfigurator {
   uint256 private constant CONFIGURATOR_REVISION = 1;
@@ -26,10 +27,10 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
   uint256 private _entryCount;
   mapping(address => uint256) private _underlyings;
 
-  StakeConfiguratorBypass private immutable _bypass;
+  ProxyOwner internal immutable _proxies;
 
   constructor() public MarketAccessBitmask(IMarketAccessController(0)) {
-    _bypass = new StakeConfiguratorBypass();
+    _proxies = new ProxyOwner();
   }
 
   function getRevision() internal pure virtual override returns (uint256) {
@@ -63,8 +64,20 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     return _entries[i].token;
   }
 
-  function dataOf(address stakeToken) public view returns (StakeTokenData memory data) {
-    return _bypass.dataOf(stakeToken);
+  function dataOf(address stakeToken)
+    public
+    view
+    returns (IStakeConfigurator.StakeTokenData memory data)
+  {
+    (
+      data.config,
+      data.stkTokenName,
+      data.stkTokenSymbol,
+      data.stkTokenDecimals
+    ) = IInitializableStakeToken(stakeToken).initializedWith();
+    data.token = stakeToken;
+
+    return data;
   }
 
   function getStakeTokensData()
@@ -151,7 +164,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
         input.stkTokenDecimals
       );
 
-    token = address(_remoteAcl.createProxy(address(this), input.stakeTokenImpl, params));
+    token = address(_remoteAcl.createProxy(address(_proxies), input.stakeTokenImpl, params));
 
     emit StakeTokenInitialized(token, input);
 
@@ -175,28 +188,8 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
         data.stkTokenDecimals
       );
 
-    IProxy(input.token).upgradeToAndCall(input.stakeTokenImpl, params);
+    _proxies.upgradeToAndCall(input.token, input.stakeTokenImpl, params);
 
     emit StakeTokenUpgraded(input.token, input);
-  }
-}
-
-/// @notice A helper to let StakeConfigurator to access methods of stake tokens
-/// @dev Proxy default behavior denies its admin to access implementation's methods
-contract StakeConfiguratorBypass {
-  function dataOf(address stakeToken)
-    public
-    view
-    returns (IStakeConfigurator.StakeTokenData memory data)
-  {
-    (
-      data.config,
-      data.stkTokenName,
-      data.stkTokenSymbol,
-      data.stkTokenDecimals
-    ) = IInitializableStakeToken(stakeToken).initializedWith();
-    data.token = stakeToken;
-
-    return data;
   }
 }

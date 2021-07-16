@@ -264,14 +264,31 @@ export const CommonsConfig: ICommonConfiguration = {
     CooldownPeriod: 2 * DAY,
     UnstakePeriod: DAY,
     StakeToken: {
-      AAVE: StakeMode.noStake,
-      LINK: StakeMode.noStake,
-
       DAI:  StakeMode.stakeAg,
       USDC: StakeMode.stakeAg,
       USDT: StakeMode.stakeAg,
       WBTC: StakeMode.stakeAg,
       WETH: StakeMode.stakeAg,
+    }
+  },
+
+  RewardParams : {
+    InitialRate: 10,
+    TokenPools: {
+      DAI:   {
+        Share: {
+          deposit: 100,
+          vDebt:   200,
+          stake:   500,
+        }
+      },
+      USDC:   {
+        Share: {
+          deposit: 1000,
+          vDebt:   1200,
+          stake:   1500,
+        }
+      },
     }
   }
 };

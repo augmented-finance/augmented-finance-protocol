@@ -8,10 +8,17 @@ import {IMarketAccessController} from '../access/interfaces/IMarketAccessControl
 import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
 import {Errors} from '../tools/Errors.sol';
 import {IRewardConfigurator} from './interfaces/IRewardConfigurator.sol';
-import {IManagedRewardController} from './interfaces/IRewardController.sol';
+import {
+  IManagedRewardController,
+  IUntypedRewardControllerPools
+} from './interfaces/IRewardController.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
+import {ForwardingRewardPool} from './pools/ForwardingRewardPool.sol';
+import {IInitializableRewardPool} from './interfaces/IInitializableRewardPool.sol';
+import {ProxyOwner} from '../tools/upgradeability/ProxyOwner.sol';
+import {IRewardedToken} from '../interfaces/IRewardedToken.sol';
 
 contract RewardConfigurator is
   MarketAccessBitmask(IMarketAccessController(0)),
@@ -24,17 +31,11 @@ contract RewardConfigurator is
     return CONFIGURATOR_REVISION;
   }
 
-  // TODO mapping for pool implementations
+  ProxyOwner internal immutable _proxies;
 
-  struct NamedPool {
-    IManagedRewardPool pool;
-    string[] names;
+  constructor() public {
+    _proxies = new ProxyOwner();
   }
-
-  mapping(uint256 => NamedPool) internal _rewardPools;
-  mapping(address => uint256) internal _poolToPoolNum;
-  mapping(string => uint256) internal _nameToPoolNum;
-  uint256 internal _rewardPoolCount;
 
   // This initializer is invoked by AccessController.setAddressAsImpl
   function initialize(address addressesProvider) external initializer(CONFIGURATOR_REVISION) {
@@ -58,30 +59,12 @@ contract RewardConfigurator is
     getDefaultController().updateBaseline(baseline);
   }
 
-  function addRewardPool(IManagedRewardPool pool, string memory name) public onlyRewardAdmin {
-    require(pool != IManagedRewardPool(0), 'pool is required');
-    require(findRewardPoolByName(name) == address(0), 'duplicate pool name');
-
-    uint256 poolNum = _poolToPoolNum[address(pool)];
-    if (poolNum == 0) {
-      poolNum = _rewardPoolCount + 1;
-      _rewardPoolCount = poolNum;
-      _rewardPools[poolNum].pool = pool;
-      _poolToPoolNum[address(pool)] = poolNum;
-    }
-    _rewardPools[poolNum].names.push(name);
-    _nameToPoolNum[name] = poolNum;
-
+  function addRewardPool(IManagedRewardPool pool) public onlyRewardAdmin {
     IManagedRewardController(pool.getRewardController()).addRewardPool(pool);
   }
 
-  function removeRewardPool(IManagedRewardPool pool) external onlyRewardAdmin returns (bool) {
-    uint256 poolNum = _poolToPoolNum[address(pool)];
-    if (poolNum == 0) {
-      return false;
-    }
-    delete (_poolToPoolNum[address(pool)]);
-    delete (_rewardPools[poolNum]);
+  function removeRewardPool(IManagedRewardPool pool) external onlyRewardAdmin {
+    IManagedRewardController(pool.getRewardController()).removeRewardPool(pool);
   }
 
   function addRewardProvider(
@@ -99,31 +82,77 @@ contract RewardConfigurator is
     pool.removeRewardProvider(provider);
   }
 
-  function findRewardPoolByName(string memory name) public view returns (address) {
-    uint256 poolNum = _nameToPoolNum[name];
-    if (poolNum == 0) {
-      return address(0);
-    }
-    return address(_rewardPools[poolNum].pool);
-  }
-
   function list() public view returns (address[] memory pools, uint256 count) {
-    if (_rewardPoolCount == 0) {
-      return (pools, 0);
+    uint256 ignoreMask;
+    (pools, ignoreMask) = IUntypedRewardControllerPools(address(getDefaultController())).getPools();
+
+    if (pools.length == 0 || ignoreMask == 0) {
+      return (pools, pools.length);
     }
-    pools = new address[](_rewardPoolCount);
-    for (uint256 i = 1; i <= _rewardPoolCount; i++) {
-      pools[count] = address(_rewardPools[i].pool);
-      if (pools[count] != address(0)) {
-        count++;
+
+    for (uint256 i = 0; i < pools.length; i++) {
+      if (ignoreMask & 1 != 0) {
+        continue;
       }
+      if (count != i) {
+        pools[count] = pools[i];
+      }
+      count++;
     }
     return (pools, count);
   }
 
-  // function overridePoolRate(address pool, uint256 rate) external onlyOwner {
-  //   IManagedRewardPool(pool).setRate(rate);
-  // }
+  function batchInitRewardPools(PoolInitData[] calldata entries) external override onlyRewardAdmin {
+    IManagedRewardController ctl = getDefaultController();
+
+    for (uint256 i = 0; i < entries.length; i++) {
+      PoolInitData calldata entry = entries[i];
+      address pool;
+      if (entry.impl == address(0)) {
+        pool = address(
+          new ForwardingRewardPool(
+            ctl,
+            entry.initialRate,
+            entry.rateScale,
+            entry.baselinePercentage
+          )
+        );
+      } else {
+        IInitializableRewardPool.InitData memory params =
+          IInitializableRewardPool.InitData(
+            ctl,
+            entry.initialRate,
+            entry.rateScale,
+            entry.baselinePercentage
+          );
+
+        pool = address(
+          _remoteAcl.createProxy(
+            address(_proxies),
+            entry.impl,
+            abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
+          )
+        );
+      }
+
+      IManagedRewardPool(pool).addRewardProvider(entry.provider, entry.provider);
+      IRewardedToken(entry.provider).setIncentivesController(pool);
+    }
+  }
+
+  function updateRewardToken(PoolUpdateData calldata input) external onlyRewardAdmin {
+    // StakeTokenData memory data = dataOf(input.token);
+    // bytes memory params =
+    //   abi.encodeWithSelector(
+    //     IInitializableStakeToken.initialize.selector,
+    //     data.config,
+    //     input.stkTokenName,
+    //     input.stkTokenSymbol,
+    //     data.stkTokenDecimals
+    //   );
+    // _proxies.upgradeToAndCall(input.token, input.stakeTokenImpl, params);
+    // emit StakeTokenUpgraded(input.token, input);
+  }
 
   function buildRewardTokenInitData(
     string calldata name,

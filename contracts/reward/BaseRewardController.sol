@@ -138,7 +138,12 @@ abstract contract BaseRewardController is
     _rewardMinter = minter;
   }
 
-  function getPools() public view returns (IManagedRewardPool[] memory, uint256 ignoreMask) {
+  function getPools()
+    public
+    view
+    override
+    returns (IManagedRewardPool[] memory, uint256 ignoreMask)
+  {
     return (_poolList, _ignoreMask);
   }
 
@@ -240,7 +245,7 @@ abstract contract BaseRewardController is
     if (!hasRemoteAcl()) {
       return addr == address(this);
     }
-    return acl_hasAllOf(addr, AccessFlags.REWARD_CONFIG_ADMIN);
+    return acl_hasAnyOf(addr, AccessFlags.REWARD_CONFIGURATOR | AccessFlags.REWARD_CONFIG_ADMIN);
   }
 
   modifier onlyConfigurator {
