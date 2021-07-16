@@ -6,7 +6,7 @@ import {
   getDepositToken,
   getMintableERC20,
   getLendingPoolConfiguratorProxy,
-  getPriceOracle,
+  getMockPriceOracle,
   getAddressesProviderRegistry,
   getWETHMocked,
   getWETHGateway,
@@ -121,7 +121,7 @@ export async function initializeMakeSuite() {
   testEnv.addressesProvider = await getMarketAddressController();
   // testEnv.registry.getAddressesProviderByAddress(address);
 
-  testEnv.oracle = await getPriceOracle(await testEnv.addressesProvider.getPriceOracle());
+  testEnv.oracle = await getMockPriceOracle(await testEnv.addressesProvider.getPriceOracle());
 
   testEnv.pool = await getLendingPoolProxy(await testEnv.addressesProvider.getLendingPool());
   testEnv.configurator = await getLendingPoolConfiguratorProxy(

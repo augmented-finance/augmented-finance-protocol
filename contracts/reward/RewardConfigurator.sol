@@ -11,6 +11,7 @@ import {IRewardConfigurator} from './interfaces/IRewardConfigurator.sol';
 import {IManagedRewardController} from './interfaces/IRewardController.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
+import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
 
 contract RewardConfigurator is
   MarketAccessBitmask(IMarketAccessController(0)),
@@ -123,4 +124,14 @@ contract RewardConfigurator is
   // function overridePoolRate(address pool, uint256 rate) external onlyOwner {
   //   IManagedRewardPool(pool).setRate(rate);
   // }
+
+  function buildRewardTokenInitData(
+    string calldata name,
+    string calldata symbol,
+    uint8 decimals
+  ) external view returns (bytes memory) {
+    IInitializableRewardToken.InitData memory data =
+      IInitializableRewardToken.InitData(_remoteAcl, name, symbol, decimals);
+    return abi.encodeWithSelector(IInitializableRewardToken.initialize.selector, data);
+  }
 }

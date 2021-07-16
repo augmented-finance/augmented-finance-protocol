@@ -1,6 +1,6 @@
 import { task, types } from 'hardhat/config';
 import {
-  deployAccessController,
+  deployMarketAccessController,
   deployForwardingRewardPool,
   deployMockAgfToken,
   deployRewardController,
@@ -19,8 +19,7 @@ import {
   stakingCooldownTicks,
   stakingUnstakeTicks,
 } from './defaultTestDeployConfig';
-import { BigNumber } from 'ethers';
-import { AccessFlags } from '../../helpers/access-flags';
+import { AccessFlags, ACCESS_REWARD_MINT } from '../../helpers/access-flags';
 
 task('augmented:test-local', 'Deploy Augmented test contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
@@ -59,11 +58,14 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       const [root, user1, user2, slasher] = await localBRE.ethers.getSigners();
 
       console.log(`#1 deploying: Access Controller`);
-      const ac = await deployAccessController();
+      const ac = await deployMarketAccessController('marketId');
       // emergency admin + liquidity admin
-      await ac.setEmergencyAdmin(root.address);
-      await ac.grantRoles(root.address, AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN);
-      await ac.grantRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
+      await ac.grantRoles(
+        root.address,
+        AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN | AccessFlags.EMERGENCY_ADMIN
+      );
+      await ac.grantRoles(root.address, ACCESS_REWARD_MINT);
+      await ac.grantAnyRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
       console.log(`#2 deploying: mock AGF`);
       const agfToken = await deployMockAgfToken(
@@ -74,6 +76,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       console.log(`#3 deploying: RewardFreezer`);
       const rewardCtl = await deployRewardController([ac.address, agfToken.address], verify);
       await rewardCtl.setFreezePercentage(0);
+      await ac.grantAnyRoles(rewardCtl.address, ACCESS_REWARD_MINT);
 
       const freezerRewardPool = await deployPermitFreezerRewardPool(
         [rewardCtl.address, RAY, 'burners'],

@@ -1,6 +1,6 @@
 import { task, types } from 'hardhat/config';
 import {
-  deployAccessController,
+  deployMarketAccessController,
   deployMockAgfToken,
   deployMockStakedAgfToken,
   deployMockStakedAgToken,
@@ -28,7 +28,7 @@ import {
   stakingUnstakeTicks,
 } from './defaultTestDeployConfig';
 import { getAGTokenByName } from '../../helpers/contracts-getters';
-import { AccessFlags } from '../../helpers/access-flags';
+import { AccessFlags, ACCESS_REWARD_MINT } from '../../helpers/access-flags';
 
 task('augmented:test-local-staking', 'Deploy staking test contracts')
   .addOptionalParam(
@@ -51,18 +51,17 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       const [root, user1, user2, slasher, excessReceiverUser] = await localBRE.ethers.getSigners();
 
       console.log(`#1 deploying: Access Controller`);
-      const ac = await deployAccessController();
-      // emergency admin + liquidity admin
-      await ac.setEmergencyAdmin(root.address);
-      await ac.grantRoles(
+      const ac = await deployMarketAccessController('marketId');
+      await ac.grantAnyRoles(
         root.address,
-        AccessFlags.STAKE_ADMIN |
+        AccessFlags.EMERGENCY_ADMIN |
+          AccessFlags.STAKE_ADMIN |
           AccessFlags.REWARD_CONFIG_ADMIN |
           AccessFlags.REWARD_CONFIGURATOR |
           AccessFlags.STAKE_CONFIGURATOR |
           AccessFlags.REWARD_CONTROLLER
       );
-      await ac.grantRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
+      await ac.grantAnyRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
       console.log(`#2 deploying: mock AGF`);
       const agfToken = await deployMockAgfToken(
@@ -70,9 +69,10 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
         verify
       );
 
-      console.log(`#3 deploying: RewardController`);
+      console.log(`#3 deploying: RewardFreezer`);
       const rewardCtl = await deployRewardController([ac.address, agfToken.address], verify);
       await rewardCtl.connect(root).setFreezePercentage(0);
+      await ac.grantAnyRoles(rewardCtl.address, ACCESS_REWARD_MINT);
 
       console.log(`#4 Staking`);
       const agDaiToken = await getAGTokenByName('agDAI');
@@ -107,6 +107,8 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
 
       console.log('#5 Booster and a basic boost pool');
       const boosterController = await deployRewardBooster([ac.address, agfToken.address]);
+      await ac.grantAnyRoles(boosterController.address, ACCESS_REWARD_MINT);
+
       // agDAI pool
       const agDAIPoolBoosted = await deployTokenWeightedRewardPoolAGBoosted(
         [boosterController.address, RAY, RAY, 0, RAY_100],

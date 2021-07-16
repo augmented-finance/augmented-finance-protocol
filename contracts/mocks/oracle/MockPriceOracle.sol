@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 
 import {IPriceOracle} from '../../interfaces/IPriceOracle.sol';
 
-contract PriceOracle is IPriceOracle {
+contract MockPriceOracle is IPriceOracle {
   mapping(address => uint256) prices;
   uint256 ethPriceUsd;
 

@@ -7,13 +7,12 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import rawBRE, { ethers } from 'hardhat';
 
 import {
-  getAgfToken,
   getMockAgfToken,
   getPermitFreezerRewardPool,
   getRewardController,
 } from '../../helpers/contracts-getters';
 
-import { AGFToken, RewardFreezer } from '../../types';
+import { MockAgfToken, RewardFreezer } from '../../types';
 import { ONE_ADDRESS, RAY, ZERO_ADDRESS } from '../../helpers/constants';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 
@@ -28,7 +27,7 @@ describe('Rewards test suite', () => {
   let otherUsers: SignerWithAddress[];
 
   let rewardCtl: RewardFreezer;
-  let agf: AGFToken;
+  let agf: MockAgfToken;
 
   before(async () => {
     await rawBRE.run('set-DRE');

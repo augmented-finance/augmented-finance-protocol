@@ -1,3 +1,5 @@
+import { ethers } from 'ethers';
+
 export enum AccessFlags {
   EMERGENCY_ADMIN = 1 << 0,
   POOL_ADMIN = 1 << 1,
@@ -25,9 +27,7 @@ export enum AccessFlags {
 
   REFERRAL_REGISTRY = 1 << 27,
   WETH_GATEWAY = 1 << 27,
-
-  REWARD_MINT = 1 << 64,
-  REWARD_BURN = 1 << 65,
-
-  POOL_SPONSORED_LOAN_USER = 1 << 66,
 }
+
+export const ACCESS_REWARD_MINT = ethers.BigNumber.from(2).pow(64);
+export const ACCESS_REWARD_BURN = ethers.BigNumber.from(2).pow(65);

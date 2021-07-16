@@ -1,4 +1,5 @@
 import { task } from 'hardhat/config';
+import { AccessFlags } from '../../helpers/access-flags';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import {
   getProtocolDataProvider,
@@ -26,23 +27,26 @@ task('print-config', 'Inits the DRE, to have access to all the plugins')
 
     const providers = await providerRegistry.getAddressesProvidersList();
 
-    const addressesProvider = await getMarketAddressController(providers[0]); // Checks first provider
+    const addressProvider = await getMarketAddressController(providers[0]); // Checks first provider
 
     console.log('Addresses Providers', providers.join(', '));
-    console.log('Market Id: ', await addressesProvider.getMarketId());
-    console.log('LendingPool Proxy:', await addressesProvider.getLendingPool());
+    console.log('Market Id: ', await addressProvider.getMarketId());
+    console.log('LendingPool Proxy:', await addressProvider.getLendingPool());
     console.log(
       'Lending Pool Collateral Manager',
-      await addressesProvider.getLendingPoolCollateralManager()
+      await addressProvider.getLendingPoolCollateralManager()
     );
     console.log(
       'Lending Pool Configurator proxy',
-      await addressesProvider.getLendingPoolConfigurator()
+      await addressProvider.getLendingPoolConfigurator()
     );
-    console.log('Pool admin', await addressesProvider.getPoolAdmin());
-    console.log('Emergency admin', await addressesProvider.getEmergencyAdmin());
-    console.log('Price Oracle', await addressesProvider.getPriceOracle());
-    console.log('Lending Rate Oracle', await addressesProvider.getLendingRateOracle());
+    console.log('Pool Admin(s)', await addressProvider.roleActiveGrantees(AccessFlags.POOL_ADMIN));
+    console.log(
+      'Emergency Admin(s)',
+      await addressProvider.roleActiveGrantees(AccessFlags.EMERGENCY_ADMIN)
+    );
+    console.log('Price Oracle', await addressProvider.getPriceOracle());
+    console.log('Lending Rate Oracle', await addressProvider.getLendingRateOracle());
     console.log('Lending Pool Data Provider', dataProvider);
     const protocolDataProvider = await getProtocolDataProvider(dataProvider);
 

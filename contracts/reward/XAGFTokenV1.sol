@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {AccessFlags} from '../access/AccessFlags.sol';
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 
 import {DecayingTokenLocker} from './locker/DecayingTokenLocker.sol';
 import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
+import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
+import {IRemoteAccessBitmask} from '../access/interfaces/IRemoteAccessBitmask.sol';
 
 import 'hardhat/console.sol';
 
-contract XAGFTokenV1 is DecayingTokenLocker, VersionedInitializable {
+contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, VersionedInitializable {
   string internal constant NAME = 'Augmented Finance Locked Reward Token';
   string internal constant SYMBOL = 'xAGF';
   uint8 internal constant DECIMALS = 18;
@@ -63,6 +66,16 @@ contract XAGFTokenV1 is DecayingTokenLocker, VersionedInitializable {
     initializerRunAlways(TOKEN_REVISION)
   {
     _initialize(remoteAcl, remoteAcl.getRewardToken(), NAME, SYMBOL, DECIMALS);
+  }
+
+  function initialize(InitData calldata data)
+    public
+    virtual
+    override
+    initializerRunAlways(TOKEN_REVISION)
+  {
+    IMarketAccessController ac = IMarketAccessController(address(data.remoteAcl));
+    _initialize(ac, ac.getRewardToken(), data.name, data.symbol, data.decimals);
   }
 
   function initializeToken(

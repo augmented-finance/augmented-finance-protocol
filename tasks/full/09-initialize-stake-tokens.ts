@@ -29,9 +29,15 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
       const poolConfig = loadPoolConfig(pool);
       const addressesProvider = await getMarketAddressController();
       const impl = await deployStakeTokenImpl(verify);
-      await waitForTx(await addressesProvider.addImplementation(`${CONTRACT_NAME}`, impl.address));
+      await waitForTx(
+        await addressesProvider.addImplementation(`${CONTRACT_NAME}V1`, impl.address)
+      );
 
       const { ReserveAssets, Names } = poolConfig as ICommonConfiguration;
+
+      const stakeConfigurator = await getStakeConfiguratorImpl(
+        await addressesProvider.getStakeConfigurator()
+      );
 
       const reserveAssets = getParamPerNetwork(ReserveAssets, network);
       const lendingPool = await getLendingPoolProxy(await addressesProvider.getLendingPool());
@@ -62,6 +68,14 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
         if (falsyOrZeroAddress(asset)) {
           console.log('Stake asset is missing:', tokenName, mode);
           continue;
+        }
+
+        {
+          const existingToken = await stakeConfigurator.stakeTokenOf(asset);
+          if (!falsyOrZeroAddress(existingToken)) {
+            console.log('Stake asset is present:', tokenName, existingToken);
+            continue;
+          }
         }
 
         const assetDetailed = await getIErc20Detailed(asset);
@@ -98,9 +112,6 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
       const chunkedParams = chunk(initParams, initChunks);
       const chunkedSymbols = chunk(initSymbols, initChunks);
 
-      const stakeConfigurator = await getStakeConfiguratorImpl(
-        await addressesProvider.getStakeConfigurator()
-      );
       await waitForTx(
         await addressesProvider.grantRoles(
           (await getFirstSigner()).address,
@@ -108,7 +119,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
         )
       );
 
-      console.log(`- Stakes initialization in ${chunkedParams.length} txs`);
+      console.log(`- Stakes initialization with ${chunkedParams.length} txs`);
       for (let chunkIndex = 0; chunkIndex < chunkedParams.length; chunkIndex++) {
         const param = chunkedParams[chunkIndex];
         console.log(param);
@@ -121,8 +132,6 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
         console.log(`  - Stake(s) ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
         console.log('    * gasUsed', tx3.gasUsed.toString());
       }
-
-      stakeConfigurator.batchInitStakeTokens(initParams);
 
       console.log(`${CONTRACT_NAME}.address`, impl.address);
       console.log(`\tFinished ${CONTRACT_NAME} deployment`);

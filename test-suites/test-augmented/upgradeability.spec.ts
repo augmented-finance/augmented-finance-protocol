@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ProtocolErrors, eContractid } from '../../helpers/types';
-import { deployContract, getContract } from '../../helpers/contracts-helpers';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getAgfToken,
@@ -132,26 +131,22 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     expect(await aDai.DOMAIN_SEPARATOR()).eq(domainSep);
   });
 
-  // it('Upgrades the AGF Atoken implementation ', async () => {
-  //   const { agf } = testEnv;
-
-  //   const newImpl = await getAgfToken(newAgfTokenAddress);
-  //   const name = await newImpl.name();
-  //   const symbol = await newImpl.symbol();
-  //   const revision = await newImpl.REVISION();
-
-  //   const domainSep = await agf.DOMAIN_SEPARATOR();
-
-  //   expect(name).not.eq(await agf.name());
-  //   expect(newImpl.DOMAIN_SEPARATOR()).not.eq(domainSep);
-  //   expect(revision).not.eq(await agf.REVISION());
-
-  //   // todo upgrade token
-
-  //   expect(await agf.name()).to.be.eq(name, 'Invalid token name');
-  //   expect(await agf.REVISION()).eq(revision);
-  //   expect(await agf.DOMAIN_SEPARATOR()).eq(domainSep);
-  // });
+  it.skip('Upgrades the AGF Atoken implementation ', async () => {
+    // TODO
+    // const { agf } = testEnv;
+    // const newImpl = await getAgfToken(newAgfTokenAddress);
+    // const name = await newImpl.name();
+    // const symbol = await newImpl.symbol();
+    // const revision = await newImpl.REVISION();
+    // const domainSep = await agf.DOMAIN_SEPARATOR();
+    // expect(name).not.eq(await agf.name());
+    // expect(newImpl.DOMAIN_SEPARATOR()).not.eq(domainSep);
+    // expect(revision).not.eq(await agf.REVISION());
+    // // todo upgrade token
+    // expect(await agf.name()).to.be.eq(name, 'Invalid token name');
+    // expect(await agf.REVISION()).eq(revision);
+    // expect(await agf.DOMAIN_SEPARATOR()).eq(domainSep);
+  });
 
   it('Tries to update the DAI Stable debt token implementation with a different address than the lendingPoolManager', async () => {
     const { dai, configurator, users } = testEnv;

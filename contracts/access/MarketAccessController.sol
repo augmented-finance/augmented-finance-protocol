@@ -96,16 +96,8 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
    * of the protocol hence the upgradable proxy pattern is not used
    **/
 
-  function getPoolAdmin() external view override returns (address) {
-    return getAddress(AccessFlags.POOL_ADMIN);
-  }
-
   function isPoolAdmin(address addr) external view override returns (bool) {
     return isAddress(AccessFlags.POOL_ADMIN, addr);
-  }
-
-  function setPoolAdmin(address admin) external override onlyOwner {
-    setAddress(AccessFlags.POOL_ADMIN, admin);
   }
 
   function getPriceOracle() external view override returns (address) {

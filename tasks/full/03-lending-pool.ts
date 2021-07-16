@@ -1,9 +1,7 @@
 import { task } from 'hardhat/config';
 import {
-  deployATokensAndRatesHelper,
   deployLendingPoolConfiguratorImpl,
   deployLendingPoolImpl,
-  deployStableAndVariableTokensHelper,
 } from '../../helpers/contracts-deployments';
 import { eContractid, eNetwork } from '../../helpers/types';
 import { falsyOrZeroAddress, getTenderlyDashboardLink, waitForTx } from '../../helpers/misc-utils';
@@ -50,20 +48,6 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
       // Set lending pool conf impl to Address Provider
       await waitForTx(
         await addressesProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImplAddress)
-      );
-
-      const lendingPoolConfiguratorProxy = await getLendingPoolConfiguratorProxy(
-        await addressesProvider.getLendingPoolConfigurator()
-      );
-
-      // Deploy deployment helpers
-      await deployStableAndVariableTokensHelper(
-        [lendingPoolProxy.address, addressesProvider.address],
-        verify
-      );
-      await deployATokensAndRatesHelper(
-        [lendingPoolProxy.address, addressesProvider.address, lendingPoolConfiguratorProxy.address],
-        verify
       );
     } catch (error) {
       if (DRE.network.name.includes('tenderly')) {

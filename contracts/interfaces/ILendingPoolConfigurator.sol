@@ -38,6 +38,15 @@ interface ILendingPoolConfigurator {
     bytes params;
   }
 
+  struct ConfigureReserveInput {
+    address asset;
+    uint256 baseLTV;
+    uint256 liquidationThreshold;
+    uint256 liquidationBonus;
+    uint256 reserveFactor;
+    bool stableBorrowingEnabled;
+  }
+
   /**
    * @dev Emitted when a reserve is initialized.
    * @param asset The address of the underlying asset of the reserve

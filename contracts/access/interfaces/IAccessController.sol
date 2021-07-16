@@ -44,11 +44,6 @@ interface IManagedAccessController is IAccessController {
     bytes calldata initCall
   ) external;
 
-  function getEmergencyAdmin() external view returns (address);
-
-  function setEmergencyAdmin(address admin) external;
-
   event ProxyCreated(uint256 indexed id, address indexed newAddress);
   event AddressSet(uint256 indexed id, address indexed newAddress, bool hasProxy);
-  event EmergencyAdminUpdated(address indexed newAddress);
 }

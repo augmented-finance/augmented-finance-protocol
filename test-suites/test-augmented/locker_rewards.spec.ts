@@ -8,17 +8,16 @@ import {
   getRewardController,
   getTokenLocker,
   getForwardingRewardPool,
+  getMarketAddressController,
 } from '../../helpers/contracts-getters';
 
 import {
   MockAgfToken,
   RewardFreezer,
   ForwardingRewardPool,
-  XAGFTokenV1,
   RewardedTokenLocker,
 } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { waitForTx } from '../../helpers/misc-utils';
 import {
   currentTick,
   mineToTicks,
@@ -27,18 +26,9 @@ import {
   takeSnapshot,
   alignTicks,
 } from './utils';
-import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
-import {
-  MAX_LOCKER_PERIOD,
-  RAY,
-  RAY_100,
-  RAY_10000,
-  RAY_PER_WEEK,
-  DAY,
-  WEEK,
-} from '../../helpers/constants';
+import { MAX_LOCKER_PERIOD, RAY, DAY, WEEK } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;

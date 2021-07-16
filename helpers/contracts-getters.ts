@@ -1,7 +1,6 @@
 import {
   ProtocolDataProviderFactory,
   DepositTokenFactory,
-  ATokensAndRatesHelperFactory,
   OracleRouterFactory,
   GenericLogicFactory,
   InitializableAdminUpgradeabilityProxyFactory,
@@ -17,10 +16,7 @@ import {
   MockStableDebtTokenFactory,
   MockVariableDebtTokenFactory,
   MockUniswapV2Router02Factory,
-  PriceOracleFactory,
   ReserveLogicFactory,
-  SelfdestructTransferFactory,
-  StableAndVariableTokensHelperFactory,
   StableDebtTokenFactory,
   UniswapLiquiditySwapAdapterFactory,
   UniswapRepayAdapterFactory,
@@ -30,7 +26,7 @@ import {
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
-  AGFTokenFactory,
+  AGFTokenV1Factory,
   MockAgfTokenFactory,
   MockStakedAgfTokenFactory,
   TeamRewardPoolFactory,
@@ -45,6 +41,8 @@ import {
   DecayingTokenLockerFactory,
   StakeConfiguratorFactory,
   StakeTokenFactory,
+  RewardConfiguratorFactory,
+  MockPriceOracleFactory,
 } from '../types';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
@@ -66,8 +64,8 @@ export const getLendingPoolConfiguratorProxy = async (address: tEthereumAddress)
 export const getLendingPoolProxy = async (address: tEthereumAddress) =>
   LendingPoolFactory.connect(address, await getFirstSigner());
 
-export const getPriceOracle = async (address: tEthereumAddress) =>
-  PriceOracleFactory.connect(address, await getFirstSigner());
+export const getMockPriceOracle = async (address: tEthereumAddress) =>
+  MockPriceOracleFactory.connect(address, await getFirstSigner());
 
 export const getDepositToken = async (address: tEthereumAddress) =>
   DepositTokenFactory.connect(address, await getFirstSigner());
@@ -83,6 +81,9 @@ export const getMintableERC20 = async (address: tEthereumAddress) =>
 
 export const getIErc20Detailed = async (address: tEthereumAddress) =>
   IERC20DetailedFactory.connect(address, await getFirstSigner());
+
+export const getRewardConfiguratorProxy = async (address: tEthereumAddress) =>
+  RewardConfiguratorFactory.connect(address, await getFirstSigner());
 
 export const getProtocolDataProvider = async (address?: tEthereumAddress) =>
   ProtocolDataProviderFactory.connect(
@@ -176,18 +177,6 @@ export const getGenericLogic = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getStableAndVariableTokensHelper = async (address?: tEthereumAddress) =>
-  StableAndVariableTokensHelperFactory.connect(
-    address || (await getAddr(eContractid.StableAndVariableTokensHelper)),
-    await getFirstSigner()
-  );
-
-export const getATokensAndRatesHelper = async (address?: tEthereumAddress) =>
-  ATokensAndRatesHelperFactory.connect(
-    address || (await getAddr(eContractid.ATokensAndRatesHelper)),
-    await getFirstSigner()
-  );
-
 export const getWETHGateway = async (address?: tEthereumAddress) =>
   WETHGatewayFactory.connect(
     address || (await getAddr(eContractid.WETHGateway)),
@@ -230,12 +219,6 @@ export const getMockStakedAgfToken = async (address?: tEthereumAddress) =>
 export const getMockStakedAgToken = async (address?: tEthereumAddress) =>
   MockStakedAgfTokenFactory.connect(
     address || (await getAddr(eContractid.MockStakedAgToken)),
-    await getFirstSigner()
-  );
-
-export const getSelfdestructTransferMock = async (address?: tEthereumAddress) =>
-  SelfdestructTransferFactory.connect(
-    address || (await getAddr(eContractid.SelfdestructTransferMock)),
     await getFirstSigner()
   );
 
@@ -300,7 +283,10 @@ export const getFlashLiquidationAdapter = async (address?: tEthereumAddress) =>
   );
 
 export const getAgfToken = async (address?: tEthereumAddress) =>
-  AGFTokenFactory.connect(address || (await getAddr(eContractid.AGFToken)), await getFirstSigner());
+  AGFTokenV1Factory.connect(
+    address || (await getAddr(eContractid.AGFToken)),
+    await getFirstSigner()
+  );
 
 export const getTokenLocker = async (address?: tEthereumAddress) =>
   RewardedTokenLockerFactory.connect(
@@ -311,12 +297,6 @@ export const getTokenLocker = async (address?: tEthereumAddress) =>
 export const getDecayingTokenLocker = async (address?: tEthereumAddress) =>
   DecayingTokenLockerFactory.connect(
     address || (await getAddr(eContractid.DecayingTokenLocker)),
-    await getFirstSigner()
-  );
-
-export const getXAgfToken = async (address?: tEthereumAddress) =>
-  XAGFTokenV1Factory.connect(
-    address || (await getAddr(eContractid.XAGFToken)),
     await getFirstSigner()
   );
 
@@ -392,9 +372,9 @@ export const getTokenWeightedRewardPoolAGUSDCBoosted = async (address?: tEthereu
     await getFirstSigner()
   );
 
-export const getAccessController = async (address?: tEthereumAddress) =>
+export const getMarketAccessController = async (address?: tEthereumAddress) =>
   AccessControllerFactory.connect(
-    address || (await getAddr(eContractid.AccessController)),
+    address || (await getAddr(eContractid.MarketAccessController)),
     await getFirstSigner()
   );
 
@@ -416,5 +396,11 @@ export const getStakeConfiguratorImpl = async (address?: tEthereumAddress) =>
 export const getStakeTokenImpl = async (address?: tEthereumAddress) =>
   StakeTokenFactory.connect(
     address || (await getAddr(eContractid.StakeTokenImpl)),
+    await getFirstSigner()
+  );
+
+export const getXAgfToken = async (address?: tEthereumAddress) =>
+  XAGFTokenV1Factory.connect(
+    address || (await getAddr(eContractid.XAGFToken)),
     await getFirstSigner()
   );
