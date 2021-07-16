@@ -86,9 +86,6 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
         if (mode != StakeMode.stakeAg) {
           stakePrefix = Names.DepositSymbolPrefix;
           symbolPrefix = Names.SymbolPrefix;
-          if (symbolPrefix == '' && symbol[0] >= 'a' && symbol[0] <= 'z') {
-            symbolPrefix = '_';
-          }
         }
 
         initSymbols.push(symbol);

@@ -170,10 +170,6 @@ export const initReservesByHelper = async (
     }
 
     const reserveSymbol = reserveSymbols[i];
-    let symbolPrefix = names.SymbolPrefix;
-    if (symbolPrefix == '' && reserveSymbol[0] >= 'a' && reserveSymbol[0] <= 'z') {
-      symbolPrefix = '_';
-    }
 
     initInputParams.push({
       aTokenImpl: tokenToUse,
@@ -187,13 +183,13 @@ export const initReservesByHelper = async (
       underlyingAssetName: reserveSymbol,
 
       aTokenName: `${names.DepositTokenNamePrefix} ${reserveSymbol}`,
-      aTokenSymbol: `${names.DepositSymbolPrefix}${symbolPrefix}${reserveSymbol}`,
+      aTokenSymbol: `${names.DepositSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
 
       variableDebtTokenName: `${names.VariableDebtTokenNamePrefix} ${reserveSymbol}`,
-      variableDebtTokenSymbol: `${names.VariableDebtSymbolPrefix}${symbolPrefix}${reserveSymbol}`,
+      variableDebtTokenSymbol: `${names.VariableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
 
       stableDebtTokenName: `${names.StableDebtTokenNamePrefix} ${reserveSymbol}`,
-      stableDebtTokenSymbol: `${names.StableDebtSymbolPrefix}${symbolPrefix}${reserveSymbol}`,
+      stableDebtTokenSymbol: `${names.StableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
 
       params: '0x10',
     });
@@ -258,13 +254,7 @@ export const configureReservesByHelper = async (
   helpers: ProtocolDataProvider
 ) => {
   const addressProvider = await getMarketAddressController();
-  const tokens: string[] = [];
   const symbols: string[] = [];
-  const baseLTVA: string[] = [];
-  const liquidationThresholds: string[] = [];
-  const liquidationBonuses: string[] = [];
-  const reserveFactors: string[] = [];
-  const stableRatesEnabled: boolean[] = [];
 
   const inputParams: {
     asset: string;
@@ -272,6 +262,7 @@ export const configureReservesByHelper = async (
     liquidationThreshold: BigNumberish;
     liquidationBonus: BigNumberish;
     reserveFactor: BigNumberish;
+    borrowingEnabled: boolean;
     stableBorrowingEnabled: boolean;
   }[] = [];
 
@@ -282,6 +273,7 @@ export const configureReservesByHelper = async (
       liquidationBonus,
       liquidationThreshold,
       reserveFactor,
+      borrowingEnabled,
       stableBorrowRateEnabled,
     },
   ] of Object.entries(reservesParams) as [string, IReserveParams][]) {
@@ -309,18 +301,13 @@ export const configureReservesByHelper = async (
       liquidationThreshold: liquidationThreshold,
       liquidationBonus: liquidationBonus,
       reserveFactor: reserveFactor,
+      borrowingEnabled: borrowingEnabled,
       stableBorrowingEnabled: stableBorrowRateEnabled,
     });
 
-    tokens.push(tokenAddress);
     symbols.push(assetSymbol);
-    baseLTVA.push(baseLTVAsCollateral);
-    liquidationThresholds.push(liquidationThreshold);
-    liquidationBonuses.push(liquidationBonus);
-    reserveFactors.push(reserveFactor);
-    stableRatesEnabled.push(stableBorrowRateEnabled);
   }
-  if (!tokens.length) {
+  if (!inputParams.length) {
     return;
   }
 
