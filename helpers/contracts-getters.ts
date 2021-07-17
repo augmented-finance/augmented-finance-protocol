@@ -43,6 +43,8 @@ import {
   XAGFTokenV1Factory,
   AGFTokenV1Factory,
 } from '../types';
+import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
+
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
 import { getFirstSigner, getFromJsonDb } from './misc-utils';
@@ -391,3 +393,6 @@ export const getAGFTokenV1Impl = async (address?: tEthereumAddress) =>
     address || (await getAddr(eContractid.AGFTokenV1Impl)),
     await getFirstSigner()
   );
+
+export const getIManagedRewardPool = async (address: tEthereumAddress) =>
+  IManagedRewardPoolFactory.connect(address, await getFirstSigner());

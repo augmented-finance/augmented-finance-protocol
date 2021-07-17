@@ -237,7 +237,7 @@ abstract contract BaseRewardController is
   }
 
   modifier onlyRateController {
-    require(isRateController(msg.sender), 'only configurator');
+    require(isRateController(msg.sender), 'only rate admin');
     _;
   }
 

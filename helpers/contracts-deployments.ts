@@ -62,6 +62,7 @@ import {
   StakeConfiguratorFactory,
   MintableDelegationERC20,
   TokenWeightedRewardPoolV1Factory,
+  ReferralRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -772,9 +773,8 @@ export const deployRewardController = async (
 
 export const deployTeamRewardPool = async (
   args: [
-    controller: string,
+    controller: tEthereumAddress,
     initialRate: BigNumberish,
-    rateScale: BigNumberish,
     baselinePercentage: BigNumberish,
     teamManager: string
   ],
@@ -783,6 +783,33 @@ export const deployTeamRewardPool = async (
   withSaveAndVerify(
     await new TeamRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TeamRewardPool,
+    [],
+    verify
+  );
+
+export const deployNamedReferralRewardPool = async (
+  rewardPoolName: string,
+  args: [controller: tEthereumAddress, rewardLimit: BigNumberish, claimLimit: BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new ReferralRewardPoolFactory(await getFirstSigner()).deploy(...args, rewardPoolName),
+    rewardPoolName,
+    [],
+    verify
+  );
+
+export const deployNamedPermitFreezerRewardPool = async (
+  rewardPoolName: string,
+  args: [controller: tEthereumAddress, rewardLimit: BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new PermitFreezerRewardPoolFactory(await getFirstSigner()).deploy(
+      ...args,
+      rewardPoolName
+    ),
+    rewardPoolName,
     [],
     verify
   );

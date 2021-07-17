@@ -11,6 +11,7 @@ import {IRewardPool} from './interfaces/IRewardPool.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IBoostExcessReceiver} from './interfaces/IBoostExcessReceiver.sol';
 import {IManagedRewardBooster} from './interfaces/IManagedRewardBooster.sol';
+import {IBoostRate} from './interfaces/IBoostRate.sol';
 
 import './interfaces/IAutolocker.sol';
 
@@ -84,10 +85,10 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
       baselineMask & ~_boostPoolMask
     );
     if (totalRate < baseline) {
-      _boostPool.setRate(baseline - totalRate);
+      IBoostRate(address(_boostPool)).setBoostRate(baseline - totalRate);
       totalRate = baseline;
     } else {
-      _boostPool.setRate(0);
+      IBoostRate(address(_boostPool)).setBoostRate(0);
     }
 
     return (totalRate, baselineMask);

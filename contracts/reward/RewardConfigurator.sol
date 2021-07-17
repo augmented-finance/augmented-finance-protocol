@@ -41,13 +41,6 @@ contract RewardConfigurator is
     _remoteAcl = IMarketAccessController(addressesProvider);
   }
 
-  function updateBaselineOf(IManagedRewardController ctl, uint256 baseline)
-    external
-    onlyRewardAdmin
-  {
-    ctl.updateBaseline(baseline);
-  }
-
   function getDefaultController() public view returns (IManagedRewardController) {
     address ctl = _remoteAcl.getRewardController();
     require(ctl != address(0), 'incomplete configuration');
@@ -117,6 +110,7 @@ contract RewardConfigurator is
           )
         );
 
+      ctl.addRewardPool(IManagedRewardPool(pool));
       IManagedRewardPool(pool).addRewardProvider(entry.provider, entry.provider);
       IRewardedToken(entry.provider).setIncentivesController(pool);
     }

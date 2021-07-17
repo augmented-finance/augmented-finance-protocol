@@ -55,11 +55,8 @@ task('augmented:mainnet', 'Deploy development enviroment')
       console.log('09. Deploy reward contracts and AGF token');
       await DRE.run('full:deploy-reward-contracts', { pool: POOL_NAME });
 
-      console.log('10. Deploy token reward pools');
-      await DRE.run('full:init-token-reward-pools', { pool: POOL_NAME });
-
-      console.log('11. Deploy other reward pools');
-      await DRE.run('full:init-misc-reward-pools', { pool: POOL_NAME });
+      console.log('10. Deploy reward pools');
+      await DRE.run('full:init-reward-pools', { pool: POOL_NAME });
 
       if (verify) {
         printContracts((await getFirstSigner()).address);
