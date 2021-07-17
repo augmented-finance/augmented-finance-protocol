@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
@@ -13,9 +12,7 @@ import {
   IUntypedRewardControllerPools
 } from './interfaces/IRewardController.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
-import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
-import {ForwardingRewardPool} from './pools/ForwardingRewardPool.sol';
 import {IInitializableRewardPool} from './interfaces/IInitializableRewardPool.sol';
 import {ProxyOwner} from '../tools/upgradeability/ProxyOwner.sol';
 import {IRewardedToken} from '../interfaces/IRewardedToken.sol';
@@ -100,33 +97,23 @@ contract RewardConfigurator is
 
     for (uint256 i = 0; i < entries.length; i++) {
       PoolInitData calldata entry = entries[i];
-      address pool;
-      if (entry.impl == address(0)) {
-        pool = address(
-          new ForwardingRewardPool(
-            ctl,
-            entry.initialRate,
-            entry.rateScale,
-            entry.baselinePercentage
-          )
-        );
-      } else {
-        IInitializableRewardPool.InitData memory params =
-          IInitializableRewardPool.InitData(
-            ctl,
-            entry.initialRate,
-            entry.rateScale,
-            entry.baselinePercentage
-          );
 
-        pool = address(
+      IInitializableRewardPool.InitData memory params =
+        IInitializableRewardPool.InitData(
+          ctl,
+          entry.initialRate,
+          entry.rateScale,
+          entry.baselinePercentage
+        );
+
+      address pool =
+        address(
           _remoteAcl.createProxy(
             address(_proxies),
             entry.impl,
             abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
           )
         );
-      }
 
       IManagedRewardPool(pool).addRewardProvider(entry.provider, entry.provider);
       IRewardedToken(entry.provider).setIncentivesController(pool);

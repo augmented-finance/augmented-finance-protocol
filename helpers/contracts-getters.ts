@@ -35,7 +35,6 @@ import {
   DepositToken,
   TokenWeightedRewardPoolFactory,
   RewardBoosterFactory,
-  ForwardingRewardPoolFactory,
   XAGFTokenV1Factory,
   RewardedTokenLockerFactory,
   DecayingTokenLockerFactory,
@@ -303,18 +302,6 @@ export const getDecayingTokenLocker = async (address?: tEthereumAddress) =>
 export const getTeamRewardPool = async (address?: tEthereumAddress) =>
   TeamRewardPoolFactory.connect(
     address || (await getAddr(eContractid.TeamRewardPool)),
-    await getFirstSigner()
-  );
-
-export const getForwardingRewardPool = async (address?: tEthereumAddress) =>
-  ForwardingRewardPoolFactory.connect(
-    address || (await getAddr(eContractid.ForwardingRewardPool)),
-    await getFirstSigner()
-  );
-
-export const getForwardingRewardPoolDecay = async (address?: tEthereumAddress) =>
-  ForwardingRewardPoolFactory.connect(
-    address || (await getAddr(eContractid.ForwardingRewardPoolDecay)),
     await getFirstSigner()
   );
 
