@@ -80,10 +80,9 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
 
       const symbol = tokenName; // await assetDetailed.symbol();
       let symbolPrefix = '';
-      let stakePrefix = '';
+      let stakePrefix = Names.DepositSymbolPrefix;
 
       if (mode != StakeMode.stakeAg) {
-        stakePrefix = Names.DepositSymbolPrefix;
         symbolPrefix = Names.SymbolPrefix;
       }
 
