@@ -73,8 +73,6 @@ export enum eContractid {
   UniswapRepayAdapter = 'UniswapRepayAdapter',
   FlashLiquidationAdapter = 'FlashLiquidationAdapter',
 
-  AGFToken = 'AGFToken',
-  XAGFToken = 'XAGFToken',
   RewardController = 'RewardController',
   RewardBooster = 'RewardBooster',
   TokenLocker = 'TokenLocker',
@@ -94,8 +92,9 @@ export enum eContractid {
   TreasuryImpl = 'TreasuryImpl',
 
   RewardConfiguratorImpl = 'RewardConfiguratorImpl',
-  RewardTokenImpl = 'RewardTokenImpl',
   TokenWeightedRewardPoolImpl = 'TokenWeightedRewardPoolImpl',
+  XAGFTokenV1Impl = 'XAGFTokenV1Impl',
+  AGFTokenV1Impl = 'AGFTokenV1Impl',
 }
 
 /*

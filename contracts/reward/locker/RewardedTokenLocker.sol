@@ -162,10 +162,6 @@ contract RewardedTokenLocker is
     return (amount, since);
   }
 
-  // function getRewardRate() external view override returns (uint256) {
-  //   return getLinearRate();
-  // }
-
   function internalGetRate() internal view override returns (uint256) {
     return getLinearRate();
   }

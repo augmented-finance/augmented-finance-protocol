@@ -47,7 +47,7 @@ task(`full:init-token-reward-pools`, `Deploys token reward pools`)
     let totalShare = 0;
 
     const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
-    const initialRate = BigNumber.from(RAY).mul(rewardParams.InitialRate);
+    //    const initialRate = BigNumber.from(RAY).mul(rewardParams.InitialRate);
 
     for (const [symbol, opt] of Object.entries(rewardParams.TokenPools)) {
       if (opt == undefined) {
@@ -60,8 +60,6 @@ task(`full:init-token-reward-pools`, `Deploys token reward pools`)
         console.log('Reward asset (underlying) is missing:', symbol);
         continue;
       }
-
-      const startIndex = initParams.length;
 
       let rateScale = BigNumber.from(RAY);
       if (tokenParams.Scale != undefined) {
@@ -83,7 +81,7 @@ task(`full:init-token-reward-pools`, `Deploys token reward pools`)
               provider: token,
               baselinePercentage: share,
               rateScale: rateScale,
-              initialRate: initialRate.mul(share).div(10000),
+              initialRate: 0,
               impl: poolImpl.address,
             });
             initSymbols.push(Names.DepositSymbolPrefix + symbol);
@@ -98,7 +96,7 @@ task(`full:init-token-reward-pools`, `Deploys token reward pools`)
               provider: token,
               baselinePercentage: share,
               rateScale: rateScale,
-              initialRate: initialRate.mul(share).div(10000),
+              initialRate: 0,
               impl: poolImpl.address,
             });
             initSymbols.push(Names.VariableDebtSymbolPrefix + symbol);
@@ -113,7 +111,7 @@ task(`full:init-token-reward-pools`, `Deploys token reward pools`)
               provider: token,
               baselinePercentage: share,
               rateScale: rateScale,
-              initialRate: initialRate.mul(share).div(10000),
+              initialRate: 0,
               impl: poolImpl.address,
             });
             initSymbols.push(Names.StableDebtSymbolPrefix + symbol);
@@ -130,7 +128,7 @@ task(`full:init-token-reward-pools`, `Deploys token reward pools`)
             provider: token,
             baselinePercentage: share,
             rateScale: rateScale,
-            initialRate: initialRate.mul(share).div(10000),
+            initialRate: 0,
             impl: poolImpl.address,
           });
           initSymbols.push(Names.StableDebtSymbolPrefix + symbol);

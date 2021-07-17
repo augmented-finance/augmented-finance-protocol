@@ -12,6 +12,8 @@ import {
   IUntypedRewardControllerPools
 } from './interfaces/IRewardController.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
+import {IManagedRewardBooster} from './interfaces/IManagedRewardBooster.sol';
+
 import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
 import {IInitializableRewardPool} from './interfaces/IInitializableRewardPool.sol';
 import {ProxyOwner} from '../tools/upgradeability/ProxyOwner.sol';
@@ -142,5 +144,19 @@ contract RewardConfigurator is
     IInitializableRewardToken.InitData memory data =
       IInitializableRewardToken.InitData(_remoteAcl, name, symbol, decimals);
     return abi.encodeWithSelector(IInitializableRewardToken.initialize.selector, data);
+  }
+
+  function configureRewardBoost(
+    IManagedRewardPool boostPool,
+    bool updateRate,
+    address excessTarget,
+    bool mintExcess
+  ) external {
+    IManagedRewardBooster booster = IManagedRewardBooster(address(getDefaultController()));
+
+    booster.setUpdateBoostPoolRate(updateRate);
+    booster.addRewardPool(boostPool);
+    booster.setBoostPool(address(boostPool));
+    booster.setBoostExcessTarget(excessTarget, mintExcess);
   }
 }

@@ -58,10 +58,7 @@ task('augmented:mainnet', 'Deploy development enviroment')
       console.log('10. Deploy token reward pools');
       await DRE.run('full:init-token-reward-pools', { pool: POOL_NAME });
 
-      console.log('11. Deploy reward boost and xAGF token');
-      await DRE.run('full:init-reward-locker', { pool: POOL_NAME });
-
-      console.log('12. Deploy other reward pools');
+      console.log('11. Deploy other reward pools');
       await DRE.run('full:init-misc-reward-pools', { pool: POOL_NAME });
 
       if (verify) {
