@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { eNetwork } from '../../helpers/types';
 import { loadPoolConfig } from '../../helpers/configuration';
-import { falsyOrZeroAddress } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import {
   getAddressesProviderRegistry,
   getMarketAccessController,
@@ -30,6 +30,6 @@ task('full:deploy-finalize', 'Finalize deployment')
     console.log('Registrar permissions renounced');
 
     const addressProvider = await getMarketAccessController();
-    addressProvider.renounceTemporaryAdmin();
+    await waitForTx(await addressProvider.renounceTemporaryAdmin());
     console.log('Temporary admin permissions renounced');
   });
