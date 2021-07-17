@@ -19,7 +19,7 @@ import {Errors} from '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
+abstract contract BaseTokenLocker is IERC20 {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
@@ -45,7 +45,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   uint32 private _lastUpdateTS;
 
   bool private _updateEntered;
-  bool private _paused;
 
   struct UserBalance {
     uint192 underlyingAmount;
@@ -68,11 +67,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   event Redeemed(address indexed from, address indexed to, uint256 underlyingAmount);
 
   constructor(
-    IMarketAccessController accessCtl,
     address underlying,
     uint32 pointPeriod,
     uint32 maxValuePeriod
-  ) public MarketAccessBitmask(accessCtl) {
+  ) public {
     _initialize(underlying, pointPeriod, maxValuePeriod);
   }
 
@@ -309,7 +307,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
    * @dev Redeems staked tokens, and stop earning rewards
    * @param to Address to redeem to
    **/
-  function redeem(address to) external notPaused returns (uint256 underlyingAmount) {
+  function redeem(address to) public virtual returns (uint256 underlyingAmount) {
     return internalRedeem(msg.sender, to);
   }
 
@@ -472,23 +470,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     if (nextPoint == 0 || nextPoint > _lastKnownPoint) {
       _lastKnownPoint = nextPoint;
     }
-  }
-
-  modifier notPaused() {
-    require(!_paused);
-    _;
-  }
-
-  function isRedeemable() external view returns (bool) {
-    return !_paused;
-  }
-
-  function setPaused(bool paused) external onlyEmergencyAdmin {
-    _paused = paused;
-  }
-
-  function isPaused() external view returns (bool) {
-    return _paused;
   }
 
   function getUnderlying() internal view returns (address) {

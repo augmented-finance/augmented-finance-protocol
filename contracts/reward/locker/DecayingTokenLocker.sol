@@ -25,14 +25,31 @@ import {Errors} from '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
+import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
+
 contract DecayingTokenLocker is RewardedTokenLocker {
   constructor(
-    IMarketAccessController accessCtl,
+    IRewardController controller,
+    uint256 initialRate,
+    uint224 rateScale,
+    uint16 baselinePercentage,
     address underlying,
     uint32 pointPeriod,
     uint32 maxValuePeriod,
     uint256 maxWeightBase
-  ) public RewardedTokenLocker(accessCtl, underlying, pointPeriod, maxValuePeriod, maxWeightBase) {}
+  )
+    public
+    RewardedTokenLocker(
+      controller,
+      initialRate,
+      rateScale,
+      baselinePercentage,
+      underlying,
+      pointPeriod,
+      maxValuePeriod,
+      maxWeightBase
+    )
+  {}
 
   function balanceOf(address account) public view virtual override returns (uint256) {
     (uint32 startTS, uint32 endTS) = expiryOf(account);
@@ -50,8 +67,8 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return stakeDecayed;
   }
 
-  function calcReward(address holder)
-    external
+  function internalCalcReward(address holder)
+    internal
     view
     override
     returns (uint256 amount, uint32 since)
@@ -93,7 +110,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return (amount, since);
   }
 
-  function internalClaimReward(address holder, uint256 limit)
+  function internalGetReward(address holder, uint256 limit)
     internal
     virtual
     override

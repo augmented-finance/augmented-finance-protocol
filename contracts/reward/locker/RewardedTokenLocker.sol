@@ -12,11 +12,12 @@ import {AccessFlags} from '../../access/AccessFlags.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 
 import {BaseTokenLocker} from './BaseTokenLocker.sol';
-import {ForwardedRewardPool} from '../pools/ForwardedRewardPool.sol';
+import {BaseBoostRewardPool} from '../pools/BaseBoostRewardPool.sol';
 import {CalcCheckpointWeightedReward} from '../calcs/CalcCheckpointWeightedReward.sol';
 import {AllocationMode} from '../interfaces/IRewardController.sol';
 import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
 import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
+import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import '../interfaces/IAutolocker.sol';
 
 import {Errors} from '../../tools/Errors.sol';
@@ -25,7 +26,7 @@ import 'hardhat/console.sol';
 
 contract RewardedTokenLocker is
   BaseTokenLocker,
-  ForwardedRewardPool,
+  BaseBoostRewardPool,
   CalcCheckpointWeightedReward,
   IBoostExcessReceiver,
   IAutolocker
@@ -35,19 +36,27 @@ contract RewardedTokenLocker is
   using SafeERC20 for IERC20;
 
   constructor(
-    IMarketAccessController accessCtl,
+    IRewardController controller,
+    uint256 initialRate,
+    uint224 rateScale,
+    uint16 baselinePercentage,
     address underlying,
     uint32 pointPeriod,
     uint32 maxValuePeriod,
     uint256 maxWeightBase
   )
     public
-    BaseTokenLocker(accessCtl, underlying, pointPeriod, maxValuePeriod)
+    BaseTokenLocker(underlying, pointPeriod, maxValuePeriod)
     CalcCheckpointWeightedReward(maxWeightBase)
+    BaseBoostRewardPool(controller, initialRate, rateScale, baselinePercentage)
   {}
 
-  function setForwardingRewardPool(IForwardingRewardPool forwarder) public onlyRewardAdmin {
-    internalSetForwarder(forwarder);
+  function redeem(address to) public override notPaused returns (uint256 underlyingAmount) {
+    return super.redeem(to);
+  }
+
+  function isRedeemable() external view returns (bool) {
+    return !isPaused();
   }
 
   function internalSyncRate(uint32 at) internal override {
@@ -111,10 +120,9 @@ contract RewardedTokenLocker is
     return getStakeBalance(account);
   }
 
-  function calcReward(address holder)
-    external
+  function internalCalcReward(address holder)
+    internal
     view
-    virtual
     override
     returns (uint256 amount, uint32 since)
   {
@@ -129,7 +137,7 @@ contract RewardedTokenLocker is
     return doCalcRewardAt(holder, current);
   }
 
-  function internalClaimReward(address holder, uint256 limit)
+  function internalGetReward(address holder, uint256 limit)
     internal
     virtual
     override
@@ -156,11 +164,15 @@ contract RewardedTokenLocker is
     return (amount, since);
   }
 
-  function getRewardRate() external view override returns (uint256) {
+  // function getRewardRate() external view override returns (uint256) {
+  //   return getLinearRate();
+  // }
+
+  function internalGetRate() internal view override returns (uint256) {
     return getLinearRate();
   }
 
-  function internalSetRewardRate(uint256 rate) internal override {
+  function internalSetRate(uint256 rate) internal override {
     internalUpdate(false, 0);
     setLinearRate(rate);
   }
@@ -169,9 +181,9 @@ contract RewardedTokenLocker is
     return uint32(block.timestamp);
   }
 
-  function receiveBoostExcess(uint256 amount, uint32 since) external override onlyForwarder {
+  function receiveBoostExcess(uint256 amount, uint32 since) external override onlyController {
     internalUpdate(false, 0);
-    internalAddExcess(amount, since);
+    internalAddExcess(scaleRate(amount), since);
   }
 
   function applyAutolock(
@@ -183,7 +195,7 @@ contract RewardedTokenLocker is
   )
     external
     override
-    onlyForwarder
+    onlyController
     returns (
       address, /* receiver */
       uint256, /* lockAmount */
