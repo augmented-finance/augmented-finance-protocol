@@ -4,8 +4,13 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { parseEther } from 'ethers/lib/utils';
 import { DRE, waitForTx } from '../../helpers/misc-utils';
 import { BigNumber } from 'ethers';
-import { getStableDebtToken, getVariableDebtToken } from '../../helpers/contracts-getters';
+import {
+  getMarketAccessController,
+  getStableDebtToken,
+  getVariableDebtToken,
+} from '../../helpers/contracts-getters';
 import { deploySelfdestructTransferMock } from '../../helpers/contracts-deployments';
+import { AccessFlags } from '../../helpers/access-flags';
 
 const { expect } = require('chai');
 
@@ -324,9 +329,12 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
       'User should have lost the funds here.'
     );
 
-    await wethGateway
+    const addressProvider = await getMarketAccessController();
+    await addressProvider
       .connect(deployer.signer)
-      .emergencyTokenTransfer(dai.address, user.address, amount);
+      .grantRoles(deployer.address, AccessFlags.SWEEP_ADMIN);
+
+    await wethGateway.connect(deployer.signer).sweepToken(dai.address, user.address, amount);
     const daiBalanceAfterRecovery = await dai.balanceOf(user.address);
 
     expect(daiBalanceAfterRecovery).to.be.eq(
@@ -355,8 +363,13 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
     expect(userBalanceAfterCall).to.be.eq(userBalancePriorCall.sub(amount).sub(gasFees), '');
     ('User should have lost the funds');
 
+    const addressProvider = await getMarketAccessController();
+    await addressProvider
+      .connect(deployer.signer)
+      .grantRoles(deployer.address, AccessFlags.SWEEP_ADMIN);
+
     // Recover the funds from the contract and sends back to the user
-    await wethGateway.connect(deployer.signer).emergencyEtherTransfer(user.address, amount);
+    await wethGateway.connect(deployer.signer).sweepEth(user.address, amount);
 
     const userBalanceAfterRecovery = await user.signer.getBalance();
     const wethGatewayAfterRecovery = await DRE.ethers.provider.getBalance(wethGateway.address);
