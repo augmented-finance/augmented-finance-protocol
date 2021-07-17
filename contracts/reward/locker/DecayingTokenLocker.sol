@@ -2,27 +2,12 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {BitUtils} from '../../tools/math/BitUtils.sol';
 
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-
-import {BaseTokenLocker} from './BaseTokenLocker.sol';
-import {ForwardedRewardPool} from '../pools/ForwardedRewardPool.sol';
-import {CalcLinearWeightedReward} from '../calcs/CalcLinearWeightedReward.sol';
 import {AllocationMode} from '../interfaces/IRewardController.sol';
-import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
-import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
-
 import {RewardedTokenLocker} from './RewardedTokenLocker.sol';
-
-import {Errors} from '../../tools/Errors.sol';
-
 import 'hardhat/console.sol';
 
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';

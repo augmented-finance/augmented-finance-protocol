@@ -2,20 +2,12 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-
 import {BaseTokenLocker} from './BaseTokenLocker.sol';
-import {BaseBoostRewardPool} from '../pools/BaseBoostRewardPool.sol';
+import {ControlledRewardPool} from '../pools/ControlledRewardPool.sol';
 import {CalcCheckpointWeightedReward} from '../calcs/CalcCheckpointWeightedReward.sol';
-import {AllocationMode} from '../interfaces/IRewardController.sol';
-import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
 import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import '../interfaces/IAutolocker.sol';
@@ -26,14 +18,13 @@ import 'hardhat/console.sol';
 
 contract RewardedTokenLocker is
   BaseTokenLocker,
-  BaseBoostRewardPool,
+  ControlledRewardPool,
   CalcCheckpointWeightedReward,
   IBoostExcessReceiver,
   IAutolocker
 {
   using SafeMath for uint256;
   using WadRayMath for uint256;
-  using SafeERC20 for IERC20;
 
   constructor(
     IRewardController controller,
@@ -48,7 +39,7 @@ contract RewardedTokenLocker is
     public
     BaseTokenLocker(underlying, pointPeriod, maxValuePeriod)
     CalcCheckpointWeightedReward(maxWeightBase)
-    BaseBoostRewardPool(controller, initialRate, rateScale, baselinePercentage)
+    ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage)
   {}
 
   function redeem(address to) public override notPaused returns (uint256 underlyingAmount) {
@@ -58,6 +49,12 @@ contract RewardedTokenLocker is
   function isRedeemable() external view returns (bool) {
     return !isPaused();
   }
+
+  function addRewardProvider(address, address) external override onlyController {
+    revert('UNSUPPORTED');
+  }
+
+  function removeRewardProvider(address) external override onlyController {}
 
   function internalSyncRate(uint32 at) internal override {
     // console.log('internalSyncRate', at, getExtraRate(), getStakedTotal());
@@ -123,6 +120,7 @@ contract RewardedTokenLocker is
   function internalCalcReward(address holder)
     internal
     view
+    virtual
     override
     returns (uint256 amount, uint32 since)
   {

@@ -12,7 +12,6 @@ import {AccessFlags} from '../../access/AccessFlags.sol';
 import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 
-import {ForwardedRewardPool} from '../pools/ForwardedRewardPool.sol';
 import {CalcLinearRateReward} from '../calcs/CalcLinearRateReward.sol';
 
 import {Errors} from '../../tools/Errors.sol';
