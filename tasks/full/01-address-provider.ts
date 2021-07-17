@@ -6,17 +6,12 @@ import {
 } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
 import { getGenesisPoolAdmin, loadPoolConfig } from '../../helpers/configuration';
-import { isAddress } from 'ethers/lib/utils';
-import { isZeroAddress } from 'ethereumjs-util';
 import { falsyOrZeroAddress, getFirstSigner, getSigner, waitForTx } from '../../helpers/misc-utils';
 import { getAddressesProviderRegistry } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
 
-task(
-  'full:deploy-address-provider-registry',
-  'Deploy address provider registry for prod enviroment'
-)
+task('full:deploy-address-provider', 'Deploy address provider registry for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(async ({ verify, pool }, DRE) => {
     await DRE.run('set-DRE');
