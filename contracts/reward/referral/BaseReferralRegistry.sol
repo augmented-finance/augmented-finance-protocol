@@ -2,27 +2,13 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-
-import {ForwardedRewardPool} from '../pools/ForwardedRewardPool.sol';
-import {CalcLinearRateReward} from '../calcs/CalcLinearRateReward.sol';
-
 import {Errors} from '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
 abstract contract BaseReferralRegistry {
   using SafeMath for uint256;
-  using WadRayMath for uint256;
-  using SafeERC20 for IERC20;
 
   mapping(uint256 => address) _delegations;
   mapping(uint256 => uint32) _timestamps;

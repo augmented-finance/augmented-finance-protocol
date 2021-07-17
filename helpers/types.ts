@@ -87,10 +87,7 @@ export enum eContractid {
   TokenWeightedRewardPoolAGBoosted = 'TokenWeightedRewardPoolAGBoosted',
   TokenWeightedRewardPoolAGUSDCBoosted = 'TokenWeightedRewardPoolAGUSDCBoosted',
 
-  TokenWeightedRewardPool = 'TokenWeightedRewardPool',
   PermitFreezerRewardPool = 'PermitFreezerRewardPool',
-  ForwardingRewardPool = 'ForwardingRewardPool',
-  ForwardingRewardPoolDecay = 'ForwardingRewardPoolDecay',
 
   StakeConfiguratorImpl = 'StakeConfiguratorImpl',
   StakeTokenImpl = 'StakeTokenImpl',
