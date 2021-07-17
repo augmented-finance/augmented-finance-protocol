@@ -367,7 +367,6 @@ export interface ICommonConfiguration {
 
   LendingRateOracleRatesCommon: iMultiPoolsAssets<IMarketRates>;
 
-  OracleRouter: iParamsPerNetwork<tEthereumAddress>;
   FallbackOracle: iParamsPerNetwork<tEthereumAddress>;
 
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;

@@ -61,6 +61,9 @@ task('augmented:mainnet', 'Deploy development enviroment')
       console.log('11. Deploy token reward pools');
       await DRE.run('full:init-token-reward-pools', { pool: POOL_NAME });
 
+      console.log('12. Deploy other reward pools');
+      await DRE.run('full:init-misc-reward-pools', { pool: POOL_NAME });
+
       if (verify) {
         printContracts((await getFirstSigner()).address);
         console.log('N-1. Veryfing contracts');

@@ -88,15 +88,6 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.hardhat]: '',
     [eEthereumNetwork.tenderlyMain]: '',
   },
-  OracleRouter: {
-    [eEthereumNetwork.coverage]: '',
-    [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.kovan]: '',
-    [eEthereumNetwork.ropsten]: '',
-    [eEthereumNetwork.rinkeby]: '',
-    [eEthereumNetwork.main]: '',
-    [eEthereumNetwork.tenderlyMain]: '',
-  },
   FallbackOracle: {
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: ZERO_ADDRESS,

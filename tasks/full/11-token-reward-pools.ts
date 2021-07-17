@@ -1,17 +1,10 @@
 import { task } from 'hardhat/config';
 import { exit } from 'process';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
+import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { deployTokenWeightedRewardPoolImpl } from '../../helpers/contracts-deployments';
+import { eNetwork, ICommonConfiguration, ITokenRewardPoolParams } from '../../helpers/types';
 import {
-  eContractid,
-  eNetwork,
-  ICommonConfiguration,
-  ITokenRewardPoolParams,
-  StakeMode,
-} from '../../helpers/types';
-import {
-  getIErc20Detailed,
   getLendingPoolProxy,
   getMarketAddressController,
   getRewardConfiguratorProxy,
@@ -22,7 +15,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumber, BigNumberish } from 'ethers';
 import { RAY } from '../../helpers/constants';
 
-task(`full:init-token-reward-pools`, `Deploys reword pools for lending`)
+task(`full:init-token-reward-pools`, `Deploys token reward pools`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .addFlag('verify', `Verify contracts via Etherscan API.`)
   .setAction(async ({ verify, pool }, localBRE) => {
