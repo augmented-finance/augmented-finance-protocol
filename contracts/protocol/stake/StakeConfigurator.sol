@@ -42,18 +42,15 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     _remoteAcl = IMarketAccessController(addressesProvider);
   }
 
-  function list() public view returns (address[] memory tokens, uint256 count) {
+  function list() public view returns (address[] memory tokens) {
     if (_entryCount == 0) {
-      return (tokens, 0);
+      return tokens;
     }
     tokens = new address[](_entryCount);
     for (uint256 i = 1; i <= _entryCount; i++) {
-      tokens[count] = _entries[i].token;
-      if (tokens[count] != address(0)) {
-        count++;
-      }
+      tokens[i - 1] = _entries[i].token;
     }
-    return (tokens, count);
+    return tokens;
   }
 
   function stakeTokenOf(address underlying) public view returns (address) {

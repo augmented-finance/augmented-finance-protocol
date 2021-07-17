@@ -16,4 +16,6 @@ interface IAddressesProviderRegistry {
   function setOneTimeRegistrar(address user, uint256 expectedId) external;
 
   function getOneTimeRegistrar() external view returns (address user, uint256 expectedId);
+
+  function renounceOneTimeRegistrar() external;
 }

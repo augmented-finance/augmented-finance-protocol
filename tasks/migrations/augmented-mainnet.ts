@@ -22,6 +22,9 @@ task('augmented:mainnet', 'Deploy development enviroment')
       checkVerification();
     }
 
+    let success = false;
+    let renounce = true;
+
     try {
       console.log('Deployment started\n');
 
@@ -66,17 +69,32 @@ task('augmented:mainnet', 'Deploy development enviroment')
         console.log('N. Veryfing depositTokens and debtTokens');
         await DRE.run('verify:tokens', { pool: POOL_NAME });
       }
+
+      success = true;
     } catch (err) {
       if (usingTenderly()) {
         console.error('Check tx error:', getTenderlyDashboardLink());
       }
       console.error(err);
+    }
+
+    if (renounce) {
+      try {
+        console.log('99. Finalize');
+        await DRE.run('full:deploy-finalize', { pool: POOL_NAME });
+      } catch (err) {
+        console.log('Error during finalization & renouncement');
+        console.error(err);
+      }
+    }
+
+    if (!success) {
       exit(1);
     }
 
     if (usingTenderly()) {
-      const postDeployHead = DRE.tenderlyNetwork.getHead();
-      const postDeployFork = DRE.tenderlyNetwork.getFork();
+      const postDeployHead = (<any>DRE).tenderlyNetwork.getHead();
+      const postDeployFork = (<any>DRE).tenderlyNetwork.getFork();
       console.log('Tenderly Info');
       console.log('- Head', postDeployHead);
       console.log('- Fork', postDeployFork);

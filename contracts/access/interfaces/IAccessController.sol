@@ -21,9 +21,11 @@ interface IAccessController is IRemoteAccessBitmask {
 }
 
 interface IManagedAccessController is IAccessController {
-  function setTempAdmin(address) external;
+  function setTemporaryAdmin(address admin, uint32 expiryBlocks) external;
 
-  function getTempAdmin() external view returns (address);
+  function getTemporaryAdmin() external view returns (address admin, uint256 expiresAtBlock);
+
+  function renounceTemporaryAdmin() external;
 
   function setAddress(uint256 id, address newAddress) external;
 

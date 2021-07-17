@@ -39,9 +39,10 @@ task(
 
       const owner = await registry.owner();
       let signer;
+
       if (owner == deployer.address) {
-        console.log('Owned by deployer.');
         signer = deployer;
+        console.log('Owned by deployer');
       } else {
         signer = getSigner(owner);
       }
@@ -49,14 +50,14 @@ task(
       if (signer == undefined) {
         const oneTime = await registry.getOneTimeRegistrar();
         if (oneTime.user == deployer.address) {
-          console.log('One-time access is granted to deployer.');
+          console.log('One-time access is granted to deployer');
         } else {
           signer = getSigner(oneTime.user);
         }
       }
 
       if (signer == undefined) {
-        console.log('Deployer has no access.');
+        console.log('Deployer has no access');
         throw 'Deployer has no access to the registry';
       }
 
@@ -76,7 +77,7 @@ task(
     console.log('Deployed provider:', addressProvider.address);
 
     if (!falsyOrZeroAddress(registryOwner)) {
-      await addressProvider.setTempAdmin(deployer.address);
+      await addressProvider.setTemporaryAdmin(deployer.address, 1000);
       await addressProvider.transferOwnership(registryOwner!);
       console.log('Provider ownership transferred to:', registryOwner);
     }

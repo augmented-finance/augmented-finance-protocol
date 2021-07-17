@@ -28,6 +28,12 @@ contract AddressesProviderRegistry is Ownable, IAddressesProviderRegistry {
     _oneTimeRegistrar = registrar;
   }
 
+  function renounceOneTimeRegistrar() external override {
+    if (_oneTimeRegistrar == _msgSender()) {
+      _oneTimeRegistrar = address(0);
+    }
+  }
+
   function getOneTimeRegistrar() external view override returns (address user, uint256 expectedId) {
     if (_oneTimeRegistrar == address(0)) {
       return (address(0), 0);
@@ -63,11 +69,14 @@ contract AddressesProviderRegistry is Ownable, IAddressesProviderRegistry {
     }
 
     require(provider != address(0), Errors.LPAPR_PROVIDER_NOT_REGISTERED);
-    require(_index[provider].index == 0, Errors.LPAPR_PROVIDER_NOT_REGISTERED);
 
-    require(_providers.length < type(uint16).max);
-    _providers.push(provider);
-    _index[provider] = Entry(id, uint16(_providers.length));
+    if (_index[provider].index > 0) {
+      _index[provider].id = id;
+    } else {
+      require(_providers.length < type(uint16).max);
+      _providers.push(provider);
+      _index[provider] = Entry(id, uint16(_providers.length));
+    }
 
     emit AddressesProviderRegistered(provider);
   }
