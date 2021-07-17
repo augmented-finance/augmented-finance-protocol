@@ -9,12 +9,7 @@ import {
   getTokenLocker,
 } from '../../helpers/contracts-getters';
 
-import {
-  MockAgfToken,
-  RewardFreezer,
-  ForwardingRewardPool,
-  RewardedTokenLocker,
-} from '../../types';
+import { MockAgfToken, RewardFreezer, RewardedTokenLocker } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
   currentTick,

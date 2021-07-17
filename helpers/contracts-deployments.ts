@@ -14,7 +14,6 @@ import { MockContract } from 'ethereum-waffle';
 import { getReservesConfigByPool } from './configuration';
 import { ZERO_ADDRESS } from './constants';
 import {
-  ForwardingRewardPoolFactory,
   MarketAccessControllerFactory,
   MintableERC20,
   RewardBoosterFactory,

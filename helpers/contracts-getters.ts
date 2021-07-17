@@ -35,7 +35,6 @@ import {
   DepositToken,
   TokenWeightedRewardPoolFactory,
   RewardBoosterFactory,
-  ForwardingRewardPoolFactory,
   XAGFTokenV1Factory,
   RewardedTokenLockerFactory,
   DecayingTokenLockerFactory,

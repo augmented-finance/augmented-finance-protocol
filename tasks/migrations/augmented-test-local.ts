@@ -98,7 +98,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       );
       await waitForTx(await rewardCtl.addRewardPool(teamRewardPool.address));
 
-      console.log(`#5 deploying: RewardedTokenLocker + Forwarding Reward Pool`);
+      console.log(`#5 deploying: RewardedTokenLocker`);
 
       const basicLocker = await deployTokenLocker([
         rewardCtl.address,
