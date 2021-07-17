@@ -720,7 +720,16 @@ export const deployRewardBooster = async (
   );
 
 export const deployTokenLocker = async (
-  args: [tEthereumAddress, tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  args: [
+    controller: tEthereumAddress,
+    initialRate: BigNumberish,
+    rateScale: BigNumberish,
+    baselinePercentage: BigNumberish,
+    underlying: tEthereumAddress,
+    pointPeriod: BigNumberish,
+    maxValuePeriod: BigNumberish,
+    maxWeightBase: BigNumberish
+  ],
   verify?: boolean
 ) =>
   await withSaveAndVerify(
@@ -731,7 +740,16 @@ export const deployTokenLocker = async (
   );
 
 export const deployDecayingTokenLocker = async (
-  args: [tEthereumAddress, tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  args: [
+    controller: tEthereumAddress,
+    initialRate: BigNumberish,
+    rateScale: BigNumberish,
+    baselinePercentage: BigNumberish,
+    underlying: tEthereumAddress,
+    pointPeriod: BigNumberish,
+    maxValuePeriod: BigNumberish,
+    maxWeightBase: BigNumberish
+  ],
   verify?: boolean
 ) =>
   await withSaveAndVerify(
@@ -842,28 +860,6 @@ export const deployPermitFreezerRewardPool = async (
   withSaveAndVerify(
     await new PermitFreezerRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.PermitFreezerRewardPool,
-    [],
-    verify
-  );
-
-export const deployForwardingRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new ForwardingRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.ForwardingRewardPool,
-    [],
-    verify
-  );
-
-export const deployForwardingRewardPoolDecay = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new ForwardingRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.ForwardingRewardPoolDecay,
     [],
     verify
   );

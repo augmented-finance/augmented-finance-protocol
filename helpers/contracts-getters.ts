@@ -306,18 +306,6 @@ export const getTeamRewardPool = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getForwardingRewardPool = async (address?: tEthereumAddress) =>
-  ForwardingRewardPoolFactory.connect(
-    address || (await getAddr(eContractid.ForwardingRewardPool)),
-    await getFirstSigner()
-  );
-
-export const getForwardingRewardPoolDecay = async (address?: tEthereumAddress) =>
-  ForwardingRewardPoolFactory.connect(
-    address || (await getAddr(eContractid.ForwardingRewardPoolDecay)),
-    await getFirstSigner()
-  );
-
 export const getRewardController = async (address?: tEthereumAddress) =>
   RewardFreezerFactory.connect(
     address || (await getAddr(eContractid.RewardController)),

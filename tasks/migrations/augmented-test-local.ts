@@ -1,7 +1,6 @@
 import { task, types } from 'hardhat/config';
 import {
   deployMarketAccessController,
-  deployForwardingRewardPool,
   deployMockAgfToken,
   deployRewardController,
   deployTeamRewardPool,
@@ -101,21 +100,17 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       console.log(`#5 deploying: RewardedTokenLocker + Forwarding Reward Pool`);
 
-      // deploy token weighted reward pool, register in controller, separated pool for math tests
-      const fwdRewardPool = await deployForwardingRewardPool(
-        [rewardCtl.address, RAY, RAY, 0],
-        verify
-      );
       const basicLocker = await deployTokenLocker([
-        ac.address,
+        rewardCtl.address,
+        RAY,
+        RAY,
+        0,
         agfToken.address,
         WEEK,
         MAX_LOCKER_PERIOD,
         RAY_100,
       ]);
-      await waitForTx(await rewardCtl.addRewardPool(fwdRewardPool.address));
-      await basicLocker.setForwardingRewardPool(fwdRewardPool.address);
-      await fwdRewardPool.addRewardProvider(basicLocker.address, ONE_ADDRESS);
+      await waitForTx(await rewardCtl.addRewardPool(basicLocker.address));
 
       if (process.env.MAINNET_FORK === 'true') {
         // console.log(`#6 deploying: Migrator + Adapters`);

@@ -2,7 +2,6 @@ import { task, types } from 'hardhat/config';
 import {
   deployMockAgfToken,
   deployRewardBooster,
-  deployForwardingRewardPoolDecay,
   deployDecayingTokenLocker,
   deployMarketAccessController,
 } from '../../helpers/contracts-deployments';
@@ -42,22 +41,18 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
     const rewardBooster = await deployRewardBooster([ac.address, agfToken.address], verify);
     await ac.setRewardController(rewardBooster.address);
 
-    console.log(`#5 deploying: DecayingTokenLocker + ForwardingRewardPool for RewardBooster`);
+    console.log(`#5 deploying: DecayingTokenLocker for RewardBooster`);
 
-    // deploy token weighted reward pool, register in controller, separated pool for math tests
-    const fwdRewardPoolDecay = await deployForwardingRewardPoolDecay(
-      [rewardBooster.address, RAY_10000, RAY, 0],
-      verify
-    );
     const decayLocker = await deployDecayingTokenLocker([
-      ac.address,
+      rewardBooster.address,
+      RAY_10000,
+      RAY,
+      0,
       agfToken.address,
       WEEK,
       MAX_LOCKER_PERIOD,
       RAY_100,
     ]);
-    await waitForTx(await rewardBooster.addRewardPool(fwdRewardPoolDecay.address));
-    await decayLocker.setForwardingRewardPool(fwdRewardPoolDecay.address);
-    await fwdRewardPoolDecay.addRewardProvider(decayLocker.address, ONE_ADDRESS);
+    await waitForTx(await rewardBooster.addRewardPool(decayLocker.address));
   }
 );

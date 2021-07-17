@@ -5,18 +5,11 @@ import rawBRE, { ethers } from 'hardhat';
 
 import {
   getMockAgfToken,
-  getForwardingRewardPoolDecay,
   getRewardBooster,
   getDecayingTokenLocker,
-  getMarketAddressController,
 } from '../../helpers/contracts-getters';
 
-import {
-  MockAgfToken,
-  ForwardingRewardPool,
-  RewardBooster,
-  DecayingTokenLocker,
-} from '../../types';
+import { MockAgfToken, RewardBooster, DecayingTokenLocker } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { waitForTx } from '../../helpers/misc-utils';
 import {
@@ -38,7 +31,6 @@ describe('Token decaying locker suite', () => {
   let root: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
-  let frp: ForwardingRewardPool;
   let rewardController: RewardBooster;
   let AGF: MockAgfToken;
   let xAGF: DecayingTokenLocker;
@@ -53,7 +45,6 @@ describe('Token decaying locker suite', () => {
     await rawBRE.run('augmented:test-local-decay', CFG);
     rewardController = await getRewardBooster();
 
-    frp = await getForwardingRewardPoolDecay();
     AGF = await getMockAgfToken();
     xAGF = await getDecayingTokenLocker();
 
