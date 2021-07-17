@@ -105,32 +105,33 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         rateScale = rateScale.mul(tp.Scale);
       }
 
-      if (
-        tp.Share.deposit != undefined ||
-        tp.Share.vDebt != undefined ||
-        tp.Share.sDebt != undefined
-      ) {
-        const rd = await lendingPool.getReserveData(asset);
-        await buildToken(tp.Share.deposit, rd.aTokenAddress, rateScale, Names.DepositSymbolPrefix);
+      const rd = await lendingPool.getReserveData(asset);
+      if (falsyOrZeroAddress(rd.aTokenAddress)) {
+        continue;
+      }
+
+      await buildToken(tp.Share.deposit, rd.aTokenAddress, rateScale, Names.DepositSymbolPrefix);
+      await buildToken(
+        tp.Share.vDebt,
+        rd.variableDebtTokenAddress,
+        rateScale,
+        Names.VariableDebtSymbolPrefix
+      );
+      await buildToken(
+        tp.Share.sDebt,
+        rd.stableDebtTokenAddress,
+        rateScale,
+        Names.StableDebtSymbolPrefix
+      );
+
+      if (tp.Share.stake != undefined) {
         await buildToken(
-          tp.Share.vDebt,
-          rd.variableDebtTokenAddress,
+          tp.Share.stake,
+          await stakeConfigurator.stakeTokenOf(rd.aTokenAddress),
           rateScale,
-          Names.VariableDebtSymbolPrefix
-        );
-        await buildToken(
-          tp.Share.sDebt,
-          rd.stableDebtTokenAddress,
-          rateScale,
-          Names.StableDebtSymbolPrefix
+          Names.StakeSymbolPrefix
         );
       }
-      await buildToken(
-        tp.Share.stake,
-        await stakeConfigurator.stakeTokenOf(asset),
-        rateScale,
-        Names.StakeSymbolPrefix
-      );
     }
 
     const rewardController = await getRewardBooster(await addressesProvider.getRewardController());
@@ -197,7 +198,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     console.log(`- Reward pools initialization with ${chunkedParams.length} txs`);
     for (let chunkIndex = 0; chunkIndex < chunkedParams.length; chunkIndex++) {
       const param = chunkedParams[chunkIndex];
-      console.log(param);
+      // console.log(param);
       const tx3 = await waitForTx(
         await configurator.batchInitRewardPools(param, {
           gasLimit: 5000000,
