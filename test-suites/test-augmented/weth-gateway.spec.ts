@@ -315,7 +315,7 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
   });
 
   it('Sweep admin can do emergency token recovery', async () => {
-    const { users, dai, wethGateway, deployer } = testEnv;
+    const { users, dai, wethGateway, deployer, addressesProvider } = testEnv;
     const user = users[0];
     const amount = parseEther('1');
 
@@ -329,8 +329,7 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
       'User should have lost the funds here.'
     );
 
-    const addressProvider = await getMarketAccessController();
-    await addressProvider
+    await addressesProvider
       .connect(deployer.signer)
       .grantRoles(deployer.address, AccessFlags.SWEEP_ADMIN);
 
@@ -344,7 +343,7 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
   });
 
   it('Sweep admin can do emergency native ETH recovery', async () => {
-    const { users, wethGateway, deployer } = testEnv;
+    const { users, wethGateway, deployer, addressesProvider } = testEnv;
     const user = users[0];
     const amount = parseEther('1');
     const userBalancePriorCall = await user.signer.getBalance();
@@ -363,8 +362,7 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
     expect(userBalanceAfterCall).to.be.eq(userBalancePriorCall.sub(amount).sub(gasFees), '');
     ('User should have lost the funds');
 
-    const addressProvider = await getMarketAccessController();
-    await addressProvider
+    await addressesProvider
       .connect(deployer.signer)
       .grantRoles(deployer.address, AccessFlags.SWEEP_ADMIN);
 
