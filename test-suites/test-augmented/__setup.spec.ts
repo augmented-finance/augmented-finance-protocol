@@ -162,10 +162,10 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const [tokens, aggregators] = getPairsTokenAggregator(allTokenAddresses, allAggregatorsAddresses);
 
   await deployOracleRouter([tokens, aggregators, fallbackOracle.address, mockTokens.WETH.address]);
-  await waitForTx(await addressProvider.setPriceOracle(fallbackOracle.address));
 
-  const lendingRateOracle = await deployLendingRateOracle();
-  await waitForTx(await addressProvider.setLendingRateOracle(lendingRateOracle.address));
+  const lendingRateOracle = await deployLendingRateOracle([addressProvider.address]);
+
+  await addressProvider.grantRoles(await deployer.getAddress(), AccessFlags.LENDING_RATE_ADMIN);
 
   const { USD, ...tokensAddressesWithoutUsd } = allTokenAddresses;
   const allReservesAddresses = {
@@ -176,6 +176,9 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
     allReservesAddresses,
     lendingRateOracle
   );
+
+  await addressProvider.setPriceOracle(fallbackOracle.address);
+  await addressProvider.setLendingRateOracle(lendingRateOracle.address);
 
   const reservesParams = getReservesConfigByPool(LendingPools.augmented);
 

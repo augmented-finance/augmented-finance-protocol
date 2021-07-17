@@ -190,9 +190,9 @@ export const deployMockPriceOracle = async (verify?: boolean) =>
     verify
   );
 
-export const deployLendingRateOracle = async (verify?: boolean) =>
+export const deployLendingRateOracle = async (args: [tEthereumAddress], verify?: boolean) =>
   withSaveAndVerify(
-    await new LendingRateOracleFactory(await getFirstSigner()).deploy(),
+    await new LendingRateOracleFactory(await getFirstSigner()).deploy(...args),
     eContractid.LendingRateOracle,
     [],
     verify

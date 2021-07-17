@@ -10,7 +10,7 @@ import {
   setInitialMarketRatesInRatesOracleByHelper,
 } from '../../helpers/oracles-helpers';
 import { ICommonConfiguration, iAssetBase, TokenContractId } from '../../helpers/types';
-import { waitForTx } from '../../helpers/misc-utils';
+import { getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { getAllAggregatorsAddresses, getAllTokenAddresses } from '../../helpers/mock-helpers';
 import { ConfigNames, loadPoolConfig, getWethAddress } from '../../helpers/configuration';
 import {
@@ -18,6 +18,7 @@ import {
   getMarketAddressController,
   getPairsTokenAggregator,
 } from '../../helpers/contracts-getters';
+import { AccessFlags } from '../../helpers/access-flags';
 
 task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -40,7 +41,7 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
       prev[curr as keyof iAssetBase<string>] = mockTokens[curr].address;
       return prev;
     }, defaultTokenList);
-    const addressesProvider = await getMarketAddressController();
+    const addressProvider = await getMarketAddressController();
 
     const fallbackOracle = await deployMockPriceOracle(verify);
     await waitForTx(await fallbackOracle.setEthUsdPrice(MockUsdPriceInWei));
@@ -60,10 +61,12 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
       [tokens, aggregators, fallbackOracle.address, await getWethAddress(poolConfig)],
       verify
     );
-    await waitForTx(await addressesProvider.setPriceOracle(fallbackOracle.address));
+    await addressProvider.setPriceOracle(fallbackOracle.address);
 
-    const lendingRateOracle = await deployLendingRateOracle(verify);
-    await waitForTx(await addressesProvider.setLendingRateOracle(lendingRateOracle.address));
+    const lendingRateOracle = await deployLendingRateOracle([addressProvider.address], verify);
+
+    const deployer = await getFirstSigner();
+    await addressProvider.grantRoles(deployer.address, AccessFlags.LENDING_RATE_ADMIN);
 
     const { USD, ...tokensAddressesWithoutUsd } = allTokenAddresses;
     const allReservesAddresses = {
@@ -74,4 +77,6 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
       allReservesAddresses,
       lendingRateOracle
     );
+
+    await addressProvider.setLendingRateOracle(lendingRateOracle.address);
   });

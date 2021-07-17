@@ -43,23 +43,8 @@ contract MarketAccessBitmask {
     _;
   }
 
-  modifier aclNoneOf(uint256 flags) {
-    require(_remoteAcl.hasNoneOf(msg.sender, flags), 'access is restricted');
-    _;
-  }
-
   modifier aclAnyOf(uint256 flags) {
     require(_remoteAcl.hasAnyOf(msg.sender, flags), 'access is restricted');
-    _;
-  }
-
-  modifier aclAny() {
-    require(_remoteAcl.hasAny(msg.sender), 'access is restricted');
-    _;
-  }
-
-  modifier aclNone() {
-    require(_remoteAcl.hasNone(msg.sender), 'access is restricted');
     _;
   }
 

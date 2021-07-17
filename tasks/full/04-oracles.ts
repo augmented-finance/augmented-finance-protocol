@@ -8,6 +8,7 @@ import {
   notFalsyOrZeroAddress,
   getSigner,
   getTenderlyDashboardLink,
+  getFirstSigner,
 } from '../../helpers/misc-utils';
 import {
   ConfigNames,
@@ -23,6 +24,7 @@ import {
   getPairsTokenAggregator,
 } from '../../helpers/contracts-getters';
 import { OracleRouter } from '../../types';
+import { AccessFlags } from '../../helpers/access-flags';
 
 task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -38,7 +40,7 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
       ChainlinkAggregator,
     } = poolConfig as ICommonConfiguration;
     const lendingRateOracles = getLendingRateOracles(poolConfig);
-    const addressesProvider = await getMarketAddressController();
+    const addressProvider = await getMarketAddressController();
     const oracleRouterAddress = getParamPerNetwork(poolConfig.OracleRouter, network);
     const fallbackOracleAddress = await getParamPerNetwork(FallbackOracle, network);
     const reserveAssets = await getParamPerNetwork(ReserveAssets, network);
@@ -65,12 +67,12 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
       );
     }
 
-    let lendingRateOracle = await deployLendingRateOracle(verify);
+    let lendingRateOracle = await deployLendingRateOracle([addressProvider.address], verify);
+    const deployer = await getFirstSigner();
+    await addressProvider.grantRoles(deployer.address, AccessFlags.LENDING_RATE_ADMIN);
+
     const { USD, ...tokensAddressesWithoutUsd } = tokensToWatch;
 
-    lendingRateOracle = lendingRateOracle.connect(getSigner(await lendingRateOracle.owner()));
-    // This must be done any time a new market is created I believe
-    //if (!lendingRateOracleAddress) {
     await setInitialMarketRatesInRatesOracleByHelper(
       lendingRateOracles,
       tokensAddressesWithoutUsd,
@@ -78,7 +80,7 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
     );
     //}
     console.log('ORACLES: %s and %s', oracleRouter.address, lendingRateOracle.address);
-    // Register the proxy price provider on the addressesProvider
-    await waitForTx(await addressesProvider.setPriceOracle(oracleRouter.address));
-    await waitForTx(await addressesProvider.setLendingRateOracle(lendingRateOracle.address));
+    // Register the proxy price provider on the addressProvider
+    await addressProvider.setPriceOracle(oracleRouter.address);
+    await addressProvider.setLendingRateOracle(lendingRateOracle.address);
   });
