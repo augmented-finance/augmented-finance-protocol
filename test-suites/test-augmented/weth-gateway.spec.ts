@@ -314,7 +314,7 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
     ).to.be.revertedWith('Fallback not allowed');
   });
 
-  it('Owner can do emergency token recovery', async () => {
+  it('Sweep admin can do emergency token recovery', async () => {
     const { users, dai, wethGateway, deployer } = testEnv;
     const user = users[0];
     const amount = parseEther('1');
@@ -343,7 +343,7 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
     );
   });
 
-  it('Owner can do emergency native ETH recovery', async () => {
+  it('Sweep admin can do emergency native ETH recovery', async () => {
     const { users, wethGateway, deployer } = testEnv;
     const user = users[0];
     const amount = parseEther('1');
