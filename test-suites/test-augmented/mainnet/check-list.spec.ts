@@ -364,7 +364,7 @@ makeSuite('Mainnet Check list', (testEnv: TestEnv) => {
     ('User should have lost the funds');
 
     // Recover the funds from the contract and sends back to the user
-    await wethGateway.connect(deployer.signer).emergencyEtherTransfer(user.address, amount);
+    await wethGateway.connect(deployer.signer).sweepEth(user.address, amount);
 
     const userBalanceAfterRecovery = await user.signer.getBalance();
     const wethGatewayAfterRecovery = await DRE.ethers.provider.getBalance(wethGateway.address);

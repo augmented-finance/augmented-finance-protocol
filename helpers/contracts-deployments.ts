@@ -189,9 +189,9 @@ export const deployMockPriceOracle = async (verify?: boolean) =>
     verify
   );
 
-export const deployLendingRateOracle = async (verify?: boolean) =>
+export const deployLendingRateOracle = async (args: [tEthereumAddress], verify?: boolean) =>
   withSaveAndVerify(
-    await new LendingRateOracleFactory(await getFirstSigner()).deploy(),
+    await new LendingRateOracleFactory(await getFirstSigner()).deploy(...args),
     eContractid.LendingRateOracle,
     [],
     verify
@@ -206,7 +206,13 @@ export const deployMockAggregator = async (price: tStringTokenSmallUnits, verify
   );
 
 export const deployOracleRouter = async (
-  args: [tEthereumAddress[], tEthereumAddress[], tEthereumAddress, tEthereumAddress],
+  args: [
+    tEthereumAddress,
+    tEthereumAddress[],
+    tEthereumAddress[],
+    tEthereumAddress,
+    tEthereumAddress
+  ],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -487,21 +493,16 @@ export const deployMockTokens = async (config: PoolConfiguration, verify?: boole
   return tokens;
 };
 
-export const deployWETHGateway = async (args: [tEthereumAddress], verify?: boolean) =>
+export const deployWETHGateway = async (
+  args: [tEthereumAddress, tEthereumAddress],
+  verify?: boolean
+) =>
   withSaveAndVerify(
     await new WETHGatewayFactory(await getFirstSigner()).deploy(...args),
     eContractid.WETHGateway,
     args,
     verify
   );
-
-export const authorizeWETHGateway = async (
-  wethGateWay: tEthereumAddress,
-  lendingPool: tEthereumAddress
-) =>
-  await new WETHGatewayFactory(await getFirstSigner())
-    .attach(wethGateWay)
-    .authorizeLendingPool(lendingPool);
 
 export const deployMockStableDebtToken = async (
   args: [tEthereumAddress, tEthereumAddress, string, string, string],

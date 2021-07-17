@@ -43,23 +43,8 @@ contract MarketAccessBitmask {
     _;
   }
 
-  modifier aclNoneOf(uint256 flags) {
-    require(_remoteAcl.hasNoneOf(msg.sender, flags), 'access is restricted');
-    _;
-  }
-
   modifier aclAnyOf(uint256 flags) {
     require(_remoteAcl.hasAnyOf(msg.sender, flags), 'access is restricted');
-    _;
-  }
-
-  modifier aclAny() {
-    require(_remoteAcl.hasAny(msg.sender), 'access is restricted');
-    _;
-  }
-
-  modifier aclNone() {
-    require(_remoteAcl.hasNone(msg.sender), 'access is restricted');
     _;
   }
 
@@ -70,6 +55,14 @@ contract MarketAccessBitmask {
 
   modifier onlyEmergencyAdmin {
     require(_remoteAcl.isEmergencyAdmin(msg.sender), Errors.CALLER_NOT_EMERGENCY_ADMIN);
+    _;
+  }
+
+  modifier onlySweepAdmin {
+    require(
+      _remoteAcl.hasAllOf(msg.sender, AccessFlags.SWEEP_ADMIN),
+      Errors.CT_CALLER_MUST_BE_SWEEP_ADMIN
+    );
     _;
   }
 

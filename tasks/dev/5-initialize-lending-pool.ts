@@ -1,21 +1,11 @@
 import { task } from 'hardhat/config';
 import {
-  deployMockFlashLoanReceiver,
   deployWalletBalancerProvider,
   deployProtocolDataProvider,
-  deployWETHGateway,
-  authorizeWETHGateway,
   deployTreasuryImpl,
-  deployLendingPoolCollateralManagerImpl,
 } from '../../helpers/contracts-deployments';
-import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { eNetwork } from '../../helpers/types';
-import {
-  ConfigNames,
-  getReservesConfigByPool,
-  getWethAddress,
-  loadPoolConfig,
-} from '../../helpers/configuration';
+import { ConfigNames, getReservesConfigByPool, loadPoolConfig } from '../../helpers/configuration';
 
 import { tEthereumAddress, LendingPools, eContractid } from '../../helpers/types';
 import { waitForTx, filterMapBy, falsyOrZeroAddress } from '../../helpers/misc-utils';
@@ -60,8 +50,4 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, testHelpers);
 
     await deployWalletBalancerProvider(verify);
-
-    const lendingPoolAddress = await addressesProvider.getLendingPool();
-    const gateWay = await addressesProvider.getAddress(AccessFlags.WETH_GATEWAY);
-    await authorizeWETHGateway(gateWay, lendingPoolAddress);
   });
