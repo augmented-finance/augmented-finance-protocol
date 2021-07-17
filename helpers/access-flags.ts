@@ -9,6 +9,8 @@ export enum AccessFlags {
   STAKE_ADMIN = 1 << 5,
   REFERRAL_ADMIN = 1 << 6,
   LENDING_RATE_ADMIN = 1 << 7,
+  SWEEP_ADMIN = 1 << 8,
+  ORACLE_ADMIN = 1 << 9,
 
   LIQUIDITY_CONTROLLER = 1 << 15, // can slash & pause stakes
 

@@ -62,7 +62,13 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
       await waitForTx(await oracleRouter.setAssetSources(tokens, aggregators));
     } else {
       oracleRouter = await deployOracleRouter(
-        [tokens, aggregators, fallbackOracleAddress, await getWethAddress(poolConfig)],
+        [
+          addressProvider.address,
+          tokens,
+          aggregators,
+          fallbackOracleAddress,
+          await getWethAddress(poolConfig),
+        ],
         verify
       );
     }

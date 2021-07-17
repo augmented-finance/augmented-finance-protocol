@@ -58,6 +58,14 @@ contract MarketAccessBitmask {
     _;
   }
 
+  modifier onlySweepAdmin {
+    require(
+      _remoteAcl.hasAllOf(msg.sender, AccessFlags.SWEEP_ADMIN),
+      Errors.CT_CALLER_MUST_BE_SWEEP_ADMIN
+    );
+    _;
+  }
+
   modifier onlyRewardAdmin {
     require(
       _remoteAcl.hasAnyOf(

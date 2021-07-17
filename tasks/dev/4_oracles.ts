@@ -58,7 +58,13 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
     );
 
     await deployOracleRouter(
-      [tokens, aggregators, fallbackOracle.address, await getWethAddress(poolConfig)],
+      [
+        addressProvider.address,
+        tokens,
+        aggregators,
+        fallbackOracle.address,
+        await getWethAddress(poolConfig),
+      ],
       verify
     );
     await addressProvider.setPriceOracle(fallbackOracle.address);

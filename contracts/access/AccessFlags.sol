@@ -13,6 +13,8 @@ library AccessFlags {
   uint256 public constant STAKE_ADMIN = 1 << 5;
   uint256 public constant REFERRAL_ADMIN = 1 << 6;
   uint256 public constant LENDING_RATE_ADMIN = 1 << 7;
+  uint256 public constant SWEEP_ADMIN = 1 << 8;
+  uint256 public constant ORACLE_ADMIN = 1 << 9;
 
   uint256 public constant LIQUIDITY_CONTROLLER = 1 << 15; // can slash & pause stakes
 
