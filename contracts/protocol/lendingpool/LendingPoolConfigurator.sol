@@ -244,7 +244,7 @@ contract LendingPoolConfigurator is
    * @dev Disables borrowing on a reserve
    * @param asset The address of the underlying asset of the reserve
    **/
-  function disableBorrowingOnReserve(address asset) external onlyPoolAdmin {
+  function disableBorrowingOnReserve(address asset) public onlyPoolAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
 
     currentConfig.setBorrowingEnabled(false);
@@ -445,7 +445,11 @@ contract LendingPoolConfigurator is
         inputParams[i].liquidationBonus
       );
 
-      enableBorrowingOnReserve(inputParams[i].asset, inputParams[i].stableBorrowingEnabled);
+      if (inputParams[i].borrowingEnabled) {
+        enableBorrowingOnReserve(inputParams[i].asset, inputParams[i].stableBorrowingEnabled);
+      } else {
+        disableBorrowingOnReserve(inputParams[i].asset);
+      }
       setReserveFactor(inputParams[i].asset, inputParams[i].reserveFactor);
     }
   }

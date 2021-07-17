@@ -26,6 +26,7 @@
     "compile": "SKIP_LOAD=true TS_NODE_TRANSPILE_ONLY=1 hardhat compile",
     "test": "TS_NODE_TRANSPILE_ONLY=1 hardhat test ./test-suites/test-augmented/*.spec.ts",
     "test-fork": "TS_NODE_TRANSPILE_ONLY=1 MAINNET_FORK=true hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented-fork/*.spec.ts",
+    "test-registry": "npx hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/addresses-provider-registry.spec.ts",
     "test-scenarios": "npx hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/scenario.spec.ts",
     "test-liquidate": "hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/liquidation-token.spec.ts",
     "test-liquidate-underlying": "hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/liquidation-underlying.spec.ts",

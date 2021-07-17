@@ -19,34 +19,29 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, localBRE) => {
-    try {
-      await localBRE.run('set-DRE');
-      const network = <eNetwork>localBRE.network.name;
-      const poolConfig = loadPoolConfig(pool);
-      const { Names, ReserveAssets, ReservesConfig } = poolConfig as ICommonConfiguration;
+    await localBRE.run('set-DRE');
+    const network = <eNetwork>localBRE.network.name;
+    const poolConfig = loadPoolConfig(pool);
+    const { Names, ReserveAssets, ReservesConfig } = poolConfig as ICommonConfiguration;
 
-      const reserveAssets = await getParamPerNetwork(ReserveAssets, network);
+    const reserveAssets = await getParamPerNetwork(ReserveAssets, network);
 
-      const addressesProvider = await getMarketAddressController();
+    const addressesProvider = await getMarketAddressController();
 
-      const testHelpers = await getProtocolDataProvider();
+    const testHelpers = await getProtocolDataProvider();
 
-      if (!reserveAssets) {
-        throw 'Reserve assets is undefined. Check ReserveAssets configuration at config directory';
-      }
-
-      console.log('|||||=======||||', reserveAssets);
-
-      const treasuryImpl = await deployTreasuryImpl();
-      addressesProvider.setTreasuryImpl(treasuryImpl.address);
-      const treasuryAddress = treasuryImpl.address;
-
-      await initReservesByHelper(ReservesConfig, reserveAssets, Names, treasuryAddress, verify);
-      await configureReservesByHelper(ReservesConfig, reserveAssets, testHelpers);
-
-      await deployWalletBalancerProvider(verify);
-    } catch (err) {
-      console.error(err);
-      exit(1);
+    if (!reserveAssets) {
+      throw 'Reserve assets is undefined. Check ReserveAssets configuration at config directory';
     }
+
+    console.log('|||||=======||||', reserveAssets);
+
+    const treasuryImpl = await deployTreasuryImpl();
+    addressesProvider.setTreasuryImpl(treasuryImpl.address);
+    const treasuryAddress = treasuryImpl.address;
+
+    await initReservesByHelper(ReservesConfig, reserveAssets, Names, treasuryAddress, verify);
+    await configureReservesByHelper(ReservesConfig, reserveAssets, testHelpers);
+
+    await deployWalletBalancerProvider(verify);
   });

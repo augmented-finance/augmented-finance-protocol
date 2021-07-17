@@ -82,24 +82,17 @@ contract RewardConfigurator is
     pool.removeRewardProvider(provider);
   }
 
-  function list() public view returns (address[] memory pools, uint256 count) {
+  function list() public view returns (address[] memory pools) {
     uint256 ignoreMask;
     (pools, ignoreMask) = IUntypedRewardControllerPools(address(getDefaultController())).getPools();
 
-    if (pools.length == 0 || ignoreMask == 0) {
-      return (pools, pools.length);
-    }
-
-    for (uint256 i = 0; i < pools.length; i++) {
+    for (uint256 i = 0; ignoreMask > 0 && i < pools.length; i++) {
       if (ignoreMask & 1 != 0) {
-        continue;
+        pools[i] = address(0);
       }
-      if (count != i) {
-        pools[count] = pools[i];
-      }
-      count++;
+      ignoreMask >>= 1;
     }
-    return (pools, count);
+    return pools;
   }
 
   function batchInitRewardPools(PoolInitData[] calldata entries) external override onlyRewardAdmin {

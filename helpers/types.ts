@@ -363,19 +363,21 @@ export interface ICommonConfiguration {
   Mocks: IMocksConfig;
   ProviderRegistry: iParamsPerNetwork<tEthereumAddress | undefined>;
   ProviderRegistryOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
+  ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
+
   LendingRateOracleRatesCommon: iMultiPoolsAssets<IMarketRates>;
-  LendingRateOracle: iParamsPerNetwork<tEthereumAddress>;
+
   OracleRouter: iParamsPerNetwork<tEthereumAddress>;
   FallbackOracle: iParamsPerNetwork<tEthereumAddress>;
-  ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
+
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
   PoolAdminIndex: number;
   EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
   EmergencyAdminIndex: number;
+
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;
   WETH: iParamsPerNetwork<tEthereumAddress>;
-  WethGateway: iParamsPerNetwork<tEthereumAddress>;
 
   StakeParams: IStakeParams;
 

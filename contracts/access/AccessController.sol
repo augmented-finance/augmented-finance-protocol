@@ -27,6 +27,7 @@ contract AccessController is Ownable, IManagedAccessController {
   uint256 private _proxies;
 
   address private _tempAdmin;
+  uint256 private _expiresAt;
 
   constructor(
     uint256 singletons,
@@ -42,7 +43,7 @@ contract AccessController is Ownable, IManagedAccessController {
 
   modifier onlyAdmin {
     require(
-      _msgSender() == owner() || _msgSender() == _tempAdmin,
+      _msgSender() == owner() || (_msgSender() == _tempAdmin && _expiresAt > block.number),
       'Ownable: caller is not the owner'
     );
     _;
@@ -61,12 +62,38 @@ contract AccessController is Ownable, IManagedAccessController {
     return flags & filter;
   }
 
-  function setTempAdmin(address admin) public override onlyAdmin {
+  function setTemporaryAdmin(address admin, uint32 expiryBlocks) external override onlyOwner {
+    if (_tempAdmin != address(0)) {
+      _revokeAllRoles(_tempAdmin);
+    }
+    if (admin != address(0)) {
+      _expiresAt = block.number + expiryBlocks;
+    }
     _tempAdmin = admin;
   }
 
-  function getTempAdmin() public view override returns (address) {
-    return _tempAdmin;
+  function getTemporaryAdmin()
+    external
+    view
+    override
+    returns (address admin, uint256 expiresAtBlock)
+  {
+    if (admin != address(0)) {
+      return (_tempAdmin, _expiresAt);
+    }
+    return (address(0), 0);
+  }
+
+  /// @dev Renouncement has no time limit and can be done either by the temporary admin at any time, or by anyone after the expiry.
+  function renounceTemporaryAdmin() external override {
+    if (_tempAdmin == address(0)) {
+      return;
+    }
+    if (_msgSender() != _tempAdmin && _expiresAt > block.number) {
+      return;
+    }
+    _revokeAllRoles(_tempAdmin);
+    _tempAdmin = address(0);
   }
 
   function grantRoles(address addr, uint256 flags) public onlyAdmin returns (uint256) {
@@ -109,6 +136,10 @@ contract AccessController is Ownable, IManagedAccessController {
   }
 
   function revokeAllRoles(address addr) external onlyAdmin returns (uint256) {
+    return _revokeAllRoles(addr);
+  }
+
+  function _revokeAllRoles(address addr) private returns (uint256) {
     uint256 m = _masks[addr];
     if (m == 0) {
       return 0;
