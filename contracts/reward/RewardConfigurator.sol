@@ -51,29 +51,6 @@ contract RewardConfigurator is
     getDefaultController().updateBaseline(baseline);
   }
 
-  function addRewardPool(IManagedRewardPool pool) public onlyRewardAdmin {
-    IManagedRewardController(pool.getRewardController()).addRewardPool(pool);
-  }
-
-  function removeRewardPool(IManagedRewardPool pool) external onlyRewardAdmin {
-    IManagedRewardController(pool.getRewardController()).removeRewardPool(pool);
-  }
-
-  function addRewardProvider(
-    IManagedRewardPool pool,
-    address provider,
-    address token
-  ) external onlyRewardAdmin {
-    pool.addRewardProvider(provider, token);
-  }
-
-  function removeRewardProvider(IManagedRewardPool pool, address provider)
-    external
-    onlyRewardAdmin
-  {
-    pool.removeRewardProvider(provider);
-  }
-
   function list() public view returns (address[] memory pools) {
     uint256 ignoreMask;
     (pools, ignoreMask) = IUntypedRewardControllerPools(address(getDefaultController())).getPools();

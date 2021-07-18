@@ -58,7 +58,7 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
 
   function getClaimTypeHash() internal pure virtual returns (bytes32);
 
-  function stopRewards() external onlyController() {
+  function stopRewards() external onlyRateAdmin {
     _rewardLimit = 0;
   }
 
@@ -70,13 +70,13 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
     return (0, 0);
   }
 
-  function addRewardProvider(address provider, address token) external override onlyController {
+  function addRewardProvider(address provider, address token) external override onlyConfigurator {
     require(provider != address(0), 'provider is required');
     require(token == address(0), 'token is unsupported');
     _providers[provider] = true;
   }
 
-  function removeRewardProvider(address provider) external override onlyController {
+  function removeRewardProvider(address provider) external override onlyConfigurator {
     delete (_providers[provider]);
   }
 

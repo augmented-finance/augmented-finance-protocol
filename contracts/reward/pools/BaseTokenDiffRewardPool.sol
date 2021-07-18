@@ -89,7 +89,7 @@ abstract contract BaseTokenDiffRewardPool is ControlledRewardPool, IRewardPool {
     external
     virtual
     override
-    onlyController
+    onlyConfigurator
   {
     require(provider != address(0), 'provider is required');
     if (_token == address(0)) {
@@ -105,7 +105,7 @@ abstract contract BaseTokenDiffRewardPool is ControlledRewardPool, IRewardPool {
     internalUpdateSupplyDiff(0, 1);
   }
 
-  function removeRewardProvider(address provider) external virtual override onlyController {
+  function removeRewardProvider(address provider) external virtual override onlyConfigurator {
     uint256 oldSupply = _providers[provider];
     if (oldSupply == 0) {
       return;

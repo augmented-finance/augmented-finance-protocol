@@ -71,11 +71,11 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return (true, appliedRate);
   }
 
-  function disableBaseline() external override onlyController {
+  function disableBaseline() external override onlyRateAdmin {
     _baselinePercentage = NO_BASELINE;
   }
 
-  function disableRewardPool() external override onlyController {
+  function disableRewardPool() external override onlyRateAdmin {
     _baselinePercentage = NO_BASELINE;
     _pausedRate = 0;
     internalSetRate(0);
@@ -187,7 +187,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   function internalCalcReward(address holder) internal view virtual returns (uint256, uint32);
 
   function isController(address addr) internal view returns (bool) {
-    return address(_controller) == addr || _controller.isConfigurator(addr);
+    return address(_controller) == addr;
   }
 
   modifier onlyController() {

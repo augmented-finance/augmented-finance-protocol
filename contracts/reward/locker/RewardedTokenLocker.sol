@@ -52,11 +52,11 @@ contract RewardedTokenLocker is
     return !isPaused();
   }
 
-  function addRewardProvider(address, address) external override onlyController {
+  function addRewardProvider(address, address) external override onlyConfigurator {
     revert('UNSUPPORTED');
   }
 
-  function removeRewardProvider(address) external override onlyController {}
+  function removeRewardProvider(address) external override onlyConfigurator {}
 
   function internalSyncRate(uint32 at) internal override {
     // console.log('internalSyncRate', at, getExtraRate(), getStakedTotal());

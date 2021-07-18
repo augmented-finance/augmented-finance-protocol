@@ -88,18 +88,6 @@ abstract contract BaseRewardController is
 
   function internalOnPoolRemoved(IManagedRewardPool) internal virtual {}
 
-  function addRewardProvider(
-    address pool,
-    address provider,
-    address token
-  ) external onlyConfigurator {
-    IManagedRewardPool(pool).addRewardProvider(provider, token);
-  }
-
-  function removeRewardProvider(address pool, address provider) external onlyConfigurator {
-    IManagedRewardPool(pool).removeRewardProvider(provider);
-  }
-
   function updateBaseline(uint256 baseline)
     external
     override
