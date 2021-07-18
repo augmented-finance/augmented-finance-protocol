@@ -77,10 +77,10 @@ abstract contract PoolTokenBase is
 
   modifier onlyRewardAdmin {
     require(
-      AccessHelper.hasAllOf(
+      AccessHelper.hasAnyOf(
         _pool.getAccessController(),
         _msgSender(),
-        AccessFlags.REWARD_CONFIG_ADMIN
+        AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR
       ),
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
     );
@@ -174,8 +174,8 @@ abstract contract PoolTokenBase is
   /**
    * @dev Returns the address of the incentives controller contract
    **/
-  function getIncentivesController() public view returns (IBalanceHook) {
-    return _incentivesController;
+  function getIncentivesController() public view override returns (address) {
+    return address(_incentivesController);
   }
 
   function increaseAllowance(address, uint256) public virtual returns (bool);

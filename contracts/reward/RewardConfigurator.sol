@@ -2,15 +2,22 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
 import {Errors} from '../tools/Errors.sol';
 import {IRewardConfigurator} from './interfaces/IRewardConfigurator.sol';
-import {IManagedRewardController} from './interfaces/IRewardController.sol';
+import {
+  IManagedRewardController,
+  IUntypedRewardControllerPools
+} from './interfaces/IRewardController.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
-import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
+import {IManagedRewardBooster} from './interfaces/IManagedRewardBooster.sol';
+
+import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
+import {IInitializableRewardPool} from './interfaces/IInitializableRewardPool.sol';
+import {ProxyOwner} from '../tools/upgradeability/ProxyOwner.sol';
+import {IRewardedToken} from '../interfaces/IRewardedToken.sol';
 
 contract RewardConfigurator is
   MarketAccessBitmask(IMarketAccessController(0)),
@@ -23,28 +30,15 @@ contract RewardConfigurator is
     return CONFIGURATOR_REVISION;
   }
 
-  // TODO mapping for pool implementations
+  ProxyOwner internal immutable _proxies;
 
-  struct NamedPool {
-    IManagedRewardPool pool;
-    string[] names;
+  constructor() public {
+    _proxies = new ProxyOwner();
   }
-
-  mapping(uint256 => NamedPool) internal _rewardPools;
-  mapping(address => uint256) internal _poolToPoolNum;
-  mapping(string => uint256) internal _nameToPoolNum;
-  uint256 internal _rewardPoolCount;
 
   // This initializer is invoked by AccessController.setAddressAsImpl
   function initialize(address addressesProvider) external initializer(CONFIGURATOR_REVISION) {
     _remoteAcl = IMarketAccessController(addressesProvider);
-  }
-
-  function updateBaselineOf(IManagedRewardController ctl, uint256 baseline)
-    external
-    onlyRewardAdmin
-  {
-    ctl.updateBaseline(baseline);
   }
 
   function getDefaultController() public view returns (IManagedRewardController) {
@@ -57,30 +51,12 @@ contract RewardConfigurator is
     getDefaultController().updateBaseline(baseline);
   }
 
-  function addRewardPool(IManagedRewardPool pool, string memory name) public onlyRewardAdmin {
-    require(pool != IManagedRewardPool(0), 'pool is required');
-    require(findRewardPoolByName(name) == address(0), 'duplicate pool name');
-
-    uint256 poolNum = _poolToPoolNum[address(pool)];
-    if (poolNum == 0) {
-      poolNum = _rewardPoolCount + 1;
-      _rewardPoolCount = poolNum;
-      _rewardPools[poolNum].pool = pool;
-      _poolToPoolNum[address(pool)] = poolNum;
-    }
-    _rewardPools[poolNum].names.push(name);
-    _nameToPoolNum[name] = poolNum;
-
+  function addRewardPool(IManagedRewardPool pool) public onlyRewardAdmin {
     IManagedRewardController(pool.getRewardController()).addRewardPool(pool);
   }
 
-  function removeRewardPool(IManagedRewardPool pool) external onlyRewardAdmin returns (bool) {
-    uint256 poolNum = _poolToPoolNum[address(pool)];
-    if (poolNum == 0) {
-      return false;
-    }
-    delete (_poolToPoolNum[address(pool)]);
-    delete (_rewardPools[poolNum]);
+  function removeRewardPool(IManagedRewardPool pool) external onlyRewardAdmin {
+    IManagedRewardController(pool.getRewardController()).removeRewardPool(pool);
   }
 
   function addRewardProvider(
@@ -98,29 +74,83 @@ contract RewardConfigurator is
     pool.removeRewardProvider(provider);
   }
 
-  function findRewardPoolByName(string memory name) public view returns (address) {
-    uint256 poolNum = _nameToPoolNum[name];
-    if (poolNum == 0) {
-      return address(0);
-    }
-    return address(_rewardPools[poolNum].pool);
-  }
+  function list() public view returns (address[] memory pools) {
+    uint256 ignoreMask;
+    (pools, ignoreMask) = IUntypedRewardControllerPools(address(getDefaultController())).getPools();
 
-  function list() public view returns (address[] memory pools, uint256 count) {
-    if (_rewardPoolCount == 0) {
-      return (pools, 0);
-    }
-    pools = new address[](_rewardPoolCount);
-    for (uint256 i = 1; i <= _rewardPoolCount; i++) {
-      pools[count] = address(_rewardPools[i].pool);
-      if (pools[count] != address(0)) {
-        count++;
+    for (uint256 i = 0; ignoreMask > 0 && i < pools.length; i++) {
+      if (ignoreMask & 1 != 0) {
+        pools[i] = address(0);
       }
+      ignoreMask >>= 1;
     }
-    return (pools, count);
+    return pools;
   }
 
-  // function overridePoolRate(address pool, uint256 rate) external onlyOwner {
-  //   IManagedRewardPool(pool).setRate(rate);
-  // }
+  function batchInitRewardPools(PoolInitData[] calldata entries) external override onlyRewardAdmin {
+    IManagedRewardController ctl = getDefaultController();
+
+    for (uint256 i = 0; i < entries.length; i++) {
+      PoolInitData calldata entry = entries[i];
+
+      IInitializableRewardPool.InitData memory params =
+        IInitializableRewardPool.InitData(
+          ctl,
+          entry.initialRate,
+          entry.rateScale,
+          entry.baselinePercentage
+        );
+
+      address pool =
+        address(
+          _remoteAcl.createProxy(
+            address(_proxies),
+            entry.impl,
+            abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
+          )
+        );
+
+      ctl.addRewardPool(IManagedRewardPool(pool));
+      IManagedRewardPool(pool).addRewardProvider(entry.provider, entry.provider);
+      IRewardedToken(entry.provider).setIncentivesController(pool);
+    }
+  }
+
+  function updateRewardToken(PoolUpdateData calldata input) external onlyRewardAdmin {
+    // StakeTokenData memory data = dataOf(input.token);
+    // bytes memory params =
+    //   abi.encodeWithSelector(
+    //     IInitializableStakeToken.initialize.selector,
+    //     data.config,
+    //     input.stkTokenName,
+    //     input.stkTokenSymbol,
+    //     data.stkTokenDecimals
+    //   );
+    // _proxies.upgradeToAndCall(input.token, input.stakeTokenImpl, params);
+    // emit StakeTokenUpgraded(input.token, input);
+  }
+
+  function buildRewardTokenInitData(
+    string calldata name,
+    string calldata symbol,
+    uint8 decimals
+  ) external view returns (bytes memory) {
+    IInitializableRewardToken.InitData memory data =
+      IInitializableRewardToken.InitData(_remoteAcl, name, symbol, decimals);
+    return abi.encodeWithSelector(IInitializableRewardToken.initialize.selector, data);
+  }
+
+  function configureRewardBoost(
+    IManagedRewardPool boostPool,
+    bool updateRate,
+    address excessTarget,
+    bool mintExcess
+  ) external {
+    IManagedRewardBooster booster = IManagedRewardBooster(address(getDefaultController()));
+
+    booster.setUpdateBoostPoolRate(updateRate);
+    booster.addRewardPool(boostPool);
+    booster.setBoostPool(address(boostPool));
+    booster.setBoostExcessTarget(excessTarget, mintExcess);
+  }
 }

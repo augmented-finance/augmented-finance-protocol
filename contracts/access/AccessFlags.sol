@@ -12,16 +12,20 @@ library AccessFlags {
   uint256 public constant REWARD_RATE_ADMIN = 1 << 4;
   uint256 public constant STAKE_ADMIN = 1 << 5;
   uint256 public constant REFERRAL_ADMIN = 1 << 6;
+  uint256 public constant LENDING_RATE_ADMIN = 1 << 7;
+  uint256 public constant SWEEP_ADMIN = 1 << 8;
+  uint256 public constant ORACLE_ADMIN = 1 << 9;
 
   uint256 public constant LIQUIDITY_CONTROLLER = 1 << 15; // can slash & pause stakes
 
-  // singletons - use range [16..32]
+  // singletons - use range [16..64]
   // these roles can ONLY be assigned to a single address
-  uint256 public constant SINGLETONS = ((uint256(1) << 32) - 1) & ~((uint256(1) << 16) - 1);
+  uint256 public constant ROLES = (uint256(1) << 16) - 1;
+  uint256 public constant SINGLETONS = ((uint256(1) << 64) - 1) & ~ROLES;
 
   uint256 public constant LENDING_POOL = 1 << 16; // use proxy
   uint256 public constant LENDING_POOL_CONFIGURATOR = 1 << 17; // use proxy
-  uint256 public constant LENDING_POOL_COLLATERAL_MANAGER = 1 << 18;
+
   uint256 public constant PRICE_ORACLE = 1 << 19;
   uint256 public constant LENDING_RATE_ORACLE = 1 << 20;
   uint256 public constant TREASURY = 1 << 21; // use proxy

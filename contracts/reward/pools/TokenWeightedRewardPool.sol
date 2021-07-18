@@ -26,6 +26,15 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
     CalcLinearWeightedReward(maxWeightBase)
   {}
 
+  function _initialize(
+    IRewardController controller,
+    uint256 initialRate,
+    uint224 rateScale,
+    uint16 baselinePercentage
+  ) internal override {
+    super._initialize(controller, initialRate, rateScale, baselinePercentage);
+  }
+
   function internalGetRate() internal view override returns (uint256) {
     return super.getLinearRate();
   }

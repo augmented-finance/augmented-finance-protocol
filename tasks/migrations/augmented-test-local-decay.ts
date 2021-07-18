@@ -1,10 +1,9 @@
 import { task, types } from 'hardhat/config';
 import {
-  deployAccessController,
   deployMockAgfToken,
   deployRewardBooster,
-  deployForwardingRewardPoolDecay,
   deployDecayingTokenLocker,
+  deployMarketAccessController,
 } from '../../helpers/contracts-deployments';
 import {
   MAX_LOCKER_PERIOD,
@@ -15,7 +14,7 @@ import {
   WEEK,
 } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
-import { AccessFlags } from '../../helpers/access-flags';
+import { AccessFlags, ACCESS_REWARD_MINT } from '../../helpers/access-flags';
 
 task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
   async ({ verify }, localBRE) => {
@@ -23,11 +22,14 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
     const [root, user1, user2, slasher] = await localBRE.ethers.getSigners();
 
     console.log(`#1 deploying: Access Controller`);
-    const ac = await deployAccessController();
+    const ac = await deployMarketAccessController('marketId');
     // emergency admin + liquidity admin
-    await ac.setEmergencyAdmin(root.address);
-    await ac.grantRoles(root.address, AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN);
-    await ac.grantRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
+    await ac.grantRoles(
+      root.address,
+      AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN | AccessFlags.EMERGENCY_ADMIN
+    );
+    await ac.grantRoles(root.address, ACCESS_REWARD_MINT);
+    await ac.grantAnyRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
     console.log(`#2 deploying: mock AGF`);
     const agfToken = await deployMockAgfToken(
@@ -37,23 +39,20 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
 
     console.log(`#3 deploying: RewardBooster`);
     const rewardBooster = await deployRewardBooster([ac.address, agfToken.address], verify);
+    await ac.setRewardController(rewardBooster.address);
 
-    console.log(`#5 deploying: DecayingTokenLocker + ForwardingRewardPool for RewardBooster`);
+    console.log(`#5 deploying: DecayingTokenLocker for RewardBooster`);
 
-    // deploy token weighted reward pool, register in controller, separated pool for math tests
-    const fwdRewardPoolDecay = await deployForwardingRewardPoolDecay(
-      [rewardBooster.address, RAY_10000, RAY, 0],
-      verify
-    );
     const decayLocker = await deployDecayingTokenLocker([
-      ac.address,
+      rewardBooster.address,
+      RAY_10000,
+      RAY,
+      0,
       agfToken.address,
       WEEK,
       MAX_LOCKER_PERIOD,
       RAY_100,
     ]);
-    await waitForTx(await rewardBooster.addRewardPool(fwdRewardPoolDecay.address));
-    await decayLocker.setForwardingRewardPool(fwdRewardPoolDecay.address);
-    await fwdRewardPoolDecay.addRewardProvider(decayLocker.address, ONE_ADDRESS);
+    await waitForTx(await rewardBooster.addRewardPool(decayLocker.address));
   }
 );

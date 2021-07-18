@@ -437,4 +437,12 @@ abstract contract SlashableStakeTokenBase is
     params.maxSlashable = _maxSlashablePercentage;
     return (params, name(), symbol(), decimals());
   }
+
+  function setIncentivesController(address addr) external override onlyRewardAdmin {
+    _incentivesController = IBalanceHook(addr);
+  }
+
+  function getIncentivesController() public view override returns (address) {
+    return address(_incentivesController);
+  }
 }

@@ -2,37 +2,39 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {BitUtils} from '../../tools/math/BitUtils.sol';
 
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-
-import {BaseTokenLocker} from './BaseTokenLocker.sol';
-import {ForwardedRewardPool} from '../pools/ForwardedRewardPool.sol';
-import {CalcLinearWeightedReward} from '../calcs/CalcLinearWeightedReward.sol';
 import {AllocationMode} from '../interfaces/IRewardController.sol';
-import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
-import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
-
 import {RewardedTokenLocker} from './RewardedTokenLocker.sol';
-
-import {Errors} from '../../tools/Errors.sol';
-
 import 'hardhat/console.sol';
+
+import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 
 contract DecayingTokenLocker is RewardedTokenLocker {
   constructor(
-    IMarketAccessController accessCtl,
+    IRewardController controller,
+    uint256 initialRate,
+    uint224 rateScale,
+    uint16 baselinePercentage,
     address underlying,
     uint32 pointPeriod,
     uint32 maxValuePeriod,
     uint256 maxWeightBase
-  ) public RewardedTokenLocker(accessCtl, underlying, pointPeriod, maxValuePeriod, maxWeightBase) {}
+  )
+    public
+    RewardedTokenLocker(
+      controller,
+      initialRate,
+      rateScale,
+      baselinePercentage,
+      underlying,
+      pointPeriod,
+      maxValuePeriod,
+      maxWeightBase
+    )
+  {}
 
   function balanceOf(address account) public view virtual override returns (uint256) {
     (uint32 startTS, uint32 endTS) = expiryOf(account);
@@ -50,8 +52,8 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return stakeDecayed;
   }
 
-  function calcReward(address holder)
-    external
+  function internalCalcReward(address holder)
+    internal
     view
     override
     returns (uint256 amount, uint32 since)
@@ -93,7 +95,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return (amount, since);
   }
 
-  function internalClaimReward(address holder, uint256 limit)
+  function internalGetReward(address holder, uint256 limit)
     internal
     virtual
     override

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {AccessFlags} from '../access/AccessFlags.sol';
 import {RemoteAccessBitmask} from '../access/RemoteAccessBitmask.sol';
@@ -12,7 +13,7 @@ import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.
 
 import 'hardhat/console.sol';
 
-contract AGFToken is
+contract AGFTokenV1 is
   RewardToken,
   RemoteAccessBitmask,
   VersionedInitializable,
@@ -37,23 +38,25 @@ contract AGFToken is
     virtual
     initializerRunAlways(TOKEN_REVISION)
   {
-    _initialize(remoteAcl, NAME, SYMBOL);
+    _initialize(remoteAcl, NAME, SYMBOL, DECIMALS);
   }
 
-  function initialize(
-    IRemoteAccessBitmask remoteAcl,
-    string calldata name,
-    string calldata symbol
-  ) public virtual override initializerRunAlways(TOKEN_REVISION) {
-    _initialize(remoteAcl, name, symbol);
+  function initialize(InitData calldata data)
+    public
+    virtual
+    override
+    initializerRunAlways(TOKEN_REVISION)
+  {
+    _initialize(data.remoteAcl, data.name, data.symbol, data.decimals);
   }
 
   function _initialize(
     IRemoteAccessBitmask remoteAcl,
     string memory name,
-    string memory symbol
+    string memory symbol,
+    uint8 decimals
   ) private {
-    super._initializeERC20(name, symbol, DECIMALS);
+    super._initializeERC20(name, symbol, decimals);
     _remoteAcl = remoteAcl;
     if (!isRevisionInitialized(TOKEN_REVISION)) {
       super._initializeDomainSeparator();
@@ -64,7 +67,7 @@ contract AGFToken is
     address account,
     uint256 amount,
     bool
-  ) external override aclHas(AccessFlags.REWARD_MINT) {
+  ) external override aclAnyOf(AccessFlags.REWARD_MINT | AccessFlags.REWARD_CONTROLLER) {
     _mint(account, amount);
   }
 

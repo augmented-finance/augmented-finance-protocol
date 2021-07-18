@@ -26,7 +26,28 @@ contract AccessController is Ownable, IManagedAccessController {
   uint256 private _singletons;
   uint256 private _proxies;
 
-  mapping(string => address) private _implementations;
+  address private _tempAdmin;
+  uint256 private _expiresAt;
+
+  constructor(
+    uint256 singletons,
+    uint256 nonSingletons,
+    uint256 proxies
+  ) public {
+    require(singletons & nonSingletons == 0, 'mixed types');
+    require(singletons & proxies == proxies, 'all proxies must be singletons');
+    _singletons = singletons;
+    _nonSingletons = nonSingletons;
+    _proxies = proxies;
+  }
+
+  modifier onlyAdmin {
+    require(
+      _msgSender() == owner() || (_msgSender() == _tempAdmin && _expiresAt > block.number),
+      'Ownable: caller is not the owner'
+    );
+    _;
+  }
 
   function queryAccessControlMask(address addr, uint256 filter)
     external
@@ -41,9 +62,50 @@ contract AccessController is Ownable, IManagedAccessController {
     return flags & filter;
   }
 
-  function grantRoles(address addr, uint256 flags) external onlyOwner returns (uint256) {
-    require(_singletons & flags == 0, 'singleton should use setAddress');
+  function setTemporaryAdmin(address admin, uint32 expiryBlocks) external override onlyOwner {
+    if (_tempAdmin != address(0)) {
+      _revokeAllRoles(_tempAdmin);
+    }
+    if (admin != address(0)) {
+      _expiresAt = block.number + expiryBlocks;
+    }
+    _tempAdmin = admin;
+  }
 
+  function getTemporaryAdmin()
+    external
+    view
+    override
+    returns (address admin, uint256 expiresAtBlock)
+  {
+    if (admin != address(0)) {
+      return (_tempAdmin, _expiresAt);
+    }
+    return (address(0), 0);
+  }
+
+  /// @dev Renouncement has no time limit and can be done either by the temporary admin at any time, or by anyone after the expiry.
+  function renounceTemporaryAdmin() external override {
+    if (_tempAdmin == address(0)) {
+      return;
+    }
+    if (_msgSender() != _tempAdmin && _expiresAt > block.number) {
+      return;
+    }
+    _revokeAllRoles(_tempAdmin);
+    _tempAdmin = address(0);
+  }
+
+  function grantRoles(address addr, uint256 flags) public onlyAdmin returns (uint256) {
+    require(_singletons & flags == 0, 'singleton should use setAddress');
+    _grantRoles(addr, flags);
+  }
+
+  function grantAnyRoles(address addr, uint256 flags) public onlyAdmin returns (uint256) {
+    _grantRoles(addr, flags);
+  }
+
+  function _grantRoles(address addr, uint256 flags) private returns (uint256) {
     uint256 m = _masks[addr];
     flags &= ~m;
     if (flags == 0) {
@@ -67,10 +129,42 @@ contract AccessController is Ownable, IManagedAccessController {
     return m;
   }
 
-  function revokeRoles(address addr, uint256 flags) external onlyOwner returns (uint256) {
+  function revokeRoles(address addr, uint256 flags) external onlyAdmin returns (uint256) {
     require(_singletons & flags == 0, 'singleton should use setAddress');
 
     return _revokeRoles(addr, flags);
+  }
+
+  function revokeAllRoles(address addr) external onlyAdmin returns (uint256) {
+    return _revokeAllRoles(addr);
+  }
+
+  function _revokeAllRoles(address addr) private returns (uint256) {
+    uint256 m = _masks[addr];
+    if (m == 0) {
+      return 0;
+    }
+    delete (_masks[addr]);
+
+    uint256 flags = m & _singletons;
+    if (flags == 0) {
+      return m;
+    }
+
+    for (uint8 i = 0; i <= 255; i++) {
+      uint256 mask = uint256(1) << i;
+      if (mask & flags == 0) {
+        if (mask > flags) {
+          break;
+        }
+        continue;
+      }
+      if (_addresses[mask] == addr) {
+        delete (_addresses[mask]);
+      }
+    }
+
+    return m;
   }
 
   function _revokeRoles(address addr, uint256 flags) private returns (uint256) {
@@ -82,8 +176,8 @@ contract AccessController is Ownable, IManagedAccessController {
     return m;
   }
 
-  function revokeRolesFromAll(uint256 flags, uint256 limit) external onlyOwner returns (bool) {
-    require(_singletons & flags == 0, 'singleton should use setAddress');
+  function revokeRolesFromAll(uint256 flags, uint256 limit) public onlyAdmin returns (bool all) {
+    all = true;
 
     for (uint8 i = 0; i <= 255; i++) {
       uint256 mask = uint256(1) << i;
@@ -93,32 +187,81 @@ contract AccessController is Ownable, IManagedAccessController {
         }
         continue;
       }
+      if (mask & _singletons != 0) {
+        delete (_addresses[mask]);
+      }
+
+      if (!all) {
+        continue;
+      }
+
       address[] storage grantees = _grantees[mask];
       for (uint256 j = grantees.length; j > 0; ) {
         j--;
         if (limit == 0) {
-          return false;
+          all = false;
+          break;
         }
         limit--;
         _revokeRoles(grantees[j], mask);
         grantees.pop();
       }
     }
-    return true;
+    return all;
   }
 
   function roleGrantees(uint256 id) external view returns (address[] memory addrList) {
+    require(id.isPowerOf2nz(), 'only one role is allowed');
+
     if (_singletons & id == 0) {
-      require(id.isPowerOf2nz(), 'only one role is allowed');
       return _grantees[id];
     }
 
-    address addr = getAddress(id);
-    if (addr != address(0)) {
-      addrList = new address[](1);
-      addrList[0] = addr;
+    address singleton = _addresses[id];
+    if (singleton == address(0)) {
+      return _grantees[id];
+    }
+
+    address[] storage grantees = _grantees[id];
+
+    addrList = new address[](1 + grantees.length);
+    addrList[0] = singleton;
+    for (uint256 i = 1; i < addrList.length; i++) {
+      addrList[i] = grantees[i - 1];
     }
     return addrList;
+  }
+
+  function roleActiveGrantees(uint256 id)
+    external
+    view
+    returns (address[] memory addrList, uint256 count)
+  {
+    require(id.isPowerOf2nz(), 'only one role is allowed');
+
+    address addr;
+    if (_singletons & id != 0) {
+      addr = _addresses[id];
+    }
+
+    address[] storage grantees = _grantees[id];
+
+    if (addr == address(0)) {
+      addrList = new address[](grantees.length);
+    } else {
+      addrList = new address[](1 + grantees.length);
+      addrList[0] = addr;
+      count++;
+    }
+
+    for (uint256 i = 0; i < grantees.length; i++) {
+      addr = grantees[i];
+      if (_masks[addr] & id != 0) {
+        addrList[count] = addr;
+        count++;
+      }
+    }
+    return (addrList, count);
   }
 
   /**
@@ -127,7 +270,7 @@ contract AccessController is Ownable, IManagedAccessController {
    * @param id The id
    * @param newAddress The address to set
    */
-  function setAddress(uint256 id, address newAddress) public override onlyOwner {
+  function setAddress(uint256 id, address newAddress) public override onlyAdmin {
     require(_proxies & id == 0, 'use of setAddressAsProxy is required');
     _internalSetAddress(id, newAddress);
     emit AddressSet(id, newAddress, false);
@@ -138,6 +281,7 @@ contract AccessController is Ownable, IManagedAccessController {
     if (_singletons & id == 0) {
       require(_nonSingletons & id == 0, 'id is not a singleton');
       _singletons |= id;
+      console.log('_internalSetAddress', newAddress, id);
     }
 
     address prev = _addresses[id];
@@ -173,20 +317,11 @@ contract AccessController is Ownable, IManagedAccessController {
     return isAddress(AccessFlags.EMERGENCY_ADMIN, addr);
   }
 
-  function getEmergencyAdmin() external view override returns (address) {
-    return getAddress(AccessFlags.EMERGENCY_ADMIN);
-  }
-
-  function setEmergencyAdmin(address emergencyAdmin) external override onlyOwner {
-    _internalSetAddress(AccessFlags.EMERGENCY_ADMIN, emergencyAdmin);
-    emit EmergencyAdminUpdated(emergencyAdmin);
-  }
-
-  function markProxies(uint256 id) external onlyOwner {
+  function markProxies(uint256 id) external onlyAdmin {
     _proxies |= id;
   }
 
-  function unmarkProxies(uint256 id) external onlyOwner {
+  function unmarkProxies(uint256 id) external onlyAdmin {
     _proxies &= ~id;
   }
 
@@ -199,8 +334,12 @@ contract AccessController is Ownable, IManagedAccessController {
    * @param id The id
    * @param implementationAddress The address of the new implementation
    */
-  function setAddressAsProxy(uint256 id, address implementationAddress) public override onlyOwner {
-    _updateImpl(id, implementationAddress);
+  function setAddressAsProxy(uint256 id, address implementationAddress) public override onlyAdmin {
+    _updateImpl(
+      id,
+      implementationAddress,
+      abi.encodeWithSignature('initialize(address)', address(this))
+    );
     emit AddressSet(id, implementationAddress, true);
   }
 
@@ -208,44 +347,25 @@ contract AccessController is Ownable, IManagedAccessController {
     uint256 id,
     address implementationAddress,
     bytes calldata params
-  ) public override onlyOwner {
-    _updateCustomImpl(id, implementationAddress, params);
+  ) public override onlyAdmin {
+    _updateImpl(id, implementationAddress, params);
     emit AddressSet(id, implementationAddress, true);
   }
 
   /**
    * @dev Internal function to update the implementation of a specific proxied component of the protocol
    * - If there is no proxy registered in the given `id`, it creates the proxy setting `newAdress`
-   *   as implementation and calls the initialize() function on the proxy
-   * - If there is already a proxy registered, it just updates the implementation to `newAddress` and
-   *   calls the initialize() function via upgradeToAndCall() in the proxy
+   *   as implementation and calls a function on the proxy.
+   * - If there is already a proxy registered, it updates the implementation to `newAddress` by
+   *   the upgradeToAndCall() of the proxy.
    * @param id The id of the proxy to be updated
    * @param newAddress The address of the new implementation
+   * @param params The address of the new implementation
    **/
-  function _updateImpl(uint256 id, address newAddress) private {
-    require(id.isPowerOf2nz(), 'invalid singleton id');
-    address payable proxyAddress = payable(getAddress(id));
-
-    bytes memory params = abi.encodeWithSignature('initialize(address)', address(this));
-
-    if (proxyAddress != address(0)) {
-      InitializableImmutableAdminUpgradeabilityProxy(proxyAddress).upgradeToAndCall(
-        newAddress,
-        params
-      );
-      return;
-    }
-
-    proxyAddress = payable(_createProxy(address(this), newAddress, params));
-    _internalSetAddress(id, proxyAddress);
-    _proxies |= id;
-    emit ProxyCreated(id, proxyAddress);
-  }
-
-  function _updateCustomImpl(
+  function _updateImpl(
     uint256 id,
     address newAddress,
-    bytes calldata params
+    bytes memory params
   ) private {
     require(id.isPowerOf2nz(), 'invalid singleton id');
     address payable proxyAddress = payable(getAddress(id));
@@ -258,7 +378,7 @@ contract AccessController is Ownable, IManagedAccessController {
       return;
     }
 
-    proxyAddress = payable(address(createProxy(address(this), newAddress, params)));
+    proxyAddress = payable(address(_createProxy(address(this), newAddress, params)));
     _internalSetAddress(id, proxyAddress);
     _proxies |= id;
     emit ProxyCreated(id, proxyAddress);
@@ -280,42 +400,6 @@ contract AccessController is Ownable, IManagedAccessController {
     address implAddress,
     bytes calldata params
   ) public override returns (IProxy) {
-    require(implAddress != address(0), 'implementation is required');
-
-    InitializableImmutableAdminUpgradeabilityProxy proxy =
-      new InitializableImmutableAdminUpgradeabilityProxy(adminAddress);
-    proxy.initialize(implAddress, params);
-    return proxy;
-  }
-
-  function createProxyByName(
-    address adminAddress,
-    string calldata implName,
-    bytes calldata params
-  ) public override returns (IProxy) {
-    return createProxy(adminAddress, getImplementation(implName), params);
-  }
-
-  function getImplementation(string calldata id) public view override returns (address) {
-    return _implementations[id];
-  }
-
-  function addImplementation(string calldata id, address addr) public override {
-    require(addImplementationOpt(id, addr) == addr, 'conflicting implementations');
-  }
-
-  function addImplementationOpt(string calldata id, address addr)
-    public
-    override
-    onlyOwner
-    returns (address)
-  {
-    require(addr != address(0), 'implementation is required');
-    address a = _implementations[id];
-    if (a != address(0)) {
-      return a;
-    }
-    _implementations[id] = addr;
-    return addr;
+    return _createProxy(adminAddress, implAddress, params);
   }
 }

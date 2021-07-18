@@ -205,8 +205,4 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
   function getAccessController() external view override returns (IMarketAccessController) {
     return originalPool.getAccessController();
   }
-
-  function isPoolAdmin(address addr) external view override returns (bool) {
-    return originalPool.isPoolAdmin(addr);
-  }
 }

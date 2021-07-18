@@ -2,31 +2,28 @@ import rawBRE from 'hardhat';
 import { MockContract } from 'ethereum-waffle';
 import { getEthersSigners, registerContractInJsonDb } from '../../helpers/contracts-helpers';
 import {
-  deployLendingPoolAddressesProvider,
+  deployMarketAccessController,
   deployMintableERC20,
   deployAddressesProviderRegistry,
-  deployPriceOracle,
+  deployMockPriceOracle,
   deployOracleRouter,
   deployMockFlashLoanReceiver,
   deployWalletBalancerProvider,
   deployProtocolDataProvider,
   deployLendingRateOracle,
-  deployStableAndVariableTokensHelper,
-  deployATokensAndRatesHelper,
   deployWETHGateway,
   deployWETHMocked,
   deployMockUniswapRouter,
   deployUniswapLiquiditySwapAdapter,
   deployUniswapRepayAdapter,
   deployFlashLiquidationAdapter,
-  authorizeWETHGateway,
   deployTreasuryImpl,
   deployLendingPoolConfiguratorImpl,
   deployLendingPoolImpl,
   deployLendingPoolCollateralManagerImpl,
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
-import { TokenContractId, eContractid, tEthereumAddress, LendingPools } from '../../helpers/types';
+import { TokenContractId, tEthereumAddress, LendingPools } from '../../helpers/types';
 import { MintableERC20 } from '../../types';
 import { ConfigNames, getReservesConfigByPool, loadPoolConfig } from '../../helpers/configuration';
 import { initializeMakeSuite } from './helpers/make-suite';
@@ -36,16 +33,12 @@ import {
   deployAllMockAggregators,
   setInitialMarketRatesInRatesOracleByHelper,
 } from '../../helpers/oracles-helpers';
-import { DRE, falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { DRE, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
 import AugmentedConfig from '../../markets/augmented';
-import { ZERO_ADDRESS } from '../../helpers/constants';
-import {
-  getLendingPoolProxy,
-  getLendingPoolConfiguratorProxy,
-  getPairsTokenAggregator,
-} from '../../helpers/contracts-getters';
+import { getLendingPoolProxy, getPairsTokenAggregator } from '../../helpers/contracts-getters';
 import { WETH9Mocked } from '../../types';
+import { AccessFlags } from '../../helpers/access-flags';
 
 const MOCK_USD_PRICE_IN_WEI = AugmentedConfig.ProtocolGlobalParams.MockUsdPriceInWei;
 const ALL_ASSETS_INITIAL_PRICES = AugmentedConfig.Mocks.AllAssetsInitialPrices;
@@ -85,49 +78,48 @@ const deployAllMockTokens = async (deployer: Signer) => {
 
 const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   console.time('setup');
-  const aaveAdmin = await deployer.getAddress();
 
   const mockTokens = await deployAllMockTokens(deployer);
   console.log('Deployed mocks');
-  const addressesProvider = await deployLendingPoolAddressesProvider(AugmentedConfig.MarketId);
-  await waitForTx(await addressesProvider.setPoolAdmin(aaveAdmin));
+  const addressProvider = await deployMarketAccessController(AugmentedConfig.MarketId);
+  await waitForTx(
+    await addressProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN)
+  );
 
   //setting users[1] as emergency admin, which is in position 2 in the DRE addresses list
   const addressList = await Promise.all(
     (await DRE.ethers.getSigners()).map((signer) => signer.getAddress())
   );
 
-  await waitForTx(await addressesProvider.setEmergencyAdmin(addressList[2]));
+  await waitForTx(await addressProvider.grantRoles(addressList[2], AccessFlags.EMERGENCY_ADMIN));
 
   const addressesProviderRegistry = await deployAddressesProviderRegistry();
   await waitForTx(
-    await addressesProviderRegistry.registerAddressesProvider(addressesProvider.address, 1)
+    await addressesProviderRegistry.registerAddressesProvider(addressProvider.address, 1)
   );
 
   const lendingPoolImpl = await deployLendingPoolImpl();
 
-  await waitForTx(await addressesProvider.setLendingPoolImpl(lendingPoolImpl.address));
+  await waitForTx(await addressProvider.setLendingPoolImpl(lendingPoolImpl.address));
 
-  const lendingPoolAddress = await addressesProvider.getLendingPool();
+  const lendingPoolAddress = await addressProvider.getLendingPool();
   const lendingPoolProxy = await getLendingPoolProxy(lendingPoolAddress);
+
+  const collateralManager = await deployLendingPoolCollateralManagerImpl();
+  console.log(
+    '\tSetting lending pool collateral manager implementation with address',
+    collateralManager.address
+  );
+  await waitForTx(
+    await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address)
+  );
 
   const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl();
   await waitForTx(
-    await addressesProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address)
-  );
-  const lendingPoolConfiguratorProxy = await getLendingPoolConfiguratorProxy(
-    await addressesProvider.getLendingPoolConfigurator()
+    await addressProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address)
   );
 
-  // Deploy deployment helpers
-  await deployStableAndVariableTokensHelper([lendingPoolProxy.address, addressesProvider.address]);
-  await deployATokensAndRatesHelper([
-    lendingPoolProxy.address,
-    addressesProvider.address,
-    lendingPoolConfiguratorProxy.address,
-  ]);
-
-  const fallbackOracle = await deployPriceOracle();
+  const fallbackOracle = await deployMockPriceOracle();
   await waitForTx(await fallbackOracle.setEthUsdPrice(MOCK_USD_PRICE_IN_WEI));
   await setInitialAssetPricesInOracle(
     ALL_ASSETS_INITIAL_PRICES,
@@ -137,8 +129,8 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
       USDC: mockTokens.USDC.address,
       USDT: mockTokens.USDT.address,
       AAVE: mockTokens.AAVE.address,
-      LINK: mockTokens.LINK.address,
       WBTC: mockTokens.WBTC.address,
+      LINK: mockTokens.LINK.address,
       USD: USD_ADDRESS,
     },
     fallbackOracle
@@ -163,11 +155,20 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const [tokens, aggregators] = getPairsTokenAggregator(allTokenAddresses, allAggregatorsAddresses);
 
-  await deployOracleRouter([tokens, aggregators, fallbackOracle.address, mockTokens.WETH.address]);
-  await waitForTx(await addressesProvider.setPriceOracle(fallbackOracle.address));
+  await deployOracleRouter([
+    addressProvider.address,
+    tokens,
+    aggregators,
+    fallbackOracle.address,
+    mockTokens.WETH.address,
+  ]);
 
-  const lendingRateOracle = await deployLendingRateOracle();
-  await waitForTx(await addressesProvider.setLendingRateOracle(lendingRateOracle.address));
+  const lendingRateOracle = await deployLendingRateOracle([addressProvider.address]);
+
+  await addressProvider.grantRoles(
+    await deployer.getAddress(),
+    AccessFlags.LENDING_RATE_ADMIN | AccessFlags.ORACLE_ADMIN
+  );
 
   const { USD, ...tokensAddressesWithoutUsd } = allTokenAddresses;
   const allReservesAddresses = {
@@ -176,15 +177,15 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   await setInitialMarketRatesInRatesOracleByHelper(
     LENDING_RATE_ORACLE_RATES_COMMON,
     allReservesAddresses,
-    lendingRateOracle,
-    aaveAdmin
+    lendingRateOracle
   );
+
+  await addressProvider.setPriceOracle(fallbackOracle.address);
+  await addressProvider.setLendingRateOracle(lendingRateOracle.address);
 
   const reservesParams = getReservesConfigByPool(LendingPools.augmented);
 
-  const testHelpers = await deployProtocolDataProvider(addressesProvider.address);
-
-  const admin = await deployer.getAddress();
+  const testHelpers = await deployProtocolDataProvider(addressProvider.address);
 
   console.log('Initialize configuration');
 
@@ -193,31 +194,19 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const { Names } = config;
 
   const treasuryImpl = await deployTreasuryImpl();
-  addressesProvider.addImplementation('Treasury', treasuryImpl.address);
-  addressesProvider.setTreasuryImpl(treasuryImpl.address);
+  addressProvider.setTreasuryImpl(treasuryImpl.address);
   const treasuryAddress = treasuryImpl.address;
 
-  await initReservesByHelper(
-    reservesParams,
-    allReservesAddresses,
-    Names,
-    admin,
-    treasuryAddress,
-    false
-  );
+  await initReservesByHelper(reservesParams, allReservesAddresses, Names, treasuryAddress, false);
 
-  await configureReservesByHelper(reservesParams, allReservesAddresses, testHelpers, admin);
+  await configureReservesByHelper(reservesParams, allReservesAddresses, testHelpers);
 
-  const collateralManagerImpl = await deployLendingPoolCollateralManagerImpl();
-  await waitForTx(
-    await addressesProvider.setLendingPoolCollateralManager(collateralManagerImpl.address)
-  );
-  await deployMockFlashLoanReceiver(addressesProvider.address);
+  await deployMockFlashLoanReceiver(addressProvider.address);
 
   const mockUniswapRouter = await deployMockUniswapRouter();
 
   const adapterParams: [string, string, string] = [
-    addressesProvider.address,
+    addressProvider.address,
     mockUniswapRouter.address,
     mockTokens.WETH.address,
   ];
@@ -228,8 +217,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   await deployWalletBalancerProvider();
 
-  const gateWay = await deployWETHGateway([mockTokens.WETH.address]);
-  await authorizeWETHGateway(gateWay.address, lendingPoolAddress);
+  await deployWETHGateway([addressProvider.address, mockTokens.WETH.address]);
 
   console.timeEnd('setup');
 };

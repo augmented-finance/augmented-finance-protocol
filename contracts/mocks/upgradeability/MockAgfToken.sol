@@ -2,15 +2,11 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {AGFToken} from '../../reward/AGFToken.sol';
+import {AGFTokenV1} from '../../reward/AGFTokenV1.sol';
 
-contract MockAgfToken is AGFToken {
+contract MockAgfToken is AGFTokenV1 {
   function getRevision() internal pure override returns (uint256) {
     return super.getRevision() + 1;
-  }
-
-  modifier aclHas(uint256) override {
-    _;
   }
 
   function _checkTransfer(address, address) internal view override {}

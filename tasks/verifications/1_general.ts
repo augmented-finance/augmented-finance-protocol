@@ -31,7 +31,6 @@ task('verify:general', 'Verify contracts at Etherscan')
       ReservesConfig,
       ProviderRegistry,
       MarketId,
-      WethGateway,
     } = poolConfig as ICommonConfiguration;
 
     const registryAddress = getParamPerNetwork(ProviderRegistry, network);
@@ -53,10 +52,7 @@ task('verify:general', 'Verify contracts at Etherscan')
       const dataProvider = await getProtocolDataProvider();
       const walletProvider = await getWalletProvider();
 
-      const wethGatewayAddress = getParamPerNetwork(WethGateway, network);
-      const wethGateway = notFalsyOrZeroAddress(wethGatewayAddress)
-        ? await getWETHGateway(wethGatewayAddress)
-        : await getWETHGateway();
+      const wethGateway = await getWETHGateway();
 
       // Address Provider
       console.log('\n- Verifying address provider...\n');

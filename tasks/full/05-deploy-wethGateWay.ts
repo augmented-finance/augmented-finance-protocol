@@ -1,7 +1,6 @@
 import { task } from 'hardhat/config';
-import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
-import { authorizeWETHGateway, deployWETHGateway } from '../../helpers/contracts-deployments';
+import { deployWETHGateway } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
 import { getMarketAddressController } from '../../helpers/contracts-getters';
 import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
@@ -16,22 +15,21 @@ task(`full-deploy-weth-gateway`, `Deploys the ${CONTRACT_NAME} contract for prod
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const addressesProvider = await getMarketAddressController();
-
-    const { WethGateway } = poolConfig;
+    const addressProvider = await getMarketAddressController();
 
     if (!localBRE.network.config.chainId) {
       throw new Error('INVALID_CHAIN_ID');
     }
-    let gateWay = getParamPerNetwork(WethGateway, network);
 
-    if (gateWay === '') {
+    let gateWay = await addressProvider.getAddress(AccessFlags.WETH_GATEWAY);
+
+    if (falsyOrZeroAddress(gateWay)) {
       const Weth = await getWethAddress(poolConfig);
       if (falsyOrZeroAddress(Weth)) {
         throw 'WETH address is missing';
       }
 
-      const impl = await deployWETHGateway([Weth], verify);
+      const impl = await deployWETHGateway([addressProvider.address, Weth], verify);
 
       console.log(`Deployed ${CONTRACT_NAME}.address`, impl.address);
       gateWay = impl.address;
@@ -39,10 +37,7 @@ task(`full-deploy-weth-gateway`, `Deploys the ${CONTRACT_NAME} contract for prod
       console.log(`${CONTRACT_NAME} already deployed: ${gateWay}`);
     }
 
-    await waitForTx(await addressesProvider.setAddress(AccessFlags.WETH_GATEWAY, gateWay));
-
-    const lendingPoolAddress = await addressesProvider.getLendingPool();
-    await authorizeWETHGateway(gateWay, lendingPoolAddress);
+    await waitForTx(await addressProvider.setAddress(AccessFlags.WETH_GATEWAY, gateWay));
 
     console.log(`\tFinished ${CONTRACT_NAME} deployment`);
   });
