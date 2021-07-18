@@ -3,27 +3,17 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { deployOracleRouter, deployLendingRateOracle } from '../../helpers/contracts-deployments';
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
 import { ICommonConfiguration, eNetwork, SymbolMap } from '../../helpers/types';
-import {
-  waitForTx,
-  notFalsyOrZeroAddress,
-  getSigner,
-  getTenderlyDashboardLink,
-  getFirstSigner,
-} from '../../helpers/misc-utils';
+import { getFirstSigner } from '../../helpers/misc-utils';
 import {
   ConfigNames,
   loadPoolConfig,
   getWethAddress,
-  getGenesisPoolAdmin,
   getLendingRateOracles,
 } from '../../helpers/configuration';
 import {
-  getOracleRouter,
   getMarketAddressController,
-  getLendingRateOracle,
   getPairsTokenAggregator,
 } from '../../helpers/contracts-getters';
-import { OracleRouter } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
 
 task('full:deploy-oracles', 'Deploy oracles for prod enviroment')

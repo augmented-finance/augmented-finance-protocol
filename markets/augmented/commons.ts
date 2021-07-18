@@ -59,7 +59,6 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.main]: undefined,
     [eEthereumNetwork.tenderlyMain]: undefined,
   },
-  PoolAdminIndex: 0,
   EmergencyAdmin: {
     [eEthereumNetwork.hardhat]: undefined,
     [eEthereumNetwork.coverage]: undefined,
@@ -69,7 +68,6 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.main]: undefined,
     [eEthereumNetwork.tenderlyMain]: undefined,
   },
-  EmergencyAdminIndex: 1,
   ProviderRegistry: {
     [eEthereumNetwork.kovan]: '',
     [eEthereumNetwork.ropsten]: '',
@@ -282,6 +280,7 @@ export const CommonsConfig: ICommonConfiguration = {
     },
     TeamPool: {
       Share: 1000,
+      UnlockAt: new Date('2021-11-01'),
       Manager: ZERO_ADDRESS,
       Members: {
         '0x0000000000000000000000000000000000000001': 5000
