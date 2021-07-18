@@ -129,11 +129,11 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   function internalSetRate(uint256 rate) internal virtual;
 
   function setPaused(bool paused) public override onlyEmergencyAdmin {
-    if (_paused == paused) {
-      return;
+    if (_paused != paused) {
+      _paused = paused;
+      internalPause(paused);
     }
-    _paused = paused;
-    internalPause(paused);
+    emit EmergencyPaused(msg.sender, paused);
   }
 
   function isPaused() public view override returns (bool) {
