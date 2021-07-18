@@ -39,8 +39,8 @@ contract RewardedTokenLocker is
     uint256 maxWeightBase
   )
     public
-    BaseTokenLocker(underlying, pointPeriod, maxValuePeriod)
     CalcCheckpointWeightedReward(maxWeightBase)
+    BaseTokenLocker(underlying, pointPeriod, maxValuePeriod)
     ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage)
   {}
 

@@ -6,7 +6,7 @@ import rawBRE, { ethers } from 'hardhat';
 import {
   getMockAgfToken,
   getRewardBooster,
-  getDecayingTokenLocker,
+  getMockDecayingTokenLocker,
 } from '../../helpers/contracts-getters';
 
 import { MockAgfToken, RewardBooster, DecayingTokenLocker } from '../../types';
@@ -46,7 +46,7 @@ describe('Token decaying locker suite', () => {
     rewardController = await getRewardBooster();
 
     AGF = await getMockAgfToken();
-    xAGF = await getDecayingTokenLocker();
+    xAGF = await getMockDecayingTokenLocker();
 
     await AGF.connect(root).mintReward(user1.address, defaultStkAmount, false);
     await AGF.connect(user1).approve(xAGF.address, defaultStkAmount);

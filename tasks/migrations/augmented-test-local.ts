@@ -4,7 +4,7 @@ import {
   deployMockAgfToken,
   deployRewardController,
   deployTeamRewardPool,
-  deployTokenLocker,
+  deployMockTokenLocker,
   deployPermitFreezerRewardPool,
   deployTokenWeightedRewardPoolAGFSeparate,
 } from '../../helpers/contracts-deployments';
@@ -100,7 +100,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       console.log(`#5 deploying: RewardedTokenLocker`);
 
-      const basicLocker = await deployTokenLocker([
+      const basicLocker = await deployMockTokenLocker([
         rewardCtl.address,
         RAY,
         RAY,

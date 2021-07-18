@@ -75,8 +75,9 @@ export enum eContractid {
 
   RewardController = 'RewardController',
   RewardBooster = 'RewardBooster',
-  TokenLocker = 'TokenLocker',
-  DecayingTokenLocker = 'DecayingTokenLocker',
+  MockTokenLocker = 'MockTokenLocker',
+  MockDecayingTokenLocker = 'MockDecayingTokenLocker',
+
   TeamRewardPool = 'TeamRewardPool',
   ReferralRewardPool = 'ReferralRewardPool',
 

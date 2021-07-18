@@ -44,7 +44,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     require(address(controller) != address(0), 'controller is required');
     _controller = controller;
 
-    if (initialRate != 0 && baselinePercentage == 0) {
+    if (baselinePercentage == NO_BASELINE || (initialRate != 0 && baselinePercentage == 0)) {
       _baselinePercentage = NO_BASELINE;
       emit BaselineDisabled();
     } else if (baselinePercentage > 0) {
@@ -192,7 +192,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   function internalCalcReward(address holder) internal view virtual returns (uint256, uint32);
 
-  function isController(address addr) internal view returns (bool) {
+  function isController(address addr) internal view virtual returns (bool) {
     return address(_controller) == addr;
   }
 

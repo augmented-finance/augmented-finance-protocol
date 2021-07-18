@@ -2,7 +2,7 @@ import { task, types } from 'hardhat/config';
 import {
   deployMockAgfToken,
   deployRewardBooster,
-  deployDecayingTokenLocker,
+  deployMockDecayingTokenLocker,
   deployMarketAccessController,
 } from '../../helpers/contracts-deployments';
 import {
@@ -19,7 +19,7 @@ import { AccessFlags, ACCESS_REWARD_MINT } from '../../helpers/access-flags';
 task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
   async ({ verify }, localBRE) => {
     await localBRE.run('set-DRE');
-    const [root, user1, user2, slasher] = await localBRE.ethers.getSigners();
+    const [root, user1, user2, slasher] = await (<any>localBRE).ethers.getSigners();
 
     console.log(`#1 deploying: Access Controller`);
     const ac = await deployMarketAccessController('marketId');
@@ -43,7 +43,7 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
 
     console.log(`#5 deploying: DecayingTokenLocker for RewardBooster`);
 
-    const decayLocker = await deployDecayingTokenLocker([
+    const decayLocker = await deployMockDecayingTokenLocker([
       rewardBooster.address,
       RAY_10000,
       RAY,

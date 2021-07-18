@@ -283,15 +283,15 @@ export const getFlashLiquidationAdapter = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getTokenLocker = async (address?: tEthereumAddress) =>
+export const getMockTokenLocker = async (address?: tEthereumAddress) =>
   RewardedTokenLockerFactory.connect(
-    address || (await getAddr(eContractid.TokenLocker)),
+    address || (await getAddr(eContractid.MockTokenLocker)),
     await getFirstSigner()
   );
 
-export const getDecayingTokenLocker = async (address?: tEthereumAddress) =>
+export const getMockDecayingTokenLocker = async (address?: tEthereumAddress) =>
   DecayingTokenLockerFactory.connect(
-    address || (await getAddr(eContractid.DecayingTokenLocker)),
+    address || (await getAddr(eContractid.MockDecayingTokenLocker)),
     await getFirstSigner()
   );
 
