@@ -245,7 +245,7 @@ abstract contract BaseRewardController is
   }
 
   function _onlyConfigurator() private view {
-    require(isConfigurator(msg.sender), Errors.RW_NOT_REWARD_CONFIGURATOR);
+    require(isConfigurator(msg.sender), Errors.RW_NOT_REWARD_CONFIG_ADMIN);
   }
 
   modifier onlyConfigurator {
@@ -253,11 +253,12 @@ abstract contract BaseRewardController is
     _;
   }
 
+  function _onlyConfiguratorOrAdmin() private view {
+    require(isConfigurator(msg.sender) || isRateAdmin(msg.sender), Errors.RW_NOT_REWARD_RATE_ADMIN);
+  }
+
   modifier onlyConfiguratorOrAdmin {
-    require(
-      isConfigurator(msg.sender) || isRateAdmin(msg.sender),
-      'only configurator or rate admin'
-    );
+    _onlyConfiguratorOrAdmin();
     _;
   }
 
@@ -339,8 +340,12 @@ abstract contract BaseRewardController is
     uint32 since
   ) internal virtual;
 
+  function _notPaused() private view {
+    require(!_paused, Errors.RW_REWARD_PAUSED);
+  }
+
   modifier notPaused() {
-    require(!_paused, 'rewards are paused');
+    _notPaused();
     _;
   }
 
