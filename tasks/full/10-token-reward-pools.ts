@@ -134,9 +134,19 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       }
     }
 
+    let totalShare = 0;
+    for (const params of initParams) {
+      totalShare += params.baselinePercentage.toNumber();
+    }
+    totalShare += rewardParams.TeamPool.Share;
+
+    console.log(`Total reward share: ${(0.0 + totalShare) / 100.0}%`);
+    if (totalShare > 10000) {
+      throw `excessive total reward share`;
+    }
+
     const rewardController = await getRewardBooster(await addressesProvider.getRewardController());
 
-    let totalShare = 0;
     let extraNames: string[] = [Names.RewardStakeTokenSymbol];
     {
       const poolName = 'TeamPool';
@@ -176,15 +186,6 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       console.log(`Deployed ${poolName}: `, brp.address);
     }
 
-    for (const params of initParams) {
-      totalShare += params.baselinePercentage.toNumber();
-    }
-
-    console.log(`Total reward share: ${(0.0 + totalShare) / 100.0}%`);
-    if (totalShare > 10000) {
-      throw `excessive total reward share`;
-    }
-
     // CHUNK CONFIGURATION
     const initChunks = 1;
 
@@ -215,18 +216,18 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     const initialRate = BigNumber.from(WAD).mul(rewardParams.InitialRate * WAD_RAY_RATIO_NUM);
     await rewardController.updateBaseline(initialRate);
 
-    console.log(`  - Pool(s) initialized with rate: ${rewardParams.InitialRate}`);
+    console.log(`Reward pools initialized with total rate: ${rewardParams.InitialRate}`);
     const poolList = await configurator.list();
 
     if (initSymbols.length != poolList.length) {
       console.log(
-        `Different number of pools. Expected ${initSymbols.length}, actual ${poolList.length}`
+        `Different number of reward pools. Expected ${initSymbols.length}, actual ${poolList.length}`
       );
-      console.log('Actual Pools: ', poolList);
+      console.log('Actual reward pools: ', poolList);
     } else {
       let totalRate = BigNumber.from(0);
 
-      console.log(`Rates of ${initSymbols.length} pools configured:`);
+      console.log(`Rates of ${initSymbols.length} reward pools configured:`);
       let index = 0;
       for (const poolAddr of poolList) {
         const pool = await getIManagedRewardPool(poolAddr);
@@ -238,7 +239,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         );
         index++;
       }
-      console.log(`Total rate:   ${totalRate.div(WAD).toNumber() / WAD_RAY_RATIO_NUM}`);
-      console.log(`Initial rate: ${initialRate.div(WAD).toNumber() / WAD_RAY_RATIO_NUM}`);
+      console.log(`Total reward rate:   ${totalRate.div(WAD).toNumber() / WAD_RAY_RATIO_NUM}`);
+      console.log(`Initial reward rate: ${initialRate.div(WAD).toNumber() / WAD_RAY_RATIO_NUM}`);
     }
   });

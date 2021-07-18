@@ -88,10 +88,4 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
     }
 
     await waitForTx(await registry.registerAddressesProvider(addressProvider.address, ProviderId));
-
-    console.log('Pool Admin(s)', await addressProvider.roleActiveGrantees(AccessFlags.POOL_ADMIN));
-    console.log(
-      'Emergency Admin(s)',
-      await addressProvider.roleActiveGrantees(AccessFlags.EMERGENCY_ADMIN)
-    );
   });
