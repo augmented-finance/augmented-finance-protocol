@@ -88,10 +88,24 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return _lockupTill > 0 && _lockupTill < at;
   }
 
+  function updateTeamMembers(address[] calldata members, uint16[] calldata memberSharePct)
+    external
+    onlyTeamManagerOrConfigurator
+  {
+    require(members.length == memberSharePct.length);
+    for (uint256 i = 0; i < members.length; i++) {
+      _updateTeamMember(members[i], memberSharePct[i]);
+    }
+  }
+
   function updateTeamMember(address member, uint16 memberSharePct)
     external
     onlyTeamManagerOrConfigurator
   {
+    _updateTeamMember(member, memberSharePct);
+  }
+
+  function _updateTeamMember(address member, uint16 memberSharePct) private {
     require(member != address(0), 'member is required');
     require(memberSharePct <= PercentageMath.ONE, 'invalid share percentage');
 
