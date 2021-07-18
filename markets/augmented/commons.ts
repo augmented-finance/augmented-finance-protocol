@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { oneEther, oneRay, RAY, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames } from '../../helpers/constants';
+import { ONE_ADDRESS, oneRay, RAY, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames } from '../../helpers/constants';
 import { ICommonConfiguration, eEthereumNetwork, StakeMode } from '../../helpers/types';
 
 // ----------------
@@ -86,15 +86,6 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.tenderlyMain]: '',
-  },
-  OracleRouter: {
-    [eEthereumNetwork.coverage]: '',
-    [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.kovan]: '',
-    [eEthereumNetwork.ropsten]: '',
-    [eEthereumNetwork.rinkeby]: '',
-    [eEthereumNetwork.main]: '',
     [eEthereumNetwork.tenderlyMain]: '',
   },
   FallbackOracle: {
@@ -254,22 +245,47 @@ export const CommonsConfig: ICommonConfiguration = {
   },
 
   RewardParams : {
-    InitialRate: 10,
+    InitialRate: 100,
     TokenPools: {
       DAI:   {
         Share: {
-          deposit: 100,
-          vDebt:   200,
-          stake:   500,
+          deposit: {
+            BasePoints: 100,
+            BoostFactor: 1,
+          },
+          vDebt: {
+            BasePoints: 200,
+            BoostFactor: 1,
+          },
+          stake: {
+            BasePoints: 500,
+            BoostFactor: 0,
+          },
         }
       },
       USDC:   {
         Share: {
-          deposit: 1000,
-          vDebt:   1200,
-          stake:   1500,
+          deposit: {
+            BasePoints: 1000,
+            BoostFactor: 0,
+          },
+          vDebt: {
+            BasePoints: 1200,
+            BoostFactor: 0,
+          },
+          stake: {
+            BasePoints: 1500,
+            BoostFactor: 0,
+          },
         }
       },
+    },
+    TeamPool: {
+      Share: 1000,
+      Manager: ZERO_ADDRESS,
+      Members: {
+        '0x0000000000000000000000000000000000000001': 5000
+      }
     }
   }
 };

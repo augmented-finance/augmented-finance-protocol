@@ -29,37 +29,34 @@ task('augmented:mainnet', 'Deploy development enviroment')
       console.log('Deployment started\n');
 
       console.log('01. Deploy address provider registry');
-      await DRE.run('full:deploy-address-provider-registry', { pool: POOL_NAME });
-
-      console.log('02. Deploy address provider');
       await DRE.run('full:deploy-address-provider', { pool: POOL_NAME });
 
-      console.log('03. Deploy lending pool');
+      console.log('02. Deploy lending pool');
       await DRE.run('full:deploy-lending-pool', { pool: POOL_NAME });
 
-      console.log('04. Deploy oracles');
+      console.log('03. Deploy oracles');
       await DRE.run('full:deploy-oracles', { pool: POOL_NAME });
 
-      console.log('05. Deploy Data Provider');
+      console.log('04. Deploy Data Provider');
       await DRE.run('full:data-provider', { pool: POOL_NAME });
 
-      console.log('06. Deploy WETH Gateway');
+      console.log('05. Deploy WETH Gateway');
       await DRE.run('full-deploy-weth-gateway', { pool: POOL_NAME });
 
-      console.log('07. Initialize lending pool');
+      console.log('06. Initialize lending pool');
       await DRE.run('full:initialize-lending-pool', { pool: POOL_NAME });
 
-      console.log('08. Deploy StakeConfigurator');
+      console.log('07. Deploy StakeConfigurator');
       await DRE.run('full:deploy-stake-configurator', { pool: POOL_NAME });
 
-      console.log('09. Deploy and initialize stake tokens');
+      console.log('08. Deploy and initialize stake tokens');
       await DRE.run('full:init-stake-tokens', { pool: POOL_NAME });
 
-      console.log('10. Deploy reward contracts and AGF token');
+      console.log('09. Deploy reward contracts and AGF token');
       await DRE.run('full:deploy-reward-contracts', { pool: POOL_NAME });
 
-      console.log('11. Deploy token reward pools');
-      await DRE.run('full:init-token-reward-pools', { pool: POOL_NAME });
+      console.log('10. Deploy reward pools');
+      await DRE.run('full:init-reward-pools', { pool: POOL_NAME });
 
       if (verify) {
         printContracts((await getFirstSigner()).address);

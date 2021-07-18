@@ -41,7 +41,6 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
     } = poolConfig as ICommonConfiguration;
     const lendingRateOracles = getLendingRateOracles(poolConfig);
     const addressProvider = await getMarketAddressController();
-    const oracleRouterAddress = getParamPerNetwork(poolConfig.OracleRouter, network);
     const fallbackOracleAddress = await getParamPerNetwork(FallbackOracle, network);
     const reserveAssets = await getParamPerNetwork(ReserveAssets, network);
     const chainlinkAggregators = await getParamPerNetwork(ChainlinkAggregator, network);
@@ -52,26 +51,16 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
     };
     const [tokens, aggregators] = getPairsTokenAggregator(tokensToWatch, chainlinkAggregators);
 
-    let oracleRouter: OracleRouter;
-    if (notFalsyOrZeroAddress(oracleRouterAddress)) {
-      oracleRouter = await await getOracleRouter(oracleRouterAddress);
-      const owner = await oracleRouter.owner();
-      const signer = getSigner(owner);
-
-      oracleRouter = await (await getOracleRouter(oracleRouterAddress)).connect(signer);
-      await waitForTx(await oracleRouter.setAssetSources(tokens, aggregators));
-    } else {
-      oracleRouter = await deployOracleRouter(
-        [
-          addressProvider.address,
-          tokens,
-          aggregators,
-          fallbackOracleAddress,
-          await getWethAddress(poolConfig),
-        ],
-        verify
-      );
-    }
+    const oracleRouter = await deployOracleRouter(
+      [
+        addressProvider.address,
+        tokens,
+        aggregators,
+        fallbackOracleAddress,
+        await getWethAddress(poolConfig),
+      ],
+      verify
+    );
 
     let lendingRateOracle = await deployLendingRateOracle([addressProvider.address], verify);
     const deployer = await getFirstSigner();

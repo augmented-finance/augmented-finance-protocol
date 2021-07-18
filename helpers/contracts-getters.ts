@@ -26,7 +26,6 @@ import {
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
   RewardFreezerFactory,
-  AGFTokenV1Factory,
   MockAgfTokenFactory,
   MockStakedAgfTokenFactory,
   TeamRewardPoolFactory,
@@ -35,14 +34,17 @@ import {
   DepositToken,
   TokenWeightedRewardPoolFactory,
   RewardBoosterFactory,
-  XAGFTokenV1Factory,
   RewardedTokenLockerFactory,
   DecayingTokenLockerFactory,
   StakeConfiguratorFactory,
   StakeTokenFactory,
   RewardConfiguratorFactory,
   MockPriceOracleFactory,
+  XAGFTokenV1Factory,
+  AGFTokenV1Factory,
 } from '../types';
+import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
+
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
 import { getFirstSigner, getFromJsonDb } from './misc-utils';
@@ -281,12 +283,6 @@ export const getFlashLiquidationAdapter = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getAgfToken = async (address?: tEthereumAddress) =>
-  AGFTokenV1Factory.connect(
-    address || (await getAddr(eContractid.AGFToken)),
-    await getFirstSigner()
-  );
-
 export const getTokenLocker = async (address?: tEthereumAddress) =>
   RewardedTokenLockerFactory.connect(
     address || (await getAddr(eContractid.TokenLocker)),
@@ -386,8 +382,17 @@ export const getStakeTokenImpl = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getXAgfToken = async (address?: tEthereumAddress) =>
+export const getXAGFTokenV1Impl = async (address?: tEthereumAddress) =>
   XAGFTokenV1Factory.connect(
-    address || (await getAddr(eContractid.XAGFToken)),
+    address || (await getAddr(eContractid.XAGFTokenV1Impl)),
     await getFirstSigner()
   );
+
+export const getAGFTokenV1Impl = async (address?: tEthereumAddress) =>
+  AGFTokenV1Factory.connect(
+    address || (await getAddr(eContractid.AGFTokenV1Impl)),
+    await getFirstSigner()
+  );
+
+export const getIManagedRewardPool = async (address: tEthereumAddress) =>
+  IManagedRewardPoolFactory.connect(address, await getFirstSigner());

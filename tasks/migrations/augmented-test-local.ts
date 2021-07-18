@@ -54,7 +54,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       localBRE
     ) => {
       await localBRE.run('set-DRE');
-      const [root, user1, user2, slasher] = await localBRE.ethers.getSigners();
+      const [root, user1, user2, slasher] = await (<any>localBRE).ethers.getSigners();
 
       console.log(`#1 deploying: Access Controller`);
       const ac = await deployMarketAccessController('marketId');
@@ -93,7 +93,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       console.log(`#4 deploying: Team Reward Pool`);
       const teamRewardPool = await deployTeamRewardPool(
-        [rewardCtl.address, teamRewardInitialRate, RAY, teamRewardBaselinePercentage, root.address],
+        [rewardCtl.address, teamRewardInitialRate, teamRewardBaselinePercentage, root.address],
         verify
       );
       await waitForTx(await rewardCtl.addRewardPool(teamRewardPool.address));

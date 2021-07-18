@@ -79,19 +79,13 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
       const decimals = await assetDetailed.decimals();
 
       const symbol = tokenName; // await assetDetailed.symbol();
-      let symbolPrefix = '';
-      let stakePrefix = Names.DepositSymbolPrefix;
-
-      if (mode != StakeMode.stakeAg) {
-        symbolPrefix = Names.SymbolPrefix;
-      }
 
       initSymbols.push(symbol);
       initParams.push({
         stakeTokenImpl: impl.address,
         stakedToken: asset,
         stkTokenName: `${Names.StakeTokenNamePrefix} ${tokenName}`,
-        stkTokenSymbol: `${Names.StakeSymbolPrefix}${stakePrefix}${symbolPrefix}${symbol}`,
+        stkTokenSymbol: `${Names.StakeSymbolPrefix}${Names.SymbolPrefix}${symbol}`,
         stkTokenDecimals: decimals,
         cooldownPeriod: stakeParams.CooldownPeriod,
         unstakePeriod: stakeParams.UnstakePeriod,
