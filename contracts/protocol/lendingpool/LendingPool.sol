@@ -27,6 +27,7 @@ import {ReserveConfiguration} from '../libraries/configuration/ReserveConfigurat
 import {UserConfiguration} from '../libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
+import {ILendingPoolCollateralManager} from '../../interfaces/ILendingPoolCollateralManager.sol';
 
 /**
  * @title LendingPool contract
@@ -448,11 +449,10 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     bool receiveAToken
   ) external override whenNotPaused {
     require(_disabledFeatures & FEATURE_LIQUIDATION == 0, Errors.LP_LIQUIDATION_DISABLED);
-    address collateralManager = _addressesProvider.getLendingPoolCollateralManager();
 
     //solium-disable-next-line
     (bool success, bytes memory result) =
-      collateralManager.delegatecall(
+      _collateralManager.delegatecall(
         abi.encodeWithSignature(
           'liquidationCall(address,address,address,uint256,bool)',
           collateralAsset,
@@ -1043,5 +1043,27 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
 
   function getDisabledFeatures() external view returns (uint16 disabledFeatures) {
     return _disabledFeatures;
+  }
+
+  /**
+   * @dev Returns the address of the LendingPoolCollateralManager. Since the manager is used
+   * through delegateCall within the LendingPool contract
+   * @return The address of the LendingPoolCollateralManager
+   **/
+
+  function getLendingPoolCollateralManager() external view override returns (address) {
+    return _collateralManager;
+  }
+
+  /**
+   * @dev Updates the address of the LendingPoolCollateralManager
+   * @param manager The new LendingPoolCollateralManager address
+   **/
+  function setLendingPoolCollateralManager(address manager)
+    external
+    override
+    onlyConfiguratorOrAdmin
+  {
+    _collateralManager = manager;
   }
 }

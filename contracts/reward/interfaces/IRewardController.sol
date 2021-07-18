@@ -33,4 +33,10 @@ interface IManagedRewardController is IEmergencyAccess, IRewardController {
   function removeRewardPool(IManagedRewardPool) external;
 
   function setRewardMinter(IRewardMinter) external;
+
+  function getPools() external view returns (IManagedRewardPool[] memory, uint256 ignoreMask);
+}
+
+interface IUntypedRewardControllerPools {
+  function getPools() external view returns (address[] memory, uint256 ignoreMask);
 }

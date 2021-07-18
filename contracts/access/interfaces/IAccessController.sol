@@ -18,23 +18,16 @@ interface IAccessController is IRemoteAccessBitmask {
     address impl,
     bytes calldata params
   ) external returns (IProxy);
-
-  function createProxyByName(
-    address admin,
-    string calldata implName,
-    bytes calldata params
-  ) external returns (IProxy);
-
-  function getImplementation(string calldata id) external view returns (address);
-  //  function getFirstImplementation(string[] calldata ids) external view returns (address);
 }
 
 interface IManagedAccessController is IAccessController {
+  function setTemporaryAdmin(address admin, uint32 expiryBlocks) external;
+
+  function getTemporaryAdmin() external view returns (address admin, uint256 expiresAtBlock);
+
+  function renounceTemporaryAdmin() external;
+
   function setAddress(uint256 id, address newAddress) external;
-
-  function addImplementation(string calldata id, address addr) external;
-
-  function addImplementationOpt(string calldata id, address addr) external returns (address);
 
   function setAddressAsProxy(uint256 id, address impl) external;
 
@@ -44,11 +37,6 @@ interface IManagedAccessController is IAccessController {
     bytes calldata initCall
   ) external;
 
-  function getEmergencyAdmin() external view returns (address);
-
-  function setEmergencyAdmin(address admin) external;
-
   event ProxyCreated(uint256 indexed id, address indexed newAddress);
   event AddressSet(uint256 indexed id, address indexed newAddress, bool hasProxy);
-  event EmergencyAdminUpdated(address indexed newAddress);
 }

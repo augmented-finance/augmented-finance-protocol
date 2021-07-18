@@ -397,4 +397,8 @@ interface ILendingPool is IEmergencyAccess {
   function getAddressesProvider() external view returns (IMarketAccessController);
 
   function getAccessController() external view returns (IMarketAccessController);
+
+  function getLendingPoolCollateralManager() external view returns (address);
+
+  function setLendingPoolCollateralManager(address) external;
 }

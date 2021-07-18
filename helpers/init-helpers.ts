@@ -8,13 +8,8 @@ import {
   tEthereumAddress,
 } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
-import { chunk, DRE, getDb, waitForTx } from './misc-utils';
-import {
-  getATokensAndRatesHelper,
-  getMarketAddressController,
-  getLendingPoolConfiguratorProxy,
-  getStableAndVariableTokensHelper,
-} from './contracts-getters';
+import { chunk, waitForTx } from './misc-utils';
+import { getMarketAddressController, getLendingPoolConfiguratorProxy } from './contracts-getters';
 import { registerContractInJsonDb } from './contracts-helpers';
 import { BigNumber, BigNumberish, Signer } from 'ethers';
 import {
@@ -23,6 +18,9 @@ import {
   deployDelegationAwareDepositTokenImpl,
   deployDepositToken,
   deployDepositTokenImpl,
+  deployStableDebtToken,
+  deployStableDebtTokenImpl,
+  deployVariableDebtTokenImpl,
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
 
@@ -41,12 +39,10 @@ export const initReservesByHelper = async (
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
   names: ITokenNames,
-  admin: tEthereumAddress,
   treasuryAddress: tEthereumAddress,
   verify: boolean
 ): Promise<BigNumber> => {
   let gasUsage = BigNumber.from('0');
-  const stableAndVariableDeployer = await getStableAndVariableTokensHelper();
 
   const addressProvider = await getMarketAddressController();
 
@@ -91,18 +87,9 @@ export const initReservesByHelper = async (
   let strategyAddressPerAsset: Record<string, string> = {};
   let depositTokenType: Record<string, boolean> = {};
   let delegationAwareATokenImplementationAddress = '';
-  let stableDebtTokenImplementationAddress = '';
-  let variableDebtTokenImplementationAddress = '';
 
-  // NOT WORKING ON MATIC, DEPLOYING INDIVIDUAL IMPLs INSTEAD
-  const tx1 = await waitForTx(
-    await stableAndVariableDeployer.initDeployment([ZERO_ADDRESS], ['1'])
-  );
-  console.log(tx1.events);
-  tx1.events?.forEach((event, index) => {
-    stableDebtTokenImplementationAddress = event?.args?.stableToken;
-    variableDebtTokenImplementationAddress = event?.args?.variableToken;
-  });
+  const stableDebtTokenImpl = await deployStableDebtTokenImpl(verify);
+  const variableDebtTokenImpl = await deployVariableDebtTokenImpl(verify);
 
   const depositTokenImplementationAddress = (await deployDepositTokenImpl(verify)).address;
 
@@ -183,15 +170,11 @@ export const initReservesByHelper = async (
     }
 
     const reserveSymbol = reserveSymbols[i];
-    let symbolPrefix = names.SymbolPrefix;
-    if (symbolPrefix == '' && reserveSymbol[0] >= 'a' && reserveSymbol[0] <= 'z') {
-      symbolPrefix = '_';
-    }
 
     initInputParams.push({
       aTokenImpl: tokenToUse,
-      stableDebtTokenImpl: stableDebtTokenImplementationAddress,
-      variableDebtTokenImpl: variableDebtTokenImplementationAddress,
+      stableDebtTokenImpl: stableDebtTokenImpl.address,
+      variableDebtTokenImpl: variableDebtTokenImpl.address,
       underlyingAssetDecimals: reserveInitDecimals[i],
       interestRateStrategyAddress: strategyAddressPerAsset[reserveSymbol],
       underlyingAsset: reserveTokens[i],
@@ -200,13 +183,13 @@ export const initReservesByHelper = async (
       underlyingAssetName: reserveSymbol,
 
       aTokenName: `${names.DepositTokenNamePrefix} ${reserveSymbol}`,
-      aTokenSymbol: `${names.DepositSymbolPrefix}${symbolPrefix}${reserveSymbol}`,
+      aTokenSymbol: `${names.DepositSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
 
       variableDebtTokenName: `${names.VariableDebtTokenNamePrefix} ${reserveSymbol}`,
-      variableDebtTokenSymbol: `${names.VariableDebtSymbolPrefix}${symbolPrefix}${reserveSymbol}`,
+      variableDebtTokenSymbol: `${names.VariableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
 
       stableDebtTokenName: `${names.StableDebtTokenNamePrefix} ${reserveSymbol}`,
-      stableDebtTokenSymbol: `${names.StableDebtSymbolPrefix}${symbolPrefix}${reserveSymbol}`,
+      stableDebtTokenSymbol: `${names.StableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
 
       params: '0x10',
     });
@@ -219,7 +202,6 @@ export const initReservesByHelper = async (
   const configurator = await getLendingPoolConfiguratorProxy(
     await addressProvider.getLendingPoolConfigurator()
   );
-  //await waitForTx(await addressProvider.setPoolAdmin(admin));
 
   console.log(`- Reserves initialization in ${chunkedInitInputParams.length} txs`);
   for (let chunkIndex = 0; chunkIndex < chunkedInitInputParams.length; chunkIndex++) {
@@ -269,18 +251,10 @@ export const getPairsTokenAggregator = (
 export const configureReservesByHelper = async (
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
-  helpers: ProtocolDataProvider,
-  admin: tEthereumAddress
+  helpers: ProtocolDataProvider
 ) => {
   const addressProvider = await getMarketAddressController();
-  const atokenAndRatesDeployer = await getATokensAndRatesHelper();
-  const tokens: string[] = [];
   const symbols: string[] = [];
-  const baseLTVA: string[] = [];
-  const liquidationThresholds: string[] = [];
-  const liquidationBonuses: string[] = [];
-  const reserveFactors: string[] = [];
-  const stableRatesEnabled: boolean[] = [];
 
   const inputParams: {
     asset: string;
@@ -288,6 +262,7 @@ export const configureReservesByHelper = async (
     liquidationThreshold: BigNumberish;
     liquidationBonus: BigNumberish;
     reserveFactor: BigNumberish;
+    borrowingEnabled: boolean;
     stableBorrowingEnabled: boolean;
   }[] = [];
 
@@ -298,11 +273,11 @@ export const configureReservesByHelper = async (
       liquidationBonus,
       liquidationThreshold,
       reserveFactor,
+      borrowingEnabled,
       stableBorrowRateEnabled,
     },
   ] of Object.entries(reservesParams) as [string, IReserveParams][]) {
     if (baseLTVAsCollateral === '-1') continue;
-    // if (assetSymbol !== 'DAI') continue;
 
     const assetAddressIndex = Object.keys(tokenAddresses).findIndex(
       (value) => value === assetSymbol
@@ -326,37 +301,32 @@ export const configureReservesByHelper = async (
       liquidationThreshold: liquidationThreshold,
       liquidationBonus: liquidationBonus,
       reserveFactor: reserveFactor,
+      borrowingEnabled: borrowingEnabled,
       stableBorrowingEnabled: stableBorrowRateEnabled,
     });
 
-    tokens.push(tokenAddress);
     symbols.push(assetSymbol);
-    baseLTVA.push(baseLTVAsCollateral);
-    liquidationThresholds.push(liquidationThreshold);
-    liquidationBonuses.push(liquidationBonus);
-    reserveFactors.push(reserveFactor);
-    stableRatesEnabled.push(stableBorrowRateEnabled);
   }
-  if (tokens.length) {
-    // Set aTokenAndRatesDeployer as temporal admin
-    await waitForTx(await addressProvider.setPoolAdmin(atokenAndRatesDeployer.address));
+  if (!inputParams.length) {
+    return;
+  }
 
-    // Deploy init per chunks
-    const enableChunks = 1;
-    const chunkedSymbols = chunk(symbols, enableChunks);
-    const chunkedInputParams = chunk(inputParams, enableChunks);
+  const configurator = await getLendingPoolConfiguratorProxy(
+    await addressProvider.getLendingPoolConfigurator()
+  );
 
-    console.log(`- Configure reserves in ${chunkedInputParams.length} txs`);
-    for (let chunkIndex = 0; chunkIndex < chunkedInputParams.length; chunkIndex++) {
-      await waitForTx(
-        await atokenAndRatesDeployer.configureReserves(chunkedInputParams[chunkIndex], {
-          gasLimit: 7000000,
-        })
-      );
-      console.log(`  - Init for: ${chunkedSymbols[chunkIndex].join(', ')}`);
-    }
-    // Set deployer back as admin
-    console.log('Set deployer back as admin: ', admin);
-    await waitForTx(await addressProvider.setPoolAdmin(admin));
+  // Deploy init per chunks
+  const enableChunks = 1;
+  const chunkedSymbols = chunk(symbols, enableChunks);
+  const chunkedInputParams = chunk(inputParams, enableChunks);
+
+  console.log(`- Configure reserves with ${chunkedInputParams.length} txs`);
+  for (let chunkIndex = 0; chunkIndex < chunkedInputParams.length; chunkIndex++) {
+    await waitForTx(
+      await configurator.configureReserves(chunkedInputParams[chunkIndex], {
+        gasLimit: 5000000,
+      })
+    );
+    console.log(`  - Configured for: ${chunkedSymbols[chunkIndex].join(', ')}`);
   }
 };

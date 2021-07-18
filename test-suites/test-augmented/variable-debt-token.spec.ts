@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { ProtocolErrors, TokenContractId, eContractid } from '../../helpers/types';
+import { ProtocolErrors } from '../../helpers/types';
 import { getVariableDebtToken } from '../../helpers/contracts-getters';
 
 makeSuite('Variable debt token tests', (testEnv: TestEnv) => {

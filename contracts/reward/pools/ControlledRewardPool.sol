@@ -32,6 +32,15 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     uint224 rateScale,
     uint16 baselinePercentage
   ) public {
+    _initialize(controller, initialRate, rateScale, baselinePercentage);
+  }
+
+  function _initialize(
+    IRewardController controller,
+    uint256 initialRate,
+    uint224 rateScale,
+    uint16 baselinePercentage
+  ) internal virtual {
     require(address(controller) != address(0), 'controller is required');
     _controller = controller;
 
@@ -42,7 +51,9 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     }
 
     internalSetRateScale(rateScale);
-    internalSetRate(initialRate);
+    if (initialRate != 0) {
+      internalSetRate(initialRate);
+    }
   }
 
   function updateBaseline(uint256 baseline)
@@ -83,7 +94,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _setRate(rate);
   }
 
-  function _setRate(uint256 rate) private {
+  function _setRate(uint256 rate) internal {
     if (isPaused()) {
       _pausedRate = rate;
       return;
@@ -95,7 +106,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return rate.rayMul(_rateScale);
   }
 
-  function getRate() external view returns (uint256) {
+  function getRate() external view override returns (uint256) {
     return internalGetRate().rayDiv(_rateScale);
   }
 
@@ -177,6 +188,11 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   modifier onlyController() {
     require(isController(msg.sender), 'only controller is allowed');
+    _;
+  }
+
+  modifier onlyConfigurator() {
+    require(_controller.isConfigurator(msg.sender), 'only configurator is allowed');
     _;
   }
 

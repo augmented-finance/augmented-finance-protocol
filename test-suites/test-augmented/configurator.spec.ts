@@ -42,7 +42,7 @@ makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
     expect(isActive).to.be.equal(true);
   });
 
-  it('Check the onlyAaveAdmin on deactivateReserve ', async () => {
+  it('Check the onlyPoolAdmin on deactivateReserve ', async () => {
     const { configurator, users, weth } = testEnv;
     await expect(
       configurator.connect(users[2].signer).deactivateReserve(weth.address),
@@ -50,7 +50,7 @@ makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
     ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
   });
 
-  it('Check the onlyAaveAdmin on activateReserve ', async () => {
+  it('Check the onlyPoolAdmin on activateReserve ', async () => {
     const { configurator, users, weth } = testEnv;
     await expect(
       configurator.connect(users[2].signer).activateReserve(weth.address),
@@ -112,7 +112,7 @@ makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
     expect(reserveFactor).to.be.equal(strategyWETH.reserveFactor);
   });
 
-  it('Check the onlyAaveAdmin on freezeReserve ', async () => {
+  it('Check the onlyPoolAdmin on freezeReserve ', async () => {
     const { configurator, users, weth } = testEnv;
     await expect(
       configurator.connect(users[2].signer).freezeReserve(weth.address),
@@ -120,7 +120,7 @@ makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
     ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
   });
 
-  it('Check the onlyAaveAdmin on unfreezeReserve ', async () => {
+  it('Check the onlyPoolAdmin on unfreezeReserve ', async () => {
     const { configurator, users, weth } = testEnv;
     await expect(
       configurator.connect(users[2].signer).unfreezeReserve(weth.address),
@@ -184,7 +184,7 @@ makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
     expect(variableBorrowIndex.toString()).to.be.equal(RAY);
   });
 
-  it('Check the onlyAaveAdmin on disableBorrowingOnReserve ', async () => {
+  it('Check the onlyPoolAdmin on disableBorrowingOnReserve ', async () => {
     const { configurator, users, weth } = testEnv;
     await expect(
       configurator.connect(users[2].signer).disableBorrowingOnReserve(weth.address),
@@ -192,7 +192,7 @@ makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
     ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
   });
 
-  it('Check the onlyAaveAdmin on enableBorrowingOnReserve ', async () => {
+  it('Check the onlyPoolAdmin on enableBorrowingOnReserve ', async () => {
     const { configurator, users, weth } = testEnv;
     await expect(
       configurator.connect(users[2].signer).enableBorrowingOnReserve(weth.address, true),
@@ -254,7 +254,7 @@ makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
     expect(reserveFactor).to.be.equal(strategyWETH.reserveFactor);
   });
 
-  it('Check the onlyAaveAdmin on configureReserveAsCollateral ', async () => {
+  it('Check the onlyPoolAdmin on configureReserveAsCollateral ', async () => {
     const { configurator, users, weth } = testEnv;
     await expect(
       configurator
@@ -316,7 +316,7 @@ makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
     expect(reserveFactor).to.be.equal(strategyWETH.reserveFactor);
   });
 
-  it('Check the onlyAaveAdmin on disableReserveStableRate', async () => {
+  it('Check the onlyPoolAdmin on disableReserveStableRate', async () => {
     const { configurator, users, weth } = testEnv;
     await expect(
       configurator.connect(users[2].signer).disableReserveStableRate(weth.address),
@@ -324,7 +324,7 @@ makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
     ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
   });
 
-  it('Check the onlyAaveAdmin on enableReserveStableRate', async () => {
+  it('Check the onlyPoolAdmin on enableReserveStableRate', async () => {
     const { configurator, users, weth } = testEnv;
     await expect(
       configurator.connect(users[2].signer).enableReserveStableRate(weth.address),

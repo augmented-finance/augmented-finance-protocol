@@ -10,7 +10,7 @@ import {
 } from '../../../../helpers/contracts-getters';
 import { tEthereumAddress } from '../../../../helpers/types';
 import BigNumber from 'bignumber.js';
-import { getDb, DRE } from '../../../../helpers/misc-utils';
+import { DRE, getFromJsonDb } from '../../../../helpers/misc-utils';
 import { ProtocolDataProvider } from '../../../../types/ProtocolDataProvider';
 
 export const getReserveData = async (
@@ -103,10 +103,7 @@ export const getUserData = async (
 };
 
 export const getReserveAddressFromSymbol = async (symbol: string) => {
-  const token = await getMintableERC20(
-    (await getDb().get(`${symbol}.${DRE.network.name}`).value()).address
-  );
-
+  const token = await getMintableERC20((await getFromJsonDb(symbol)).address);
   if (!token) {
     throw `Could not find instance for contract ${symbol}`;
   }

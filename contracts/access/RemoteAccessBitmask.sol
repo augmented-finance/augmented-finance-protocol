@@ -20,7 +20,7 @@ contract RemoteAccessBitmask is Context {
     return _remoteAcl != IRemoteAccessBitmask(0);
   }
 
-  modifier aclHas(uint256 flags) virtual {
+  modifier aclHas(uint256 flags) {
     require(_remoteAcl.hasAllOf(_msgSender(), flags), 'access is restricted');
     _;
   }
