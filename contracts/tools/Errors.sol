@@ -110,6 +110,9 @@ library Errors {
   string public constant LP_FLASH_LOAN_RESTRICTED = '85';
   string public constant CT_PUMP_DUMP_PROTECTION = '86';
   string public constant LP_LIQUIDATION_DISABLED = '87';
+  string public constant RW_NOT_REWARD_CONFIG_ADMIN = '88';
+  string public constant RW_NOT_REWARD_RATE_ADMIN = '89';
+  string public constant RW_NOT_REWARD_CONFIGURATOR = '90';
 
   enum CollateralManagerErrors {
     NO_ERROR,
@@ -123,4 +126,7 @@ library Errors {
     INVALID_EQUAL_ASSETS_TO_SWAP,
     FROZEN_RESERVE
   }
+
+  string public constant TXT_OWNABLE_CALLER_NOT_OWNER = 'Ownable: caller is not the owner';
+  string public constant TXT_ACCESS_RESTRICTED = 'RESTRICTED';
 }

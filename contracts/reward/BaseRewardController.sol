@@ -12,6 +12,7 @@ import {IRewardPool} from './interfaces/IRewardPool.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {IRewardCollector} from './interfaces/IRewardCollector.sol';
+import {Errors} from '../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
@@ -227,8 +228,12 @@ abstract contract BaseRewardController is
     return acl_hasAllOf(addr, AccessFlags.REWARD_RATE_ADMIN);
   }
 
+  function _onlyRateAdmin() private view {
+    require(isRateAdmin(msg.sender), Errors.RW_NOT_REWARD_RATE_ADMIN);
+  }
+
   modifier onlyRateAdmin {
-    require(isRateAdmin(msg.sender), 'only rate admin');
+    _onlyRateAdmin();
     _;
   }
 
@@ -239,8 +244,12 @@ abstract contract BaseRewardController is
     return acl_hasAnyOf(addr, AccessFlags.REWARD_CONFIGURATOR | AccessFlags.REWARD_CONFIG_ADMIN);
   }
 
+  function _onlyConfigurator() private view {
+    require(isConfigurator(msg.sender), Errors.RW_NOT_REWARD_CONFIGURATOR);
+  }
+
   modifier onlyConfigurator {
-    require(isConfigurator(msg.sender), 'only configurator');
+    _onlyConfigurator();
     _;
   }
 

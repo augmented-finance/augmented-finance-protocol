@@ -64,7 +64,7 @@ contract AddressesProviderRegistry is Ownable, IAddressesProviderRegistry {
       require(_oneTimeId == 0 || _oneTimeId == id, Errors.LPAPR_INVALID_ADDRESSES_PROVIDER_ID);
       _oneTimeRegistrar = address(0);
     } else {
-      require(_msgSender() == owner(), 'Ownable: caller is not the owner');
+      require(_msgSender() == owner(), Errors.TXT_OWNABLE_CALLER_NOT_OWNER);
       require(id != 0, Errors.LPAPR_INVALID_ADDRESSES_PROVIDER_ID);
     }
 

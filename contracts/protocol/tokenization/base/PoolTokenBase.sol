@@ -67,15 +67,16 @@ abstract contract PoolTokenBase is
     return _decimals;
   }
 
-  /**
-   * @dev Only lending pool can call functions marked by this modifier
-   **/
-  modifier onlyLendingPool {
+  function _onlyLendingPool() private view {
     require(_msgSender() == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
+  }
+
+  modifier onlyLendingPool {
+    _onlyLendingPool();
     _;
   }
 
-  modifier onlyRewardConfiguratorOrAdmin {
+  function _onlyRewardConfiguratorOrAdmin() private view {
     require(
       AccessHelper.hasAnyOf(
         _pool.getAccessController(),
@@ -84,6 +85,10 @@ abstract contract PoolTokenBase is
       ),
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
     );
+  }
+
+  modifier onlyRewardConfiguratorOrAdmin {
+    _onlyRewardConfiguratorOrAdmin();
     _;
   }
 

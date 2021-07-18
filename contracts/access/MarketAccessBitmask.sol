@@ -33,50 +33,65 @@ contract MarketAccessBitmask {
     return _remoteAcl.hasAnyOf(subject, flags);
   }
 
+  function acl_requireAllOf(
+    address subject,
+    uint256 flags,
+    string memory text
+  ) internal view {
+    require(_remoteAcl.hasAllOf(subject, flags), text);
+  }
+
+  function acl_requireAnyOf(
+    address subject,
+    uint256 flags,
+    string memory text
+  ) internal view {
+    require(_remoteAcl.hasAnyOf(subject, flags), text);
+  }
+
   modifier aclHas(uint256 flags) virtual {
-    require(_remoteAcl.hasAllOf(msg.sender, flags), 'access is restricted');
+    acl_requireAllOf(msg.sender, flags, Errors.TXT_ACCESS_RESTRICTED);
     _;
   }
 
   modifier aclAllOf(uint256 flags) {
-    require(_remoteAcl.hasAllOf(msg.sender, flags), 'access is restricted');
+    acl_requireAllOf(msg.sender, flags, Errors.TXT_ACCESS_RESTRICTED);
     _;
   }
 
   modifier aclAnyOf(uint256 flags) {
-    require(_remoteAcl.hasAnyOf(msg.sender, flags), 'access is restricted');
+    acl_requireAnyOf(msg.sender, flags, Errors.TXT_ACCESS_RESTRICTED);
     _;
   }
 
   modifier onlyPoolAdmin {
-    require(_remoteAcl.isPoolAdmin(msg.sender), Errors.CALLER_NOT_POOL_ADMIN);
+    acl_requireAllOf(msg.sender, AccessFlags.POOL_ADMIN, Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
 
   modifier onlyEmergencyAdmin {
-    require(_remoteAcl.isEmergencyAdmin(msg.sender), Errors.CALLER_NOT_EMERGENCY_ADMIN);
+    acl_requireAllOf(msg.sender, AccessFlags.EMERGENCY_ADMIN, Errors.CALLER_NOT_EMERGENCY_ADMIN);
     _;
   }
 
   modifier onlySweepAdmin {
-    require(
-      _remoteAcl.hasAllOf(msg.sender, AccessFlags.SWEEP_ADMIN),
-      Errors.CT_CALLER_MUST_BE_SWEEP_ADMIN
-    );
+    acl_requireAllOf(msg.sender, AccessFlags.SWEEP_ADMIN, Errors.CT_CALLER_MUST_BE_SWEEP_ADMIN);
     _;
   }
 
   modifier onlyRewardAdmin {
-    require(
-      _remoteAcl.hasAllOf(msg.sender, AccessFlags.REWARD_CONFIG_ADMIN),
+    acl_requireAllOf(
+      msg.sender,
+      AccessFlags.REWARD_CONFIG_ADMIN,
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
     );
     _;
   }
 
   modifier onlyRewardConfiguratorOrAdmin {
-    require(
-      acl_hasAnyOf(msg.sender, AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR),
+    acl_requireAnyOf(
+      msg.sender,
+      AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR,
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
     );
     _;

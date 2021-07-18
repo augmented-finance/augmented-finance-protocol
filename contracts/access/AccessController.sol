@@ -6,6 +6,7 @@ import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
+import {Errors} from '../tools/Errors.sol';
 
 import {BitUtils} from '../tools/math/BitUtils.sol';
 
@@ -41,11 +42,15 @@ contract AccessController is Ownable, IManagedAccessController {
     _proxies = proxies;
   }
 
-  modifier onlyAdmin {
+  function _onlyAdmin() private view {
     require(
       _msgSender() == owner() || (_msgSender() == _tempAdmin && _expiresAt > block.number),
-      'Ownable: caller is not the owner'
+      Errors.TXT_OWNABLE_CALLER_NOT_OWNER
     );
+  }
+
+  modifier onlyAdmin {
+    _onlyAdmin();
     _;
   }
 
@@ -311,10 +316,6 @@ contract AccessController is Ownable, IManagedAccessController {
   function isAddress(uint256 id, address addr) public view returns (bool) {
     // require(id.isPowerOf2nz(), 'only singleton id is accepted');
     return _masks[addr] & id != 0;
-  }
-
-  function isEmergencyAdmin(address addr) external view override returns (bool) {
-    return isAddress(AccessFlags.EMERGENCY_ADMIN, addr);
   }
 
   function markProxies(uint256 id) external onlyAdmin {
