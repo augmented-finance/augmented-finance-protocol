@@ -103,6 +103,7 @@ abstract contract BaseTokenDiffRewardPool is ControlledRewardPool, IRewardPool {
     }
     _providers[provider] = 1;
     internalUpdateSupplyDiff(0, 1);
+    emit ProviderAdded(provider, token);
   }
 
   function removeRewardProvider(address provider) external virtual override onlyConfigurator {
@@ -112,6 +113,7 @@ abstract contract BaseTokenDiffRewardPool is ControlledRewardPool, IRewardPool {
     }
     delete (_providers[provider]);
     internalUpdateSupplyDiff(oldSupply, 0);
+    emit ProviderRemoved(provider);
   }
 
   function internalUpdateReward(

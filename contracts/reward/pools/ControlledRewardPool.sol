@@ -46,13 +46,14 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
     if (initialRate != 0 && baselinePercentage == 0) {
       _baselinePercentage = NO_BASELINE;
-    } else {
-      _baselinePercentage = baselinePercentage;
+      emit BaselineDisabled();
+    } else if (baselinePercentage > 0) {
+      internalSetBaselinePercentage(baselinePercentage);
     }
 
     internalSetRateScale(rateScale);
-    if (initialRate != 0) {
-      internalSetRate(initialRate);
+    if (initialRate > 0) {
+      _setRate(initialRate);
     }
   }
 
@@ -73,12 +74,15 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   function disableBaseline() external override onlyRateAdmin {
     _baselinePercentage = NO_BASELINE;
+    emit BaselineDisabled();
   }
 
   function disableRewardPool() external override onlyRateAdmin {
     _baselinePercentage = NO_BASELINE;
     _pausedRate = 0;
     internalSetRate(0);
+    emit BaselineDisabled();
+    emit RateUpdated(0, _rateScale);
   }
 
   function setBaselinePercentage(uint16 factor) external override onlyRateAdmin {
@@ -92,6 +96,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   function internalSetBaselinePercentage(uint16 factor) internal virtual {
     require(factor <= PercentageMath.ONE, 'illegal value');
     _baselinePercentage = factor;
+    emit BaselineFactorUpdated(factor);
   }
 
   function setRate(uint256 rate) external override onlyRateAdmin {
@@ -104,6 +109,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
       return;
     }
     internalSetRate(rate.rayMul(_rateScale));
+    emit RateUpdated(rate, _rateScale);
   }
 
   function scaleRate(uint256 rate) internal view returns (uint256) {

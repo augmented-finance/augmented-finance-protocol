@@ -29,4 +29,10 @@ interface IManagedRewardPool is IEmergencyAccess {
   function removeRewardProvider(address provider) external;
 
   function getRewardController() external view returns (address);
+
+  event RateUpdated(uint256 rate, uint256 rateScale);
+  event BaselineFactorUpdated(uint16);
+  event BaselineDisabled();
+  event ProviderAdded(address provider, address token);
+  event ProviderRemoved(address provider);
 }
