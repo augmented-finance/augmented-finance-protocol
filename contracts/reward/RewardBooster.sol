@@ -11,11 +11,12 @@ import {IRewardPool} from './interfaces/IRewardPool.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IManagedRewardBooster} from './interfaces/IRewardController.sol';
 import {IBoostExcessReceiver} from './interfaces/IBoostExcessReceiver.sol';
+import {IManagedRewardBooster} from './interfaces/IManagedRewardBooster.sol';
+import {IBoostRate} from './interfaces/IBoostRate.sol';
+
 import './interfaces/IAutolocker.sol';
 
 import 'hardhat/console.sol';
-
-enum BoostPoolRateUpdateMode {DefaultUpdateMode, BaselineLeftoverMode}
 
 contract RewardBooster is IManagedRewardBooster, BaseRewardController {
   using SafeMath for uint256;
@@ -27,7 +28,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
 
   address private _boostExcessDelegate;
   bool private _mintExcess;
-  BoostPoolRateUpdateMode private _boostRateMode;
+  bool private _updateBoostPool;
 
   mapping(address => uint256) private _boostRewards;
 
@@ -67,8 +68,8 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     return uint32(_boostFactor[pool]);
   }
 
-  function setBoostPoolRateUpdateMode(BoostPoolRateUpdateMode mode) external onlyConfigurator {
-    _boostRateMode = mode;
+  function setUpdateBoostPoolRate(bool updateBoostPool) external override onlyConfigurator {
+    _updateBoostPool = updateBoostPool;
   }
 
   function internalUpdateBaseline(uint256 baseline, uint256 baselineMask)
@@ -76,7 +77,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     override
     returns (uint256 totalRate, uint256)
   {
-    if (_boostPoolMask == 0 || _boostRateMode == BoostPoolRateUpdateMode.DefaultUpdateMode) {
+    if (_boostPoolMask == 0 || !_updateBoostPool) {
       return super.internalUpdateBaseline(baseline, baselineMask);
     }
 
@@ -85,16 +86,16 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
       baselineMask & ~_boostPoolMask
     );
     if (totalRate < baseline) {
-      _boostPool.setRate(baseline - totalRate);
+      IBoostRate(address(_boostPool)).setBoostRate(baseline - totalRate);
       totalRate = baseline;
     } else {
-      _boostPool.setRate(0);
+      IBoostRate(address(_boostPool)).setBoostRate(0);
     }
 
     return (totalRate, baselineMask);
   }
 
-  function setBoostPool(address pool) external onlyConfigurator {
+  function setBoostPool(address pool) external override onlyConfigurator {
     if (pool == address(0)) {
       _boostPoolMask = 0;
     } else {
@@ -111,7 +112,11 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     return address(_boostPool);
   }
 
-  function setBoostExcessTarget(address target, bool mintExcess) external onlyConfigurator {
+  function setBoostExcessTarget(address target, bool mintExcess)
+    external
+    override
+    onlyConfigurator
+  {
     _boostExcessDelegate = target;
     _mintExcess = mintExcess && (target != address(0));
   }

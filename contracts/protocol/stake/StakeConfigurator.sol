@@ -19,11 +19,7 @@ import {ProxyOwner} from '../../tools/upgradeability/ProxyOwner.sol';
 contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStakeConfigurator {
   uint256 private constant CONFIGURATOR_REVISION = 1;
 
-  struct TokenEntry {
-    address token;
-  }
-
-  mapping(uint256 => TokenEntry) private _entries;
+  mapping(uint256 => address) private _entries;
   uint256 private _entryCount;
   mapping(address => uint256) private _underlyings;
 
@@ -48,7 +44,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     }
     tokens = new address[](_entryCount);
     for (uint256 i = 1; i <= _entryCount; i++) {
-      tokens[i - 1] = _entries[i].token;
+      tokens[i - 1] = _entries[i];
     }
     return tokens;
   }
@@ -58,7 +54,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     if (i == 0) {
       return address(0);
     }
-    return _entries[i].token;
+    return _entries[i];
   }
 
   function dataOf(address stakeToken)
@@ -87,7 +83,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     }
     dataList = new StakeTokenData[](_entryCount);
     for (uint256 i = 1; i <= _entryCount; i++) {
-      address token = _entries[i].token;
+      address token = _entries[i];
       if (token == address(0)) {
         continue;
       }
@@ -113,10 +109,10 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
       return false;
     }
 
-    emit StakeTokenRemoved(_entries[i].token, underlying);
+    emit StakeTokenRemoved(_entries[i], underlying);
 
-    delete (_underlyings[underlying]);
     delete (_entries[i]);
+    delete (_underlyings[underlying]);
     return true;
   }
 
@@ -124,11 +120,10 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     require(token != address(0), 'unknown token');
     require(underlying != address(0), 'unknown underlying');
     require(stakeTokenOf(underlying) == address(0), 'ambiguous underlying');
-    uint256 i = _entryCount + 1;
-    _entryCount = i;
 
-    _entries[i] = TokenEntry(token);
-    _underlyings[underlying] = i;
+    _entryCount++;
+    _entries[_entryCount] = token;
+    _underlyings[underlying] = _entryCount;
 
     emit StakeTokenAdded(token, underlying);
   }

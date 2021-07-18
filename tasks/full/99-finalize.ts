@@ -8,6 +8,7 @@ import {
   getMarketAccessController,
 } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry } from '../../types';
+import { AccessFlags } from '../../helpers/access-flags';
 
 task('full:deploy-finalize', 'Finalize deployment')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -32,4 +33,10 @@ task('full:deploy-finalize', 'Finalize deployment')
     const addressProvider = await getMarketAccessController();
     await waitForTx(await addressProvider.renounceTemporaryAdmin());
     console.log('Temporary admin permissions renounced');
+
+    console.log('Pool Admin(s)', await addressProvider.roleActiveGrantees(AccessFlags.POOL_ADMIN));
+    console.log(
+      'Emergency Admin(s)',
+      await addressProvider.roleActiveGrantees(AccessFlags.EMERGENCY_ADMIN)
+    );
   });

@@ -1,24 +1,26 @@
 import { task } from 'hardhat/config';
-import { exit } from 'process';
-import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
+import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import {
-  deployRewardTokenImpl,
+  deployAGFTokenV1Impl,
   deployRewardBooster,
   deployRewardConfiguratorImpl,
-  deployStakeConfiguratorImpl,
+  deployXAGFTokenV1Impl,
 } from '../../helpers/contracts-deployments';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import {
-  getAgfToken,
+  getAGFTokenV1Impl,
   getMarketAddressController,
   getRewardConfiguratorProxy,
+  getRewardBooster,
 } from '../../helpers/contracts-getters';
 import { waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { MarketAccessController } from '../../types';
 
-task(`full:deploy-reward-contracts`, `Deploys reward contracts for prod enviroment`)
+task(
+  `full:deploy-reward-contracts`,
+  `Deploys reward contracts, AGF and xAGF tokens for prod enviroment`
+)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .addFlag('verify', `Verify contracts via Etherscan API.`)
   .setAction(async ({ verify, pool }, localBRE) => {
@@ -48,19 +50,18 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts for prod envirome
       Names.RewardTokenSymbol,
       18
     );
-    await waitForTx(
-      await addressesProvider.setAddressAsProxyWithInit(
-        AccessFlags.REWARD_TOKEN,
-        await deployedContractImpl(
-          addressesProvider,
-          'AGFTokenV1',
-          await deployRewardTokenImpl(verify)
-        ),
-        agfInitData
-      )
+
+    await addressesProvider.setAddressAsProxyWithInit(
+      AccessFlags.REWARD_TOKEN,
+      await deployedContractImpl(
+        addressesProvider,
+        'AGFTokenV1',
+        await deployAGFTokenV1Impl(verify)
+      ),
+      agfInitData
     );
 
-    const agf = await getAgfToken(await addressesProvider.getRewardToken());
+    const agf = await getAGFTokenV1Impl(await addressesProvider.getRewardToken());
 
     console.log(
       'AGF token: ',
@@ -78,6 +79,35 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts for prod envirome
           await deployRewardBooster([addressesProvider.address, agf.address], verify)
         )
       )
+    );
+
+    const booster = await getRewardBooster(await addressesProvider.getRewardController());
+
+    const xagfInitData = await configurator.buildRewardTokenInitData(
+      Names.RewardStakeTokenName,
+      Names.RewardStakeTokenSymbol,
+      18
+    );
+
+    await addressesProvider.setAddressAsProxyWithInit(
+      AccessFlags.REWARD_STAKE_TOKEN,
+      await deployedContractImpl(
+        addressesProvider,
+        'XAGFTokenV1',
+        await deployXAGFTokenV1Impl(verify)
+      ),
+      xagfInitData
+    );
+
+    const xagf = await getAGFTokenV1Impl(await addressesProvider.getRewardStakeToken());
+    await configurator.configureRewardBoost(xagf.address, true, xagf.address, false);
+
+    console.log(
+      'xAGF token: ',
+      xagf.address,
+      await xagf.name(),
+      await xagf.symbol(),
+      await xagf.decimals()
     );
   });
 

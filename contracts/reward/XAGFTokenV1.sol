@@ -31,7 +31,7 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
   constructor()
     public
     DecayingTokenLocker(
-      IRewardController(0),
+      IRewardController(address(this)),
       0,
       NO_SCALE,
       0,
@@ -80,8 +80,8 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
     address underlying = ac.getRewardToken();
 
     _initializeERC20(NAME, SYMBOL, DECIMALS);
-    super._initialize(IRewardController(controller), 0, NO_SCALE, 0);
     super._initialize(underlying, ONE_PERIOD, MAX_PERIOD);
+    super._initialize(IRewardController(controller), 0, NO_SCALE, 0);
   }
 
   function initialize(InitData calldata data)
@@ -95,8 +95,8 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
     address underlying = ac.getRewardToken();
 
     _initializeERC20(data.name, data.symbol, data.decimals);
-    super._initialize(IRewardController(controller), 0, NO_SCALE, 0);
     super._initialize(underlying, ONE_PERIOD, MAX_PERIOD);
+    super._initialize(IRewardController(controller), 0, NO_SCALE, 0);
   }
 
   function initializeToken(
@@ -109,8 +109,8 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
     address controller = remoteAcl.getRewardController();
 
     _initializeERC20(name_, symbol_, decimals_);
-    super._initialize(IRewardController(controller), 0, NO_SCALE, 0);
     super._initialize(underlying, ONE_PERIOD, MAX_PERIOD);
+    super._initialize(IRewardController(controller), 0, NO_SCALE, 0);
   }
 
   function initializePool(
@@ -121,7 +121,7 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
     uint16 baselinePercentage
   ) public virtual initializerRunAlways(TOKEN_REVISION) {
     _initializeERC20(NAME, SYMBOL, DECIMALS);
-    super._initialize(controller, initialRate, rateScale, baselinePercentage);
     super._initialize(underlying, ONE_PERIOD, MAX_PERIOD);
+    super._initialize(controller, initialRate, rateScale, baselinePercentage);
   }
 }

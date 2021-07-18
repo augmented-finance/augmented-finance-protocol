@@ -6,6 +6,7 @@ import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 
 import {BaseTokenLocker} from './BaseTokenLocker.sol';
+import {IBoostRate} from '../interfaces/IBoostRate.sol';
 import {ControlledRewardPool} from '../pools/ControlledRewardPool.sol';
 import {CalcCheckpointWeightedReward} from '../calcs/CalcCheckpointWeightedReward.sol';
 import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
@@ -21,6 +22,7 @@ contract RewardedTokenLocker is
   ControlledRewardPool,
   CalcCheckpointWeightedReward,
   IBoostExcessReceiver,
+  IBoostRate,
   IAutolocker
 {
   using SafeMath for uint256;
@@ -162,10 +164,6 @@ contract RewardedTokenLocker is
     return (amount, since);
   }
 
-  // function getRewardRate() external view override returns (uint256) {
-  //   return getLinearRate();
-  // }
-
   function internalGetRate() internal view override returns (uint256) {
     return getLinearRate();
   }
@@ -177,6 +175,10 @@ contract RewardedTokenLocker is
 
   function getCurrentTick() internal view override returns (uint32) {
     return uint32(block.timestamp);
+  }
+
+  function setBoostRate(uint256 rate) external override onlyController {
+    _setRate(rate);
   }
 
   function receiveBoostExcess(uint256 amount, uint32 since) external override onlyController {
