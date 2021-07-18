@@ -6,5 +6,5 @@ interface IEmergencyAccess {
 
   function isPaused() external view returns (bool);
 
-  event EmergencyPaused(address indexed by, address indexed contractAddr, bool paused);
+  event EmergencyPaused(address indexed by, bool paused);
 }

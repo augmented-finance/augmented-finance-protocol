@@ -321,7 +321,7 @@ abstract contract SlashableStakeTokenBase is
 
   function setPaused(bool paused) external override onlyEmergencyAdmin {
     _redeemPaused = paused;
-    emit EmergencyPaused(msg.sender, address(this), paused);
+    emit EmergencyPaused(msg.sender, paused);
   }
 
   function isPaused() external view override returns (bool) {

@@ -432,14 +432,6 @@ contract LendingPoolConfigurator is
     emit ReserveInterestRateStrategyChanged(asset, rateStrategyAddress);
   }
 
-  /**
-   * @dev pauses or unpauses all the actions of the protocol, including aToken transfers. Deprecated, call the pool directly. Used by tests.
-   * @param val true if protocol needs to be paused, false otherwise
-   **/
-  function setPoolPause(bool val) external onlyEmergencyAdmin {
-    pool.setPaused(val);
-  }
-
   function _initTokenWithProxy(address impl, bytes memory initParams) internal returns (address) {
     return address(_remoteAcl.createProxy(address(this), impl, initParams));
   }

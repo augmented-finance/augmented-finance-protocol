@@ -486,7 +486,7 @@ abstract contract BaseTokenLocker is IERC20, IEmergencyAccess, MarketAccessBitma
 
   function setPaused(bool paused) external override onlyEmergencyAdmin {
     _paused = paused;
-    emit EmergencyPaused(msg.sender, address(this), paused);
+    emit EmergencyPaused(msg.sender, paused);
   }
 
   function isPaused() external view override returns (bool) {

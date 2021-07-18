@@ -122,7 +122,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
       _paused = paused;
       internalPause(paused);
     }
-    emit EmergencyPaused(msg.sender, address(this), paused);
+    emit EmergencyPaused(msg.sender, paused);
   }
 
   function isPaused() public view override returns (bool) {
