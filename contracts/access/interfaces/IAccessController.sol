@@ -11,8 +11,6 @@ import {IProxy} from '../../tools/upgradeability/IProxy.sol';
 interface IAccessController is IRemoteAccessBitmask {
   function getAddress(uint256 id) external view returns (address);
 
-  function isEmergencyAdmin(address admin) external view returns (bool);
-
   function createProxy(
     address admin,
     address impl,

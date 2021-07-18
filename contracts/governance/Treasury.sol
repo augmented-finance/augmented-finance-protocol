@@ -3,16 +3,18 @@ pragma solidity 0.6.12;
 
 import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
-import {RemoteAccessBitmask} from '../access/RemoteAccessBitmask.sol';
-import {IRemoteAccessBitmask} from '../access/interfaces/IRemoteAccessBitmask.sol';
+import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 import {AccessFlags} from '../access/AccessFlags.sol';
 
-contract Treasury is VersionedInitializable, RemoteAccessBitmask {
+contract Treasury is VersionedInitializable, MarketAccessBitmask {
   uint256 private constant TREASURY_REVISION = 1;
+
+  constructor() public MarketAccessBitmask(IMarketAccessController(0)) {}
 
   // This initializer is invoked by AccessController.setAddressAsImpl
   function initialize(address remoteAcl) external virtual initializerRunAlways(TREASURY_REVISION) {
-    _remoteAcl = IRemoteAccessBitmask(remoteAcl);
+    _remoteAcl = IMarketAccessController(remoteAcl);
   }
 
   function getRevision() internal pure virtual override returns (uint256) {

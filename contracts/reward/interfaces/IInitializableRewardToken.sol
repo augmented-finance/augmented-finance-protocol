@@ -2,11 +2,11 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IRemoteAccessBitmask} from '../../access/interfaces/IRemoteAccessBitmask.sol';
+import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 
 interface IInitializableRewardToken {
   struct InitData {
-    IRemoteAccessBitmask remoteAcl;
+    IMarketAccessController remoteAcl;
     string name;
     string symbol;
     uint8 decimals;

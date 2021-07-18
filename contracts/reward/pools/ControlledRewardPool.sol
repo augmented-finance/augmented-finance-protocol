@@ -8,6 +8,7 @@ import {IRewardController, AllocationMode} from '../interfaces/IRewardController
 import {IManagedRewardPool} from '../interfaces/IManagedRewardPool.sol';
 import {AccessFlags} from '../../access/AccessFlags.sol';
 import {AccessHelper} from '../../access/AccessHelper.sol';
+import {Errors} from '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
@@ -196,27 +197,43 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return address(_controller) == addr;
   }
 
+  function _onlyController() private view {
+    require(isController(msg.sender), Errors.RW_NOT_REWARD_CONTROLLER);
+  }
+
   modifier onlyController() {
-    require(isController(msg.sender), 'only controller is allowed');
+    _onlyController();
     _;
+  }
+
+  function _onlyConfigurator() private view {
+    require(_controller.isConfigurator(msg.sender), Errors.RW_NOT_REWARD_CONFIG_ADMIN);
   }
 
   modifier onlyConfigurator() {
-    require(_controller.isConfigurator(msg.sender), 'only configurator is allowed');
+    _onlyConfigurator();
     _;
+  }
+
+  function _onlyRateAdmin() private view {
+    require(_controller.isRateAdmin(msg.sender), Errors.RW_NOT_REWARD_RATE_ADMIN);
   }
 
   modifier onlyRateAdmin() {
-    require(_controller.isRateAdmin(msg.sender), 'only rate admin is allowed');
+    _onlyRateAdmin();
     _;
+  }
+
+  function _onlyEmergencyAdmin() private view {
+    require(_controller.isEmergencyAdmin(msg.sender), Errors.CALLER_NOT_EMERGENCY_ADMIN);
   }
 
   modifier onlyEmergencyAdmin() {
-    require(_controller.isEmergencyAdmin(msg.sender), 'only emergency admin is allowed');
+    _onlyEmergencyAdmin();
     _;
   }
 
-  modifier onlyRefAdmin() {
+  function _onlyRefAdmin() private view {
     require(
       AccessHelper.hasAllOf(
         _controller.getAccessController(),
@@ -225,11 +242,19 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
       ),
       'only referral admin is allowed'
     );
+  }
+
+  modifier onlyRefAdmin() {
+    _onlyRefAdmin();
     _;
   }
 
+  function _notPaused() private view {
+    require(!_paused, Errors.RW_REWARD_PAUSED);
+  }
+
   modifier notPaused() {
-    require(!_paused, 'rewards are paused');
+    _notPaused();
     _;
   }
 }

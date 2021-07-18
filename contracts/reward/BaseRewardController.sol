@@ -12,6 +12,7 @@ import {IRewardPool} from './interfaces/IRewardPool.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {IRewardCollector} from './interfaces/IRewardCollector.sol';
+import {Errors} from '../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
@@ -227,8 +228,12 @@ abstract contract BaseRewardController is
     return acl_hasAllOf(addr, AccessFlags.REWARD_RATE_ADMIN);
   }
 
+  function _onlyRateAdmin() private view {
+    require(isRateAdmin(msg.sender), Errors.RW_NOT_REWARD_RATE_ADMIN);
+  }
+
   modifier onlyRateAdmin {
-    require(isRateAdmin(msg.sender), 'only rate admin');
+    _onlyRateAdmin();
     _;
   }
 
@@ -239,16 +244,21 @@ abstract contract BaseRewardController is
     return acl_hasAnyOf(addr, AccessFlags.REWARD_CONFIGURATOR | AccessFlags.REWARD_CONFIG_ADMIN);
   }
 
+  function _onlyConfigurator() private view {
+    require(isConfigurator(msg.sender), Errors.RW_NOT_REWARD_CONFIG_ADMIN);
+  }
+
   modifier onlyConfigurator {
-    require(isConfigurator(msg.sender), 'only configurator');
+    _onlyConfigurator();
     _;
   }
 
+  function _onlyConfiguratorOrAdmin() private view {
+    require(isConfigurator(msg.sender) || isRateAdmin(msg.sender), Errors.RW_NOT_REWARD_RATE_ADMIN);
+  }
+
   modifier onlyConfiguratorOrAdmin {
-    require(
-      isConfigurator(msg.sender) || isRateAdmin(msg.sender),
-      'only configurator or rate admin'
-    );
+    _onlyConfiguratorOrAdmin();
     _;
   }
 
@@ -330,8 +340,12 @@ abstract contract BaseRewardController is
     uint32 since
   ) internal virtual;
 
+  function _notPaused() private view {
+    require(!_paused, Errors.RW_REWARD_PAUSED);
+  }
+
   modifier notPaused() {
-    require(!_paused, 'rewards are paused');
+    _notPaused();
     _;
   }
 

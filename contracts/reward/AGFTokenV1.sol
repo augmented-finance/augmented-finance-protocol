@@ -3,8 +3,8 @@ pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
 import {AccessFlags} from '../access/AccessFlags.sol';
-import {RemoteAccessBitmask} from '../access/RemoteAccessBitmask.sol';
-import {IRemoteAccessBitmask} from '../access/interfaces/IRemoteAccessBitmask.sol';
+import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {RewardToken} from './RewardToken.sol';
@@ -15,7 +15,7 @@ import 'hardhat/console.sol';
 
 contract AGFTokenV1 is
   RewardToken,
-  RemoteAccessBitmask,
+  MarketAccessBitmask,
   VersionedInitializable,
   IInitializableRewardToken,
   IRewardMinter
@@ -26,14 +26,18 @@ contract AGFTokenV1 is
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor() public RewardToken(NAME, SYMBOL, DECIMALS) {}
+  constructor()
+    public
+    RewardToken(NAME, SYMBOL, DECIMALS)
+    MarketAccessBitmask(IMarketAccessController(0))
+  {}
 
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
   }
 
   // This initializer is invoked by AccessController.setAddressAsImpl
-  function initialize(IRemoteAccessBitmask remoteAcl)
+  function initialize(IMarketAccessController remoteAcl)
     external
     virtual
     initializerRunAlways(TOKEN_REVISION)
@@ -51,7 +55,7 @@ contract AGFTokenV1 is
   }
 
   function _initialize(
-    IRemoteAccessBitmask remoteAcl,
+    IMarketAccessController remoteAcl,
     string memory name,
     string memory symbol,
     uint8 decimals

@@ -3,6 +3,7 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import './IProxy.sol';
+import {Errors} from '../Errors.sol';
 
 contract ProxyOwner {
   address private _owner;
@@ -12,7 +13,7 @@ contract ProxyOwner {
   }
 
   modifier onlyOwner {
-    require(msg.sender == _owner, 'ProxyOwner: only owner');
+    require(msg.sender == _owner, Errors.TXT_CALLER_NOT_PROXY_OWNER);
     _;
   }
 

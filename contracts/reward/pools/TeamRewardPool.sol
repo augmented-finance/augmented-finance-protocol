@@ -5,6 +5,7 @@ import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {ControlledRewardPool} from './ControlledRewardPool.sol';
 import {CalcLinearUnweightedReward} from '../calcs/CalcLinearUnweightedReward.sol';
+import {Errors} from '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
@@ -25,11 +26,15 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     _teamManager = teamManager;
   }
 
-  modifier onlyTeamManagerOrConfigurator() {
+  function _onlyTeamManagerOrConfigurator() private view {
     require(
       msg.sender == _teamManager || _controller.isConfigurator(msg.sender),
-      'only team manager or configurator'
+      Errors.RW_NOT_TEAM_MANAGER
     );
+  }
+
+  modifier onlyTeamManagerOrConfigurator {
+    _onlyTeamManagerOrConfigurator();
     _;
   }
 
