@@ -42,9 +42,6 @@ abstract contract BaseRewardController is
     _rewardMinter = rewardMinter;
   }
 
-  event RewardsAllocated(address indexed user, uint256 amount);
-  event RewardsClaimed(address indexed user, address indexed to, uint256 amount);
-
   function getAccessController() public view override returns (IMarketAccessController) {
     return _remoteAcl;
   }
@@ -59,22 +56,26 @@ abstract contract BaseRewardController is
     _poolMask[address(pool)] = poolMask;
     _baselineMask |= poolMask;
     _poolList.push(pool);
+
+    emit RewardPoolAdded(address(pool), poolMask);
   }
 
   function removeRewardPool(IManagedRewardPool pool) external override onlyConfigurator {
     require(address(pool) != address(0), 'reward pool required');
-    uint256 mask = _poolMask[address(pool)];
-    if (mask == 0) {
+    uint256 poolMask = _poolMask[address(pool)];
+    if (poolMask == 0) {
       return;
     }
-    uint256 idx = BitUtils.bitLength(mask);
+    uint256 idx = BitUtils.bitLength(poolMask);
     require(_poolList[idx] == pool, 'unexpected pool');
 
     _poolList[idx] = IManagedRewardPool(0);
     delete (_poolMask[address(pool)]);
-    _ignoreMask |= mask;
+    _ignoreMask |= poolMask;
 
     internalOnPoolRemoved(pool);
+
+    emit RewardPoolRemoved(address(pool), poolMask);
   }
 
   function getPoolMask(address pool) public view returns (uint256 poolMask) {
@@ -106,6 +107,7 @@ abstract contract BaseRewardController is
     returns (uint256 totalRate)
   {
     (totalRate, _baselineMask) = internalUpdateBaseline(baseline, _baselineMask);
+    emit BaselineUpdated(baseline, totalRate, _baselineMask);
     return totalRate;
   }
 
@@ -136,6 +138,7 @@ abstract contract BaseRewardController is
 
   function setRewardMinter(IRewardMinter minter) external override onlyConfigurator {
     _rewardMinter = minter;
+    emit RewardMinterSet(address(minter));
   }
 
   function getPools()
@@ -210,7 +213,7 @@ abstract contract BaseRewardController is
 
     if (allocated > 0) {
       internalAllocatedByPool(holder, allocated, msg.sender, since);
-      emit RewardsAllocated(holder, allocated);
+      emit RewardsAllocated(holder, allocated, msg.sender);
     }
 
     if (mode == AllocationMode.Push) {
