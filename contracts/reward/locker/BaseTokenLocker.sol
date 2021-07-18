@@ -11,6 +11,7 @@ import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {AccessFlags} from '../../access/AccessFlags.sol';
 import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
+import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
 
 import {CalcLinearRateReward} from '../calcs/CalcLinearRateReward.sol';
 

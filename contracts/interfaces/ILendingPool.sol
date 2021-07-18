@@ -115,16 +115,6 @@ interface ILendingPool is IEmergencyAccess {
   );
 
   /**
-   * @dev Emitted when the pause is triggered.
-   */
-  event Paused();
-
-  /**
-   * @dev Emitted when the pause is lifted.
-   */
-  event Unpaused();
-
-  /**
    * @dev Emitted when a borrower is liquidated. This event is emitted by the LendingPool via
    * LendingPoolCollateral manager using a DELEGATECALL
    * This allows to have the events in the generated ABI for LendingPool.
