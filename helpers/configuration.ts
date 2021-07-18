@@ -50,36 +50,6 @@ export const getReservesConfigByPool = (pool: LendingPools): iMultiPoolsAssets<I
     pool
   );
 
-export const getGenesisPoolAdmin = async (
-  config: ICommonConfiguration
-): Promise<tEthereumAddress> => {
-  const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  const targetAddress = getParamPerNetwork(config.PoolAdmin, <eNetwork>currentNetwork);
-  if (targetAddress) {
-    return targetAddress;
-  }
-  const addressList = await Promise.all(
-    (await DRE.ethers.getSigners()).map((signer) => signer.getAddress())
-  );
-  const addressIndex = config.PoolAdminIndex;
-  return addressList[addressIndex];
-};
-
-export const getEmergencyAdmin = async (
-  config: ICommonConfiguration
-): Promise<tEthereumAddress> => {
-  const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  const targetAddress = getParamPerNetwork(config.EmergencyAdmin, <eNetwork>currentNetwork);
-  if (targetAddress) {
-    return targetAddress;
-  }
-  const addressList = await Promise.all(
-    (await DRE.ethers.getSigners()).map((signer) => signer.getAddress())
-  );
-  const addressIndex = config.EmergencyAdminIndex;
-  return addressList[addressIndex];
-};
-
 export const getWethAddress = async (config: ICommonConfiguration) => {
   const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
   const wethAddress = getParamPerNetwork(config.WETH, <eNetwork>currentNetwork);

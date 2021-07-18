@@ -34,9 +34,11 @@ task('full:deploy-finalize', 'Finalize deployment')
     await waitForTx(await addressProvider.renounceTemporaryAdmin());
     console.log('Temporary admin permissions renounced');
 
-    console.log('Pool Admin(s)', await addressProvider.roleActiveGrantees(AccessFlags.POOL_ADMIN));
-    console.log(
-      'Emergency Admin(s)',
-      await addressProvider.roleActiveGrantees(AccessFlags.EMERGENCY_ADMIN)
-    );
+    const activeGrantees = async (flag: AccessFlags) => {
+      const result = await addressProvider.roleActiveGrantees(flag);
+      return result.addrList.slice(0, result.count.toNumber());
+    };
+
+    console.log('Pool Admin(s):', await activeGrantees(AccessFlags.POOL_ADMIN));
+    console.log('Emergency Admin(s):', await activeGrantees(AccessFlags.EMERGENCY_ADMIN));
   });

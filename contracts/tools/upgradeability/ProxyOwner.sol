@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IProxy} from './IProxy.sol';
+import './IProxy.sol';
 
 contract ProxyOwner {
   address private _owner;
@@ -16,12 +16,10 @@ contract ProxyOwner {
     _;
   }
 
-  function adminOf(address proxy) external returns (address) {
-    return IProxy(proxy).admin();
-  }
-
-  function implementationOf(address proxy) external returns (address) {
-    return IProxy(proxy).implementation();
+  function implementationOf(address proxy) external view returns (address) {
+    (address admin, address impl) = IProxyView(proxy)._proxy_view_implementation();
+    require(admin == address(this), 'proxy admin is different');
+    return impl;
   }
 
   function upgradeTo(address proxy, address newImplementation) external onlyOwner {

@@ -65,17 +65,24 @@ abstract contract BaseTokenAbsRewardPool is ControlledRewardPool, IRewardPool {
     internalAllocateReward(holder, allocated, since, mode);
   }
 
-  function addRewardProvider(address provider, address) external virtual override onlyController {
+  function addRewardProvider(address provider, address token)
+    external
+    virtual
+    override
+    onlyConfigurator
+  {
     require(provider != address(0), 'provider is required');
     require(_provider == address(0), 'provider is already set');
     _provider = provider;
+    emit ProviderAdded(provider, token);
   }
 
-  function removeRewardProvider(address provider) external virtual override onlyController {
-    if (_provider != provider) {
+  function removeRewardProvider(address provider) external virtual override onlyConfigurator {
+    if (_provider != provider || provider == address(0)) {
       return;
     }
     _provider = address(0);
+    emit ProviderRemoved(provider);
   }
 
   function internalUpdateTotal(uint256 totalBalance) internal virtual;

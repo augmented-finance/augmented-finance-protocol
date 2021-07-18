@@ -2,11 +2,13 @@ import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
 import rawBRE, { ethers } from 'hardhat';
+import { AccessFlags } from '../../helpers/access-flags';
 
 import {
+  getMarketAccessController,
   getMockAgfToken,
   getRewardController,
-  getTokenLocker,
+  getMockTokenLocker,
 } from '../../helpers/contracts-getters';
 
 import { MockAgfToken, RewardFreezer, RewardedTokenLocker } from '../../types';
@@ -46,7 +48,7 @@ describe('Token locker suite', () => {
     rewardController.setFreezePercentage(0);
 
     AGF = await getMockAgfToken();
-    xAGF = await getTokenLocker();
+    xAGF = await getMockTokenLocker();
 
     await AGF.connect(root).mintReward(user1.address, defaultStkAmount, false);
     await AGF.connect(user1).approve(xAGF.address, defaultStkAmount);
@@ -243,6 +245,9 @@ describe('Token locker suite', () => {
     const total12 = await xAGF.totalSupply();
 
     expect(await xAGF.getRate()).eq(rateBase);
+
+    const ac = await getMarketAccessController(await rewardController.getAccessController());
+    ac.grantAnyRoles(root.address, AccessFlags.REWARD_CONTROLLER);
 
     await xAGF.connect(root).receiveBoostExcess(rateBase.mul(10000), 0); // 10000 will be distributed over 1 week or less
 

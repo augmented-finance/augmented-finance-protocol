@@ -24,14 +24,16 @@ import {
 } from '../../helpers/contracts-getters';
 import { chunk, falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
-import { BigNumber, BigNumberish } from 'ethers';
-import { RAY, WAD, WAD_NUM, WAD_RAY_RATIO, WAD_RAY_RATIO_NUM } from '../../helpers/constants';
+import { BigNumber } from 'ethers';
+import { RAY, WAD, WAD_RAY_RATIO_NUM } from '../../helpers/constants';
+import { transpose } from 'underscore';
 
 interface poolInitParams {
   provider: tEthereumAddress;
   impl: tEthereumAddress;
   baselinePercentage: BigNumber;
   initialRate: BigNumber;
+  boostFactor: BigNumber;
   rateScale: BigNumber;
 }
 
@@ -80,6 +82,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         baselinePercentage: BigNumber.from(share!.BasePoints),
         rateScale: rateScale,
         initialRate: BigNumber.from(0),
+        boostFactor: BigNumber.from(share!.BoostFactor),
         impl: poolImpl.address,
       });
       initSymbols.push(prefix + Names.SymbolPrefix + symbol);
@@ -156,8 +159,22 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         [rewardController.address, 0, rewardParams.TeamPool.Share, rewardParams.TeamPool.Manager],
         verify
       );
+
+      const unlockTimestamp = (rewardParams.TeamPool.UnlockAt.getTime() / 1000) | 0;
+      await trp.setUnlockedAt(unlockTimestamp);
       await rewardController.addRewardPool(trp.address);
-      console.log(`Deployed ${poolName}: `, trp.address);
+
+      const members = Object.entries(rewardParams.TeamPool.Members);
+      if (members) {
+        const [memberAddresses, memberShares] = transpose(members);
+        await trp.updateTeamMembers(memberAddresses, memberShares);
+      }
+      const allocation = await trp.getAllocatedShares();
+      console.log(
+        `Deployed ${poolName}: ${trp.address}, allocation ${allocation / 100.0}%, ${
+          members.length
+        } members(s), unlocks at ${rewardParams.TeamPool.UnlockAt} (${unlockTimestamp})`
+      );
     }
 
     if (rewardParams.ReferralPool != undefined && rewardParams.ReferralPool!.TotalWad > 0) {

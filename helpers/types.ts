@@ -75,8 +75,9 @@ export enum eContractid {
 
   RewardController = 'RewardController',
   RewardBooster = 'RewardBooster',
-  TokenLocker = 'TokenLocker',
-  DecayingTokenLocker = 'DecayingTokenLocker',
+  MockTokenLocker = 'MockTokenLocker',
+  MockDecayingTokenLocker = 'MockDecayingTokenLocker',
+
   TeamRewardPool = 'TeamRewardPool',
   ReferralRewardPool = 'ReferralRewardPool',
 
@@ -368,9 +369,7 @@ export interface ICommonConfiguration {
   FallbackOracle: iParamsPerNetwork<tEthereumAddress>;
 
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
-  PoolAdminIndex: number;
   EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
-  EmergencyAdminIndex: number;
 
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;
@@ -432,6 +431,7 @@ export interface IRewardParams {
 export interface ITeamPool {
   Share: number;
   Manager: tEthereumAddress;
+  UnlockAt: Date;
   Members: ITeamMembers;
 }
 

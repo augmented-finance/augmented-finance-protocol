@@ -68,10 +68,15 @@ contract MarketAccessBitmask {
 
   modifier onlyRewardAdmin {
     require(
-      _remoteAcl.hasAnyOf(
-        msg.sender,
-        AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR
-      ),
+      _remoteAcl.hasAllOf(msg.sender, AccessFlags.REWARD_CONFIG_ADMIN),
+      Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
+    );
+    _;
+  }
+
+  modifier onlyRewardConfiguratorOrAdmin {
+    require(
+      acl_hasAnyOf(msg.sender, AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR),
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
     );
     _;

@@ -63,6 +63,7 @@ import {
   MintableDelegationERC20,
   TokenWeightedRewardPoolV1Factory,
   ReferralRewardPoolFactory,
+  MockRewardedTokenLockerFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -720,7 +721,7 @@ export const deployRewardBooster = async (
     verify
   );
 
-export const deployTokenLocker = async (
+export const deployMockTokenLocker = async (
   args: [
     controller: tEthereumAddress,
     initialRate: BigNumberish,
@@ -734,13 +735,13 @@ export const deployTokenLocker = async (
   verify?: boolean
 ) =>
   await withSaveAndVerify(
-    await new RewardedTokenLockerFactory(await getFirstSigner()).deploy(...args),
-    eContractid.TokenLocker,
+    await new MockRewardedTokenLockerFactory(await getFirstSigner()).deploy(...args),
+    eContractid.MockTokenLocker,
     [],
     verify
   );
 
-export const deployDecayingTokenLocker = async (
+export const deployMockDecayingTokenLocker = async (
   args: [
     controller: tEthereumAddress,
     initialRate: BigNumberish,
@@ -755,7 +756,7 @@ export const deployDecayingTokenLocker = async (
 ) =>
   await withSaveAndVerify(
     await new DecayingTokenLockerFactory(await getFirstSigner()).deploy(...args),
-    eContractid.DecayingTokenLocker,
+    eContractid.MockDecayingTokenLocker,
     [],
     verify
   );

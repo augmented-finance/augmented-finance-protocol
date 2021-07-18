@@ -165,6 +165,10 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     return token;
   }
 
+  function implementationOf(address token) external view returns (address) {
+    return _proxies.implementationOf(token);
+  }
+
   function updateStakeToken(UpdateStakeTokenData calldata input)
     external
     aclHas(AccessFlags.STAKE_ADMIN)

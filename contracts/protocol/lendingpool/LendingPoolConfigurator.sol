@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
-import {IProxy} from '../../tools/upgradeability/IProxy.sol';
+import '../../tools/upgradeability/IProxy.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
@@ -219,6 +219,12 @@ contract LendingPoolConfigurator is
       reserveData.variableDebtTokenAddress,
       input.implementation
     );
+  }
+
+  function implementationOf(address token) external view returns (address) {
+    (address admin, address impl) = IProxyView(token)._proxy_view_implementation();
+    require(admin == address(this), 'proxy admin is different');
+    return impl;
   }
 
   /**

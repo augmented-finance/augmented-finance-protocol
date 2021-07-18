@@ -40,11 +40,14 @@ task('print-config', 'Inits the DRE, to have access to all the plugins')
       'Lending Pool Configurator proxy',
       await addressProvider.getLendingPoolConfigurator()
     );
-    console.log('Pool Admin(s)', await addressProvider.roleActiveGrantees(AccessFlags.POOL_ADMIN));
-    console.log(
-      'Emergency Admin(s)',
-      await addressProvider.roleActiveGrantees(AccessFlags.EMERGENCY_ADMIN)
-    );
+    const activeGrantees = async (flag: AccessFlags) => {
+      const result = await addressProvider.roleActiveGrantees(flag);
+      return result.addrList.slice(0, result.count.toNumber());
+    };
+
+    console.log('Pool Admin(s):', await activeGrantees(AccessFlags.POOL_ADMIN));
+    console.log('Emergency Admin(s):', await activeGrantees(AccessFlags.EMERGENCY_ADMIN));
+
     console.log('Price Oracle', await addressProvider.getPriceOracle());
     console.log('Lending Rate Oracle', await addressProvider.getLendingRateOracle());
     console.log('Lending Pool Data Provider', dataProvider);

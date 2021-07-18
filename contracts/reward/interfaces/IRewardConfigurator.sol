@@ -8,12 +8,16 @@ interface IRewardConfigurator {
     address impl;
     uint256 initialRate;
     uint224 rateScale;
+    uint32 boostFactor;
     uint16 baselinePercentage;
   }
 
   struct PoolUpdateData {
     address pool;
+    address impl;
   }
 
-  function batchInitRewardPools(PoolInitData[] calldata entries) external;
+  event RewardPoolInitialized(address indexed pool, address indexed provider, PoolInitData data);
+
+  event RewardPoolUpgraded(address indexed pool, address impl);
 }

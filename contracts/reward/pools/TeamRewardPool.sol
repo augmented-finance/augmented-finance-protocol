@@ -25,10 +25,10 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     _teamManager = teamManager;
   }
 
-  modifier onlyTeamManagerOrController() {
+  modifier onlyTeamManagerOrConfigurator() {
     require(
-      msg.sender == _teamManager || isController(msg.sender),
-      'only team manager or controller'
+      msg.sender == _teamManager || _controller.isConfigurator(msg.sender),
+      'only team manager or configurator'
     );
     _;
   }
@@ -74,13 +74,11 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return (rate, allocated, since);
   }
 
-  function addRewardProvider(address, address) external override {
-    revert('unsupported');
+  function addRewardProvider(address, address) external override onlyConfigurator {
+    revert('UNSUPPORTED');
   }
 
-  function removeRewardProvider(address) external override {
-    revert('unsupported');
-  }
+  function removeRewardProvider(address) external override onlyConfigurator {}
 
   function getAllocatedShares() external view returns (uint16) {
     return _totalShare;
@@ -90,10 +88,24 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return _lockupTill > 0 && _lockupTill < at;
   }
 
+  function updateTeamMembers(address[] calldata members, uint16[] calldata memberSharePct)
+    external
+    onlyTeamManagerOrConfigurator
+  {
+    require(members.length == memberSharePct.length);
+    for (uint256 i = 0; i < members.length; i++) {
+      _updateTeamMember(members[i], memberSharePct[i]);
+    }
+  }
+
   function updateTeamMember(address member, uint16 memberSharePct)
     external
-    onlyTeamManagerOrController
+    onlyTeamManagerOrConfigurator
   {
+    _updateTeamMember(member, memberSharePct);
+  }
+
+  function _updateTeamMember(address member, uint16 memberSharePct) private {
     require(member != address(0), 'member is required');
     require(memberSharePct <= PercentageMath.ONE, 'invalid share percentage');
 
@@ -113,7 +125,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     internalAllocateReward(member, allocated, since, mode);
   }
 
-  function removeTeamMember(address member) external onlyTeamManagerOrController {
+  function removeTeamMember(address member) external onlyTeamManagerOrConfigurator {
     require(member != address(0), 'member is required');
 
     uint256 lastShare = internalRemoveReward(member);
@@ -125,7 +137,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     internalAllocateReward(member, 0, 0, AllocationMode.UnsetPull);
   }
 
-  function setTeamManager(address member) external onlyTeamManagerOrController {
+  function setTeamManager(address member) external onlyTeamManagerOrConfigurator {
     _teamManager = member;
   }
 
@@ -133,7 +145,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return _teamManager;
   }
 
-  function setUnlockedAt(uint32 at) external onlyTeamManagerOrController {
+  function setUnlockedAt(uint32 at) external onlyTeamManagerOrConfigurator {
     require(at > 0, 'unlockAt is required');
     // console.log('setUnlockedAt', _lockupTill, getCurrentTick(), at);
     require(_lockupTill == 0 || _lockupTill >= getCurrentTick(), 'lockup is finished');

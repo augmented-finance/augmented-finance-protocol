@@ -14,8 +14,8 @@ import './IProxy.sol';
  * `ifAdmin` modifier. See ethereum/solidity#3864 for a Solidity
  * feature proposal that would enable this to be done automatically.
  */
-contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy, IProxy {
-  address immutable ADMIN;
+contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy, IProxy, IProxyView {
+  address internal immutable ADMIN;
 
   constructor(address admin) public {
     ADMIN = admin;
@@ -30,17 +30,19 @@ contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy, IProx
   }
 
   /**
-   * @return The address of the proxy admin.
-   */
-  function admin() external override ifAdmin returns (address) {
-    return ADMIN;
-  }
-
-  /**
    * @return The address of the implementation.
    */
   function implementation() external override ifAdmin returns (address) {
     return _implementation();
+  }
+
+  function _proxy_view_implementation()
+    external
+    view
+    override
+    returns (address admin, address impl)
+  {
+    return (ADMIN, _implementation());
   }
 
   /**
