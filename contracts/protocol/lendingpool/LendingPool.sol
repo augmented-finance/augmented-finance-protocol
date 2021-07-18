@@ -77,11 +77,11 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
 
   function _onlyConfiguratorOrAdmin() private view {
     require(
-      _addressesProvider.hasAllOf(
+      _addressesProvider.hasAnyOf(
         msg.sender,
-        AccessFlags.EMERGENCY_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR
+        AccessFlags.POOL_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR
       ),
-      Errors.CALLER_NOT_EMERGENCY_ADMIN
+      Errors.CALLER_NOT_POOL_ADMIN
     );
   }
 
@@ -919,11 +919,12 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     _reserves[asset].configuration.data = configuration;
   }
 
-  /**
-   * @dev Set the _pause state of a reserve
-   * @param val `true` to pause the reserve, `false` to un-pause it
-   */
-  function setPaused(bool val) external override onlyConfiguratorOrAdmin {
+  function setPaused(bool val) external override {
+    require(
+      _addressesProvider.hasAllOf(msg.sender, AccessFlags.EMERGENCY_ADMIN),
+      Errors.CALLER_NOT_EMERGENCY_ADMIN
+    );
+
     _paused = val;
     emit EmergencyPaused(msg.sender, val);
   }
