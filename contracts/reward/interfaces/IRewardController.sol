@@ -16,7 +16,7 @@ interface IRewardController {
     AllocationMode mode
   ) external;
 
-  function isRateController(address) external view returns (bool);
+  function isRateAdmin(address) external view returns (bool);
 
   function isConfigurator(address) external view returns (bool);
 
@@ -35,6 +35,10 @@ interface IManagedRewardController is IEmergencyAccess, IRewardController {
   function setRewardMinter(IRewardMinter) external;
 
   function getPools() external view returns (IManagedRewardPool[] memory, uint256 ignoreMask);
+}
+
+interface IManagedRewardBooster is IManagedRewardController {
+  function setBoostFactor(address pool, uint32 pctFactor) external;
 }
 
 interface IUntypedRewardControllerPools {

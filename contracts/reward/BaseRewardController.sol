@@ -102,7 +102,7 @@ abstract contract BaseRewardController is
   function updateBaseline(uint256 baseline)
     external
     override
-    onlyRateController
+    onlyRateAdmin
     returns (uint256 totalRate)
   {
     (totalRate, _baselineMask) = internalUpdateBaseline(baseline, _baselineMask);
@@ -229,15 +229,15 @@ abstract contract BaseRewardController is
     }
   }
 
-  function isRateController(address addr) public view override returns (bool) {
+  function isRateAdmin(address addr) public view override returns (bool) {
     if (!hasRemoteAcl()) {
       return addr == address(this);
     }
     return acl_hasAllOf(addr, AccessFlags.REWARD_RATE_ADMIN);
   }
 
-  modifier onlyRateController {
-    require(isRateController(msg.sender), 'only configurator');
+  modifier onlyRateAdmin {
+    require(isRateAdmin(msg.sender), 'only rate admin');
     _;
   }
 
@@ -250,6 +250,14 @@ abstract contract BaseRewardController is
 
   modifier onlyConfigurator {
     require(isConfigurator(msg.sender), 'only configurator');
+    _;
+  }
+
+  modifier onlyConfiguratorOrAdmin {
+    require(
+      isConfigurator(msg.sender) || isRateAdmin(msg.sender),
+      'only configurator or rate admin'
+    );
     _;
   }
 

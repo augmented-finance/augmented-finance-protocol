@@ -21,7 +21,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   IRewardController internal _controller;
 
-  uint256 internal _pausedRate;
+  uint256 private _pausedRate;
   uint224 internal _rateScale;
   uint16 private _baselinePercentage;
   bool private _paused;
@@ -79,8 +79,12 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     internalSetRate(0);
   }
 
-  function setBaselinePercentage(uint16 factor) external override onlyRateController {
+  function setBaselinePercentage(uint16 factor) external override onlyRateAdmin {
     internalSetBaselinePercentage(factor);
+  }
+
+  function getBaselinePercentage() internal view returns (uint16) {
+    return _baselinePercentage;
   }
 
   function internalSetBaselinePercentage(uint16 factor) internal virtual {
@@ -88,7 +92,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _baselinePercentage = factor;
   }
 
-  function setRate(uint256 rate) external override onlyRateController {
+  function setRate(uint256 rate) external override onlyRateAdmin {
     _setRate(rate);
   }
 
@@ -114,7 +118,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _rateScale = uint224(rateScale);
   }
 
-  function setRateScale(uint256 rateScale) external override onlyRateController {
+  function setRateScale(uint256 rateScale) external override onlyRateAdmin {
     internalSetRateScale(rateScale);
   }
 
@@ -194,8 +198,8 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _;
   }
 
-  modifier onlyRateController() {
-    require(_controller.isRateController(msg.sender), 'only rate controller is allowed');
+  modifier onlyRateAdmin() {
+    require(_controller.isRateAdmin(msg.sender), 'only rate admin is allowed');
     _;
   }
 

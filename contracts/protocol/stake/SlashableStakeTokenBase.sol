@@ -437,7 +437,7 @@ abstract contract SlashableStakeTokenBase is
     return (params, name(), symbol(), decimals());
   }
 
-  function setIncentivesController(address addr) external override onlyRewardAdmin {
+  function setIncentivesController(address addr) external override onlyRewardConfiguratorOrAdmin {
     _incentivesController = IBalanceHook(addr);
   }
 

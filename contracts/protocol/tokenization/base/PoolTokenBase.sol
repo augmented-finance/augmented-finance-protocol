@@ -75,7 +75,7 @@ abstract contract PoolTokenBase is
     _;
   }
 
-  modifier onlyRewardAdmin {
+  modifier onlyRewardConfiguratorOrAdmin {
     require(
       AccessHelper.hasAnyOf(
         _pool.getAccessController(),
@@ -167,7 +167,7 @@ abstract contract PoolTokenBase is
   /**
    * @dev Updates the address of the incentives controller contract
    **/
-  function setIncentivesController(address hook) external override onlyRewardAdmin {
+  function setIncentivesController(address hook) external override onlyRewardConfiguratorOrAdmin {
     _setIncentivesController(hook);
   }
 

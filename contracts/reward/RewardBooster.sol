@@ -9,6 +9,7 @@ import {BaseRewardController} from './BaseRewardController.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {IRewardPool} from './interfaces/IRewardPool.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
+import {IManagedRewardBooster} from './interfaces/IRewardController.sol';
 import {IBoostExcessReceiver} from './interfaces/IBoostExcessReceiver.sol';
 import './interfaces/IAutolocker.sol';
 
@@ -16,7 +17,7 @@ import 'hardhat/console.sol';
 
 enum BoostPoolRateUpdateMode {DefaultUpdateMode, BaselineLeftoverMode}
 
-contract RewardBooster is BaseRewardController {
+contract RewardBooster is IManagedRewardBooster, BaseRewardController {
   using SafeMath for uint256;
   using PercentageMath for uint256;
 
@@ -52,11 +53,11 @@ contract RewardBooster is BaseRewardController {
     }
   }
 
-  function setBoostFactor(address pool, uint32 pctFactor) external {
-    require(
-      isConfigurator(msg.sender) || isRateController(msg.sender),
-      'only owner, configurator or rate controller are allowed'
-    );
+  function setBoostFactor(address pool, uint32 pctFactor)
+    external
+    override
+    onlyConfiguratorOrAdmin
+  {
     require(getPoolMask(pool) != 0, 'unknown pool');
     require(pool != address(_boostPool), 'factor for the boost pool');
     _boostFactor[pool] = pctFactor;
@@ -281,11 +282,7 @@ contract RewardBooster is BaseRewardController {
   mapping(address => AutolockEntry) private _autolocks;
   AutolockEntry private _defaultAutolock;
 
-  function disableAutolocks() external {
-    require(
-      isConfigurator(msg.sender) || isRateController(msg.sender),
-      'only owner, configurator or rate controller are allowed'
-    );
+  function disableAutolocks() external onlyConfigurator {
     _defaultAutolock = AutolockEntry(0, AutolockMode.Default, 0);
     emit RewardAutolockConfigured(address(this), AutolockMode.Default, 0, 0);
   }
@@ -294,11 +291,7 @@ contract RewardBooster is BaseRewardController {
     AutolockMode mode,
     uint32 lockDuration,
     uint224 param
-  ) external {
-    require(
-      isConfigurator(msg.sender) || isRateController(msg.sender),
-      'only owner, configurator or rate controller are allowed'
-    );
+  ) external onlyConfigurator {
     require(mode > AutolockMode.Default);
 
     _defaultAutolock = AutolockEntry(param, mode, fromDuration(lockDuration));

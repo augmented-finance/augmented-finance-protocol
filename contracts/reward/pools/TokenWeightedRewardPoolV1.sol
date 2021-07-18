@@ -34,4 +34,14 @@ contract TokenWeightedRewardPoolV1 is
   function initialize(InitData memory data) public override initializer(TOKEN_REVISION) {
     super._initialize(data.controller, data.initialRate, data.rateScale, data.baselinePercentage);
   }
+
+  function initializedWith() external view override returns (InitData memory) {
+    return
+      InitData(
+        _controller,
+        internalGetRate().rayDiv(_rateScale),
+        _rateScale,
+        getBaselinePercentage()
+      );
+  }
 }
