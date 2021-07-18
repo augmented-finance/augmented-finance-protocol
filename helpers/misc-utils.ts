@@ -188,6 +188,7 @@ export const printContracts = (deployer: string) => {
     return `${key}: ${value.address}`;
   });
 
-  console.log('N# Contracts:', entries.length, '/', logEntries.length);
   console.log(contractsPrint.join('\n'), '\n');
+  console.log('---------------------------------');
+  console.log('N# Contracts:', entries.length, '/', logEntries.length);
 };

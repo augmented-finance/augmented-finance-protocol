@@ -73,13 +73,13 @@ export enum eContractid {
   UniswapRepayAdapter = 'UniswapRepayAdapter',
   FlashLiquidationAdapter = 'FlashLiquidationAdapter',
 
-  AGFToken = 'AGFToken',
-  XAGFToken = 'XAGFToken',
   RewardController = 'RewardController',
   RewardBooster = 'RewardBooster',
   TokenLocker = 'TokenLocker',
   DecayingTokenLocker = 'DecayingTokenLocker',
   TeamRewardPool = 'TeamRewardPool',
+  ReferralRewardPool = 'ReferralRewardPool',
+
   TokenWeightedRewardPoolAGFSeparate = 'TokenWeightedRewardPoolAGFSeparate',
   TokenWeightedRewardPoolAGF = 'TokenWeightedRewardPoolAGF',
   TokenWeightedRewardPoolAGFBoosted = 'TokenWeightedRewardPoolAGFBoosted',
@@ -94,8 +94,9 @@ export enum eContractid {
   TreasuryImpl = 'TreasuryImpl',
 
   RewardConfiguratorImpl = 'RewardConfiguratorImpl',
-  RewardTokenImpl = 'RewardTokenImpl',
   TokenWeightedRewardPoolImpl = 'TokenWeightedRewardPoolImpl',
+  XAGFTokenV1Impl = 'XAGFTokenV1Impl',
+  AGFTokenV1Impl = 'AGFTokenV1Impl',
 }
 
 /*
@@ -364,7 +365,6 @@ export interface ICommonConfiguration {
 
   LendingRateOracleRatesCommon: iMultiPoolsAssets<IMarketRates>;
 
-  OracleRouter: iParamsPerNetwork<tEthereumAddress>;
   FallbackOracle: iParamsPerNetwork<tEthereumAddress>;
 
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
@@ -424,6 +424,32 @@ export interface ITokenNames {
 export interface IRewardParams {
   InitialRate: number;
   TokenPools: iAugmentedPoolAssetsOpt<ITokenRewardPoolParams>;
+  TeamPool: ITeamPool;
+  ReferralPool?: IReferralPool;
+  PermitPool?: IPermitPool;
+}
+
+export interface ITeamPool {
+  Share: number;
+  Manager: tEthereumAddress;
+  Members: ITeamMembers;
+}
+
+export interface ITeamMembers {
+  [address: string]: number;
+}
+
+export interface IReferralPool {
+  TotalWad: number;
+}
+
+export interface IPermitPool {
+  TotalWad: number;
+}
+
+export interface ITokenRewardPoolParams {
+  Share: ITokenTypes<IRewardPoolParams>;
+  Scale?: number;
 }
 
 export interface ITokenTypes<T> {
@@ -433,7 +459,7 @@ export interface ITokenTypes<T> {
   stake?: T;
 }
 
-export interface ITokenRewardPoolParams {
-  Share: ITokenTypes<number>;
-  Scale?: number;
+export interface IRewardPoolParams {
+  BasePoints: number;
+  BoostFactor: number;
 }

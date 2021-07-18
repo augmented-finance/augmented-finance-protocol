@@ -62,6 +62,7 @@ import {
   StakeConfiguratorFactory,
   MintableDelegationERC20,
   TokenWeightedRewardPoolV1Factory,
+  ReferralRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -772,9 +773,8 @@ export const deployRewardController = async (
 
 export const deployTeamRewardPool = async (
   args: [
-    controller: string,
+    controller: tEthereumAddress,
     initialRate: BigNumberish,
-    rateScale: BigNumberish,
     baselinePercentage: BigNumberish,
     teamManager: string
   ],
@@ -783,6 +783,33 @@ export const deployTeamRewardPool = async (
   withSaveAndVerify(
     await new TeamRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TeamRewardPool,
+    [],
+    verify
+  );
+
+export const deployNamedReferralRewardPool = async (
+  rewardPoolName: string,
+  args: [controller: tEthereumAddress, rewardLimit: BigNumberish, claimLimit: BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new ReferralRewardPoolFactory(await getFirstSigner()).deploy(...args, rewardPoolName),
+    rewardPoolName,
+    [],
+    verify
+  );
+
+export const deployNamedPermitFreezerRewardPool = async (
+  rewardPoolName: string,
+  args: [controller: tEthereumAddress, rewardLimit: BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new PermitFreezerRewardPoolFactory(await getFirstSigner()).deploy(
+      ...args,
+      rewardPoolName
+    ),
+    rewardPoolName,
     [],
     verify
   );
@@ -896,10 +923,18 @@ export const deployRewardConfiguratorImpl = async (verify?: boolean) =>
     verify
   );
 
-export const deployRewardTokenImpl = async (verify?: boolean) =>
+export const deployXAGFTokenV1Impl = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await new XAGFTokenV1Factory(await getFirstSigner()).deploy(),
+    eContractid.XAGFTokenV1Impl,
+    [],
+    verify
+  );
+
+export const deployAGFTokenV1Impl = async (verify?: boolean) =>
   withSaveAndVerify(
     await new AGFTokenV1Factory(await getFirstSigner()).deploy(),
-    eContractid.RewardTokenImpl,
+    eContractid.AGFTokenV1Impl,
     [],
     verify
   );
@@ -911,17 +946,3 @@ export const deployTokenWeightedRewardPoolImpl = async (verify?: boolean) =>
     [],
     verify
   );
-
-export const deployXAGFToken = async (
-  args: [tEthereumAddress, tEthereumAddress, string, string],
-  verify?: boolean
-) => {
-  const instance = await withSaveAndVerify(
-    await new XAGFTokenV1Factory(await getFirstSigner()).deploy(),
-    eContractid.XAGFToken,
-    [],
-    verify
-  );
-  await instance.initializeToken(args[0], args[1], args[2], args[3], 18);
-  return instance;
-};
