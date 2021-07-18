@@ -8,6 +8,7 @@ import { getRewardController } from '../../helpers/contracts-getters';
 import { RewardFreezer } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
+import { ProtocolErrors } from '../../helpers/types';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -26,7 +27,9 @@ describe('Augmented pausable suite', () => {
 
   it('can pause/unpause reward controller', async () => {
     await rc.connect(root).setPaused(true);
-    await expect(rc.connect(user1).claimReward()).to.be.revertedWith('rewards are paused');
+    await expect(rc.connect(user1).claimReward()).to.be.revertedWith(
+      ProtocolErrors.RW_REWARD_PAUSED
+    );
     await rc.connect(root).setPaused(false);
     await rc.connect(user1).claimReward();
   });

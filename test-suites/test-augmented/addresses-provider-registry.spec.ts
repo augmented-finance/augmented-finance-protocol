@@ -95,7 +95,7 @@ makeSuite('AddressesProviderRegistry', (testEnv: TestEnv) => {
 
     await expect(
       registry.connect(anotherUser.signer).registerAddressesProvider(ONE_ADDRESS, 2)
-    ).to.be.revertedWith('Ownable: caller is not the owner');
+    ).to.be.revertedWith(ProtocolErrors.TXT_OWNABLE_CALLER_NOT_OWNER);
 
     await registry.setOneTimeRegistrar(anotherUser.address, 5);
     const regInfo = await registry.getOneTimeRegistrar();
@@ -110,7 +110,7 @@ makeSuite('AddressesProviderRegistry', (testEnv: TestEnv) => {
 
     await expect(
       registry.connect(anotherUser.signer).registerAddressesProvider(ONE_ADDRESS, 6)
-    ).to.be.revertedWith('Ownable: caller is not the owner');
+    ).to.be.revertedWith(ProtocolErrors.TXT_OWNABLE_CALLER_NOT_OWNER);
 
     const providers = await registry.getAddressesProvidersList();
     expect(providers.length).eq(2);
@@ -138,7 +138,7 @@ makeSuite('AddressesProviderRegistry', (testEnv: TestEnv) => {
 
     await expect(
       registry.connect(anotherUser.signer).registerAddressesProvider(ONE_ADDRESS, 6)
-    ).to.be.revertedWith('Ownable: caller is not the owner');
+    ).to.be.revertedWith(ProtocolErrors.TXT_OWNABLE_CALLER_NOT_OWNER);
 
     const providers = await registry.getAddressesProvidersList();
     expect(providers.length).eq(2);
