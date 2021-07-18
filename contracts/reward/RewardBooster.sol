@@ -11,7 +11,6 @@ import {IRewardPool} from './interfaces/IRewardPool.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IManagedRewardBooster} from './interfaces/IRewardController.sol';
 import {IBoostExcessReceiver} from './interfaces/IBoostExcessReceiver.sol';
-import {IManagedRewardBooster} from './interfaces/IManagedRewardBooster.sol';
 import {IBoostRate} from './interfaces/IBoostRate.sol';
 
 import './interfaces/IAutolocker.sol';

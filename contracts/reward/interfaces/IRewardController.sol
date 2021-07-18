@@ -48,6 +48,12 @@ interface IManagedRewardController is IEmergencyAccess, IRewardController {
 interface IManagedRewardBooster is IManagedRewardController {
   function setBoostFactor(address pool, uint32 pctFactor) external;
 
+  function setUpdateBoostPoolRate(bool) external;
+
+  function setBoostPool(address) external;
+
+  function setBoostExcessTarget(address target, bool mintExcess) external;
+
   event BoostFactorSet(address indexed pool, uint256 mask, uint32 pctFactor);
 }
 

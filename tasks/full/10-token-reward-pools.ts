@@ -24,14 +24,15 @@ import {
 } from '../../helpers/contracts-getters';
 import { chunk, falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
-import { BigNumber, BigNumberish } from 'ethers';
-import { RAY, WAD, WAD_NUM, WAD_RAY_RATIO, WAD_RAY_RATIO_NUM } from '../../helpers/constants';
+import { BigNumber } from 'ethers';
+import { RAY, WAD, WAD_RAY_RATIO_NUM } from '../../helpers/constants';
 
 interface poolInitParams {
   provider: tEthereumAddress;
   impl: tEthereumAddress;
   baselinePercentage: BigNumber;
   initialRate: BigNumber;
+  boostFactor: BigNumber;
   rateScale: BigNumber;
 }
 
@@ -80,6 +81,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         baselinePercentage: BigNumber.from(share!.BasePoints),
         rateScale: rateScale,
         initialRate: BigNumber.from(0),
+        boostFactor: BigNumber.from(share!.BoostFactor),
         impl: poolImpl.address,
       });
       initSymbols.push(prefix + Names.SymbolPrefix + symbol);

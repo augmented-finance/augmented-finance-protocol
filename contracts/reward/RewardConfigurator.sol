@@ -14,8 +14,6 @@ import {
   IManagedRewardBooster
 } from './interfaces/IRewardController.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
-import {IManagedRewardBooster} from './interfaces/IManagedRewardBooster.sol';
-
 import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
 import {IInitializableRewardPool} from './interfaces/IInitializableRewardPool.sol';
 import {ProxyOwner} from '../tools/upgradeability/ProxyOwner.sol';
