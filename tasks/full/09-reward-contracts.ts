@@ -100,7 +100,9 @@ task(
     );
 
     const xagf = await getAGFTokenV1Impl(await addressesProvider.getRewardStakeToken());
-    await configurator.configureRewardBoost(xagf.address, true, xagf.address, false);
+    await waitForTx(
+      await configurator.configureRewardBoost(xagf.address, true, xagf.address, false)
+    );
 
     console.log(
       'xAGF token: ',
