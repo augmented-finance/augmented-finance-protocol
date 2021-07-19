@@ -23,7 +23,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   IRewardController internal _controller;
 
   uint256 private _pausedRate;
-  uint224 internal _rateScale;
+  uint224 private _rateScale;
   uint16 private _baselinePercentage;
   bool private _paused;
 
@@ -131,7 +131,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     internalSetRateScale(rateScale);
   }
 
-  function getRateScale() external view returns (uint256) {
+  function getRateScale() public view returns (uint256) {
     return _rateScale;
   }
 
