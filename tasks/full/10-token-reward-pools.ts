@@ -231,7 +231,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     initSymbols = extraNames;
 
     const initialRate = BigNumber.from(WAD).mul(rewardParams.InitialRate * WAD_RAY_RATIO_NUM);
-    await rewardController.updateBaseline(initialRate);
+    await waitForTx(await rewardController.updateBaseline(initialRate));
 
     console.log(`Reward pools initialized with total rate: ${rewardParams.InitialRate}`);
     const poolList = await configurator.list();

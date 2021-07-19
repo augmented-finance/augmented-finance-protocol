@@ -37,7 +37,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
     console.log('|||||=======||||', reserveAssets);
 
     const treasuryImpl = await deployTreasuryImpl();
-    addressesProvider.setTreasuryImpl(treasuryImpl.address);
+    await addressesProvider.setTreasuryImpl(treasuryImpl.address);
     const treasuryAddress = treasuryImpl.address;
 
     await initReservesByHelper(ReservesConfig, reserveAssets, Names, treasuryAddress, verify);
