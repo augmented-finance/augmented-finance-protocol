@@ -509,16 +509,16 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     uint256 referral
   ) external override whenNotPaused {
     require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_FLASH_LOAN_RESTRICTED);
-
-    FlashLoanLocalVars memory vars;
-    vars.receiver = IFlashLoanReceiver(receiverAddress);
-    vars.referral = referral;
-    vars.onBehalfOf = onBehalfOf;
-
-    require(_nestedFlashLoanCalls < type(uint8).max, Errors.LP_FLASH_LOAN_RESTRICTED);
-    _nestedFlashLoanCalls++;
-    _flashLoan(vars, assets, amounts, modes, params, _flashLoanPremiumPct);
-    _nestedFlashLoanCalls--;
+    _flashLoan(
+      receiverAddress,
+      assets,
+      amounts,
+      modes,
+      onBehalfOf,
+      params,
+      referral,
+      _flashLoanPremiumPct
+    );
   }
 
   function sponsoredFlashLoan(
@@ -534,37 +534,39 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
       _addressesProvider.hasAllOf(msg.sender, AccessFlags.POOL_SPONSORED_LOAN_USER),
       Errors.LP_IS_NOT_SPONSORED_LOAN
     );
+    _flashLoan(receiverAddress, assets, amounts, modes, onBehalfOf, params, referral, 0);
+  }
+
+  function _flashLoan(
+    address receiverAddress,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint256 referral,
+    uint16 flashLoanPremium
+  ) private {
+    require(_nestedFlashLoanCalls < type(uint8).max, Errors.LP_FLASH_LOAN_RESTRICTED);
+    _nestedFlashLoanCalls++;
+
+    ValidationLogic.validateFlashloan(assets, amounts);
+
+    (address[] memory tokenAddresses, uint256[] memory premiums) =
+      _flashLoanPre(receiverAddress, assets, amounts, flashLoanPremium);
 
     FlashLoanLocalVars memory vars;
     vars.receiver = IFlashLoanReceiver(receiverAddress);
     vars.referral = referral;
     vars.onBehalfOf = onBehalfOf;
 
-    require(_nestedFlashLoanCalls < type(uint8).max, Errors.LP_FLASH_LOAN_RESTRICTED);
-    _nestedFlashLoanCalls++;
-    _flashLoan(vars, assets, amounts, modes, params, 0);
-    _nestedFlashLoanCalls--;
-  }
-
-  function _flashLoan(
-    FlashLoanLocalVars memory vars,
-    address[] calldata assets,
-    uint256[] calldata amounts,
-    uint256[] calldata modes,
-    bytes calldata params,
-    uint16 flashLoanPremium
-  ) private {
-    ValidationLogic.validateFlashloan(assets, amounts);
-
-    (address[] memory aTokenAddresses, uint256[] memory premiums) =
-      _flashLoanPre(address(vars.receiver), assets, amounts, flashLoanPremium);
-
     require(
       vars.receiver.executeOperation(assets, amounts, premiums, msg.sender, params),
       Errors.LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN
     );
+    _flashLoanPost(vars, assets, amounts, modes, tokenAddresses, premiums);
 
-    _flashLoanPost(vars, assets, amounts, modes, aTokenAddresses, premiums);
+    _nestedFlashLoanCalls--;
   }
 
   function _flashLoanPre(
@@ -869,7 +871,11 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
    * interest rate strategy
    * - Only callable by the LendingPoolConfigurator contract
    **/
-  function initReserve(DataTypes.InitReserveData calldata data) external override onlyLendingPoolConfigurator {
+  function initReserve(DataTypes.InitReserveData calldata data)
+    external
+    override
+    onlyLendingPoolConfigurator
+  {
     require(Address.isContract(data.asset), Errors.LP_NOT_CONTRACT);
     _reserves[data.asset].init(data);
     _addReserveToList(data.asset);
