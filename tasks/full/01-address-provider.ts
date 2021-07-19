@@ -69,6 +69,7 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
     }
 
     const addressProvider = await deployMarketAccessController(MarketId, verify);
+    await addressProvider.setAnyRoleMode(false);
     console.log('Deployed provider:', addressProvider.address);
 
     await addressProvider.setTemporaryAdmin(deployer.address, 1000);

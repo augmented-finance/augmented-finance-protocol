@@ -30,6 +30,10 @@ contract AccessController is Ownable, IManagedAccessController {
   address private _tempAdmin;
   uint256 private _expiresAt;
 
+  uint8 private constant anyRoleBlocked = 1;
+  uint8 private constant anyRoleEnabled = 2;
+  uint8 private _anyRoleMode;
+
   constructor(
     uint256 singletons,
     uint256 nonSingletons,
@@ -106,7 +110,17 @@ contract AccessController is Ownable, IManagedAccessController {
     _grantRoles(addr, flags);
   }
 
+  function setAnyRoleMode(bool blockOrEnable) public onlyAdmin {
+    require(_anyRoleMode != anyRoleBlocked);
+    if (blockOrEnable) {
+      _anyRoleMode = anyRoleEnabled;
+    } else {
+      _anyRoleMode = anyRoleBlocked;
+    }
+  }
+
   function grantAnyRoles(address addr, uint256 flags) public onlyAdmin returns (uint256) {
+    require(_anyRoleMode == anyRoleEnabled);
     _grantRoles(addr, flags);
   }
 

@@ -48,10 +48,13 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
   .setAction(
     async ({ stakeCooldownTicks, stakeUnstakeTicks, slashingPercentage, verify }, localBRE) => {
       await localBRE.run('set-DRE');
-      const [root, user1, user2, slasher, excessReceiverUser] = await localBRE.ethers.getSigners();
+      const [root, user1, user2, slasher, excessReceiverUser] = await (<any>(
+        localBRE
+      )).ethers.getSigners();
 
       console.log(`#1 deploying: Access Controller`);
       const ac = await deployMarketAccessController('marketId');
+      await ac.setAnyRoleMode(true);
       await ac.grantAnyRoles(
         root.address,
         AccessFlags.EMERGENCY_ADMIN |
