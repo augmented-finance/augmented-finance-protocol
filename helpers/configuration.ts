@@ -12,7 +12,7 @@ import { DRE, filterMapBy } from './misc-utils';
 import { tEthereumAddress } from './types';
 import { getParamPerNetwork } from './contracts-helpers';
 import { deployWETHMocked } from './contracts-deployments';
-import AugmentedConfig from '../markets/augmented';
+import { AugmentedConfig } from '../markets/augmented';
 
 export enum ConfigNames {
   Commons = 'Commons',
@@ -49,48 +49,6 @@ export const getReservesConfigByPool = (pool: LendingPools): iMultiPoolsAssets<I
     },
     pool
   );
-
-export const getGenesisPoolAdmin = async (
-  config: ICommonConfiguration
-): Promise<tEthereumAddress> => {
-  const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  const targetAddress = getParamPerNetwork(config.PoolAdmin, <eNetwork>currentNetwork);
-  if (targetAddress) {
-    return targetAddress;
-  }
-  const addressList = await Promise.all(
-    (await DRE.ethers.getSigners()).map((signer) => signer.getAddress())
-  );
-  const addressIndex = config.PoolAdminIndex;
-  return addressList[addressIndex];
-};
-
-export const getEmergencyAdmin = async (
-  config: ICommonConfiguration
-): Promise<tEthereumAddress> => {
-  const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  const targetAddress = getParamPerNetwork(config.EmergencyAdmin, <eNetwork>currentNetwork);
-  if (targetAddress) {
-    return targetAddress;
-  }
-  const addressList = await Promise.all(
-    (await DRE.ethers.getSigners()).map((signer) => signer.getAddress())
-  );
-  const addressIndex = config.EmergencyAdminIndex;
-  return addressList[addressIndex];
-};
-
-export const getTreasuryAddress = async (
-  config: ICommonConfiguration
-): Promise<tEthereumAddress> => {
-  const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  return getParamPerNetwork(config.ReserveFactorTreasuryAddress, <eNetwork>currentNetwork);
-};
-
-export const getATokenDomainSeparatorPerNetwork = (
-  network: eNetwork,
-  config: ICommonConfiguration
-): tEthereumAddress => getParamPerNetwork<tEthereumAddress>(config.ATokenDomainSeparator, network);
 
 export const getWethAddress = async (config: ICommonConfiguration) => {
   const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;

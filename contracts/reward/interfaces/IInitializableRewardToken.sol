@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
-import {IRemoteAccessBitmask} from '../../access/interfaces/IRemoteAccessBitmask.sol';
+import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 
-/**
- * @title IInitializableStakeToken
- * @notice Interface for the initialize function on StakeToken
- **/
 interface IInitializableRewardToken {
-  event Initialized(IRemoteAccessBitmask remoteAcl, string tokenName, string tokenSymbol);
+  struct InitData {
+    IMarketAccessController remoteAcl;
+    string name;
+    string symbol;
+    uint8 decimals;
+  }
 
-  function initialize(
-    IRemoteAccessBitmask remoteAcl,
-    string calldata name,
-    string calldata symbol
-  ) external;
+  function initialize(InitData memory) external;
 }

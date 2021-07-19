@@ -1,9 +1,9 @@
 import { task } from 'hardhat/config';
-import { DRE, setDRE } from '../../helpers/misc-utils';
+import { cleanupJsonDb, DRE, setDRE } from '../../helpers/misc-utils';
 import { EthereumNetworkNames } from '../../helpers/types';
 import { usingTenderly } from '../../helpers/tenderly-utils';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { getFirstSigner } from '../../helpers/contracts-getters';
+import { getFirstSigner } from '../../helpers/misc-utils';
 import { formatEther } from 'ethers/lib/utils';
 
 task(`set-DRE`, `Inits the DRE, to have access to all the plugins' objects`).setAction(

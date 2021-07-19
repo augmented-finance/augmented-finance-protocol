@@ -12,6 +12,7 @@ import {IRewardPool} from './interfaces/IRewardPool.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {IRewardCollector} from './interfaces/IRewardCollector.sol';
+import {Errors} from '../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
@@ -42,9 +43,6 @@ abstract contract BaseRewardController is
     _rewardMinter = rewardMinter;
   }
 
-  event RewardsAllocated(address indexed user, uint256 amount);
-  event RewardsClaimed(address indexed user, address indexed to, uint256 amount);
-
   function getAccessController() public view override returns (IMarketAccessController) {
     return _remoteAcl;
   }
@@ -59,22 +57,26 @@ abstract contract BaseRewardController is
     _poolMask[address(pool)] = poolMask;
     _baselineMask |= poolMask;
     _poolList.push(pool);
+
+    emit RewardPoolAdded(address(pool), poolMask);
   }
 
   function removeRewardPool(IManagedRewardPool pool) external override onlyConfigurator {
     require(address(pool) != address(0), 'reward pool required');
-    uint256 mask = _poolMask[address(pool)];
-    if (mask == 0) {
+    uint256 poolMask = _poolMask[address(pool)];
+    if (poolMask == 0) {
       return;
     }
-    uint256 idx = BitUtils.bitLength(mask);
+    uint256 idx = BitUtils.bitLength(poolMask);
     require(_poolList[idx] == pool, 'unexpected pool');
 
     _poolList[idx] = IManagedRewardPool(0);
     delete (_poolMask[address(pool)]);
-    _ignoreMask |= mask;
+    _ignoreMask |= poolMask;
 
     internalOnPoolRemoved(pool);
+
+    emit RewardPoolRemoved(address(pool), poolMask);
   }
 
   function getPoolMask(address pool) public view returns (uint256 poolMask) {
@@ -87,25 +89,14 @@ abstract contract BaseRewardController is
 
   function internalOnPoolRemoved(IManagedRewardPool) internal virtual {}
 
-  function addRewardProvider(
-    address pool,
-    address provider,
-    address token
-  ) external onlyConfigurator {
-    IManagedRewardPool(pool).addRewardProvider(provider, token);
-  }
-
-  function removeRewardProvider(address pool, address provider) external onlyConfigurator {
-    IManagedRewardPool(pool).removeRewardProvider(provider);
-  }
-
   function updateBaseline(uint256 baseline)
     external
     override
-    onlyRateController
+    onlyRateAdmin
     returns (uint256 totalRate)
   {
     (totalRate, _baselineMask) = internalUpdateBaseline(baseline, _baselineMask);
+    emit BaselineUpdated(baseline, totalRate, _baselineMask);
     return totalRate;
   }
 
@@ -136,9 +127,15 @@ abstract contract BaseRewardController is
 
   function setRewardMinter(IRewardMinter minter) external override onlyConfigurator {
     _rewardMinter = minter;
+    emit RewardMinterSet(address(minter));
   }
 
-  function getPools() public view returns (IManagedRewardPool[] memory, uint256 ignoreMask) {
+  function getPools()
+    public
+    view
+    override
+    returns (IManagedRewardPool[] memory, uint256 ignoreMask)
+  {
     return (_poolList, _ignoreMask);
   }
 
@@ -205,7 +202,7 @@ abstract contract BaseRewardController is
 
     if (allocated > 0) {
       internalAllocatedByPool(holder, allocated, msg.sender, since);
-      emit RewardsAllocated(holder, allocated);
+      emit RewardsAllocated(holder, allocated, msg.sender);
     }
 
     if (mode == AllocationMode.Push) {
@@ -224,15 +221,19 @@ abstract contract BaseRewardController is
     }
   }
 
-  function isRateController(address addr) public view override returns (bool) {
+  function isRateAdmin(address addr) public view override returns (bool) {
     if (!hasRemoteAcl()) {
       return addr == address(this);
     }
     return acl_hasAllOf(addr, AccessFlags.REWARD_RATE_ADMIN);
   }
 
-  modifier onlyRateController {
-    require(isRateController(msg.sender), 'only configurator');
+  function _onlyRateAdmin() private view {
+    require(isRateAdmin(msg.sender), Errors.RW_NOT_REWARD_RATE_ADMIN);
+  }
+
+  modifier onlyRateAdmin {
+    _onlyRateAdmin();
     _;
   }
 
@@ -240,11 +241,24 @@ abstract contract BaseRewardController is
     if (!hasRemoteAcl()) {
       return addr == address(this);
     }
-    return acl_hasAllOf(addr, AccessFlags.REWARD_CONFIG_ADMIN);
+    return acl_hasAnyOf(addr, AccessFlags.REWARD_CONFIGURATOR | AccessFlags.REWARD_CONFIG_ADMIN);
+  }
+
+  function _onlyConfigurator() private view {
+    require(isConfigurator(msg.sender), Errors.RW_NOT_REWARD_CONFIG_ADMIN);
   }
 
   modifier onlyConfigurator {
-    require(isConfigurator(msg.sender), 'only configurator');
+    _onlyConfigurator();
+    _;
+  }
+
+  function _onlyConfiguratorOrAdmin() private view {
+    require(isConfigurator(msg.sender) || isRateAdmin(msg.sender), Errors.RW_NOT_REWARD_RATE_ADMIN);
+  }
+
+  modifier onlyConfiguratorOrAdmin {
+    _onlyConfiguratorOrAdmin();
     _;
   }
 
@@ -326,13 +340,18 @@ abstract contract BaseRewardController is
     uint32 since
   ) internal virtual;
 
+  function _notPaused() private view {
+    require(!_paused, Errors.RW_REWARD_PAUSED);
+  }
+
   modifier notPaused() {
-    require(!_paused, 'rewards are paused');
+    _notPaused();
     _;
   }
 
   function setPaused(bool paused) public override onlyEmergencyAdmin {
     _paused = paused;
+    emit EmergencyPaused(msg.sender, paused);
   }
 
   function isPaused() public view override returns (bool) {

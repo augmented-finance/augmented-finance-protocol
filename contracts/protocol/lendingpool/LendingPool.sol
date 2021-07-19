@@ -27,6 +27,7 @@ import {ReserveConfiguration} from '../libraries/configuration/ReserveConfigurat
 import {UserConfiguration} from '../libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
+import {ILendingPoolCollateralManager} from '../../interfaces/ILendingPoolCollateralManager.sol';
 
 /**
  * @title LendingPool contract
@@ -53,33 +54,42 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
 
   uint256 private constant POOL_REVISION = 0x1;
 
+  function _whenNotPaused() private view {
+    require(!_paused, Errors.LP_IS_PAUSED);
+  }
+
   modifier whenNotPaused() {
     _whenNotPaused();
     _;
   }
 
-  modifier onlyLendingPoolConfigurator() {
-    _onlyLendingPoolConfigurator();
-    _;
-  }
-
-  modifier onlySponsoredLoan() {
-    require(
-      _addressesProvider.hasAllOf(msg.sender, AccessFlags.POOL_SPONSORED_LOAN_USER),
-      Errors.LP_IS_NOT_SPONSORED_LOAN
-    );
-    _;
-  }
-
-  function _whenNotPaused() internal view {
-    require(!_paused, Errors.LP_IS_PAUSED);
-  }
-
-  function _onlyLendingPoolConfigurator() internal view {
+  function _onlyLendingPoolConfigurator() private view {
     require(
       _addressesProvider.hasAllOf(msg.sender, AccessFlags.LENDING_POOL_CONFIGURATOR),
       Errors.LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR
     );
+  }
+
+  modifier onlyLendingPoolConfigurator() {
+    // This trick makes generated code smaller when modifier is applied multiple times.
+    _onlyLendingPoolConfigurator();
+    _;
+  }
+
+  function _onlyConfiguratorOrAdmin() private view {
+    require(
+      _addressesProvider.hasAnyOf(
+        msg.sender,
+        AccessFlags.POOL_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR
+      ),
+      Errors.CALLER_NOT_POOL_ADMIN
+    );
+  }
+
+  modifier onlyConfiguratorOrAdmin() {
+    // This trick makes generated code smaller when modifier is applied multiple times.
+    _onlyConfiguratorOrAdmin();
+    _;
   }
 
   function getRevision() internal pure virtual override returns (uint256) {
@@ -97,7 +107,6 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     _addressesProvider = provider;
     _maxStableRateBorrowSizePct = 25 * PercentageMath.PCT;
     _flashLoanPremiumPct = 9 * PercentageMath.BP;
-    _maxNumberOfReserves = 128;
   }
 
   /**
@@ -439,12 +448,11 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     uint256 debtToCover,
     bool receiveAToken
   ) external override whenNotPaused {
-    require(!_liquidationDisabled, Errors.LP_LIQUIDATION_DISABLED);
-    address collateralManager = _addressesProvider.getLendingPoolCollateralManager();
+    require(_disabledFeatures & FEATURE_LIQUIDATION == 0, Errors.LP_LIQUIDATION_DISABLED);
 
     //solium-disable-next-line
     (bool success, bytes memory result) =
-      collateralManager.delegatecall(
+      _collateralManager.delegatecall(
         abi.encodeWithSignature(
           'liquidationCall(address,address,address,uint256,bool)',
           collateralAsset,
@@ -500,7 +508,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     bytes calldata params,
     uint256 referral
   ) external override whenNotPaused {
-    require(!_flashloanDisabled, Errors.LP_FLASH_LOAN_RESTRICTED);
+    require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_FLASH_LOAN_RESTRICTED);
 
     FlashLoanLocalVars memory vars;
     vars.receiver = IFlashLoanReceiver(receiverAddress);
@@ -521,7 +529,12 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     address onBehalfOf,
     bytes calldata params,
     uint256 referral
-  ) external whenNotPaused onlySponsoredLoan {
+  ) external whenNotPaused {
+    require(
+      _addressesProvider.hasAllOf(msg.sender, AccessFlags.POOL_SPONSORED_LOAN_USER),
+      Errors.LP_IS_NOT_SPONSORED_LOAN
+    );
+
     FlashLoanLocalVars memory vars;
     vars.receiver = IFlashLoanReceiver(receiverAddress);
     vars.referral = referral;
@@ -783,10 +796,6 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     return _addressesProvider;
   }
 
-  function isPoolAdmin(address addr) public view override returns (bool) {
-    return _addressesProvider.isPoolAdmin(addr);
-  }
-
   /**
    * @dev Returns the percentage of available liquidity that can be borrowed at once at stable rate
    */
@@ -805,6 +814,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
    * @dev Returns the maximum number of reserves supported to be listed in this LendingPool
    */
   function MAX_NUMBER_RESERVES() public view returns (uint256) {
+    this;
     return _maxNumberOfReserves;
   }
 
@@ -909,29 +919,17 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     _reserves[asset].configuration.data = configuration;
   }
 
-  /**
-   * @dev Set the _pause state of a reserve
-   * - Only callable by AccessFlags.EMERGENCY_ADMIN or AccessFlags.LENDING_POOL_CONFIGURATOR roles.
-   * @param val `true` to pause the reserve, `false` to un-pause it
-   */
   function setPaused(bool val) external override {
     require(
-      _addressesProvider.hasAnyOf(
-        msg.sender,
-        AccessFlags.EMERGENCY_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR
-      ),
+      _addressesProvider.hasAllOf(msg.sender, AccessFlags.EMERGENCY_ADMIN),
       Errors.CALLER_NOT_EMERGENCY_ADMIN
     );
 
     _paused = val;
-    if (_paused) {
-      emit Paused();
-    } else {
-      emit Unpaused();
-    }
+    emit EmergencyPaused(msg.sender, val);
   }
 
-  function setFlashLoanPremium(uint16 premium) external onlyLendingPoolConfigurator {
+  function setFlashLoanPremium(uint16 premium) external onlyConfiguratorOrAdmin {
     require(premium <= PercentageMath.ONE && premium > 0, Errors.LP_INVALID_PERCENTAGE);
     _flashLoanPremiumPct = premium;
   }
@@ -1039,24 +1037,33 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     }
   }
 
-  modifier onlyPoolAdmin {
-    require(isPoolAdmin(msg.sender), Errors.CALLER_NOT_POOL_ADMIN);
-    _;
+  function setDisabledFeatures(uint16 disabledFeatures) external onlyConfiguratorOrAdmin {
+    _disabledFeatures = disabledFeatures;
   }
 
-  function enableFlashLoan(bool enable) external onlyPoolAdmin {
-    _flashloanDisabled = !enable;
+  function getDisabledFeatures() external view returns (uint16 disabledFeatures) {
+    return _disabledFeatures;
   }
 
-  function enableLiquidation(bool enable) external onlyPoolAdmin {
-    _liquidationDisabled = !enable;
+  /**
+   * @dev Returns the address of the LendingPoolCollateralManager. Since the manager is used
+   * through delegateCall within the LendingPool contract
+   * @return The address of the LendingPoolCollateralManager
+   **/
+
+  function getLendingPoolCollateralManager() external view override returns (address) {
+    return _collateralManager;
   }
 
-  function isFlashLoanEnabled() external view returns (bool) {
-    return !_flashloanDisabled;
-  }
-
-  function isLiquidationEnabled() external view returns (bool) {
-    return !_flashloanDisabled;
+  /**
+   * @dev Updates the address of the LendingPoolCollateralManager
+   * @param manager The new LendingPoolCollateralManager address
+   **/
+  function setLendingPoolCollateralManager(address manager)
+    external
+    override
+    onlyConfiguratorOrAdmin
+  {
+    _collateralManager = manager;
   }
 }

@@ -14,6 +14,7 @@ abstract contract LendingPoolStorage {
   using UserConfiguration for DataTypes.UserConfigurationMap;
 
   IMarketAccessController internal _addressesProvider;
+  address internal _collateralManager;
 
   mapping(address => DataTypes.ReserveData) internal _reserves;
   mapping(address => DataTypes.UserConfigurationMap) internal _usersConfig;
@@ -25,15 +26,15 @@ abstract contract LendingPoolStorage {
 
   uint16 internal _flashLoanPremiumPct;
 
+  uint16 internal constant FEATURE_FLASHLOAN = 1 << 0;
+  uint16 internal constant FEATURE_LIQUIDATION = 1 << 1;
+  uint16 internal _disabledFeatures;
+
   uint8 internal _reservesCount;
 
-  uint8 internal _maxNumberOfReserves;
+  uint8 internal constant _maxNumberOfReserves = 128;
 
   uint8 internal _nestedFlashLoanCalls;
 
   bool internal _paused;
-
-  bool internal _flashloanDisabled;
-
-  bool internal _liquidationDisabled;
 }

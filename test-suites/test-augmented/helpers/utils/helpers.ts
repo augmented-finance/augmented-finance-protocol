@@ -4,13 +4,13 @@ import {
   getLendingRateOracle,
   getIErc20Detailed,
   getMintableERC20,
-  getAToken,
+  getDepositToken,
   getStableDebtToken,
   getVariableDebtToken,
 } from '../../../../helpers/contracts-getters';
 import { tEthereumAddress } from '../../../../helpers/types';
 import BigNumber from 'bignumber.js';
-import { getDb, DRE } from '../../../../helpers/misc-utils';
+import { DRE, getFromJsonDb } from '../../../../helpers/misc-utils';
 import { ProtocolDataProvider } from '../../../../types/ProtocolDataProvider';
 
 export const getReserveData = async (
@@ -103,10 +103,7 @@ export const getUserData = async (
 };
 
 export const getReserveAddressFromSymbol = async (symbol: string) => {
-  const token = await getMintableERC20(
-    (await getDb().get(`${symbol}.${DRE.network.name}`).value()).address
-  );
-
+  const token = await getMintableERC20((await getFromJsonDb(symbol)).address);
   if (!token) {
     throw `Could not find instance for contract ${symbol}`;
   }
@@ -121,7 +118,7 @@ const getATokenUserData = async (
   const aTokenAddress: string = (await helpersContract.getReserveTokensAddresses(reserve))
     .aTokenAddress;
 
-  const aToken = await getAToken(aTokenAddress);
+  const aToken = await getDepositToken(aTokenAddress);
 
   const scaledBalance = await aToken.scaledBalanceOf(user);
   return scaledBalance.toString();

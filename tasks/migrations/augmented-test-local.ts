@@ -1,11 +1,10 @@
 import { task, types } from 'hardhat/config';
 import {
-  deployAccessController,
-  deployForwardingRewardPool,
+  deployMarketAccessController,
   deployMockAgfToken,
   deployRewardController,
   deployTeamRewardPool,
-  deployTokenLocker,
+  deployMockTokenLocker,
   deployPermitFreezerRewardPool,
   deployTokenWeightedRewardPoolAGFSeparate,
 } from '../../helpers/contracts-deployments';
@@ -19,7 +18,7 @@ import {
   stakingCooldownTicks,
   stakingUnstakeTicks,
 } from './defaultTestDeployConfig';
-import { BigNumber } from 'ethers';
+import { AccessFlags, ACCESS_REWARD_MINT } from '../../helpers/access-flags';
 
 task('augmented:test-local', 'Deploy Augmented test contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
@@ -55,14 +54,18 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       localBRE
     ) => {
       await localBRE.run('set-DRE');
-      const [root, user1, user2, slasher] = await localBRE.ethers.getSigners();
+      const [root, user1, user2, slasher] = await (<any>localBRE).ethers.getSigners();
 
       console.log(`#1 deploying: Access Controller`);
-      const ac = await deployAccessController();
+      const ac = await deployMarketAccessController('marketId');
+      await ac.setAnyRoleMode(true);
       // emergency admin + liquidity admin
-      await ac.setEmergencyAdmin(root.address);
-      await ac.grantRoles(root.address, (1 << 3) | (1 << 5)); // REWARD_CONFIG_ADMIN | STAKE_ADMIN
-      await ac.grantRoles(slasher.address, 1 << 15); // LIQUIDITY_CONTROLLER
+      await ac.grantRoles(
+        root.address,
+        AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN | AccessFlags.EMERGENCY_ADMIN
+      );
+      await ac.grantRoles(root.address, ACCESS_REWARD_MINT);
+      await ac.grantAnyRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
       console.log(`#2 deploying: mock AGF`);
       const agfToken = await deployMockAgfToken(
@@ -73,6 +76,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       console.log(`#3 deploying: RewardFreezer`);
       const rewardCtl = await deployRewardController([ac.address, agfToken.address], verify);
       await rewardCtl.setFreezePercentage(0);
+      await ac.grantAnyRoles(rewardCtl.address, ACCESS_REWARD_MINT);
 
       const freezerRewardPool = await deployPermitFreezerRewardPool(
         [rewardCtl.address, RAY, 'burners'],
@@ -90,28 +94,24 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       console.log(`#4 deploying: Team Reward Pool`);
       const teamRewardPool = await deployTeamRewardPool(
-        [rewardCtl.address, teamRewardInitialRate, RAY, teamRewardBaselinePercentage, root.address],
+        [rewardCtl.address, teamRewardInitialRate, teamRewardBaselinePercentage, root.address],
         verify
       );
       await waitForTx(await rewardCtl.addRewardPool(teamRewardPool.address));
 
-      console.log(`#5 deploying: RewardedTokenLocker + Forwarding Reward Pool`);
+      console.log(`#5 deploying: RewardedTokenLocker`);
 
-      // deploy token weighted reward pool, register in controller, separated pool for math tests
-      const fwdRewardPool = await deployForwardingRewardPool(
-        [rewardCtl.address, RAY, RAY, 0],
-        verify
-      );
-      const basicLocker = await deployTokenLocker([
-        ac.address,
+      const basicLocker = await deployMockTokenLocker([
+        rewardCtl.address,
+        RAY,
+        RAY,
+        0,
         agfToken.address,
         WEEK,
         MAX_LOCKER_PERIOD,
         RAY_100,
       ]);
-      await waitForTx(await rewardCtl.addRewardPool(fwdRewardPool.address));
-      await basicLocker.setForwardingRewardPool(fwdRewardPool.address);
-      await fwdRewardPool.addRewardProvider(basicLocker.address, ONE_ADDRESS);
+      await waitForTx(await rewardCtl.addRewardPool(basicLocker.address));
 
       if (process.env.MAINNET_FORK === 'true') {
         // console.log(`#6 deploying: Migrator + Adapters`);

@@ -2,23 +2,17 @@ import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
 import rawBRE, { ethers } from 'hardhat';
+import { AccessFlags } from '../../helpers/access-flags';
 
 import {
+  getMarketAccessController,
   getMockAgfToken,
   getRewardController,
-  getTokenLocker,
-  getForwardingRewardPool,
+  getMockTokenLocker,
 } from '../../helpers/contracts-getters';
 
-import {
-  MockAgfToken,
-  RewardFreezer,
-  ForwardingRewardPool,
-  XAGFTokenV1,
-  RewardedTokenLocker,
-} from '../../types';
+import { MockAgfToken, RewardFreezer, RewardedTokenLocker } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { waitForTx } from '../../helpers/misc-utils';
 import {
   currentTick,
   mineToTicks,
@@ -27,18 +21,9 @@ import {
   takeSnapshot,
   alignTicks,
 } from './utils';
-import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
-import {
-  MAX_LOCKER_PERIOD,
-  RAY,
-  RAY_100,
-  RAY_10000,
-  RAY_PER_WEEK,
-  DAY,
-  WEEK,
-} from '../../helpers/constants';
+import { MAX_LOCKER_PERIOD, RAY, DAY, WEEK } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -47,7 +32,6 @@ describe('Token locker suite', () => {
   let root: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
-  let frp: ForwardingRewardPool;
   let rewardController: RewardFreezer;
   let AGF: MockAgfToken;
   let xAGF: RewardedTokenLocker;
@@ -63,9 +47,8 @@ describe('Token locker suite', () => {
     rewardController = await getRewardController();
     rewardController.setFreezePercentage(0);
 
-    frp = await getForwardingRewardPool();
     AGF = await getMockAgfToken();
-    xAGF = await getTokenLocker();
+    xAGF = await getMockTokenLocker();
 
     await AGF.connect(root).mintReward(user1.address, defaultStkAmount, false);
     await AGF.connect(user1).approve(xAGF.address, defaultStkAmount);
@@ -252,7 +235,7 @@ describe('Token locker suite', () => {
     await AGF.connect(root).mintReward(root.address, defaultStkAmount, false);
     await AGF.connect(root).approve(xAGF.address, defaultStkAmount);
 
-    const rateBase = await xAGF.getRewardRate();
+    const rateBase = await xAGF.getRate();
 
     await xAGF.connect(user1).lock(defaultStkAmount, 6 * WEEK, 0);
     const startedAt = await currentTick();
@@ -261,11 +244,14 @@ describe('Token locker suite', () => {
     await xAGF.connect(user2).lock(defaultStkAmount * 2, 6 * WEEK, 0);
     const total12 = await xAGF.totalSupply();
 
-    expect(await xAGF.getRewardRate()).eq(rateBase);
+    expect(await xAGF.getRate()).eq(rateBase);
 
-    await frp.connect(root).receiveBoostExcess(rateBase.mul(10000), 0); // 10000 will be distributed over 1 week or less
+    const ac = await getMarketAccessController(await rewardController.getAccessController());
+    ac.grantAnyRoles(root.address, AccessFlags.REWARD_CONTROLLER);
 
-    expect(await xAGF.getRewardRate()).eq(rateBase);
+    await xAGF.connect(root).receiveBoostExcess(rateBase.mul(10000), 0); // 10000 will be distributed over 1 week or less
+
+    expect(await xAGF.getRate()).eq(rateBase);
 
     await mineTicks(3 * WEEK);
 
@@ -434,7 +420,7 @@ describe('Token locker suite', () => {
 
     await rewardController.connect(user1).claimReward();
 
-    const rate = await frp.getRate();
+    const rate = await xAGF.getRate();
 
     const balance = await AGF.balanceOf(user1.address);
     expect(reward2.claimable.toNumber()).approximately(balance.toNumber(), 1);

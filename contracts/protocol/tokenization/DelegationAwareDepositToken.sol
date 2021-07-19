@@ -13,7 +13,10 @@ import {DepositToken} from './DepositToken.sol';
  */
 contract DelegationAwareDepositToken is DepositToken {
   modifier onlyPoolAdmin {
-    require(ILendingPool(_pool).isPoolAdmin(_msgSender()), Errors.CALLER_NOT_POOL_ADMIN);
+    require(
+      ILendingPool(_pool).getAccessController().isPoolAdmin(_msgSender()),
+      Errors.CALLER_NOT_POOL_ADMIN
+    );
     _;
   }
 

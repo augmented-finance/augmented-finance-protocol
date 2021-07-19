@@ -5,20 +5,11 @@ import rawBRE, { ethers } from 'hardhat';
 
 import {
   getMockAgfToken,
-  getForwardingRewardPoolDecay,
   getRewardBooster,
-  getDecayingTokenLocker,
+  getMockDecayingTokenLocker,
 } from '../../helpers/contracts-getters';
 
-import {
-  MockAgfToken,
-  RewardFreezer,
-  ForwardingRewardPool,
-  XAGFTokenV1,
-  RewardedTokenLocker,
-  RewardBooster,
-  DecayingTokenLocker,
-} from '../../types';
+import { MockAgfToken, RewardBooster, DecayingTokenLocker } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { waitForTx } from '../../helpers/misc-utils';
 import {
@@ -27,23 +18,11 @@ import {
   mineTicks,
   revertSnapshot,
   takeSnapshot,
-  mineBlocks,
   alignTicks,
 } from './utils';
-import { calcTeamRewardForMember } from './helpers/utils/calculations_augmented';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
-import {
-  MAX_LOCKER_PERIOD,
-  RAY,
-  RAY_100,
-  RAY_10000,
-  RAY_PER_WEEK,
-  DAY,
-  WEEK,
-  HALF_RAY,
-} from '../../helpers/constants';
-import { fail } from 'assert';
+import { MAX_LOCKER_PERIOD, RAY, DAY, WEEK, HALF_RAY } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -52,7 +31,6 @@ describe('Token decaying locker suite', () => {
   let root: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
-  let frp: ForwardingRewardPool;
   let rewardController: RewardBooster;
   let AGF: MockAgfToken;
   let xAGF: DecayingTokenLocker;
@@ -67,9 +45,8 @@ describe('Token decaying locker suite', () => {
     await rawBRE.run('augmented:test-local-decay', CFG);
     rewardController = await getRewardBooster();
 
-    frp = await getForwardingRewardPoolDecay();
     AGF = await getMockAgfToken();
-    xAGF = await getDecayingTokenLocker();
+    xAGF = await getMockDecayingTokenLocker();
 
     await AGF.connect(root).mintReward(user1.address, defaultStkAmount, false);
     await AGF.connect(user1).approve(xAGF.address, defaultStkAmount);

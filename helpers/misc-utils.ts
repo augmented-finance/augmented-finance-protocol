@@ -3,7 +3,7 @@ import BN = require('bn.js');
 import low from 'lowdb';
 import FileSync from 'lowdb/adapters/FileSync';
 import { WAD } from './constants';
-import { Wallet, ContractTransaction } from 'ethers';
+import { Contract, Wallet, ContractTransaction } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from './types';
 import { isAddress } from 'ethers/lib/utils';
@@ -14,7 +14,7 @@ export const toWad = (value: string | number) => new BigNumber(value).times(WAD)
 export const bnToBigNumber = (amount: BN): BigNumber => new BigNumber(<any>amount);
 export const stringToBigNumber = (amount: string): BigNumber => new BigNumber(amount);
 
-export const getDb = () => low(new FileSync('./deployed-contracts.json'));
+const getDb = () => low(new FileSync('./deployed-contracts.json'));
 
 export let DRE: HardhatRuntimeEnvironment;
 
@@ -85,29 +85,6 @@ export const chunk = <T>(arr: Array<T>, chunkSize: number): Array<Array<T>> => {
   );
 };
 
-interface DbEntry {
-  [network: string]: {
-    deployer: string;
-    address: string;
-  };
-}
-
-export const printContracts = () => {
-  const network = DRE.network.name;
-  const db = getDb();
-  console.log('Contracts deployed at', network);
-  console.log('---------------------------------');
-
-  const entries = Object.entries<DbEntry>(db.getState()).filter(([_k, value]) => !!value[network]);
-
-  const contractsPrint = entries.map(
-    ([key, value]: [string, DbEntry]) => `${key}: ${value[network].address}`
-  );
-
-  console.log('N# Contracts:', entries.length);
-  console.log(contractsPrint.join('\n'), '\n');
-};
-
 export const notFalsyOrZeroAddress = (address: tEthereumAddress | null | undefined): boolean => {
   if (!address) {
     return false;
@@ -117,4 +94,101 @@ export const notFalsyOrZeroAddress = (address: tEthereumAddress | null | undefin
 
 export const falsyOrZeroAddress = (address: tEthereumAddress | null | undefined): boolean => {
   return !notFalsyOrZeroAddress(address);
+};
+
+export const getSigner = (address: tEthereumAddress | string | undefined) =>
+  DRE.ethers.provider.getSigner(address);
+
+export const getTenderlyDashboardLink = () => {
+  return `https://dashboard.tenderly.co/${DRE.config.tenderly.username}/${
+    DRE.config.tenderly.project
+  }/fork/${DRE.tenderlyNetwork.getFork()}/simulation/${DRE.tenderlyNetwork.getHead()}`;
+};
+
+export const getFirstSigner = async () => (await DRE.ethers.getSigners())[0];
+
+export const getContractFactory = async (abi: any[], bytecode: string) =>
+  await DRE.ethers.getContractFactory(abi, bytecode);
+
+interface DbNamedEntry {
+  deployer: string;
+  address: string;
+  count: number;
+}
+
+interface DbLogEntry {
+  id: string;
+  deployer: string;
+}
+
+export const cleanupJsonDb = async (currentNetwork: string) => {
+  const db = getDb();
+  await db.set(`${currentNetwork}`, {}).write();
+};
+
+export const logContractInJsonDb = async (
+  contractId: string,
+  contractInstance: Contract,
+  register: boolean
+) => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+  const deployer = contractInstance.deployTransaction.from;
+
+  const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+  if (MAINNET_FORK || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
+    console.log(`*** ${contractId} ***\n`);
+    console.log(`Network: ${currentNetwork}`);
+    console.log(`tx: ${contractInstance.deployTransaction.hash}`);
+    console.log(`contract address: ${contractInstance.address}`);
+    console.log(`deployer address: ${contractInstance.deployTransaction.from}`);
+    console.log(`gas price: ${contractInstance.deployTransaction.gasPrice}`);
+    console.log(`gas used: ${contractInstance.deployTransaction.gasLimit}`);
+    console.log(`\n******`);
+    console.log();
+  }
+
+  await db
+    .set(`${currentNetwork}.log.${contractInstance.address}`, {
+      id: contractId,
+      deployer: deployer,
+    })
+    .write();
+
+  if (register) {
+    const node = `${currentNetwork}.named.${contractId}`;
+    const count = (await db.get(node).value())?.count || 0;
+    await db
+      .set(`${currentNetwork}.named.${contractId}`, {
+        address: contractInstance.address,
+        deployer: deployer,
+        count: count + 1,
+      })
+      .write();
+  }
+};
+
+export const getFromJsonDb = async (id: string) =>
+  await getDb().get(`${DRE.network.name}.named.${id}`).value();
+
+export const printContracts = (deployer: string) => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+
+  console.log('Contracts deployed at', currentNetwork, 'by', deployer);
+  console.log('---------------------------------');
+
+  const entries = Object.entries<DbNamedEntry>(db.get(`${currentNetwork}.named`).value());
+  const logEntries = Object.entries<DbLogEntry>(db.get(`${currentNetwork}.log`).value());
+
+  const contractsPrint = entries.map(([key, value]: [string, DbNamedEntry]) => {
+    if (value.count > 1) {
+      return `${key}: N=${value.count}`;
+    }
+    return `${key}: ${value.address}`;
+  });
+
+  console.log(contractsPrint.join('\n'), '\n');
+  console.log('---------------------------------');
+  console.log('N# Contracts:', entries.length, '/', logEntries.length);
 };

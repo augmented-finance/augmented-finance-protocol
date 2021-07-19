@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {AccessFlags} from '../access/AccessFlags.sol';
-import {RemoteAccessBitmask} from '../access/RemoteAccessBitmask.sol';
-import {IRemoteAccessBitmask} from '../access/interfaces/IRemoteAccessBitmask.sol';
+import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {RewardToken} from './RewardToken.sol';
@@ -12,9 +13,9 @@ import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.
 
 import 'hardhat/console.sol';
 
-contract AGFToken is
+contract AGFTokenV1 is
   RewardToken,
-  RemoteAccessBitmask,
+  MarketAccessBitmask,
   VersionedInitializable,
   IInitializableRewardToken,
   IRewardMinter
@@ -25,35 +26,41 @@ contract AGFToken is
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor() public RewardToken(NAME, SYMBOL, DECIMALS) {}
+  constructor()
+    public
+    RewardToken(NAME, SYMBOL, DECIMALS)
+    MarketAccessBitmask(IMarketAccessController(0))
+  {}
 
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
   }
 
   // This initializer is invoked by AccessController.setAddressAsImpl
-  function initialize(IRemoteAccessBitmask remoteAcl)
+  function initialize(IMarketAccessController remoteAcl)
     external
     virtual
     initializerRunAlways(TOKEN_REVISION)
   {
-    _initialize(remoteAcl, NAME, SYMBOL);
+    _initialize(remoteAcl, NAME, SYMBOL, DECIMALS);
   }
 
-  function initialize(
-    IRemoteAccessBitmask remoteAcl,
-    string calldata name,
-    string calldata symbol
-  ) public virtual override initializerRunAlways(TOKEN_REVISION) {
-    _initialize(remoteAcl, name, symbol);
+  function initialize(InitData calldata data)
+    public
+    virtual
+    override
+    initializerRunAlways(TOKEN_REVISION)
+  {
+    _initialize(data.remoteAcl, data.name, data.symbol, data.decimals);
   }
 
   function _initialize(
-    IRemoteAccessBitmask remoteAcl,
+    IMarketAccessController remoteAcl,
     string memory name,
-    string memory symbol
+    string memory symbol,
+    uint8 decimals
   ) private {
-    super._initializeERC20(name, symbol, DECIMALS);
+    super._initializeERC20(name, symbol, decimals);
     _remoteAcl = remoteAcl;
     if (!isRevisionInitialized(TOKEN_REVISION)) {
       super._initializeDomainSeparator();
@@ -64,7 +71,7 @@ contract AGFToken is
     address account,
     uint256 amount,
     bool
-  ) external override aclHas(AccessFlags.REWARD_MINT) {
+  ) external override aclAnyOf(AccessFlags.REWARD_MINT | AccessFlags.REWARD_CONTROLLER) {
     _mint(account, amount);
   }
 

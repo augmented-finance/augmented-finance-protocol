@@ -5,6 +5,7 @@ import rawBRE, { ethers } from 'hardhat';
 
 import {
   getAGTokenByName,
+  getMarketAddressController,
   getMockAgfToken,
   getMockStakedAgfToken,
   getMockStakedAgToken,

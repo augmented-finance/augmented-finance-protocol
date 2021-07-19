@@ -8,9 +8,6 @@ import { expect } from 'chai';
 import { ethers } from 'ethers';
 import { RateMode, ProtocolErrors } from '../../helpers/types';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { CommonsConfig } from '../../markets/augmented/commons';
-
-const AAVE_REFERRAL = CommonsConfig.ProtocolGlobalParams.AaveReferral;
 
 makeSuite('DepositToken: Transfer', (testEnv: TestEnv) => {
   const {
@@ -37,7 +34,7 @@ makeSuite('DepositToken: Transfer', (testEnv: TestEnv) => {
 
     const name = await aDai.name();
 
-    expect(name).to.be.equal('Augmented interest bearing DAI');
+    expect(name).to.be.equal('Augmented deposit DAI');
 
     const fromBalance = await aDai.balanceOf(users[0].address);
     const toBalance = await aDai.balanceOf(users[1].address);
@@ -62,13 +59,7 @@ makeSuite('DepositToken: Transfer', (testEnv: TestEnv) => {
       .deposit(weth.address, ethers.utils.parseEther('1.0'), userAddress, '0');
     await pool
       .connect(users[1].signer)
-      .borrow(
-        weth.address,
-        ethers.utils.parseEther('0.1'),
-        RateMode.Stable,
-        AAVE_REFERRAL,
-        users[1].address
-      );
+      .borrow(weth.address, ethers.utils.parseEther('0.1'), RateMode.Stable, 0, users[1].address);
 
     const userReserveData = await helpersContract.getUserReserveData(
       weth.address,

@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 
 import { UniswapRepayAdapterFactory } from '../../types';
 import { verifyContract } from '../../helpers/etherscan-verification';
-import { getFirstSigner } from '../../helpers/contracts-getters';
+import { getFirstSigner } from '../../helpers/misc-utils';
 
 const CONTRACT_NAME = 'UniswapRepayAdapter';
 

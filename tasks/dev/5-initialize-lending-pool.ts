@@ -1,29 +1,19 @@
 import { task } from 'hardhat/config';
 import {
-  deployLendingPoolCollateralManager,
-  deployMockFlashLoanReceiver,
   deployWalletBalancerProvider,
   deployProtocolDataProvider,
-  deployWETHGateway,
-  authorizeWETHGateway,
+  deployTreasuryImpl,
 } from '../../helpers/contracts-deployments';
-import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { eNetwork } from '../../helpers/types';
-import {
-  ConfigNames,
-  getReservesConfigByPool,
-  getTreasuryAddress,
-  getWethAddress,
-  loadPoolConfig,
-} from '../../helpers/configuration';
+import { ConfigNames, getReservesConfigByPool, loadPoolConfig } from '../../helpers/configuration';
 
 import { tEthereumAddress, LendingPools, eContractid } from '../../helpers/types';
-import { waitForTx, filterMapBy } from '../../helpers/misc-utils';
+import { waitForTx, filterMapBy, falsyOrZeroAddress } from '../../helpers/misc-utils';
 import { configureReservesByHelper, initReservesByHelper } from '../../helpers/init-helpers';
 import { getAllTokenAddresses } from '../../helpers/mock-helpers';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import { getAllMockedTokens, getMarketAddressController } from '../../helpers/contracts-getters';
-import { insertContractAddressInDb } from '../../helpers/contracts-helpers';
+import { AccessFlags } from '../../helpers/access-flags';
 
 task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -32,13 +22,7 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const {
-      DepositTokenNamePrefix,
-      StableDebtTokenNamePrefix,
-      VariableDebtTokenNamePrefix,
-      SymbolPrefix,
-      WethGateway,
-    } = poolConfig;
+    const { Names } = poolConfig;
     const mockTokens = await getAllMockedTokens();
     const allTokenAddresses = getAllTokenAddresses(mockTokens);
 
@@ -52,45 +36,18 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
 
     const reservesParams = getReservesConfigByPool(LendingPools.augmented);
 
-    const admin = await addressesProvider.getPoolAdmin();
-
-    const treasuryAddress = await getTreasuryAddress(poolConfig);
+    const treasuryImpl = await deployTreasuryImpl();
+    addressesProvider.setTreasuryImpl(treasuryImpl.address);
+    const treasuryAddress = treasuryImpl.address;
 
     await initReservesByHelper(
       reservesParams,
       protoPoolReservesAddresses,
-      DepositTokenNamePrefix,
-      StableDebtTokenNamePrefix,
-      VariableDebtTokenNamePrefix,
-      SymbolPrefix,
-      admin,
+      Names,
       treasuryAddress,
       verify
     );
-    await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, testHelpers, admin);
-
-    const collateralManager = await deployLendingPoolCollateralManager(verify);
-    await waitForTx(
-      await addressesProvider.setLendingPoolCollateralManager(collateralManager.address)
-    );
-
-    const mockFlashLoanReceiver = await deployMockFlashLoanReceiver(
-      addressesProvider.address,
-      verify
-    );
-    await insertContractAddressInDb(
-      eContractid.MockFlashLoanReceiver,
-      mockFlashLoanReceiver.address
-    );
+    await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, testHelpers);
 
     await deployWalletBalancerProvider(verify);
-
-    await insertContractAddressInDb(eContractid.ProtocolDataProvider, testHelpers.address);
-
-    const lendingPoolAddress = await addressesProvider.getLendingPool();
-    const gateWay = await getParamPerNetwork(WethGateway, network);
-
-    if (gateWay !== '') {
-      await authorizeWETHGateway(gateWay, lendingPoolAddress);
-    }
   });
