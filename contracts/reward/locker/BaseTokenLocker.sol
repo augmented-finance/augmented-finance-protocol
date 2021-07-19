@@ -249,10 +249,6 @@ abstract contract BaseTokenLocker is IERC20 {
       _stakedTotal = _stakedTotal.add(stakeAmount);
     }
 
-    if (transfer) {
-      _underlyingToken.safeTransferFrom(from, address(this), underlyingTransfer);
-    }
-
     if (_nextKnownPoint > userBalance.endPoint || _nextKnownPoint == 0) {
       _nextKnownPoint = userBalance.endPoint;
     }
@@ -266,6 +262,10 @@ abstract contract BaseTokenLocker is IERC20 {
     }
 
     _balances[to] = userBalance;
+
+    if (transfer) {
+      _underlyingToken.safeTransferFrom(from, address(this), underlyingTransfer);
+    }
 
     emit Locked(
       from,
