@@ -12,6 +12,7 @@ import {AccessFlags} from '../../access/AccessFlags.sol';
 import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
+import {IDerivedToken} from '../../interfaces/IDerivedToken.sol';
 
 import {CalcLinearRateReward} from '../calcs/CalcLinearRateReward.sol';
 
@@ -19,40 +20,71 @@ import {Errors} from '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BaseTokenLocker is IERC20 {
+/**
+  @dev Curve-like locker, that locks an underlying token for some period and mints non-transferrable tokens for that period. 
+  Total amount of minted tokens = amount_of_locked_tokens * max_period / lock_period.
+  End of lock period is aligned to week.
+
+  Additionally, this contract recycles token excess of capped rewards by spreading the excess over some period. 
+ */
+
+abstract contract BaseTokenLocker is IERC20, IDerivedToken {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
   IERC20 private _underlyingToken;
 
+  // Total amount of minted tokens. This number is increased in situ for new locks, and decreased at week edges, when locks expire.
+  uint256 private _stakedTotal;
+  // Current extra rate that distributes the recycled excess. This number is increased in situ for new excess added, and decreased at week edges.
+  uint256 private _extraRate;
+  // Accumulated _extraRate
+  uint256 private _excessAccum;
+
+  /**
+    @dev A future point, contains deltas to be applied at the relevant time (period's edge):
+    - stakeDelta is amount to be subtracted from _stakedTotal
+    - rateDelta is amount to be subtracted from _extraRate
+  */
   struct Point {
     uint128 stakeDelta;
     uint128 rateDelta;
   }
-
-  uint256 private _stakedTotal;
-  uint256 private _extraRate;
-  uint256 private _excessAccum;
-
+  // Future points, indexed by point number (week number).
   mapping(uint32 => Point) _pointTotal;
 
+  // Absolute limit of future points - 255 periods (weeks).
   uint32 private constant _maxDurationPoints = 255;
-  uint32 private _maxValuePeriod; // = 208 weeks; // 4 * 52, must be less than _maxDurationPoints
+  // Period (in seconds) which gives 100% of lock tokens, must be less than _maxDurationPoints. Default = 208 weeks; // 4 * 52
+  uint32 private _maxValuePeriod;
+  // Duration of a single period. All points are aligned to it. Default = 1 week.
   uint32 private _pointPeriod;
+  // Next (nearest future) known point.
   uint32 private _nextKnownPoint;
+  // Latest (farest future) known point.
   uint32 private _lastKnownPoint;
+  // Timestamp when internalUpdate() was invoked.
   uint32 private _lastUpdateTS;
-
+  // Re-entrance guard for some of internalUpdate() operations.
   bool private _updateEntered;
 
+  /**
+    @dev Details about user's lock
+  */
   struct UserBalance {
+    // Total amount of underlying token received from the user
     uint192 underlyingAmount;
+    // Timestamp (not point) when the lock was created
     uint32 startTS;
+    // Point number (week number), when the lock expired
     uint32 endPoint;
   }
 
+  // Balances of users
   mapping(address => UserBalance) private _balances;
+  // Addresses which are allowed to add to user's lock
+  // map[user][delegate]
   mapping(address => mapping(address => bool)) private _allowAdd;
 
   event Locked(
@@ -66,6 +98,9 @@ abstract contract BaseTokenLocker is IERC20 {
   );
   event Redeemed(address indexed from, address indexed to, uint256 underlyingAmount);
 
+  /// @param underlying ERC20 token to be locked
+  /// @param pointPeriod duration in seconds of a single period
+  /// @param maxValuePeriod duration in seconds of period with 100% lock ratio, must be less than 255*pointPeriod
   constructor(
     address underlying,
     uint32 pointPeriod,
@@ -74,6 +109,7 @@ abstract contract BaseTokenLocker is IERC20 {
     _initialize(underlying, pointPeriod, maxValuePeriod);
   }
 
+  /// @dev To be used for initializers only. Same as constructor.
   function _initialize(
     address underlying,
     uint32 pointPeriod,
@@ -88,10 +124,20 @@ abstract contract BaseTokenLocker is IERC20 {
     _maxValuePeriod = maxValuePeriod;
   }
 
-  function UNDERLYING_ASSET_ADDRESS() external view returns (address) {
+  function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
     return address(_underlyingToken);
   }
 
+  /** @dev Creates a new lock or adds more underlying to an existing lock of the caller:
+      - with duration =0 this function adds to an existing unexpired lock without chaning lock's expiry, otherwise will fail (expired lock)
+      - when a lock exists, the expiry (end) of the lock will be maximum of the current lock and of to-be-lock with the given duration.
+      - when a lock has expired, but tokens were not redeemed these unredeemed tokens will also be added to the new locked.
+      @param underlyingAmount amount of underlying (>0) to be added to the lock. Must be approved for transferFrom.
+      @param duration in seconds of the lock. This duration will be rounded up to make sure that lock will end at a week's edge. 
+      Zero value indicates addition to an existing lock without changing expiry.
+      @param referral code to use for marketing campaings. Use 0 when not involved.      
+      @return total amount of lock tokens of the user.
+   */
   function lock(
     uint256 underlyingAmount,
     uint32 duration,
@@ -107,6 +153,10 @@ abstract contract BaseTokenLocker is IERC20 {
     return stakeAmount;
   }
 
+  /** @dev Extends an existing lock of the caller without adding more underlying. 
+      @param duration in seconds (>0) of the lock. This duration will be rounded up to make sure that lock will end at a week's edge. 
+      @return total amount of lock tokens of the user.
+   */
   function lockExtend(uint32 duration) external returns (uint256) {
     require(duration > 0, 'ZERO_DURATION');
 
@@ -117,10 +167,19 @@ abstract contract BaseTokenLocker is IERC20 {
     return stakeAmount;
   }
 
+  /** @dev Allows/disallows another user/contract to use lockAdd() function for the caller's lock.
+      @param to an address who will call lockAdd().
+      @param allow indicates if calls are allowed (true) or disallowed (false).
+   */
   function allowAdd(address to, bool allow) external {
     _allowAdd[msg.sender][to] = allow;
   }
 
+  /** @dev A function to add funds to a lock of another user. Must be explicitly allowed with allowAdd().
+      @param to an address to whose lock the given underlyingAmount shoud be added
+      @param underlyingAmount amount of underlying (>0) to be added to the lock. Must be approved for transferFrom.
+      @return total amount of lock tokens of the "to" address.
+   */
   function lockAdd(address to, uint256 underlyingAmount) external returns (uint256) {
     require(underlyingAmount > 0, 'ZERO_UNDERLYING');
     require(_allowAdd[to][msg.sender], 'ADD_TO_LOCK_RESTRICTED');
@@ -132,11 +191,13 @@ abstract contract BaseTokenLocker is IERC20 {
     return stakeAmount;
   }
 
+  // These constants are "soft" errors - such errors can be detected by the autolock function so it can stop automatically
   uint256 private constant LOCK_ERR_NOTHING_IS_LOCKED = 1;
   uint256 private constant LOCK_ERR_DURATION_IS_TOO_LARGE = 2;
   uint256 private constant LOCK_ERR_UNDERLYING_OVERFLOW = 3;
   uint256 private constant LOCK_ERR_LOCK_OVERFLOW = 4;
 
+  /// @dev Converts "soft" errors into "hard" reverts
   function revertOnError(uint256 recoverableError) private pure {
     require(recoverableError != LOCK_ERR_LOCK_OVERFLOW, 'LOCK_ERR_LOCK_OVERFLOW');
     require(recoverableError != LOCK_ERR_UNDERLYING_OVERFLOW, 'LOCK_ERR_UNDERLYING_OVERFLOW');
@@ -145,6 +206,16 @@ abstract contract BaseTokenLocker is IERC20 {
     require(recoverableError == 0, 'UNKNOWN_RECOVERABLE_ERROR');
   }
 
+  /** @dev Creates a new lock or adds underlying to an existing lock or extends it.
+      @param from whom the funds (underlying) will be taken
+      @param to whom the funds will be locked
+      @param underlyingTransfer amount of underlying (=>0) to be added to the lock.
+      @param duration in seconds of the lock. This duration will be rounded up to make sure that lock will end at a week's edge. 
+      Zero value indicates addition to an existing lock without changing expiry.
+      @param transfer indicates when transferFrom should be called. E.g. autolock uses false, as tokens will be minted externally to this contract.
+      @param referral code to use for marketing campaings. Use 0 when not involved.
+      @return stakeAmount is total amount of lock tokens of the "to" address; recoverableError is the "soft" error code.
+   */
   function internalLock(
     address from,
     address to,
@@ -158,6 +229,7 @@ abstract contract BaseTokenLocker is IERC20 {
 
     uint32 currentPoint = internalUpdate(true, 0);
 
+    // this call ensures that time-based reward calculations are pulled up to this moment
     internalSyncRate(uint32(block.timestamp));
 
     UserBalance memory userBalance = _balances[to];
@@ -203,7 +275,7 @@ abstract contract BaseTokenLocker is IERC20 {
         // can't add to an expired lock
         return (0, LOCK_ERR_NOTHING_IS_LOCKED);
       } else {
-        // new lock - new start
+        // new lock -> new start
         userBalance.startTS = uint32(block.timestamp);
       }
 
@@ -279,10 +351,12 @@ abstract contract BaseTokenLocker is IERC20 {
     return (stakeAmount, 0);
   }
 
+  /// @dev Returns amount of underlying for the given address
   function balanceOfUnderlying(address account) public view returns (uint256) {
     return _balances[account].underlyingAmount;
   }
 
+  /// @dev Returns amount of underlying and a timestamp when the lock expires. Funds can be redeemed after the timestamp.
   function balanceOfUnderlyingAndExpiry(address account)
     external
     view
@@ -304,8 +378,9 @@ abstract contract BaseTokenLocker is IERC20 {
   }
 
   /**
-   * @dev Redeems staked tokens, and stop earning rewards
-   * @param to Address to redeem to
+   * @dev Attemps to redeem all underlying tokens of caller. Will not revert on zero or locked balance.
+   * @param to address to which all redeemed tokens should be transferred.
+   * @return underlyingAmount redeemed. Zero for an unexpired lock.
    **/
   function redeem(address to) public virtual returns (uint256 underlyingAmount) {
     return internalRedeem(msg.sender, to);
@@ -316,9 +391,11 @@ abstract contract BaseTokenLocker is IERC20 {
     UserBalance memory userBalance = _balances[from];
 
     if (userBalance.underlyingAmount == 0 || userBalance.endPoint > currentPoint) {
+      // not yet
       return 0;
     }
 
+    // pay off rewards and stop
     unsetStakeBalance(from, userBalance.endPoint * _pointPeriod, false);
 
     delete (_balances[from]);
@@ -329,6 +406,8 @@ abstract contract BaseTokenLocker is IERC20 {
     return userBalance.underlyingAmount;
   }
 
+  /// @dev Explicit call to applies all future-in-past points. Only useful to handle a situation when there were no state-changing calls for a long time.
+  /// @param scanLimit defines a maximum number of points / updates to be processed at once.
   function update(uint256 scanLimit) public {
     internalUpdate(false, scanLimit);
   }
@@ -375,6 +454,7 @@ abstract contract BaseTokenLocker is IERC20 {
     return (fromPoint, tillPoint, maxPoint);
   }
 
+  /// @dev returns a total locked amount of underlying
   function totalOfUnderlying() external view returns (uint256) {
     return _underlyingToken.balanceOf(address(this));
   }
@@ -383,6 +463,7 @@ abstract contract BaseTokenLocker is IERC20 {
     return _stakedTotal;
   }
 
+  /// @dev returns a total amount of lock tokens
   function totalSupply() public view override returns (uint256 totalSupply_) {
     (uint32 fromPoint, uint32 tillPoint, ) =
       getScanRange(uint32(block.timestamp / _pointPeriod), 0);
@@ -409,6 +490,9 @@ abstract contract BaseTokenLocker is IERC20 {
     return totalSupply_;
   }
 
+  /// @param preventReentry when true will revert the call on re-entry, otherwise will exit immediately
+  /// @param scanLimit limits number of updates to be applied. Must be zero (=unlimited) for all internal oprations, otherwise the state will be inconsisten.
+  /// @return currentPoint (week number)
   function internalUpdate(bool preventReentry, uint256 scanLimit)
     internal
     returns (uint32 currentPoint)
@@ -436,6 +520,10 @@ abstract contract BaseTokenLocker is IERC20 {
     return currentPoint;
   }
 
+  /// @dev searches and processes updates for future-in-past points and update next/last known points accordingly
+  /// @param nextPoint start of future-in-past points (inclusive)
+  /// @param tillPoint end of future-in-past points (inclusive)
+  /// @param maxPoint the farest future point till which the next known point will be searched for
   function walkPoints(
     uint32 nextPoint,
     uint32 tillPoint,
@@ -477,15 +565,15 @@ abstract contract BaseTokenLocker is IERC20 {
   }
 
   function transfer(address, uint256) external override returns (bool) {
-    revert('NOT_SUPPORTED');
+    notSupported();
   }
 
   function allowance(address, address) external view override returns (uint256) {
-    revert('NOT_SUPPORTED');
+    notSupported();
   }
 
   function approve(address, uint256) external override returns (bool) {
-    revert('NOT_SUPPORTED');
+    notSupported();
   }
 
   function transferFrom(
@@ -493,13 +581,17 @@ abstract contract BaseTokenLocker is IERC20 {
     address,
     uint256
   ) external override returns (bool) {
+    notSupported();
+  }
+
+  function notSupported() private pure {
     revert('NOT_SUPPORTED');
   }
 
-  function internalGetExtraRate() internal view virtual returns (uint256 rate) {
-    return _extraRate;
-  }
-
+  /// @dev internalAddExcess recycles reward excess by spreading the given amount.
+  /// The given amount is distributed starting from now for the same period that has passed from (since) till now.
+  /// @param amount of reward to be redistributed.
+  /// @param since a timestamp (in the past) since which the given amount was accumulated. No restrictions- zero, current or event future timestamps are handled.
   function internalAddExcess(uint256 amount, uint32 since) internal {
     uint32 at = uint32(block.timestamp);
     uint32 expiry;
@@ -561,16 +653,27 @@ abstract contract BaseTokenLocker is IERC20 {
     }
   }
 
+  /// @dev is called to syncronize reward accumulators
+  /// @param at timestamp till which accumulators should be updated
   function internalSyncRate(uint32 at) internal virtual;
 
+  /// @dev is called to update rate history
+  /// @param at timestamp for which the current state should be records as a history point
   function internalCheckpoint(uint32 at) internal virtual;
 
+  /// @dev is called to sum up reward and to stop issuing it
+  /// @param holder of reward
+  /// @param at timestamp till which reward should be calculated
+  /// @param interim is true when setStakeBalance will be called right after this one
   function unsetStakeBalance(
     address holder,
     uint32 at,
     bool interim
   ) internal virtual;
 
+  /// @dev is called to sum up reward upto now and start calculation of the reward for the new stakeAmount
+  /// @param holder of reward
+  /// @param stakeAmount of lock tokens for reward calculation
   function setStakeBalance(address holder, uint224 stakeAmount) internal virtual;
 
   function getStakeBalance(address holder) internal view virtual returns (uint224 stakeAmount);
@@ -611,10 +714,14 @@ abstract contract BaseTokenLocker is IERC20 {
     return underlyingAmount;
   }
 
+  /// @dev returns current rate of reward excess / redistribution.
+  /// This function is used by decsendants.
   function getExtraRate() internal view returns (uint256) {
     return _extraRate;
   }
 
+  /// @dev returns unadjusted (current state) amount of lock tokens.
+  /// This function is used by decsendants.
   function getStakedTotal() internal view returns (uint256) {
     return _stakedTotal;
   }

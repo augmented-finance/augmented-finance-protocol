@@ -13,7 +13,6 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   using PercentageMath for uint256;
 
   address private _teamManager;
-  uint256 private _accumRate;
   uint32 private _lockupTill;
   uint16 private _totalShare;
 
