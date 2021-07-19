@@ -3,7 +3,7 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { deployOracleRouter, deployLendingRateOracle } from '../../helpers/contracts-deployments';
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
 import { ICommonConfiguration, eNetwork, SymbolMap } from '../../helpers/types';
-import { getFirstSigner } from '../../helpers/misc-utils';
+import { getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import {
   ConfigNames,
   loadPoolConfig,
@@ -67,5 +67,5 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
     console.log('ORACLES: %s and %s', oracleRouter.address, lendingRateOracle.address);
     // Register the proxy price provider on the addressProvider
     await addressProvider.setPriceOracle(oracleRouter.address);
-    await addressProvider.setLendingRateOracle(lendingRateOracle.address);
+    await waitForTx(await addressProvider.setLendingRateOracle(lendingRateOracle.address));
   });
