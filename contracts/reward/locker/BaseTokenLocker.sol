@@ -416,7 +416,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     return at <= (_lastUpdateTS / _pointPeriod) * _pointPeriod;
   }
 
-  function getScanRange(uint32 currentPoint)
+  function getScanRange(uint32 currentPoint, uint256 scanLimit)
     private
     view
     returns (
@@ -435,6 +435,13 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     if (maxPoint == 0) {
       // shouldn't happen, but as a precaution
       maxPoint = uint32(_lastUpdateTS / _pointPeriod) + _maxDurationPoints + 1;
+    }
+
+    if (scanLimit > 0 && scanLimit + fromPoint > scanLimit) {
+      scanLimit += fromPoint;
+      if (scanLimit < maxPoint) {
+        maxPoint = uint32(scanLimit);
+      }
     }
 
     if (maxPoint > currentPoint) {
@@ -457,7 +464,8 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
   /// @dev returns a total amount of lock tokens
   function totalSupply() public view override returns (uint256 totalSupply_) {
-    (uint32 fromPoint, uint32 tillPoint, ) = getScanRange(uint32(block.timestamp / _pointPeriod));
+    (uint32 fromPoint, uint32 tillPoint, ) =
+      getScanRange(uint32(block.timestamp / _pointPeriod), 0);
 
     totalSupply_ = _stakedTotal;
 
@@ -498,11 +506,11 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
       return currentPoint;
     }
 
-    (uint32 fromPoint, uint32 tillPoint, uint32 maxPoint) = getScanRange(currentPoint);
+    (uint32 fromPoint, uint32 tillPoint, uint32 maxPoint) = getScanRange(currentPoint, scanLimit);
     if (tillPoint > 0) {
       _updateEntered = true;
       {
-        walkPoints(fromPoint, tillPoint, maxPoint, scanLimit);
+        walkPoints(fromPoint, tillPoint, maxPoint);
       }
       _updateEntered = false;
     }
@@ -518,19 +526,11 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
   function walkPoints(
     uint32 nextPoint,
     uint32 tillPoint,
-    uint32 maxPoint,
-    uint256 scanLimit
+    uint32 maxPoint
   ) private {
     Point memory delta = _pointTotal[nextPoint];
 
-    //NB! must be no overflow checks here
-    if (scanLimit > 0 && scanLimit + maxPoint > maxPoint) {
-      scanLimit += maxPoint;
-    } else {
-      scanLimit = type(uint256).max;
-    }
-
-    for (; nextPoint <= tillPoint && nextPoint < scanLimit; ) {
+    for (; nextPoint <= tillPoint; ) {
       internalCheckpoint(nextPoint * _pointPeriod);
 
       _extraRate = _extraRate.sub(delta.rateDelta);
@@ -550,7 +550,10 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
         continue;
       }
 
-      nextPoint = 0;
+      // keep nextPoint to reduce gas for further calls
+      if (nextPoint > _lastKnownPoint) {
+        nextPoint = 0;
+      }
       break;
     }
 

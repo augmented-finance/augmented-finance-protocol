@@ -6,7 +6,8 @@ import { ITokenNames } from './types';
 // ----------------
 export const DAY = 60 * 60 * 24;
 export const WEEK = 7 * DAY;
-export const MAX_LOCKER_PERIOD = 4 * 52 * WEEK;
+export const MAX_LOCKER_WEEKS = 4 * 52;
+export const MAX_LOCKER_PERIOD = MAX_LOCKER_WEEKS * WEEK;
 export const PERCENTAGE_FACTOR = '10000';
 export const HALF_PERCENTAGE = '5000';
 export const PERC_100 = Number(PERCENTAGE_FACTOR);
