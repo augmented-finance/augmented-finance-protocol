@@ -58,6 +58,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       console.log(`#1 deploying: Access Controller`);
       const ac = await deployMarketAccessController('marketId');
+      await ac.setAnyRoleMode(true);
       // emergency admin + liquidity admin
       await ac.grantRoles(
         root.address,

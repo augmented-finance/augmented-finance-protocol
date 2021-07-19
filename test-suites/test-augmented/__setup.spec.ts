@@ -82,21 +82,18 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const mockTokens = await deployAllMockTokens(deployer);
   console.log('Deployed mocks');
   const addressProvider = await deployMarketAccessController(AugmentedConfig.MarketId);
-  await waitForTx(
-    await addressProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN)
-  );
+  await addressProvider.setAnyRoleMode(true);
+  await addressProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN);
 
   //setting users[1] as emergency admin, which is in position 2 in the DRE addresses list
   const addressList = await Promise.all(
-    (await DRE.ethers.getSigners()).map((signer) => signer.getAddress())
+    (await (<any>DRE).ethers.getSigners()).map((signer) => signer.getAddress())
   );
 
-  await waitForTx(await addressProvider.grantRoles(addressList[2], AccessFlags.EMERGENCY_ADMIN));
+  await addressProvider.grantRoles(<string>addressList[2], AccessFlags.EMERGENCY_ADMIN);
 
   const addressesProviderRegistry = await deployAddressesProviderRegistry();
-  await waitForTx(
-    await addressesProviderRegistry.registerAddressesProvider(addressProvider.address, 1)
-  );
+  await addressesProviderRegistry.registerAddressesProvider(addressProvider.address, 1);
 
   const lendingPoolImpl = await deployLendingPoolImpl();
 
@@ -110,14 +107,10 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
     '\tSetting lending pool collateral manager implementation with address',
     collateralManager.address
   );
-  await waitForTx(
-    await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address)
-  );
+  await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address);
 
   const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl();
-  await waitForTx(
-    await addressProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address)
-  );
+  await addressProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address);
 
   const fallbackOracle = await deployMockPriceOracle();
   await waitForTx(await fallbackOracle.setEthUsdPrice(MOCK_USD_PRICE_IN_WEI));
