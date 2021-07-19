@@ -538,7 +538,6 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
       bool found = false;
       // look for the next non-zero point
-      // scanLimit MUST NOT be cheked here
       for (nextPoint++; nextPoint <= maxPoint; nextPoint++) {
         delta = _pointTotal[nextPoint];
         if (delta.stakeDelta > 0 || delta.rateDelta > 0) {
