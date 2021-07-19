@@ -108,7 +108,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
    **/
   function calculateInterestRates(
     address reserve,
-    address aToken,
+    address depositToken,
     uint256 liquidityAdded,
     uint256 liquidityTaken,
     uint256 totalStableDebt,
@@ -125,7 +125,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
       uint256
     )
   {
-    uint256 availableLiquidity = IERC20(reserve).balanceOf(aToken);
+    uint256 availableLiquidity = IERC20(reserve).balanceOf(depositToken);
     //avoid stack too deep
     availableLiquidity = availableLiquidity.add(liquidityAdded).sub(liquidityTaken);
 
@@ -170,7 +170,6 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
   )
     public
     view
-    override
     returns (
       uint256,
       uint256,

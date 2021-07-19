@@ -25,6 +25,8 @@ library DataTypes {
     address interestRateStrategyAddress;
     //the id of the reserve. Represents the position in the list of the active reserves
     uint8 id;
+    //external asset - interestRateStrategyAddress has an extended behavior
+    bool isExternal;
   }
 
   struct ReserveConfigurationMap {
