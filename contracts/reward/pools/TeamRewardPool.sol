@@ -150,7 +150,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return _teamManager;
   }
 
-  function setUnlockedAt(uint32 at) external onlyTeamManagerOrConfigurator {
+  function setUnlockedAt(uint32 at) external onlyConfigurator {
     require(at > 0, 'unlockAt is required');
     // console.log('setUnlockedAt', _lockupTill, getCurrentTick(), at);
     require(_lockupTill == 0 || _lockupTill >= getCurrentTick(), 'lockup is finished');
