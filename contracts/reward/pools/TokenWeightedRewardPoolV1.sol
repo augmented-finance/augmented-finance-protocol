@@ -36,11 +36,12 @@ contract TokenWeightedRewardPoolV1 is
   }
 
   function initializedWith() external view override returns (InitData memory) {
+    uint256 rateScale = getRateScale();
     return
       InitData(
         _controller,
-        internalGetRate().rayDiv(_rateScale),
-        _rateScale,
+        internalGetRate().rayDiv(rateScale),
+        uint224(rateScale), // no overflow as getRateScale() is uint224 inside
         getBaselinePercentage()
       );
   }
