@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
@@ -8,6 +9,7 @@ import {IDepositToken} from '../../../interfaces/IDepositToken.sol';
 import {IStableDebtToken} from '../../../interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../../../interfaces/IVariableDebtToken.sol';
 import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
+import {IReserveDelegatedRateStrategy} from '../../../interfaces/IReserveDelegatedRateStrategy.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {MathUtils} from '../../../tools/math/MathUtils.sol';
 import {WadRayMath} from '../../../tools/math/WadRayMath.sol';
@@ -54,7 +56,7 @@ library ReserveLogic {
    * @param reserve The reserve object
    * @return the normalized income. expressed in ray
    **/
-  function getNormalizedIncome(DataTypes.ReserveData storage reserve)
+  function getNormalizedIncome(DataTypes.ReserveData storage reserve, address asset)
     internal
     view
     returns (uint256)
@@ -67,12 +69,14 @@ library ReserveLogic {
       return reserve.liquidityIndex;
     }
 
-    uint256 cumulated =
+    if (reserve.reserveFlags & DataTypes.FLAG_EXTERNAL_ASSET != 0) {
+      return _getExternalIncome(reserve, asset);
+    }
+
+    return
       MathUtils.calculateLinearInterest(reserve.currentLiquidityRate, timestamp).rayMul(
         reserve.liquidityIndex
       );
-
-    return cumulated;
   }
 
   /**
@@ -107,7 +111,12 @@ library ReserveLogic {
    * @dev Updates the liquidity cumulative index and the variable borrow index.
    * @param reserve the reserve object
    **/
-  function updateState(DataTypes.ReserveData storage reserve) internal {
+  function updateState(DataTypes.ReserveData storage reserve, address asset) internal {
+    if (reserve.reserveFlags & DataTypes.FLAG_EXTERNAL_ASSET != 0) {
+      _updateExternalIndexes(reserve, asset);
+      return;
+    }
+
     uint256 scaledVariableDebt =
       IVariableDebtToken(reserve.variableDebtTokenAddress).scaledTotalSupply();
     uint256 previousVariableBorrowIndex = reserve.variableBorrowIndex;
@@ -157,25 +166,19 @@ library ReserveLogic {
 
   /**
    * @dev Initializes a reserve
-   * @param reserve The reserve object
-   * @param aTokenAddress The address of the overlying atoken contract
-   * @param interestRateStrategyAddress The address of the interest rate strategy contract
    **/
-  function init(
-    DataTypes.ReserveData storage reserve,
-    address aTokenAddress,
-    address stableDebtTokenAddress,
-    address variableDebtTokenAddress,
-    address interestRateStrategyAddress
-  ) external {
+  function init(DataTypes.ReserveData storage reserve, DataTypes.InitReserveData calldata data)
+    external
+  {
     require(reserve.aTokenAddress == address(0), Errors.RL_RESERVE_ALREADY_INITIALIZED);
 
     reserve.liquidityIndex = uint128(WadRayMath.ray());
     reserve.variableBorrowIndex = uint128(WadRayMath.ray());
-    reserve.aTokenAddress = aTokenAddress;
-    reserve.stableDebtTokenAddress = stableDebtTokenAddress;
-    reserve.variableDebtTokenAddress = variableDebtTokenAddress;
-    reserve.interestRateStrategyAddress = interestRateStrategyAddress;
+    reserve.aTokenAddress = data.depositTokenAddress;
+    reserve.stableDebtTokenAddress = data.stableDebtAddress;
+    reserve.variableDebtTokenAddress = data.variableDebtAddress;
+    reserve.interestRateStrategyAddress = data.interestRateStrategyAddress;
+    reserve.reserveFlags = data.reserveFlags;
   }
 
   struct UpdateInterestRatesLocalVars {
@@ -202,6 +205,11 @@ library ReserveLogic {
     uint256 liquidityAdded,
     uint256 liquidityTaken
   ) internal {
+    if (reserve.reserveFlags & DataTypes.FLAG_EXTERNAL_ASSET != 0) {
+      _updateExternalRates(reserve, reserveAddress);
+      return;
+    }
+
     UpdateInterestRatesLocalVars memory vars;
 
     vars.stableDebtTokenAddress = reserve.stableDebtTokenAddress;
@@ -278,7 +286,7 @@ library ReserveLogic {
     uint256 newLiquidityIndex,
     uint256 newVariableBorrowIndex,
     uint40 timestamp
-  ) internal {
+  ) private {
     MintToTreasuryLocalVars memory vars;
 
     vars.reserveFactor = reserve.configuration.getReserveFactor();
@@ -337,7 +345,7 @@ library ReserveLogic {
     uint256 liquidityIndex,
     uint256 variableBorrowIndex,
     uint40 timestamp
-  ) internal returns (uint256, uint256) {
+  ) private returns (uint256, uint256) {
     uint256 currentLiquidityRate = reserve.currentLiquidityRate;
 
     uint256 newLiquidityIndex = liquidityIndex;
@@ -369,5 +377,34 @@ library ReserveLogic {
     //solium-disable-next-line
     reserve.lastUpdateTimestamp = uint40(block.timestamp);
     return (newLiquidityIndex, newVariableBorrowIndex);
+  }
+
+  function _updateExternalIndexes(DataTypes.ReserveData storage reserve, address asset) private {
+    (uint256 liquidityIndex, uint256 variableBorrowIndex) =
+      IReserveDelegatedRateStrategy(reserve.interestRateStrategyAddress).getDelegatedIndexes(asset);
+
+    require(liquidityIndex <= type(uint128).max, Errors.RL_LIQUIDITY_INDEX_OVERFLOW);
+    require(variableBorrowIndex <= type(uint128).max, Errors.RL_VARIABLE_BORROW_INDEX_OVERFLOW);
+
+    (reserve.liquidityIndex, reserve.variableBorrowIndex) = (
+      uint128(liquidityIndex),
+      uint128(variableBorrowIndex)
+    );
+
+    //solium-disable-next-line
+    reserve.lastUpdateTimestamp = uint40(block.timestamp);
+  }
+
+  function _updateExternalRates(DataTypes.ReserveData storage reserve, address asset) private {}
+
+  function _getExternalIncome(DataTypes.ReserveData storage reserve, address asset)
+    private
+    view
+    returns (uint256)
+  {
+    return
+      IReserveDelegatedRateStrategy(reserve.interestRateStrategyAddress).getDelegatedIncomeIndex(
+        asset
+      );
   }
 }

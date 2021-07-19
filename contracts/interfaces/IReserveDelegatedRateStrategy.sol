@@ -7,5 +7,13 @@ import {IReserveInterestRateStrategy} from './IReserveInterestRateStrategy.sol';
  * @dev Interface to access the interest rate of an external asset
  */
 interface IReserveDelegatedRateStrategy is IReserveInterestRateStrategy {
-  function getDelegatedIndex(address underlyingToken) external view returns (uint256 depositIndex);
+  function getDelegatedIndexes(address underlyingToken)
+    external
+    view
+    returns (uint256 liquidityIndex, uint256 variableBorrowIndex);
+
+  function getDelegatedIncomeIndex(address underlyingToken)
+    external
+    view
+    returns (uint256 liquidityIndex);
 }

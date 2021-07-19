@@ -124,8 +124,8 @@ interface ILendingPool is IEmergencyAccess {
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
    * @param liquidatedCollateralAmount The amount of collateral received by the liiquidator
    * @param liquidator The address of the liquidator
-   * @param receiveAToken `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants
-   * to receive the underlying collateral asset directly
+   * @param receiveAToken `true` if the liquidators wants to receive the collateral tokens, `false` if he wants
+   * to receive its underlying asset directly
    **/
   event LiquidationCall(
     address indexed collateralAsset,
@@ -328,19 +328,6 @@ interface ILendingPool is IEmergencyAccess {
       uint256 healthFactor
     );
 
-  function initReserve(
-    address reserve,
-    address aTokenAddress,
-    address stableDebtAddress,
-    address variableDebtAddress,
-    address interestRateStrategyAddress
-  ) external;
-
-  function setReserveInterestRateStrategyAddress(address reserve, address rateStrategyAddress)
-    external;
-
-  function setConfiguration(address reserve, uint256 configuration) external;
-
   /**
    * @dev Returns the configuration of the reserve
    * @param asset The address of the underlying asset of the reserve
@@ -382,23 +369,10 @@ interface ILendingPool is IEmergencyAccess {
    **/
   function getReserveData(address asset) external view returns (DataTypes.ReserveData memory);
 
-  function finalizeTransfer(
-    address asset,
-    address from,
-    address to,
-    uint256 amount,
-    uint256 balanceFromAfter,
-    uint256 balanceToBefore
-  ) external;
-
   function getReservesList() external view returns (address[] memory);
 
   /// @dev getAddressesProvider is deprecated, use getAccessController
   function getAddressesProvider() external view returns (IMarketAccessController);
 
   function getAccessController() external view returns (IMarketAccessController);
-
-  function getLendingPoolCollateralManager() external view returns (address);
-
-  function setLendingPoolCollateralManager(address) external;
 }

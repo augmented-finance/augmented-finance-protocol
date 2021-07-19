@@ -2,7 +2,9 @@
 pragma solidity 0.6.12;
 
 library DataTypes {
-  // refer to the whitepaper, section 1.1 basic concepts for a formal description of these properties.
+  uint64 public constant FLAG_EXTERNAL_ASSET = 1;
+
+  // refer to the AAVE whitepaper, section 1.1 basic concepts for a formal description of these properties.
   struct ReserveData {
     //stores the reserve configuration
     ReserveConfigurationMap configuration;
@@ -23,10 +25,9 @@ library DataTypes {
     address variableDebtTokenAddress;
     //address of the interest rate strategy
     address interestRateStrategyAddress;
+    uint64 reserveFlags;
     //the id of the reserve. Represents the position in the list of the active reserves
     uint8 id;
-    //external asset - interestRateStrategyAddress has an extended behavior
-    bool isExternal;
   }
 
   struct ReserveConfigurationMap {
@@ -48,4 +49,13 @@ library DataTypes {
   }
 
   enum InterestRateMode {NONE, STABLE, VARIABLE}
+
+  struct InitReserveData {
+    address asset;
+    address depositTokenAddress;
+    address stableDebtAddress;
+    address variableDebtAddress;
+    address interestRateStrategyAddress;
+    uint64 reserveFlags;
+  }
 }

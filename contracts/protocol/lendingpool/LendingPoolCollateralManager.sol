@@ -58,7 +58,7 @@ contract LendingPoolCollateralManager is
   }
 
   /**
-   * @dev As thIS contract extends the VersionedInitializable contract to match the state
+   * @dev As this contract extends the VersionedInitializable contract to match the state
    * of the LendingPool contract, the getRevision() function is needed, but should never be called
    */
   function getRevision() internal pure override returns (uint256) {
@@ -158,7 +158,7 @@ contract LendingPoolCollateralManager is
       }
     }
 
-    debtReserve.updateState();
+    debtReserve.updateState(debtAsset);
 
     if (vars.userVariableDebt >= vars.actualDebtToLiquidate) {
       IVariableDebtToken(debtReserve.variableDebtTokenAddress).burn(
@@ -198,7 +198,7 @@ contract LendingPoolCollateralManager is
         emit ReserveUsedAsCollateralEnabled(collateralAsset, msg.sender);
       }
     } else {
-      collateralReserve.updateState();
+      collateralReserve.updateState(collateralAsset);
       collateralReserve.updateInterestRates(
         collateralAsset,
         address(vars.collateralAtoken),

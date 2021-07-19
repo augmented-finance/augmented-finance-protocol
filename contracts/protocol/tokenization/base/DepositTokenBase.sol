@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ILendingPool} from '../../../interfaces/ILendingPool.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {PoolTokenBase} from './PoolTokenBase.sol';
 
@@ -336,9 +335,8 @@ abstract contract DepositTokenBase is
     bool validate
   ) internal {
     address underlyingAsset = _underlyingAsset;
-    ILendingPool pool = _pool;
 
-    uint256 index = pool.getReserveNormalizedIncome(underlyingAsset);
+    uint256 index = _pool.getReserveNormalizedIncome(underlyingAsset);
 
     uint256 fromBalanceBefore = super.balanceOf(from).rayMul(index);
     uint256 toBalanceBefore = super.balanceOf(to).rayMul(index);
@@ -346,7 +344,7 @@ abstract contract DepositTokenBase is
     super._transferBalance(from, to, amount.rayDiv(index), index);
 
     if (validate) {
-      pool.finalizeTransfer(underlyingAsset, from, to, amount, fromBalanceBefore, toBalanceBefore);
+      _pool.finalizeTransfer(underlyingAsset, from, to, amount, fromBalanceBefore, toBalanceBefore);
     }
 
     emit BalanceTransfer(from, to, amount, index);

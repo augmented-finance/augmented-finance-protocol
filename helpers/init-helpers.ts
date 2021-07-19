@@ -70,6 +70,7 @@ export const initReservesByHelper = async (
     variableDebtTokenSymbol: string;
     stableDebtTokenName: string;
     stableDebtTokenSymbol: string;
+    reserveFlags: BigNumberish;
     params: string;
   }[] = [];
 
@@ -191,6 +192,7 @@ export const initReservesByHelper = async (
       stableDebtTokenName: `${names.StableDebtTokenNamePrefix} ${reserveSymbol}`,
       stableDebtTokenSymbol: `${names.StableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
 
+      reserveFlags: BigNumber.from(0),
       params: '0x10',
     });
   }

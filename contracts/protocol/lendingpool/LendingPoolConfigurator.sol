@@ -8,7 +8,7 @@ import '../../tools/upgradeability/IProxy.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
-import {ILendingPool} from '../../interfaces/ILendingPool.sol';
+import {IManagedLendingPool} from '../../interfaces/IManagedLendingPool.sol';
 import {IERC20Detailed} from '../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
@@ -32,7 +32,7 @@ contract LendingPoolConfigurator is
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-  ILendingPool internal pool;
+  IManagedLendingPool internal pool;
 
   uint256 private constant CONFIGURATOR_REVISION = 0x1;
 
@@ -45,28 +45,27 @@ contract LendingPoolConfigurator is
     initializerRunAlways(CONFIGURATOR_REVISION)
   {
     _remoteAcl = provider;
-    pool = ILendingPool(provider.getLendingPool());
+    pool = IManagedLendingPool(provider.getLendingPool());
   }
 
   /**
    * @dev Initializes reserves in batch
    **/
   function batchInitReserve(InitReserveInput[] calldata input) external onlyPoolAdmin {
-    ILendingPool cachedPool = pool;
     for (uint256 i = 0; i < input.length; i++) {
-      _initReserve(cachedPool, input[i]);
+      _initReserve(input[i]);
     }
   }
 
-  function _initReserve(ILendingPool pool_, InitReserveInput calldata input) internal {
+  function _initReserve(InitReserveInput calldata input) internal {
     PoolTokenConfig memory config =
       PoolTokenConfig({
-        pool: pool_,
+        pool: pool,
         treasury: input.treasury,
         underlyingAsset: input.underlyingAsset
       });
 
-    address aTokenProxyAddress =
+    address depositTokenProxyAddress =
       _initTokenWithProxy(
         input.aTokenImpl,
         abi.encodeWithSelector(
@@ -106,11 +105,14 @@ contract LendingPoolConfigurator is
       );
 
     pool.initReserve(
-      input.underlyingAsset,
-      aTokenProxyAddress,
-      stableDebtTokenProxyAddress,
-      variableDebtTokenProxyAddress,
-      input.interestRateStrategyAddress
+      DataTypes.InitReserveData(
+        input.underlyingAsset,
+        depositTokenProxyAddress,
+        stableDebtTokenProxyAddress,
+        variableDebtTokenProxyAddress,
+        input.interestRateStrategyAddress,
+        input.reserveFlags
+      )
     );
 
     DataTypes.ReserveConfigurationMap memory currentConfig =
@@ -125,7 +127,7 @@ contract LendingPoolConfigurator is
 
     emit ReserveInitialized(
       input.underlyingAsset,
-      aTokenProxyAddress,
+      depositTokenProxyAddress,
       stableDebtTokenProxyAddress,
       variableDebtTokenProxyAddress,
       input.interestRateStrategyAddress
@@ -236,6 +238,9 @@ contract LendingPoolConfigurator is
     public
     onlyPoolAdmin
   {
+    DataTypes.ReserveData memory reserve = pool.getReserveData(asset);
+    require(reserve.variableDebtTokenAddress != address(0), Errors.LPC_INVALID_CONFIGURATION);
+
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
 
     currentConfig.setBorrowingEnabled(true);

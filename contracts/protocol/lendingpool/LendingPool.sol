@@ -28,6 +28,7 @@ import {UserConfiguration} from '../libraries/configuration/UserConfiguration.so
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
 import {ILendingPoolCollateralManager} from '../../interfaces/ILendingPoolCollateralManager.sol';
+import {IManagedLendingPool} from '../../interfaces/IManagedLendingPool.sol';
 
 /**
  * @title LendingPool contract
@@ -45,7 +46,7 @@ import {ILendingPoolCollateralManager} from '../../interfaces/ILendingPoolCollat
  * - All admin functions are callable by the LendingPoolConfigurator contract defined also in the
  *   AddressesProvider
  **/
-contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool {
+contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLendingPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -132,7 +133,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
 
     address aToken = reserve.aTokenAddress;
 
-    reserve.updateState();
+    reserve.updateState(asset);
     reserve.updateInterestRates(asset, aToken, amount, 0);
 
     IERC20(asset).safeTransferFrom(msg.sender, aToken, amount);
@@ -186,8 +187,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
       _addressesProvider.getPriceOracle()
     );
 
-    reserve.updateState();
-
+    reserve.updateState(asset);
     reserve.updateInterestRates(asset, aToken, 0, amountToWithdraw);
 
     if (amountToWithdraw == userBalance) {
@@ -280,7 +280,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
       paybackAmount = amount;
     }
 
-    reserve.updateState();
+    reserve.updateState(asset);
 
     if (interestRateMode == DataTypes.InterestRateMode.STABLE) {
       IStableDebtToken(reserve.stableDebtTokenAddress).burn(onBehalfOf, paybackAmount);
@@ -328,7 +328,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
       interestRateMode
     );
 
-    reserve.updateState();
+    reserve.updateState(asset);
 
     if (interestRateMode == DataTypes.InterestRateMode.STABLE) {
       IStableDebtToken(reserve.stableDebtTokenAddress).burn(msg.sender, stableDebt);
@@ -383,7 +383,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
       aTokenAddress
     );
 
-    reserve.updateState();
+    reserve.updateState(asset);
 
     IStableDebtToken(address(stableDebtToken)).burn(user, stableDebt);
     IStableDebtToken(address(stableDebtToken)).mint(
@@ -601,7 +601,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
       vars.currentAmountPlusPremium = vars.currentAmount.add(vars.currentPremium);
 
       if (DataTypes.InterestRateMode(modes[vars.i]) == DataTypes.InterestRateMode.NONE) {
-        _reserves[vars.currentAsset].updateState();
+        _reserves[vars.currentAsset].updateState(vars.currentAsset);
         _reserves[vars.currentAsset].cumulateToLiquidityIndex(
           IERC20(vars.currentATokenAddress).totalSupply(),
           vars.currentPremium
@@ -749,7 +749,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
     override
     returns (uint256)
   {
-    return _reserves[asset].getNormalizedIncome();
+    return _reserves[asset].getNormalizedIncome(asset);
   }
 
   /**
@@ -868,27 +868,11 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
    * @dev Initializes a reserve, activating it, assigning an aToken and debt tokens and an
    * interest rate strategy
    * - Only callable by the LendingPoolConfigurator contract
-   * @param asset The address of the underlying asset of the reserve
-   * @param aTokenAddress The address of the aToken that will be assigned to the reserve
-   * @param stableDebtAddress The address of the StableDebtToken that will be assigned to the reserve
-   * @param aTokenAddress The address of the VariableDebtToken that will be assigned to the reserve
-   * @param interestRateStrategyAddress The address of the interest rate strategy contract
    **/
-  function initReserve(
-    address asset,
-    address aTokenAddress,
-    address stableDebtAddress,
-    address variableDebtAddress,
-    address interestRateStrategyAddress
-  ) external override onlyLendingPoolConfigurator {
-    require(Address.isContract(asset), Errors.LP_NOT_CONTRACT);
-    _reserves[asset].init(
-      aTokenAddress,
-      stableDebtAddress,
-      variableDebtAddress,
-      interestRateStrategyAddress
-    );
-    _addReserveToList(asset);
+  function initReserve(DataTypes.InitReserveData calldata data) external override onlyLendingPoolConfigurator {
+    require(Address.isContract(data.asset), Errors.LP_NOT_CONTRACT);
+    _reserves[data.asset].init(data);
+    _addReserveToList(data.asset);
   }
 
   /**
@@ -971,7 +955,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, ILendingPool
       oracle
     );
 
-    reserve.updateState();
+    reserve.updateState(vars.asset);
 
     uint256 currentStableRate = 0;
 
