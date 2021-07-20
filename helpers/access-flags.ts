@@ -30,6 +30,7 @@ export enum AccessFlags {
 
   REFERRAL_REGISTRY = 1 << 27,
   WETH_GATEWAY = 1 << 27,
+  DATA_HELPER = 1 << 29,
 }
 
 export const ACCESS_REWARD_MINT = ethers.BigNumber.from(2).pow(64);
