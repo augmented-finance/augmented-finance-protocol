@@ -31,6 +31,7 @@ export const AugmentedConfig: IAugmentedConfiguration = {
   },
   ReserveAssets: {
     [eEthereumNetwork.hardhat]: {},
+    [eEthereumNetwork.docker]: {},
     [eEthereumNetwork.coverage]: {},
     [eEthereumNetwork.kovan]: {
       AAVE: '0xB597cd8D3217ea6477232F9217fa70837ff667Af',

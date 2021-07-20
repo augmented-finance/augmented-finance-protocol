@@ -13,6 +13,7 @@ export enum eEthereumNetwork {
   main = 'main',
   coverage = 'coverage',
   hardhat = 'hardhat',
+  docker = 'docker',
   tenderlyMain = 'tenderlyMain',
 }
 
@@ -327,6 +328,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.rinkeby]: T;
   [eEthereumNetwork.main]: T;
   [eEthereumNetwork.hardhat]: T;
+  [eEthereumNetwork.docker]: T;
   [eEthereumNetwork.tenderlyMain]: T;
 }
 
