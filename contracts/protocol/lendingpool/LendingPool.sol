@@ -131,14 +131,15 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
 
     ValidationLogic.validateDeposit(reserve, amount);
 
-    address aToken = reserve.aTokenAddress;
+    address depositToken = reserve.aTokenAddress;
 
     reserve.updateState(asset);
-    reserve.updateInterestRates(asset, aToken, amount, 0);
+    reserve.updateInterestRates(asset, depositToken, amount, 0);
 
-    IERC20(asset).safeTransferFrom(msg.sender, aToken, amount);
+    IERC20(asset).safeTransferFrom(msg.sender, depositToken, amount);
 
-    bool isFirstDeposit = IDepositToken(aToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
+    bool isFirstDeposit =
+      IDepositToken(depositToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
 
     if (isFirstDeposit) {
       _usersConfig[onBehalfOf].setUsingAsCollateral(reserve.id, true);
