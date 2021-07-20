@@ -16,6 +16,8 @@ export const stringToBigNumber = (amount: string): BigNumber => new BigNumber(am
 
 const getDb = () => low(new FileSync('./deployed-contracts.json'));
 
+const getUiConfig = () => low(new FileSync('./ui-config.json'));
+
 export let DRE: HardhatRuntimeEnvironment;
 
 export const setDRE = (_DRE: HardhatRuntimeEnvironment) => {
@@ -191,4 +193,26 @@ export const printContracts = (deployer: string) => {
   console.log(contractsPrint.join('\n'), '\n');
   console.log('---------------------------------');
   console.log('N# Contracts:', entries.length, '/', logEntries.length);
+};
+
+export const cleanupUiConfig = async () => {
+  const db = getUiConfig();
+  await db.setState(null).write();
+};
+
+export const writeUiConfig = async (
+  network: string,
+  addressRegistry: string,
+  addressProvider: string,
+  dataHelper: string
+) => {
+  const db = getUiConfig();
+  await db
+    .setState({
+      network: network,
+      addressRegistry: addressRegistry,
+      addressProvider: addressProvider,
+      dataHelper: dataHelper,
+    })
+    .write();
 };

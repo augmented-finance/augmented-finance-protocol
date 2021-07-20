@@ -55,8 +55,6 @@ export enum eContractid {
   MockStakedAgfToken = 'MockStakedAgfToken',
   MockStakedAgToken = 'MockStakedAgToken',
   ProtocolDataProvider = 'ProtocolDataProvider',
-  FeeProvider = 'FeeProvider',
-  UiPoolDataProvider = 'UiPoolDataProvider',
   WETHGateway = 'WETHGateway',
   WETH = 'WETH',
   WETHMocked = 'WETHMocked',
