@@ -7,11 +7,10 @@ import {
 import { eNetwork } from '../../helpers/types';
 import { ConfigNames, getReservesConfigByPool, loadPoolConfig } from '../../helpers/configuration';
 
-import { tEthereumAddress, LendingPools, eContractid } from '../../helpers/types';
-import { waitForTx, filterMapBy, falsyOrZeroAddress } from '../../helpers/misc-utils';
+import { tEthereumAddress, LendingPools } from '../../helpers/types';
+import { filterMapBy } from '../../helpers/misc-utils';
 import { configureReservesByHelper, initReservesByHelper } from '../../helpers/init-helpers';
 import { getAllTokenAddresses } from '../../helpers/mock-helpers';
-import { ZERO_ADDRESS } from '../../helpers/constants';
 import { getAllMockedTokens, getMarketAddressController } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 
@@ -32,7 +31,8 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
       filterMapBy(allTokenAddresses, (key: string) => !key.includes('UNI_'))
     );
 
-    const testHelpers = await deployProtocolDataProvider(addressesProvider.address, verify);
+    const dataHelper = await deployProtocolDataProvider(addressesProvider.address, verify);
+    await addressesProvider.setAddress(AccessFlags.DATA_HELPER, dataHelper.address);
 
     const reservesParams = getReservesConfigByPool(LendingPools.augmented);
 
@@ -47,7 +47,7 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
       treasuryAddress,
       verify
     );
-    await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, testHelpers);
+    await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, dataHelper);
 
     await deployWalletBalancerProvider(verify);
   });

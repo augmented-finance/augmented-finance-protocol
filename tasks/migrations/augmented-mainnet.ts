@@ -3,6 +3,7 @@ import { checkVerification } from '../../helpers/etherscan-verification';
 import { ConfigNames } from '../../helpers/configuration';
 import {
   cleanupJsonDb,
+  cleanupUiConfig,
   getFirstSigner,
   getTenderlyDashboardLink,
   printContracts,
@@ -16,6 +17,7 @@ task('augmented:mainnet', 'Deploy development enviroment')
     const POOL_NAME = ConfigNames.Augmented;
     await DRE.run('set-DRE');
     await cleanupJsonDb(DRE.network.name);
+    await cleanupUiConfig();
 
     // Prevent loss of gas verifying all the needed ENVs for Etherscan verification
     if (verify) {
@@ -88,6 +90,9 @@ task('augmented:mainnet', 'Deploy development enviroment')
     if (!success) {
       exit(1);
     }
+
+    console.log('Write UI config');
+    await DRE.run('full:write-ui-config', { pool: POOL_NAME });
 
     if (usingTenderly()) {
       const postDeployHead = (<any>DRE).tenderlyNetwork.getHead();
