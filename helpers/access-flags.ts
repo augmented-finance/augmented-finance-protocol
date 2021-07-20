@@ -29,7 +29,7 @@ export enum AccessFlags {
   STAKE_CONFIGURATOR = 1 << 26, // use proxy
 
   REFERRAL_REGISTRY = 1 << 27,
-  WETH_GATEWAY = 1 << 27,
+  WETH_GATEWAY = 1 << 28,
   DATA_HELPER = 1 << 29,
 }
 

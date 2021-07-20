@@ -39,7 +39,7 @@ task('full:write-ui-config', 'Prepare UI config')
 
     const dataHelperAddress = await addressProvider.getAddress(AccessFlags.DATA_HELPER);
     if (falsyOrZeroAddress(dataHelperAddress)) {
-      console.log('Data Helper is unavaileble, configuration is incomplete');
+      console.log('Data Helper is unavailable, configuration is incomplete');
     } else {
       writeUiConfig(network, registry.address, addressProvider.address, dataHelperAddress);
     }
