@@ -5,8 +5,9 @@ pragma experimental ABIEncoderV2;
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 import {IEmergencyAccess} from '../interfaces/IEmergencyAccess.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
+import {ILendingPoolEvents} from './ILendingPoolEvents.sol';
 
-interface ILendingPool is IEmergencyAccess {
+interface ILendingPool is IEmergencyAccess, ILendingPoolEvents {
   /**
    * @dev Emitted on deposit()
    * @param reserve The address of the underlying asset of the reserve

@@ -115,6 +115,8 @@ library Errors {
   string public constant RW_NOT_REWARD_CONTROLLER = '90';
   string public constant RW_REWARD_PAUSED = '91';
   string public constant RW_NOT_TEAM_MANAGER = '92';
+  string public constant LP_FLASHLOAN_CALL_FAILED = '93';
+  string public constant LP_BORROW_CALL_FAILED = '94';
 
   enum CollateralManagerErrors {
     NO_ERROR,

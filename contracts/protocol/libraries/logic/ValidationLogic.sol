@@ -88,6 +88,38 @@ library ValidationLogic {
     );
   }
 
+  /// @dev Backward compatibility
+  function validateBorrow(
+    address asset,
+    DataTypes.ReserveData storage,
+    address userAddress,
+    uint256 amount,
+    uint256 amountInETH,
+    uint256 interestRateMode,
+    uint256 maxStableLoanPercent,
+    mapping(address => DataTypes.ReserveData) storage reservesData,
+    DataTypes.UserConfigurationMap storage userConfig,
+    mapping(uint256 => address) storage reserves,
+    uint256 reservesCount,
+    address oracle
+  ) external view {
+    (bool ok, string memory errMsg) =
+      validateBorrow(
+        asset,
+        userAddress,
+        amount,
+        amountInETH,
+        interestRateMode,
+        maxStableLoanPercent,
+        reservesData,
+        userConfig,
+        reserves,
+        reservesCount,
+        oracle
+      );
+    require(ok, errMsg);
+  }
+
   struct ValidateBorrowLocalVars {
     uint256 currentLtv;
     uint256 currentLiquidationThreshold;
@@ -100,12 +132,17 @@ library ValidationLogic {
     bool isFrozen;
     bool borrowingEnabled;
     bool stableRateBorrowingEnabled;
+    address asset;
+    address user;
+    uint256 amount;
+    uint256 amountInETH;
+    uint256 rateMode;
+    uint256 maxStbleLoanPct;
   }
 
   /**
    * @dev Validates a borrow action
    * @param asset The address of the asset to borrow
-   * @param reserve The reserve state from which the user is borrowing
    * @param userAddress The address of the user
    * @param amount The amount to be borrowed
    * @param amountInETH The amount to be borrowed, in ETH
@@ -119,7 +156,6 @@ library ValidationLogic {
 
   function validateBorrow(
     address asset,
-    DataTypes.ReserveData storage reserve,
     address userAddress,
     uint256 amount,
     uint256 amountInETH,
@@ -130,23 +166,35 @@ library ValidationLogic {
     mapping(uint256 => address) storage reserves,
     uint256 reservesCount,
     address oracle
-  ) external view {
+  ) internal view returns (bool, string memory) {
     ValidateBorrowLocalVars memory vars;
 
-    (vars.isActive, vars.isFrozen, vars.borrowingEnabled, vars.stableRateBorrowingEnabled) = reserve
-      .configuration
-      .getFlags();
+    (vars.asset, vars.user, vars.amount, vars.amountInETH, vars.rateMode, vars.maxStbleLoanPct) = (
+      asset,
+      userAddress,
+      amount,
+      amountInETH,
+      interestRateMode,
+      maxStableLoanPercent
+    );
+
+    (
+      vars.isActive,
+      vars.isFrozen,
+      vars.borrowingEnabled,
+      vars.stableRateBorrowingEnabled
+    ) = reservesData[vars.asset].configuration.getFlags();
 
     require(vars.isActive, Errors.VL_NO_ACTIVE_RESERVE);
     require(!vars.isFrozen, Errors.VL_RESERVE_FROZEN);
-    require(amount != 0, Errors.VL_INVALID_AMOUNT);
+    require(vars.amount != 0, Errors.VL_INVALID_AMOUNT);
 
     require(vars.borrowingEnabled, Errors.VL_BORROWING_NOT_ENABLED);
 
     //validate interest rate mode
     require(
-      uint256(DataTypes.InterestRateMode.VARIABLE) == interestRateMode ||
-        uint256(DataTypes.InterestRateMode.STABLE) == interestRateMode,
+      uint256(DataTypes.InterestRateMode.VARIABLE) == vars.rateMode ||
+        uint256(DataTypes.InterestRateMode.STABLE) == vars.rateMode,
       Errors.VL_INVALID_INTEREST_RATE_MODE_SELECTED
     );
 
@@ -157,7 +205,7 @@ library ValidationLogic {
       vars.currentLiquidationThreshold,
       vars.healthFactor
     ) = GenericLogic.calculateUserAccountData(
-      userAddress,
+      vars.user,
       reservesData,
       userConfig,
       reserves,
@@ -172,8 +220,16 @@ library ValidationLogic {
       Errors.VL_HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
     );
 
+    return _validateBorrow(vars, reservesData[vars.asset], userConfig);
+  }
+
+  function _validateBorrow(
+    ValidateBorrowLocalVars memory vars,
+    DataTypes.ReserveData storage reserve,
+    DataTypes.UserConfigurationMap storage userConfig
+  ) private view returns (bool, string memory) {
     //add the current already borrowed amount to the amount requested to calculate the total collateral needed.
-    vars.amountOfCollateralNeededETH = vars.userBorrowBalanceETH.add(amountInETH).percentDiv(
+    vars.amountOfCollateralNeededETH = vars.userBorrowBalanceETH.add(vars.amountInETH).percentDiv(
       vars.currentLtv
     ); //LTV is calculated in percentage
 
@@ -190,7 +246,7 @@ library ValidationLogic {
      * 3. Users will be able to borrow only a portion of the total available liquidity
      **/
 
-    if (interestRateMode == uint256(DataTypes.InterestRateMode.STABLE)) {
+    if (vars.rateMode == uint256(DataTypes.InterestRateMode.STABLE)) {
       //check if the borrow mode is stable and if stable rate borrowing is enabled on this reserve
 
       require(vars.stableRateBorrowingEnabled, Errors.VL_STABLE_BORROWING_NOT_ENABLED);
@@ -198,18 +254,20 @@ library ValidationLogic {
       require(
         !userConfig.isUsingAsCollateral(reserve.id) ||
           reserve.configuration.getLtv() == 0 ||
-          amount > IERC20(reserve.aTokenAddress).balanceOf(userAddress),
+          vars.amount > IERC20(reserve.aTokenAddress).balanceOf(vars.user),
         Errors.VL_COLLATERAL_SAME_AS_BORROWING_CURRENCY
       );
 
-      vars.availableLiquidity = IERC20(asset).balanceOf(reserve.aTokenAddress);
+      vars.availableLiquidity = IERC20(vars.asset).balanceOf(reserve.aTokenAddress);
 
       //calculate the max available loan size in stable rate mode as a percentage of the
       //available liquidity
-      uint256 maxLoanSizeStable = vars.availableLiquidity.percentMul(maxStableLoanPercent);
+      uint256 maxLoanSizeStable = vars.availableLiquidity.percentMul(vars.maxStbleLoanPct);
 
-      require(amount <= maxLoanSizeStable, Errors.VL_AMOUNT_BIGGER_THAN_MAX_LOAN_SIZE_STABLE);
+      require(vars.amount <= maxLoanSizeStable, Errors.VL_AMOUNT_BIGGER_THAN_MAX_LOAN_SIZE_STABLE);
     }
+
+    return (true, '');
   }
 
   /**
@@ -376,8 +434,15 @@ library ValidationLogic {
    * @param assets The assets being flashborrowed
    * @param amounts The amounts for each asset being borrowed
    **/
-  function validateFlashloan(address[] memory assets, uint256[] memory amounts) internal pure {
-    require(assets.length == amounts.length, Errors.VL_INCONSISTENT_FLASHLOAN_PARAMS);
+  function validateFlashloan(address[] memory assets, uint256[] memory amounts)
+    internal
+    pure
+    returns (bool, string memory)
+  {
+    if (assets.length != amounts.length) {
+      return (false, Errors.VL_INCONSISTENT_FLASHLOAN_PARAMS);
+    }
+    return (true, '');
   }
 
   /**
@@ -396,21 +461,15 @@ library ValidationLogic {
     uint256 userHealthFactor,
     uint256 userStableDebt,
     uint256 userVariableDebt
-  ) internal view returns (uint256, string memory) {
+  ) internal view returns (bool, string memory) {
     if (
       !collateralReserve.configuration.getActive() || !principalReserve.configuration.getActive()
     ) {
-      return (
-        uint256(Errors.CollateralManagerErrors.NO_ACTIVE_RESERVE),
-        Errors.VL_NO_ACTIVE_RESERVE
-      );
+      return (false, Errors.VL_NO_ACTIVE_RESERVE);
     }
 
     if (userHealthFactor >= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
-      return (
-        uint256(Errors.CollateralManagerErrors.HEALTH_FACTOR_ABOVE_THRESHOLD),
-        Errors.LPCM_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
-      );
+      return (false, Errors.LPCM_HEALTH_FACTOR_NOT_BELOW_THRESHOLD);
     }
 
     bool isCollateralEnabled =
@@ -419,20 +478,14 @@ library ValidationLogic {
 
     //if collateral isn't enabled as collateral by user, it cannot be liquidated
     if (!isCollateralEnabled) {
-      return (
-        uint256(Errors.CollateralManagerErrors.COLLATERAL_CANNOT_BE_LIQUIDATED),
-        Errors.LPCM_COLLATERAL_CANNOT_BE_LIQUIDATED
-      );
+      return (false, Errors.LPCM_COLLATERAL_CANNOT_BE_LIQUIDATED);
     }
 
     if (userStableDebt == 0 && userVariableDebt == 0) {
-      return (
-        uint256(Errors.CollateralManagerErrors.CURRRENCY_NOT_BORROWED),
-        Errors.LPCM_SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER
-      );
+      return (false, Errors.LPCM_SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER);
     }
 
-    return (uint256(Errors.CollateralManagerErrors.NO_ERROR), Errors.LPCM_NO_ERRORS);
+    return (true, '');
   }
 
   /**

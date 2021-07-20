@@ -30,6 +30,8 @@ import {LendingPoolStorage} from './LendingPoolStorage.sol';
 import {ILendingPoolCollateralManager} from '../../interfaces/ILendingPoolCollateralManager.sol';
 import {IManagedLendingPool} from '../../interfaces/IManagedLendingPool.sol';
 
+import 'hardhat/console.sol';
+
 /**
  * @title LendingPool contract
  * @dev Main point of interaction with a protocol's market
@@ -225,19 +227,18 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     uint256 referral,
     address onBehalfOf
   ) external override whenNotPaused notFlashloaning {
-    DataTypes.ReserveData storage reserve = _reserves[asset];
-
-    _executeBorrow(
-      ExecuteBorrowParams(
+    delegateFnCall(
+      abi.encodeWithSelector(
+        ILendingPoolCollateralManager.executeBorrow.selector,
         asset,
         msg.sender,
         onBehalfOf,
         amount,
         interestRateMode,
-        reserve.aTokenAddress,
         referral,
         true
-      )
+      ),
+      Errors.LP_BORROW_CALL_FAILED
     );
   }
 
@@ -451,36 +452,25 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
   ) external override whenNotPaused {
     require(_disabledFeatures & FEATURE_LIQUIDATION == 0, Errors.LP_LIQUIDATION_DISABLED);
 
-    //solium-disable-next-line
-    (bool success, bytes memory result) =
-      _collateralManager.delegatecall(
-        abi.encodeWithSignature(
-          'liquidationCall(address,address,address,uint256,bool)',
-          collateralAsset,
-          debtAsset,
-          user,
-          debtToCover,
-          receiveAToken
-        )
-      );
-
-    require(success, Errors.LP_LIQUIDATION_CALL_FAILED);
-
-    (uint256 returnCode, string memory returnMessage) = abi.decode(result, (uint256, string));
-
-    require(returnCode == 0, string(abi.encodePacked(returnMessage)));
+    delegateFnCall(
+      abi.encodeWithSelector(
+        ILendingPoolCollateralManager.liquidationCall.selector,
+        collateralAsset,
+        debtAsset,
+        user,
+        debtToCover,
+        receiveAToken
+      ),
+      Errors.LP_LIQUIDATION_CALL_FAILED
+    );
   }
 
-  struct FlashLoanLocalVars {
-    IFlashLoanReceiver receiver;
-    address currentAsset;
-    address currentATokenAddress;
-    uint256 currentAmount;
-    uint256 currentPremium;
-    uint256 currentAmountPlusPremium;
-    address onBehalfOf;
-    uint256 referral;
-    uint8 i;
+  function delegateFnCall(bytes memory encoded, string memory failedCall) private {
+    (bool success, bytes memory result) = _collateralManager.delegatecall(encoded);
+    require(success, failedCall);
+
+    (bool ok, string memory returnMessage) = abi.decode(result, (bool, string));
+    require(ok, string(abi.encodePacked(returnMessage)));
   }
 
   /**
@@ -539,118 +529,45 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
   }
 
   function _flashLoan(
-    address receiverAddress,
+    address receiver,
     address[] calldata assets,
     uint256[] calldata amounts,
     uint256[] calldata modes,
     address onBehalfOf,
     bytes calldata params,
     uint256 referral,
-    uint16 flashLoanPremium
+    uint16 flPremium
   ) private {
     require(_nestedFlashLoanCalls < type(uint8).max, Errors.LP_FLASH_LOAN_RESTRICTED);
     _nestedFlashLoanCalls++;
 
-    ValidationLogic.validateFlashloan(assets, amounts);
-
-    (address[] memory tokenAddresses, uint256[] memory premiums) =
-      _flashLoanPre(receiverAddress, assets, amounts, flashLoanPremium);
-
-    FlashLoanLocalVars memory vars;
-    vars.receiver = IFlashLoanReceiver(receiverAddress);
-    vars.referral = referral;
-    vars.onBehalfOf = onBehalfOf;
-
-    require(
-      vars.receiver.executeOperation(assets, amounts, premiums, msg.sender, params),
-      Errors.LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN
+    delegateFnCall(
+      abi.encodeWithSelector(
+        ILendingPoolCollateralManager.flashLoan.selector,
+        receiver,
+        assets,
+        amounts,
+        modes,
+        onBehalfOf,
+        params,
+        referral,
+        flPremium
+      ),
+      Errors.LP_FLASHLOAN_CALL_FAILED
     );
-    _flashLoanPost(vars, assets, amounts, modes, tokenAddresses, premiums);
 
     _nestedFlashLoanCalls--;
   }
 
-  function _flashLoanPre(
-    address receiverAddress,
-    address[] calldata assets,
-    uint256[] calldata amounts,
-    uint16 flashLoanPremium
-  ) private returns (address[] memory aTokenAddresses, uint256[] memory premiums) {
-    aTokenAddresses = new address[](assets.length);
-    premiums = new uint256[](assets.length);
-
-    for (uint256 i = 0; i < assets.length; i++) {
-      aTokenAddresses[i] = _reserves[assets[i]].aTokenAddress;
-      premiums[i] = amounts[i].percentMul(flashLoanPremium);
-      IDepositToken(aTokenAddresses[i]).transferUnderlyingTo(receiverAddress, amounts[i]);
-    }
-
-    return (aTokenAddresses, premiums);
-  }
-
-  function _flashLoanPost(
-    FlashLoanLocalVars memory vars,
-    address[] calldata assets,
-    uint256[] calldata amounts,
-    uint256[] calldata modes,
-    address[] memory aTokenAddresses,
-    uint256[] memory premiums
-  ) private {
-    for (vars.i = 0; vars.i < assets.length; vars.i++) {
-      vars.currentAsset = assets[vars.i];
-      vars.currentAmount = amounts[vars.i];
-      vars.currentPremium = premiums[vars.i];
-      vars.currentATokenAddress = aTokenAddresses[vars.i];
-      vars.currentAmountPlusPremium = vars.currentAmount.add(vars.currentPremium);
-
-      if (DataTypes.InterestRateMode(modes[vars.i]) == DataTypes.InterestRateMode.NONE) {
-        _reserves[vars.currentAsset].updateState(vars.currentAsset);
-        _reserves[vars.currentAsset].cumulateToLiquidityIndex(
-          IERC20(vars.currentATokenAddress).totalSupply(),
-          vars.currentPremium
-        );
-        _reserves[vars.currentAsset].updateInterestRates(
-          vars.currentAsset,
-          vars.currentATokenAddress,
-          vars.currentAmountPlusPremium,
-          0
-        );
-
-        IERC20(vars.currentAsset).safeTransferFrom(
-          address(vars.receiver),
-          vars.currentATokenAddress,
-          vars.currentAmountPlusPremium
-        );
-      } else {
-        // If the user chose to not return the funds, the system checks if there is enough collateral and
-        // eventually opens a debt position
-        _executeBorrow(
-          ExecuteBorrowParams(
-            vars.currentAsset,
-            msg.sender,
-            vars.onBehalfOf,
-            vars.currentAmount,
-            modes[vars.i],
-            vars.currentATokenAddress,
-            vars.referral,
-            false
-          )
-        );
-      }
-      emit FlashLoan(
-        address(vars.receiver),
-        msg.sender,
-        vars.currentAsset,
-        vars.currentAmount,
-        vars.currentPremium,
-        vars.referral
-      );
-    }
+  function _notFlashloaning() private {
+    require(_nestedFlashLoanCalls == 0, Errors.LP_FLASH_LOAN_RESTRICTED);
+    _nestedFlashLoanCalls++;
   }
 
   modifier notFlashloaning() {
-    require(_nestedFlashLoanCalls == 0, Errors.LP_FLASH_LOAN_RESTRICTED);
+    _notFlashloaning();
     _;
+    _nestedFlashLoanCalls--;
   }
 
   /**
@@ -923,94 +840,6 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
   function setFlashLoanPremium(uint16 premium) external onlyConfiguratorOrAdmin {
     require(premium <= PercentageMath.ONE && premium > 0, Errors.LP_INVALID_PERCENTAGE);
     _flashLoanPremiumPct = premium;
-  }
-
-  struct ExecuteBorrowParams {
-    address asset;
-    address user;
-    address onBehalfOf;
-    uint256 amount;
-    uint256 interestRateMode;
-    address aTokenAddress;
-    uint256 referral;
-    bool releaseUnderlying;
-  }
-
-  function _executeBorrow(ExecuteBorrowParams memory vars) internal {
-    DataTypes.ReserveData storage reserve = _reserves[vars.asset];
-    DataTypes.UserConfigurationMap storage userConfig = _usersConfig[vars.onBehalfOf];
-
-    address oracle = _addressesProvider.getPriceOracle();
-
-    uint256 amountInETH =
-      IPriceOracleGetter(oracle).getAssetPrice(vars.asset).mul(vars.amount).div(
-        10**reserve.configuration.getDecimals()
-      );
-
-    ValidationLogic.validateBorrow(
-      vars.asset,
-      reserve,
-      vars.onBehalfOf,
-      vars.amount,
-      amountInETH,
-      vars.interestRateMode,
-      _maxStableRateBorrowSizePct,
-      _reserves,
-      userConfig,
-      _reservesList,
-      _reservesCount,
-      oracle
-    );
-
-    reserve.updateState(vars.asset);
-
-    uint256 currentStableRate = 0;
-
-    bool isFirstBorrowing = false;
-    if (DataTypes.InterestRateMode(vars.interestRateMode) == DataTypes.InterestRateMode.STABLE) {
-      currentStableRate = reserve.currentStableBorrowRate;
-
-      isFirstBorrowing = IStableDebtToken(reserve.stableDebtTokenAddress).mint(
-        vars.user,
-        vars.onBehalfOf,
-        vars.amount,
-        currentStableRate
-      );
-    } else {
-      isFirstBorrowing = IVariableDebtToken(reserve.variableDebtTokenAddress).mint(
-        vars.user,
-        vars.onBehalfOf,
-        vars.amount,
-        reserve.variableBorrowIndex
-      );
-    }
-
-    if (isFirstBorrowing) {
-      userConfig.setBorrowing(reserve.id, true);
-    }
-
-    reserve.updateInterestRates(
-      vars.asset,
-      vars.aTokenAddress,
-      0,
-      vars.releaseUnderlying ? vars.amount : 0
-    );
-
-    if (vars.releaseUnderlying) {
-      IDepositToken(vars.aTokenAddress).transferUnderlyingTo(vars.user, vars.amount);
-    }
-
-    emit Borrow(
-      vars.asset,
-      vars.user,
-      vars.onBehalfOf,
-      vars.amount,
-      vars.interestRateMode,
-      DataTypes.InterestRateMode(vars.interestRateMode) == DataTypes.InterestRateMode.STABLE
-        ? currentStableRate
-        : reserve.currentVariableBorrowRate,
-      vars.referral
-    );
   }
 
   function _addReserveToList(address asset) internal {

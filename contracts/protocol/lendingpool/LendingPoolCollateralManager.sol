@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts//SafeMath.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts//IERC20.sol';
@@ -18,6 +19,8 @@ import {Errors} from '../libraries/helpers/Errors.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
+import {IFlashLoanReceiver} from '../../flashloan/interfaces/IFlashLoanReceiver.sol';
+import {ILendingPoolEvents} from '../../interfaces/ILendingPoolEvents.sol';
 
 /**
  * @title LendingPoolCollateralManager contract
@@ -28,7 +31,8 @@ import {LendingPoolStorage} from './LendingPoolStorage.sol';
 contract LendingPoolCollateralManager is
   VersionedInitializable,
   LendingPoolStorage,
-  ILendingPoolCollateralManager
+  ILendingPoolCollateralManager,
+  ILendingPoolEvents
 {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -53,7 +57,7 @@ contract LendingPoolCollateralManager is
     IDepositToken collateralAtoken;
     bool isCollateralEnabled;
     DataTypes.InterestRateMode borrowRateMode;
-    uint256 errorCode;
+    bool okFlag;
     string errorMsg;
   }
 
@@ -82,7 +86,7 @@ contract LendingPoolCollateralManager is
     address user,
     uint256 debtToCover,
     bool receiveAToken
-  ) external override returns (uint256, string memory) {
+  ) external override returns (bool, string memory) {
     DataTypes.ReserveData storage collateralReserve = _reserves[collateralAsset];
     DataTypes.ReserveData storage debtReserve = _reserves[debtAsset];
     DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
@@ -100,7 +104,7 @@ contract LendingPoolCollateralManager is
 
     (vars.userStableDebt, vars.userVariableDebt) = Helpers.getUserCurrentDebt(user, debtReserve);
 
-    (vars.errorCode, vars.errorMsg) = ValidationLogic.validateLiquidationCall(
+    (vars.okFlag, vars.errorMsg) = ValidationLogic.validateLiquidationCall(
       collateralReserve,
       debtReserve,
       userConfig,
@@ -109,8 +113,8 @@ contract LendingPoolCollateralManager is
       vars.userVariableDebt
     );
 
-    if (Errors.CollateralManagerErrors(vars.errorCode) != Errors.CollateralManagerErrors.NO_ERROR) {
-      return (vars.errorCode, vars.errorMsg);
+    if (!vars.okFlag) {
+      return (false, vars.errorMsg);
     }
 
     vars.collateralAtoken = IDepositToken(collateralReserve.aTokenAddress);
@@ -151,10 +155,7 @@ contract LendingPoolCollateralManager is
       uint256 currentAvailableCollateral =
         IERC20(collateralAsset).balanceOf(address(vars.collateralAtoken));
       if (currentAvailableCollateral < vars.maxCollateralToLiquidate) {
-        return (
-          uint256(Errors.CollateralManagerErrors.NOT_ENOUGH_LIQUIDITY),
-          Errors.LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE
-        );
+        return (false, Errors.LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE);
       }
     }
 
@@ -239,7 +240,7 @@ contract LendingPoolCollateralManager is
       receiveAToken
     );
 
-    return (uint256(Errors.CollateralManagerErrors.NO_ERROR), Errors.LPCM_NO_ERRORS);
+    return (true, '');
   }
 
   struct AvailableCollateralToLiquidateLocalVars {
@@ -274,7 +275,7 @@ contract LendingPoolCollateralManager is
     address debtAsset,
     uint256 debtToCover,
     uint256 userCollateralBalance
-  ) internal view returns (uint256, uint256) {
+  ) private view returns (uint256, uint256) {
     uint256 collateralAmount = 0;
     uint256 debtAmountNeeded = 0;
     IPriceOracleGetter oracle = IPriceOracleGetter(_addressesProvider.getPriceOracle());
@@ -311,5 +312,273 @@ contract LendingPoolCollateralManager is
       debtAmountNeeded = debtToCover;
     }
     return (collateralAmount, debtAmountNeeded);
+  }
+
+  struct FlashLoanLocalVars {
+    IFlashLoanReceiver receiver;
+    address currentAsset;
+    address currentDepositToken;
+    uint256 currentAmount;
+    uint256 currentPremium;
+    uint256 currentAmountPlusPremium;
+    uint256[] premiums;
+    uint256 referral;
+    address onBehalfOf;
+    string errMsg;
+    uint16 premium;
+    bool ok;
+    uint8 i;
+  }
+
+  function flashLoan(
+    address receiver,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint256 referral,
+    uint16 flPremium
+  ) external override returns (bool, string memory) {
+    FlashLoanLocalVars memory vars;
+    (vars.ok, vars.errMsg) = ValidationLogic.validateFlashloan(assets, amounts);
+    if (!vars.ok) {
+      return (false, vars.errMsg);
+    }
+
+    (vars.receiver, vars.referral, vars.onBehalfOf, vars.premium) = (
+      IFlashLoanReceiver(receiver),
+      referral,
+      onBehalfOf,
+      flPremium
+    );
+
+    vars.premiums = _flashLoanPre(address(vars.receiver), assets, amounts, vars.premium);
+
+    if (!_flashLoanExecute(vars, assets, amounts, params)) {
+      return (false, Errors.LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN);
+    }
+
+    _flashLoanPost(vars, assets, amounts, modes, vars.premiums);
+
+    return (true, '');
+  }
+
+  function _flashLoanExecute(
+    FlashLoanLocalVars memory vars,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    bytes calldata params
+  ) private returns (bool) {
+    return vars.receiver.executeOperation(assets, amounts, vars.premiums, msg.sender, params);
+  }
+
+  function _flashLoanPre(
+    address receiverAddress,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint16 flashLoanPremium
+  ) private returns (uint256[] memory premiums) {
+    premiums = new uint256[](assets.length);
+
+    for (uint256 i = 0; i < assets.length; i++) {
+      premiums[i] = amounts[i].percentMul(flashLoanPremium);
+      IDepositToken(_reserves[assets[i]].aTokenAddress).transferUnderlyingTo(
+        receiverAddress,
+        amounts[i]
+      );
+    }
+
+    return premiums;
+  }
+
+  function _flashLoanPost(
+    FlashLoanLocalVars memory vars,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    uint256[] memory premiums
+  ) private returns (bool, string memory) {
+    for (vars.i = 0; vars.i < assets.length; vars.i++) {
+      vars.currentAsset = assets[vars.i];
+      vars.currentAmount = amounts[vars.i];
+      vars.currentPremium = premiums[vars.i];
+      vars.currentDepositToken = _reserves[vars.currentAsset].aTokenAddress;
+      vars.currentAmountPlusPremium = vars.currentAmount.add(vars.currentPremium);
+
+      if (DataTypes.InterestRateMode(modes[vars.i]) == DataTypes.InterestRateMode.NONE) {
+        _flashLoanRetrieve(vars);
+      } else {
+        // If the user chose to not return the funds, the system checks if there is enough collateral and
+        // eventually opens a debt position
+        (vars.ok, vars.errMsg) = _executeBorrow(
+          ExecuteBorrowParams(
+            vars.currentAsset,
+            msg.sender,
+            vars.onBehalfOf,
+            vars.currentAmount,
+            modes[vars.i],
+            vars.currentDepositToken,
+            vars.referral,
+            false
+          )
+        );
+        if (!vars.ok) {
+          return (false, vars.errMsg);
+        }
+      }
+      emit FlashLoan(
+        address(vars.receiver),
+        msg.sender,
+        vars.currentAsset,
+        vars.currentAmount,
+        vars.currentPremium,
+        vars.referral
+      );
+    }
+    return (true, '');
+  }
+
+  function _flashLoanRetrieve(FlashLoanLocalVars memory vars) private {
+    _reserves[vars.currentAsset].updateState(vars.currentAsset);
+    _reserves[vars.currentAsset].cumulateToLiquidityIndex(
+      IERC20(vars.currentDepositToken).totalSupply(),
+      vars.currentPremium
+    );
+    _reserves[vars.currentAsset].updateInterestRates(
+      vars.currentAsset,
+      vars.currentDepositToken,
+      vars.currentAmountPlusPremium,
+      0
+    );
+
+    IERC20(vars.currentAsset).safeTransferFrom(
+      address(vars.receiver),
+      vars.currentDepositToken,
+      vars.currentAmountPlusPremium
+    );
+  }
+
+  function executeBorrow(
+    address asset,
+    address user,
+    address onBehalfOf,
+    uint256 amount,
+    uint256 interestRateMode,
+    uint256 referral,
+    bool releaseUnderlying
+  ) external override returns (bool, string memory) {
+    return
+      _executeBorrow(
+        ExecuteBorrowParams(
+          asset,
+          user,
+          onBehalfOf,
+          amount,
+          interestRateMode,
+          _reserves[asset].aTokenAddress,
+          referral,
+          releaseUnderlying
+        )
+      );
+  }
+
+  struct ExecuteBorrowParams {
+    address asset;
+    address user;
+    address onBehalfOf;
+    uint256 amount;
+    uint256 interestRateMode;
+    address aTokenAddress;
+    uint256 referral;
+    bool releaseUnderlying;
+  }
+
+  struct ExecuteBorrowVars {
+    address oracle;
+    uint256 amountInETH;
+    bool ok;
+    string errMsg;
+  }
+
+  function _executeBorrow(ExecuteBorrowParams memory vars) private returns (bool, string memory) {
+    DataTypes.ReserveData storage reserve = _reserves[vars.asset];
+    DataTypes.UserConfigurationMap storage userConfig = _usersConfig[vars.onBehalfOf];
+
+    ExecuteBorrowVars memory v;
+
+    v.oracle = _addressesProvider.getPriceOracle();
+    v.amountInETH = IPriceOracleGetter(v.oracle).getAssetPrice(vars.asset).mul(vars.amount).div(
+      10**reserve.configuration.getDecimals()
+    );
+
+    (v.ok, v.errMsg) = ValidationLogic.validateBorrow(
+      vars.asset,
+      vars.onBehalfOf,
+      vars.amount,
+      v.amountInETH,
+      vars.interestRateMode,
+      _maxStableRateBorrowSizePct,
+      _reserves,
+      userConfig,
+      _reservesList,
+      _reservesCount,
+      v.oracle
+    );
+    if (!v.ok) {
+      return (false, v.errMsg);
+    }
+
+    reserve.updateState(vars.asset);
+
+    uint256 currentStableRate = 0;
+
+    bool isFirstBorrowing = false;
+    if (DataTypes.InterestRateMode(vars.interestRateMode) == DataTypes.InterestRateMode.STABLE) {
+      currentStableRate = reserve.currentStableBorrowRate;
+
+      isFirstBorrowing = IStableDebtToken(reserve.stableDebtTokenAddress).mint(
+        vars.user,
+        vars.onBehalfOf,
+        vars.amount,
+        currentStableRate
+      );
+    } else {
+      isFirstBorrowing = IVariableDebtToken(reserve.variableDebtTokenAddress).mint(
+        vars.user,
+        vars.onBehalfOf,
+        vars.amount,
+        reserve.variableBorrowIndex
+      );
+    }
+
+    if (isFirstBorrowing) {
+      userConfig.setBorrowing(reserve.id, true);
+    }
+
+    reserve.updateInterestRates(
+      vars.asset,
+      vars.aTokenAddress,
+      0,
+      vars.releaseUnderlying ? vars.amount : 0
+    );
+
+    if (vars.releaseUnderlying) {
+      IDepositToken(vars.aTokenAddress).transferUnderlyingTo(vars.user, vars.amount);
+    }
+
+    emit Borrow(
+      vars.asset,
+      vars.user,
+      vars.onBehalfOf,
+      vars.amount,
+      vars.interestRateMode,
+      DataTypes.InterestRateMode(vars.interestRateMode) == DataTypes.InterestRateMode.STABLE
+        ? currentStableRate
+        : reserve.currentVariableBorrowRate,
+      vars.referral
+    );
+
+    return (true, '');
   }
 }
