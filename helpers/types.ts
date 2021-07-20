@@ -494,4 +494,5 @@ export interface IRewardPoolParams {
 export interface IForkTest {
   Donors: iParamsPerNetwork<ITokenAddress>;
   DonatePct: number;
+  To: tEthereumAddress;
 }

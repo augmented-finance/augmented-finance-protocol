@@ -23,13 +23,19 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
     const deployer = await getFirstSigner();
     const donors = Object.entries(getParamPerNetwork(poolConfig.ForkTest.Donors, network));
     const assets = getParamPerNetwork(poolConfig.ReserveAssets, network);
+    const donatePct = poolConfig.ForkTest.DonatePct;
+    let receiver = poolConfig.ForkTest.To;
+
+    if (falsyOrZeroAddress(receiver)) {
+      receiver = deployer.address;
+    }
 
     if (!donors || donors.length == 0) {
       console.log(`Plucking not configured`);
       return;
     }
 
-    console.log(`Plucking from ${donors.length} donors(s)`);
+    console.log(`Plucking from ${donors.length} donors(s) to ${receiver}`);
 
     const holders = new Set<string>();
 
@@ -53,10 +59,8 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
       const decimals = await token.decimals();
 
       const balance = await token.balanceOf(tokenHolder);
-      const donation = balance.mul(poolConfig.ForkTest.DonatePct).div(100);
-      await token
-        .connect(holder)
-        .transfer(deployer.address, donation, { gasLimit: 1000000, gasPrice: 1 });
+      const donation = balance.mul(donatePct).div(100);
+      await token.connect(holder).transfer(receiver, donation, { gasLimit: 1000000, gasPrice: 1 });
 
       let factor: BigNumber;
       let divisor: number;
