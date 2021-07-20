@@ -294,5 +294,21 @@ export const CommonsConfig: ICommonConfiguration = {
         '0x0000000000000000000000000000000000000001': 5000
       }
     }
+  },
+
+  ForkTest: {
+    Donors: {
+      [eEthereumNetwork.coverage]: {},
+      [eEthereumNetwork.hardhat]: {},
+      [eEthereumNetwork.kovan]: {},
+      [eEthereumNetwork.ropsten]: {},
+      [eEthereumNetwork.docker]: {},
+      [eEthereumNetwork.rinkeby]: {},
+      [eEthereumNetwork.main]: {
+        AAVE: '0xf977814e90da44bfa03b6295a0616a897441acec', // Binance pool
+      },
+      [eEthereumNetwork.tenderlyMain]: {},
+    },
+    DonatePct: 50,
   }
 };

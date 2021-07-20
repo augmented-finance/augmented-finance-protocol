@@ -403,6 +403,8 @@ export interface ICommonConfiguration {
   StakeParams: IStakeParams;
 
   RewardParams: IRewardParams;
+
+  ForkTest: IForkTest;
 }
 
 export interface IAugmentedConfiguration extends ICommonConfiguration {
@@ -487,4 +489,9 @@ export interface ITokenTypes<T> {
 export interface IRewardPoolParams {
   BasePoints: number;
   BoostFactor: number;
+}
+
+export interface IForkTest {
+  Donors: iParamsPerNetwork<ITokenAddress>;
+  DonatePct: number;
 }

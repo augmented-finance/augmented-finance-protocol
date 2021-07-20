@@ -60,6 +60,12 @@ task('augmented:mainnet', 'Deploy development enviroment')
       console.log('10. Deploy reward pools');
       await DRE.run('full:init-reward-pools', { pool: POOL_NAME });
 
+      const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+      if (MAINNET_FORK) {
+        console.log('Pluck');
+        await DRE.run('dev:pluck-tokens', { pool: POOL_NAME });
+      }
+
       if (verify) {
         printContracts((await getFirstSigner()).address);
         console.log('N-1. Veryfing contracts');
