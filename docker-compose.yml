@@ -15,7 +15,17 @@ services:
     build: ./
     environment:
       MAINNET_FORK: "true"
-    command: yarn hardhat augmented:mainnet --network docker
+    command: bash -c "yarn hardhat augmented:mainnet --network docker && cp ui-config.json /opt/www/ui-config.json"
+    volumes:
+      - www:/opt/www
     depends_on:
       hardhat-node:
         condition: service_healthy
+  www:
+    image: nginx:stable
+    ports:
+      - 8080:80
+    volumes:
+      - www:/usr/share/nginx/html
+volumes:
+  www:
