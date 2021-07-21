@@ -499,7 +499,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     address onBehalfOf,
     bytes calldata params,
     uint256 referral
-  ) external whenNotPaused {
+  ) external override {
     require(
       _addressesProvider.hasAllOf(msg.sender, AccessFlags.POOL_SPONSORED_LOAN_USER),
       Errors.LP_IS_NOT_SPONSORED_LOAN

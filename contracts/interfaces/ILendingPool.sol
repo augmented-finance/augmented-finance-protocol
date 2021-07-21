@@ -156,6 +156,17 @@ interface ILendingPool is IEmergencyAccess, ILendingPoolEvents {
     uint256 referral
   ) external;
 
+  /// @dev Version of flashLoan with access control and with zero premium. For automated liquidity management.
+  function sponsoredFlashLoan(
+    address receiverAddress,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint256 referral
+  ) external;
+
   /**
    * @dev Returns the user account data across all the reserves
    * @param user The address of the user

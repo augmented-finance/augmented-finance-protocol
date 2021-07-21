@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
+import {ILendingPool} from './ILendingPool.sol';
+
 /**
  * @title ILendingPoolCollateralManager
  * @notice Delegate of LendingPool for borrow, flashloan and collateral.
@@ -41,4 +43,43 @@ interface ILendingPoolCollateralManager {
     uint256 referral,
     address onBehalfOf
   ) external;
+}
+
+/// @dev This interface is to ensure signature compatibility of calls delegated from ILendingPool to ILendingPoolCollateralManager
+interface DoNotUseLendingPoolCompatibilityChecker is ILendingPool, ILendingPoolCollateralManager {
+  function borrow(
+    address,
+    uint256,
+    uint256,
+    uint256,
+    address
+  ) external override(ILendingPoolCollateralManager, ILendingPool);
+
+  function liquidationCall(
+    address,
+    address,
+    address,
+    uint256,
+    bool
+  ) external override(ILendingPoolCollateralManager, ILendingPool);
+
+  function flashLoan(
+    address,
+    address[] calldata,
+    uint256[] calldata,
+    uint256[] calldata,
+    address,
+    bytes calldata,
+    uint256
+  ) external override(ILendingPoolCollateralManager, ILendingPool);
+
+  function sponsoredFlashLoan(
+    address,
+    address[] calldata,
+    uint256[] calldata,
+    uint256[] calldata,
+    address,
+    bytes calldata,
+    uint256
+  ) external override(ILendingPoolCollateralManager, ILendingPool);
 }
