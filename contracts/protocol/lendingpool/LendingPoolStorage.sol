@@ -34,7 +34,7 @@ abstract contract LendingPoolStorage {
 
   uint8 internal constant _maxNumberOfReserves = 128;
 
-  uint8 internal _nestedFlashLoanCalls;
+  uint8 internal _nestedCalls;
 
   bool internal _paused;
 }

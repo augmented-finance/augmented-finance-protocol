@@ -107,9 +107,9 @@ library Errors {
   string public constant LP_INVALID_PERCENTAGE = '82'; // 'Percentage can't be more than 100%'
   string public constant LP_IS_NOT_SPONSORED_LOAN = '83';
   string public constant CT_CALLER_MUST_BE_SWEEP_ADMIN = '84';
-  string public constant LP_FLASH_LOAN_RESTRICTED = '85';
-  string public constant CT_PUMP_DUMP_PROTECTION = '86';
-  string public constant LP_LIQUIDATION_DISABLED = '87';
+  string public constant LP_TOO_MANY_NESTED_CALLS = '85';
+  string public constant LP_RESTRICTED_FEATURE = '86';
+
   string public constant RW_NOT_REWARD_CONFIG_ADMIN = '88';
   string public constant RW_NOT_REWARD_RATE_ADMIN = '89';
   string public constant RW_NOT_REWARD_CONTROLLER = '90';

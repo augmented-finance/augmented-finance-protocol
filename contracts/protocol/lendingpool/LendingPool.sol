@@ -129,7 +129,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     uint256 amount,
     address onBehalfOf,
     uint256 referral
-  ) external override whenNotPaused notFlashloaning {
+  ) external override whenNotPaused notNested {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateDeposit(reserve, amount);
@@ -227,7 +227,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     uint256 interestRateMode,
     uint256 referral,
     address onBehalfOf
-  ) external override whenNotPaused notFlashloaning {
+  ) external override whenNotPaused notNested {
     asset;
     amount;
     interestRateMode;
@@ -444,7 +444,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     uint256 debtToCover,
     bool receiveAToken
   ) external override whenNotPaused {
-    require(_disabledFeatures & FEATURE_LIQUIDATION == 0, Errors.LP_LIQUIDATION_DISABLED);
+    require(_disabledFeatures & FEATURE_LIQUIDATION == 0, Errors.LP_RESTRICTED_FEATURE);
 
     collateralAsset;
     debtAsset;
@@ -480,7 +480,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     bytes calldata params,
     uint256 referral
   ) external override whenNotPaused {
-    require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_FLASH_LOAN_RESTRICTED);
+    require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_RESTRICTED_FEATURE);
     receiverAddress;
     assets;
     amounts;
@@ -514,12 +514,12 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     _delegate(_collateralManager);
   }
 
-  function _notFlashloaning() private view {
-    require(_nestedFlashLoanCalls == 0, Errors.LP_FLASH_LOAN_RESTRICTED);
+  function _notNested() private view {
+    require(_nestedCalls == 0, Errors.LP_TOO_MANY_NESTED_CALLS);
   }
 
-  modifier notFlashloaning() {
-    _notFlashloaning();
+  modifier notNested {
+    _notNested();
     _;
   }
 

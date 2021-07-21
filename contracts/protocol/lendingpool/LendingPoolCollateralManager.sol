@@ -342,10 +342,10 @@ contract LendingPoolCollateralManager is
   }
 
   modifier countFlashloan {
-    require(_nestedFlashLoanCalls < type(uint8).max, Errors.LP_FLASH_LOAN_RESTRICTED);
-    _nestedFlashLoanCalls++;
+    require(_nestedCalls < type(uint8).max, Errors.LP_TOO_MANY_NESTED_CALLS);
+    _nestedCalls++;
     _;
-    _nestedFlashLoanCalls--;
+    _nestedCalls--;
   }
 
   struct FlashLoanLocalVars {
