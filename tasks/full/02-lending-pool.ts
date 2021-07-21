@@ -1,6 +1,5 @@
 import { task } from 'hardhat/config';
 import {
-  deployLendingPoolCollateralManagerImpl,
   deployLendingPoolConfiguratorImpl,
   deployLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
@@ -22,18 +21,17 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
     const deployer = await getFirstSigner();
     const addressesProvider = await getMarketAddressController();
 
-    console.log('\tDeploying lending pool & libraries...');
-    const lendingPoolImpl = await deployLendingPoolImpl(verify);
+    console.log('\tDeploying lending pool, collateral manager & libraries...');
+    const [lendingPoolImpl, collateralManagerImpl] = await deployLendingPoolImpl(verify);
     console.log('\tLending pool:', lendingPoolImpl.address);
     await waitForTx(await addressesProvider.setLendingPoolImpl(lendingPoolImpl.address));
 
     const lendingPoolProxy = await getLendingPoolProxy(await addressesProvider.getLendingPool());
 
     console.log('\tDeploying collateral manager...');
-    const collateralManager = await deployLendingPoolCollateralManagerImpl(verify);
-    console.log('\tCollateral manager:', collateralManager.address);
+    console.log('\tCollateral manager:', collateralManagerImpl.address);
     await addressesProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN);
-    await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address);
+    await lendingPoolProxy.setLendingPoolCollateralManager(collateralManagerImpl.address);
 
     console.log('\tDeploying configurator...');
     const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(verify);

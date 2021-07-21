@@ -1,15 +1,12 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import {
-  deployLendingPoolCollateralManagerImpl,
   deployTreasuryImpl,
   deployWalletBalancerProvider,
 } from '../../helpers/contracts-deployments';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
-import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
-import { exit } from 'process';
 import {
   getProtocolDataProvider,
   getMarketAddressController,

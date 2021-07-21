@@ -148,7 +148,7 @@ export const deployValidationLogic = async (
   return withSaveAndVerify(validationLogic, eContractid.ValidationLogic, [], verify);
 };
 
-export const deployAaveLibraries = async (
+export const deployLendingPoolLibraries = async (
   verify?: boolean
 ): Promise<LendingPoolLibraryAddresses> => {
   const reserveLogic = await deployReserveLogicLibrary(verify);
@@ -174,13 +174,20 @@ export const deployAaveLibraries = async (
 };
 
 export const deployLendingPoolImpl = async (verify?: boolean) => {
-  const libraries = await deployAaveLibraries(verify);
-  return withSaveAndVerify(
+  const libraries = await deployLendingPoolLibraries(verify);
+  const lp = await withSaveAndVerify(
     await new LendingPoolFactory(libraries, await getFirstSigner()).deploy(),
     eContractid.LendingPoolImpl,
     [],
     verify
   );
+  const lpm = await withSaveAndVerify(
+    await new LendingPoolCollateralManagerFactory(libraries, await getFirstSigner()).deploy(),
+    eContractid.LendingPoolCollateralManagerImpl,
+    [],
+    verify
+  );
+  return [lp, lpm];
 };
 
 export const deployMockPriceOracle = async (verify?: boolean) =>
@@ -221,14 +228,6 @@ export const deployOracleRouter = async (
     await new OracleRouterFactory(await getFirstSigner()).deploy(...args),
     eContractid.OracleRouter,
     args,
-    verify
-  );
-
-export const deployLendingPoolCollateralManagerImpl = async (verify?: boolean) =>
-  withSaveAndVerify(
-    await new LendingPoolCollateralManagerFactory(await getFirstSigner()).deploy(),
-    eContractid.LendingPoolCollateralManagerImpl,
-    [],
     verify
   );
 

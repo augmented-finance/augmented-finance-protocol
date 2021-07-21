@@ -525,8 +525,8 @@ contract LendingPoolCollateralManager is
     );
 
     ValidationLogic.validateBorrow(
-      reserve,
       vars.asset,
+      reserve,
       vars.onBehalfOf,
       vars.amount,
       v.amountInETH,

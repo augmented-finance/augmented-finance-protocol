@@ -3,7 +3,6 @@ import { createRandomAddress } from '../../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ProtocolErrors } from '../../helpers/types';
 import { ethers } from 'ethers';
-import { ZERO_ADDRESS } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
 import { deployLendingPoolImpl } from '../../helpers/contracts-deployments';
 
@@ -44,7 +43,7 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
 
     const currentAddressesProviderOwner = users[1];
 
-    const mockLendingPool = await deployLendingPoolImpl();
+    const [mockLendingPool, lpcm] = await deployLendingPoolImpl();
     const proxiedAddressId = 1 << 62;
 
     const proxiedAddressSetReceipt = await waitForTx(
