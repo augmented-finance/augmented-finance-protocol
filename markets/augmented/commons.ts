@@ -53,6 +53,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.coverage]: undefined,
     [eEthereumNetwork.coverage]: undefined,
     [eEthereumNetwork.hardhat]: undefined,
+    [eEthereumNetwork.docker]: undefined,
     [eEthereumNetwork.kovan]: undefined,
     [eEthereumNetwork.ropsten]: undefined,
     [eEthereumNetwork.rinkeby]: undefined,
@@ -61,6 +62,7 @@ export const CommonsConfig: ICommonConfiguration = {
   },
   EmergencyAdmin: {
     [eEthereumNetwork.hardhat]: undefined,
+    [eEthereumNetwork.docker]: undefined,
     [eEthereumNetwork.coverage]: undefined,
     [eEthereumNetwork.kovan]: undefined,
     [eEthereumNetwork.ropsten]: undefined,
@@ -75,6 +77,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: '',
+    [eEthereumNetwork.docker]: '',
     [eEthereumNetwork.tenderlyMain]: '',
   },
   ProviderRegistryOwner: {
@@ -84,11 +87,13 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: '',
+    [eEthereumNetwork.docker]: '',
     [eEthereumNetwork.tenderlyMain]: '',
   },
   FallbackOracle: {
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: ZERO_ADDRESS,
+    [eEthereumNetwork.docker]: ZERO_ADDRESS,
     [eEthereumNetwork.kovan]: ZERO_ADDRESS, 
     [eEthereumNetwork.ropsten]: ZERO_ADDRESS, 
     [eEthereumNetwork.rinkeby]: ZERO_ADDRESS,
@@ -98,6 +103,7 @@ export const CommonsConfig: ICommonConfiguration = {
   ChainlinkAggregator: {
     [eEthereumNetwork.coverage]: {},
     [eEthereumNetwork.hardhat]: {},
+    [eEthereumNetwork.docker]: {},
     [eEthereumNetwork.kovan]: {
       AAVE: '0xd04647B7CB523bb9f26730E9B6dE1174db7591Ad',
       BAT: '0x0e4fcEC26c9f85c3D714370c98f43C4E02Fc35Ae',
@@ -212,6 +218,7 @@ export const CommonsConfig: ICommonConfiguration = {
   ReserveAssets: {
     [eEthereumNetwork.coverage]: {},
     [eEthereumNetwork.hardhat]: {},
+    [eEthereumNetwork.docker]: {},
     [eEthereumNetwork.main]: {},
     [eEthereumNetwork.kovan]: {},
     [eEthereumNetwork.ropsten]: {},
@@ -222,6 +229,7 @@ export const CommonsConfig: ICommonConfiguration = {
   WETH: {
     [eEthereumNetwork.coverage]: '', // deployed in local evm
     [eEthereumNetwork.hardhat]: '', // deployed in local evm
+    [eEthereumNetwork.docker]: '', // deployed in local evm
     [eEthereumNetwork.kovan]: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
     [eEthereumNetwork.ropsten]: '0xc778417e063141139fce010982780140aa0cd5ab',
     [eEthereumNetwork.rinkeby]: '0xdf032bc4b9dc2782bb09352007d4c57b75160b15',
@@ -286,5 +294,22 @@ export const CommonsConfig: ICommonConfiguration = {
         '0x0000000000000000000000000000000000000001': 5000
       }
     }
+  },
+
+  ForkTest: {
+    Donors: {
+      [eEthereumNetwork.coverage]: {},
+      [eEthereumNetwork.hardhat]: {},
+      [eEthereumNetwork.kovan]: {},
+      [eEthereumNetwork.ropsten]: {},
+      [eEthereumNetwork.docker]: {},
+      [eEthereumNetwork.rinkeby]: {},
+      [eEthereumNetwork.main]: {
+        AAVE: '0xf977814e90da44bfa03b6295a0616a897441acec', // Binance pool
+      },
+      [eEthereumNetwork.tenderlyMain]: {},
+    },
+    DonatePct: 50,
+    To: '',
   }
 };

@@ -13,6 +13,7 @@ export enum eEthereumNetwork {
   main = 'main',
   coverage = 'coverage',
   hardhat = 'hardhat',
+  docker = 'docker',
   tenderlyMain = 'tenderlyMain',
 }
 
@@ -327,6 +328,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.rinkeby]: T;
   [eEthereumNetwork.main]: T;
   [eEthereumNetwork.hardhat]: T;
+  [eEthereumNetwork.docker]: T;
   [eEthereumNetwork.tenderlyMain]: T;
 }
 
@@ -401,6 +403,8 @@ export interface ICommonConfiguration {
   StakeParams: IStakeParams;
 
   RewardParams: IRewardParams;
+
+  ForkTest: IForkTest;
 }
 
 export interface IAugmentedConfiguration extends ICommonConfiguration {
@@ -485,4 +489,10 @@ export interface ITokenTypes<T> {
 export interface IRewardPoolParams {
   BasePoints: number;
   BoostFactor: number;
+}
+
+export interface IForkTest {
+  Donors: iParamsPerNetwork<ITokenAddress>;
+  DonatePct: number;
+  To: tEthereumAddress;
 }
