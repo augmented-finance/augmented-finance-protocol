@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import {ILendingPoolAaveCompatible} from '../../interfaces/ILendingPoolAaveCompatible.sol';
 import {LendingPool} from './LendingPool.sol';
 
-/// @dev LendingPoolCompatible is a wrapper for backward compatibility with aave
+/// @dev LendingPoolCompatible is a wrapper for backward compatibility with AAVE due to modified referral field format.
 contract LendingPoolCompatible is LendingPool, ILendingPoolAaveCompatible {
   /* AAVE compatibility method */
   function deposit(
