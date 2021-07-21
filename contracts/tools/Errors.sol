@@ -47,7 +47,7 @@ library Errors {
   string public constant VL_DEPOSIT_ALREADY_IN_USE = '20'; // 'User deposit is already being used as collateral'
   string public constant LP_NOT_ENOUGH_STABLE_BORROW_BALANCE = '21'; // 'User does not have any stable rate loan for this reserve'
   string public constant LP_INTEREST_RATE_REBALANCE_CONDITIONS_NOT_MET = '22'; // 'Interest rate rebalance conditions were not met'
-  string public constant LP_LIQUIDATION_CALL_FAILED = '23'; // 'Liquidation call failed'
+  //  string public constant LP_LIQUIDATION_CALL_FAILED = '23'; // 'Liquidation call failed'
   string public constant LP_NOT_ENOUGH_LIQUIDITY_TO_BORROW = '24'; // 'There is not enough liquidity available to borrow'
   string public constant LP_REQUESTED_AMOUNT_TOO_SMALL = '25'; // 'The requested amount is too small for a FlashLoan.'
   string public constant LP_INCONSISTENT_PROTOCOL_ACTUAL_BALANCE = '26'; // 'The actual balance of the protocol is inconsistent'
@@ -69,7 +69,7 @@ library Errors {
   string public constant LPCM_COLLATERAL_CANNOT_BE_LIQUIDATED = '43'; // 'The collateral chosen cannot be liquidated'
   string public constant LPCM_SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER = '44'; // 'User did not borrow the specified currency'
   string public constant LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE = '45'; // "There isn't enough liquidity available to liquidate"
-  string public constant LPCM_NO_ERRORS = '46'; // 'No errors'
+  //  string public constant LPCM_NO_ERRORS = '46'; // 'No errors'
   string public constant LP_INVALID_FLASHLOAN_MODE = '47'; //Invalid flashloan mode selected
   string public constant MATH_MULTIPLICATION_OVERFLOW = '48';
   string public constant MATH_ADDITION_OVERFLOW = '49';
@@ -115,21 +115,6 @@ library Errors {
   string public constant RW_NOT_REWARD_CONTROLLER = '90';
   string public constant RW_REWARD_PAUSED = '91';
   string public constant RW_NOT_TEAM_MANAGER = '92';
-  string public constant LP_FLASHLOAN_CALL_FAILED = '93';
-  string public constant LP_BORROW_CALL_FAILED = '94';
-
-  enum CollateralManagerErrors {
-    NO_ERROR,
-    NO_COLLATERAL_AVAILABLE,
-    COLLATERAL_CANNOT_BE_LIQUIDATED,
-    CURRRENCY_NOT_BORROWED,
-    HEALTH_FACTOR_ABOVE_THRESHOLD,
-    NOT_ENOUGH_LIQUIDITY,
-    NO_ACTIVE_RESERVE,
-    HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD,
-    INVALID_EQUAL_ASSETS_TO_SWAP,
-    FROZEN_RESERVE
-  }
 
   string public constant TXT_OWNABLE_CALLER_NOT_OWNER = 'Ownable: caller is not the owner';
   string public constant TXT_CALLER_NOT_PROXY_OWNER = 'ProxyOwner: caller is not the owner';

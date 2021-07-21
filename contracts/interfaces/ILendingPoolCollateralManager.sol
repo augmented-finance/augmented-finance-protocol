@@ -7,31 +7,38 @@ pragma solidity 0.6.12;
  **/
 interface ILendingPoolCollateralManager {
   function liquidationCall(
-    address collateral,
-    address principal,
+    address collateralAsset,
+    address debtAsset,
     address user,
     uint256 debtToCover,
-    bool receiveAToken
-  ) external returns (bool, string memory);
+    bool receiveDepositToken
+  ) external;
 
   function flashLoan(
-    address receiver,
+    address receiverAddress,
     address[] calldata assets,
     uint256[] calldata amounts,
     uint256[] calldata modes,
     address onBehalfOf,
     bytes calldata params,
-    uint256 referral,
-    uint16 flPremium
-  ) external returns (bool, string memory);
+    uint256 referral
+  ) external;
 
-  function executeBorrow(
-    address asset,
-    address user,
+  function sponsoredFlashLoan(
+    address receiverAddress,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
     address onBehalfOf,
+    bytes calldata params,
+    uint256 referral
+  ) external;
+
+  function borrow(
+    address asset,
     uint256 amount,
     uint256 interestRateMode,
     uint256 referral,
-    bool releaseUnderlying
-  ) external returns (bool, string memory);
+    address onBehalfOf
+  ) external;
 }

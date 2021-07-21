@@ -29,6 +29,7 @@ import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {LendingPoolStorage} from './LendingPoolStorage.sol';
 import {ILendingPoolCollateralManager} from '../../interfaces/ILendingPoolCollateralManager.sol';
 import {IManagedLendingPool} from '../../interfaces/IManagedLendingPool.sol';
+import {Delegator} from '../../tools/upgradeability/Delegator.sol';
 
 import 'hardhat/console.sol';
 
@@ -48,7 +49,7 @@ import 'hardhat/console.sol';
  * - All admin functions are callable by the LendingPoolConfigurator contract defined also in the
  *   AddressesProvider
  **/
-contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLendingPool {
+contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLendingPool, Delegator {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -227,19 +228,12 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     uint256 referral,
     address onBehalfOf
   ) external override whenNotPaused notFlashloaning {
-    delegateFnCall(
-      abi.encodeWithSelector(
-        ILendingPoolCollateralManager.executeBorrow.selector,
-        asset,
-        msg.sender,
-        onBehalfOf,
-        amount,
-        interestRateMode,
-        referral,
-        true
-      ),
-      Errors.LP_BORROW_CALL_FAILED
-    );
+    asset;
+    amount;
+    interestRateMode;
+    referral;
+    onBehalfOf;
+    _delegate(_collateralManager);
   }
 
   /**
@@ -452,25 +446,12 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
   ) external override whenNotPaused {
     require(_disabledFeatures & FEATURE_LIQUIDATION == 0, Errors.LP_LIQUIDATION_DISABLED);
 
-    delegateFnCall(
-      abi.encodeWithSelector(
-        ILendingPoolCollateralManager.liquidationCall.selector,
-        collateralAsset,
-        debtAsset,
-        user,
-        debtToCover,
-        receiveAToken
-      ),
-      Errors.LP_LIQUIDATION_CALL_FAILED
-    );
-  }
-
-  function delegateFnCall(bytes memory encoded, string memory failedCall) private {
-    (bool success, bytes memory result) = _collateralManager.delegatecall(encoded);
-    require(success, failedCall);
-
-    (bool ok, string memory returnMessage) = abi.decode(result, (bool, string));
-    require(ok, string(abi.encodePacked(returnMessage)));
+    collateralAsset;
+    debtAsset;
+    user;
+    debtToCover;
+    receiveAToken;
+    _delegate(_collateralManager);
   }
 
   /**
@@ -500,16 +481,14 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     uint256 referral
   ) external override whenNotPaused {
     require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_FLASH_LOAN_RESTRICTED);
-    _flashLoan(
-      receiverAddress,
-      assets,
-      amounts,
-      modes,
-      onBehalfOf,
-      params,
-      referral,
-      _flashLoanPremiumPct
-    );
+    receiverAddress;
+    assets;
+    amounts;
+    modes;
+    onBehalfOf;
+    params;
+    referral;
+    _delegate(_collateralManager);
   }
 
   function sponsoredFlashLoan(
@@ -525,49 +504,23 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
       _addressesProvider.hasAllOf(msg.sender, AccessFlags.POOL_SPONSORED_LOAN_USER),
       Errors.LP_IS_NOT_SPONSORED_LOAN
     );
-    _flashLoan(receiverAddress, assets, amounts, modes, onBehalfOf, params, referral, 0);
+    receiverAddress;
+    assets;
+    amounts;
+    modes;
+    onBehalfOf;
+    params;
+    referral;
+    _delegate(_collateralManager);
   }
 
-  function _flashLoan(
-    address receiver,
-    address[] calldata assets,
-    uint256[] calldata amounts,
-    uint256[] calldata modes,
-    address onBehalfOf,
-    bytes calldata params,
-    uint256 referral,
-    uint16 flPremium
-  ) private {
-    require(_nestedFlashLoanCalls < type(uint8).max, Errors.LP_FLASH_LOAN_RESTRICTED);
-    _nestedFlashLoanCalls++;
-
-    delegateFnCall(
-      abi.encodeWithSelector(
-        ILendingPoolCollateralManager.flashLoan.selector,
-        receiver,
-        assets,
-        amounts,
-        modes,
-        onBehalfOf,
-        params,
-        referral,
-        flPremium
-      ),
-      Errors.LP_FLASHLOAN_CALL_FAILED
-    );
-
-    _nestedFlashLoanCalls--;
-  }
-
-  function _notFlashloaning() private {
+  function _notFlashloaning() private view {
     require(_nestedFlashLoanCalls == 0, Errors.LP_FLASH_LOAN_RESTRICTED);
-    _nestedFlashLoanCalls++;
   }
 
   modifier notFlashloaning() {
     _notFlashloaning();
     _;
-    _nestedFlashLoanCalls--;
   }
 
   /**

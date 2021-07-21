@@ -57,8 +57,6 @@ contract LendingPoolCollateralManager is
     IDepositToken collateralAtoken;
     bool isCollateralEnabled;
     DataTypes.InterestRateMode borrowRateMode;
-    bool okFlag;
-    string errorMsg;
   }
 
   /**
@@ -77,16 +75,17 @@ contract LendingPoolCollateralManager is
    * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param user The address of the borrower getting liquidated
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
-   * @param receiveAToken `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants
+   * @param receiveDepositToken `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants
    * to receive the underlying collateral asset directly
    **/
+
   function liquidationCall(
     address collateralAsset,
     address debtAsset,
     address user,
     uint256 debtToCover,
-    bool receiveAToken
-  ) external override returns (bool, string memory) {
+    bool receiveDepositToken
+  ) external override {
     DataTypes.ReserveData storage collateralReserve = _reserves[collateralAsset];
     DataTypes.ReserveData storage debtReserve = _reserves[debtAsset];
     DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
@@ -104,7 +103,7 @@ contract LendingPoolCollateralManager is
 
     (vars.userStableDebt, vars.userVariableDebt) = Helpers.getUserCurrentDebt(user, debtReserve);
 
-    (vars.okFlag, vars.errorMsg) = ValidationLogic.validateLiquidationCall(
+    ValidationLogic.validateLiquidationCall(
       collateralReserve,
       debtReserve,
       userConfig,
@@ -112,10 +111,6 @@ contract LendingPoolCollateralManager is
       vars.userStableDebt,
       vars.userVariableDebt
     );
-
-    if (!vars.okFlag) {
-      return (false, vars.errorMsg);
-    }
 
     vars.collateralAtoken = IDepositToken(collateralReserve.aTokenAddress);
 
@@ -151,12 +146,13 @@ contract LendingPoolCollateralManager is
 
     // If the liquidator reclaims the underlying asset, we make sure there is enough available liquidity in the
     // collateral reserve
-    if (!receiveAToken) {
+    if (!receiveDepositToken) {
       uint256 currentAvailableCollateral =
         IERC20(collateralAsset).balanceOf(address(vars.collateralAtoken));
-      if (currentAvailableCollateral < vars.maxCollateralToLiquidate) {
-        return (false, Errors.LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE);
-      }
+      require(
+        currentAvailableCollateral >= vars.maxCollateralToLiquidate,
+        Errors.LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE
+      );
     }
 
     debtReserve.updateState(debtAsset);
@@ -189,7 +185,7 @@ contract LendingPoolCollateralManager is
       0
     );
 
-    if (receiveAToken) {
+    if (receiveDepositToken) {
       vars.liquidatorPreviousATokenBalance = IERC20(vars.collateralAtoken).balanceOf(msg.sender);
       vars.collateralAtoken.transferOnLiquidation(user, msg.sender, vars.maxCollateralToLiquidate);
 
@@ -237,10 +233,8 @@ contract LendingPoolCollateralManager is
       vars.actualDebtToLiquidate,
       vars.maxCollateralToLiquidate,
       msg.sender,
-      receiveAToken
+      receiveDepositToken
     );
-
-    return (true, '');
   }
 
   struct AvailableCollateralToLiquidateLocalVars {
@@ -314,6 +308,46 @@ contract LendingPoolCollateralManager is
     return (collateralAmount, debtAmountNeeded);
   }
 
+  function flashLoan(
+    address receiver,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint256 referral
+  ) external override countFlashloan {
+    _flashLoan(
+      receiver,
+      assets,
+      amounts,
+      modes,
+      onBehalfOf,
+      params,
+      referral,
+      _flashLoanPremiumPct
+    );
+  }
+
+  function sponsoredFlashLoan(
+    address receiver,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint256 referral
+  ) external override countFlashloan {
+    _flashLoan(receiver, assets, amounts, modes, onBehalfOf, params, referral, 0);
+  }
+
+  modifier countFlashloan {
+    require(_nestedFlashLoanCalls < type(uint8).max, Errors.LP_FLASH_LOAN_RESTRICTED);
+    _nestedFlashLoanCalls++;
+    _;
+    _nestedFlashLoanCalls--;
+  }
+
   struct FlashLoanLocalVars {
     IFlashLoanReceiver receiver;
     address currentAsset;
@@ -324,13 +358,11 @@ contract LendingPoolCollateralManager is
     uint256[] premiums;
     uint256 referral;
     address onBehalfOf;
-    string errMsg;
     uint16 premium;
-    bool ok;
     uint8 i;
   }
 
-  function flashLoan(
+  function _flashLoan(
     address receiver,
     address[] calldata assets,
     uint256[] calldata amounts,
@@ -339,12 +371,9 @@ contract LendingPoolCollateralManager is
     bytes calldata params,
     uint256 referral,
     uint16 flPremium
-  ) external override returns (bool, string memory) {
+  ) private {
     FlashLoanLocalVars memory vars;
-    (vars.ok, vars.errMsg) = ValidationLogic.validateFlashloan(assets, amounts);
-    if (!vars.ok) {
-      return (false, vars.errMsg);
-    }
+    ValidationLogic.validateFlashloan(assets, amounts);
 
     (vars.receiver, vars.referral, vars.onBehalfOf, vars.premium) = (
       IFlashLoanReceiver(receiver),
@@ -355,22 +384,12 @@ contract LendingPoolCollateralManager is
 
     vars.premiums = _flashLoanPre(address(vars.receiver), assets, amounts, vars.premium);
 
-    if (!_flashLoanExecute(vars, assets, amounts, params)) {
-      return (false, Errors.LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN);
-    }
+    require(
+      vars.receiver.executeOperation(assets, amounts, vars.premiums, msg.sender, params),
+      Errors.LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN
+    );
 
     _flashLoanPost(vars, assets, amounts, modes, vars.premiums);
-
-    return (true, '');
-  }
-
-  function _flashLoanExecute(
-    FlashLoanLocalVars memory vars,
-    address[] calldata assets,
-    uint256[] calldata amounts,
-    bytes calldata params
-  ) private returns (bool) {
-    return vars.receiver.executeOperation(assets, amounts, vars.premiums, msg.sender, params);
   }
 
   function _flashLoanPre(
@@ -398,7 +417,7 @@ contract LendingPoolCollateralManager is
     uint256[] calldata amounts,
     uint256[] calldata modes,
     uint256[] memory premiums
-  ) private returns (bool, string memory) {
+  ) private {
     for (vars.i = 0; vars.i < assets.length; vars.i++) {
       vars.currentAsset = assets[vars.i];
       vars.currentAmount = amounts[vars.i];
@@ -411,7 +430,7 @@ contract LendingPoolCollateralManager is
       } else {
         // If the user chose to not return the funds, the system checks if there is enough collateral and
         // eventually opens a debt position
-        (vars.ok, vars.errMsg) = _executeBorrow(
+        _executeBorrow(
           ExecuteBorrowParams(
             vars.currentAsset,
             msg.sender,
@@ -423,9 +442,6 @@ contract LendingPoolCollateralManager is
             false
           )
         );
-        if (!vars.ok) {
-          return (false, vars.errMsg);
-        }
       }
       emit FlashLoan(
         address(vars.receiver),
@@ -436,7 +452,6 @@ contract LendingPoolCollateralManager is
         vars.referral
       );
     }
-    return (true, '');
   }
 
   function _flashLoanRetrieve(FlashLoanLocalVars memory vars) private {
@@ -459,28 +474,27 @@ contract LendingPoolCollateralManager is
     );
   }
 
-  function executeBorrow(
+  function borrow(
     address asset,
-    address user,
-    address onBehalfOf,
     uint256 amount,
     uint256 interestRateMode,
     uint256 referral,
-    bool releaseUnderlying
-  ) external override returns (bool, string memory) {
-    return
+    address onBehalfOf
+  ) external override {
+    (bool ok, string memory errMsg) =
       _executeBorrow(
         ExecuteBorrowParams(
           asset,
-          user,
+          msg.sender,
           onBehalfOf,
           amount,
           interestRateMode,
           _reserves[asset].aTokenAddress,
           referral,
-          releaseUnderlying
+          true
         )
       );
+    require(ok, errMsg);
   }
 
   struct ExecuteBorrowParams {
@@ -497,8 +511,6 @@ contract LendingPoolCollateralManager is
   struct ExecuteBorrowVars {
     address oracle;
     uint256 amountInETH;
-    bool ok;
-    string errMsg;
   }
 
   function _executeBorrow(ExecuteBorrowParams memory vars) private returns (bool, string memory) {
@@ -512,7 +524,8 @@ contract LendingPoolCollateralManager is
       10**reserve.configuration.getDecimals()
     );
 
-    (v.ok, v.errMsg) = ValidationLogic.validateBorrow(
+    ValidationLogic.validateBorrow(
+      reserve,
       vars.asset,
       vars.onBehalfOf,
       vars.amount,
@@ -525,9 +538,6 @@ contract LendingPoolCollateralManager is
       _reservesCount,
       v.oracle
     );
-    if (!v.ok) {
-      return (false, v.errMsg);
-    }
 
     reserve.updateState(vars.asset);
 
