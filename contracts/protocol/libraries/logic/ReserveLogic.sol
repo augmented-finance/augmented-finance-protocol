@@ -168,7 +168,7 @@ library ReserveLogic {
    * @dev Initializes a reserve
    **/
   function init(DataTypes.ReserveData storage reserve, DataTypes.InitReserveData calldata data)
-    external
+    internal
   {
     require(reserve.aTokenAddress == address(0), Errors.RL_RESERVE_ALREADY_INITIALIZED);
 

@@ -18,7 +18,6 @@ import {
   MintableERC20,
   RewardBoosterFactory,
   RewardConfiguratorFactory,
-  RewardedTokenLockerFactory,
   StakeTokenFactory,
   TreasuryFactory,
   XAGFTokenV1Factory,
@@ -72,7 +71,6 @@ import {
   withVerify,
 } from './contracts-helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { LendingPoolLibraryAddresses } from '../types/LendingPoolFactory';
 
 const readArtifact = async (id: string) => {
   return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
@@ -148,41 +146,41 @@ export const deployValidationLogic = async (
   return withSaveAndVerify(validationLogic, eContractid.ValidationLogic, [], verify);
 };
 
-export const deployLendingPoolLibraries = async (
-  verify?: boolean
-): Promise<LendingPoolLibraryAddresses> => {
-  const reserveLogic = await deployReserveLogicLibrary(verify);
-  const genericLogic = await deployGenericLogic(reserveLogic, verify);
-  const validationLogic = await deployValidationLogic(reserveLogic, genericLogic, verify);
+// const deployLendingPoolLibraries = async (
+//   verify?: boolean
+// ): Promise<LendingPoolLibraryAddresses> => {
+//   const reserveLogic = await deployReserveLogicLibrary(verify);
+//   const genericLogic = await deployGenericLogic(reserveLogic, verify);
+//   const validationLogic = await deployValidationLogic(reserveLogic, genericLogic, verify);
 
-  // Hardcoded solidity placeholders, if any library changes path this will fail.
-  // tslint:disable-next-line:max-line-length
-  // The '__$PLACEHOLDER$__ can be calculated via solidity keccak, but the LendingPoolLibraryAddresses Type seems to
-  // require a hardcoded string.
-  //
-  //  how-to:
-  //  1. PLACEHOLDER = solidityKeccak256(['string'], `${libPath}:${libName}`).slice(2, 36)
-  //  2. LIB_PLACEHOLDER = `__$${PLACEHOLDER}$__`
-  // or grab placeholdes from LendingPoolLibraryAddresses at Typechain generation.
-  //
-  // libPath example: contracts/libraries/logic/GenericLogic.sol
-  // libName example: GenericLogic
-  return {
-    ['__$de8c0cf1a7d7c36c802af9a64fb9d86036$__']: validationLogic.address,
-    ['__$22cd43a9dda9ce44e9b92ba393b88fb9ac$__']: reserveLogic.address,
-  };
-};
+//   // Hardcoded solidity placeholders, if any library changes path this will fail.
+//   // tslint:disable-next-line:max-line-length
+//   // The '__$PLACEHOLDER$__ can be calculated via solidity keccak, but the LendingPoolLibraryAddresses Type seems to
+//   // require a hardcoded string.
+//   //
+//   //  how-to:
+//   //  1. PLACEHOLDER = solidityKeccak256(['string'], `${libPath}:${libName}`).slice(2, 36)
+//   //  2. LIB_PLACEHOLDER = `__$${PLACEHOLDER}$__`
+//   // or grab placeholdes from LendingPoolLibraryAddresses at Typechain generation.
+//   //
+//   // libPath example: contracts/libraries/logic/GenericLogic.sol
+//   // libName example: GenericLogic
+//   return {
+//     ['__$de8c0cf1a7d7c36c802af9a64fb9d86036$__']: validationLogic.address,
+//     ['__$22cd43a9dda9ce44e9b92ba393b88fb9ac$__']: reserveLogic.address,
+//   };
+// };
 
 export const deployLendingPoolImpl = async (verify?: boolean) => {
-  const libraries = await deployLendingPoolLibraries(verify);
+  // const libraries = await deployLendingPoolLibraries(verify);
   const lp = await withSaveAndVerify(
-    await new LendingPoolFactory(libraries, await getFirstSigner()).deploy(),
+    await new LendingPoolFactory(/* libraries, */ await getFirstSigner()).deploy(),
     eContractid.LendingPoolImpl,
     [],
     verify
   );
   const lpm = await withSaveAndVerify(
-    await new LendingPoolCollateralManagerFactory(libraries, await getFirstSigner()).deploy(),
+    await new LendingPoolCollateralManagerFactory(/* libraries, */ await getFirstSigner()).deploy(),
     eContractid.LendingPoolCollateralManagerImpl,
     [],
     verify
