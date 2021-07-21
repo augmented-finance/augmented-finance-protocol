@@ -24,8 +24,8 @@ import {ILendingPoolEvents} from '../../interfaces/ILendingPoolEvents.sol';
 
 /**
  * @title LendingPoolCollateralManager contract
- * @dev Implements actions involving management of collateral in the protocol, the main one being the liquidations
- * IMPORTANT This contract will run always via DELEGATECALL, through the LendingPool, so the chain of inheritance
+ * @dev Delegate of LendingPool for borrow, flashloan and collateral.
+ * IMPORTANT This contract runs via DELEGATECALL from the LendingPool, so the chain of inheritance
  * is the same as the LendingPool, to have compatible storage layouts
  **/
 contract LendingPoolCollateralManager is
