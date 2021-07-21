@@ -316,7 +316,7 @@ contract LendingPoolCollateralManager is
     address onBehalfOf,
     bytes calldata params,
     uint256 referral
-  ) external override countFlashloan {
+  ) external override countCalls {
     _flashLoan(
       receiver,
       assets,
@@ -337,11 +337,11 @@ contract LendingPoolCollateralManager is
     address onBehalfOf,
     bytes calldata params,
     uint256 referral
-  ) external override countFlashloan {
+  ) external override countCalls {
     _flashLoan(receiver, assets, amounts, modes, onBehalfOf, params, referral, 0);
   }
 
-  modifier countFlashloan {
+  modifier countCalls {
     require(_nestedCalls < type(uint8).max, Errors.LP_TOO_MANY_NESTED_CALLS);
     _nestedCalls++;
     _;
