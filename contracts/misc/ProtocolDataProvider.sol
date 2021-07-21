@@ -218,7 +218,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   }
 
   function getReservesDataOf(IPoolAddressProvider provider, address user)
-    public
+    external
     view
     override
     returns (
