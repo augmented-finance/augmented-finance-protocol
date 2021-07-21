@@ -214,13 +214,25 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       uint256
     )
   {
-    return getReservesData(IPoolAddressProvider(address(ADDRESS_PROVIDER)), user);
+    return _getReservesData(IPoolAddressProvider(address(ADDRESS_PROVIDER)), user);
   }
 
-  function getReservesData(IPoolAddressProvider provider, address user)
+  function getReservesDataOf(IPoolAddressProvider provider, address user)
     public
     view
     override
+    returns (
+      AggregatedReserveData[] memory,
+      UserReserveData[] memory,
+      uint256
+    )
+  {
+    return _getReservesData(provider, user);
+  }
+
+  function _getReservesData(IPoolAddressProvider provider, address user)
+    private
+    view
     returns (
       AggregatedReserveData[] memory,
       UserReserveData[] memory,
