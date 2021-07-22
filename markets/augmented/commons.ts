@@ -169,7 +169,7 @@ export const CommonsConfig: ICommonConfiguration = {
       YFI: ZERO_ADDRESS,
       ZRX: ZERO_ADDRESS,
       USD: '0x8A753747A1Fa494EC906cE90E9f37563A8AF630e',
-    }, //TODO:
+    }, 
     [eEthereumNetwork.main]: {
       AAVE: '0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012',
       BAT: '0x0d16d4528239e9ee52fa531af613AcdB23D88c94',
