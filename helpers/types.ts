@@ -46,6 +46,7 @@ export enum eContractid {
   MockPriceOracle = 'MockPriceOracle',
   MockAggregator = 'MockAggregator',
   LendingRateOracle = 'LendingRateOracle',
+  StaticPriceOracle = 'StaticPriceOracle',
   OracleRouter = 'OracleRouter',
   MockFlashLoanReceiver = 'MockFlashLoanReceiver',
   WalletBalanceProvider = 'WalletBalanceProvider',
@@ -391,7 +392,7 @@ export interface ICommonConfiguration {
 
   LendingRateOracleRatesCommon: iMultiPoolsAssets<IMarketRates>;
 
-  FallbackOracle: iParamsPerNetwork<tEthereumAddress>;
+  FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
 
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
   EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
@@ -495,4 +496,8 @@ export interface IForkTest {
   Donors: iParamsPerNetwork<ITokenAddress>;
   DonatePct: number;
   To: tEthereumAddress;
+}
+
+export interface IPrices {
+  [token: string]: number;
 }
