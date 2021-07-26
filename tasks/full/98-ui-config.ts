@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { eNetwork } from '../../helpers/types';
-import { loadPoolConfig } from '../../helpers/configuration';
+import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { falsyOrZeroAddress, writeUiConfig } from '../../helpers/misc-utils';
 import {
   getAddressesProviderRegistry,
@@ -12,6 +12,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 
 task('full:write-ui-config', 'Prepare UI config')
   .addFlag('verify', 'Verify contracts at Etherscan')
+  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE) => {
     await DRE.run('set-DRE');
 

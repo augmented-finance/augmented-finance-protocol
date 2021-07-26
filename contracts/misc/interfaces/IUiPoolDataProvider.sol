@@ -84,7 +84,7 @@ interface IUiPoolDataProvider {
   //    address aTokenAddress;
   //  }
 
-  function getReservesData(IPoolAddressProvider provider, address user)
+  function getReservesDataOf(IPoolAddressProvider provider, address user)
     external
     view
     returns (

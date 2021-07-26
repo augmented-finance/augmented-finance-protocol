@@ -35,7 +35,7 @@ import {
 import { DRE, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
 import AugmentedConfig from '../../markets/augmented';
-import { getLendingPoolProxy, getPairsTokenAggregator } from '../../helpers/contracts-getters';
+import { getLendingPoolProxy, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
 import { WETH9Mocked } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
 
@@ -144,7 +144,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
     {}
   );
 
-  const [tokens, aggregators] = getPairsTokenAggregator(allTokenAddresses, allAggregatorsAddresses);
+  const [tokens, aggregators] = getTokenAggregatorPairs(allTokenAddresses, allAggregatorsAddresses);
 
   await deployOracleRouter([
     addressProvider.address,

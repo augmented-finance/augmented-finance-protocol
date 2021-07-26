@@ -89,9 +89,11 @@ export const initReservesByHelper = async (
   let depositTokenType: Record<string, boolean> = {};
   let delegationAwareATokenImplementationAddress = '';
 
+  console.log('deployStableDebtTokenImpl');
   const stableDebtTokenImpl = await deployStableDebtTokenImpl(verify);
   const variableDebtTokenImpl = await deployVariableDebtTokenImpl(verify);
 
+  console.log('deployDepositTokenImpl');
   const depositTokenImplementationAddress = (await deployDepositTokenImpl(verify)).address;
 
   const delegatedAwareReserves = Object.entries(reservesParams).filter(
@@ -99,6 +101,7 @@ export const initReservesByHelper = async (
   ) as [string, IReserveParams][];
 
   if (delegatedAwareReserves.length > 0) {
+    console.log('\tdeployDelegationAwareDepositTokenImpl')
     const delegationAwareATokenImplementation = await deployDelegationAwareDepositTokenImpl(verify);
     delegationAwareATokenImplementationAddress = delegationAwareATokenImplementation.address;
   }
@@ -223,7 +226,7 @@ export const initReservesByHelper = async (
   return gasUsage; // Deprecated
 };
 
-export const getPairsTokenAggregator = (
+export const getTokenAggregatorPairs = (
   allAssetsAddresses: {
     [tokenSymbol: string]: tEthereumAddress;
   },

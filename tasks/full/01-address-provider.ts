@@ -5,7 +5,7 @@ import {
   deployMarketAccessController,
 } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
-import { loadPoolConfig } from '../../helpers/configuration';
+import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { falsyOrZeroAddress, getFirstSigner, getSigner, waitForTx } from '../../helpers/misc-utils';
 import { getAddressesProviderRegistry } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry } from '../../types';
@@ -13,6 +13,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 
 task('full:deploy-address-provider', 'Deploy address provider registry for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
+  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE) => {
     await DRE.run('set-DRE');
 
@@ -68,6 +69,7 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
       }
     }
 
+    console.log('deploy MarketAccessController');
     const addressProvider = await deployMarketAccessController(MarketId, verify);
     await addressProvider.setAnyRoleMode(false);
     console.log('Deployed provider:', addressProvider.address);
