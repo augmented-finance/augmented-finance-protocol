@@ -39,6 +39,8 @@ export enum LendingPools {
 
 export enum eContractid {
   MarketAccessController = 'MarketAccessController',
+  PreDeployedMarketAccessController = '~MarketAccessController',
+
   AddressesProviderRegistry = 'AddressesProviderRegistry',
   ValidationLogic = 'ValidationLogic',
   ReserveLogic = 'ReserveLogic',
@@ -388,6 +390,9 @@ export interface ICommonConfiguration {
   Mocks: IMocksConfig;
   ProviderRegistry: iParamsPerNetwork<tEthereumAddress | undefined>;
   ProviderRegistryOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
+  AddressProvider: iParamsPerNetwork<tEthereumAddress | undefined>;
+  AddressProviderOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
+
   ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
 
   LendingRateOracleRatesCommon: iMultiPoolsAssets<IMarketRates>;

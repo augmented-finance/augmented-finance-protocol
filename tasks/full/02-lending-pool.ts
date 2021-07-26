@@ -5,11 +5,12 @@ import {
   deployLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
-import { getFirstSigner, waitForTx } from '../../helpers/misc-utils';
-import { getMarketAddressController, getLendingPoolProxy } from '../../helpers/contracts-getters';
+import { falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
+import { getLendingPoolProxy } from '../../helpers/contracts-getters';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { AccessFlags } from '../../helpers/access-flags';
+import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
 task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -20,26 +21,48 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
     const poolConfig = loadPoolConfig(pool);
 
     const deployer = await getFirstSigner();
-    const addressesProvider = await getMarketAddressController();
+    const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-    console.log('\tDeploying lending pool & libraries...');
-    const lendingPoolImpl = await deployLendingPoolImpl(verify);
-    console.log('\tLending pool:', lendingPoolImpl.address);
-    await waitForTx(await addressesProvider.setLendingPoolImpl(lendingPoolImpl.address));
+    // LendingPool is updated for existing installations
+    let lpAddress = continuation ? await addressProvider.getLendingPool() : '';
+    const newLandingPool = falsyOrZeroAddress(lpAddress);
 
-    const lendingPoolProxy = await getLendingPoolProxy(await addressesProvider.getLendingPool());
+    if (newLandingPool) {
+      console.log('\tDeploying lending pool & libraries...');
+      const lendingPoolImpl = await deployLendingPoolImpl(verify);
+      console.log('\tLending pool implementation:', lendingPoolImpl.address);
+      await waitForTx(await addressProvider.setLendingPoolImpl(lendingPoolImpl.address));
+      lpAddress = await addressProvider.getLendingPool();
+    }
 
-    console.log('\tDeploying collateral manager...');
-    const collateralManager = await deployLendingPoolCollateralManagerImpl(verify);
-    console.log('\tCollateral manager:', collateralManager.address);
-    await addressesProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN);
-    await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address);
+    const lendingPoolProxy = await getLendingPoolProxy(lpAddress);
+    console.log('\tLending pool:', lpAddress);
 
-    console.log('\tDeploying configurator...');
-    const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(verify);
-    console.log('\tLending pool configurator:', lendingPoolConfiguratorImpl.address);
+    let lpExt = newLandingPool ? '' : await lendingPoolProxy.getLendingPoolCollateralManager();
+    if (falsyOrZeroAddress(lpExt)) {
+      console.log('\tDeploying collateral manager...');
+      const collateralManager = await deployLendingPoolCollateralManagerImpl(verify);
+      await addressProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN);
+      await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address);
+      lpExt = collateralManager.address;
+    }
+    console.log('\tCollateral manager:', lpExt);
 
-    await waitForTx(
-      await addressesProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address)
-    );
+    let lpConfigurator = newLandingPool ? '' : await addressProvider.getLendingPoolConfigurator();
+
+    if (falsyOrZeroAddress(lpConfigurator)) {
+      console.log('\tDeploying configurator...');
+      const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(verify);
+      console.log(
+        '\tLending pool configurator implementation:',
+        lendingPoolConfiguratorImpl.address
+      );
+
+      await waitForTx(
+        await addressProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address)
+      );
+      lpConfigurator = await addressProvider.getLendingPoolConfigurator();
+    }
+
+    console.log('\tLending pool configurator:', lpConfigurator);
   });

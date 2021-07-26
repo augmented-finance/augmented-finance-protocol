@@ -14,12 +14,10 @@ import {
   getWethAddress,
   getLendingRateOracles,
 } from '../../helpers/configuration';
-import {
-  getMarketAddressController,
-  getTokenAggregatorPairs,
-} from '../../helpers/contracts-getters';
+import { getTokenAggregatorPairs } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 import { oneEther } from '../../helpers/constants';
+import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
 task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -34,8 +32,6 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
       FallbackOracle,
       ChainlinkAggregator,
     } = poolConfig as ICommonConfiguration;
-    const lendingRateOracles = getLendingRateOracles(poolConfig);
-    const addressProvider = await getMarketAddressController();
     const fallbackOracle = getParamPerNetwork(FallbackOracle, network);
     const reserveAssets = getParamPerNetwork(ReserveAssets, network);
     const chainlinkAggregators = getParamPerNetwork(ChainlinkAggregator, network);
@@ -47,61 +43,80 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
 
     let fallbackOracleAddress: tEthereumAddress;
 
-    if (typeof fallbackOracle == 'string') {
-      fallbackOracleAddress = fallbackOracle;
-    } else {
-      console.log('Deploying StaticPriceOracle as fallback');
-      const tokenAddressList: string[] = [];
-      const tokenPriceList: string[] = [];
+    // Oracles are NOT updated for existing installations
+    const [freshStart, continuation, addressProvider] = await getDeployAccessController();
+    const newOracles = freshStart && !continuation;
 
-      for (const [tokenSymbol, tokenPrice] of Object.entries(fallbackOracle)) {
-        const tokenAddress = tokensToWatch[tokenSymbol];
-        if (falsyOrZeroAddress(tokenAddress)) {
-          continue;
-        }
-        tokenAddressList.push(tokenAddress);
-        const ethPrice = oneEther.multipliedBy(tokenPrice);
-        tokenPriceList.push(ethPrice.toString());
-        console.log(`\t${tokenSymbol}: ${tokenPrice} (${ethPrice} ether)`);
+    {
+      let lroAddress = newOracles ? '' : await addressProvider.getLendingRateOracle();
+
+      if (falsyOrZeroAddress(lroAddress)) {
+        console.log('Deploying LendingRateOracle');
+
+        const lendingRateOracle = await deployLendingRateOracle([addressProvider.address], verify);
+        const deployer = await getFirstSigner();
+        await addressProvider.grantRoles(deployer.address, AccessFlags.LENDING_RATE_ADMIN);
+
+        const { USD, ...tokensAddressesWithoutUsd } = tokensToWatch;
+
+        const lendingRateOracles = getLendingRateOracles(poolConfig);
+        await setInitialMarketRatesInRatesOracleByHelper(
+          lendingRateOracles,
+          tokensAddressesWithoutUsd,
+          lendingRateOracle
+        );
+        await waitForTx(await addressProvider.setLendingRateOracle(lendingRateOracle.address));
+
+        lroAddress = lendingRateOracle.address;
       }
-      const oracle = await deployStaticPriceOracle([
-        addressProvider.address,
-        tokenAddressList,
-        tokenPriceList,
-      ]);
-      fallbackOracleAddress = oracle.address;
+      console.log('LendingRateOracle:', lroAddress);
     }
-    console.log('Fallback oracle: ', fallbackOracleAddress);
 
-    const [tokens, aggregators] = getTokenAggregatorPairs(tokensToWatch, chainlinkAggregators);
+    let poAddress = newOracles ? '' : await addressProvider.getPriceOracle();
 
-    console.log('Deploying OracleRouter');
-    console.log('\tPrice aggregators for tokens: ', tokens);
-    const oracleRouter = await deployOracleRouter(
-      [
-        addressProvider.address,
-        tokens,
-        aggregators,
-        fallbackOracleAddress,
-        await getWethAddress(poolConfig),
-      ],
-      verify
-    );
+    if (falsyOrZeroAddress(poAddress)) {
+      if (typeof fallbackOracle == 'string') {
+        fallbackOracleAddress = fallbackOracle;
+      } else {
+        console.log('Deploying StaticPriceOracle as fallback');
+        const tokenAddressList: string[] = [];
+        const tokenPriceList: string[] = [];
 
-    let lendingRateOracle = await deployLendingRateOracle([addressProvider.address], verify);
-    const deployer = await getFirstSigner();
-    await addressProvider.grantRoles(deployer.address, AccessFlags.LENDING_RATE_ADMIN);
+        for (const [tokenSymbol, tokenPrice] of Object.entries(fallbackOracle)) {
+          const tokenAddress = tokensToWatch[tokenSymbol];
+          if (falsyOrZeroAddress(tokenAddress)) {
+            continue;
+          }
+          tokenAddressList.push(tokenAddress);
+          const ethPrice = oneEther.multipliedBy(tokenPrice);
+          tokenPriceList.push(ethPrice.toString());
+          console.log(`\t${tokenSymbol}: ${tokenPrice} (${ethPrice} ether)`);
+        }
+        const oracle = await deployStaticPriceOracle([
+          addressProvider.address,
+          tokenAddressList,
+          tokenPriceList,
+        ]);
+        fallbackOracleAddress = oracle.address;
+      }
+      console.log('Fallback oracle: ', fallbackOracleAddress);
 
-    const { USD, ...tokensAddressesWithoutUsd } = tokensToWatch;
+      const [tokens, aggregators] = getTokenAggregatorPairs(tokensToWatch, chainlinkAggregators);
 
-    await setInitialMarketRatesInRatesOracleByHelper(
-      lendingRateOracles,
-      tokensAddressesWithoutUsd,
-      lendingRateOracle
-    );
-    //}
-    console.log('Oracles: %s and %s', oracleRouter.address, lendingRateOracle.address);
-    // Register the proxy price provider on the addressProvider
-    await addressProvider.setPriceOracle(oracleRouter.address);
-    await waitForTx(await addressProvider.setLendingRateOracle(lendingRateOracle.address));
+      console.log('Deploying PriceOracle');
+      console.log('\tPrice aggregators for tokens: ', tokens);
+      const oracleRouter = await deployOracleRouter(
+        [
+          addressProvider.address,
+          tokens,
+          aggregators,
+          fallbackOracleAddress,
+          await getWethAddress(poolConfig),
+        ],
+        verify
+      );
+      await addressProvider.setPriceOracle(oracleRouter.address);
+
+      console.log('PriceOracle: ', oracleRouter.address);
+    }
   });

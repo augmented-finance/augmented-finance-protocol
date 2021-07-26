@@ -2,7 +2,7 @@ import BigNumber from 'bignumber.js';
 import BN = require('bn.js');
 import low from 'lowdb';
 import FileSync from 'lowdb/adapters/FileSync';
-import { WAD } from './constants';
+import { WAD, ZERO_ADDRESS } from './constants';
 import { Contract, Wallet, ContractTransaction } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from './types';
@@ -168,6 +168,28 @@ export const logContractInJsonDb = async (
       })
       .write();
   }
+};
+
+export const logExternalContractInJsonDb = async (contractId: string, contractAddress: string) => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+
+  await db
+    .set(`${currentNetwork}.log.${contractAddress}`, {
+      id: contractId,
+      deployer: ZERO_ADDRESS,
+    })
+    .write();
+
+  const node = `${currentNetwork}.named.${contractId}`;
+  const count = (await db.get(node).value())?.count || 0;
+  await db
+    .set(`${currentNetwork}.named.${contractId}`, {
+      address: contractAddress,
+      deployer: ZERO_ADDRESS,
+      count: count + 1,
+    })
+    .write();
 };
 
 export const getFromJsonDb = async (id: string) =>

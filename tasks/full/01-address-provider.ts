@@ -10,6 +10,7 @@ import { falsyOrZeroAddress, getFirstSigner, getSigner, waitForTx } from '../../
 import { getAddressesProviderRegistry } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
+import { setDeployAccessController } from '../../helpers/deploy-helpers';
 
 task('full:deploy-address-provider', 'Deploy address provider registry for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -22,6 +23,16 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
     const { ProviderId, MarketId } = poolConfig;
 
     const deployer = await getFirstSigner();
+
+    {
+      const [continuation, existingProvider] = await setDeployAccessController(
+        getParamPerNetwork(poolConfig.AddressProvider, network)
+      );
+      if (existingProvider != undefined) {
+        console.log('Existing Provider:', existingProvider);
+        return;
+      }
+    }
 
     const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
     const registryOwner = getParamPerNetwork(poolConfig.ProviderRegistryOwner, network);
@@ -75,7 +86,12 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
     console.log('Deployed provider:', addressProvider.address);
 
     await addressProvider.setTemporaryAdmin(deployer.address, 1000);
-    if (!falsyOrZeroAddress(registryOwner)) {
+
+    const providerOwner = getParamPerNetwork(poolConfig.AddressProviderOwner, network);
+    if (!falsyOrZeroAddress(providerOwner)) {
+      await addressProvider.transferOwnership(providerOwner!);
+      console.log('Provider ownership transferred to:', providerOwner);
+    } else if (!falsyOrZeroAddress(registryOwner)) {
       await addressProvider.transferOwnership(registryOwner!);
       console.log('Provider ownership transferred to:', registryOwner);
     }
