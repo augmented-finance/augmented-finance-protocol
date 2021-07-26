@@ -46,7 +46,8 @@ export const setInitialMarketRatesInRatesOracleByHelper = async (
     await waitForTx(
       await lendingRateOracleInstance.setMarketBorrowRates(
         chunkedTokens[chunkIndex],
-        chunkedRates[chunkIndex]
+        chunkedRates[chunkIndex],
+        { gasLimit: 5000000 }
       )
     );
     console.log(`  - Setted Oracle Borrow Rates for: ${chunkedSymbols[chunkIndex].join(', ')}`);
