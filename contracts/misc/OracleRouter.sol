@@ -56,7 +56,6 @@ contract OracleRouter is IPriceOracleGetter, MarketAccessBitmask {
   }
 
   /// @notice Sets the fallbackOracle
-  /// - Callable only by the Aave governance
   /// @param fallbackOracle The address of the fallbackOracle
   function setFallbackOracle(address fallbackOracle) external aclHas(AccessFlags.ORACLE_ADMIN) {
     _setFallbackOracle(fallbackOracle);

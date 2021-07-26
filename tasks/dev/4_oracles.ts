@@ -16,7 +16,7 @@ import { ConfigNames, loadPoolConfig, getWethAddress } from '../../helpers/confi
 import {
   getAllMockedTokens,
   getMarketAddressController,
-  getPairsTokenAggregator,
+  getTokenAggregatorPairs,
 } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 
@@ -52,7 +52,7 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
     const allTokenAddresses = getAllTokenAddresses(mockTokens);
     const allAggregatorsAddresses = getAllAggregatorsAddresses(mockAggregators);
 
-    const [tokens, aggregators] = getPairsTokenAggregator(
+    const [tokens, aggregators] = getTokenAggregatorPairs(
       allTokenAddresses,
       allAggregatorsAddresses
     );

@@ -64,6 +64,7 @@ import {
   TokenWeightedRewardPoolV1Factory,
   ReferralRewardPoolFactory,
   MockRewardedTokenLockerFactory,
+  StaticPriceOracleFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -221,6 +222,17 @@ export const deployOracleRouter = async (
     await new OracleRouterFactory(await getFirstSigner()).deploy(...args),
     eContractid.OracleRouter,
     args,
+    verify
+  );
+
+export const deployStaticPriceOracle = async (
+  args: [remoteAcl: string, assets_: string[], prices_: BigNumberish[]],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new StaticPriceOracleFactory(await getFirstSigner()).deploy(...args),
+    eContractid.StaticPriceOracle,
+    [],
     verify
   );
 

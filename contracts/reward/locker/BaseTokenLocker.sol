@@ -437,7 +437,6 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
       maxPoint = uint32(_lastUpdateTS / _pointPeriod) + _maxDurationPoints + 1;
     }
 
-    // overflow is treated as no-limit
     if (scanLimit > 0 && scanLimit + fromPoint > scanLimit) {
       scanLimit += fromPoint;
       if (scanLimit < maxPoint) {
@@ -550,7 +549,10 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
         continue;
       }
 
-      nextPoint = 0;
+      // keep nextPoint to reduce gas for further calls
+      if (nextPoint > _lastKnownPoint) {
+        nextPoint = 0;
+      }
       break;
     }
 

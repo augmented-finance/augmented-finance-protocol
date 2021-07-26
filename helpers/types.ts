@@ -13,6 +13,7 @@ export enum eEthereumNetwork {
   main = 'main',
   coverage = 'coverage',
   hardhat = 'hardhat',
+  docker = 'docker',
   tenderlyMain = 'tenderlyMain',
 }
 
@@ -45,6 +46,7 @@ export enum eContractid {
   MockPriceOracle = 'MockPriceOracle',
   MockAggregator = 'MockAggregator',
   LendingRateOracle = 'LendingRateOracle',
+  StaticPriceOracle = 'StaticPriceOracle',
   OracleRouter = 'OracleRouter',
   MockFlashLoanReceiver = 'MockFlashLoanReceiver',
   WalletBalanceProvider = 'WalletBalanceProvider',
@@ -55,8 +57,6 @@ export enum eContractid {
   MockStakedAgfToken = 'MockStakedAgfToken',
   MockStakedAgToken = 'MockStakedAgToken',
   ProtocolDataProvider = 'ProtocolDataProvider',
-  FeeProvider = 'FeeProvider',
-  UiPoolDataProvider = 'UiPoolDataProvider',
   WETHGateway = 'WETHGateway',
   WETH = 'WETH',
   WETHMocked = 'WETHMocked',
@@ -329,6 +329,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.rinkeby]: T;
   [eEthereumNetwork.main]: T;
   [eEthereumNetwork.hardhat]: T;
+  [eEthereumNetwork.docker]: T;
   [eEthereumNetwork.tenderlyMain]: T;
 }
 
@@ -391,7 +392,7 @@ export interface ICommonConfiguration {
 
   LendingRateOracleRatesCommon: iMultiPoolsAssets<IMarketRates>;
 
-  FallbackOracle: iParamsPerNetwork<tEthereumAddress>;
+  FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
 
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
   EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
@@ -403,6 +404,8 @@ export interface ICommonConfiguration {
   StakeParams: IStakeParams;
 
   RewardParams: IRewardParams;
+
+  ForkTest: IForkTest;
 }
 
 export interface IAugmentedConfiguration extends ICommonConfiguration {
@@ -487,4 +490,14 @@ export interface ITokenTypes<T> {
 export interface IRewardPoolParams {
   BasePoints: number;
   BoostFactor: number;
+}
+
+export interface IForkTest {
+  Donors: iParamsPerNetwork<ITokenAddress>;
+  DonatePct: number;
+  To: tEthereumAddress;
+}
+
+export interface IPrices {
+  [token: string]: number;
 }

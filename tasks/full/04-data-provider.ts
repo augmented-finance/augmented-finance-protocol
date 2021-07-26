@@ -1,7 +1,8 @@
 import { task } from 'hardhat/config';
 import { deployProtocolDataProvider } from '../../helpers/contracts-deployments';
-import { exit } from 'process';
 import { getMarketAddressController } from '../../helpers/contracts-getters';
+import { AccessFlags } from '../../helpers/access-flags';
+import { waitForTx } from '../../helpers/misc-utils';
 
 task('full:data-provider', 'Initialize lending pool configuration.')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -10,5 +11,8 @@ task('full:data-provider', 'Initialize lending pool configuration.')
 
     const addressesProvider = await getMarketAddressController();
 
-    await deployProtocolDataProvider(addressesProvider.address, verify);
+    const dataHelper = await deployProtocolDataProvider(addressesProvider.address, verify);
+    await waitForTx(
+      await addressesProvider.setAddress(AccessFlags.DATA_HELPER, dataHelper.address)
+    );
   });

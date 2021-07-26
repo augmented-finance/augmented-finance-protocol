@@ -1,9 +1,13 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { deployOracleRouter, deployLendingRateOracle } from '../../helpers/contracts-deployments';
+import {
+  deployOracleRouter,
+  deployLendingRateOracle,
+  deployStaticPriceOracle,
+} from '../../helpers/contracts-deployments';
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
-import { ICommonConfiguration, eNetwork, SymbolMap } from '../../helpers/types';
-import { getFirstSigner, waitForTx } from '../../helpers/misc-utils';
+import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress } from '../../helpers/types';
+import { falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import {
   ConfigNames,
   loadPoolConfig,
@@ -12,9 +16,10 @@ import {
 } from '../../helpers/configuration';
 import {
   getMarketAddressController,
-  getPairsTokenAggregator,
+  getTokenAggregatorPairs,
 } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
+import { oneEther } from '../../helpers/constants';
 
 task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -31,16 +36,47 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
     } = poolConfig as ICommonConfiguration;
     const lendingRateOracles = getLendingRateOracles(poolConfig);
     const addressProvider = await getMarketAddressController();
-    const fallbackOracleAddress = await getParamPerNetwork(FallbackOracle, network);
-    const reserveAssets = await getParamPerNetwork(ReserveAssets, network);
-    const chainlinkAggregators = await getParamPerNetwork(ChainlinkAggregator, network);
+    const fallbackOracle = getParamPerNetwork(FallbackOracle, network);
+    const reserveAssets = getParamPerNetwork(ReserveAssets, network);
+    const chainlinkAggregators = getParamPerNetwork(ChainlinkAggregator, network);
 
     const tokensToWatch: SymbolMap<string> = {
       ...reserveAssets,
       USD: UsdAddress,
     };
-    const [tokens, aggregators] = getPairsTokenAggregator(tokensToWatch, chainlinkAggregators);
 
+    let fallbackOracleAddress: tEthereumAddress;
+
+    if (typeof fallbackOracle == 'string') {
+      fallbackOracleAddress = fallbackOracle;
+    } else {
+      console.log('Deploying StaticPriceOracle as fallback');
+      const tokenAddressList: string[] = [];
+      const tokenPriceList: string[] = [];
+
+      for (const [tokenSymbol, tokenPrice] of Object.entries(fallbackOracle)) {
+        const tokenAddress = tokensToWatch[tokenSymbol];
+        if (falsyOrZeroAddress(tokenAddress)) {
+          continue;
+        }
+        tokenAddressList.push(tokenAddress);
+        const ethPrice = oneEther.multipliedBy(tokenPrice);
+        tokenPriceList.push(ethPrice.toString());
+        console.log(`\t${tokenSymbol}: ${tokenPrice} (${ethPrice} ether)`);
+      }
+      const oracle = await deployStaticPriceOracle([
+        addressProvider.address,
+        tokenAddressList,
+        tokenPriceList,
+      ]);
+      fallbackOracleAddress = oracle.address;
+    }
+    console.log('Fallback oracle: ', fallbackOracleAddress);
+
+    const [tokens, aggregators] = getTokenAggregatorPairs(tokensToWatch, chainlinkAggregators);
+
+    console.log('Deploying OracleRouter');
+    console.log('\tPrice aggregators for tokens: ', tokens);
     const oracleRouter = await deployOracleRouter(
       [
         addressProvider.address,
@@ -64,7 +100,7 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
       lendingRateOracle
     );
     //}
-    console.log('ORACLES: %s and %s', oracleRouter.address, lendingRateOracle.address);
+    console.log('Oracles: %s and %s', oracleRouter.address, lendingRateOracle.address);
     // Register the proxy price provider on the addressProvider
     await addressProvider.setPriceOracle(oracleRouter.address);
     await waitForTx(await addressProvider.setLendingRateOracle(lendingRateOracle.address));

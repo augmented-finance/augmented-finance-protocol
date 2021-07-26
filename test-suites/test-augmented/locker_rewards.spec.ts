@@ -23,7 +23,7 @@ import {
 } from './utils';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
-import { MAX_LOCKER_PERIOD, RAY, DAY, WEEK } from '../../helpers/constants';
+import { MAX_LOCKER_PERIOD, RAY, DAY, WEEK, MAX_LOCKER_WEEKS } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -368,14 +368,18 @@ describe('Token locker suite', () => {
     );
   });
 
-  it('2 users spread over 4 years, apply partial update', async () => {
+  it('3 users spread over 4 years, apply partial update', async () => {
+    await AGF.connect(root).mintReward(root.address, defaultStkAmount, false);
+    await AGF.connect(root).approve(xAGF.address, defaultStkAmount);
+
     await xAGF.connect(user1).lock(defaultStkAmount, WEEK, 0);
     await xAGF.connect(user2).lock(defaultStkAmount, MAX_LOCKER_PERIOD, 0);
+    await xAGF.connect(root).lock(defaultStkAmount, MAX_LOCKER_PERIOD + 6 * WEEK, 0);
     const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user2.address);
 
-    await mineToTicks(lockInfo.availableSince);
+    await mineToTicks(lockInfo.availableSince + WEEK);
 
-    const gasLimit = 250000;
+    const gasLimit = 275000;
     await xAGF
       .connect(user1)
       .update(0, { gasLimit: gasLimit })
@@ -387,7 +391,28 @@ describe('Token locker suite', () => {
     // do a partial update
     await xAGF.connect(user1).update(104, { gasLimit: gasLimit });
 
+    // overshoot by update
+    await xAGF.connect(user1).update(MAX_LOCKER_WEEKS - 104 + 3, { gasLimit: gasLimit });
+
+    // make sure that remaining locks are valid and further updates are correct
+    const lockInfo2 = await xAGF.balanceOfUnderlyingAndExpiry(root.address);
+    expect(lockInfo2.availableSince).gt(lockInfo.availableSince);
+    expect(await xAGF.totalSupply()).gt(0);
+    expect(await xAGF.totalSupply()).eq(await xAGF.balanceOf(root.address));
+
+    await mineToTicks(lockInfo2.availableSince + MAX_LOCKER_PERIOD);
+    expect(await xAGF.totalSupply()).eq(0);
+    expect(await xAGF.totalSupply()).eq(await xAGF.balanceOf(root.address));
+
+    await xAGF.connect(user1).update(1e12, { gasLimit: gasLimit });
+
+    expect(await xAGF.totalSupply()).eq(0);
+    expect(await xAGF.totalSupply()).eq(await xAGF.balanceOf(root.address));
+
     await xAGF.connect(user1).update(0, { gasLimit: gasLimit });
+
+    expect(await xAGF.totalSupply()).eq(0);
+    expect(await xAGF.totalSupply()).eq(await xAGF.balanceOf(root.address));
   });
 
   it('user1 creates then adds to a lock', async () => {

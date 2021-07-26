@@ -221,7 +221,7 @@ export const initReservesByHelper = async (
   return gasUsage; // Deprecated
 };
 
-export const getPairsTokenAggregator = (
+export const getTokenAggregatorPairs = (
   allAssetsAddresses: {
     [tokenSymbol: string]: tEthereumAddress;
   },

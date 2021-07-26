@@ -131,33 +131,33 @@ export const getAllMockedTokens = async () => {
   return tokens;
 };
 
-export const getPairsTokenAggregator = (
+export const getTokenAggregatorPairs = (
   allAssetsAddresses: {
     [tokenSymbol: string]: tEthereumAddress;
   },
-  aggregatorsAddresses: { [tokenSymbol: string]: tEthereumAddress }
+  aggregatorAddresses: { [tokenSymbol: string]: tEthereumAddress }
 ): [string[], string[]] => {
   console.log(allAssetsAddresses);
+  console.log(aggregatorAddresses);
+  if (aggregatorAddresses == undefined) {
+    return [[], []];
+  }
   const { ETH, USD, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
   console.log(assetsAddressesWithoutEth);
 
-  const pairs = Object.entries(assetsAddressesWithoutEth).map(([tokenSymbol, tokenAddress]) => {
-    //if (true/*tokenSymbol !== 'WETH' && tokenSymbol !== 'ETH' && tokenSymbol !== 'LpWETH'*/) {
-    const aggregatorAddressIndex = Object.keys(aggregatorsAddresses).findIndex(
-      (value) => value === tokenSymbol
-    );
-    const [, aggregatorAddress] = (Object.entries(aggregatorsAddresses) as [
-      string,
-      tEthereumAddress
-    ][])[aggregatorAddressIndex];
-    return [tokenAddress, aggregatorAddress];
-    //}
-  }) as [string, string][];
+  const assets: string[] = [];
+  const aggregators: string[] = [];
 
-  const mappedPairs = pairs.map(([asset]) => asset);
-  const mappedAggregators = pairs.map(([, source]) => source);
+  for (const [tokenSymbol, tokenAddress] of Object.entries(assetsAddressesWithoutEth)) {
+    const aggregatorAddress = aggregatorAddresses[tokenSymbol];
+    if (aggregatorAddress == undefined) {
+      continue;
+    }
+    assets.push(tokenAddress);
+    aggregators.push(aggregatorAddress);
+  }
 
-  return [mappedPairs, mappedAggregators];
+  return [assets, aggregators];
 };
 
 export const getAddressesProviderRegistry = async (address?: tEthereumAddress) =>
