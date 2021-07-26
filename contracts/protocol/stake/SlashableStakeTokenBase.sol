@@ -380,7 +380,7 @@ abstract contract SlashableStakeTokenBase is
     uint256 amountToReceive,
     address toAddress,
     uint256 toBalance
-  ) public returns (uint32) {
+  ) internal returns (uint32) {
     uint32 toCooldownPeriod = _stakersCooldowns[toAddress];
     if (toCooldownPeriod == 0) {
       return 0;
