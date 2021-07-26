@@ -51,7 +51,6 @@ abstract contract VersionedInitializable {
   modifier initializerRunAlways(uint256 localRevision) {
     uint256 topRevision = getRevision();
     (bool initializing, bool skip) = _preInitializer(localRevision, topRevision);
-    _;
 
     if (!skip) {
       lastInitializingRevision = localRevision;
