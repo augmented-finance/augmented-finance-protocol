@@ -60,7 +60,7 @@ export const getMarketAddressController = async (address?: tEthereumAddress) =>
   );
 
 export const hasMarketAddressController = async () =>
-  await hasAddr(eContractid.PreDeployedMarketAccessController);
+  await hasAddr(eContractid.MarketAccessController);
 
 export const getPreDeployedAddressController = async () =>
   MarketAccessControllerFactory.connect(
