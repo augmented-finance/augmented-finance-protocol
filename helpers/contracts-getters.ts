@@ -21,7 +21,6 @@ import {
   UniswapLiquiditySwapAdapterFactory,
   UniswapRepayAdapterFactory,
   VariableDebtTokenFactory,
-  WalletBalanceProviderFactory,
   WETH9MockedFactory,
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
@@ -257,12 +256,6 @@ export const getLendingPoolCollateralManagerImpl = async (address?: tEthereumAdd
     await getFirstSigner()
   );
 
-export const getWalletProvider = async (address?: tEthereumAddress) =>
-  WalletBalanceProviderFactory.connect(
-    address || (await getAddr(eContractid.WalletBalanceProvider)),
-    await getFirstSigner()
-  );
-
 export const getAddressById = async (id: string): Promise<tEthereumAddress | undefined> =>
   (await getFromJsonDb(id))?.address || undefined;
 
@@ -376,7 +369,7 @@ export const getMarketAccessController = async (address?: tEthereumAddress) =>
 
 export const getAGTokenByName = async (name: string): Promise<DepositToken> => {
   const dp = await getProtocolDataProvider();
-  const tokens = await dp.getAllATokens();
+  const tokens = await dp.getAllDepositTokens();
   // console.log(`all deposit tokens: ${tokens}`);
   const addrByName = tokens.filter((v) => v.symbol === name)[0].tokenAddress;
   // console.log(`deposit token addr by name ${name}: ${addrByName}`);

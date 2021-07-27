@@ -91,7 +91,7 @@ export const getUserData = async (
 
   return {
     scaledATokenBalance: new BigNumber(scaledATokenBalance),
-    currentATokenBalance: new BigNumber(userData.currentATokenBalance.toString()),
+    currentATokenBalance: new BigNumber(userData.currentDepositBalance.toString()),
     currentStableDebt: new BigNumber(userData.currentStableDebt.toString()),
     currentVariableDebt: new BigNumber(userData.currentVariableDebt.toString()),
     principalStableDebt: new BigNumber(userData.principalStableDebt.toString()),
