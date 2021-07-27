@@ -40,6 +40,11 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     bool active;
   }
 
+  struct TokenData {
+    string symbol;
+    address tokenAddress;
+  }
+
   IMarketAccessController public immutable ADDRESS_PROVIDER;
 
   constructor(IMarketAccessController addressesProvider) public {
@@ -227,6 +232,21 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     }
 
     return (tokens, tokenCount);
+  }
+
+  function getAllDepositTokens() external view returns (TokenData[] memory) {
+    ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
+    address[] memory reserves = pool.getReservesList();
+    TokenData[] memory depositTokens = new TokenData[](reserves.length);
+    for (uint256 i = 0; i < reserves.length; i++) {
+      DataTypes.ReserveData memory reserveData = pool.getReserveData(reserves[i]);
+      depositTokens[i] = TokenData({
+        symbol: IERC20Detailed(reserveData.aTokenAddress).symbol(),
+        tokenAddress: reserveData.aTokenAddress
+      });
+    }
+
+    return depositTokens;
   }
 
   function getReserveConfigurationData(address asset)
