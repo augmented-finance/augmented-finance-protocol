@@ -11,7 +11,6 @@ import {
   getLendingPoolCollateralManagerImpl,
   getLendingPoolConfiguratorImpl,
   getLendingPoolImpl,
-  getWalletProvider,
   getWETHGateway,
 } from '../../helpers/contracts-getters';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
@@ -50,7 +49,6 @@ task('verify:general', 'Verify contracts at Etherscan')
       const lendingPoolCollateralManagerImpl = await getLendingPoolCollateralManagerImpl();
 
       const dataProvider = await getProtocolDataProvider();
-      const walletProvider = await getWalletProvider();
 
       const wethGateway = await getWETHGateway();
 
@@ -78,9 +76,9 @@ task('verify:general', 'Verify contracts at Etherscan')
       console.log('\n- Verifying  Aave  Provider Helpers...\n');
       await verifyContract(dataProvider.address, [addressesProvider.address]);
 
-      // Wallet balance provider
-      console.log('\n- Verifying  Wallet Balance Provider...\n');
-      await verifyContract(walletProvider.address, []);
+      // // Wallet balance provider
+      // console.log('\n- Verifying  Wallet Balance Provider...\n');
+      // await verifyContract(walletProvider.address, []);
 
       // WETHGateway
       console.log('\n- Verifying  WETHGateway...\n');
