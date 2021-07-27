@@ -243,10 +243,30 @@ abstract contract SlashableStakeTokenBase is
 
   /**
    * @dev Gets end of the cooldown period.
-   * - Returns zero for a not staking user.
+   * - Returns zero for a non-staking user or .
    **/
   function getCooldown(address holder) external view override returns (uint32) {
     return _stakersCooldowns[holder];
+  }
+
+  function balanceAndCooldownOf(address holder)
+    external
+    view
+    override
+    returns (
+      uint256,
+      uint32 windowStart,
+      uint32 windowEnd
+    )
+  {
+    windowStart = _stakersCooldowns[holder];
+    if (windowStart != 0) {
+      windowEnd = windowStart + _unstakePeriod;
+      if (windowEnd < windowStart) {
+        windowEnd = type(uint32).max;
+      }
+    }
+    return (balanceOf(holder), windowStart, windowEnd);
   }
 
   function exchangeRate() public view override returns (uint256) {

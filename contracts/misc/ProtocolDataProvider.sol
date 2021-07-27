@@ -19,6 +19,7 @@ import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
 import {IDepositToken} from '../interfaces/IDepositToken.sol';
 import {IDerivedToken} from '../interfaces/IDerivedToken.sol';
 import {IStakeConfigurator} from '../protocol/stake/interfaces/IStakeConfigurator.sol';
+import {IStakeToken} from '../protocol/stake/interfaces/IStakeToken.sol';
 
 contract ProtocolDataProvider is IUiPoolDataProvider {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -43,6 +44,12 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   struct TokenData {
     string symbol;
     address tokenAddress;
+  }
+
+  struct StakeTokenBalance {
+    uint256 balance;
+    uint32 unstakeWindowStart;
+    uint32 unstakeWindowEnd;
   }
 
   IMarketAccessController public immutable ADDRESS_PROVIDER;
@@ -237,16 +244,30 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   function getAllDepositTokens() external view returns (TokenData[] memory) {
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
     address[] memory reserves = pool.getReservesList();
-    TokenData[] memory depositTokens = new TokenData[](reserves.length);
+    TokenData[] memory tokens = new TokenData[](reserves.length);
     for (uint256 i = 0; i < reserves.length; i++) {
       DataTypes.ReserveData memory reserveData = pool.getReserveData(reserves[i]);
-      depositTokens[i] = TokenData({
+      tokens[i] = TokenData({
         symbol: IERC20Detailed(reserveData.aTokenAddress).symbol(),
         tokenAddress: reserveData.aTokenAddress
       });
     }
 
-    return depositTokens;
+    return tokens;
+  }
+
+  function getAllReserveTokens() external view returns (TokenData[] memory) {
+    ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
+    address[] memory reserves = pool.getReservesList();
+    TokenData[] memory tokens = new TokenData[](reserves.length);
+    for (uint256 i = 0; i < reserves.length; i++) {
+      tokens[i] = TokenData({
+        symbol: IERC20Detailed(reserves[i]).symbol(),
+        tokenAddress: reserves[i]
+      });
+    }
+
+    return tokens;
   }
 
   function getReserveConfigurationData(address asset)
@@ -539,6 +560,31 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     data.referralRegistry = ADDRESS_PROVIDER.getAddress(AccessFlags.REFERRAL_REGISTRY);
   }
 
+  /**
+   * @notice Fetches balances for a list of _users and _tokens (ETH included with mock address)
+   * @param users The list of users
+   * @param tokens The list of stake tokens
+   * @return balances - an array with the concatenation of balances for each user
+   **/
+  function batchStakeBalanceOf(address[] calldata users, address[] calldata tokens)
+    external
+    view
+    returns (StakeTokenBalance[] memory balances)
+  {
+    balances = new StakeTokenBalance[](users.length * tokens.length);
+
+    for (uint256 i = 0; i < users.length; i++) {
+      for (uint256 j = 0; j < tokens.length; j++) {
+        StakeTokenBalance memory b;
+        (b.balance, b.unstakeWindowStart, b.unstakeWindowEnd) = IStakeToken(tokens[j])
+          .balanceAndCooldownOf(users[i]);
+        balances[i * tokens.length + j] = b;
+      }
+    }
+
+    return balances;
+  }
+
   // influenced by Aave && https://github.com/wbobeirne/eth-balance-checker/blob/master/contracts/BalanceChecker.sol
 
   /**
@@ -555,10 +601,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   }
 
   /**
-   * @notice Fetches, for a list of _users and _tokens (ETH included with mock address), the balances
+   * @notice Fetches balances for a list of _users and _tokens (ETH included with mock address)
    * @param users The list of users
    * @param tokens The list of tokens
-   * @return And array with the concatenation of, for each user, his/her balances
+   * @return An array with the concatenation of balances for each user
    **/
   function batchBalanceOf(address[] calldata users, address[] calldata tokens)
     external
