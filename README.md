@@ -63,10 +63,6 @@ The Augmented Finance protocol security and safety is at the high level:
 
 Augmented Finance’s team has developed a world-class lending and borrowing protocol to meet the existent needs of users and unlock the intelligent DeFi era. Join us to unlock a new level of innovation in DeFi and power a brand new generation of decentralized intelligent financial services.
 
-## Connect with the community
+## More Questions?
 
-You can join at the [Discord](https://discord.gg/bJgTWV8j7m) channel for asking questions about the protocol or talk about Aave with other peers.
-
-## Getting Started
-
-To be published soon.
+[FAQ](https://docs.augmented.finance/glossary-and-faq/faq), [Discord](https://discord.gg/bJgTWV8j7m), [Twitter](https://twitter.com/augmentedfin), [Telegram](https://t.me/augmentedfin), [Medium](https://augmentedfinance.medium.com/), [Reddit](https://www.reddit.com/user/augmentedfinance/)
