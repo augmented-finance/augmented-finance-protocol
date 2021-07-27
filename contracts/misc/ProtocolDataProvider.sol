@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
+import {Address} from '../dependencies/openzeppelin/contracts/Address.sol';
 import {IERC20Detailed} from '../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 import {AccessFlags} from '../access/AccessFlags.sol';
@@ -16,17 +17,27 @@ import {IPoolAddressProvider} from '../interfaces/IPoolAddressProvider.sol';
 import {IUiPoolDataProvider} from './interfaces/IUiPoolDataProvider.sol';
 import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
 import {IDepositToken} from '../interfaces/IDepositToken.sol';
+import {IDerivedToken} from '../interfaces/IDerivedToken.sol';
+import {IStakeConfigurator} from '../protocol/stake/interfaces/IStakeConfigurator.sol';
 
 contract ProtocolDataProvider is IUiPoolDataProvider {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using UserConfiguration for DataTypes.UserConfigurationMap;
 
-  address constant MKR = 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
-  address constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+  address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+  address public constant USD = 0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96;
 
-  struct TokenData {
-    string symbol;
-    address tokenAddress;
+  enum TokenType {PoolAsset, Deposit, VariableDebt, StableDebt, Stake, Reward, RewardStake}
+
+  struct TokenDescription {
+    address token;
+    // priceToken == 0 for a non-transferrable token
+    address priceToken;
+    string tokenSymbol;
+    address underlying;
+    uint8 decimals;
+    TokenType tokenType;
+    bool active;
   }
 
   IMarketAccessController public immutable ADDRESS_PROVIDER;
@@ -35,39 +46,187 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     ADDRESS_PROVIDER = addressesProvider;
   }
 
-  function getAllReservesTokens() external view returns (TokenData[] memory) {
+  function getAllTokenDescriptions(bool includeAssets)
+    external
+    view
+    returns (TokenDescription[] memory tokens, uint256 tokenCount)
+  {
+    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getStakeConfigurator());
+    address[] memory stakeList = stakeCfg.list();
+
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
-    address[] memory reserves = pool.getReservesList();
-    TokenData[] memory reservesTokens = new TokenData[](reserves.length);
-    for (uint256 i = 0; i < reserves.length; i++) {
-      if (reserves[i] == MKR) {
-        reservesTokens[i] = TokenData({symbol: 'MKR', tokenAddress: reserves[i]});
-        continue;
-      }
-      if (reserves[i] == ETH) {
-        reservesTokens[i] = TokenData({symbol: 'ETH', tokenAddress: reserves[i]});
-        continue;
-      }
-      reservesTokens[i] = TokenData({
-        symbol: IERC20Detailed(reserves[i]).symbol(),
-        tokenAddress: reserves[i]
-      });
+    address[] memory reserveList = pool.getReservesList();
+
+    tokenCount = 2 + stakeList.length + reserveList.length * 3;
+    if (includeAssets) {
+      tokenCount += reserveList.length;
     }
-    return reservesTokens;
+
+    tokens = new TokenDescription[](tokenCount);
+
+    address token = ADDRESS_PROVIDER.getRewardToken();
+    string memory symbol = IERC20Detailed(token).symbol();
+    tokens[0] = TokenDescription(
+      token,
+      token,
+      symbol,
+      address(0),
+      IERC20Detailed(token).decimals(),
+      TokenType.Reward,
+      true
+    );
+
+    token = ADDRESS_PROVIDER.getRewardStakeToken();
+    symbol = IERC20Detailed(token).symbol();
+    tokens[1] = TokenDescription(
+      token,
+      address(0),
+      symbol,
+      tokens[0].token,
+      IERC20Detailed(token).decimals(),
+      TokenType.RewardStake,
+      true
+    );
+    tokenCount = 2;
+
+    for (uint256 i = 0; i < reserveList.length; i++) {
+      token = reserveList[i];
+      DataTypes.ReserveData memory reserveData = pool.getReserveData(token);
+      (bool isActive, , bool canBorrow, bool canBorrowStable) =
+        reserveData.configuration.getFlagsMemory();
+      canBorrow = isActive && canBorrow;
+      canBorrowStable = canBorrowStable && canBorrow;
+
+      uint8 decimals = reserveData.configuration.getDecimalsMemory();
+
+      if (includeAssets) {
+        symbol = IERC20Detailed(token).symbol();
+        tokens[tokenCount] = TokenDescription(
+          token,
+          token,
+          symbol,
+          address(0),
+          decimals,
+          TokenType.PoolAsset,
+          true
+        );
+        tokenCount++;
+      }
+
+      symbol = IERC20Detailed(reserveData.aTokenAddress).symbol();
+      tokens[tokenCount] = TokenDescription(
+        reserveData.aTokenAddress,
+        reserveData.aTokenAddress,
+        symbol,
+        token,
+        decimals,
+        TokenType.Deposit,
+        isActive
+      );
+      tokenCount++;
+
+      if (reserveData.variableDebtTokenAddress != address(0)) {
+        symbol = IERC20Detailed(reserveData.variableDebtTokenAddress).symbol();
+        tokens[tokenCount] = TokenDescription(
+          reserveData.variableDebtTokenAddress,
+          address(0),
+          symbol,
+          token,
+          decimals,
+          TokenType.VariableDebt,
+          canBorrow
+        );
+        tokenCount++;
+      }
+
+      if (reserveData.stableDebtTokenAddress != address(0)) {
+        symbol = IERC20Detailed(reserveData.stableDebtTokenAddress).symbol();
+        tokens[tokenCount] = TokenDescription(
+          reserveData.stableDebtTokenAddress,
+          address(0),
+          symbol,
+          token,
+          decimals,
+          TokenType.StableDebt,
+          canBorrowStable
+        );
+        tokenCount++;
+      }
+    }
+
+    for (uint256 i = 0; i < stakeList.length; i++) {
+      token = stakeList[i];
+      address u = IDerivedToken(token).UNDERLYING_ASSET_ADDRESS();
+      tokens[tokenCount] = TokenDescription(
+        token,
+        address(0),
+        IERC20Detailed(token).symbol(),
+        u,
+        IERC20Detailed(token).decimals(),
+        TokenType.Stake,
+        true
+      );
+      tokenCount++;
+    }
+
+    return (tokens, tokenCount);
   }
 
-  function getAllATokens() external view returns (TokenData[] memory) {
+  function getAllTokens(bool includeAssets)
+    public
+    view
+    returns (address[] memory tokens, uint256 tokenCount)
+  {
+    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getStakeConfigurator());
+    address[] memory stakeList = stakeCfg.list();
+
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
-    address[] memory reserves = pool.getReservesList();
-    TokenData[] memory aTokens = new TokenData[](reserves.length);
-    for (uint256 i = 0; i < reserves.length; i++) {
-      DataTypes.ReserveData memory reserveData = pool.getReserveData(reserves[i]);
-      aTokens[i] = TokenData({
-        symbol: IERC20Detailed(reserveData.aTokenAddress).symbol(),
-        tokenAddress: reserveData.aTokenAddress
-      });
+    address[] memory reserveList = pool.getReservesList();
+
+    tokenCount = 2 + stakeList.length + reserveList.length * 3;
+    if (includeAssets) {
+      tokenCount += reserveList.length;
     }
-    return aTokens;
+    tokens = new address[](tokenCount);
+
+    tokens[0] = ADDRESS_PROVIDER.getRewardToken();
+    tokens[1] = ADDRESS_PROVIDER.getRewardStakeToken();
+
+    tokenCount = 2;
+
+    for (uint256 i = 0; i < reserveList.length; i++) {
+      address token = reserveList[i];
+      DataTypes.ReserveData memory reserveData = pool.getReserveData(token);
+      (bool isActive, , bool canBorrow, bool canBorrowStable) =
+        reserveData.configuration.getFlagsMemory();
+      canBorrow = isActive && canBorrow;
+      canBorrowStable = canBorrowStable && canBorrow;
+
+      if (includeAssets) {
+        tokens[tokenCount] = token;
+        tokenCount++;
+      }
+
+      tokens[tokenCount] = reserveData.aTokenAddress;
+      tokenCount++;
+
+      if (reserveData.variableDebtTokenAddress != address(0)) {
+        tokens[tokenCount] = reserveData.variableDebtTokenAddress;
+        tokenCount++;
+      }
+
+      if (reserveData.stableDebtTokenAddress != address(0)) {
+        tokens[tokenCount] = reserveData.stableDebtTokenAddress;
+        tokenCount++;
+      }
+    }
+
+    for (uint256 i = 0; i < stakeList.length; i++) {
+      tokens[tokenCount] = stakeList[i];
+      tokenCount++;
+    }
+
+    return (tokens, tokenCount);
   }
 
   function getReserveConfigurationData(address asset)
@@ -135,7 +294,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     external
     view
     returns (
-      uint256 currentATokenBalance,
+      uint256 currentDepositBalance,
       uint256 currentStableDebt,
       uint256 currentVariableDebt,
       uint256 principalStableDebt,
@@ -152,7 +311,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     DataTypes.UserConfigurationMap memory userConfig =
       ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getUserConfiguration(user);
 
-    currentATokenBalance = IERC20Detailed(reserve.aTokenAddress).balanceOf(user);
+    currentDepositBalance = IERC20Detailed(reserve.aTokenAddress).balanceOf(user);
     currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);
     currentStableDebt = IERC20Detailed(reserve.stableDebtTokenAddress).balanceOf(user);
     principalStableDebt = IStableDebtToken(reserve.stableDebtTokenAddress).principalBalanceOf(user);
@@ -183,8 +342,6 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       reserve.variableDebtTokenAddress
     );
   }
-
-  address public constant MOCK_USD_ADDRESS = 0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96;
 
   function getInterestRateStrategySlopes(IReserveInterestRateStrategy interestRateStrategy)
     internal
@@ -266,7 +423,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       reserveData.stableDebtTokenAddress = baseData.stableDebtTokenAddress;
       reserveData.variableDebtTokenAddress = baseData.variableDebtTokenAddress;
       reserveData.interestRateStrategyAddress = baseData.interestRateStrategyAddress;
-      reserveData.priceInEth = oracle.getAssetPrice(reserveData.underlyingAsset);
+      reserveData.priceInEth = oracle.getAssetPrice(reserveData.pricingAsset);
 
       reserveData.availableLiquidity = IERC20Detailed(reserveData.underlyingAsset).balanceOf(
         reserveData.depositTokenAddress
@@ -345,7 +502,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         }
       }
     }
-    return (reservesData, userReservesData, oracle.getAssetPrice(MOCK_USD_ADDRESS));
+    return (reservesData, userReservesData, oracle.getAssetPrice(USD));
   }
 
   function getAddresses() external view override returns (Addresses memory data) {
@@ -360,5 +517,64 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     data.rewardToken = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_TOKEN);
     data.rewardStake = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_STAKE_TOKEN);
     data.referralRegistry = ADDRESS_PROVIDER.getAddress(AccessFlags.REFERRAL_REGISTRY);
+  }
+
+  // influenced by Aave && https://github.com/wbobeirne/eth-balance-checker/blob/master/contracts/BalanceChecker.sol
+
+  /**
+    @dev Check the token balance of a wallet in a token contract
+    Returns the balance of the token for user, and 0 on non-contract address
+    **/
+  function balanceOf(address user, address token) public view returns (uint256) {
+    if (token == ETH) {
+      return user.balance; // ETH balance
+    } else if (Address.isContract(token)) {
+      return IERC20Detailed(token).balanceOf(user);
+    }
+    return 0;
+  }
+
+  /**
+   * @notice Fetches, for a list of _users and _tokens (ETH included with mock address), the balances
+   * @param users The list of users
+   * @param tokens The list of tokens
+   * @return And array with the concatenation of, for each user, his/her balances
+   **/
+  function batchBalanceOf(address[] calldata users, address[] calldata tokens)
+    external
+    view
+    returns (uint256[] memory)
+  {
+    uint256[] memory balances = new uint256[](users.length * tokens.length);
+
+    for (uint256 i = 0; i < users.length; i++) {
+      for (uint256 j = 0; j < tokens.length; j++) {
+        balances[i * tokens.length + j] = balanceOf(users[i], tokens[j]);
+      }
+    }
+
+    return balances;
+  }
+
+  /**
+    @dev provides balances of user wallet for all tokens available on the protocol
+    */
+  function getUserWalletBalances(address user, bool includeAssets)
+    external
+    view
+    returns (
+      address[] memory tokens,
+      uint256[] memory balances,
+      uint256 tokenCount
+    )
+  {
+    (tokens, tokenCount) = getAllTokens(includeAssets);
+
+    balances = new uint256[](tokenCount);
+    for (uint256 j = 0; j < tokenCount; j++) {
+      balances[j] = balanceOf(user, tokens[j]);
+    }
+
+    return (tokens, balances, tokenCount);
   }
 }

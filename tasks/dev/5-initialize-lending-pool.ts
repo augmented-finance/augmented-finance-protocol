@@ -1,6 +1,5 @@
 import { task } from 'hardhat/config';
 import {
-  deployWalletBalancerProvider,
   deployProtocolDataProvider,
   deployTreasuryImpl,
 } from '../../helpers/contracts-deployments';
@@ -48,6 +47,4 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
       verify
     );
     await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, dataHelper);
-
-    await deployWalletBalancerProvider(verify);
   });

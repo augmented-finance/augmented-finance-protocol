@@ -21,7 +21,6 @@ import {
   UniswapLiquiditySwapAdapterFactory,
   UniswapRepayAdapterFactory,
   VariableDebtTokenFactory,
-  WalletBalanceProviderFactory,
   WETH9MockedFactory,
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
@@ -241,12 +240,6 @@ export const getLendingPoolConfiguratorImpl = async (address?: tEthereumAddress)
 export const getLendingPoolCollateralManagerImpl = async (address?: tEthereumAddress) =>
   LendingPoolCollateralManagerFactory.connect(
     address || (await getAddr(eContractid.LendingPoolCollateralManagerImpl)),
-    await getFirstSigner()
-  );
-
-export const getWalletProvider = async (address?: tEthereumAddress) =>
-  WalletBalanceProviderFactory.connect(
-    address || (await getAddr(eContractid.WalletBalanceProvider)),
     await getFirstSigner()
   );
 

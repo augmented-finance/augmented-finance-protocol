@@ -8,7 +8,6 @@ import {
   deployMockPriceOracle,
   deployOracleRouter,
   deployMockFlashLoanReceiver,
-  deployWalletBalancerProvider,
   deployProtocolDataProvider,
   deployLendingRateOracle,
   deployWETHGateway,
@@ -207,8 +206,6 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   await deployUniswapLiquiditySwapAdapter(adapterParams);
   await deployUniswapRepayAdapter(adapterParams);
   await deployFlashLiquidationAdapter(adapterParams);
-
-  await deployWalletBalancerProvider();
 
   await deployWETHGateway([addressProvider.address, mockTokens.WETH.address]);
 

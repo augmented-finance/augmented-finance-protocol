@@ -1,15 +1,9 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import {
-  deployLendingPoolCollateralManagerImpl,
-  deployTreasuryImpl,
-  deployWalletBalancerProvider,
-} from '../../helpers/contracts-deployments';
+import { deployTreasuryImpl } from '../../helpers/contracts-deployments';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
-import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
-import { exit } from 'process';
 import {
   getProtocolDataProvider,
   getMarketAddressController,
@@ -42,6 +36,4 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
 
     await initReservesByHelper(ReservesConfig, reserveAssets, Names, treasuryAddress, verify);
     await configureReservesByHelper(ReservesConfig, reserveAssets, testHelpers);
-
-    await deployWalletBalancerProvider(verify);
   });

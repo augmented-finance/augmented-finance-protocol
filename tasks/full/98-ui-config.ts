@@ -6,6 +6,7 @@ import { falsyOrZeroAddress, writeUiConfig } from '../../helpers/misc-utils';
 import {
   getAddressesProviderRegistry,
   getMarketAddressController,
+  getProtocolDataProvider,
 } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
@@ -41,7 +42,17 @@ task('full:write-ui-config', 'Prepare UI config')
     const dataHelperAddress = await addressProvider.getAddress(AccessFlags.DATA_HELPER);
     if (falsyOrZeroAddress(dataHelperAddress)) {
       console.log('Data Helper is unavailable, configuration is incomplete');
-    } else {
-      writeUiConfig(network, registry.address, addressProvider.address, dataHelperAddress);
+      return;
     }
+
+    writeUiConfig(network, registry.address, addressProvider.address, dataHelperAddress);
+
+    const dataHelper = await getProtocolDataProvider(dataHelperAddress);
+    const allTokens = await dataHelper.getAllTokenDescriptions(true);
+    console.log('All tokens:');
+    allTokens.tokens.slice(0, allTokens.tokenCount.toNumber()).map((x) => {
+      console.log(
+        ` ${x.tokenSymbol} (${x.tokenType} ${x.active} ${x.decimals}):\t${x.token} ${x.underlying} ${x.priceToken}`
+      );
+    });
   });

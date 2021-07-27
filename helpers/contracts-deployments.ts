@@ -50,7 +50,6 @@ import {
   UniswapLiquiditySwapAdapterFactory,
   UniswapRepayAdapterFactory,
   VariableDebtTokenFactory,
-  WalletBalanceProviderFactory,
   WETH9MockedFactory,
   WETHGatewayFactory,
   FlashLiquidationAdapterFactory,
@@ -252,14 +251,6 @@ export const deployMockFlashLoanReceiver = async (
     await new MockFlashLoanReceiverFactory(await getFirstSigner()).deploy(addressesProvider),
     eContractid.MockFlashLoanReceiver,
     [addressesProvider],
-    verify
-  );
-
-export const deployWalletBalancerProvider = async (verify?: boolean) =>
-  withSaveAndVerify(
-    await new WalletBalanceProviderFactory(await getFirstSigner()).deploy(),
-    eContractid.WalletBalanceProvider,
-    [],
     verify
   );
 
