@@ -49,7 +49,6 @@ export enum eContractid {
   StaticPriceOracle = 'StaticPriceOracle',
   OracleRouter = 'OracleRouter',
   MockFlashLoanReceiver = 'MockFlashLoanReceiver',
-  WalletBalanceProvider = 'WalletBalanceProvider',
   MockDepositToken = 'MockDepositToken',
   MockStableDebtToken = 'MockStableDebtToken',
   MockVariableDebtToken = 'MockVariableDebtToken',
