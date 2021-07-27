@@ -70,6 +70,7 @@ import {
   registerContractInJsonDb,
   linkBytecode,
   withVerify,
+  withSaveAndVerifyOnce,
 } from './contracts-helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { LendingPoolLibraryAddresses } from '../types/LendingPoolFactory';
@@ -85,6 +86,9 @@ export const deployMarketAccessController = async (marketId: string, verify?: bo
     [marketId],
     verify
   );
+
+export const deployMarketAccessControllerNoSave = async (marketId: string) =>
+  await new MarketAccessControllerFactory(await getFirstSigner()).deploy(marketId);
 
 export const deployAddressesProviderRegistry = async (verify?: boolean) =>
   withSaveAndVerify(
@@ -148,9 +152,7 @@ export const deployValidationLogic = async (
   return withSaveAndVerify(validationLogic, eContractid.ValidationLogic, [], verify);
 };
 
-export const deployAaveLibraries = async (
-  verify?: boolean
-): Promise<LendingPoolLibraryAddresses> => {
+export const deployLibraries = async (verify?: boolean): Promise<LendingPoolLibraryAddresses> => {
   const reserveLogic = await deployReserveLogicLibrary(verify);
   const genericLogic = await deployGenericLogic(reserveLogic, verify);
   const validationLogic = await deployValidationLogic(reserveLogic, genericLogic, verify);
@@ -174,9 +176,9 @@ export const deployAaveLibraries = async (
 };
 
 export const deployLendingPoolImpl = async (verify?: boolean) => {
-  const libraries = await deployAaveLibraries(verify);
-  return withSaveAndVerify(
-    await new LendingPoolFactory(libraries, await getFirstSigner()).deploy(),
+  const libraries = await deployLibraries(verify);
+  return withSaveAndVerifyOnce(
+    new LendingPoolFactory(libraries, await getFirstSigner()),
     eContractid.LendingPoolImpl,
     [],
     verify
@@ -427,32 +429,32 @@ export const deployDelegationAwareDepositToken = async (
 };
 
 export const deployStableDebtTokenImpl = async (verify: boolean) =>
-  withSaveAndVerify(
-    await new StableDebtTokenFactory(await getFirstSigner()).deploy(),
+  withSaveAndVerifyOnce(
+    new StableDebtTokenFactory(await getFirstSigner()),
     eContractid.StableDebtTokenImpl,
     [],
     verify
   );
 
 export const deployVariableDebtTokenImpl = async (verify: boolean) =>
-  withSaveAndVerify(
-    await new VariableDebtTokenFactory(await getFirstSigner()).deploy(),
+  withSaveAndVerifyOnce(
+    new VariableDebtTokenFactory(await getFirstSigner()),
     eContractid.VariableDebtTokenImpl,
     [],
     verify
   );
 
 export const deployDepositTokenImpl = async (verify: boolean) =>
-  withSaveAndVerify(
-    await new DepositTokenFactory(await getFirstSigner()).deploy(),
+  withSaveAndVerifyOnce(
+    new DepositTokenFactory(await getFirstSigner()),
     eContractid.DepositTokenImpl,
     [],
     verify
   );
 
 export const deployDelegationAwareDepositTokenImpl = async (verify: boolean) =>
-  withSaveAndVerify(
-    await new DelegationAwareDepositTokenFactory(await getFirstSigner()).deploy(),
+  withSaveAndVerifyOnce(
+    new DelegationAwareDepositTokenFactory(await getFirstSigner()),
     eContractid.DelegationAwareDepositTokenImpl,
     [],
     verify

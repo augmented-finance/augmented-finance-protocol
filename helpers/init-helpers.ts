@@ -9,9 +9,9 @@ import {
 } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, waitForTx } from './misc-utils';
-import { getMarketAddressController, getLendingPoolConfiguratorProxy } from './contracts-getters';
+import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contracts-getters';
 import { registerContractInJsonDb } from './contracts-helpers';
-import { BigNumber, BigNumberish, Signer } from 'ethers';
+import { BigNumberish } from 'ethers';
 import {
   deployDefaultReserveInterestRateStrategy,
   deployDelegationAwareDepositToken,
@@ -23,6 +23,7 @@ import {
   deployVariableDebtTokenImpl,
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
+import { MarketAccessController } from '../types';
 
 export const chooseDepositTokenDeployment = (id: eContractid) => {
   switch (id) {
@@ -36,16 +37,14 @@ export const chooseDepositTokenDeployment = (id: eContractid) => {
 };
 
 export const initReservesByHelper = async (
+  addressProvider: MarketAccessController,
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
   names: ITokenNames,
+  skipExistingAssets: boolean,
   treasuryAddress: tEthereumAddress,
   verify: boolean
-): Promise<BigNumber> => {
-  let gasUsage = BigNumber.from('0');
-
-  const addressProvider = await getMarketAddressController();
-
+) => {
   // CHUNK CONFIGURATION
   const initChunks = 1;
 
@@ -100,9 +99,17 @@ export const initReservesByHelper = async (
   ) as [string, IReserveParams][];
 
   if (delegatedAwareReserves.length > 0) {
-    console.log('\tdeployDelegationAwareDepositTokenImpl')
+    console.log('deployDelegationAwareDepositTokenImpl');
     const delegationAwareATokenImplementation = await deployDelegationAwareDepositTokenImpl(verify);
     delegationAwareATokenImplementationAddress = delegationAwareATokenImplementation.address;
+  }
+
+  const existingAssets = new Set<string>();
+
+  if (skipExistingAssets) {
+    const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
+    const reserves = await lendingPool.getReservesList();
+    reserves.forEach((addr) => existingAssets.add(addr));
   }
 
   const reserves = Object.entries(reservesParams).filter(
@@ -112,7 +119,16 @@ export const initReservesByHelper = async (
   ) as [string, IReserveParams][];
 
   for (let [symbol, params] of reserves) {
-    // if (symbol !== 'DAI') continue;
+    const tokenAddress = tokenAddresses[symbol];
+    if (tokenAddress == undefined) {
+      console.log(`Asset ${symbol} is missing in ${tokenAddresses}`);
+      throw 'asset is missing: ' + symbol;
+    }
+
+    if (existingAssets.has(tokenAddress)) {
+      console.log(`Asset ${symbol} was skipped`);
+      continue;
+    }
 
     const { strategy, aTokenImpl, reserveDecimals } = params;
     const {
@@ -154,12 +170,7 @@ export const initReservesByHelper = async (
 
     reserveInitDecimals.push(reserveDecimals);
 
-    if (tokenAddresses[symbol] == undefined) {
-      console.log('Asset ', symbol, ' is missing in ', tokenAddresses);
-      throw 'asset is missing: ' + symbol;
-    }
-
-    reserveTokens.push(tokenAddresses[symbol]);
+    reserveTokens.push(tokenAddress);
     reserveSymbols.push(symbol);
   }
 
@@ -218,10 +229,7 @@ export const initReservesByHelper = async (
 
     console.log(`  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
     console.log('    * gasUsed', tx3.gasUsed.toString());
-    //gasUsage = gasUsage.add(tx3.gasUsed);
   }
-
-  return gasUsage; // Deprecated
 };
 
 export const getTokenAggregatorPairs = (
@@ -252,11 +260,11 @@ export const getTokenAggregatorPairs = (
 };
 
 export const configureReservesByHelper = async (
+  addressProvider: MarketAccessController,
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
   helpers: ProtocolDataProvider
 ) => {
-  const addressProvider = await getMarketAddressController();
   const symbols: string[] = [];
 
   const inputParams: {

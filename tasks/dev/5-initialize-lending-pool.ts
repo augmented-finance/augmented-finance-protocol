@@ -40,11 +40,18 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     const treasuryAddress = treasuryImpl.address;
 
     await initReservesByHelper(
+      addressesProvider,
       reservesParams,
       protoPoolReservesAddresses,
       Names,
+      false,
       treasuryAddress,
       verify
     );
-    await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, dataHelper);
+    await configureReservesByHelper(
+      addressesProvider,
+      reservesParams,
+      protoPoolReservesAddresses,
+      dataHelper
+    );
   });

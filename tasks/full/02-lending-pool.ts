@@ -23,7 +23,7 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
     const deployer = await getFirstSigner();
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-    // LendingPool is updated for existing installations
+    // LendingPool will be updated for existing installations
     let lpAddress = continuation ? await addressProvider.getLendingPool() : '';
     const newLandingPool = falsyOrZeroAddress(lpAddress);
 

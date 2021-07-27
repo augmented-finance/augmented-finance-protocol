@@ -46,11 +46,10 @@ import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
-import { falsyOrZeroAddress, getFirstSigner, getFromJsonDb } from './misc-utils';
+import { getFirstSigner, getFromJsonDb, hasInJsonDb } from './misc-utils';
 import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } from './types';
 
 const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
-const hasAddr = async (id: eContractid) => !falsyOrZeroAddress((await getFromJsonDb(id))?.address);
 
 export const getMarketAddressController = async (address?: tEthereumAddress) =>
   MarketAccessControllerFactory.connect(
@@ -59,7 +58,7 @@ export const getMarketAddressController = async (address?: tEthereumAddress) =>
   );
 
 export const hasMarketAddressController = async () =>
-  await hasAddr(eContractid.MarketAccessController);
+  await hasInJsonDb(eContractid.MarketAccessController);
 
 export const getPreDeployedAddressController = async () =>
   MarketAccessControllerFactory.connect(
@@ -68,7 +67,7 @@ export const getPreDeployedAddressController = async () =>
   );
 
 export const hasPreDeployedAddressController = async () =>
-  await hasAddr(eContractid.PreDeployedMarketAccessController);
+  await hasInJsonDb(eContractid.PreDeployedMarketAccessController);
 
 export const getLendingPoolConfiguratorProxy = async (address: tEthereumAddress) => {
   return LendingPoolConfiguratorFactory.connect(address, await getFirstSigner());

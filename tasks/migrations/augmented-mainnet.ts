@@ -11,7 +11,7 @@ import {
 import { usingTenderly } from '../../helpers/tenderly-utils';
 import { exit } from 'process';
 
-task('augmented:mainnet', 'Deploy development enviroment')
+task('augmented:mainnet', 'Deploy enviroment')
   .addFlag('incremental', 'Continue interrupted installation')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(async ({ incremental, verify }, DRE) => {
@@ -19,6 +19,10 @@ task('augmented:mainnet', 'Deploy development enviroment')
     await DRE.run('set-DRE');
     if (!incremental) {
       await cleanupJsonDb(DRE.network.name);
+    } else {
+      console.log('======================================================================');
+      console.log('====================    ATTN! INCREMENTAL MODE    ====================');
+      console.log('======================================================================');
     }
     await cleanupUiConfig();
 

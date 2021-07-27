@@ -189,9 +189,22 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   addressProvider.setTreasuryImpl(treasuryImpl.address);
   const treasuryAddress = treasuryImpl.address;
 
-  await initReservesByHelper(reservesParams, allReservesAddresses, Names, treasuryAddress, false);
+  await initReservesByHelper(
+    addressProvider,
+    reservesParams,
+    allReservesAddresses,
+    Names,
+    false,
+    treasuryAddress,
+    false
+  );
 
-  await configureReservesByHelper(reservesParams, allReservesAddresses, testHelpers);
+  await configureReservesByHelper(
+    addressProvider,
+    reservesParams,
+    allReservesAddresses,
+    testHelpers
+  );
 
   await deployMockFlashLoanReceiver(addressProvider.address);
 

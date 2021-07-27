@@ -195,6 +195,9 @@ export const logExternalContractInJsonDb = async (contractId: string, contractAd
 export const getFromJsonDb = async (id: string) =>
   await getDb().get(`${DRE.network.name}.named.${id}`).value();
 
+export const hasInJsonDb = async (id: string) =>
+  !falsyOrZeroAddress((await getFromJsonDb(id))?.address);
+
 export const printContracts = (deployer: string) => {
   const currentNetwork = DRE.network.name;
   const db = getDb();

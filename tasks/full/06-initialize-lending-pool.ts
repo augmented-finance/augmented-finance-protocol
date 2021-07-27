@@ -6,10 +6,8 @@ import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { AccessFlags } from '../../helpers/access-flags';
-import {
-  getProtocolDataProvider,
-  getMarketAddressController,
-} from '../../helpers/contracts-getters';
+import { getProtocolDataProvider } from '../../helpers/contracts-getters';
+import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 
 task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -31,7 +29,9 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       await addressProvider.getAddress(AccessFlags.DATA_HELPER)
     );
 
-    let treasuryAddress = freshStart && !continuation ? '' : await addressProvider.getTreasury();
+    // Treasury implementation is updated for existing installations
+    let treasuryAddress = continuation ? await addressProvider.getTreasury() : '';
+
     if (falsyOrZeroAddress(treasuryAddress)) {
       const treasuryImpl = await deployTreasuryImpl();
       await addressProvider.setTreasuryImpl(treasuryImpl.address);
@@ -41,6 +41,16 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
     console.log('\tTreasury:', treasuryAddress);
 
     console.log('ReserveAssets: ', reserveAssets);
-    await initReservesByHelper(ReservesConfig, reserveAssets, Names, treasuryAddress, verify);
-    await configureReservesByHelper(ReservesConfig, reserveAssets, testHelpers);
+    // asset initialization is skipped for existing assets
+    await initReservesByHelper(
+      addressProvider,
+      ReservesConfig,
+      reserveAssets,
+      Names,
+      continuation || !freshStart,
+      treasuryAddress,
+      verify
+    );
+    // but configuration will be always applied
+    await configureReservesByHelper(addressProvider, ReservesConfig, reserveAssets, testHelpers);
   });
