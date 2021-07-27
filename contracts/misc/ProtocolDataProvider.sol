@@ -77,11 +77,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     tokens = new TokenDescription[](tokenCount);
 
     address token = ADDRESS_PROVIDER.getRewardToken();
-    string memory symbol = IERC20Detailed(token).symbol();
     tokens[0] = TokenDescription(
       token,
       token,
-      symbol,
+      IERC20Detailed(token).symbol(),
       address(0),
       IERC20Detailed(token).decimals(),
       TokenType.Reward,
@@ -89,11 +88,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     );
 
     token = ADDRESS_PROVIDER.getRewardStakeToken();
-    symbol = IERC20Detailed(token).symbol();
     tokens[1] = TokenDescription(
       token,
       address(0),
-      symbol,
+      IERC20Detailed(token).symbol(),
       tokens[0].token,
       IERC20Detailed(token).decimals(),
       TokenType.RewardStake,
@@ -112,11 +110,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       uint8 decimals = reserveData.configuration.getDecimalsMemory();
 
       if (includeAssets) {
-        symbol = IERC20Detailed(token).symbol();
         tokens[tokenCount] = TokenDescription(
           token,
           token,
-          symbol,
+          IERC20Detailed(token).symbol(),
           address(0),
           decimals,
           TokenType.PoolAsset,
@@ -125,11 +122,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         tokenCount++;
       }
 
-      symbol = IERC20Detailed(reserveData.aTokenAddress).symbol();
       tokens[tokenCount] = TokenDescription(
         reserveData.aTokenAddress,
         reserveData.aTokenAddress,
-        symbol,
+        IERC20Detailed(reserveData.aTokenAddress).symbol(),
         token,
         decimals,
         TokenType.Deposit,
@@ -138,11 +134,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       tokenCount++;
 
       if (reserveData.variableDebtTokenAddress != address(0)) {
-        symbol = IERC20Detailed(reserveData.variableDebtTokenAddress).symbol();
         tokens[tokenCount] = TokenDescription(
           reserveData.variableDebtTokenAddress,
           address(0),
-          symbol,
+          IERC20Detailed(reserveData.variableDebtTokenAddress).symbol(),
           token,
           decimals,
           TokenType.VariableDebt,
@@ -152,11 +147,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       }
 
       if (reserveData.stableDebtTokenAddress != address(0)) {
-        symbol = IERC20Detailed(reserveData.stableDebtTokenAddress).symbol();
         tokens[tokenCount] = TokenDescription(
           reserveData.stableDebtTokenAddress,
           address(0),
-          symbol,
+          IERC20Detailed(reserveData.stableDebtTokenAddress).symbol(),
           token,
           decimals,
           TokenType.StableDebt,
@@ -168,12 +162,11 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
 
     for (uint256 i = 0; i < stakeList.length; i++) {
       token = stakeList[i];
-      address u = IDerivedToken(token).UNDERLYING_ASSET_ADDRESS();
       tokens[tokenCount] = TokenDescription(
         token,
         address(0),
         IERC20Detailed(token).symbol(),
-        u,
+        IDerivedToken(token).UNDERLYING_ASSET_ADDRESS(),
         IERC20Detailed(token).decimals(),
         TokenType.Stake,
         true
@@ -241,33 +234,42 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     return (tokens, tokenCount);
   }
 
-  function getAllDepositTokens() external view returns (TokenData[] memory) {
+  function getPoolTokensByType(TokenType tt) public view returns (TokenData[] memory tokens) {
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
     address[] memory reserves = pool.getReservesList();
-    TokenData[] memory tokens = new TokenData[](reserves.length);
+    tokens = new TokenData[](reserves.length);
+
+    address token;
     for (uint256 i = 0; i < reserves.length; i++) {
-      DataTypes.ReserveData memory reserveData = pool.getReserveData(reserves[i]);
-      tokens[i] = TokenData({
-        symbol: IERC20Detailed(reserveData.aTokenAddress).symbol(),
-        tokenAddress: reserveData.aTokenAddress
-      });
+      if (tt == TokenType.PoolAsset) {
+        token = reserves[i];
+      } else {
+        DataTypes.ReserveData memory reserveData = pool.getReserveData(reserves[i]);
+        if (tt == TokenType.Deposit) {
+          token = reserveData.aTokenAddress;
+        } else if (tt == TokenType.VariableDebt) {
+          token = reserveData.variableDebtTokenAddress;
+        } else if (tt == TokenType.StableDebt) {
+          token = reserveData.stableDebtTokenAddress;
+        } else {
+          revert('UNSUPPORTED');
+        }
+      }
+
+      if (token != address(0)) {
+        tokens[i] = TokenData({symbol: IERC20Detailed(token).symbol(), tokenAddress: token});
+      }
     }
 
     return tokens;
   }
 
-  function getAllReserveTokens() external view returns (TokenData[] memory) {
-    ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
-    address[] memory reserves = pool.getReservesList();
-    TokenData[] memory tokens = new TokenData[](reserves.length);
-    for (uint256 i = 0; i < reserves.length; i++) {
-      tokens[i] = TokenData({
-        symbol: IERC20Detailed(reserves[i]).symbol(),
-        tokenAddress: reserves[i]
-      });
-    }
+  function getAllDepositTokens() external view returns (TokenData[] memory) {
+    return getPoolTokensByType(TokenType.Deposit);
+  }
 
-    return tokens;
+  function getAllReserveTokens() external view returns (TokenData[] memory) {
+    return getPoolTokensByType(TokenType.PoolAsset);
   }
 
   function getReserveConfigurationData(address asset)
