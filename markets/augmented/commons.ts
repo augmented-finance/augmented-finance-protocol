@@ -94,8 +94,8 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: ZERO_ADDRESS,
     [eEthereumNetwork.docker]: ZERO_ADDRESS,
-    [eEthereumNetwork.kovan]: ZERO_ADDRESS, 
-    [eEthereumNetwork.ropsten]: ZERO_ADDRESS, 
+    [eEthereumNetwork.kovan]: ZERO_ADDRESS,
+    [eEthereumNetwork.ropsten]: ZERO_ADDRESS,
     [eEthereumNetwork.rinkeby]: ZERO_ADDRESS,
     [eEthereumNetwork.main]: ZERO_ADDRESS,
     [eEthereumNetwork.tenderlyMain]: ZERO_ADDRESS,
@@ -169,7 +169,7 @@ export const CommonsConfig: ICommonConfiguration = {
       YFI: ZERO_ADDRESS,
       ZRX: ZERO_ADDRESS,
       USD: '0x8A753747A1Fa494EC906cE90E9f37563A8AF630e',
-    }, 
+    },
     [eEthereumNetwork.main]: {
       AAVE: '0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012',
       BAT: '0x0d16d4528239e9ee52fa531af613AcdB23D88c94',
@@ -311,7 +311,12 @@ export const CommonsConfig: ICommonConfiguration = {
       },
       [eEthereumNetwork.tenderlyMain]: {},
     },
-    DonatePct: 50,
-    To: '',
+    DonatePct: 20,
+    To: [
+      '0xc783df8a850f42e7F7e57013759C285caa701eB6',
+      '0xE5904695748fe4A84b40b3fc79De2277660BD1D3',
+      '0x31B29E1d3524f281f513B34F3855Ee8E473c0264',
+      '0xeAD9C93b79Ae7C1591b1FB5323BD777E86e150d4'
+    ],
   }
 };
