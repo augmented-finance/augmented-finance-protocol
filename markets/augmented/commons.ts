@@ -305,14 +305,16 @@ export const CommonsConfig: ICommonConfiguration = {
       [eEthereumNetwork.docker]: {},
       [eEthereumNetwork.rinkeby]: {},
       [eEthereumNetwork.main]: {
+        // WETH: '0xBeC69dfcE4c1fA8b7843FEE1Ca85788d84A86B06'
         // AAVE: '0xf977814e90da44bfa03b6295a0616a897441acec', // Binance pool
         DAI: '0x503828976D22510aad0201ac7EC88293211D23Da', // Coinbase
         USDC: '0x503828976D22510aad0201ac7EC88293211D23Da', // Coinbase
-        WETH: '0xBeC69dfcE4c1fA8b7843FEE1Ca85788d84A86B06'
+        USDT: '0x5754284f345afc66a98fbB0a0Afe71e0F007B949',
+        WBTC: '0xC948eB5205bDE3e18CAc4969d6ad3a56ba7B2347'
       },
       [eEthereumNetwork.tenderlyMain]: {},
     },
-    DonatePct: 20,
+    DonatePct: 50,
     To: [
       '0xc783df8a850f42e7F7e57013759C285caa701eB6',
       '0xE5904695748fe4A84b40b3fc79De2277660BD1D3',
