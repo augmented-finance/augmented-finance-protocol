@@ -904,20 +904,22 @@ export const deployPermitFreezerRewardPool = async (
     verify
   );
 
-export const deployStakeConfiguratorImpl = async (verify?: boolean) =>
-  withSaveAndVerify(
-    await new StakeConfiguratorFactory(await getFirstSigner()).deploy(),
+export const deployStakeConfiguratorImpl = async (verify: boolean, once: boolean) =>
+  withSaveAndVerifyOnce(
+    new StakeConfiguratorFactory(await getFirstSigner()),
     eContractid.StakeConfiguratorImpl,
     [],
-    verify
+    verify,
+    once
   );
 
-export const deployStakeTokenImpl = async (verify?: boolean) =>
-  withSaveAndVerify(
-    await new StakeTokenFactory(await getFirstSigner()).deploy(),
+export const deployStakeTokenImpl = async (verify: boolean, once: boolean) =>
+  withSaveAndVerifyOnce(
+    new StakeTokenFactory(await getFirstSigner()),
     eContractid.StakeTokenImpl,
     [],
-    verify
+    verify,
+    once
   );
 
 export const deployTreasuryImpl = async (verify: boolean, once: boolean) =>

@@ -27,7 +27,7 @@ task(`full:deploy-stake-configurator`, `Deploys the ${CONTRACT_NAME} contract fo
     let stakeConfiguratorAddr = continuation ? await addressProvider.getStakeConfigurator() : '';
 
     if (falsyOrZeroAddress(stakeConfiguratorAddr)) {
-      const impl = await deployStakeConfiguratorImpl(verify);
+      const impl = await deployStakeConfiguratorImpl(verify, continuation);
       console.log(`${CONTRACT_NAME} implementation:`, impl.address);
       await waitForTx(await addressProvider.setStakeConfiguratorImpl(impl.address));
 
