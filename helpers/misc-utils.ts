@@ -204,7 +204,9 @@ export const writeUiConfig = async (
   network: string,
   addressRegistry: string,
   addressProvider: string,
-  dataHelper: string
+  dataHelper: string,
+  referralRegistry: string,
+  priceOracle: string
 ) => {
   const db = getUiConfig();
   await db
@@ -213,6 +215,8 @@ export const writeUiConfig = async (
       addressRegistry: addressRegistry,
       addressProvider: addressProvider,
       dataHelper: dataHelper,
+      referralRegistry: referralRegistry,
+      priceOracle: priceOracle,
     })
     .write();
 };
