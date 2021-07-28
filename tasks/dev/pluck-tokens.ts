@@ -3,10 +3,13 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { falsyOrZeroAddress, getFirstSigner } from '../../helpers/misc-utils';
 import { eNetwork } from '../../helpers/types';
-import { getIErc20Detailed } from '../../helpers/contracts-getters';
+import {
+  getIErc20Detailed,
+  getLendingPoolProxy,
+  getMarketAddressController,
+} from '../../helpers/contracts-getters';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { BigNumber } from 'ethers';
-import { WAD, WAD_NUM } from '../../helpers/constants';
 
 task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
@@ -24,7 +27,11 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
     const donors = Object.entries(getParamPerNetwork(poolConfig.ForkTest.Donors, network));
     const assets = getParamPerNetwork(poolConfig.ReserveAssets, network);
     const donatePct = poolConfig.ForkTest.DonatePct;
-    let receiver = poolConfig.ForkTest.To;
+    const depositPct = poolConfig.ForkTest.AutoDepositPct;
+    let receiver = poolConfig.ForkTest.DonateTo;
+
+    const addressProvider = await getMarketAddressController();
+    const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
 
     if (falsyOrZeroAddress(receiver)) {
       receiver = deployer.address;
@@ -60,7 +67,22 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
 
       const balance = await token.balanceOf(tokenHolder);
       const donation = balance.mul(donatePct).div(100);
-      await token.connect(holder).transfer(receiver, donation, { gasLimit: 1000000, gasPrice: 1 });
+      if (donation.gt(0)) {
+        await token
+          .connect(holder)
+          .transfer(receiver, donation, { gasLimit: 1000000, gasPrice: 1 });
+      }
+
+      const deposit = balance.mul(depositPct).div(100);
+      if (deposit.gt(0)) {
+        await token
+          .connect(holder)
+          .transfer(deployer.address, deposit, { gasLimit: 1000000, gasPrice: 1 });
+        await token
+          .connect(deployer)
+          .approve(lendingPool.address, deposit, { gasLimit: 1000000, gasPrice: 1 });
+        await lendingPool.connect(deployer).deposit(token.address, deposit, deployer.address, 0);
+      }
 
       let factor: BigNumber;
       let divisor: number;
@@ -73,9 +95,18 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
       }
 
       BigNumber.from(10).pow(decimals - 3);
-      console.log(
-        `\tPlucked ${donation.div(factor).toNumber() / divisor} ${tokenName} from ${tokenHolder}`
-      );
+      if (donation.gt(0)) {
+        console.log(
+          `\t${tokenName}: ${donation.div(factor).toNumber() / divisor} plucked from ${tokenHolder}`
+        );
+      }
+      if (deposit.gt(0)) {
+        console.log(
+          `\t${tokenName}: ${
+            deposit.div(factor).toNumber() / divisor
+          } plucked & deposited from ${tokenHolder}`
+        );
+      }
     }
   });
 

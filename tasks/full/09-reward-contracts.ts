@@ -13,7 +13,7 @@ import {
   getRewardConfiguratorProxy,
   getRewardBooster,
 } from '../../helpers/contracts-getters';
-import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { getFirstSigner, falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
@@ -27,7 +27,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     const { Names } = poolConfig as ICommonConfiguration;
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
-
+  
     // configurator is always updated
     let configuratorAddr =
       freshStart && continuation ? await addressProvider.getRewardConfigurator() : '';
@@ -113,6 +113,11 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     }
 
     if (freshStart && (!continuation || falsyOrZeroAddress((await booster.getBoostPool())[0]))) {
+      await addressProvider.grantRoles(
+        (await getFirstSigner()).address,
+        AccessFlags.REWARD_CONFIG_ADMIN
+      );   
+      
       await waitForTx(await configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false));
       console.log('Boost pool and excess recevier: ', xagfAddr);
     }
