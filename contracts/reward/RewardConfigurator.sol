@@ -128,7 +128,7 @@ contract RewardConfigurator is
     bool updateRate,
     address excessTarget,
     bool mintExcess
-  ) external {
+  ) external onlyRewardAdmin {
     IManagedRewardBooster booster = IManagedRewardBooster(address(getDefaultController()));
 
     booster.setUpdateBoostPoolRate(updateRate);
