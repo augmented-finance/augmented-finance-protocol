@@ -104,8 +104,6 @@ task('augmented:mainnet', 'Deploy enviroment')
       exit(1);
     }
 
-    //    await cleanupJsonDb(DRE.network.name);
-
     console.log('Write UI config');
     await DRE.run('full:write-ui-config', { pool: POOL_NAME });
 
@@ -119,4 +117,6 @@ task('augmented:mainnet', 'Deploy enviroment')
 
     console.log('\nFinished deployment');
     printContracts((await getFirstSigner()).address);
+
+    //    await cleanupJsonDb(DRE.network.name);
   });
