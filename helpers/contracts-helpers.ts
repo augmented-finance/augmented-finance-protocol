@@ -67,13 +67,16 @@ export const withSaveAndVerifyOnce = async <ContractType extends Contract>(
   factory: ContractInstanceFactory<ContractType>,
   id: string,
   args: (string | string[])[],
-  verify?: boolean
+  verify: boolean,
+  once: boolean
 ): Promise<ContractType> => {
-  const addr = (await getFromJsonDb(id))?.address;
-  if (falsyOrZeroAddress(addr)) {
-    return await withSaveAndVerify(await factory.deploy(), id, args, verify);
+  if (once) {
+    const addr = (await getFromJsonDb(id))?.address;
+    if (!falsyOrZeroAddress(addr)) {
+      return factory.attach(addr);
+    }
   }
-  return factory.attach(addr);
+  return await withSaveAndVerify(await factory.deploy(), id, args, verify);
 };
 
 export const withSaveAndVerify = async <ContractType extends Contract>(

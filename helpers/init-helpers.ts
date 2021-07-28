@@ -18,7 +18,6 @@ import {
   deployDelegationAwareDepositTokenImpl,
   deployDepositToken,
   deployDepositTokenImpl,
-  deployStableDebtToken,
   deployStableDebtTokenImpl,
   deployVariableDebtTokenImpl,
 } from './contracts-deployments';
@@ -85,24 +84,19 @@ export const initReservesByHelper = async (
   let strategyAddresses: Record<string, tEthereumAddress> = {};
   let strategyAddressPerAsset: Record<string, string> = {};
   let depositTokenType: Record<string, boolean> = {};
-  let delegationAwareATokenImplementationAddress = '';
 
-  console.log('deployStableDebtTokenImpl');
-  const stableDebtTokenImpl = await deployStableDebtTokenImpl(verify);
-  const variableDebtTokenImpl = await deployVariableDebtTokenImpl(verify);
-
-  console.log('deployDepositTokenImpl');
-  const depositTokenImplementationAddress = (await deployDepositTokenImpl(verify)).address;
+  const stableDebtTokenImpl = await deployStableDebtTokenImpl(verify, skipExistingAssets);
+  const variableDebtTokenImpl = await deployVariableDebtTokenImpl(verify, skipExistingAssets);
+  const depositTokenImpl = await deployDepositTokenImpl(verify, skipExistingAssets);
 
   const delegatedAwareReserves = Object.entries(reservesParams).filter(
     ([_, { aTokenImpl }]) => aTokenImpl === eContractid.DelegationAwareDepositTokenImpl
   ) as [string, IReserveParams][];
 
-  if (delegatedAwareReserves.length > 0) {
-    console.log('deployDelegationAwareDepositTokenImpl');
-    const delegationAwareATokenImplementation = await deployDelegationAwareDepositTokenImpl(verify);
-    delegationAwareATokenImplementationAddress = delegationAwareATokenImplementation.address;
-  }
+  const delegationAwareTokenImpl =
+    delegatedAwareReserves.length > 0
+      ? await deployDelegationAwareDepositTokenImpl(verify, skipExistingAssets)
+      : undefined;
 
   const existingAssets = new Set<string>();
 
@@ -177,10 +171,10 @@ export const initReservesByHelper = async (
   for (let i = 0; i < reserveSymbols.length; i++) {
     let tokenToUse: string;
     if (!depositTokenType[reserveSymbols[i]]) {
-      tokenToUse = depositTokenImplementationAddress;
+      tokenToUse = depositTokenImpl.address;
       console.log('=-= generic:', reserveSymbols[i], tokenToUse);
     } else {
-      tokenToUse = delegationAwareATokenImplementationAddress;
+      tokenToUse = delegationAwareTokenImpl!.address;
     }
 
     const reserveSymbol = reserveSymbols[i];

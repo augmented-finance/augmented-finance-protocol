@@ -94,21 +94,21 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const addressesProviderRegistry = await deployAddressesProviderRegistry();
   await addressesProviderRegistry.registerAddressesProvider(addressProvider.address, 1);
 
-  const lendingPoolImpl = await deployLendingPoolImpl();
+  const lendingPoolImpl = await deployLendingPoolImpl(false, false);
 
   await waitForTx(await addressProvider.setLendingPoolImpl(lendingPoolImpl.address));
 
   const lendingPoolAddress = await addressProvider.getLendingPool();
   const lendingPoolProxy = await getLendingPoolProxy(lendingPoolAddress);
 
-  const collateralManager = await deployLendingPoolCollateralManagerImpl();
+  const collateralManager = await deployLendingPoolCollateralManagerImpl(false, false);
   console.log(
     '\tSetting lending pool collateral manager implementation with address',
     collateralManager.address
   );
   await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address);
 
-  const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl();
+  const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(false, false);
   await addressProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address);
 
   const fallbackOracle = await deployMockPriceOracle();

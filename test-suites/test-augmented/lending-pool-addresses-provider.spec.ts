@@ -44,7 +44,7 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
 
     const currentAddressesProviderOwner = users[1];
 
-    const mockLendingPool = await deployLendingPoolImpl();
+    const mockLendingPool = await deployLendingPoolImpl(false, false);
     const proxiedAddressId = 1 << 62;
 
     const proxiedAddressSetReceipt = await waitForTx(
