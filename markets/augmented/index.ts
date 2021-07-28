@@ -21,8 +21,8 @@ export const AugmentedConfig: IAugmentedConfiguration = {
   MarketId: 'Augmented genesis market',
   ProviderId: 1,
   ReservesConfig: {
-    AAVE: strategyAAVE,
-    LINK: strategyLINK,
+    // AAVE: strategyAAVE,
+    // LINK: strategyLINK,
     DAI: strategyDAI,
     USDC: strategyUSDC,
     USDT: strategyUSDT,
@@ -37,8 +37,8 @@ export const AugmentedConfig: IAugmentedConfiguration = {
     [eEthereumNetwork.ropsten]: '',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: {
-      AAVE: 0.13308194,
-      LINK: 0.0077041609,
+      // AAVE: 0.13308194,
+      // LINK: 0.0077041609,
       DAI: 0.0005022851,
       USDC: 0.0005022851,
       USDT: 0.00050314705,
@@ -53,7 +53,7 @@ export const AugmentedConfig: IAugmentedConfiguration = {
     [eEthereumNetwork.docker]: {},
     [eEthereumNetwork.kovan]: {},
     [eEthereumNetwork.ropsten]: {},
-    [eEthereumNetwork.rinkeby]: {}, 
+    [eEthereumNetwork.rinkeby]: {},
     [eEthereumNetwork.main]: {},
     [eEthereumNetwork.tenderlyMain]: {},
   },
@@ -91,10 +91,10 @@ export const AugmentedConfig: IAugmentedConfiguration = {
       WETH: ZERO_ADDRESS,
     }, // TODO:
     [eEthereumNetwork.main]: {
-      AAVE: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
+      // AAVE: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
       // BUSD: '0x4Fabb145d64652a948d72533023f6E7A623C7C53',
       DAI: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-      LINK: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+      // LINK: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
       USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
       USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
       WBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',

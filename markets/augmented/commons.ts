@@ -305,9 +305,10 @@ export const CommonsConfig: ICommonConfiguration = {
       [eEthereumNetwork.docker]: {},
       [eEthereumNetwork.rinkeby]: {},
       [eEthereumNetwork.main]: {
-        AAVE: '0xf977814e90da44bfa03b6295a0616a897441acec', // Binance pool
+        // AAVE: '0xf977814e90da44bfa03b6295a0616a897441acec', // Binance pool
         DAI: '0x503828976D22510aad0201ac7EC88293211D23Da', // Coinbase
-        USDC: '0x503828976D22510aad0201ac7EC88293211D23Da' // Coinbase
+        USDC: '0x503828976D22510aad0201ac7EC88293211D23Da', // Coinbase
+        WETH: '0xBeC69dfcE4c1fA8b7843FEE1Ca85788d84A86B06'
       },
       [eEthereumNetwork.tenderlyMain]: {},
     },
@@ -316,7 +317,8 @@ export const CommonsConfig: ICommonConfiguration = {
       '0xc783df8a850f42e7F7e57013759C285caa701eB6',
       '0xE5904695748fe4A84b40b3fc79De2277660BD1D3',
       '0x31B29E1d3524f281f513B34F3855Ee8E473c0264',
-      '0xeAD9C93b79Ae7C1591b1FB5323BD777E86e150d4'
+      '0xeAD9C93b79Ae7C1591b1FB5323BD777E86e150d4',
+      '0x5aeb8010b003D8112e9F953b711BD82e82D6178A'
     ],
   }
 };
