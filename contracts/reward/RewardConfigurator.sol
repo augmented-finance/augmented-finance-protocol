@@ -102,6 +102,7 @@ contract RewardConfigurator is
 
   function addNamedRewardPools(IManagedRewardPool[] calldata pools, string[] calldata names)
     external
+    onlyRewardAdmin
   {
     require(pools.length == names.length);
 
@@ -157,7 +158,7 @@ contract RewardConfigurator is
     bool updateRate,
     address excessTarget,
     bool mintExcess
-  ) external {
+  ) external onlyRewardAdmin {
     IManagedRewardBooster booster = IManagedRewardBooster(address(getDefaultController()));
 
     booster.setUpdateBoostPoolRate(updateRate);
@@ -172,7 +173,7 @@ contract RewardConfigurator is
     uint32 unlockedAt,
     address[] calldata members,
     uint16[] calldata memberShares
-  ) external {
+  ) external onlyRewardAdmin {
     IManagedRewardController ctl = getDefaultController();
     ctl.addRewardPool(pool);
     _namedPools[name] = address(pool);
