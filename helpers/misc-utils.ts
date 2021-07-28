@@ -198,7 +198,15 @@ export const hasInJsonDb = async (id: string) =>
 export const hasExternalInJsonDb = async (id: string) =>
   falsyOrZeroAddress((await getFromJsonDbByAddr(id))?.deployer);
 
-export const printContracts = (deployer: string) => {
+export const getInstanceCountFromJsonDb = () => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+  return Object.entries<DbLogEntry>(db.get(`${currentNetwork}.log`).value()).length;
+};
+
+export const printContracts = (
+  deployer: string
+): [Map<string, tEthereumAddress>, number, number] => {
   const currentNetwork = DRE.network.name;
   const db = getDb();
 
@@ -208,16 +216,24 @@ export const printContracts = (deployer: string) => {
   const entries = Object.entries<DbNamedEntry>(db.get(`${currentNetwork}.named`).value());
   const logEntries = Object.entries<DbLogEntry>(db.get(`${currentNetwork}.log`).value());
 
-  const contractsPrint = entries.map(([key, value]: [string, DbNamedEntry]) => {
-    if (value.count > 1) {
-      return `${key}: N=${value.count}`;
+  let multiCount = 0;
+  const entryMap = new Map<string, tEthereumAddress>();
+  entries.forEach(([key, value]: [string, DbNamedEntry]) => {
+    if (key.startsWith('~')) {
+      return;
+    } else if (value.count > 1) {
+      console.log(`\t${key}: N=${value.count}`);
+      multiCount++;
+    } else {
+      console.log(`\t${key}: ${value.address}`);
+      entryMap.set(key, value.address);
     }
-    return `${key}: ${value.address}`;
   });
 
-  console.log(contractsPrint.join('\n'), '\n');
   console.log('---------------------------------');
-  console.log('N# Contracts:', entries.length, '/', logEntries.length);
+  console.log('N# Contracts:', entryMap.size + multiCount, '/', logEntries.length);
+
+  return [entryMap, logEntries.length, multiCount];
 };
 
 export const cleanupUiConfig = async () => {

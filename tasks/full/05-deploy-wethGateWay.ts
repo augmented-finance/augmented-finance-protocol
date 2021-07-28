@@ -36,9 +36,7 @@ task(`full-deploy-weth-gateway`, `Deploys the ${CONTRACT_NAME} contract for prod
       console.log(`Deployed ${CONTRACT_NAME}.address`, impl.address);
       wgAddress = impl.address;
       await waitForTx(await addressProvider.setAddress(AccessFlags.WETH_GATEWAY, wgAddress));
-    } else {
-      console.log(`${CONTRACT_NAME} already deployed: ${wgAddress}`);
     }
 
-    console.log(`\tFinished ${CONTRACT_NAME} deployment`);
+    console.log(`${CONTRACT_NAME}:`, wgAddress);
   });

@@ -27,7 +27,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     const { Names } = poolConfig as ICommonConfiguration;
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
-  
+
     // configurator is always updated
     let configuratorAddr =
       freshStart && continuation ? await addressProvider.getRewardConfigurator() : '';
@@ -59,7 +59,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
 
       const agf = await getAGFTokenV1Impl(await addressProvider.getRewardToken());
       console.log(
-        'Deployed AGF token:',
+        'AGF token:',
         agf.address,
         await agf.name(),
         await agf.symbol(),
@@ -67,6 +67,8 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       );
 
       agfAddr = agf.address;
+    } else {
+      console.log('AGF token:', agfAddr);
     }
 
     // Reward controller is not updated
@@ -79,6 +81,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       await waitForTx(await addressProvider.setRewardController(impl.address));
       boosterAddr = await addressProvider.getRewardController();
     }
+    console.log('RewardBooster', boosterAddr);
     const booster = await getRewardBooster(boosterAddr);
 
     // xAGF token is always updated
@@ -102,7 +105,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       const xagf = await getAGFTokenV1Impl(await addressProvider.getRewardStakeToken());
 
       console.log(
-        'Deployed xAGF token: ',
+        'xAGF token: ',
         xagf.address,
         await xagf.name(),
         await xagf.symbol(),
@@ -110,14 +113,16 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       );
 
       xagfAddr = xagf.address;
+    } else {
+      console.log('xAGF token:', xagfAddr);
     }
 
-    if (freshStart && (!continuation || falsyOrZeroAddress((await booster.getBoostPool())[0]))) {
+    if (freshStart && (!continuation || falsyOrZeroAddress((await booster.getBoostPool()).pool))) {
       await addressProvider.grantRoles(
         (await getFirstSigner()).address,
         AccessFlags.REWARD_CONFIG_ADMIN
-      );   
-      
+      );
+
       await waitForTx(await configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false));
       console.log('Boost pool and excess recevier: ', xagfAddr);
     }

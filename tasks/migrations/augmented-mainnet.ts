@@ -17,12 +17,12 @@ task('augmented:mainnet', 'Deploy enviroment')
   .setAction(async ({ incremental, verify }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
     await DRE.run('set-DRE');
-    if (!incremental) {
-      await cleanupJsonDb(DRE.network.name);
-    } else {
+    if (incremental) {
       console.log('======================================================================');
       console.log('====================    ATTN! INCREMENTAL MODE    ====================');
       console.log('======================================================================');
+    } else {
+      await cleanupJsonDb(DRE.network.name);
     }
     await cleanupUiConfig();
 

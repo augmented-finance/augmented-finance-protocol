@@ -88,7 +88,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         const rewardedToken = await getIRewardedToken(token);
         const ctl = await rewardedToken.getIncentivesController();
         if (!falsyOrZeroAddress(ctl)) {
-          console.log('Token has a reward pool already:', symbol, ctl);
+          console.log('Token has a reward pool already:', prefix + symbol, ctl);
           return;
         }
       }
@@ -165,9 +165,10 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     if (!freshStart || continuation) {
       const totals = await configurator.getPoolTotals(true);
       totalShare = totals.totalBaselinePercentage.toNumber();
-      newPoolsOffset = totals.activePoolCount.toNumber();
+      newPoolsOffset = totals.listCount.toNumber();
     }
-    if (newPoolsOffset == 0 && freshStart) {
+    if (freshStart && newPoolsOffset <= 1) {
+      newPoolsOffset = 0;
       newNames.push(Names.RewardStakeTokenSymbol);
     }
 
@@ -190,7 +191,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     }
 
     // CHUNK CONFIGURATION
-    const initChunks = 1;
+    const initChunks = 4;
 
     const chunkedParams = chunk(initParams, initChunks);
     const chunkedSymbols = chunk(initSymbols, initChunks);
@@ -236,7 +237,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         console.log(`    ${newNames[index]}: ${poolRate.div(WAD).toNumber() / WAD_RAY_RATIO_NUM}`);
         index++;
       }
-      console.log(`Total reward rate:   ${totalRate.div(WAD).toNumber() / WAD_RAY_RATIO_NUM}`);
+      console.log(`Assigned reward rate:   ${totalRate.div(WAD).toNumber() / WAD_RAY_RATIO_NUM}`);
       console.log(`Initial reward rate: ${initialRate.div(WAD).toNumber() / WAD_RAY_RATIO_NUM}`);
     }
   });

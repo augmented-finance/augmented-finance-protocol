@@ -25,5 +25,5 @@ task('full:data-provider', 'Initialize lending pool configuration.')
       dhAddress = dataHelper.address;
     }
 
-    console.log('\tData helper:', dhAddress);
+    console.log('Data helper:', dhAddress);
   });

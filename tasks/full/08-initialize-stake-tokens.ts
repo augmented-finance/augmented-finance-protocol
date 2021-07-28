@@ -98,7 +98,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
     }
 
     // CHUNK CONFIGURATION
-    const initChunks = 1;
+    const initChunks = 4;
 
     const chunkedParams = chunk(initParams, initChunks);
     const chunkedSymbols = chunk(initSymbols, initChunks);

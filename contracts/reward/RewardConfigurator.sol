@@ -193,17 +193,21 @@ contract RewardConfigurator is
       uint256 totalBaselinePercentage,
       uint256 totalRate,
       uint256 activePoolCount,
-      uint256 poolCount
+      uint256 poolCount,
+      uint256 listCount
     )
   {
     IManagedRewardController ctl = getDefaultController();
     (IManagedRewardPool[] memory pools, uint256 ignoreMask) = ctl.getPools();
 
-    poolCount = pools.length;
+    listCount = pools.length;
 
     if (excludeBoost) {
       (, uint256 mask) = IManagedRewardBooster(address(ctl)).getBoostPool();
-      ignoreMask |= mask;
+      if (mask != 0) {
+        poolCount++;
+        ignoreMask |= mask;
+      }
     }
 
     for (uint256 i = 0; i < pools.length; i++) {
@@ -217,5 +221,6 @@ contract RewardConfigurator is
       }
       ignoreMask >>= 1;
     }
+    poolCount += activePoolCount;
   }
 }

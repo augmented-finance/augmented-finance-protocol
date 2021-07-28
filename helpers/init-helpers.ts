@@ -120,7 +120,7 @@ export const initReservesByHelper = async (
     }
 
     if (existingAssets.has(tokenAddress)) {
-      console.log(`Asset ${symbol} was skipped`);
+      console.log(`Asset ${symbol} already exists`);
       continue;
     }
 
