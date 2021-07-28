@@ -12,12 +12,17 @@ export const getDeployAccessController = async (): Promise<
   [boolean, boolean, MarketAccessController]
 > => {
   if (await hasPreDeployedAddressController()) {
-    return [true, await hasMarketAddressController(), await getPreDeployedAddressController()];
+    const ac = await getPreDeployedAddressController();
+    if (await hasMarketAddressController()) {
+      return [true, true, ac];
+    }
+    // TODO continuation for pre-deployed
+    return [false, false, ac];
   }
-  return [false, false, await getMarketAddressController()];
+  return [true, false, await getMarketAddressController()];
 };
 
-export const setDeployAccessController = async (
+export const setPreDeployAccessController = async (
   existingProvider: tEthereumAddress | undefined
 ): Promise<[boolean, MarketAccessController | undefined]> => {
   if (!falsyOrZeroAddress(existingProvider)) {

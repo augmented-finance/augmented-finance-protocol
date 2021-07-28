@@ -174,20 +174,14 @@ export const logExternalContractInJsonDb = async (contractId: string, contractAd
   const currentNetwork = DRE.network.name;
   const db = getDb();
 
-  await db
-    .set(`${currentNetwork}.log.${contractAddress}`, {
-      id: contractId,
-      deployer: ZERO_ADDRESS,
-    })
-    .write();
-
   const node = `${currentNetwork}.named.${contractId}`;
-  const count = (await db.get(node).value())?.count || 0;
+  const nodeValue = await db.get(node).value();
+
   await db
     .set(`${currentNetwork}.named.${contractId}`, {
       address: contractAddress,
-      deployer: ZERO_ADDRESS,
-      count: count + 1,
+      deployer: nodeValue?.deployer ? nodeValue.deployer : ZERO_ADDRESS,
+      count: 1 + (nodeValue?.count || 0),
     })
     .write();
 };
@@ -195,8 +189,14 @@ export const logExternalContractInJsonDb = async (contractId: string, contractAd
 export const getFromJsonDb = async (id: string) =>
   await getDb().get(`${DRE.network.name}.named.${id}`).value();
 
+export const getFromJsonDbByAddr = async (id: string) =>
+  await getDb().get(`${DRE.network.name}.log.${id}`).value();
+
 export const hasInJsonDb = async (id: string) =>
   !falsyOrZeroAddress((await getFromJsonDb(id))?.address);
+
+export const hasExternalInJsonDb = async (id: string) =>
+  falsyOrZeroAddress((await getFromJsonDbByAddr(id))?.deployer);
 
 export const printContracts = (deployer: string) => {
   const currentNetwork = DRE.network.name;

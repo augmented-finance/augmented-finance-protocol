@@ -14,7 +14,8 @@ task('full:data-provider', 'Initialize lending pool configuration.')
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
     // ProtocolDataProvider is updated for existing installations
-    let dhAddress = continuation ? await addressProvider.getAddress(AccessFlags.DATA_HELPER) : '';
+    let dhAddress =
+      freshStart && continuation ? await addressProvider.getAddress(AccessFlags.DATA_HELPER) : '';
 
     if (falsyOrZeroAddress(dhAddress)) {
       const dataHelper = await deployProtocolDataProvider(addressProvider.address, verify);

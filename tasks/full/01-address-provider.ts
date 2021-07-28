@@ -15,7 +15,7 @@ import { falsyOrZeroAddress, getFirstSigner, getSigner, waitForTx } from '../../
 import { getAddressesProviderRegistry } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
-import { setDeployAccessController } from '../../helpers/deploy-helpers';
+import { setPreDeployAccessController } from '../../helpers/deploy-helpers';
 
 task('full:deploy-address-provider', 'Deploy address provider registry for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -29,7 +29,7 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
 
     const deployer = await getFirstSigner();
 
-    const [continuation, existingProvider] = await setDeployAccessController(
+    const [continuation, existingProvider] = await setPreDeployAccessController(
       getParamPerNetwork(poolConfig.AddressProvider, network)
     );
 

@@ -24,7 +24,8 @@ task(`full:deploy-stake-configurator`, `Deploys the ${CONTRACT_NAME} contract fo
     console.log(`Deploy ${CONTRACT_NAME}`);
 
     // StakeConfigurator is always updated
-    let stakeConfiguratorAddr = continuation ? await addressProvider.getStakeConfigurator() : '';
+    let stakeConfiguratorAddr =
+      freshStart && continuation ? await addressProvider.getStakeConfigurator() : '';
 
     if (falsyOrZeroAddress(stakeConfiguratorAddr)) {
       const impl = await deployStakeConfiguratorImpl(verify, continuation);

@@ -24,10 +24,10 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
     // LendingPool will be updated for existing installations
-    let lpAddress = continuation ? await addressProvider.getLendingPool() : '';
-    const newLandingPool = falsyOrZeroAddress(lpAddress);
+    let lpAddress = freshStart && continuation ? await addressProvider.getLendingPool() : '';
+    const newLendingPool = falsyOrZeroAddress(lpAddress);
 
-    if (newLandingPool) {
+    if (newLendingPool) {
       console.log('\tDeploying lending pool & libraries...');
       const lendingPoolImpl = await deployLendingPoolImpl(verify, continuation);
       console.log('\tLending pool implementation:', lendingPoolImpl.address);
@@ -38,7 +38,7 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
     const lendingPoolProxy = await getLendingPoolProxy(lpAddress);
     console.log('\tLending pool:', lpAddress);
 
-    let lpExt = newLandingPool ? '' : await lendingPoolProxy.getLendingPoolCollateralManager();
+    let lpExt = newLendingPool ? '' : await lendingPoolProxy.getLendingPoolCollateralManager();
     if (falsyOrZeroAddress(lpExt)) {
       console.log('\tDeploying collateral manager...');
       const collateralManager = await deployLendingPoolCollateralManagerImpl(verify, continuation);
@@ -48,7 +48,7 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
     }
     console.log('\tCollateral manager:', lpExt);
 
-    let lpConfigurator = newLandingPool ? '' : await addressProvider.getLendingPoolConfigurator();
+    let lpConfigurator = newLendingPool ? '' : await addressProvider.getLendingPoolConfigurator();
 
     if (falsyOrZeroAddress(lpConfigurator)) {
       console.log('\tDeploying configurator...');

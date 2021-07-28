@@ -931,28 +931,31 @@ export const deployTreasuryImpl = async (verify: boolean, once: boolean) =>
     once
   );
 
-export const deployRewardConfiguratorImpl = async (verify?: boolean) =>
-  withSaveAndVerify(
-    await new RewardConfiguratorFactory(await getFirstSigner()).deploy(),
+export const deployRewardConfiguratorImpl = async (verify: boolean, once: boolean) =>
+  withSaveAndVerifyOnce(
+    new RewardConfiguratorFactory(await getFirstSigner()),
     eContractid.RewardConfiguratorImpl,
     [],
-    verify
+    verify,
+    once
   );
 
-export const deployXAGFTokenV1Impl = async (verify?: boolean) =>
-  withSaveAndVerify(
-    await new XAGFTokenV1Factory(await getFirstSigner()).deploy(),
+export const deployXAGFTokenV1Impl = async (verify: boolean, once: boolean) =>
+  withSaveAndVerifyOnce(
+    new XAGFTokenV1Factory(await getFirstSigner()),
     eContractid.XAGFTokenV1Impl,
     [],
-    verify
+    verify,
+    once
   );
 
-export const deployAGFTokenV1Impl = async (verify?: boolean) =>
-  withSaveAndVerify(
-    await new AGFTokenV1Factory(await getFirstSigner()).deploy(),
+export const deployAGFTokenV1Impl = async (verify: boolean, once: boolean) =>
+  withSaveAndVerifyOnce(
+    new AGFTokenV1Factory(await getFirstSigner()),
     eContractid.AGFTokenV1Impl,
     [],
-    verify
+    verify,
+    once
   );
 
 export const deployTokenWeightedRewardPoolImpl = async (verify?: boolean) =>
