@@ -33,7 +33,7 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
     let treasuryAddress = continuation ? await addressProvider.getTreasury() : '';
 
     if (falsyOrZeroAddress(treasuryAddress)) {
-      const treasuryImpl = await deployTreasuryImpl();
+      const treasuryImpl = await deployTreasuryImpl(verify, continuation);
       await addressProvider.setTreasuryImpl(treasuryImpl.address);
       console.log('\tTreasury implementation:', treasuryImpl.address);
       treasuryAddress = treasuryImpl.address;

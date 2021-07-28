@@ -920,12 +920,13 @@ export const deployStakeTokenImpl = async (verify?: boolean) =>
     verify
   );
 
-export const deployTreasuryImpl = async (verify?: boolean) =>
-  withSaveAndVerify(
-    await new TreasuryFactory(await getFirstSigner()).deploy(),
+export const deployTreasuryImpl = async (verify: boolean, once: boolean) =>
+  withSaveAndVerifyOnce(
+    new TreasuryFactory(await getFirstSigner()),
     eContractid.TreasuryImpl,
     [],
-    verify
+    verify,
+    once
   );
 
 export const deployRewardConfiguratorImpl = async (verify?: boolean) =>
