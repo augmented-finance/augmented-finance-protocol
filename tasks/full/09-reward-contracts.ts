@@ -13,7 +13,7 @@ import {
   getRewardConfiguratorProxy,
   getRewardBooster,
 } from '../../helpers/contracts-getters';
-import { waitForTx } from '../../helpers/misc-utils';
+import { getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { MarketAccessController } from '../../types';
 
@@ -30,6 +30,13 @@ task(
     const { Names } = poolConfig as ICommonConfiguration;
 
     const addressesProvider = await getMarketAddressController();
+
+    await waitForTx(
+      await addressesProvider.grantRoles(
+        (await getFirstSigner()).address,
+        AccessFlags.REWARD_CONFIG_ADMIN
+      )
+    );
 
     await waitForTx(
       await addressesProvider.setRewardConfiguratorImpl(
