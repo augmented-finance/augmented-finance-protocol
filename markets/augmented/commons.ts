@@ -311,7 +311,8 @@ export const CommonsConfig: ICommonConfiguration = {
       },
       [eEthereumNetwork.tenderlyMain]: {},
     },
-    DonatePct: 50,
-    To: '',
+    DonatePct: 20,
+    DonateTo: '',
+    AutoDepositPct: 30,
   }
 };
