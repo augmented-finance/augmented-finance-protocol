@@ -14,6 +14,17 @@ Augmented Finance is on a mission to help you achieve and secure financial indep
 
 **Fair launch**: no pre-mine, no pre-sale, no ICO, no VC allocation. Unlike Aave and Compound where the majority of tokens distributed to ICO participants or Venture Capital funds, almost all AGF tokens will be distributed to the Augmented Finance protocol's users who actively use the protocol (borrow, supply, stake & lock).
 
+## Pools:
+
+| Pool | % of Total AGF |
+| ---- | :------------- |
+|Liquidity Incentives | 52% |
+|Staking Incentives | 25% |
+|Referral Incentives | 2% |
+|Token Burner Incentives| 1% |
+|Dev Fund | 10% |
+|Ecosystem Fund | 10% |
+
 **Augmented Finance’s tokenomics** is engineered to benefit the protocol's users, increase the protocol’s total value locked (TVL), and bolster the protocol's resilience through all market cycles.
 
 ## AGF
