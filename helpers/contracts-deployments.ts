@@ -958,10 +958,11 @@ export const deployAGFTokenV1Impl = async (verify: boolean, once: boolean) =>
     once
   );
 
-export const deployTokenWeightedRewardPoolImpl = async (verify?: boolean) =>
-  withSaveAndVerify(
-    await new TokenWeightedRewardPoolV1Factory(await getFirstSigner()).deploy(),
+export const deployTokenWeightedRewardPoolImpl = async (verify: boolean, once: boolean) =>
+  withSaveAndVerifyOnce(
+    new TokenWeightedRewardPoolV1Factory(await getFirstSigner()),
     eContractid.TokenWeightedRewardPoolImpl,
     [],
-    verify
+    verify,
+    once
   );

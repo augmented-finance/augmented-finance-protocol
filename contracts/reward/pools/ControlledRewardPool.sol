@@ -90,7 +90,14 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     internalSetBaselinePercentage(factor);
   }
 
-  function getBaselinePercentage() internal view returns (uint16) {
+  function getBaselinePercentage() external view override returns (bool, uint16) {
+    if (_baselinePercentage == NO_BASELINE) {
+      return (false, 0);
+    }
+    return (true, _baselinePercentage);
+  }
+
+  function internalGetBaselinePercentage() internal view returns (uint16) {
     return _baselinePercentage;
   }
 

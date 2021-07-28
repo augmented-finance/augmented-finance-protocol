@@ -112,7 +112,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       xagfAddr = xagf.address;
     }
 
-    if (freshStart && (!continuation || falsyOrZeroAddress(await booster.getBoostPool()))) {
+    if (freshStart && (!continuation || falsyOrZeroAddress((await booster.getBoostPool())[0]))) {
       await waitForTx(await configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false));
       console.log('Boost pool and excess recevier: ', xagfAddr);
     }

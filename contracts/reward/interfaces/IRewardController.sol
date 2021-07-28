@@ -52,6 +52,8 @@ interface IManagedRewardBooster is IManagedRewardController {
 
   function setBoostPool(address) external;
 
+  function getBoostPool() external view returns (address, uint256);
+
   function setBoostExcessTarget(address target, bool mintExcess) external;
 
   event BoostFactorSet(address indexed pool, uint256 mask, uint32 pctFactor);

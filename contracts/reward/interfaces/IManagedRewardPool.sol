@@ -8,6 +8,8 @@ interface IManagedRewardPool is IEmergencyAccess {
 
   function setBaselinePercentage(uint16) external;
 
+  function getBaselinePercentage() external view returns (bool, uint16);
+
   function disableBaseline() external;
 
   function disableRewardPool() external;

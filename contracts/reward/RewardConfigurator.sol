@@ -18,6 +18,7 @@ import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.
 import {IInitializableRewardPool} from './interfaces/IInitializableRewardPool.sol';
 import {ProxyOwner} from '../tools/upgradeability/ProxyOwner.sol';
 import {IRewardedToken} from '../interfaces/IRewardedToken.sol';
+import {TeamRewardPool} from './pools/TeamRewardPool.sol';
 
 contract RewardConfigurator is
   MarketAccessBitmask(IMarketAccessController(0)),
@@ -31,6 +32,7 @@ contract RewardConfigurator is
   }
 
   ProxyOwner internal immutable _proxies;
+  mapping(string => address) _namedPools;
 
   constructor() public {
     _proxies = new ProxyOwner();
@@ -98,6 +100,33 @@ contract RewardConfigurator is
     }
   }
 
+  function addNamedRewardPools(IManagedRewardPool[] calldata pools, string[] calldata names)
+    external
+  {
+    require(pools.length == names.length);
+
+    IManagedRewardController ctl = getDefaultController();
+    for (uint256 i = 0; i < names.length; i++) {
+      IManagedRewardPool pool = pools[i];
+      _namedPools[names[i]] = address(pool);
+      if (pool != IManagedRewardPool(0)) {
+        ctl.addRewardPool(pool);
+      }
+    }
+  }
+
+  function getNamedRewardPools(string[] calldata names)
+    external
+    view
+    returns (address[] memory pools)
+  {
+    pools = new address[](names.length);
+    for (uint256 i = 0; i < names.length; i++) {
+      pools[i] = _namedPools[names[i]];
+    }
+    return pools;
+  }
+
   function implementationOf(address token) external view returns (address) {
     return _proxies.implementationOf(token);
   }
@@ -135,5 +164,57 @@ contract RewardConfigurator is
     booster.addRewardPool(boostPool);
     booster.setBoostPool(address(boostPool));
     booster.setBoostExcessTarget(excessTarget, mintExcess);
+  }
+
+  function configureTeamRewardPool(
+    TeamRewardPool pool,
+    string calldata name,
+    uint32 unlockedAt,
+    address[] calldata members,
+    uint16[] calldata memberShares
+  ) external {
+    IManagedRewardController ctl = getDefaultController();
+    ctl.addRewardPool(pool);
+    _namedPools[name] = address(pool);
+
+    if (unlockedAt > 0) {
+      pool.setUnlockedAt(unlockedAt);
+    }
+    if (members.length > 0) {
+      pool.updateTeamMembers(members, memberShares);
+    }
+  }
+
+  function getPoolTotals(bool excludeBoost)
+    external
+    view
+    returns (
+      uint256 totalBaselinePercentage,
+      uint256 totalRate,
+      uint256 activePoolCount,
+      uint256 poolCount
+    )
+  {
+    IManagedRewardController ctl = getDefaultController();
+    (IManagedRewardPool[] memory pools, uint256 ignoreMask) = ctl.getPools();
+
+    poolCount = pools.length;
+
+    if (excludeBoost) {
+      (, uint256 mask) = IManagedRewardBooster(address(ctl)).getBoostPool();
+      ignoreMask |= mask;
+    }
+
+    for (uint256 i = 0; i < pools.length; i++) {
+      if (ignoreMask & 1 == 0 && pools[i] != IManagedRewardPool(0)) {
+        activePoolCount++;
+        (bool ok, uint16 pct) = pools[i].getBaselinePercentage();
+        if (ok) {
+          totalBaselinePercentage += uint256(pct);
+        }
+        totalRate += pools[i].getRate();
+      }
+      ignoreMask >>= 1;
+    }
   }
 }

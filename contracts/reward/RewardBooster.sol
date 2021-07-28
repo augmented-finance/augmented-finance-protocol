@@ -107,8 +107,8 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     _boostPool = IManagedRewardPool(pool);
   }
 
-  function getBoostPool() external view returns (address) {
-    return address(_boostPool);
+  function getBoostPool() external view override returns (address, uint256) {
+    return (address(_boostPool), _boostPoolMask);
   }
 
   function setBoostExcessTarget(address target, bool mintExcess)
