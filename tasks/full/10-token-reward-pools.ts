@@ -187,6 +187,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         verify
       );
       await rewardController.addRewardPool(brp.address);
+      await addressesProvider.setAddress(AccessFlags.REFERRAL_REGISTRY, brp.address);
       console.log(`Deployed ${poolName}: `, brp.address);
     }
 
