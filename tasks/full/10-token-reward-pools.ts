@@ -302,7 +302,11 @@ const deployExtraPools = async (
     );
   }
 
-  if (!knownNamedPools.has(refPoolName)) {
+  if (
+    rewardParams.ReferralPool != undefined &&
+    rewardParams.ReferralPool!.TotalWad > 0 &&
+    !knownNamedPools.has(refPoolName)
+  ) {
     const poolName = refPoolName;
     extraNames.push(poolName);
     const limit = BigNumber.from(WAD).mul(rewardParams.ReferralPool?.TotalWad | 0);
