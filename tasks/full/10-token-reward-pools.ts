@@ -17,7 +17,6 @@ import {
 } from '../../helpers/types';
 import {
   getLendingPoolProxy,
-  getMarketAddressController,
   getRewardConfiguratorProxy,
   getStakeConfiguratorImpl,
   getRewardBooster,
@@ -30,7 +29,7 @@ import { BigNumber } from 'ethers';
 import { RAY, WAD, WAD_RAY_RATIO_NUM } from '../../helpers/constants';
 import { transpose } from 'underscore';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
-import { RewardConfigurator } from '../../types';
+import { MarketAccessController, RewardConfigurator } from '../../types';
 
 interface poolInitParams {
   provider: tEthereumAddress;
@@ -173,6 +172,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     }
 
     const [extraNames, extraShare] = await deployExtraPools(
+      addressProvider,
       freshStart && !continuation,
       rewardParams,
       configurator,
@@ -243,6 +243,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
   });
 
 const deployExtraPools = async (
+  addressProvider: MarketAccessController,
   cleanStart: boolean,
   rewardParams: IRewardParams,
   configurator: RewardConfigurator,
@@ -301,22 +302,18 @@ const deployExtraPools = async (
     );
   }
 
-  if (
-    rewardParams.ReferralPool != undefined &&
-    rewardParams.ReferralPool!.TotalWad > 0 &&
-    !knownNamedPools.has(refPoolName)
-  ) {
+  if (!knownNamedPools.has(refPoolName)) {
     const poolName = refPoolName;
     extraNames.push(poolName);
-    const limit = BigNumber.from(WAD).mul(rewardParams.ReferralPool!.TotalWad);
+    const limit = BigNumber.from(WAD).mul(rewardParams.ReferralPool?.TotalWad | 0);
     const brp = await deployNamedReferralRewardPool(
       poolName,
       [rewardCtlAddress, limit, limit],
       verify
     );
 
+    await addressProvider.setAddress(AccessFlags.REFERRAL_REGISTRY, brp.address);
     await configurator.addNamedRewardPools([poolName], [brp.address]);
-    await addressesProvider.setAddress(AccessFlags.REFERRAL_REGISTRY, brp.address);
     console.log(`Deployed ${poolName}: `, brp.address);
   }
 
