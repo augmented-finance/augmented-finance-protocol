@@ -316,6 +316,7 @@ const deployExtraPools = async (
     );
 
     await configurator.addNamedRewardPools([poolName], [brp.address]);
+    await addressesProvider.setAddress(AccessFlags.REFERRAL_REGISTRY, brp.address);
     console.log(`Deployed ${poolName}: `, brp.address);
   }
 
