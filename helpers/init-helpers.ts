@@ -1,7 +1,5 @@
 import {
   eContractid,
-  eEthereumNetwork,
-  eNetwork,
   iMultiPoolsAssets,
   IReserveParams,
   ITokenNames,
@@ -11,7 +9,7 @@ import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, waitForTx } from './misc-utils';
 import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contracts-getters';
 import { registerContractInJsonDb } from './contracts-helpers';
-import { BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import {
   deployDefaultReserveInterestRateStrategy,
   deployDelegationAwareDepositToken,
