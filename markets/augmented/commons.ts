@@ -306,8 +306,12 @@ export const CommonsConfig: ICommonConfiguration = {
         }
       },
     },
+    ReferralPool: {
+      BasePoints: 100,
+      BoostFactor: 0, // ignored atm
+    },
     TeamPool: {
-      Share: 1000,
+      BasePoints: 1000,
       UnlockAt: new Date('2021-11-01'),
       Manager: ZERO_ADDRESS,
       Members: {

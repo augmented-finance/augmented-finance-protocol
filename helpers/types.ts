@@ -80,7 +80,6 @@ export enum eContractid {
   MockDecayingTokenLocker = 'MockDecayingTokenLocker',
 
   TeamRewardPool = 'TeamRewardPool',
-  ReferralRewardPool = 'ReferralRewardPool',
 
   TokenWeightedRewardPoolAGFSeparate = 'TokenWeightedRewardPoolAGFSeparate',
   TokenWeightedRewardPoolAGF = 'TokenWeightedRewardPoolAGF',
@@ -99,6 +98,7 @@ export enum eContractid {
   TokenWeightedRewardPoolImpl = 'TokenWeightedRewardPoolImpl',
   XAGFTokenV1Impl = 'XAGFTokenV1Impl',
   AGFTokenV1Impl = 'AGFTokenV1Impl',
+  ReferralRewardPoolV1Impl = 'ReferralRewardPoolV1Impl',
 }
 
 /*
@@ -456,12 +456,12 @@ export interface IRewardParams {
   InitialRate: number;
   TokenPools: iAugmentedPoolAssetsOpt<ITokenRewardPoolParams>;
   TeamPool: ITeamPool;
-  ReferralPool?: IReferralPool;
+  ReferralPool: IReferralPool;
   PermitPool?: IPermitPool;
 }
 
 export interface ITeamPool {
-  Share: number;
+  BasePoints: number;
   Manager: tEthereumAddress;
   UnlockAt: Date;
   Members: ITeamMembers;
@@ -471,9 +471,7 @@ export interface ITeamMembers {
   [address: string]: number;
 }
 
-export interface IReferralPool {
-  TotalWad: number;
-}
+export interface IReferralPool extends IRewardPoolParams {}
 
 export interface IPermitPool {
   TotalWad: number;

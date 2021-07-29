@@ -8,6 +8,7 @@ import {IRewardController} from './IRewardController.sol';
 interface IInitializableRewardPool {
   struct InitData {
     IRewardController controller;
+    string poolName;
     uint256 initialRate;
     uint224 rateScale;
     uint16 baselinePercentage;

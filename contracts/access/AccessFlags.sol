@@ -37,7 +37,7 @@ library AccessFlags {
 
   uint256 public constant STAKE_CONFIGURATOR = 1 << 26; // use proxy
 
-  uint256 public constant REFERRAL_REGISTRY = 1 << 27;
+  uint256 public constant REFERRAL_REGISTRY = 1 << 27; // use proxy
 
   uint256 public constant WETH_GATEWAY = 1 << 28;
 

@@ -28,13 +28,29 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
 
   constructor(
     IRewardController controller,
-    string memory rewardPoolName,
     uint256 initialRate,
     uint224 rateScale,
-    uint16 baselinePercentage
+    uint16 baselinePercentage,
+    string memory rewardPoolName
   ) public ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage) {
     _rewardPoolName = rewardPoolName;
 
+    _initializeDomainSeparator();
+  }
+
+  function _initialize(
+    IRewardController controller,
+    uint256 initialRate,
+    uint224 rateScale,
+    uint16 baselinePercentage,
+    string memory rewardPoolName
+  ) internal {
+    _rewardPoolName = rewardPoolName;
+    _initializeDomainSeparator();
+    super._initialize(controller, initialRate, rateScale, baselinePercentage);
+  }
+
+  function _initializeDomainSeparator() internal {
     uint256 chainId;
 
     //solium-disable-next-line
@@ -51,8 +67,11 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
         address(this)
       )
     );
-
     CLAIM_TYPEHASH = getClaimTypeHash();
+  }
+
+  function getPoolName() public view override returns (string memory) {
+    return _rewardPoolName;
   }
 
   function availableReward() public view virtual returns (uint256);

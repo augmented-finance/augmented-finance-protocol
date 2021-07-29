@@ -40,6 +40,7 @@ contract TokenWeightedRewardPoolV1 is
     return
       InitData(
         _controller,
+        getPoolName(),
         internalGetRate().rayDiv(rateScale),
         uint224(rateScale), // no overflow as getRateScale() is uint224 inside
         internalGetBaselinePercentage()

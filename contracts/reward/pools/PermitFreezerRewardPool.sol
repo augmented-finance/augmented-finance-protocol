@@ -17,7 +17,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     IRewardController controller,
     uint256 rewardLimit,
     string memory rewardPoolName
-  ) public BasePermitRewardPool(controller, rewardPoolName, 0, NO_SCALE, NO_BASELINE) {
+  ) public BasePermitRewardPool(controller, 0, NO_SCALE, NO_BASELINE, rewardPoolName) {
     _rewardLimit = rewardLimit;
   }
 

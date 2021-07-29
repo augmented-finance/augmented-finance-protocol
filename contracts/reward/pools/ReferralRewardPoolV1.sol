@@ -28,18 +28,17 @@ contract ReferralRewardPoolV1 is
 
   constructor()
     public
-    ReferralRewardPool(
-      IRewardController(address(this)),
-      type(uint256).max,
-      'RefPool',
-      0,
-      uint224(WadRayMath.RAY),
-      0
-    )
+    ReferralRewardPool(IRewardController(address(this)), 'RefPool', 0, uint224(WadRayMath.RAY), 0)
   {}
 
   function initialize(InitData memory data) public override initializer(TOKEN_REVISION) {
-    super._initialize(data.controller, data.initialRate, data.rateScale, data.baselinePercentage);
+    super._initialize(
+      data.controller,
+      data.initialRate,
+      data.rateScale,
+      data.baselinePercentage,
+      data.poolName
+    );
   }
 
   function initializedWith() external view override returns (InitData memory) {
@@ -47,6 +46,7 @@ contract ReferralRewardPoolV1 is
     return
       InitData(
         _controller,
+        getPoolName(),
         internalGetRate().rayDiv(rateScale),
         uint224(rateScale), // no overflow as getRateScale() is uint224 inside
         internalGetBaselinePercentage()
