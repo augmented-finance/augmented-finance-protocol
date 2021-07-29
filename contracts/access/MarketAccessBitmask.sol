@@ -96,4 +96,13 @@ contract MarketAccessBitmask {
     );
     _;
   }
+
+  modifier onlyRewardRateAdmin {
+    acl_requireAllOf(
+      msg.sender,
+      AccessFlags.REWARD_RATE_ADMIN,
+      Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN
+    );
+    _;
+  }
 }

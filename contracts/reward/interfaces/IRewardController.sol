@@ -18,7 +18,7 @@ interface IRewardController {
 
   function isRateAdmin(address) external view returns (bool);
 
-  function isConfigurator(address) external view returns (bool);
+  function isConfigAdmin(address) external view returns (bool);
 
   function isEmergencyAdmin(address) external view returns (bool);
 
@@ -51,6 +51,8 @@ interface IManagedRewardBooster is IManagedRewardController {
   function setUpdateBoostPoolRate(bool) external;
 
   function setBoostPool(address) external;
+
+  function getBoostPool() external view returns (address pool, uint256 mask);
 
   function setBoostExcessTarget(address target, bool mintExcess) external;
 

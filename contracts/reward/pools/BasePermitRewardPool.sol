@@ -70,14 +70,14 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
     return (0, 0);
   }
 
-  function addRewardProvider(address provider, address token) external override onlyConfigurator {
+  function addRewardProvider(address provider, address token) external override onlyConfigAdmin {
     require(provider != address(0), 'provider is required');
     require(token == address(0), 'token is unsupported');
     _providers[provider] = true;
     emit ProviderAdded(provider, token);
   }
 
-  function removeRewardProvider(address provider) external override onlyConfigurator {
+  function removeRewardProvider(address provider) external override onlyConfigAdmin {
     delete (_providers[provider]);
     emit ProviderRemoved(provider);
   }

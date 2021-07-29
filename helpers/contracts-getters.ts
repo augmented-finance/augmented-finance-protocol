@@ -43,10 +43,11 @@ import {
   AGFTokenV1Factory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
-
+import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
+
 import { MockTokenMap } from './contracts-helpers';
-import { getFirstSigner, getFromJsonDb } from './misc-utils';
+import { getFirstSigner, getFromJsonDb, hasInJsonDb } from './misc-utils';
 import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } from './types';
 
 const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
@@ -56,6 +57,18 @@ export const getMarketAddressController = async (address?: tEthereumAddress) =>
     address || (await getAddr(eContractid.MarketAccessController)),
     await getFirstSigner()
   );
+
+export const hasMarketAddressController = async () =>
+  await hasInJsonDb(eContractid.MarketAccessController);
+
+export const getPreDeployedAddressController = async () =>
+  MarketAccessControllerFactory.connect(
+    await getAddr(eContractid.PreDeployedMarketAccessController),
+    await getFirstSigner()
+  );
+
+export const hasPreDeployedAddressController = async () =>
+  await hasInJsonDb(eContractid.PreDeployedMarketAccessController);
 
 export const getLendingPoolConfiguratorProxy = async (address: tEthereumAddress) => {
   return LendingPoolConfiguratorFactory.connect(address, await getFirstSigner());
@@ -81,6 +94,9 @@ export const getMintableERC20 = async (address: tEthereumAddress) =>
 
 export const getIErc20Detailed = async (address: tEthereumAddress) =>
   IERC20DetailedFactory.connect(address, await getFirstSigner());
+
+export const getIRewardedToken = async (address: tEthereumAddress) =>
+  IRewardedTokenFactory.connect(address, await getFirstSigner());
 
 export const getRewardConfiguratorProxy = async (address: tEthereumAddress) =>
   RewardConfiguratorFactory.connect(address, await getFirstSigner());

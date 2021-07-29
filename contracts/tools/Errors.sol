@@ -110,11 +110,10 @@ library Errors {
   string public constant LP_TOO_MANY_NESTED_CALLS = '85';
   string public constant LP_RESTRICTED_FEATURE = '86';
 
-  string public constant RW_NOT_REWARD_CONFIG_ADMIN = '88';
-  string public constant RW_NOT_REWARD_RATE_ADMIN = '89';
-  string public constant RW_NOT_REWARD_CONTROLLER = '90';
+  string public constant CT_CALLER_MUST_BE_REWARD_RATE_ADMIN = '89';
+  string public constant CT_CALLER_MUST_BE_REWARD_CONTROLLER = '90';
   string public constant RW_REWARD_PAUSED = '91';
-  string public constant RW_NOT_TEAM_MANAGER = '92';
+  string public constant CT_CALLER_MUST_BE_TEAM_MANAGER = '92';
 
   string public constant TXT_OWNABLE_CALLER_NOT_OWNER = 'Ownable: caller is not the owner';
   string public constant TXT_CALLER_NOT_PROXY_OWNER = 'ProxyOwner: caller is not the owner';

@@ -61,7 +61,8 @@
     "aave:ropsten:full:migration": "npm run compile && npm run hardhat:ropsten -- augmented:mainnet --verify",
     "aave:fork:main:tenderly": "npm run compile && npm run hardhat:tenderly-main -- augmented:mainnet",
     "augmented:main": "hardhat augmented:mainnet",
-    "augmented:main:fork": "npm run compile && MAINNET_FORK=true hardhat augmented:mainnet",
+    "augmented:main:fork": "MAINNET_FORK=true hardhat augmented:mainnet",
+    "augmented:test-incremental": "MAINNET_FORK=true hardhat augmented:test-incremental",
 
     "aave:fork:main": "npm run compile && MAINNET_FORK=true hardhat augmented:mainnet",
     "aave:main:full:migration": "npm run compile && npm run hardhat:main -- augmented:mainnet --verify",

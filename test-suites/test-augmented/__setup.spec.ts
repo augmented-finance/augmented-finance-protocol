@@ -19,6 +19,7 @@ import {
   deployTreasuryImpl,
   deployLendingPoolConfiguratorImpl,
   deployLendingPoolImpl,
+  deployLendingPoolCollateralManagerImpl,
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
 import { TokenContractId, tEthereumAddress, LendingPools } from '../../helpers/types';
@@ -93,20 +94,21 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const addressesProviderRegistry = await deployAddressesProviderRegistry();
   await addressesProviderRegistry.registerAddressesProvider(addressProvider.address, 1);
 
-  const [lendingPoolImpl, collateralManagerImpl] = await deployLendingPoolImpl();
+  const lendingPoolImpl = await deployLendingPoolImpl(false, false);
 
   await waitForTx(await addressProvider.setLendingPoolImpl(lendingPoolImpl.address));
 
   const lendingPoolAddress = await addressProvider.getLendingPool();
   const lendingPoolProxy = await getLendingPoolProxy(lendingPoolAddress);
 
+  const collateralManagerImpl = await deployLendingPoolCollateralManagerImpl(false, false);
   console.log(
     '\tSetting lending pool collateral manager implementation with address',
     collateralManagerImpl.address
   );
   await lendingPoolProxy.setLendingPoolCollateralManager(collateralManagerImpl.address);
 
-  const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl();
+  const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(false, false);
   await addressProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address);
 
   const fallbackOracle = await deployMockPriceOracle();
@@ -187,9 +189,22 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   addressProvider.setTreasuryImpl(treasuryImpl.address);
   const treasuryAddress = treasuryImpl.address;
 
-  await initReservesByHelper(reservesParams, allReservesAddresses, Names, treasuryAddress, false);
+  await initReservesByHelper(
+    addressProvider,
+    reservesParams,
+    allReservesAddresses,
+    Names,
+    false,
+    treasuryAddress,
+    false
+  );
 
-  await configureReservesByHelper(reservesParams, allReservesAddresses, testHelpers);
+  await configureReservesByHelper(
+    addressProvider,
+    reservesParams,
+    allReservesAddresses,
+    testHelpers
+  );
 
   await deployMockFlashLoanReceiver(addressProvider.address);
 

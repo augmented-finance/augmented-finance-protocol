@@ -18,6 +18,7 @@ import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.
 import {IInitializableRewardPool} from './interfaces/IInitializableRewardPool.sol';
 import {ProxyOwner} from '../tools/upgradeability/ProxyOwner.sol';
 import {IRewardedToken} from '../interfaces/IRewardedToken.sol';
+import {TeamRewardPool} from './pools/TeamRewardPool.sol';
 
 contract RewardConfigurator is
   MarketAccessBitmask(IMarketAccessController(0)),
@@ -31,6 +32,7 @@ contract RewardConfigurator is
   }
 
   ProxyOwner internal immutable _proxies;
+  mapping(string => address) _namedPools;
 
   constructor() public {
     _proxies = new ProxyOwner();
@@ -45,10 +47,6 @@ contract RewardConfigurator is
     address ctl = _remoteAcl.getRewardController();
     require(ctl != address(0), 'incomplete configuration');
     return IManagedRewardController(ctl);
-  }
-
-  function updateBaseline(uint256 baseline) external onlyRewardAdmin {
-    getDefaultController().updateBaseline(baseline);
   }
 
   function list() public view returns (address[] memory pools) {
@@ -98,6 +96,37 @@ contract RewardConfigurator is
     }
   }
 
+  function addNamedRewardPools(IManagedRewardPool[] calldata pools, string[] calldata names)
+    external
+    onlyRewardAdmin
+  {
+    require(pools.length >= names.length);
+
+    IManagedRewardController ctl = getDefaultController();
+
+    for (uint256 i = 0; i < names.length; i++) {
+      IManagedRewardPool pool = pools[i];
+      if (pool != IManagedRewardPool(0)) {
+        ctl.addRewardPool(pool);
+      }
+      if (i < names.length && bytes(names[i]).length > 0) {
+        _namedPools[names[i]] = address(pool);
+      }
+    }
+  }
+
+  function getNamedRewardPools(string[] calldata names)
+    external
+    view
+    returns (address[] memory pools)
+  {
+    pools = new address[](names.length);
+    for (uint256 i = 0; i < names.length; i++) {
+      pools[i] = _namedPools[names[i]];
+    }
+    return pools;
+  }
+
   function implementationOf(address token) external view returns (address) {
     return _proxies.implementationOf(token);
   }
@@ -135,5 +164,84 @@ contract RewardConfigurator is
     booster.addRewardPool(boostPool);
     booster.setBoostPool(address(boostPool));
     booster.setBoostExcessTarget(excessTarget, mintExcess);
+  }
+
+  function configureTeamRewardPool(
+    TeamRewardPool pool,
+    string calldata name,
+    uint32 unlockedAt,
+    address[] calldata members,
+    uint16[] calldata memberShares
+  ) external onlyRewardAdmin {
+    IManagedRewardController ctl = getDefaultController();
+    ctl.addRewardPool(pool);
+    _namedPools[name] = address(pool);
+
+    if (unlockedAt > 0) {
+      pool.setUnlockedAt(unlockedAt);
+    }
+    if (members.length > 0) {
+      pool.updateTeamMembers(members, memberShares);
+    }
+  }
+
+  function setRates(IManagedRewardPool[] calldata pools, uint256[] calldata rates)
+    external
+    onlyRewardRateAdmin
+  {
+    require(pools.length == rates.length);
+
+    for (uint256 i = 0; i < pools.length; i++) {
+      pools[i].setRate(rates[i]);
+    }
+  }
+
+  function setBaselinePercentages(IManagedRewardPool[] calldata pools, uint16[] calldata pcts)
+    external
+    onlyRewardRateAdmin
+  {
+    require(pools.length == pcts.length);
+
+    for (uint256 i = 0; i < pools.length; i++) {
+      pools[i].setBaselinePercentage(pcts[i]);
+    }
+  }
+
+  function getPoolTotals(bool excludeBoost)
+    external
+    view
+    returns (
+      uint256 totalBaselinePercentage,
+      uint256 totalRate,
+      uint256 activePoolCount,
+      uint256 poolCount,
+      uint256 listCount
+    )
+  {
+    IManagedRewardController ctl = getDefaultController();
+    (IManagedRewardPool[] memory pools, uint256 ignoreMask) = ctl.getPools();
+
+    listCount = pools.length;
+
+    if (excludeBoost) {
+      (, uint256 mask) = IManagedRewardBooster(address(ctl)).getBoostPool();
+      if (mask != 0) {
+        poolCount++;
+        ignoreMask |= mask;
+      }
+    }
+
+    for (uint256 i = 0; i < pools.length; i++) {
+      if (ignoreMask & 1 == 0 && pools[i] != IManagedRewardPool(0)) {
+        activePoolCount++;
+        (bool ok, uint16 pct) = pools[i].getBaselinePercentage();
+        if (ok) {
+          totalBaselinePercentage += uint256(pct);
+        }
+        totalRate += pools[i].getRate();
+      }
+      ignoreMask >>= 1;
+    }
+    poolCount += activePoolCount;
   }
 }

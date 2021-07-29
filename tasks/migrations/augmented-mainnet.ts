@@ -11,12 +11,19 @@ import {
 import { usingTenderly } from '../../helpers/tenderly-utils';
 import { exit } from 'process';
 
-task('augmented:mainnet', 'Deploy development enviroment')
+task('augmented:mainnet', 'Deploy enviroment')
+  .addFlag('incremental', 'Continue interrupted installation')
   .addFlag('verify', 'Verify contracts at Etherscan')
-  .setAction(async ({ verify }, DRE) => {
+  .setAction(async ({ incremental, verify }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
     await DRE.run('set-DRE');
-    await cleanupJsonDb(DRE.network.name);
+    if (incremental) {
+      console.log('======================================================================');
+      console.log('====================    ATTN! INCREMENTAL MODE    ====================');
+      console.log('======================================================================');
+    } else {
+      await cleanupJsonDb(DRE.network.name);
+    }
     await cleanupUiConfig();
 
     // Prevent loss of gas verifying all the needed ENVs for Etherscan verification
@@ -110,4 +117,6 @@ task('augmented:mainnet', 'Deploy development enviroment')
 
     console.log('\nFinished deployment');
     printContracts((await getFirstSigner()).address);
+
+    //    await cleanupJsonDb(DRE.network.name);
   });

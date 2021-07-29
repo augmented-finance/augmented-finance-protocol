@@ -18,7 +18,7 @@ task('dev:deploy-lending-pool', 'Deploy lending pool for dev enviroment')
 
     const addressesProvider = await getMarketAddressController();
 
-    const [lendingPoolImpl, collateralManagerImpl] = await deployLendingPoolImpl(verify);
+    const [lendingPoolImpl, collateralManagerImpl] = await deployLendingPoolImpl(verify, false);
 
     // Set lending pool impl to Address Provider
     await waitForTx(await addressesProvider.setLendingPoolImpl(lendingPoolImpl.address));
@@ -34,7 +34,7 @@ task('dev:deploy-lending-pool', 'Deploy lending pool for dev enviroment')
       await lendingPoolProxy.setLendingPoolCollateralManager(collateralManagerImpl.address)
     );
 
-    const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(verify);
+    const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(verify, false);
 
     // Set lending pool conf impl to Address Provider
     await waitForTx(

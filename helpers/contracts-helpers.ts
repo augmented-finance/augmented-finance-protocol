@@ -1,8 +1,14 @@
-import { Contract, Signer, utils, ethers, BigNumberish } from 'ethers';
+import { Contract, Signer, utils, ethers, BigNumberish, Overrides } from 'ethers';
 import { signTypedData_v4 } from 'eth-sig-util';
 import { fromRpcSig, ECDSASignature } from 'ethereumjs-util';
 import BigNumber from 'bignumber.js';
-import { DRE, logContractInJsonDb, waitForTx } from './misc-utils';
+import {
+  DRE,
+  falsyOrZeroAddress,
+  getFromJsonDb,
+  logContractInJsonDb,
+  waitForTx,
+} from './misc-utils';
 import {
   tEthereumAddress,
   tStringTokenSmallUnits,
@@ -52,6 +58,27 @@ export const deployContract = async <ContractType extends Contract>(
   return contract;
 };
 
+export interface ContractInstanceFactory<ContractType extends Contract> {
+  deploy(overrides?: Overrides): Promise<ContractType>;
+  attach(address: string): ContractType;
+}
+
+export const withSaveAndVerifyOnce = async <ContractType extends Contract>(
+  factory: ContractInstanceFactory<ContractType>,
+  id: string,
+  args: (string | string[])[],
+  verify: boolean,
+  once: boolean
+): Promise<ContractType> => {
+  if (once) {
+    const addr = (await getFromJsonDb(id))?.address;
+    if (!falsyOrZeroAddress(addr)) {
+      return factory.attach(addr);
+    }
+  }
+  return await withSaveAndVerify(await factory.deploy(), id, args, verify);
+};
+
 export const withSaveAndVerify = async <ContractType extends Contract>(
   instance: ContractType,
   id: string,
@@ -60,16 +87,21 @@ export const withSaveAndVerify = async <ContractType extends Contract>(
 ): Promise<ContractType> => {
   await waitForTx(instance.deployTransaction);
   await registerContractInJsonDb(id, instance);
-  if (usingTenderly()) {
-    console.log();
-    console.log('Doing Tenderly contract verification of', id);
-    await (DRE as any).tenderlyNetwork.verify({
-      name: id,
-      address: instance.address,
-    });
-    console.log(`Verified ${id} at Tenderly!`);
-    console.log();
+  await verifyOnTenderly(instance, id);
+  if (verify) {
+    await verifyContract(instance.address, args);
   }
+  return instance;
+};
+
+export const registerAndVerify = async <ContractType extends Contract>(
+  instance: ContractType,
+  id: string,
+  args: (string | string[])[],
+  verify?: boolean
+): Promise<ContractType> => {
+  await registerContractInJsonDb(id, instance);
+  await verifyOnTenderly(instance, id);
   if (verify) {
     await verifyContract(instance.address, args);
   }
@@ -85,6 +117,17 @@ export const withVerify = async <ContractType extends Contract>(
   await waitForTx(instance.deployTransaction);
   logContractInJsonDb(id, instance, false);
 
+  await verifyOnTenderly(instance, id);
+  if (verify) {
+    await verifyContract(instance.address, args);
+  }
+  return instance;
+};
+
+const verifyOnTenderly = async <ContractType extends Contract>(
+  instance: ContractType,
+  id: string
+) => {
   if (usingTenderly()) {
     console.log();
     console.log('Doing Tenderly contract verification of', id);
@@ -95,10 +138,6 @@ export const withVerify = async <ContractType extends Contract>(
     console.log(`Verified ${id} at Tenderly!`);
     console.log();
   }
-  if (verify) {
-    await verifyContract(instance.address, args);
-  }
-  return instance;
 };
 
 export const linkBytecode = (artifact: Artifact, libraries: any) => {
