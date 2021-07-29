@@ -82,12 +82,32 @@ task('augmented:mainnet', 'Deploy enviroment')
         await DRE.run('verify:tokens', { pool: POOL_NAME });
       }
 
+      const [entryMap, instanceCount, multiCount] = printContracts(
+        (await getFirstSigner()).address
+      );
+
+      if (multiCount > 0) {
+        throw 'multi-deployed contract(s) detected';
+      }
+      if (entryMap.size != instanceCount) {
+        throw 'unknown contract(s) detected';
+      }
+      entryMap.forEach((value, key, m) => {
+        if (key.startsWith('Mock')) {
+          throw 'mock contract(s) detected';
+        }
+      });
+
       success = true;
     } catch (err) {
       if (usingTenderly()) {
         console.error('Check tx error:', getTenderlyDashboardLink());
       }
-      console.error(err);
+      console.error(
+        '\n=========================================================\nERROR:',
+        err,
+        '\n'
+      );
     }
 
     if (renounce) {
@@ -116,7 +136,5 @@ task('augmented:mainnet', 'Deploy enviroment')
     }
 
     console.log('\nFinished deployment');
-    printContracts((await getFirstSigner()).address);
-
     //    await cleanupJsonDb(DRE.network.name);
   });

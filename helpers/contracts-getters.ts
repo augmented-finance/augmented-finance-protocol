@@ -310,17 +310,20 @@ export const getTeamRewardPool = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getRewardController = async (address?: tEthereumAddress) =>
+export const getMockRewardFreezer = async (address?: tEthereumAddress) =>
   RewardFreezerFactory.connect(
-    address || (await getAddr(eContractid.RewardController)),
+    address || (await getAddr(eContractid.MockRewardFreezer)),
     await getFirstSigner()
   );
 
-export const getRewardBooster = async (address?: tEthereumAddress) =>
+export const getMockRewardBooster = async (address?: tEthereumAddress) =>
   RewardBoosterFactory.connect(
-    address || (await getAddr(eContractid.RewardBooster)),
+    address || (await getAddr(eContractid.MockRewardBooster)),
     await getFirstSigner()
   );
+
+export const getRewardBooster = async (address: tEthereumAddress) =>
+  RewardBoosterFactory.connect(address, await getFirstSigner());
 
 export const getPermitFreezerRewardPool = async (address?: tEthereumAddress) =>
   PermitFreezerRewardPoolFactory.connect(

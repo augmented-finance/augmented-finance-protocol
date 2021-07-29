@@ -43,6 +43,11 @@ abstract contract BaseRewardController is
     _rewardMinter = rewardMinter;
   }
 
+  function _initialize(IMarketAccessController ac, IRewardMinter rewardMinter) internal {
+    _remoteAcl = ac;
+    _rewardMinter = rewardMinter;
+  }
+
   function getAccessController() public view override returns (IMarketAccessController) {
     return _remoteAcl;
   }

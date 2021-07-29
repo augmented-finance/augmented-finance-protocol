@@ -2,16 +2,15 @@ import { task } from 'hardhat/config';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import {
   deployAGFTokenV1Impl,
-  deployRewardBooster,
+  deployRewardBoosterV1Impl,
   deployRewardConfiguratorImpl,
   deployXAGFTokenV1Impl,
 } from '../../helpers/contracts-deployments';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import {
   getAGFTokenV1Impl,
-  getMarketAddressController,
-  getRewardConfiguratorProxy,
   getRewardBooster,
+  getRewardConfiguratorProxy,
 } from '../../helpers/contracts-getters';
 import { getFirstSigner, falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
@@ -76,9 +75,9 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       freshStart && !continuation ? '' : await addressProvider.getRewardController();
 
     if (falsyOrZeroAddress(boosterAddr)) {
-      const impl = await deployRewardBooster([addressProvider.address, agfAddr], verify);
+      const impl = await deployRewardBoosterV1Impl(verify, continuation);
       console.log('Deployed RewardBooster implementation:', impl.address);
-      await waitForTx(await addressProvider.setRewardController(impl.address));
+      await waitForTx(await addressProvider.setRewardControllerImpl(impl.address));
       boosterAddr = await addressProvider.getRewardController();
     }
     console.log('RewardBooster', boosterAddr);

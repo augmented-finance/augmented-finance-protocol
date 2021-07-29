@@ -18,7 +18,6 @@ import {
   MintableERC20,
   RewardBoosterFactory,
   RewardConfiguratorFactory,
-  RewardedTokenLockerFactory,
   StakeTokenFactory,
   TreasuryFactory,
   XAGFTokenV1Factory,
@@ -64,6 +63,7 @@ import {
   MockRewardedTokenLockerFactory,
   StaticPriceOracleFactory,
   ReferralRewardPoolV1Factory,
+  RewardBoosterV1Factory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -722,13 +722,22 @@ export const deployFlashLiquidationAdapter = async (
     verify
   );
 
-export const deployRewardBooster = async (
+export const deployRewardBoosterV1Impl = async (verify: boolean, once: boolean) =>
+  withSaveAndVerifyOnce(
+    new RewardBoosterV1Factory(await getFirstSigner()),
+    eContractid.RewardBoosterImpl,
+    [],
+    verify,
+    once
+  );
+
+export const deployMockRewardBooster = async (
   args: [tEthereumAddress, tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await new RewardBoosterFactory(await getFirstSigner()).deploy(...args),
-    eContractid.RewardBooster,
+    eContractid.MockRewardBooster,
     [],
     verify
   );
@@ -773,13 +782,13 @@ export const deployMockDecayingTokenLocker = async (
     verify
   );
 
-export const deployRewardController = async (
+export const deployMockRewardFreezer = async (
   args: [tEthereumAddress, tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await new RewardFreezerFactory(await getFirstSigner()).deploy(...args),
-    eContractid.RewardController,
+    eContractid.MockRewardFreezer,
     args,
     verify
   );

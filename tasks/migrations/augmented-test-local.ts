@@ -2,7 +2,7 @@ import { task, types } from 'hardhat/config';
 import {
   deployMarketAccessController,
   deployMockAgfToken,
-  deployRewardController,
+  deployMockRewardFreezer,
   deployTeamRewardPool,
   deployMockTokenLocker,
   deployPermitFreezerRewardPool,
@@ -74,7 +74,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       );
 
       console.log(`#3 deploying: RewardFreezer`);
-      const rewardCtl = await deployRewardController([ac.address, agfToken.address], verify);
+      const rewardCtl = await deployMockRewardFreezer([ac.address, agfToken.address], verify);
       await rewardCtl.setFreezePercentage(0);
       await ac.grantAnyRoles(rewardCtl.address, ACCESS_REWARD_MINT);
 
