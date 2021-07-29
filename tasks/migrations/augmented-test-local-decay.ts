@@ -33,7 +33,7 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
 
     console.log(`#3 deploying: RewardBooster`);
     const rewardBooster = await deployMockRewardBooster([ac.address, agfToken.address], verify);
-    await ac.setRewardController(rewardBooster.address);
+    await ac.setAddress(AccessFlags.REWARD_CONTROLLER, rewardBooster.address); // do not use proxy
 
     console.log(`#5 deploying: DecayingTokenLocker for RewardBooster`);
 
