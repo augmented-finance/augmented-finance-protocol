@@ -18,7 +18,7 @@ interface IRewardController {
 
   function isRateAdmin(address) external view returns (bool);
 
-  function isConfigurator(address) external view returns (bool);
+  function isConfigAdmin(address) external view returns (bool);
 
   function isEmergencyAdmin(address) external view returns (bool);
 
