@@ -110,11 +110,11 @@ library Errors {
   string public constant LP_FLASH_LOAN_RESTRICTED = '85';
   string public constant CT_PUMP_DUMP_PROTECTION = '86';
   string public constant LP_LIQUIDATION_DISABLED = '87';
-  string public constant RW_NOT_REWARD_CONFIG_ADMIN = '88';
-  string public constant RW_NOT_REWARD_RATE_ADMIN = '89';
-  string public constant RW_NOT_REWARD_CONTROLLER = '90';
+  //  string public constant RW_NOT_REWARD_CONFIG_ADMIN = '88';
+  string public constant CT_CALLER_MUST_BE_REWARD_RATE_ADMIN = '89';
+  string public constant CT_CALLER_MUST_BE_REWARD_CONTROLLER = '90';
   string public constant RW_REWARD_PAUSED = '91';
-  string public constant RW_NOT_TEAM_MANAGER = '92';
+  string public constant CT_CALLER_MUST_BE_TEAM_MANAGER = '92';
 
   enum CollateralManagerErrors {
     NO_ERROR,

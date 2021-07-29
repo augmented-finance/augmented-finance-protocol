@@ -90,7 +90,14 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     internalSetBaselinePercentage(factor);
   }
 
-  function getBaselinePercentage() internal view returns (uint16) {
+  function getBaselinePercentage() external view override returns (bool, uint16) {
+    if (_baselinePercentage == NO_BASELINE) {
+      return (false, 0);
+    }
+    return (true, _baselinePercentage);
+  }
+
+  function internalGetBaselinePercentage() internal view returns (uint16) {
     return _baselinePercentage;
   }
 
@@ -198,7 +205,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   }
 
   function _onlyController() private view {
-    require(isController(msg.sender), Errors.RW_NOT_REWARD_CONTROLLER);
+    require(isController(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_CONTROLLER);
   }
 
   modifier onlyController() {
@@ -206,17 +213,17 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _;
   }
 
-  function _onlyConfigurator() private view {
-    require(_controller.isConfigurator(msg.sender), Errors.RW_NOT_REWARD_CONFIG_ADMIN);
+  function _onlyConfigAdmin() private view {
+    require(_controller.isConfigAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_ADMIN);
   }
 
-  modifier onlyConfigurator() {
-    _onlyConfigurator();
+  modifier onlyConfigAdmin() {
+    _onlyConfigAdmin();
     _;
   }
 
   function _onlyRateAdmin() private view {
-    require(_controller.isRateAdmin(msg.sender), Errors.RW_NOT_REWARD_RATE_ADMIN);
+    require(_controller.isRateAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN);
   }
 
   modifier onlyRateAdmin() {

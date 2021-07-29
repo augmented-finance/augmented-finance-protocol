@@ -53,11 +53,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     }
   }
 
-  function setBoostFactor(address pool, uint32 pctFactor)
-    external
-    override
-    onlyConfiguratorOrAdmin
-  {
+  function setBoostFactor(address pool, uint32 pctFactor) external override onlyConfigOrRateAdmin {
     require(getPoolMask(pool) != 0, 'unknown pool');
     require(pool != address(_boostPool), 'factor for the boost pool');
     _boostFactor[pool] = pctFactor;
@@ -67,7 +63,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     return uint32(_boostFactor[pool]);
   }
 
-  function setUpdateBoostPoolRate(bool updateBoostPool) external override onlyConfigurator {
+  function setUpdateBoostPoolRate(bool updateBoostPool) external override onlyConfigAdmin {
     _updateBoostPool = updateBoostPool;
   }
 
@@ -94,7 +90,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     return (totalRate, baselineMask);
   }
 
-  function setBoostPool(address pool) external override onlyConfigurator {
+  function setBoostPool(address pool) external override onlyConfigAdmin {
     if (pool == address(0)) {
       _boostPoolMask = 0;
     } else {
@@ -107,15 +103,11 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     _boostPool = IManagedRewardPool(pool);
   }
 
-  function getBoostPool() external view returns (address) {
-    return address(_boostPool);
+  function getBoostPool() external view override returns (address pool, uint256 mask) {
+    return (address(_boostPool), _boostPoolMask);
   }
 
-  function setBoostExcessTarget(address target, bool mintExcess)
-    external
-    override
-    onlyConfigurator
-  {
+  function setBoostExcessTarget(address target, bool mintExcess) external override onlyConfigAdmin {
     _boostExcessDelegate = target;
     _mintExcess = mintExcess && (target != address(0));
   }
@@ -286,7 +278,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
   mapping(address => AutolockEntry) private _autolocks;
   AutolockEntry private _defaultAutolock;
 
-  function disableAutolocks() external onlyConfigurator {
+  function disableAutolocks() external onlyConfigAdmin {
     _defaultAutolock = AutolockEntry(0, AutolockMode.Default, 0);
     emit RewardAutolockConfigured(address(this), AutolockMode.Default, 0, 0);
   }
@@ -295,7 +287,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     AutolockMode mode,
     uint32 lockDuration,
     uint224 param
-  ) external onlyConfigurator {
+  ) external onlyConfigAdmin {
     require(mode > AutolockMode.Default);
 
     _defaultAutolock = AutolockEntry(param, mode, fromDuration(lockDuration));

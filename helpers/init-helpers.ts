@@ -9,20 +9,20 @@ import {
 } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, waitForTx } from './misc-utils';
-import { getMarketAddressController, getLendingPoolConfiguratorProxy } from './contracts-getters';
+import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contracts-getters';
 import { registerContractInJsonDb } from './contracts-helpers';
-import { BigNumber, BigNumberish, Signer } from 'ethers';
+import { BigNumberish } from 'ethers';
 import {
   deployDefaultReserveInterestRateStrategy,
   deployDelegationAwareDepositToken,
   deployDelegationAwareDepositTokenImpl,
   deployDepositToken,
   deployDepositTokenImpl,
-  deployStableDebtToken,
   deployStableDebtTokenImpl,
   deployVariableDebtTokenImpl,
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
+import { MarketAccessController } from '../types';
 
 export const chooseDepositTokenDeployment = (id: eContractid) => {
   switch (id) {
@@ -36,16 +36,14 @@ export const chooseDepositTokenDeployment = (id: eContractid) => {
 };
 
 export const initReservesByHelper = async (
+  addressProvider: MarketAccessController,
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
   names: ITokenNames,
+  skipExistingAssets: boolean,
   treasuryAddress: tEthereumAddress,
   verify: boolean
-): Promise<BigNumber> => {
-  let gasUsage = BigNumber.from('0');
-
-  const addressProvider = await getMarketAddressController();
-
+) => {
   // CHUNK CONFIGURATION
   const initChunks = 1;
 
@@ -86,23 +84,26 @@ export const initReservesByHelper = async (
   let strategyAddresses: Record<string, tEthereumAddress> = {};
   let strategyAddressPerAsset: Record<string, string> = {};
   let depositTokenType: Record<string, boolean> = {};
-  let delegationAwareATokenImplementationAddress = '';
 
-  console.log('deployStableDebtTokenImpl');
-  const stableDebtTokenImpl = await deployStableDebtTokenImpl(verify);
-  const variableDebtTokenImpl = await deployVariableDebtTokenImpl(verify);
-
-  console.log('deployDepositTokenImpl');
-  const depositTokenImplementationAddress = (await deployDepositTokenImpl(verify)).address;
+  const stableDebtTokenImpl = await deployStableDebtTokenImpl(verify, skipExistingAssets);
+  const variableDebtTokenImpl = await deployVariableDebtTokenImpl(verify, skipExistingAssets);
+  const depositTokenImpl = await deployDepositTokenImpl(verify, skipExistingAssets);
 
   const delegatedAwareReserves = Object.entries(reservesParams).filter(
     ([_, { aTokenImpl }]) => aTokenImpl === eContractid.DelegationAwareDepositTokenImpl
   ) as [string, IReserveParams][];
 
-  if (delegatedAwareReserves.length > 0) {
-    console.log('\tdeployDelegationAwareDepositTokenImpl')
-    const delegationAwareATokenImplementation = await deployDelegationAwareDepositTokenImpl(verify);
-    delegationAwareATokenImplementationAddress = delegationAwareATokenImplementation.address;
+  const delegationAwareTokenImpl =
+    delegatedAwareReserves.length > 0
+      ? await deployDelegationAwareDepositTokenImpl(verify, skipExistingAssets)
+      : undefined;
+
+  const existingAssets = new Set<string>();
+
+  if (skipExistingAssets) {
+    const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
+    const reserves = await lendingPool.getReservesList();
+    reserves.forEach((addr) => existingAssets.add(addr));
   }
 
   const reserves = Object.entries(reservesParams).filter(
@@ -112,7 +113,16 @@ export const initReservesByHelper = async (
   ) as [string, IReserveParams][];
 
   for (let [symbol, params] of reserves) {
-    // if (symbol !== 'DAI') continue;
+    const tokenAddress = tokenAddresses[symbol];
+    if (tokenAddress == undefined) {
+      console.log(`Asset ${symbol} is missing in ${tokenAddresses}`);
+      throw 'asset is missing: ' + symbol;
+    }
+
+    if (existingAssets.has(tokenAddress)) {
+      console.log(`Asset ${symbol} already exists`);
+      continue;
+    }
 
     const { strategy, aTokenImpl, reserveDecimals } = params;
     const {
@@ -154,22 +164,17 @@ export const initReservesByHelper = async (
 
     reserveInitDecimals.push(reserveDecimals);
 
-    if (tokenAddresses[symbol] == undefined) {
-      console.log('Asset ', symbol, ' is missing in ', tokenAddresses);
-      throw 'asset is missing: ' + symbol;
-    }
-
-    reserveTokens.push(tokenAddresses[symbol]);
+    reserveTokens.push(tokenAddress);
     reserveSymbols.push(symbol);
   }
 
   for (let i = 0; i < reserveSymbols.length; i++) {
     let tokenToUse: string;
     if (!depositTokenType[reserveSymbols[i]]) {
-      tokenToUse = depositTokenImplementationAddress;
+      tokenToUse = depositTokenImpl.address;
       console.log('=-= generic:', reserveSymbols[i], tokenToUse);
     } else {
-      tokenToUse = delegationAwareATokenImplementationAddress;
+      tokenToUse = delegationAwareTokenImpl!.address;
     }
 
     const reserveSymbol = reserveSymbols[i];
@@ -218,10 +223,7 @@ export const initReservesByHelper = async (
 
     console.log(`  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
     console.log('    * gasUsed', tx3.gasUsed.toString());
-    //gasUsage = gasUsage.add(tx3.gasUsed);
   }
-
-  return gasUsage; // Deprecated
 };
 
 export const getTokenAggregatorPairs = (
@@ -252,11 +254,11 @@ export const getTokenAggregatorPairs = (
 };
 
 export const configureReservesByHelper = async (
+  addressProvider: MarketAccessController,
   reservesParams: iMultiPoolsAssets<IReserveParams>,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
   helpers: ProtocolDataProvider
 ) => {
-  const addressProvider = await getMarketAddressController();
   const symbols: string[] = [];
 
   const inputParams: {

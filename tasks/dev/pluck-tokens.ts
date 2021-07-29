@@ -13,7 +13,8 @@ import { BigNumber } from 'ethers';
 
 task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .setAction(async ({ pool }, DRE) => {
+  .addFlag('mustDeposit', 'Enforces deposit')
+  .setAction(async ({ pool, mustDeposit }, DRE) => {
     await DRE.run('set-DRE');
 
     const network = <eNetwork>DRE.network.name;
@@ -39,8 +40,13 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
 
     if (!donors || donors.length == 0) {
       console.log(`Plucking not configured`);
+      if (mustDeposit) {
+        throw `Plucking not configured`;
+      }
       return;
     }
+
+    let hasDeposits = false;
 
     console.log(`Plucking from ${donors.length} donors(s) to ${receiver}`);
 
@@ -66,22 +72,25 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
       const decimals = await token.decimals();
 
       const balance = await token.balanceOf(tokenHolder);
-      const donation = balance.mul(donatePct).div(100);
+
+      const donation = balance.mul(mustDeposit ? 0 : donatePct).div(100);
       if (donation.gt(0)) {
         await token
           .connect(holder)
           .transfer(receiver, donation, { gasLimit: 1000000, gasPrice: 1 });
       }
 
-      const deposit = balance.mul(depositPct).div(100);
+      const deposit = balance.mul(mustDeposit && depositPct == 0 ? 20 : depositPct).div(100);
       if (deposit.gt(0)) {
         await token
           .connect(holder)
           .transfer(deployer.address, deposit, { gasLimit: 1000000, gasPrice: 1 });
+
         await token
           .connect(deployer)
           .approve(lendingPool.address, deposit, { gasLimit: 1000000, gasPrice: 1 });
         await lendingPool.connect(deployer).deposit(token.address, deposit, deployer.address, 0);
+        hasDeposits = true;
       }
 
       let factor: BigNumber;
@@ -107,6 +116,10 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
           } plucked & deposited from ${tokenHolder}`
         );
       }
+    }
+
+    if (mustDeposit && !hasDeposits) {
+      throw `Deposits were not done`;
     }
   });
 
