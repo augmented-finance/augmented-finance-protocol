@@ -16,9 +16,11 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
   constructor(
     IRewardController controller,
     uint256 rewardLimit,
+    uint32 meltDownAt,
     string memory rewardPoolName
   ) public BasePermitRewardPool(controller, 0, NO_SCALE, NO_BASELINE, rewardPoolName) {
     _rewardLimit = rewardLimit;
+    internalSetMeltDownAt(meltDownAt);
   }
 
   function getClaimTypeHash() internal pure override returns (bytes32) {

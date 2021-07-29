@@ -79,7 +79,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       await ac.grantAnyRoles(rewardCtl.address, ACCESS_REWARD_MINT);
 
       const freezerRewardPool = await deployPermitFreezerRewardPool(
-        [rewardCtl.address, RAY, 'burners'],
+        [rewardCtl.address, RAY, 0, 'burners'],
         verify
       );
       await waitForTx(await rewardCtl.addRewardPool(freezerRewardPool.address));

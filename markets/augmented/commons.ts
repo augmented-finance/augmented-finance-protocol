@@ -314,9 +314,10 @@ export const CommonsConfig: ICommonConfiguration = {
       BasePoints: 1000,
       BoostFactor: 0,
     },
-    PermitPool: {
+    BurnersPool: {
       TotalWad: 1e6,
       BoostFactor: 0,
+      MeltDownAt: new Date('2021-02-01'),
     },
 
     TeamPool: {

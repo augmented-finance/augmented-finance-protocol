@@ -838,7 +838,7 @@ export const deployTreasuryRewardPool = async (
 
 export const deployNamedPermitFreezerRewardPool = async (
   rewardPoolName: string,
-  args: [controller: tEthereumAddress, rewardLimit: BigNumberish],
+  args: [controller: tEthereumAddress, rewardLimit: BigNumberish, meltDownAt: number],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -918,7 +918,7 @@ export const deployTokenWeightedRewardPoolAGUSDCBoosted = async (
   );
 
 export const deployPermitFreezerRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, string],
+  args: [tEthereumAddress, BigNumberish, number, string],
   verify?: boolean
 ) =>
   withSaveAndVerify(

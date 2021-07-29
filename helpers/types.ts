@@ -458,7 +458,7 @@ export interface IRewardParams {
   TeamPool: ITeamPool;
   ReferralPool: IBasicRewardPool;
   TreasuryPool: IBasicRewardPool;
-  PermitPool: IPermitPool;
+  BurnersPool: IBurnersPool;
 }
 
 export interface ITeamPool {
@@ -474,9 +474,10 @@ export interface ITeamMembers {
 
 export interface IBasicRewardPool extends IRewardPoolParams {}
 
-export interface IPermitPool {
+export interface IBurnersPool {
   TotalWad: number;
   BoostFactor: number;
+  MeltDownAt: Date;
 }
 
 export interface ITokenRewardPoolParams {

@@ -265,7 +265,7 @@ const deployExtraPools = async (
   const knownNamedPools = new Set<string>();
   const teamPoolName = 'TeamPool';
   const refPoolName = 'RefPool';
-  const burnPoolName = 'BurnPool';
+  const burnPoolName = 'BurnersPool';
   const treasuryPoolName = 'TreasuryPool';
 
   let totalShare: number = 0;
@@ -283,18 +283,20 @@ const deployExtraPools = async (
 
   if (!knownNamedPools.has(teamPoolName)) {
     const poolName = teamPoolName;
+    const params = rewardParams.TeamPool;
+
     extraNames.push(poolName);
-    totalShare += rewardParams.TeamPool.BasePoints;
+    totalShare += params.BasePoints;
     const trp = await deployTeamRewardPool(
-      [rewardCtlAddress, 0, rewardParams.TeamPool.BasePoints, rewardParams.TeamPool.Manager],
+      [rewardCtlAddress, 0, params.BasePoints, params.Manager],
       verify
     );
 
-    const unlockTimestamp = (rewardParams.TeamPool.UnlockAt.getTime() / 1000) | 0;
+    const unlockTimestamp = (params.UnlockAt.getTime() / 1000) | 0;
     let memberAddresses: tEthereumAddress[] = [];
     let memberShares: number[] = [];
 
-    const members = Object.entries(rewardParams.TeamPool.Members);
+    const members = Object.entries(params.Members);
     if (members) {
       [memberAddresses, memberShares] = transpose(members);
     }
@@ -311,7 +313,7 @@ const deployExtraPools = async (
     console.log(
       `Deployed ${poolName}: ${trp.address}, allocation ${allocation / 100.0}%, ${
         members.length
-      } members(s), unlocks at ${rewardParams.TeamPool.UnlockAt} (${unlockTimestamp})`
+      } members(s), unlocks at ${params.UnlockAt} (${unlockTimestamp})`
     );
   }
 
@@ -362,23 +364,25 @@ const deployExtraPools = async (
     poolFactors.push(params.BoostFactor);
   }
 
-  if (
-    rewardParams.PermitPool != undefined &&
-    rewardParams.PermitPool!.TotalWad > 0 &&
-    !knownNamedPools.has(burnPoolName)
-  ) {
+  if (rewardParams.BurnersPool.TotalWad > 0 && !knownNamedPools.has(burnPoolName)) {
     const poolName = burnPoolName;
-    const params = rewardParams.PermitPool!;
+    const params = rewardParams.BurnersPool;
+
+    const unlockTimestamp = (params.MeltDownAt.getTime() / 1000) | 0;
 
     const brp = await deployNamedPermitFreezerRewardPool(
       poolName,
-      [rewardCtlAddress, oneWad.multipliedBy(params.TotalWad).toFixed()],
+      [rewardCtlAddress, oneWad.multipliedBy(params.TotalWad).toFixed(), unlockTimestamp],
       verify
     );
 
     poolAddrs.push(brp.address);
     poolNames.push(poolName);
     poolFactors.push(params.BoostFactor);
+
+    console.log(
+      `Deployed ${poolName}: ${brp.address}, limit ${params.TotalWad} wad, melts at ${params.MeltDownAt} (${unlockTimestamp})`
+    );
   }
 
   if (poolAddrs.length > 0) {
