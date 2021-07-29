@@ -49,7 +49,6 @@ export enum eContractid {
   StaticPriceOracle = 'StaticPriceOracle',
   OracleRouter = 'OracleRouter',
   MockFlashLoanReceiver = 'MockFlashLoanReceiver',
-  WalletBalanceProvider = 'WalletBalanceProvider',
   MockDepositToken = 'MockDepositToken',
   MockStableDebtToken = 'MockStableDebtToken',
   MockVariableDebtToken = 'MockVariableDebtToken',
@@ -495,7 +494,8 @@ export interface IRewardPoolParams {
 export interface IForkTest {
   Donors: iParamsPerNetwork<ITokenAddress>;
   DonatePct: number;
-  To: tEthereumAddress;
+  DonateTo: tEthereumAddress;
+  AutoDepositPct: number;
 }
 
 export interface IPrices {

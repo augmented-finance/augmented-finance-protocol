@@ -38,7 +38,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     _remoteAcl = IMarketAccessController(addressesProvider);
   }
 
-  function list() public view returns (address[] memory tokens) {
+  function list() public view override returns (address[] memory tokens) {
     if (_entryCount == 0) {
       return tokens;
     }
@@ -49,7 +49,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     return tokens;
   }
 
-  function stakeTokenOf(address underlying) public view returns (address) {
+  function stakeTokenOf(address underlying) public view override returns (address) {
     uint256 i = _underlyings[underlying];
     if (i == 0) {
       return address(0);
@@ -57,11 +57,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     return _entries[i];
   }
 
-  function dataOf(address stakeToken)
-    public
-    view
-    returns (IStakeConfigurator.StakeTokenData memory data)
-  {
+  function dataOf(address stakeToken) public view override returns (StakeTokenData memory data) {
     (
       data.config,
       data.stkTokenName,
@@ -76,6 +72,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
   function getStakeTokensData()
     public
     view
+    override
     returns (StakeTokenData[] memory dataList, uint256 count)
   {
     if (_entryCount == 0) {

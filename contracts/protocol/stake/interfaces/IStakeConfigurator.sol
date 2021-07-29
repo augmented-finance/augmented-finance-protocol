@@ -38,4 +38,15 @@ interface IStakeConfigurator {
   event StakeTokenAdded(address indexed token, address indexed underlying);
 
   event StakeTokenRemoved(address indexed token, address indexed underlying);
+
+  function list() external view returns (address[] memory tokens);
+
+  function dataOf(address stakeToken) external view returns (StakeTokenData memory data);
+
+  function stakeTokenOf(address underlying) external view returns (address);
+
+  function getStakeTokensData()
+    external
+    view
+    returns (StakeTokenData[] memory dataList, uint256 count);
 }

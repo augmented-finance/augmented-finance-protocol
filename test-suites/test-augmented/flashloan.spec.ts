@@ -277,7 +277,7 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
       .toString();
     const currentLiqudityRate = reserveData.liquidityRate.toString();
     const currentLiquidityIndex = reserveData.liquidityIndex.toString();
-    const currentUserBalance = userData.currentATokenBalance.toString();
+    const currentUserBalance = userData.currentDepositBalance.toString();
 
     const expectedLiquidity = await convertToCurrencyDecimals(usdc.address, '1000.450');
 

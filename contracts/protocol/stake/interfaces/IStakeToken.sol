@@ -26,11 +26,14 @@ interface IStakeToken is IDerivedToken, IRewardedToken {
 
   function isRedeemable() external view returns (bool);
 
-  function slashUnderlying(
-    address destination,
-    uint256 minAmount,
-    uint256 maxAmount
-  ) external returns (uint256);
+  function balanceAndCooldownOf(address holder)
+    external
+    view
+    returns (
+      uint256 balance,
+      uint32 windowStart,
+      uint32 windowEnd
+    );
 }
 
 interface IManagedStakeToken is IEmergencyAccess {
@@ -41,4 +44,10 @@ interface IManagedStakeToken is IEmergencyAccess {
   function setMaxSlashablePercentage(uint16 percentage) external;
 
   function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod) external;
+
+  function slashUnderlying(
+    address destination,
+    uint256 minAmount,
+    uint256 maxAmount
+  ) external returns (uint256);
 }
