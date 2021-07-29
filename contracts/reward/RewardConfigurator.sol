@@ -49,10 +49,6 @@ contract RewardConfigurator is
     return IManagedRewardController(ctl);
   }
 
-  function updateBaseline(uint256 baseline) external onlyRewardAdmin {
-    getDefaultController().updateBaseline(baseline);
-  }
-
   function list() public view returns (address[] memory pools) {
     uint256 ignoreMask;
     (pools, ignoreMask) = IUntypedRewardControllerPools(address(getDefaultController())).getPools();
@@ -104,14 +100,17 @@ contract RewardConfigurator is
     external
     onlyRewardAdmin
   {
-    require(pools.length == names.length);
+    require(pools.length >= names.length);
 
     IManagedRewardController ctl = getDefaultController();
+
     for (uint256 i = 0; i < names.length; i++) {
       IManagedRewardPool pool = pools[i];
-      _namedPools[names[i]] = address(pool);
       if (pool != IManagedRewardPool(0)) {
         ctl.addRewardPool(pool);
+      }
+      if (i < names.length && bytes(names[i]).length > 0) {
+        _namedPools[names[i]] = address(pool);
       }
     }
   }
@@ -183,6 +182,28 @@ contract RewardConfigurator is
     }
     if (members.length > 0) {
       pool.updateTeamMembers(members, memberShares);
+    }
+  }
+
+  function setRates(IManagedRewardPool[] calldata pools, uint256[] calldata rates)
+    external
+    onlyRewardRateAdmin
+  {
+    require(pools.length == rates.length);
+
+    for (uint256 i = 0; i < pools.length; i++) {
+      pools[i].setRate(rates[i]);
+    }
+  }
+
+  function setBaselinePercentages(IManagedRewardPool[] calldata pools, uint16[] calldata pcts)
+    external
+    onlyRewardRateAdmin
+  {
+    require(pools.length == pcts.length);
+
+    for (uint256 i = 0; i < pools.length; i++) {
+      pools[i].setBaselinePercentage(pcts[i]);
     }
   }
 
