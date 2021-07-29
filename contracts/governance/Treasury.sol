@@ -6,6 +6,7 @@ import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializ
 import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 import {AccessFlags} from '../access/AccessFlags.sol';
+import {IRewardCollector} from '../reward/interfaces/IRewardCollector.sol';
 
 contract Treasury is VersionedInitializable, MarketAccessBitmask {
   uint256 private constant TREASURY_REVISION = 1;
@@ -34,6 +35,12 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
     address recipient,
     uint256 amount
   ) external aclHas(AccessFlags.TREASURY_ADMIN) {
+    if (token == _remoteAcl.getRewardToken() && IERC20(token).balanceOf(address(this)) < amount) {
+      address rc = _remoteAcl.getRewardController();
+      if (rc != address(0)) {
+        IRewardCollector(rc).claimReward();
+      }
+    }
     IERC20(token).transfer(recipient, amount);
   }
 }

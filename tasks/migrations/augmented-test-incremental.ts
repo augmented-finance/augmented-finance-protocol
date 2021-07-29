@@ -41,6 +41,11 @@ task('augmented:test-incremental', 'Test incremental deploy').setAction(async ({
         if (!checkUnchanged(lastEntryMap, entryMap)) {
           throw `some contracts were redeployed after step ${maxStep}`;
         }
+        entryMap.forEach((value, key, m) => {
+          if (key.startsWith('Mock')) {
+            throw 'mock contract(s) detected';
+          }
+        });
 
         lastInstanceCount = instanceCount;
         lastEntryMap = entryMap;

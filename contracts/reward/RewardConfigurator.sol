@@ -100,11 +100,13 @@ contract RewardConfigurator is
     }
   }
 
-  function addNamedRewardPools(IManagedRewardPool[] calldata pools, string[] calldata names)
-    external
-    onlyRewardAdmin
-  {
+  function addNamedRewardPools(
+    IManagedRewardPool[] calldata pools,
+    string[] calldata names,
+    uint32[] calldata boostFactors
+  ) external onlyRewardAdmin {
     require(pools.length >= names.length);
+    require(pools.length >= boostFactors.length);
 
     IManagedRewardController ctl = getDefaultController();
 
@@ -115,6 +117,9 @@ contract RewardConfigurator is
       }
       if (i < names.length && bytes(names[i]).length > 0) {
         _namedPools[names[i]] = address(pool);
+      }
+      if (i < boostFactors.length && boostFactors[i] > 0) {
+        IManagedRewardBooster(address(ctl)).setBoostFactor(address(pool), boostFactors[i]);
       }
     }
   }

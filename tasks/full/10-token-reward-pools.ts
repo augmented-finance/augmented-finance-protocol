@@ -6,6 +6,7 @@ import {
   deployTeamRewardPool,
   deployNamedPermitFreezerRewardPool,
   deployReferralRewardPoolV1Impl,
+  deployTreasuryRewardPool,
 } from '../../helpers/contracts-deployments';
 import {
   tEthereumAddress,
@@ -26,7 +27,7 @@ import {
 import { chunk, falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumber } from 'ethers';
-import { RAY, WAD, WAD_RAY_RATIO_NUM, ZERO_ADDRESS } from '../../helpers/constants';
+import { oneRay, oneWad, RAY, WAD, WAD_RAY_RATIO_NUM, ZERO_ADDRESS } from '../../helpers/constants';
 import { transpose } from 'underscore';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { MarketAccessController, RewardConfigurator } from '../../types';
@@ -121,8 +122,6 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       await addressProvider.getRewardConfigurator()
     );
 
-    const rateRay = BigNumber.from(RAY);
-
     const [extraNames, extraShare] = await deployExtraPools(
       addressProvider,
       freshStart,
@@ -147,10 +146,9 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         continue;
       }
 
-      let rateScale = rateRay;
-      if (tp.Scale != undefined) {
-        rateScale = rateScale.mul(tp.Scale);
-      }
+      const rateScale = BigNumber.from(
+        oneRay.multipliedBy(tp.Scale == undefined ? 1 : tp.Scale).toFixed()
+      );
 
       const rd = await lendingPool.getReserveData(asset);
       if (falsyOrZeroAddress(rd.aTokenAddress)) {
@@ -226,7 +224,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     newNames.push(...extraNames);
     newNames.push(...initNames);
 
-    const initialRate = BigNumber.from(WAD).mul(rewardParams.InitialRate * WAD_RAY_RATIO_NUM);
+    const initialRate = BigNumber.from(oneRay.multipliedBy(rewardParams.InitialRate).toFixed());
     await waitForTx(await rewardController.updateBaseline(initialRate));
 
     console.log(`Reward pools initialized with total rate: ${rewardParams.InitialRate}`);
@@ -268,12 +266,13 @@ const deployExtraPools = async (
   const teamPoolName = 'TeamPool';
   const refPoolName = 'RefPool';
   const burnPoolName = 'BurnPool';
+  const treasuryPoolName = 'TreasuryPool';
 
   let totalShare: number = 0;
   const extraNames: string[] = [];
 
   if (!freshStart || continuation) {
-    const allNames = [teamPoolName, refPoolName, burnPoolName];
+    const allNames = [teamPoolName, refPoolName, burnPoolName, treasuryPoolName];
     const allNamed = await configurator.getNamedRewardPools(allNames);
     for (let i = 0; i < allNamed.length; i++) {
       if (!falsyOrZeroAddress(allNamed[i])) {
@@ -318,13 +317,16 @@ const deployExtraPools = async (
 
   const poolAddrs: tEthereumAddress[] = [];
   const poolNames: string[] = [];
+  const poolFactors: number[] = [];
 
   if (!knownNamedPools.has(refPoolName)) {
     const poolName = refPoolName;
+    const params = rewardParams.ReferralPool;
+
     const impl = await deployReferralRewardPoolV1Impl(verify, continuation);
     console.log(`Deployed ${poolName} implementation: `, impl.address);
 
-    const baselinePct = rewardParams.ReferralPool.BasePoints;
+    const baselinePct = params.BasePoints;
     totalShare += baselinePct;
 
     const initData = await configurator.buildRewardPoolInitData(poolName, 0, RAY, baselinePct);
@@ -337,6 +339,27 @@ const deployExtraPools = async (
 
     poolAddrs.push(poolAddr);
     poolNames.push(poolName);
+    poolFactors.push(params.BoostFactor);
+  }
+
+  if (!knownNamedPools.has(treasuryPoolName)) {
+    const poolName = treasuryPoolName;
+    const params = rewardParams.TreasuryPool;
+
+    const baselinePct = params.BasePoints;
+    totalShare += baselinePct;
+
+    const treasury = await addressProvider.getTreasury();
+
+    const impl = await deployTreasuryRewardPool(
+      [rewardCtlAddress, 0, RAY, baselinePct, treasury],
+      verify
+    );
+    console.log(`Deployed ${poolName}: `, impl.address);
+
+    poolAddrs.push(impl.address);
+    poolNames.push(poolName);
+    poolFactors.push(params.BoostFactor);
   }
 
   if (
@@ -345,19 +368,21 @@ const deployExtraPools = async (
     !knownNamedPools.has(burnPoolName)
   ) {
     const poolName = burnPoolName;
-    const limit = BigNumber.from(WAD).mul(rewardParams.PermitPool!.TotalWad);
+    const params = rewardParams.PermitPool!;
+
     const brp = await deployNamedPermitFreezerRewardPool(
       poolName,
-      [rewardCtlAddress, limit],
+      [rewardCtlAddress, oneWad.multipliedBy(params.TotalWad).toFixed()],
       verify
     );
 
     poolAddrs.push(brp.address);
     poolNames.push(poolName);
+    poolFactors.push(params.BoostFactor);
   }
 
   if (poolAddrs.length > 0) {
-    await waitForTx(await configurator.addNamedRewardPools(poolAddrs, poolNames));
+    await waitForTx(await configurator.addNamedRewardPools(poolAddrs, poolNames, poolFactors));
 
     console.log(`Deployed ${poolNames.join(', ')}: ${poolAddrs}`);
     extraNames.push(...poolNames);

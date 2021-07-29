@@ -74,6 +74,7 @@ import {
 } from './contracts-helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { LendingPoolLibraryAddresses } from '../types/LendingPoolFactory';
+import { TreasuryRewardPoolFactory } from '../types/TreasuryRewardPoolFactory';
 
 const readArtifact = async (id: string) => {
   return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
@@ -816,6 +817,23 @@ export const deployReferralRewardPoolV1Impl = async (verify: boolean, once: bool
     [],
     verify,
     once
+  );
+
+export const deployTreasuryRewardPool = async (
+  args: [
+    controller: string,
+    initialRate: BigNumberish,
+    rateScale: BigNumberish,
+    baselinePercentage: BigNumberish,
+    treasury: string
+  ],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new TreasuryRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TreasuryRewardPool,
+    [],
+    verify
   );
 
 export const deployNamedPermitFreezerRewardPool = async (

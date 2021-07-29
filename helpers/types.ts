@@ -71,6 +71,7 @@ export enum eContractid {
   AGFTokenV1Impl = 'AGFTokenV1Impl',
   ReferralRewardPoolV1Impl = 'ReferralRewardPoolV1Impl',
   RewardBoosterImpl = 'RewardBoosterImpl',
+  TreasuryRewardPool = 'TreasuryRewardPool',
 
   UniswapLiquiditySwapAdapter = 'UniswapLiquiditySwapAdapter',
   UniswapRepayAdapter = 'UniswapRepayAdapter',
@@ -455,8 +456,9 @@ export interface IRewardParams {
   InitialRate: number;
   TokenPools: iAugmentedPoolAssetsOpt<ITokenRewardPoolParams>;
   TeamPool: ITeamPool;
-  ReferralPool: IReferralPool;
-  PermitPool?: IPermitPool;
+  ReferralPool: IBasicRewardPool;
+  TreasuryPool: IBasicRewardPool;
+  PermitPool: IPermitPool;
 }
 
 export interface ITeamPool {
@@ -470,10 +472,11 @@ export interface ITeamMembers {
   [address: string]: number;
 }
 
-export interface IReferralPool extends IRewardPoolParams {}
+export interface IBasicRewardPool extends IRewardPoolParams {}
 
 export interface IPermitPool {
   TotalWad: number;
+  BoostFactor: number;
 }
 
 export interface ITokenRewardPoolParams {

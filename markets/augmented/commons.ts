@@ -308,8 +308,17 @@ export const CommonsConfig: ICommonConfiguration = {
     },
     ReferralPool: {
       BasePoints: 100,
-      BoostFactor: 0, // ignored atm
+      BoostFactor: 0,
     },
+    TreasuryPool: {
+      BasePoints: 1000,
+      BoostFactor: 0,
+    },
+    PermitPool: {
+      TotalWad: 1e6,
+      BoostFactor: 0,
+    },
+
     TeamPool: {
       BasePoints: 1000,
       UnlockAt: new Date('2021-11-01'),

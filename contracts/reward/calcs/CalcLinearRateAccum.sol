@@ -74,6 +74,15 @@ abstract contract CalcLinearRateAccum is CalcBase {
     _consumed = _consumed.add(amount);
   }
 
+  function doGetAllReward(uint256 limit) internal returns (uint256 available) {
+    available = doCalcReward();
+    if (limit < available) {
+      available = limit;
+    }
+    _consumed = _consumed.add(available);
+    return available;
+  }
+
   function doCalcReward() internal view virtual returns (uint256) {
     return doCalcRewardAt(getCurrentTick());
   }
