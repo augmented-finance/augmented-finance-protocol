@@ -98,6 +98,7 @@ export enum eContractid {
   TokenWeightedRewardPoolAG = 'MockRewardPoolAG',
   TokenWeightedRewardPoolAGBoosted = 'MockRewardPoolAGBoosted',
   TokenWeightedRewardPoolAGUSDCBoosted = 'MockRewardPoolAGUSDCBoosted',
+  MockReferralRewardPool = 'MockReferralRewardPool',
 }
 
 /*

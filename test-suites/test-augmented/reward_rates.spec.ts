@@ -12,7 +12,7 @@ import {
   getTokenWeightedRewardPoolAGFSeparate,
 } from '../../helpers/contracts-getters';
 
-import { MockAgfToken, RewardFreezer } from '../../types';
+import { MockAgfToken, ReferralRewardPool, RewardFreezer } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { mineTicks, revertSnapshot, takeSnapshot } from './utils';
 import {
@@ -23,7 +23,10 @@ import {
   WEEK,
 } from '../../helpers/constants';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
-import { deployTreasuryRewardPool } from '../../helpers/contracts-deployments';
+import {
+  deployReferralRewardPool,
+  deployTreasuryRewardPool,
+} from '../../helpers/contracts-deployments';
 import { AccessFlags } from '../../helpers/access-flags';
 import { IManagedRewardPool } from '../../types/IManagedRewardPool';
 import { IManagedRewardPoolFactory } from '../../types/IManagedRewardPoolFactory';
@@ -40,6 +43,7 @@ describe('Reward rates suite', () => {
   let pools: IManagedRewardPool[] = [];
   let agf: MockAgfToken;
   let blkBeforeDeploy;
+  let refPool: ReferralRewardPool;
   const defaultRate = 1;
 
   beforeEach(async () => {
@@ -57,6 +61,13 @@ describe('Reward rates suite', () => {
     const ac = await getMarketAccessController();
     await ac.grantRoles(root.address, AccessFlags.REWARD_RATE_ADMIN);
 
+    refPool = await deployReferralRewardPool('RefPool', [
+      rewardController.address,
+      defaultRate,
+      RAY,
+      0,
+    ]);
+
     {
       const pool = await deployTreasuryRewardPool([
         rewardController.address,
@@ -68,14 +79,6 @@ describe('Reward rates suite', () => {
       await rewardController.addRewardPool(pool.address);
       pushPool(pool);
     }
-    {
-      // TODO Ref pool
-      // const pool = await getPermitFreezerRewardPool();
-      // await pool.setFreezePercentage(0);
-      // await pool.setRate(defaultRate);
-      // pushPool(pool);
-    }
-
     {
       const pool = await getTokenWeightedRewardPoolAGFSeparate();
       await pool.setRate(defaultRate);
@@ -110,16 +113,22 @@ describe('Reward rates suite', () => {
     const tickCount = 10;
 
     const preValues: string[] = [];
+    preValues.push((await refPool.availableReward()).add(tickCount * defaultRate).toString());
+
     for (const pool of pools) {
-      preValues.push((await pool.calcRewardFor(root.address)).amount.add(tickCount * defaultRate).toString());
+      preValues.push(
+        (await pool.calcRewardFor(root.address)).amount.add(tickCount * defaultRate).toString()
+      );
     }
     await mineTicks(tickCount);
 
     const postValues: string[] = [];
+    postValues.push((await refPool.availableReward()).toString());
+
     for (const pool of pools) {
       postValues.push((await pool.calcRewardFor(root.address)).amount.toString());
     }
-    
+
     expect(postValues).eql(preValues);
   });
 });

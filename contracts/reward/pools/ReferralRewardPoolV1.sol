@@ -28,7 +28,7 @@ contract ReferralRewardPoolV1 is
 
   constructor()
     public
-    ReferralRewardPool(IRewardController(address(this)), 'RefPool', 0, uint224(WadRayMath.RAY), 0)
+    ReferralRewardPool(IRewardController(address(this)), 0, uint224(WadRayMath.RAY), 0, 'RefPool')
   {}
 
   function initialize(InitData memory data) public override initializer(TOKEN_REVISION) {

@@ -64,6 +64,7 @@ import {
   StaticPriceOracleFactory,
   ReferralRewardPoolV1Factory,
   RewardBoosterV1Factory,
+  ReferralRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -913,6 +914,23 @@ export const deployPermitFreezerRewardPool = async (
   withSaveAndVerify(
     await new PermitFreezerRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.PermitFreezerRewardPool,
+    [],
+    verify
+  );
+
+export const deployReferralRewardPool = async (
+  rewardPoolName: string,
+  args: [
+    controller: string,
+    initialRate: BigNumberish,
+    rateScale: BigNumberish,
+    baselinePercentage: BigNumberish
+  ],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new ReferralRewardPoolFactory(await getFirstSigner()).deploy(...args, rewardPoolName),
+    eContractid.MockReferralRewardPool,
     [],
     verify
   );
