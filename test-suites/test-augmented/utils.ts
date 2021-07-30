@@ -26,7 +26,7 @@ export const mineBlocks = async (amount: number): Promise<number> => {
     }
   }
   const blkAfter = await ethers.provider.getBlock('latest');
-  console.log(`moved to block: ${blkAfter.number} ${blkAfter.timestamp}`);
+  //  console.log(`moved to block: ${blkAfter.number} ${blkAfter.timestamp}`);
   return blockMined;
 };
 
@@ -38,7 +38,7 @@ export const advanceBlock = async (timestamp: number) =>
 
 export const mineTicks = async (amount: number): Promise<number> => {
   const blkBefore = await ethers.provider.getBlock('latest');
-  console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} +${amount}`);
+  //  console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} +${amount}`);
   await increaseTime(amount);
   await mineBlocks(1);
   const blkAfter = await ethers.provider.getBlock('latest');
@@ -47,14 +47,14 @@ export const mineTicks = async (amount: number): Promise<number> => {
 
 export const nextTicks = async (amount: number): Promise<void> => {
   const blkBefore = await ethers.provider.getBlock('latest');
-  console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} +)${amount}`);
+  //  console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} +)${amount}`);
   await increaseTime(amount);
   return;
 };
 
 export const nextToTicks = async (amount: number): Promise<boolean> => {
   const blkBefore = await ethers.provider.getBlock('latest');
-  console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} =>)${amount}`);
+  //  console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} =>)${amount}`);
   if (blkBefore.timestamp < amount) {
     await advanceBlock(amount);
     return true;
@@ -69,7 +69,7 @@ export const alignTicks = async (period: number): Promise<number> => {
 
 export const mineToTicks = async (amount: number): Promise<number> => {
   const blkBefore = await ethers.provider.getBlock('latest');
-  console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} =>${amount}`);
+  //  console.log(`move from block: ${blkBefore.number} ${blkBefore.timestamp} =>${amount}`);
   if (blkBefore.timestamp >= amount) {
     return 0;
   }
@@ -117,7 +117,7 @@ export const mineToBlock = async (to: number): Promise<number> => {
     blockMined += 1;
   }
   const blkAfter = await ethers.provider.getBlock('latest');
-  console.log(`moved to block: ${blkAfter.number} ${blkAfter.timestamp}`);
+  //  console.log(`moved to block: ${blkAfter.number} ${blkAfter.timestamp}`);
   return blockMined;
 };
 

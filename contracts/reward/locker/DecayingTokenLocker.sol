@@ -76,6 +76,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       return (0, 0);
     }
 
+    //    console.log('internalCalcReward_1', amount, since, getExtraRate());
     uint256 decayAmount = amount.rayMul(calcDecayForReward(startTS, endTS, since, current));
 
     amount =
@@ -87,6 +88,8 @@ contract DecayingTokenLocker is RewardedTokenLocker {
         totalSupply(),
         calcDecayTimeCompensation(startTS, endTS, since, current)
       );
+
+    //    console.log('internalCalcReward_2', current - since, amount, decayAmount);
 
     if (amount == 0) {
       return (0, 0);
@@ -124,6 +127,8 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       return (0, 0);
     }
 
+    //    console.log('internalGetReward_1', maxAmount, since, getExtraRate());
+
     uint256 decayAmount = maxAmount.rayMul(calcDecayForReward(startTS, endTS, since, current));
 
     if (limit <= maxAmount && limit + decayAmount <= maxAmount) {
@@ -140,6 +145,8 @@ contract DecayingTokenLocker is RewardedTokenLocker {
           calcDecayTimeCompensation(startTS, endTS, since, current)
         );
 
+      //      console.log('internalGetReward_2', current - since, amount, decayAmount);
+
       // console.log(
       //   'internalClaimReward (compensated)',
       //   maxAmount,
@@ -153,8 +160,9 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       }
     }
 
+    //    console.log('internalClaimReward', maxAmount, maxAmount - amount, getExtraRate());
     if (maxAmount > amount) {
-      // console.log('internalClaimReward (excess)', maxAmount - amount);
+      //      console.log('internalClaimReward (excess)', maxAmount - amount);
       internalAddExcess(maxAmount - amount, since);
     }
 

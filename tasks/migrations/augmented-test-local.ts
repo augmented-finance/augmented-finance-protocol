@@ -103,7 +103,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       const basicLocker = await deployMockTokenLocker([
         rewardCtl.address,
-        RAY,
+        1e6,
         RAY,
         0,
         agfToken.address,

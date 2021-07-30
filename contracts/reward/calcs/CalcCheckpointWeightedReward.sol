@@ -82,7 +82,7 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
     returns (
       uint256 adjRate,
       uint256 allocated,
-      uint32 since
+      uint32 /* since */
     )
   {
     if (isHistory(at)) {
@@ -107,7 +107,7 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
       return (adjRate, 0, entry.claimedAt);
     }
 
-    uint256 v = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _maxWeightBase);
-    return (adjRate, v.div(WadRayMath.RAY), entry.claimedAt);
+    allocated = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _maxWeightBase);
+    return (adjRate, allocated, entry.claimedAt);
   }
 }

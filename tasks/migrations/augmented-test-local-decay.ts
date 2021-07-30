@@ -39,7 +39,7 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
 
     const decayLocker = await deployMockDecayingTokenLocker([
       rewardBooster.address,
-      RAY_10000,
+      1e6,
       RAY,
       0,
       agfToken.address,

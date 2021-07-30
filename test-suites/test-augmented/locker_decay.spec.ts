@@ -1,7 +1,7 @@
 import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
-import rawBRE, { ethers } from 'hardhat';
+import rawBRE from 'hardhat';
 
 import {
   getMockAgfToken,
@@ -11,7 +11,6 @@ import {
 
 import { MockAgfToken, RewardBooster, DecayingTokenLocker } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { waitForTx } from '../../helpers/misc-utils';
 import {
   currentTick,
   mineToTicks,
@@ -41,7 +40,7 @@ describe('Token decaying locker suite', () => {
 
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
-    [root, user1, user2] = await ethers.getSigners();
+    [root, user1, user2] = await (<any>rawBRE).ethers.getSigners();
     await rawBRE.run('augmented:test-local-decay', CFG);
     rewardController = await getMockRewardBooster();
 
@@ -207,6 +206,7 @@ describe('Token decaying locker suite', () => {
 
   it('user1 claims daily, user2 claims once', async () => {
     const defaultPeriod = WEEK * 4;
+    const rateBase = (await xAGF.getRate()).toNumber();
 
     await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod, 0);
     await xAGF.connect(user2).lock(defaultStkAmount, defaultPeriod, 0);
@@ -232,11 +232,15 @@ describe('Token decaying locker suite', () => {
       const expectedLongClaim = await rewardController.claimableReward(user1.address);
       expect(newBalance.toNumber()).lte(expectedLongClaim.claimable.toNumber());
 
-      expect(newIncrement.toNumber()).approximately(expectedIncrement.claimable.toNumber(), 10000); // +/- 1 tick rate
+      expect(newIncrement.toNumber()).approximately(
+        expectedIncrement.claimable.toNumber(),
+        rateBase
+      ); // +/- 1 tick rate
       if (tick > step) {
         if (newIncrement.eq(0) && tick > defaultPeriod / 2) {
           break;
         }
+        // console.log(' ', lastIncrement.toNumber(), '\n ', newIncrement.toNumber(), newIncrement.lt(lastIncrement));
         expect(newIncrement).lt(lastIncrement);
       }
       lastBalance = newBalance;
@@ -250,7 +254,7 @@ describe('Token decaying locker suite', () => {
     await rewardController.connect(user2).claimReward();
 
     const longClaim = await AGF.balanceOf(user1.address);
-    expect(longClaim.toNumber()).approximately(expectedLongClaim.claimable.toNumber(), 10000); // +/- 1 tick rate
+    expect(longClaim.toNumber()).approximately(expectedLongClaim.claimable.toNumber(), rateBase); // +/- 1 tick rate
 
     // micro-claims shouldn't give benefits
     const shortClaims = await AGF.balanceOf(user2.address);
@@ -264,6 +268,7 @@ describe('Token decaying locker suite', () => {
     await AGF.connect(root).approve(xAGF.address, defaultStkAmount * 10);
 
     const defaultPeriod = WEEK * 4;
+    const rateBase = (await xAGF.getRate()).toNumber();
 
     await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod, 0);
     await xAGF.connect(user2).lock(defaultStkAmount, defaultPeriod, 0);
@@ -290,7 +295,10 @@ describe('Token decaying locker suite', () => {
       const expectedLongClaim = await rewardController.claimableReward(user1.address);
       expect(newBalance.toNumber()).lte(expectedLongClaim.claimable.toNumber());
 
-      expect(newIncrement.toNumber()).approximately(expectedIncrement.claimable.toNumber(), 100); // +/- 10% of tick rate
+      expect(newIncrement.toNumber()).approximately(
+        expectedIncrement.claimable.toNumber(),
+        rateBase / 10
+      ); // +/- 10% of tick rate
       if (tick > step) {
         if (newIncrement.eq(0) && tick > defaultPeriod / 2) {
           break;
@@ -310,7 +318,10 @@ describe('Token decaying locker suite', () => {
     await rewardController.connect(user2).claimReward();
 
     const longClaim = await AGF.balanceOf(user1.address);
-    expect(longClaim.toNumber()).approximately(expectedLongClaim.claimable.toNumber(), 100); // +/- 10% of tick rate
+    expect(longClaim.toNumber()).approximately(
+      expectedLongClaim.claimable.toNumber(),
+      rateBase / 10
+    ); // +/- 10% of tick rate
 
     // micro-claims shouldn't give benefits
     const shortClaims = await AGF.balanceOf(user2.address);
@@ -335,6 +346,7 @@ describe('Token decaying locker suite', () => {
 
   it('user1 creates then adds to a lock', async () => {
     await alignTicks(WEEK);
+    const rateBase = (await xAGF.getRate()).toNumber();
 
     await xAGF.connect(user1).lock(defaultStkAmount - 1, WEEK * 4, 0);
     const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
@@ -361,11 +373,12 @@ describe('Token decaying locker suite', () => {
     await rewardController.connect(user1).claimReward();
 
     const balance = await AGF.balanceOf(user1.address);
-    expect(reward2.claimable.toNumber()).approximately(balance.toNumber(), 1);
+    expect(reward2.claimable.toNumber()).approximately(balance.toNumber(), rateBase);
   });
 
   it('user1 creates then extends a lock', async () => {
     await alignTicks(WEEK);
+    const rateBase = (await xAGF.getRate()).toNumber();
 
     const startedAt = await currentTick();
     await xAGF.connect(user1).lock(defaultStkAmount, WEEK * 4, 0);
@@ -401,11 +414,13 @@ describe('Token decaying locker suite', () => {
 
     await mineToTicks(lockInfo2.availableSince);
 
+    // make sure that claimableReward will use the recent state
+    await xAGF.update(0);
     const reward2 = await rewardController.claimableReward(user1.address);
     await rewardController.connect(user1).claimReward();
 
     const balance = await AGF.balanceOf(user1.address);
-    expect(reward2.claimable.toNumber()).approximately(balance.toNumber(), 1);
+    expect(reward2.claimable.toNumber()).approximately(balance.toNumber(), rateBase);
 
     expect(reward2.claimable.sub(reward1.claimable)).gt(reward1.claimable);
   });
@@ -413,12 +428,13 @@ describe('Token decaying locker suite', () => {
   it('no more rewards after expiry', async () => {
     await xAGF.connect(user1).lock(defaultStkAmount, WEEK * 4, 0);
     const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+    const rateBase = (await xAGF.getRate()).toNumber();
 
     await mineToTicks(lockInfo.availableSince);
 
     const reward = await rewardController.claimableReward(user1.address);
 
-    await mineToTicks(WEEK);
+    await mineTicks(WEEK);
 
     const reward1 = await rewardController.claimableReward(user1.address);
     expect(reward1.claimable).eq(reward.claimable);
@@ -426,9 +442,9 @@ describe('Token decaying locker suite', () => {
     await rewardController.connect(user1).claimReward();
 
     const balance = await AGF.balanceOf(user1.address);
-    expect(reward.claimable.toNumber()).approximately(balance.toNumber(), 1);
+    expect(reward.claimable.toNumber()).approximately(balance.toNumber(), rateBase);
 
-    await mineToTicks(WEEK);
+    await mineTicks(WEEK);
 
     const reward2 = await rewardController.claimableReward(user1.address);
     expect(reward2.claimable).eq(0);
