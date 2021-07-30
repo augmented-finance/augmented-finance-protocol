@@ -5,7 +5,7 @@ import {
   deployMockDecayingTokenLocker,
   deployMarketAccessController,
 } from '../../helpers/contracts-deployments';
-import { MAX_LOCKER_PERIOD, RAY, RAY_100, RAY_10000, WEEK } from '../../helpers/constants';
+import { MAX_LOCKER_PERIOD, RAY_100, WEEK } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags, ACCESS_REWARD_MINT } from '../../helpers/access-flags';
 
@@ -39,8 +39,7 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
 
     const decayLocker = await deployMockDecayingTokenLocker([
       rewardBooster.address,
-      RAY_10000,
-      RAY,
+      1e6,
       0,
       agfToken.address,
       WEEK,

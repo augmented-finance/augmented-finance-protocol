@@ -8,20 +8,10 @@ import {
   deployMockRewardFreezer,
   deployTokenWeightedRewardPoolAG,
   deployTokenWeightedRewardPoolAGBoosted,
-  deployTokenWeightedRewardPoolAGF,
   deployTokenWeightedRewardPoolAGFBoosted,
   deployTokenWeightedRewardPoolAGUSDCBoosted,
 } from '../../helpers/contracts-deployments';
-import {
-  ONE_ADDRESS,
-  oneRay,
-  PERC_100,
-  WAD_RAY_RATIO,
-  RAY,
-  WAD,
-  RAY_100,
-  ZERO_ADDRESS,
-} from '../../helpers/constants';
+import { PERC_100, RAY_100 } from '../../helpers/constants';
 import {
   slashingDefaultPercentage,
   stakingCooldownTicks,
@@ -80,7 +70,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       console.log(`#4 Staking`);
       const agDaiToken = await getAGTokenByName('agDAI');
       const xAGPool = await deployTokenWeightedRewardPoolAG(
-        [rewardCtl.address, RAY, RAY, 0, RAY_100],
+        [rewardCtl.address, 1, 0, RAY_100],
         verify
       );
       const xAG = await deployMockStakedAgToken([
@@ -92,11 +82,6 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
         stakeUnstakeTicks,
       ]);
       await xAG.connect(root).setMaxSlashablePercentage(slashingPercentage);
-
-      const xAGFPool = await deployTokenWeightedRewardPoolAGF(
-        [rewardCtl.address, RAY, RAY, 0, RAY_100],
-        verify
-      );
 
       const xAGF = await deployMockStakedAgfToken([
         ac.address,
@@ -114,7 +99,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
 
       // agDAI pool
       const agDAIPoolBoosted = await deployTokenWeightedRewardPoolAGBoosted(
-        [boosterController.address, RAY, RAY, 0, RAY_100],
+        [boosterController.address, 1, 0, RAY_100],
         verify
       );
       await agDAIPoolBoosted.connect(root).addRewardProvider(root.address, agDaiToken.address);
@@ -122,14 +107,14 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       //agUSDC pool
       const agUSDC = await getAGTokenByName('agUSDC');
       const agUSDCPoolBoosted = await deployTokenWeightedRewardPoolAGUSDCBoosted(
-        [boosterController.address, RAY, RAY, 0, RAY_100],
+        [boosterController.address, 1, 0, RAY_100],
         verify
       );
       await agUSDCPoolBoosted.connect(root).addRewardProvider(root.address, agUSDC.address);
 
       // booster reward pool
       const AGFPoolBooster = await deployTokenWeightedRewardPoolAGFBoosted(
-        [boosterController.address, RAY, RAY, 0, RAY_100],
+        [boosterController.address, 1, 0, RAY_100],
         verify
       );
       await AGFPoolBooster.connect(root).addRewardProvider(root.address, xAGF.address);

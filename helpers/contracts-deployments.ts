@@ -62,8 +62,7 @@ import {
   TokenWeightedRewardPoolV1Factory,
   MockRewardedTokenLockerFactory,
   StaticPriceOracleFactory,
-  ReferralRewardPoolV1Factory,
-  RewardBoosterV1Factory,
+  ReferralRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -75,6 +74,8 @@ import {
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { LendingPoolLibraryAddresses } from '../types/LendingPoolFactory';
 import { TreasuryRewardPoolFactory } from '../types/TreasuryRewardPoolFactory';
+import { ReferralRewardPoolV1Factory } from '../types/ReferralRewardPoolV1Factory';
+import { RewardBoosterV1Factory } from '../types/RewardBoosterV1Factory';
 
 const readArtifact = async (id: string) => {
   return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
@@ -747,7 +748,6 @@ export const deployMockTokenLocker = async (
   args: [
     controller: tEthereumAddress,
     initialRate: BigNumberish,
-    rateScale: BigNumberish,
     baselinePercentage: BigNumberish,
     underlying: tEthereumAddress,
     pointPeriod: BigNumberish,
@@ -767,7 +767,6 @@ export const deployMockDecayingTokenLocker = async (
   args: [
     controller: tEthereumAddress,
     initialRate: BigNumberish,
-    rateScale: BigNumberish,
     baselinePercentage: BigNumberish,
     underlying: tEthereumAddress,
     pointPeriod: BigNumberish,
@@ -823,7 +822,6 @@ export const deployTreasuryRewardPool = async (
   args: [
     controller: string,
     initialRate: BigNumberish,
-    rateScale: BigNumberish,
     baselinePercentage: BigNumberish,
     treasury: string
   ],
@@ -851,19 +849,8 @@ export const deployNamedPermitFreezerRewardPool = async (
     verify
   );
 
-export const deployTokenWeightedRewardPoolAGF = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, BigNumberish],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.TokenWeightedRewardPoolAGF,
-    [],
-    verify
-  );
-
 export const deployTokenWeightedRewardPoolAGFBoosted = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -874,7 +861,7 @@ export const deployTokenWeightedRewardPoolAGFBoosted = async (
   );
 
 export const deployTokenWeightedRewardPoolAGFSeparate = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -885,7 +872,7 @@ export const deployTokenWeightedRewardPoolAGFSeparate = async (
   );
 
 export const deployTokenWeightedRewardPoolAG = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -896,7 +883,7 @@ export const deployTokenWeightedRewardPoolAG = async (
   );
 
 export const deployTokenWeightedRewardPoolAGBoosted = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -907,7 +894,7 @@ export const deployTokenWeightedRewardPoolAGBoosted = async (
   );
 
 export const deployTokenWeightedRewardPoolAGUSDCBoosted = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -924,6 +911,18 @@ export const deployPermitFreezerRewardPool = async (
   withSaveAndVerify(
     await new PermitFreezerRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.PermitFreezerRewardPool,
+    [],
+    verify
+  );
+
+export const deployReferralRewardPool = async (
+  rewardPoolName: string,
+  args: [controller: string, initialRate: BigNumberish, baselinePercentage: BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new ReferralRewardPoolFactory(await getFirstSigner()).deploy(...args, rewardPoolName),
+    eContractid.MockReferralRewardPool,
     [],
     verify
   );

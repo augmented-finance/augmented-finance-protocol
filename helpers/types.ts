@@ -94,11 +94,11 @@ export enum eContractid {
   MockDecayingTokenLocker = 'MockDecayingTokenLocker',
 
   TokenWeightedRewardPoolAGFSeparate = 'MockRewardPoolAGFSeparate',
-  TokenWeightedRewardPoolAGF = 'MockRewardPoolAGF',
   TokenWeightedRewardPoolAGFBoosted = 'MockRewardPoolAGFBoosted',
   TokenWeightedRewardPoolAG = 'MockRewardPoolAG',
   TokenWeightedRewardPoolAGBoosted = 'MockRewardPoolAGBoosted',
   TokenWeightedRewardPoolAGUSDCBoosted = 'MockRewardPoolAGUSDCBoosted',
+  MockReferralRewardPool = 'MockReferralRewardPool',
 }
 
 /*
@@ -482,7 +482,6 @@ export interface IBurnersPool {
 
 export interface ITokenRewardPoolParams {
   Share: ITokenTypes<IRewardPoolParams>;
-  Scale?: number;
 }
 
 export interface ITokenTypes<T> {
