@@ -8,6 +8,8 @@ import {IMarketAccessController} from '../access/interfaces/IMarketAccessControl
 import {AccessFlags} from '../access/AccessFlags.sol';
 import {IRewardCollector} from '../reward/interfaces/IRewardCollector.sol';
 
+import 'hardhat/console.sol';
+
 contract Treasury is VersionedInitializable, MarketAccessBitmask {
   uint256 private constant TREASURY_REVISION = 1;
 
@@ -36,11 +38,31 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
     uint256 amount
   ) external aclHas(AccessFlags.TREASURY_ADMIN) {
     if (token == _remoteAcl.getRewardToken() && IERC20(token).balanceOf(address(this)) < amount) {
-      address rc = _remoteAcl.getRewardController();
-      if (rc != address(0)) {
-        IRewardCollector(rc).claimReward();
-      }
+      _claimRewards();
     }
     IERC20(token).transfer(recipient, amount);
+  }
+
+  function _claimRewards() private {
+    address rc = _remoteAcl.getRewardController();
+    if (rc != address(0)) {
+      IRewardCollector(rc).claimReward();
+    }
+  }
+
+  function claimRewardsForTreasury() external aclHas(AccessFlags.TREASURY_ADMIN) {
+    _claimRewards();
+  }
+
+  function _safeTransferETH(address to, uint256 value) internal {
+    (bool success, ) = to.call{value: value}(new bytes(0));
+    require(success, 'ETH_TRANSFER_FAILED');
+  }
+
+  function transferEth(address recipient, uint256 amount)
+    external
+    aclHas(AccessFlags.TREASURY_ADMIN)
+  {
+    _safeTransferETH(recipient, amount);
   }
 }

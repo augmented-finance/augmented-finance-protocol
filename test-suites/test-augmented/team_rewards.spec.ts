@@ -28,7 +28,6 @@ describe('Team rewards suite', () => {
   let rewardController: RewardFreezer;
   let agf: MockAgfToken;
   let blkBeforeDeploy;
-  let blkAfterDeploy;
   let REWARD_UNLOCKED_AT;
   let rewardPrecision = 1.5;
 
