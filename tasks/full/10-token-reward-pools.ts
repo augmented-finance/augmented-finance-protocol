@@ -224,10 +224,10 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     newNames.push(...extraNames);
     newNames.push(...initNames);
 
-    const initialRate = BigNumber.from(oneRay.multipliedBy(rewardParams.InitialRate).toFixed());
+    const initialRate = BigNumber.from(oneWad.multipliedBy(rewardParams.InitialRateWad).toFixed());
     await waitForTx(await rewardController.updateBaseline(initialRate));
 
-    console.log(`Reward pools initialized with total rate: ${rewardParams.InitialRate}`);
+    console.log(`Reward pools initialized with total rate: ${rewardParams.InitialRateWad} wad/s`);
     const activePools = await configurator.list();
 
     if (newNames.length + newPoolsOffset != activePools.length) {
@@ -245,11 +245,11 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         const poolRate = await pool.getRate();
 
         totalRate = totalRate.add(poolRate);
-        console.log(`    ${newNames[index]}: ${poolRate.div(WAD).toNumber() / WAD_RAY_RATIO_NUM}`);
+        console.log(`\t${newNames[index]}:\t${poolRate.div(1e9).toNumber() / 1e9} wad/s`);
         index++;
       }
-      console.log(`Assigned reward rate:   ${totalRate.div(WAD).toNumber() / WAD_RAY_RATIO_NUM}`);
-      console.log(`Initial reward rate: ${initialRate.div(WAD).toNumber() / WAD_RAY_RATIO_NUM}`);
+      console.log(`Assigned reward rate: ${totalRate.div(1e9).toNumber() / 1e9} wad/s`);
+      console.log(`Initial reward rate:  ${initialRate.div(1e9).toNumber() / 1e9} wad/s`);
     }
   });
 

@@ -271,37 +271,85 @@ export const CommonsConfig: ICommonConfiguration = {
   },
 
   RewardParams : {
-    InitialRate: 100,
+    InitialRateWad: 2.12,
     TokenPools: {
       DAI:   {
         Share: {
           deposit: {
-            BasePoints: 100,
-            BoostFactor: 1,
+            BasePoints: 200,
+            BoostFactor: 3,
           },
           vDebt: {
             BasePoints: 200,
-            BoostFactor: 1,
+            BoostFactor: 3,
           },
           stake: {
-            BasePoints: 500,
-            BoostFactor: 0,
+            BasePoints: 400,
+            BoostFactor: 3,
           },
         }
       },
       USDC:   {
         Share: {
           deposit: {
-            BasePoints: 1000,
-            BoostFactor: 0,
+            BasePoints: 200,
+            BoostFactor: 3,
           },
           vDebt: {
-            BasePoints: 1200,
-            BoostFactor: 0,
+            BasePoints: 200,
+            BoostFactor: 3,
           },
           stake: {
-            BasePoints: 1500,
-            BoostFactor: 0,
+            BasePoints: 400,
+            BoostFactor: 3,
+          },
+        }
+      },
+      USDT:   {
+        Share: {
+          deposit: {
+            BasePoints: 200,
+            BoostFactor: 3,
+          },
+          vDebt: {
+            BasePoints: 200,
+            BoostFactor: 3,
+          },
+          stake: {
+            BasePoints: 400,
+            BoostFactor: 3,
+          },
+        }
+      },
+      WBTC:   {
+        Share: {
+          deposit: {
+            BasePoints: 100,
+            BoostFactor: 3,
+          },
+          vDebt: {
+            BasePoints: 100,
+            BoostFactor: 3,
+          },
+          stake: {
+            BasePoints: 200,
+            BoostFactor: 3,
+          },
+        }
+      },
+      WETH:   {
+        Share: {
+          deposit: {
+            BasePoints: 100,
+            BoostFactor: 3,
+          },
+          vDebt: {
+            BasePoints: 100,
+            BoostFactor: 3,
+          },
+          stake: {
+            BasePoints: 200,
+            BoostFactor: 3,
           },
         }
       },
@@ -319,7 +367,6 @@ export const CommonsConfig: ICommonConfiguration = {
       BoostFactor: 0,
       MeltDownAt: new Date('2021-02-01'),
     },
-
     TeamPool: {
       BasePoints: 1000,
       UnlockAt: new Date('2021-11-01'),

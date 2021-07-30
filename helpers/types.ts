@@ -453,7 +453,7 @@ export interface ITokenNames {
 }
 
 export interface IRewardParams {
-  InitialRate: number;
+  InitialRateWad: number;
   TokenPools: iAugmentedPoolAssetsOpt<ITokenRewardPoolParams>;
   TeamPool: ITeamPool;
   ReferralPool: IBasicRewardPool;
