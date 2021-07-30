@@ -20,7 +20,7 @@ export const slashingDefaultPercentageHR = 0.3;
 export const CFG = {
   aDaiAddress: ADAI_ADDRESS,
   cDaiAddress: CDAI_ADDRESS,
-  teamRewardInitialRate: RAY,
+  teamRewardInitialRate: '1',
   teamRewardBaselinePercentage: 0,
   stakingCooldownTicks,
   stakingUnstakeTicks,

@@ -40,7 +40,7 @@ abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
     (uint256 rate, uint32 updatedAt) = getRateAndUpdatedAt();
 
     adjRate = _accumRate.add(rate.mul(at - updatedAt));
-    allocated = uint256(entry.rewardBase).rayMul(adjRate.sub(lastAccumRate));
+    allocated = uint256(entry.rewardBase).mul(adjRate.sub(lastAccumRate));
 
     return (adjRate, allocated, entry.claimedAt);
   }

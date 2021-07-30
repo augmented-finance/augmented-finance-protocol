@@ -13,7 +13,7 @@ import {
 import { MarketAccessController, MockAgfToken, RewardFreezer, Treasury } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { mineTicks, revertSnapshot, takeSnapshot } from './utils';
-import { RAY, RAY_100 } from '../../helpers/constants';
+import { RAY } from '../../helpers/constants';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { deployTreasuryImpl, deployTreasuryRewardPool } from '../../helpers/contracts-deployments';
 import { TreasuryRewardPool } from '../../types/TreasuryRewardPool';
@@ -48,13 +48,7 @@ describe('Team rewards suite', () => {
     treasury = await getTreasuryProxy(await ac.getTreasury());
     await ac.grantRoles(user1.address, AccessFlags.TREASURY_ADMIN);
     await rewardController.setFreezePercentage(0);
-    trp = await deployTreasuryRewardPool([
-      rewardController.address,
-      RAY_100,
-      RAY,
-      0,
-      treasury.address,
-    ]);
+    trp = await deployTreasuryRewardPool([rewardController.address, 1, RAY, 0, treasury.address]);
     await rewardController.addRewardPool(trp.address);
   });
 
