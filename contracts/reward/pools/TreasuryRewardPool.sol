@@ -16,10 +16,9 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRateAccum {
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage,
     address treasury
-  ) public ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage) {
+  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
     require(treasury != address(0));
     _treasury = treasury;
   }

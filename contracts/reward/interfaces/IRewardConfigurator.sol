@@ -8,7 +8,6 @@ interface IRewardConfigurator {
     address impl;
     string poolName;
     uint256 initialRate;
-    uint224 rateScale;
     uint32 boostFactor;
     uint16 baselinePercentage;
   }

@@ -16,7 +16,6 @@ contract DecayingTokenLocker is RewardedTokenLocker {
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage,
     address underlying,
     uint32 pointPeriod,
@@ -27,7 +26,6 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     RewardedTokenLocker(
       controller,
       initialRate,
-      rateScale,
       baselinePercentage,
       underlying,
       pointPeriod,

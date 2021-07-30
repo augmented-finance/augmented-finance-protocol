@@ -61,18 +61,12 @@ describe('Reward rates suite', () => {
     const ac = await getMarketAccessController();
     await ac.grantRoles(root.address, AccessFlags.REWARD_RATE_ADMIN);
 
-    refPool = await deployReferralRewardPool('RefPool', [
-      rewardController.address,
-      defaultRate,
-      RAY,
-      0,
-    ]);
+    refPool = await deployReferralRewardPool('RefPool', [rewardController.address, defaultRate, 0]);
 
     {
       const pool = await deployTreasuryRewardPool([
         rewardController.address,
         defaultRate,
-        RAY,
         0,
         root.address,
       ]);

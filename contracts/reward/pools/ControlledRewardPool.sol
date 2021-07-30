@@ -18,28 +18,24 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   using PercentageMath for uint256;
 
   uint16 internal constant NO_BASELINE = type(uint16).max;
-  uint224 internal constant NO_SCALE = 1e27; // WadRayMath.RAY
 
   IRewardController internal _controller;
 
   uint256 private _pausedRate;
-  uint224 private _rateScale;
   uint16 private _baselinePercentage;
   bool private _paused;
 
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage
   ) public {
-    _initialize(controller, initialRate, rateScale, baselinePercentage);
+    _initialize(controller, initialRate, baselinePercentage);
   }
 
   function _initialize(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage
   ) internal virtual {
     require(address(controller) != address(0), 'controller is required');
@@ -52,7 +48,6 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
       internalSetBaselinePercentage(baselinePercentage);
     }
 
-    internalSetRateScale(rateScale);
     if (initialRate > 0) {
       _setRate(initialRate);
     }
@@ -71,7 +66,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     returns (bool hasBaseline, uint256 appliedRate)
   {
     if (_baselinePercentage == NO_BASELINE) {
-      return (false, internalGetRate().rayDiv(_rateScale));
+      return (false, internalGetRate());
     }
     appliedRate = baseline.percentMul(_baselinePercentage);
     _setRate(appliedRate);
@@ -88,7 +83,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _pausedRate = 0;
     internalSetRate(0);
     emit BaselineDisabled();
-    emit RateUpdated(0, _rateScale);
+    emit RateUpdated(0);
   }
 
   function setBaselinePercentage(uint16 factor) external override onlyRateAdmin {
@@ -121,30 +116,12 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
       _pausedRate = rate;
       return;
     }
-    internalSetRate(rate.rayMul(_rateScale));
-    emit RateUpdated(rate, _rateScale);
-  }
-
-  function scaleRate(uint256 rate) internal view returns (uint256) {
-    return rate.rayMul(_rateScale);
+    internalSetRate(rate);
+    emit RateUpdated(rate);
   }
 
   function getRate() external view override returns (uint256) {
-    return internalGetRate().rayDiv(_rateScale);
-  }
-
-  function internalSetRateScale(uint256 rateScale) private {
-    require(rateScale > 0, 'rate scale is required');
-    require(rateScale <= type(uint224).max, 'rate scale is excessive');
-    _rateScale = uint224(rateScale);
-  }
-
-  function setRateScale(uint256 rateScale) external override onlyRateAdmin {
-    internalSetRateScale(rateScale);
-  }
-
-  function getRateScale() public view returns (uint256) {
-    return _rateScale;
+    return internalGetRate();
   }
 
   function internalGetRate() internal view virtual returns (uint256);

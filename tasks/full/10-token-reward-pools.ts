@@ -39,7 +39,6 @@ interface poolInitParams {
   baselinePercentage: BigNumber;
   initialRate: BigNumber;
   boostFactor: BigNumber;
-  rateScale: BigNumber;
 }
 
 task(`full:init-reward-pools`, `Deploys reward pools`)
@@ -76,7 +75,6 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       share: IRewardPoolParams,
       provider: tEthereumAddress,
       impl: tEthereumAddress,
-      rateScale: BigNumber,
       name: string,
       poolName: string
     ) => {
@@ -84,7 +82,6 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         provider: provider,
         baselinePercentage: BigNumber.from(share.BasePoints),
         poolName: poolName,
-        rateScale: rateScale,
         initialRate: BigNumber.from(0),
         boostFactor: BigNumber.from(share!.BoostFactor),
         impl: impl,
@@ -97,7 +94,6 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     const buildToken = async (
       share: IRewardPoolParams | undefined,
       token: tEthereumAddress,
-      rateScale: BigNumber,
       prefix: string
     ) => {
       if (share == undefined || falsyOrZeroAddress(token)) {
@@ -112,7 +108,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
           return;
         }
       }
-      buildPool(share!, token, poolImpl.address, rateScale, tokenSymbol, '');
+      buildPool(share!, token, poolImpl.address, tokenSymbol, '');
     };
 
     const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
@@ -146,35 +142,20 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         continue;
       }
 
-      const rateScale = BigNumber.from(
-        oneRay.multipliedBy(tp.Scale == undefined ? 1 : tp.Scale).toFixed()
-      );
-
       const rd = await lendingPool.getReserveData(asset);
       if (falsyOrZeroAddress(rd.aTokenAddress)) {
         console.log('Reserve is missing for asset (underlying):', symbol);
         continue;
       }
 
-      await buildToken(tp.Share.deposit, rd.aTokenAddress, rateScale, Names.DepositSymbolPrefix);
-      await buildToken(
-        tp.Share.vDebt,
-        rd.variableDebtTokenAddress,
-        rateScale,
-        Names.VariableDebtSymbolPrefix
-      );
-      await buildToken(
-        tp.Share.sDebt,
-        rd.stableDebtTokenAddress,
-        rateScale,
-        Names.StableDebtSymbolPrefix
-      );
+      await buildToken(tp.Share.deposit, rd.aTokenAddress, Names.DepositSymbolPrefix);
+      await buildToken(tp.Share.vDebt, rd.variableDebtTokenAddress, Names.VariableDebtSymbolPrefix);
+      await buildToken(tp.Share.sDebt, rd.stableDebtTokenAddress, Names.StableDebtSymbolPrefix);
 
       if (tp.Share.stake != undefined) {
         await buildToken(
           tp.Share.stake,
           await stakeConfigurator.stakeTokenOf(rd.aTokenAddress),
-          rateScale,
           Names.StakeSymbolPrefix
         );
       }
@@ -331,7 +312,7 @@ const deployExtraPools = async (
     const baselinePct = params.BasePoints;
     totalShare += baselinePct;
 
-    const initData = await configurator.buildRewardPoolInitData(poolName, 0, RAY, baselinePct);
+    const initData = await configurator.buildRewardPoolInitData(poolName, 0, baselinePct);
     await addressProvider.setAddressAsProxyWithInit(
       AccessFlags.REFERRAL_REGISTRY,
       impl.address,
@@ -354,7 +335,7 @@ const deployExtraPools = async (
     const treasury = await addressProvider.getTreasury();
 
     const impl = await deployTreasuryRewardPool(
-      [rewardCtlAddress, 0, RAY, baselinePct, treasury],
+      [rewardCtlAddress, 0, baselinePct, treasury],
       verify
     );
     console.log(`Deployed ${poolName}: `, impl.address);

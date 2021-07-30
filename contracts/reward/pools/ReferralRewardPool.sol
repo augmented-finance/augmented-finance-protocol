@@ -17,13 +17,9 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage,
     string memory rewardPoolName
-  )
-    public
-    BasePermitRewardPool(controller, initialRate, rateScale, baselinePercentage, rewardPoolName)
-  {
+  ) public BasePermitRewardPool(controller, initialRate, baselinePercentage, rewardPoolName) {
     _claimLimit = type(uint256).max;
   }
 

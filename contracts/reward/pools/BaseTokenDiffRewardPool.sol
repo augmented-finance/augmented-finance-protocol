@@ -22,10 +22,9 @@ abstract contract BaseTokenDiffRewardPool is ControlledRewardPool, IRewardPool {
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage,
     address token
-  ) public ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage) {
+  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _token = token;
   }
 

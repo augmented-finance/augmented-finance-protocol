@@ -26,24 +26,13 @@ contract TokenWeightedRewardPoolV1 is
     return TOKEN_REVISION;
   }
 
-  constructor()
-    public
-    TokenWeightedRewardPool(IRewardController(address(this)), 0, uint224(WadRayMath.RAY), 0, 1**36)
-  {}
+  constructor() public TokenWeightedRewardPool(IRewardController(address(this)), 0, 0, 1**36) {}
 
   function initialize(InitData memory data) public override initializer(TOKEN_REVISION) {
-    super._initialize(data.controller, data.initialRate, data.rateScale, data.baselinePercentage);
+    super._initialize(data.controller, data.initialRate, data.baselinePercentage);
   }
 
   function initializedWith() external view override returns (InitData memory) {
-    uint256 rateScale = getRateScale();
-    return
-      InitData(
-        _controller,
-        getPoolName(),
-        internalGetRate().rayDiv(rateScale),
-        uint224(rateScale), // no overflow as getRateScale() is uint224 inside
-        internalGetBaselinePercentage()
-      );
+    return InitData(_controller, getPoolName(), internalGetRate(), internalGetBaselinePercentage());
   }
 }

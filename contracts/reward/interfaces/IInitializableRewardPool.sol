@@ -10,7 +10,6 @@ interface IInitializableRewardPool {
     IRewardController controller;
     string poolName;
     uint256 initialRate;
-    uint224 rateScale;
     uint16 baselinePercentage;
   }
 

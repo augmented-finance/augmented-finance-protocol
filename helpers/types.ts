@@ -482,7 +482,6 @@ export interface IBurnersPool {
 
 export interface ITokenRewardPoolParams {
   Share: ITokenTypes<IRewardPoolParams>;
-  Scale?: number;
 }
 
 export interface ITokenTypes<T> {

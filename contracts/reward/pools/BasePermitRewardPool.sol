@@ -29,10 +29,9 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage,
     string memory rewardPoolName
-  ) public ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage) {
+  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _rewardPoolName = rewardPoolName;
 
     _initializeDomainSeparator();
@@ -41,13 +40,12 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
   function _initialize(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage,
     string memory rewardPoolName
   ) internal {
     _rewardPoolName = rewardPoolName;
     _initializeDomainSeparator();
-    super._initialize(controller, initialRate, rateScale, baselinePercentage);
+    super._initialize(controller, initialRate, baselinePercentage);
   }
 
   function _initializeDomainSeparator() internal {
