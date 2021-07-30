@@ -4,8 +4,8 @@ import {
   deployMockAgfToken,
   deployMockStakedAgfToken,
   deployMockStakedAgToken,
-  deployRewardBooster,
-  deployRewardController,
+  deployMockRewardBooster,
+  deployMockRewardFreezer,
   deployTokenWeightedRewardPoolAG,
   deployTokenWeightedRewardPoolAGBoosted,
   deployTokenWeightedRewardPoolAGF,
@@ -73,7 +73,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       );
 
       console.log(`#3 deploying: RewardFreezer`);
-      const rewardCtl = await deployRewardController([ac.address, agfToken.address], verify);
+      const rewardCtl = await deployMockRewardFreezer([ac.address, agfToken.address], verify);
       await rewardCtl.connect(root).setFreezePercentage(0);
       await ac.grantAnyRoles(rewardCtl.address, ACCESS_REWARD_MINT);
 
@@ -109,7 +109,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       await xAGF.connect(root).setMaxSlashablePercentage(slashingPercentage);
 
       console.log('#5 Booster and a basic boost pool');
-      const boosterController = await deployRewardBooster([ac.address, agfToken.address]);
+      const boosterController = await deployMockRewardBooster([ac.address, agfToken.address]);
       await ac.grantAnyRoles(boosterController.address, ACCESS_REWARD_MINT);
 
       // agDAI pool

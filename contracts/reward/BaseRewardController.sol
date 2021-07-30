@@ -43,6 +43,11 @@ abstract contract BaseRewardController is
     _rewardMinter = rewardMinter;
   }
 
+  function _initialize(IMarketAccessController ac, IRewardMinter rewardMinter) internal {
+    _remoteAcl = ac;
+    _rewardMinter = rewardMinter;
+  }
+
   function getAccessController() public view override returns (IMarketAccessController) {
     return _remoteAcl;
   }
@@ -50,13 +55,14 @@ abstract contract BaseRewardController is
   function addRewardPool(IManagedRewardPool pool) external override onlyConfigAdmin {
     require(address(pool) != address(0), 'reward pool required');
     require(_poolMask[address(pool)] == 0, 'already registered');
-    pool.claimRewardFor(address(this), 0); // access check
     require(_poolList.length <= 255, 'too many pools');
 
     uint256 poolMask = 1 << _poolList.length;
     _poolMask[address(pool)] = poolMask;
     _baselineMask |= poolMask;
     _poolList.push(pool);
+
+    pool.attachedToRewardController(); // access check
 
     emit RewardPoolAdded(address(pool), poolMask);
   }

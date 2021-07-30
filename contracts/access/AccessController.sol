@@ -2,9 +2,6 @@
 pragma solidity ^0.6.12;
 
 import 'hardhat/console.sol';
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {Errors} from '../tools/Errors.sol';
 
@@ -15,7 +12,6 @@ import {InitializableImmutableAdminUpgradeabilityProxy} from '../tools/upgradeab
 import {IProxy} from '../tools/upgradeability/IProxy.sol';
 
 import {IManagedAccessController} from './interfaces/IAccessController.sol';
-import {AccessFlags} from './AccessFlags.sol';
 
 contract AccessController is Ownable, IManagedAccessController {
   using BitUtils for uint256;

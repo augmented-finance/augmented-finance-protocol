@@ -12,7 +12,7 @@ import {
   getAGTokenByName,
   getMintableERC20,
   getMockAgfToken,
-  getRewardController,
+  getMockRewardFreezer,
 } from '../../helpers/contracts-getters';
 import { Signer } from 'ethers';
 import { Provider } from '@ethersproject/providers';
@@ -56,7 +56,7 @@ makeSuite('Fork test suite', (testEnv: TestEnv) => {
     blkBeforeDeploy = await takeSnapshot();
     await rawBRE.run('augmented:test-local', CFG);
     agf = await getMockAgfToken();
-    rc = await getRewardController();
+    rc = await getMockRewardFreezer();
   });
 
   afterEach(async () => {

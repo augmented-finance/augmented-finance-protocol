@@ -7,7 +7,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 import {
   getMarketAccessController,
   getMockAgfToken,
-  getRewardController,
+  getMockRewardFreezer,
   getMockTokenLocker,
 } from '../../helpers/contracts-getters';
 
@@ -44,7 +44,7 @@ describe('Token locker suite', () => {
     blkBeforeDeploy = await takeSnapshot();
     [root, user1, user2] = await ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
-    rewardController = await getRewardController();
+    rewardController = await getMockRewardFreezer();
     rewardController.setFreezePercentage(0);
 
     AGF = await getMockAgfToken();

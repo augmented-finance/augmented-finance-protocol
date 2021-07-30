@@ -54,7 +54,7 @@ interface IManagedMarketAccessController is IMarketAccessController {
 
   function setRewardStakeTokenImpl(address) external;
 
-  function setRewardController(address) external;
+  function setRewardControllerImpl(address) external;
 
   function setRewardConfiguratorImpl(address) external;
 

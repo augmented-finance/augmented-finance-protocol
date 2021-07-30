@@ -136,8 +136,8 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
     setAddressAsProxy(AccessFlags.REWARD_STAKE_TOKEN, addr);
   }
 
-  function setRewardController(address addr) external override {
-    setAddress(AccessFlags.REWARD_CONTROLLER, addr);
+  function setRewardControllerImpl(address addr) external override {
+    setAddressAsProxy(AccessFlags.REWARD_CONTROLLER, addr);
   }
 
   function setRewardConfiguratorImpl(address addr) external override {

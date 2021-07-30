@@ -58,6 +58,11 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     }
   }
 
+  function getPoolName() public view virtual returns (string memory) {
+    this;
+    return '';
+  }
+
   function updateBaseline(uint256 baseline)
     external
     virtual
@@ -199,6 +204,12 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     returns (uint256, uint32);
 
   function internalCalcReward(address holder) internal view virtual returns (uint256, uint32);
+
+  function attachedToRewardController() external override onlyController {
+    internalAttachedToRewardController();
+  }
+
+  function internalAttachedToRewardController() internal virtual {}
 
   function isController(address addr) internal view virtual returns (bool) {
     return address(_controller) == addr;

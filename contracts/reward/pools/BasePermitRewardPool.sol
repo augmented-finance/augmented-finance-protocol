@@ -22,20 +22,35 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
   /// @dev spender => next valid nonce to submit with permit()
   mapping(address => uint256) public _nonces;
 
-  uint256 private _rewardLimit;
   string private _rewardPoolName;
 
   mapping(address => bool) private _providers;
 
   constructor(
     IRewardController controller,
-    uint256 rewardLimit,
+    uint256 initialRate,
+    uint224 rateScale,
+    uint16 baselinePercentage,
     string memory rewardPoolName
-  ) public ControlledRewardPool(controller, 0, NO_SCALE, NO_BASELINE) {
-    require(rewardLimit > 0, 'reward limit is required');
-    _rewardLimit = rewardLimit;
+  ) public ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage) {
     _rewardPoolName = rewardPoolName;
 
+    _initializeDomainSeparator();
+  }
+
+  function _initialize(
+    IRewardController controller,
+    uint256 initialRate,
+    uint224 rateScale,
+    uint16 baselinePercentage,
+    string memory rewardPoolName
+  ) internal {
+    _rewardPoolName = rewardPoolName;
+    _initializeDomainSeparator();
+    super._initialize(controller, initialRate, rateScale, baselinePercentage);
+  }
+
+  function _initializeDomainSeparator() internal {
     uint256 chainId;
 
     //solium-disable-next-line
@@ -52,23 +67,16 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
         address(this)
       )
     );
-
     CLAIM_TYPEHASH = getClaimTypeHash();
   }
 
+  function getPoolName() public view override returns (string memory) {
+    return _rewardPoolName;
+  }
+
+  function availableReward() public view virtual returns (uint256);
+
   function getClaimTypeHash() internal pure virtual returns (bytes32);
-
-  function stopRewards() external onlyRateAdmin {
-    _rewardLimit = 0;
-  }
-
-  function internalGetReward(address, uint256) internal virtual override returns (uint256, uint32) {
-    return (0, 0);
-  }
-
-  function internalCalcReward(address) internal view virtual override returns (uint256, uint32) {
-    return (0, 0);
-  }
 
   function addRewardProvider(address provider, address token) external override onlyConfigAdmin {
     require(provider != address(0), 'provider is required');
@@ -94,20 +102,22 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
     bytes32 r,
     bytes32 s
   ) internal {
-    require(provider != address(0), 'INVALID_PROVIDER');
-    require(_providers[provider], 'INVALID_PROVIDER');
-    require(_rewardLimit >= value, 'INSUFFICIENT_FUNDS');
-    bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, encodedHash));
+    require(provider != address(0) && _providers[provider], 'INVALID_PROVIDER');
 
+    bytes32 digest = keccak256(abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, encodedHash));
     require(provider == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
 
     _nonces[spender] = internalCheckNonce(currentValidNonce, at);
+
     if (value == 0) {
       return;
     }
-    _rewardLimit = _rewardLimit.sub(value, 'insufficient reward pool balance');
+
+    internalUpdateFunds(value);
     internalPushReward(to, value, uint32(block.timestamp));
   }
+
+  function internalUpdateFunds(uint256 value) internal virtual;
 
   function internalCheckNonce(uint256 nonce, uint256 at) internal virtual returns (uint256);
 
@@ -117,15 +127,5 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
     uint32 since
   ) internal virtual {
     internalAllocateReward(holder, allocated, since, AllocationMode.Push);
-  }
-
-  function internalSetBaselinePercentage(uint16) internal override {
-    revert('NOT_SUPPORTED');
-  }
-
-  function internalSetRate(uint256) internal override {}
-
-  function internalGetRate() internal view override returns (uint256) {
-    return 0;
   }
 }

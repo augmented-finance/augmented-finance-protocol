@@ -45,22 +45,15 @@ export enum eContractid {
   ValidationLogic = 'ValidationLogic',
   ReserveLogic = 'ReserveLogic',
   GenericLogic = 'GenericLogic',
-  MockPriceOracle = 'MockPriceOracle',
-  MockAggregator = 'MockAggregator',
+
   LendingRateOracle = 'LendingRateOracle',
   StaticPriceOracle = 'StaticPriceOracle',
   OracleRouter = 'OracleRouter',
-  MockFlashLoanReceiver = 'MockFlashLoanReceiver',
-  MockDepositToken = 'MockDepositToken',
-  MockStableDebtToken = 'MockStableDebtToken',
-  MockVariableDebtToken = 'MockVariableDebtToken',
-  MockAgfToken = 'MockAgfToken',
-  MockStakedAgfToken = 'MockStakedAgfToken',
-  MockStakedAgToken = 'MockStakedAgToken',
   ProtocolDataProvider = 'ProtocolDataProvider',
   WETHGateway = 'WETHGateway',
-  WETH = 'WETH',
-  WETHMocked = 'WETHMocked',
+
+  TeamRewardPool = 'TeamRewardPool',
+  PermitFreezerRewardPool = 'PermitFreezerRewardPool',
 
   DepositTokenImpl = 'DepositTokenImpl',
   DelegationAwareDepositTokenImpl = 'DelegationAwareDepositTokenImpl',
@@ -69,36 +62,43 @@ export enum eContractid {
   LendingPoolImpl = 'LendingPoolImpl',
   LendingPoolConfiguratorImpl = 'LendingPoolConfiguratorImpl',
   LendingPoolCollateralManagerImpl = 'LendingPoolCollateralManagerImpl',
-  MockUniswapV2Router02 = 'MockUniswapV2Router02',
-  UniswapLiquiditySwapAdapter = 'UniswapLiquiditySwapAdapter',
-  UniswapRepayAdapter = 'UniswapRepayAdapter',
-  FlashLiquidationAdapter = 'FlashLiquidationAdapter',
-
-  RewardController = 'RewardController',
-  RewardBooster = 'RewardBooster',
-  MockTokenLocker = 'MockTokenLocker',
-  MockDecayingTokenLocker = 'MockDecayingTokenLocker',
-
-  TeamRewardPool = 'TeamRewardPool',
-  ReferralRewardPool = 'ReferralRewardPool',
-
-  TokenWeightedRewardPoolAGFSeparate = 'TokenWeightedRewardPoolAGFSeparate',
-  TokenWeightedRewardPoolAGF = 'TokenWeightedRewardPoolAGF',
-  TokenWeightedRewardPoolAGFBoosted = 'TokenWeightedRewardPoolAGFBoosted',
-  TokenWeightedRewardPoolAG = 'TokenWeightedRewardPoolAG',
-  TokenWeightedRewardPoolAGBoosted = 'TokenWeightedRewardPoolAGBoosted',
-  TokenWeightedRewardPoolAGUSDCBoosted = 'TokenWeightedRewardPoolAGUSDCBoosted',
-
-  PermitFreezerRewardPool = 'PermitFreezerRewardPool',
-
   StakeConfiguratorImpl = 'StakeConfiguratorImpl',
   StakeTokenImpl = 'StakeTokenImpl',
   TreasuryImpl = 'TreasuryImpl',
-
   RewardConfiguratorImpl = 'RewardConfiguratorImpl',
   TokenWeightedRewardPoolImpl = 'TokenWeightedRewardPoolImpl',
   XAGFTokenV1Impl = 'XAGFTokenV1Impl',
   AGFTokenV1Impl = 'AGFTokenV1Impl',
+  ReferralRewardPoolV1Impl = 'ReferralRewardPoolV1Impl',
+  RewardBoosterImpl = 'RewardBoosterImpl',
+  TreasuryRewardPool = 'TreasuryRewardPool',
+
+  UniswapLiquiditySwapAdapter = 'UniswapLiquiditySwapAdapter',
+  UniswapRepayAdapter = 'UniswapRepayAdapter',
+  FlashLiquidationAdapter = 'FlashLiquidationAdapter',
+
+  MockRewardFreezer = 'MockRewardFreezer',
+  MockRewardBooster = 'MockRewardBooster',
+  MockPriceOracle = 'MockPriceOracle',
+  MockAggregator = 'MockAggregator',
+  MockFlashLoanReceiver = 'MockFlashLoanReceiver',
+  MockDepositToken = 'MockDepositToken',
+  MockStableDebtToken = 'MockStableDebtToken',
+  MockVariableDebtToken = 'MockVariableDebtToken',
+  MockAgfToken = 'MockAgfToken',
+  MockStakedAgfToken = 'MockStakedAgfToken',
+  MockStakedAgToken = 'MockStakedAgToken',
+  WETHMocked = 'MockWETH',
+  MockUniswapV2Router02 = 'MockUniswapV2Router02',
+  MockTokenLocker = 'MockTokenLocker',
+  MockDecayingTokenLocker = 'MockDecayingTokenLocker',
+
+  TokenWeightedRewardPoolAGFSeparate = 'MockRewardPoolAGFSeparate',
+  TokenWeightedRewardPoolAGF = 'MockRewardPoolAGF',
+  TokenWeightedRewardPoolAGFBoosted = 'MockRewardPoolAGFBoosted',
+  TokenWeightedRewardPoolAG = 'MockRewardPoolAG',
+  TokenWeightedRewardPoolAGBoosted = 'MockRewardPoolAGBoosted',
+  TokenWeightedRewardPoolAGUSDCBoosted = 'MockRewardPoolAGUSDCBoosted',
 }
 
 /*
@@ -453,15 +453,16 @@ export interface ITokenNames {
 }
 
 export interface IRewardParams {
-  InitialRate: number;
+  InitialRateWad: number;
   TokenPools: iAugmentedPoolAssetsOpt<ITokenRewardPoolParams>;
   TeamPool: ITeamPool;
-  ReferralPool?: IReferralPool;
-  PermitPool?: IPermitPool;
+  ReferralPool: IBasicRewardPool;
+  TreasuryPool: IBasicRewardPool;
+  BurnersPool: IBurnersPool;
 }
 
 export interface ITeamPool {
-  Share: number;
+  BasePoints: number;
   Manager: tEthereumAddress;
   UnlockAt: Date;
   Members: ITeamMembers;
@@ -471,12 +472,12 @@ export interface ITeamMembers {
   [address: string]: number;
 }
 
-export interface IReferralPool {
-  TotalWad: number;
-}
+export interface IBasicRewardPool extends IRewardPoolParams {}
 
-export interface IPermitPool {
+export interface IBurnersPool {
   TotalWad: number;
+  BoostFactor: number;
+  MeltDownAt: Date;
 }
 
 export interface ITokenRewardPoolParams {

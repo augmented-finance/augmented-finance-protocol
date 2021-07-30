@@ -5,7 +5,7 @@ import rawBRE, { ethers } from 'hardhat';
 
 import {
   getMockAgfToken,
-  getRewardController,
+  getMockRewardFreezer,
   getTeamRewardPool,
 } from '../../helpers/contracts-getters';
 
@@ -28,7 +28,6 @@ describe('Team rewards suite', () => {
   let rewardController: RewardFreezer;
   let agf: MockAgfToken;
   let blkBeforeDeploy;
-  let blkAfterDeploy;
   let REWARD_UNLOCKED_AT;
   let rewardPrecision = 1.5;
 
@@ -36,7 +35,7 @@ describe('Team rewards suite', () => {
     blkBeforeDeploy = await takeSnapshot();
     [root, teamMember1, teamMember2] = await ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
-    rewardController = await getRewardController();
+    rewardController = await getMockRewardFreezer();
     trp = await getTeamRewardPool();
     agf = await getMockAgfToken();
     REWARD_UNLOCKED_AT = 10 + (await currentTick());

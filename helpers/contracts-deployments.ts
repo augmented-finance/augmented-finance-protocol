@@ -18,7 +18,6 @@ import {
   MintableERC20,
   RewardBoosterFactory,
   RewardConfiguratorFactory,
-  RewardedTokenLockerFactory,
   StakeTokenFactory,
   TreasuryFactory,
   XAGFTokenV1Factory,
@@ -61,9 +60,10 @@ import {
   StakeConfiguratorFactory,
   MintableDelegationERC20,
   TokenWeightedRewardPoolV1Factory,
-  ReferralRewardPoolFactory,
   MockRewardedTokenLockerFactory,
   StaticPriceOracleFactory,
+  ReferralRewardPoolV1Factory,
+  RewardBoosterV1Factory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -74,6 +74,7 @@ import {
 } from './contracts-helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { LendingPoolLibraryAddresses } from '../types/LendingPoolFactory';
+import { TreasuryRewardPoolFactory } from '../types/TreasuryRewardPoolFactory';
 
 const readArtifact = async (id: string) => {
   return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
@@ -722,13 +723,22 @@ export const deployFlashLiquidationAdapter = async (
     verify
   );
 
-export const deployRewardBooster = async (
+export const deployRewardBoosterV1Impl = async (verify: boolean, once: boolean) =>
+  withSaveAndVerifyOnce(
+    new RewardBoosterV1Factory(await getFirstSigner()),
+    eContractid.RewardBoosterImpl,
+    [],
+    verify,
+    once
+  );
+
+export const deployMockRewardBooster = async (
   args: [tEthereumAddress, tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await new RewardBoosterFactory(await getFirstSigner()).deploy(...args),
-    eContractid.RewardBooster,
+    eContractid.MockRewardBooster,
     [],
     verify
   );
@@ -773,13 +783,13 @@ export const deployMockDecayingTokenLocker = async (
     verify
   );
 
-export const deployRewardController = async (
+export const deployMockRewardFreezer = async (
   args: [tEthereumAddress, tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await new RewardFreezerFactory(await getFirstSigner()).deploy(...args),
-    eContractid.RewardController,
+    eContractid.MockRewardFreezer,
     args,
     verify
   );
@@ -800,21 +810,35 @@ export const deployTeamRewardPool = async (
     verify
   );
 
-export const deployNamedReferralRewardPool = async (
-  rewardPoolName: string,
-  args: [controller: tEthereumAddress, rewardLimit: BigNumberish, claimLimit: BigNumberish],
+export const deployReferralRewardPoolV1Impl = async (verify: boolean, once: boolean) =>
+  withSaveAndVerifyOnce(
+    new ReferralRewardPoolV1Factory(await getFirstSigner()),
+    eContractid.ReferralRewardPoolV1Impl,
+    [],
+    verify,
+    once
+  );
+
+export const deployTreasuryRewardPool = async (
+  args: [
+    controller: string,
+    initialRate: BigNumberish,
+    rateScale: BigNumberish,
+    baselinePercentage: BigNumberish,
+    treasury: string
+  ],
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    await new ReferralRewardPoolFactory(await getFirstSigner()).deploy(...args, rewardPoolName),
-    rewardPoolName,
+    await new TreasuryRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.TreasuryRewardPool,
     [],
     verify
   );
 
 export const deployNamedPermitFreezerRewardPool = async (
   rewardPoolName: string,
-  args: [controller: tEthereumAddress, rewardLimit: BigNumberish],
+  args: [controller: tEthereumAddress, rewardLimit: BigNumberish, meltDownAt: number],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -894,7 +918,7 @@ export const deployTokenWeightedRewardPoolAGUSDCBoosted = async (
   );
 
 export const deployPermitFreezerRewardPool = async (
-  args: [tEthereumAddress, BigNumberish, string],
+  args: [tEthereumAddress, BigNumberish, number, string],
   verify?: boolean
 ) =>
   withSaveAndVerify(
