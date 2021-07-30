@@ -2,8 +2,6 @@
 pragma solidity ^0.6.12;
 
 import 'hardhat/console.sol';
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {IMarketAccessController} from './interfaces/IMarketAccessController.sol';
 import {AccessHelper} from './AccessHelper.sol';
 import {AccessFlags} from './AccessFlags.sol';
