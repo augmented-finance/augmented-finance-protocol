@@ -12,15 +12,24 @@ import { usingTenderly } from '../../helpers/tenderly-utils';
 import { exit } from 'process';
 
 task('augmented:mainnet', 'Deploy enviroment')
-  .addFlag('incremental', 'Continue interrupted installation')
+  .addFlag('incremental', 'Incremental installation')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(async ({ incremental, verify }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
+    const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+
     await DRE.run('set-DRE');
+
+    let renounce = true;
     if (incremental) {
+      console.log('======================================================================');
       console.log('======================================================================');
       console.log('====================    ATTN! INCREMENTAL MODE    ====================');
       console.log('======================================================================');
+      console.log(`=========== Delete 'deployed-contracts.json' to start anew ===========`);
+      console.log('======================================================================');
+      console.log('======================================================================');
+      renounce = false;
     } else {
       await cleanupJsonDb(DRE.network.name);
     }
@@ -32,7 +41,6 @@ task('augmented:mainnet', 'Deploy enviroment')
     }
 
     let success = false;
-    let renounce = true;
 
     try {
       console.log('Deployment started\n');
@@ -67,7 +75,6 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('10. Deploy reward pools');
       await DRE.run('full:init-reward-pools', { pool: POOL_NAME });
 
-      const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
       if (MAINNET_FORK) {
         console.log('Pluck');
         await DRE.run('dev:pluck-tokens', { pool: POOL_NAME });
@@ -81,6 +88,8 @@ task('augmented:mainnet', 'Deploy enviroment')
         console.log('N. Veryfing depositTokens and debtTokens');
         await DRE.run('verify:tokens', { pool: POOL_NAME });
       }
+
+      renounce = true;
 
       const [entryMap, instanceCount, multiCount] = printContracts(
         (await getFirstSigner()).address
