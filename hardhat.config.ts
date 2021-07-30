@@ -62,7 +62,11 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
 
 const mainnetFork = MAINNET_FORK
   ? {
-      blockNumber: 12913200,
+      blockNumber: 12924500,
+      mining: {
+        auto: false,
+        interval: [3000, 6000]
+      },
       // aave fixed block
       // blockNumber: 12413572,
       url: NETWORKS_RPC_URL['main'],
