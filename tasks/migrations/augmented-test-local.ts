@@ -86,7 +86,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const tokenWeightedRewardPoolSeparate = await deployTokenWeightedRewardPoolAGFSeparate(
-        [rewardCtl.address, RAY_100, RAY, 0, RAY_100],
+        [rewardCtl.address, 100, RAY, 0, RAY_100],
         verify
       );
       await waitForTx(await rewardCtl.addRewardPool(tokenWeightedRewardPoolSeparate.address));

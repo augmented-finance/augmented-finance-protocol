@@ -336,12 +336,6 @@ export const getPermitFreezerRewardPool = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getTokenWeightedRewardPoolAGF = async (address?: tEthereumAddress) =>
-  TokenWeightedRewardPoolFactory.connect(
-    address || (await getAddr(eContractid.TokenWeightedRewardPoolAGF)),
-    await getFirstSigner()
-  );
-
 export const getTokenWeightedRewardPoolAGFBooster = async (address?: tEthereumAddress) =>
   TokenWeightedRewardPoolFactory.connect(
     address || (await getAddr(eContractid.TokenWeightedRewardPoolAGFBoosted)),

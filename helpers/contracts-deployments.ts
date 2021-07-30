@@ -851,17 +851,6 @@ export const deployNamedPermitFreezerRewardPool = async (
     verify
   );
 
-export const deployTokenWeightedRewardPoolAGF = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, BigNumberish],
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await new TokenWeightedRewardPoolFactory(await getFirstSigner()).deploy(...args),
-    eContractid.TokenWeightedRewardPoolAGF,
-    [],
-    verify
-  );
-
 export const deployTokenWeightedRewardPoolAGFBoosted = async (
   args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish, BigNumberish],
   verify?: boolean

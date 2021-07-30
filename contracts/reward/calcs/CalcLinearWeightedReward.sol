@@ -118,7 +118,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     }
 
     allocated = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _maxWeightBase);
-    return (adjRate, allocated.div(WadRayMath.RAY), entry.claimedAt);
+    return (adjRate, allocated, entry.claimedAt);
   }
 
   function totalSupplyMax() internal view returns (uint256) {

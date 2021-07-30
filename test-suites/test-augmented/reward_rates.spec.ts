@@ -51,7 +51,6 @@ describe('Reward rates suite', () => {
     await rewardController.setFreezePercentage(0);
 
     const pushPool = (c: Contract) => {
-      console.log(c.address);
       pools.push(IManagedRewardPoolFactory.connect(c.address, root));
     };
 
@@ -107,19 +106,20 @@ describe('Reward rates suite', () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  it('check rates', async () => {
+  it('different pool types should have same outcome for the same rate', async () => {
+    const tickCount = 10;
+
     const preValues: string[] = [];
     for (const pool of pools) {
-      preValues.push((await pool.calcRewardFor(root.address)).amount.toString());
+      preValues.push((await pool.calcRewardFor(root.address)).amount.add(tickCount * defaultRate).toString());
     }
-    console.log(preValues);
-
-    await mineTicks(10);
+    await mineTicks(tickCount);
 
     const postValues: string[] = [];
     for (const pool of pools) {
       postValues.push((await pool.calcRewardFor(root.address)).amount.toString());
     }
-    console.log(postValues);
+    
+    expect(postValues).eql(preValues);
   });
 });

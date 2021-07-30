@@ -94,7 +94,6 @@ export enum eContractid {
   MockDecayingTokenLocker = 'MockDecayingTokenLocker',
 
   TokenWeightedRewardPoolAGFSeparate = 'MockRewardPoolAGFSeparate',
-  TokenWeightedRewardPoolAGF = 'MockRewardPoolAGF',
   TokenWeightedRewardPoolAGFBoosted = 'MockRewardPoolAGFBoosted',
   TokenWeightedRewardPoolAG = 'MockRewardPoolAG',
   TokenWeightedRewardPoolAGBoosted = 'MockRewardPoolAGBoosted',
