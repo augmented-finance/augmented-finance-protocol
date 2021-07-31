@@ -55,7 +55,7 @@ export const initReservesByHelper = async (
     stableDebtTokenImpl: string;
     variableDebtTokenImpl: string;
     underlyingAssetDecimals: BigNumberish;
-    interestRateStrategyAddress: string;
+    strategy: string;
     underlyingAsset: string;
     treasury: string;
     incentivesController: string;
@@ -183,7 +183,7 @@ export const initReservesByHelper = async (
       stableDebtTokenImpl: stableDebtTokenImpl.address,
       variableDebtTokenImpl: variableDebtTokenImpl.address,
       underlyingAssetDecimals: reserveInitDecimals[i],
-      interestRateStrategyAddress: strategyAddressPerAsset[reserveSymbol],
+      strategy: strategyAddressPerAsset[reserveSymbol],
       underlyingAsset: reserveTokens[i],
       treasury: treasuryAddress,
       incentivesController: ZERO_ADDRESS,
