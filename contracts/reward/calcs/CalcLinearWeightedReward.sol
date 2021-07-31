@@ -17,14 +17,6 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
   uint256 private _totalSupply;
 
   uint256 private constant _maxWeightBase = 1e36;
-  uint256 private constant minBitReserve = 32;
-
-  constructor() public {
-    //    _maxWeightBase = maxWeightBase; // (1 << maxWeightBits) - 1;
-    require(_maxWeightBase > 0, 'max total supply is unknown');
-    uint256 maxWeightBits = BitUtils.bitLength(_maxWeightBase);
-    require(maxWeightBits + minBitReserve < 256, 'max total supply is too high');
-  }
 
   function doUpdateTotalSupplyDiff(uint256 oldSupply, uint256 newSupply) internal returns (bool) {
     if (newSupply > oldSupply) {
@@ -117,9 +109,5 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
 
     allocated = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _maxWeightBase);
     return (adjRate, allocated, entry.claimedAt);
-  }
-
-  function totalSupplyMax() internal pure returns (uint256) {
-    return _maxWeightBase;
   }
 }

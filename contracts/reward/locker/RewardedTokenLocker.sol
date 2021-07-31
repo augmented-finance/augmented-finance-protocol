@@ -32,14 +32,11 @@ contract RewardedTokenLocker is
     IRewardController controller,
     uint256 initialRate,
     uint16 baselinePercentage,
-    address underlying,
-    uint32 pointPeriod,
-    uint32 maxValuePeriod,
-    uint256 maxWeightBase
+    address underlying
   )
     public
-    CalcCheckpointWeightedReward(maxWeightBase)
-    BaseTokenLocker(underlying, pointPeriod, maxValuePeriod)
+    CalcCheckpointWeightedReward()
+    BaseTokenLocker(underlying)
     ControlledRewardPool(controller, initialRate, baselinePercentage)
   {}
 
@@ -262,6 +259,7 @@ contract RewardedTokenLocker is
     uint256 limit,
     uint32 lockDuration
   ) private view returns (uint256) {
+    this;
     if (balance >= limit) {
       return 0;
     }

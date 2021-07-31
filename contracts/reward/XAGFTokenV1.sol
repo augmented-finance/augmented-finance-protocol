@@ -24,22 +24,8 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
   uint8 private _decimals;
 
   uint256 private constant TOKEN_REVISION = 1;
-  uint32 private constant ONE_PERIOD = 1 weeks;
-  uint32 private constant MAX_PERIOD = 4 * 52 weeks;
-  uint256 private constant WEIGHT_BASE = 1e36;
 
-  constructor()
-    public
-    DecayingTokenLocker(
-      IRewardController(address(this)),
-      0,
-      0,
-      address(0),
-      ONE_PERIOD,
-      MAX_PERIOD,
-      WEIGHT_BASE
-    )
-  {
+  constructor() public DecayingTokenLocker(IRewardController(address(this)), 0, 0, address(0)) {
     _initializeERC20(NAME, SYMBOL, DECIMALS);
   }
 
@@ -75,7 +61,7 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
     address underlying = ac.getRewardToken();
 
     _initializeERC20(NAME, SYMBOL, DECIMALS);
-    super._initialize(underlying, ONE_PERIOD, MAX_PERIOD);
+    super._initialize(underlying);
     super._initialize(IRewardController(controller), 0, 0);
   }
 
@@ -85,7 +71,7 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
     address underlying = ac.getRewardToken();
 
     _initializeERC20(data.name, data.symbol, data.decimals);
-    super._initialize(underlying, ONE_PERIOD, MAX_PERIOD);
+    super._initialize(underlying);
     super._initialize(IRewardController(controller), 0, 0);
   }
 
@@ -99,7 +85,7 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
     address controller = remoteAcl.getRewardController();
 
     _initializeERC20(name_, symbol_, decimals_);
-    super._initialize(underlying, ONE_PERIOD, MAX_PERIOD);
+    super._initialize(underlying);
     super._initialize(IRewardController(controller), 0, 0);
   }
 
@@ -110,7 +96,7 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
     uint16 baselinePercentage
   ) public virtual initializer(TOKEN_REVISION) {
     _initializeERC20(NAME, SYMBOL, DECIMALS);
-    super._initialize(underlying, ONE_PERIOD, MAX_PERIOD);
+    super._initialize(underlying);
     super._initialize(controller, initialRate, baselinePercentage);
   }
 }
