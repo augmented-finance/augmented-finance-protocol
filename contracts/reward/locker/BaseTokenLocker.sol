@@ -57,9 +57,9 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
   // Absolute limit of future points - 255 periods (weeks).
   uint32 private constant _maxDurationPoints = 255;
   // Period (in seconds) which gives 100% of lock tokens, must be less than _maxDurationPoints. Default = 208 weeks; // 4 * 52
-  uint32 private _maxValuePeriod;
+  uint32 private constant _maxValuePeriod = 4 * 52 weeks;
   // Duration of a single period. All points are aligned to it. Default = 1 week.
-  uint32 private _pointPeriod;
+  uint32 private constant _pointPeriod = 1 weeks;
   // Next (nearest future) known point.
   uint32 private _nextKnownPoint;
   // Latest (farest future) known point.
@@ -99,29 +99,13 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
   event Redeemed(address indexed from, address indexed to, uint256 underlyingAmount);
 
   /// @param underlying ERC20 token to be locked
-  /// @param pointPeriod duration in seconds of a single period
-  /// @param maxValuePeriod duration in seconds of period with 100% lock ratio, must be less than 255*pointPeriod
-  constructor(
-    address underlying,
-    uint32 pointPeriod,
-    uint32 maxValuePeriod
-  ) public {
-    _initialize(underlying, pointPeriod, maxValuePeriod);
+  constructor(address underlying) public {
+    _initialize(underlying);
   }
 
   /// @dev To be used for initializers only. Same as constructor.
-  function _initialize(
-    address underlying,
-    uint32 pointPeriod,
-    uint32 maxValuePeriod
-  ) internal {
-    require(pointPeriod > 0, 'invalid pointPeriod');
-    require(maxValuePeriod > pointPeriod, 'invalid maxValuePeriod');
-    require(maxValuePeriod < pointPeriod * _maxDurationPoints, 'invalid maxValuePeriod');
-
+  function _initialize(address underlying) internal {
     _underlyingToken = IERC20(underlying);
-    _pointPeriod = pointPeriod;
-    _maxValuePeriod = maxValuePeriod;
   }
 
   function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
@@ -686,6 +670,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     view
     returns (uint256)
   {
+    this;
     if (lockDuration > _maxValuePeriod) {
       lockDuration = _maxValuePeriod;
     }
@@ -704,6 +689,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     view
     returns (uint256 lockedAmount)
   {
+    this;
     if (lockDuration > _maxValuePeriod) {
       lockDuration = _maxValuePeriod;
     }

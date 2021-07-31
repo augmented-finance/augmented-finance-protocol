@@ -8,7 +8,7 @@ import {
   deployPermitFreezerRewardPool,
   deployTokenWeightedRewardPoolAGFSeparate,
 } from '../../helpers/contracts-deployments';
-import { MAX_LOCKER_PERIOD, ONE_ADDRESS, RAY, RAY_100, WEEK } from '../../helpers/constants';
+import { ONE_ADDRESS, RAY } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
 import {
   ADAI_ADDRESS,
@@ -86,7 +86,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const tokenWeightedRewardPoolSeparate = await deployTokenWeightedRewardPoolAGFSeparate(
-        [rewardCtl.address, 100, 0, RAY_100],
+        [rewardCtl.address, 100, 0],
         verify
       );
       await waitForTx(await rewardCtl.addRewardPool(tokenWeightedRewardPoolSeparate.address));
@@ -106,9 +106,6 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
         1e6,
         0,
         agfToken.address,
-        WEEK,
-        MAX_LOCKER_PERIOD,
-        RAY_100,
       ]);
       await waitForTx(await rewardCtl.addRewardPool(basicLocker.address));
 

@@ -11,7 +11,7 @@ import {
   deployTokenWeightedRewardPoolAGFBoosted,
   deployTokenWeightedRewardPoolAGUSDCBoosted,
 } from '../../helpers/contracts-deployments';
-import { PERC_100, RAY_100 } from '../../helpers/constants';
+import { PERC_100 } from '../../helpers/constants';
 import {
   slashingDefaultPercentage,
   stakingCooldownTicks,
@@ -69,10 +69,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
 
       console.log(`#4 Staking`);
       const agDaiToken = await getAGTokenByName('agDAI');
-      const xAGPool = await deployTokenWeightedRewardPoolAG(
-        [rewardCtl.address, 1, 0, RAY_100],
-        verify
-      );
+      const xAGPool = await deployTokenWeightedRewardPoolAG([rewardCtl.address, 1, 0], verify);
       const xAG = await deployMockStakedAgToken([
         ac.address,
         agDaiToken.address,
@@ -99,7 +96,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
 
       // agDAI pool
       const agDAIPoolBoosted = await deployTokenWeightedRewardPoolAGBoosted(
-        [boosterController.address, 1, 0, RAY_100],
+        [boosterController.address, 1, 0],
         verify
       );
       await agDAIPoolBoosted.connect(root).addRewardProvider(root.address, agDaiToken.address);
@@ -107,14 +104,14 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       //agUSDC pool
       const agUSDC = await getAGTokenByName('agUSDC');
       const agUSDCPoolBoosted = await deployTokenWeightedRewardPoolAGUSDCBoosted(
-        [boosterController.address, 1, 0, RAY_100],
+        [boosterController.address, 1, 0],
         verify
       );
       await agUSDCPoolBoosted.connect(root).addRewardProvider(root.address, agUSDC.address);
 
       // booster reward pool
       const AGFPoolBooster = await deployTokenWeightedRewardPoolAGFBoosted(
-        [boosterController.address, 1, 0, RAY_100],
+        [boosterController.address, 1, 0],
         verify
       );
       await AGFPoolBooster.connect(root).addRewardProvider(root.address, xAGF.address);

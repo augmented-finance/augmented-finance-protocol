@@ -17,22 +17,8 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     IRewardController controller,
     uint256 initialRate,
     uint16 baselinePercentage,
-    address underlying,
-    uint32 pointPeriod,
-    uint32 maxValuePeriod,
-    uint256 maxWeightBase
-  )
-    public
-    RewardedTokenLocker(
-      controller,
-      initialRate,
-      baselinePercentage,
-      underlying,
-      pointPeriod,
-      maxValuePeriod,
-      maxWeightBase
-    )
-  {}
+    address underlying
+  ) public RewardedTokenLocker(controller, initialRate, baselinePercentage, underlying) {}
 
   function balanceOf(address account) public view virtual override returns (uint256) {
     (uint32 startTS, uint32 endTS) = expiryOf(account);
