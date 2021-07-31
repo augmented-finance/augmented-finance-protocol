@@ -9,7 +9,7 @@ import rawBRE, { ethers } from 'hardhat';
 import {
   getMockAgfToken,
   getPermitFreezerRewardPool,
-  getRewardController,
+  getMockRewardFreezer,
 } from '../../helpers/contracts-getters';
 
 import { MockAgfToken, RewardFreezer } from '../../types';
@@ -38,7 +38,7 @@ describe('Rewards test suite', () => {
     console.log(`User address: ${user.address}`);
 
     // TODO each test below needs a separate freezer
-    rewardCtl = await getRewardController();
+    rewardCtl = await getMockRewardFreezer();
     expect(rewardCtl.address).to.properAddress;
 
     const freezer = await getPermitFreezerRewardPool();

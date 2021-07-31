@@ -21,7 +21,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     uint256 initialRate,
     uint16 baselinePercentage,
     address teamManager
-  ) public ControlledRewardPool(controller, initialRate, NO_SCALE, baselinePercentage) {
+  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _teamManager = teamManager;
   }
 

@@ -1,18 +1,11 @@
-import { task, types } from 'hardhat/config';
+import { task } from 'hardhat/config';
 import {
   deployMockAgfToken,
-  deployRewardBooster,
+  deployMockRewardBooster,
   deployMockDecayingTokenLocker,
   deployMarketAccessController,
 } from '../../helpers/contracts-deployments';
-import {
-  MAX_LOCKER_PERIOD,
-  ONE_ADDRESS,
-  RAY,
-  RAY_100,
-  RAY_10000,
-  WEEK,
-} from '../../helpers/constants';
+import { MAX_LOCKER_PERIOD, RAY_100, WEEK } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags, ACCESS_REWARD_MINT } from '../../helpers/access-flags';
 
@@ -39,15 +32,14 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
     );
 
     console.log(`#3 deploying: RewardBooster`);
-    const rewardBooster = await deployRewardBooster([ac.address, agfToken.address], verify);
-    await ac.setRewardController(rewardBooster.address);
+    const rewardBooster = await deployMockRewardBooster([ac.address, agfToken.address], verify);
+    await ac.setAddress(AccessFlags.REWARD_CONTROLLER, rewardBooster.address); // do not use proxy
 
     console.log(`#5 deploying: DecayingTokenLocker for RewardBooster`);
 
     const decayLocker = await deployMockDecayingTokenLocker([
       rewardBooster.address,
-      RAY_10000,
-      RAY,
+      1e6,
       0,
       agfToken.address,
       WEEK,

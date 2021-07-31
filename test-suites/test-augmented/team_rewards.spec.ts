@@ -1,11 +1,11 @@
 import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
-import rawBRE, { ethers } from 'hardhat';
+import rawBRE from 'hardhat';
 
 import {
   getMockAgfToken,
-  getRewardController,
+  getMockRewardFreezer,
   getTeamRewardPool,
 } from '../../helpers/contracts-getters';
 
@@ -28,15 +28,14 @@ describe('Team rewards suite', () => {
   let rewardController: RewardFreezer;
   let agf: MockAgfToken;
   let blkBeforeDeploy;
-  let blkAfterDeploy;
   let REWARD_UNLOCKED_AT;
   let rewardPrecision = 1.5;
 
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
-    [root, teamMember1, teamMember2] = await ethers.getSigners();
+    [root, teamMember1, teamMember2] = await (<any>rawBRE).ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
-    rewardController = await getRewardController();
+    rewardController = await getMockRewardFreezer();
     trp = await getTeamRewardPool();
     agf = await getMockAgfToken();
     REWARD_UNLOCKED_AT = 10 + (await currentTick());

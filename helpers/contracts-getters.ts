@@ -41,6 +41,8 @@ import {
   MockPriceOracleFactory,
   XAGFTokenV1Factory,
   AGFTokenV1Factory,
+  TreasuryFactory,
+  ReferralRewardPoolFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -49,6 +51,7 @@ import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
 import { getFirstSigner, getFromJsonDb, hasInJsonDb } from './misc-utils';
 import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } from './types';
+import { TreasuryRewardPoolFactory } from '../types/TreasuryRewardPoolFactory';
 
 const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
 
@@ -310,27 +313,27 @@ export const getTeamRewardPool = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getRewardController = async (address?: tEthereumAddress) =>
+export const getTreasuryProxy = async (address: tEthereumAddress) =>
+  TreasuryFactory.connect(address, await getFirstSigner());
+
+export const getMockRewardFreezer = async (address?: tEthereumAddress) =>
   RewardFreezerFactory.connect(
-    address || (await getAddr(eContractid.RewardController)),
+    address || (await getAddr(eContractid.MockRewardFreezer)),
     await getFirstSigner()
   );
 
-export const getRewardBooster = async (address?: tEthereumAddress) =>
+export const getMockRewardBooster = async (address?: tEthereumAddress) =>
   RewardBoosterFactory.connect(
-    address || (await getAddr(eContractid.RewardBooster)),
+    address || (await getAddr(eContractid.MockRewardBooster)),
     await getFirstSigner()
   );
+
+export const getRewardBooster = async (address: tEthereumAddress) =>
+  RewardBoosterFactory.connect(address, await getFirstSigner());
 
 export const getPermitFreezerRewardPool = async (address?: tEthereumAddress) =>
   PermitFreezerRewardPoolFactory.connect(
     address || (await getAddr(eContractid.PermitFreezerRewardPool)),
-    await getFirstSigner()
-  );
-
-export const getTokenWeightedRewardPoolAGF = async (address?: tEthereumAddress) =>
-  TokenWeightedRewardPoolFactory.connect(
-    address || (await getAddr(eContractid.TokenWeightedRewardPoolAGF)),
     await getFirstSigner()
   );
 
@@ -364,8 +367,14 @@ export const getTokenWeightedRewardPoolAGUSDCBoosted = async (address?: tEthereu
     await getFirstSigner()
   );
 
+export const getMockReferralRewardPool = async (address?: tEthereumAddress) =>
+  ReferralRewardPoolFactory.connect(
+    address || (await getAddr(eContractid.MockReferralRewardPool)),
+    await getFirstSigner()
+  );
+
 export const getMarketAccessController = async (address?: tEthereumAddress) =>
-  AccessControllerFactory.connect(
+  MarketAccessControllerFactory.connect(
     address || (await getAddr(eContractid.MarketAccessController)),
     await getFirstSigner()
   );
@@ -379,29 +388,17 @@ export const getAGTokenByName = async (name: string): Promise<DepositToken> => {
   return await getDepositToken(addrByName);
 };
 
-export const getStakeConfiguratorImpl = async (address?: tEthereumAddress) =>
-  StakeConfiguratorFactory.connect(
-    address || (await getAddr(eContractid.StakeConfiguratorImpl)),
-    await getFirstSigner()
-  );
+export const getStakeConfiguratorImpl = async (address: tEthereumAddress) =>
+  StakeConfiguratorFactory.connect(address, await getFirstSigner());
 
-export const getStakeTokenImpl = async (address?: tEthereumAddress) =>
-  StakeTokenFactory.connect(
-    address || (await getAddr(eContractid.StakeTokenImpl)),
-    await getFirstSigner()
-  );
+export const getStakeTokenImpl = async (address: tEthereumAddress) =>
+  StakeTokenFactory.connect(address, await getFirstSigner());
 
-export const getXAGFTokenV1Impl = async (address?: tEthereumAddress) =>
-  XAGFTokenV1Factory.connect(
-    address || (await getAddr(eContractid.XAGFTokenV1Impl)),
-    await getFirstSigner()
-  );
+export const getXAGFTokenV1Impl = async (address: tEthereumAddress) =>
+  XAGFTokenV1Factory.connect(address, await getFirstSigner());
 
-export const getAGFTokenV1Impl = async (address?: tEthereumAddress) =>
-  AGFTokenV1Factory.connect(
-    address || (await getAddr(eContractid.AGFTokenV1Impl)),
-    await getFirstSigner()
-  );
+export const getAGFTokenV1Impl = async (address: tEthereumAddress) =>
+  AGFTokenV1Factory.connect(address, await getFirstSigner());
 
 export const getIManagedRewardPool = async (address: tEthereumAddress) =>
   IManagedRewardPoolFactory.connect(address, await getFirstSigner());

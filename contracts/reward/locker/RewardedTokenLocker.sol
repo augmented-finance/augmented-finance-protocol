@@ -31,7 +31,6 @@ contract RewardedTokenLocker is
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage,
     address underlying,
     uint32 pointPeriod,
@@ -41,7 +40,7 @@ contract RewardedTokenLocker is
     public
     CalcCheckpointWeightedReward(maxWeightBase)
     BaseTokenLocker(underlying, pointPeriod, maxValuePeriod)
-    ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage)
+    ControlledRewardPool(controller, initialRate, baselinePercentage)
   {}
 
   function redeem(address to) public override notPaused returns (uint256 underlyingAmount) {
@@ -183,7 +182,7 @@ contract RewardedTokenLocker is
 
   function receiveBoostExcess(uint256 amount, uint32 since) external override onlyController {
     internalUpdate(false, 0);
-    internalAddExcess(scaleRate(amount), since);
+    internalAddExcess(amount, since);
   }
 
   function applyAutolock(

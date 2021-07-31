@@ -185,7 +185,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const { Names } = config;
 
-  const treasuryImpl = await deployTreasuryImpl();
+  const treasuryImpl = await deployTreasuryImpl(false, false);
   addressProvider.setTreasuryImpl(treasuryImpl.address);
   const treasuryAddress = treasuryImpl.address;
 

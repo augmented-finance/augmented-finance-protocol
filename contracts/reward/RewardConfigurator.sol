@@ -71,8 +71,8 @@ contract RewardConfigurator is
       IInitializableRewardPool.InitData memory params =
         IInitializableRewardPool.InitData(
           ctl,
+          entry.poolName,
           entry.initialRate,
-          entry.rateScale,
           entry.baselinePercentage
         );
 
@@ -86,21 +86,26 @@ contract RewardConfigurator is
         );
 
       ctl.addRewardPool(IManagedRewardPool(pool));
+
       if (entry.boostFactor > 0) {
         IManagedRewardBooster(address(ctl)).setBoostFactor(pool, entry.boostFactor);
       }
-      IManagedRewardPool(pool).addRewardProvider(entry.provider, entry.provider);
-      IRewardedToken(entry.provider).setIncentivesController(pool);
+      if (entry.provider != address(0)) {
+        IManagedRewardPool(pool).addRewardProvider(entry.provider, entry.provider);
+        IRewardedToken(entry.provider).setIncentivesController(pool);
+      }
 
       emit RewardPoolInitialized(pool, entry.provider, entry);
     }
   }
 
-  function addNamedRewardPools(IManagedRewardPool[] calldata pools, string[] calldata names)
-    external
-    onlyRewardAdmin
-  {
+  function addNamedRewardPools(
+    IManagedRewardPool[] calldata pools,
+    string[] calldata names,
+    uint32[] calldata boostFactors
+  ) external onlyRewardAdmin {
     require(pools.length >= names.length);
+    require(pools.length >= boostFactors.length);
 
     IManagedRewardController ctl = getDefaultController();
 
@@ -111,6 +116,9 @@ contract RewardConfigurator is
       }
       if (i < names.length && bytes(names[i]).length > 0) {
         _namedPools[names[i]] = address(pool);
+      }
+      if (i < boostFactors.length && boostFactors[i] > 0) {
+        IManagedRewardBooster(address(ctl)).setBoostFactor(address(pool), boostFactors[i]);
       }
     }
   }
@@ -140,6 +148,21 @@ contract RewardConfigurator is
       abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
     );
     emit RewardPoolUpgraded(input.pool, input.impl);
+  }
+
+  function buildRewardPoolInitData(
+    string calldata poolName,
+    uint256 initialRate,
+    uint16 baselinePercentage
+  ) external view returns (bytes memory) {
+    IInitializableRewardPool.InitData memory data =
+      IInitializableRewardPool.InitData(
+        getDefaultController(),
+        poolName,
+        initialRate,
+        baselinePercentage
+      );
+    return abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, data);
   }
 
   function buildRewardTokenInitData(
