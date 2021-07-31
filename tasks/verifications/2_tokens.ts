@@ -34,7 +34,7 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
         stableDebtTokenAddress,
         variableDebtTokenAddress,
         aTokenAddress,
-        interestRateStrategyAddress,
+        strategy,
       } = await lendingPoolProxy.getReserveData(tokenAddress);
 
       const tokenConfig = configs.find(([symbol]) => symbol === token);
@@ -66,7 +66,7 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
 
       // Strategy Rate
       console.log(`\n- Verifying Strategy rate...\n`);
-      await verifyContract(interestRateStrategyAddress, [
+      await verifyContract(strategy, [
         addressesProvider.address,
         optimalUtilizationRate,
         baseVariableBorrowRate,
