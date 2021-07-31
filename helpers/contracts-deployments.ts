@@ -63,6 +63,7 @@ import {
   MockRewardedTokenLockerFactory,
   StaticPriceOracleFactory,
   ReferralRewardPoolFactory,
+  LendingPoolCompatibleFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -182,7 +183,7 @@ export const deployValidationLogic = async (
 export const deployLendingPoolImpl = async (verify: boolean, once: boolean) => {
   // const libraries = await deployLendingPoolLibraries(verify);
   return await withSaveAndVerifyOnce(
-    new LendingPoolFactory(/* libraries, */ await getFirstSigner()),
+    new LendingPoolCompatibleFactory(/* libraries, */ await getFirstSigner()),
     eContractid.LendingPoolImpl,
     [],
     verify,
