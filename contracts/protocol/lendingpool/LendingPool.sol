@@ -130,13 +130,12 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
 
     address depositToken = reserve.aTokenAddress;
 
-    reserve.updateState(asset);
-    reserve.updateInterestRates(asset, depositToken, amount, 0);
+    uint256 liquidityIndex = reserve.updateStateForDeposit(asset);
+    reserve.updateInterestRatesBeforeTransferFrom(asset, depositToken, amount);
 
     IERC20(asset).safeTransferFrom(msg.sender, depositToken, amount);
 
-    bool isFirstDeposit =
-      IDepositToken(depositToken).mint(onBehalfOf, amount, reserve.liquidityIndex);
+    bool isFirstDeposit = IDepositToken(depositToken).mint(onBehalfOf, amount, liquidityIndex);
 
     if (isFirstDeposit) {
       _usersConfig[onBehalfOf].setUsingAsCollateral(reserve.id, true);
@@ -164,9 +163,9 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
   ) external override whenNotPaused returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
-    address aToken = reserve.aTokenAddress;
+    address depositToken = reserve.aTokenAddress;
 
-    uint256 userBalance = IDepositToken(aToken).balanceOf(msg.sender);
+    uint256 userBalance = IDepositToken(depositToken).balanceOf(msg.sender);
 
     uint256 amountToWithdraw = amount;
 
@@ -185,15 +184,15 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
       _addressesProvider.getPriceOracle()
     );
 
-    reserve.updateState(asset);
-    reserve.updateInterestRates(asset, aToken, 0, amountToWithdraw);
+    uint256 liquidityIndex = reserve.updateStateForDeposit(asset);
+    reserve.updateInterestRatesBeforeTransferOut(asset, depositToken, amountToWithdraw);
 
     if (amountToWithdraw == userBalance) {
       _usersConfig[msg.sender].setUsingAsCollateral(reserve.id, false);
       emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
     }
 
-    IDepositToken(aToken).burn(msg.sender, to, amountToWithdraw, reserve.liquidityIndex);
+    IDepositToken(depositToken).burn(msg.sender, to, amountToWithdraw, liquidityIndex);
 
     emit Withdraw(asset, msg.sender, to, amountToWithdraw);
 
@@ -282,16 +281,16 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
       );
     }
 
-    address aToken = reserve.aTokenAddress;
-    reserve.updateInterestRates(asset, aToken, paybackAmount, 0);
+    address depositToken = reserve.aTokenAddress;
+    reserve.updateInterestRatesBeforeTransferFrom(asset, depositToken, paybackAmount);
 
     if (stableDebt.add(variableDebt).sub(paybackAmount) == 0) {
       _usersConfig[onBehalfOf].setBorrowing(reserve.id, false);
     }
 
-    IERC20(asset).safeTransferFrom(msg.sender, aToken, paybackAmount);
+    IERC20(asset).safeTransferFrom(msg.sender, depositToken, paybackAmount);
 
-    IDepositToken(aToken).handleRepayment(msg.sender, paybackAmount);
+    IDepositToken(depositToken).handleRepayment(msg.sender, paybackAmount);
 
     emit Repay(asset, onBehalfOf, msg.sender, paybackAmount);
 
@@ -342,7 +341,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
       );
     }
 
-    reserve.updateInterestRates(asset, reserve.aTokenAddress, 0, 0);
+    reserve.updateInterestRates(asset, reserve.aTokenAddress);
 
     emit Swap(asset, msg.sender, rateMode);
   }
@@ -361,7 +360,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
 
     IERC20 stableDebtToken = IERC20(reserve.stableDebtTokenAddress);
     IERC20 variableDebtToken = IERC20(reserve.variableDebtTokenAddress);
-    address aTokenAddress = reserve.aTokenAddress;
+    address depositToken = reserve.aTokenAddress;
 
     uint256 stableDebt = IERC20(stableDebtToken).balanceOf(user);
 
@@ -370,7 +369,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
       asset,
       stableDebtToken,
       variableDebtToken,
-      aTokenAddress
+      depositToken
     );
 
     reserve.updateState(asset);
@@ -383,7 +382,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
       reserve.currentStableBorrowRate
     );
 
-    reserve.updateInterestRates(asset, aTokenAddress, 0, 0);
+    reserve.updateInterestRates(asset, depositToken);
 
     emit RebalanceStableBorrowRate(asset, user);
   }
@@ -750,14 +749,14 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
    * @dev Updates the address of the interest rate strategy contract
    * - Only callable by the LendingPoolConfigurator contract
    * @param asset The address of the underlying asset of the reserve
-   * @param rateStrategyAddress The address of the interest rate strategy contract
+   * @param strategy The address of the interest rate strategy contract
    **/
-  function setReserveInterestRateStrategyAddress(address asset, address rateStrategyAddress)
+  function setReserveStrategy(address asset, address strategy)
     external
     override
     onlyLendingPoolConfigurator
   {
-    _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
+    _reserves[asset].strategy = strategy;
   }
 
   /**

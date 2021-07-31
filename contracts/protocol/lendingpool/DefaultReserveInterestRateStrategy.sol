@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IReserveInterestRateStrategy} from '../../interfaces/IReserveInterestRateStrategy.sol';
+import {IReserveStrategy} from '../../interfaces/IReserveStrategy.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {IPriceOracleProvider} from '../../interfaces/IPriceOracleProvider.sol';
@@ -16,7 +16,7 @@ import 'hardhat/console.sol';
  * @dev The model of interest rate is based on 2 slopes, one before the `OPTIMAL_UTILIZATION_RATE`
  * point of utilization and another from that one to 100%
  **/
-contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
+contract DefaultReserveInterestRateStrategy is IReserveStrategy {
   using WadRayMath for uint256;
   using SafeMath for uint256;
   using PercentageMath for uint256;

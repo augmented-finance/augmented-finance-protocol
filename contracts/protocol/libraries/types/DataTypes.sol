@@ -2,7 +2,8 @@
 pragma solidity 0.6.12;
 
 library DataTypes {
-  uint64 public constant FLAG_EXTERNAL_ASSET = 1;
+  uint64 public constant MASK_ASSET_TYPE = 0x0F;
+  uint64 public constant ASSET_TYPE_INTERNAL = 0;
 
   // refer to the AAVE whitepaper, section 1.1 basic concepts for a formal description of these properties.
   struct ReserveData {
@@ -24,7 +25,7 @@ library DataTypes {
     address stableDebtTokenAddress;
     address variableDebtTokenAddress;
     //address of the interest rate strategy
-    address interestRateStrategyAddress;
+    address strategy;
     uint64 reserveFlags;
     //the id of the reserve. Represents the position in the list of the active reserves
     uint8 id;
@@ -55,7 +56,7 @@ library DataTypes {
     address depositTokenAddress;
     address stableDebtAddress;
     address variableDebtAddress;
-    address interestRateStrategyAddress;
+    address strategy;
     uint64 reserveFlags;
   }
 }

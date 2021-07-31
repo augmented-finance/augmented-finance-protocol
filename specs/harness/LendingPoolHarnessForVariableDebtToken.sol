@@ -128,11 +128,11 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
     );
   }
 
-  function setReserveInterestRateStrategyAddress(address asset, address rateStrategyAddress)
+  function setReserveStrategy(address asset, address strategy)
     external
     override
   {
-    originalPool.setReserveInterestRateStrategyAddress(asset, rateStrategyAddress);
+    originalPool.setReserveStrategy(asset, strategy);
   }
 
   function setConfiguration(address asset, uint256 configuration) external override {

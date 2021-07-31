@@ -53,8 +53,8 @@ contract LendingPoolCollateralManager is
     uint256 maxCollateralToLiquidate;
     uint256 debtAmountNeeded;
     uint256 healthFactor;
-    uint256 liquidatorPreviousATokenBalance;
-    IDepositToken collateralAtoken;
+    uint256 liquidatorPreviousDepositTokenBalance;
+    IDepositToken collateralDepositToken;
     bool isCollateralEnabled;
     DataTypes.InterestRateMode borrowRateMode;
   }
@@ -112,9 +112,9 @@ contract LendingPoolCollateralManager is
       vars.userVariableDebt
     );
 
-    vars.collateralAtoken = IDepositToken(collateralReserve.aTokenAddress);
+    vars.collateralDepositToken = IDepositToken(collateralReserve.aTokenAddress);
 
-    vars.userCollateralBalance = vars.collateralAtoken.balanceOf(user);
+    vars.userCollateralBalance = vars.collateralDepositToken.balanceOf(user);
 
     vars.maxLiquidatableDebt = vars.userStableDebt.add(vars.userVariableDebt).percentMul(
       LIQUIDATION_CLOSE_FACTOR_PERCENT
@@ -148,7 +148,7 @@ contract LendingPoolCollateralManager is
     // collateral reserve
     if (!receiveDepositToken) {
       uint256 currentAvailableCollateral =
-        IERC20(collateralAsset).balanceOf(address(vars.collateralAtoken));
+        IERC20(collateralAsset).balanceOf(address(vars.collateralDepositToken));
       require(
         currentAvailableCollateral >= vars.maxCollateralToLiquidate,
         Errors.LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE
@@ -178,37 +178,41 @@ contract LendingPoolCollateralManager is
       );
     }
 
-    debtReserve.updateInterestRates(
+    debtReserve.updateInterestRatesBeforeTransferFrom(
       debtAsset,
       debtReserve.aTokenAddress,
-      vars.actualDebtToLiquidate,
-      0
+      vars.actualDebtToLiquidate
     );
 
     if (receiveDepositToken) {
-      vars.liquidatorPreviousATokenBalance = IERC20(vars.collateralAtoken).balanceOf(msg.sender);
-      vars.collateralAtoken.transferOnLiquidation(user, msg.sender, vars.maxCollateralToLiquidate);
+      vars.liquidatorPreviousDepositTokenBalance = IERC20(vars.collateralDepositToken).balanceOf(
+        msg.sender
+      );
+      vars.collateralDepositToken.transferOnLiquidation(
+        user,
+        msg.sender,
+        vars.maxCollateralToLiquidate
+      );
 
-      if (vars.liquidatorPreviousATokenBalance == 0) {
+      if (vars.liquidatorPreviousDepositTokenBalance == 0) {
         DataTypes.UserConfigurationMap storage liquidatorConfig = _usersConfig[msg.sender];
         liquidatorConfig.setUsingAsCollateral(collateralReserve.id, true);
         emit ReserveUsedAsCollateralEnabled(collateralAsset, msg.sender);
       }
     } else {
-      collateralReserve.updateState(collateralAsset);
-      collateralReserve.updateInterestRates(
+      uint256 liquidityIndex = collateralReserve.updateStateForDeposit(collateralAsset);
+      collateralReserve.updateInterestRatesBeforeTransferOut(
         collateralAsset,
-        address(vars.collateralAtoken),
-        0,
+        address(vars.collateralDepositToken),
         vars.maxCollateralToLiquidate
       );
 
-      // Burn the equivalent amount of aToken, sending the underlying to the liquidator
-      vars.collateralAtoken.burn(
+      // Burn the equivalent amount of depositToken, sending the underlying to the liquidator
+      vars.collateralDepositToken.burn(
         user,
         msg.sender,
         vars.maxCollateralToLiquidate,
-        collateralReserve.liquidityIndex
+        liquidityIndex
       );
     }
 
@@ -219,7 +223,7 @@ contract LendingPoolCollateralManager is
       emit ReserveUsedAsCollateralDisabled(collateralAsset, user);
     }
 
-    // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
+    // Transfers the debt asset being repaid to the depostToken, where the liquidity is kept
     IERC20(debtAsset).safeTransferFrom(
       msg.sender,
       debtReserve.aTokenAddress,
@@ -460,11 +464,10 @@ contract LendingPoolCollateralManager is
       IERC20(vars.currentDepositToken).totalSupply(),
       vars.currentPremium
     );
-    _reserves[vars.currentAsset].updateInterestRates(
+    _reserves[vars.currentAsset].updateInterestRatesBeforeTransferFrom(
       vars.currentAsset,
       vars.currentDepositToken,
-      vars.currentAmountPlusPremium,
-      0
+      vars.currentAmountPlusPremium
     );
 
     IERC20(vars.currentAsset).safeTransferFrom(
@@ -481,20 +484,18 @@ contract LendingPoolCollateralManager is
     uint256 referral,
     address onBehalfOf
   ) external override {
-    (bool ok, string memory errMsg) =
-      _executeBorrow(
-        ExecuteBorrowParams(
-          asset,
-          msg.sender,
-          onBehalfOf,
-          amount,
-          interestRateMode,
-          _reserves[asset].aTokenAddress,
-          referral,
-          true
-        )
-      );
-    require(ok, errMsg);
+    _executeBorrow(
+      ExecuteBorrowParams(
+        asset,
+        msg.sender,
+        onBehalfOf,
+        amount,
+        interestRateMode,
+        _reserves[asset].aTokenAddress,
+        referral,
+        true
+      )
+    );
   }
 
   struct ExecuteBorrowParams {
@@ -513,7 +514,7 @@ contract LendingPoolCollateralManager is
     uint256 amountInETH;
   }
 
-  function _executeBorrow(ExecuteBorrowParams memory vars) private returns (bool, string memory) {
+  function _executeBorrow(ExecuteBorrowParams memory vars) private {
     DataTypes.ReserveData storage reserve = _reserves[vars.asset];
     DataTypes.UserConfigurationMap storage userConfig = _usersConfig[vars.onBehalfOf];
 
@@ -566,15 +567,12 @@ contract LendingPoolCollateralManager is
       userConfig.setBorrowing(reserve.id, true);
     }
 
-    reserve.updateInterestRates(
-      vars.asset,
-      vars.aTokenAddress,
-      0,
-      vars.releaseUnderlying ? vars.amount : 0
-    );
-
     if (vars.releaseUnderlying) {
+      reserve.updateInterestRatesBeforeTransferOut(vars.asset, vars.aTokenAddress, vars.amount);
+
       IDepositToken(vars.aTokenAddress).transferUnderlyingTo(vars.user, vars.amount);
+    } else {
+      reserve.updateInterestRates(vars.asset, vars.aTokenAddress);
     }
 
     emit Borrow(
@@ -588,7 +586,5 @@ contract LendingPoolCollateralManager is
         : reserve.currentVariableBorrowRate,
       vars.referral
     );
-
-    return (true, '');
   }
 }

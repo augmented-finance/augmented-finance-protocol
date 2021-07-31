@@ -2,11 +2,11 @@
 pragma solidity 0.6.12;
 
 /**
- * @title IReserveInterestRateStrategyInterface interface
- * @dev Interface for the calculation of the interest rates
+ * @title IReserveStrategy interface
+ * @dev Strategy to control a lending pool reserve
  * @author Aave
  */
-interface IReserveInterestRateStrategy {
+interface IReserveStrategy {
   function baseVariableBorrowRate() external view returns (uint256);
 
   function getMaxVariableBorrowRate() external view returns (uint256);

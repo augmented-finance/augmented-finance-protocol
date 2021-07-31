@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IReserveInterestRateStrategy} from './IReserveInterestRateStrategy.sol';
+import {IReserveStrategy} from './IReserveStrategy.sol';
 
 /**
  * @dev Interface to access the interest rate of an external asset
  */
-interface IReserveDelegatedRateStrategy is IReserveInterestRateStrategy {
+interface IReserveDelegatedStrategy is IReserveStrategy {
   function getDelegatedIndexes(address underlyingToken)
     external
     view

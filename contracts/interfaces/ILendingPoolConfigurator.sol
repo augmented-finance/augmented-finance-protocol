@@ -9,7 +9,7 @@ interface ILendingPoolConfigurator {
     address variableDebtTokenImpl;
     uint64 reserveFlags;
     uint8 underlyingAssetDecimals;
-    address interestRateStrategyAddress;
+    address strategy;
     address underlyingAsset;
     address treasury;
     string underlyingAssetName;
@@ -55,14 +55,14 @@ interface ILendingPoolConfigurator {
    * @param depositToken The address of the associated aToken contract
    * @param stableDebtToken The address of the associated stable rate debt token
    * @param variableDebtToken The address of the associated variable rate debt token
-   * @param interestRateStrategyAddress The address of the interest rate strategy for the reserve
+   * @param strategy The address of the interest rate strategy for the reserve
    **/
   event ReserveInitialized(
     address indexed asset,
     address indexed depositToken,
     address stableDebtToken,
     address variableDebtToken,
-    address interestRateStrategyAddress
+    address strategy
   );
 
   /**
@@ -147,7 +147,7 @@ interface ILendingPoolConfigurator {
    * @param asset The address of the underlying asset of the reserve
    * @param strategy The new address of the interest strategy contract
    **/
-  event ReserveInterestRateStrategyChanged(address indexed asset, address strategy);
+  event ReserveStrategyChanged(address indexed asset, address strategy);
 
   /**
    * @dev Emitted when an aToken implementation is upgraded

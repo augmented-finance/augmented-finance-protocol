@@ -8,8 +8,7 @@ import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 interface IManagedLendingPool is ILendingPool {
   function initReserve(DataTypes.InitReserveData calldata data) external;
 
-  function setReserveInterestRateStrategyAddress(address reserve, address rateStrategyAddress)
-    external;
+  function setReserveStrategy(address reserve, address rateStrategyAddress) external;
 
   function setConfiguration(address reserve, uint256 configuration) external;
 

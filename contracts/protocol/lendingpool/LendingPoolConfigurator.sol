@@ -110,7 +110,7 @@ contract LendingPoolConfigurator is
         depositTokenProxyAddress,
         stableDebtTokenProxyAddress,
         variableDebtTokenProxyAddress,
-        input.interestRateStrategyAddress,
+        input.strategy,
         input.reserveFlags
       )
     );
@@ -130,7 +130,7 @@ contract LendingPoolConfigurator is
       depositTokenProxyAddress,
       stableDebtTokenProxyAddress,
       variableDebtTokenProxyAddress,
-      input.interestRateStrategyAddress
+      input.strategy
     );
   }
 
@@ -422,14 +422,11 @@ contract LendingPoolConfigurator is
   /**
    * @dev Sets the interest rate strategy of a reserve
    * @param asset The address of the underlying asset of the reserve
-   * @param rateStrategyAddress The new address of the interest strategy contract
+   * @param strategy The new address of the interest strategy contract
    **/
-  function setReserveInterestRateStrategyAddress(address asset, address rateStrategyAddress)
-    external
-    onlyPoolAdmin
-  {
-    pool.setReserveInterestRateStrategyAddress(asset, rateStrategyAddress);
-    emit ReserveInterestRateStrategyChanged(asset, rateStrategyAddress);
+  function setReserveStrategy(address asset, address strategy) external onlyPoolAdmin {
+    pool.setReserveStrategy(asset, strategy);
+    emit ReserveStrategyChanged(asset, strategy);
   }
 
   function _initTokenWithProxy(address impl, bytes memory initParams) internal returns (address) {
