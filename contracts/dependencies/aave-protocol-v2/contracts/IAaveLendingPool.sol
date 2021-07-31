@@ -1,13 +1,32 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
-library DataTypes {
-  uint64 public constant MASK_ASSET_TYPE = 0x0F;
-  uint64 public constant ASSET_TYPE_INTERNAL = 0;
-  uint64 public constant ASSET_TYPE_AAVE = 0x01;
-  uint64 public constant ASSET_TYPE_DELEGATED = 0x0F;
+interface IAaveLendingPool {
+  /**
+   * @dev Returns the normalized income normalized income of the reserve
+   * @param asset The address of the underlying asset of the reserve
+   * @return The reserve's normalized income
+   */
+  function getReserveNormalizedIncome(address asset) external view returns (uint256);
 
-  // refer to the AAVE whitepaper, section 1.1 basic concepts for a formal description of these properties.
+  /**
+   * @dev Returns the normalized variable debt per unit of asset
+   * @param asset The address of the underlying asset of the reserve
+   * @return The reserve normalized variable debt
+   */
+  function getReserveNormalizedVariableDebt(address asset) external view returns (uint256);
+
+  /**
+   * @dev Returns the state and configuration of the reserve
+   * @param asset The address of the underlying asset of the reserve
+   * @return The state of the reserve
+   **/
+  function getReserveData(address asset) external view returns (AaveDataTypes.ReserveData memory);
+}
+
+library AaveDataTypes {
+  // refer to the whitepaper, section 1.1 basic concepts for a formal description of these properties.
   struct ReserveData {
     //stores the reserve configuration
     ReserveConfigurationMap configuration;
@@ -21,16 +40,15 @@ library DataTypes {
     uint128 currentVariableBorrowRate;
     //the current stable borrow rate. Expressed in ray
     uint128 currentStableBorrowRate;
-    uint64 reserveFlags;
     uint40 lastUpdateTimestamp;
-    //the id of the reserve. Represents the position in the list of the active reserves
-    uint8 id;
     //tokens addresses
     address aTokenAddress;
     address stableDebtTokenAddress;
     address variableDebtTokenAddress;
     //address of the interest rate strategy
-    address strategy;
+    address interestRateStrategyAddress;
+    //the id of the reserve. Represents the position in the list of the active reserves
+    uint8 id;
   }
 
   struct ReserveConfigurationMap {
@@ -52,13 +70,4 @@ library DataTypes {
   }
 
   enum InterestRateMode {NONE, STABLE, VARIABLE}
-
-  struct InitReserveData {
-    address asset;
-    address depositTokenAddress;
-    address stableDebtAddress;
-    address variableDebtAddress;
-    address strategy;
-    uint64 reserveFlags;
-  }
 }

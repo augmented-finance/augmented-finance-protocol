@@ -123,7 +123,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     uint256 amount,
     address onBehalfOf,
     uint256 referral
-  ) external override whenNotPaused notNested {
+  ) public override whenNotPaused notNested {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateDeposit(reserve, amount);
@@ -131,7 +131,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     address depositToken = reserve.aTokenAddress;
 
     uint256 liquidityIndex = reserve.updateStateForDeposit(asset);
-    reserve.updateInterestRatesBeforeTransferFrom(asset, depositToken, amount);
+    reserve.updateInterestRates(asset, depositToken, amount, 0);
 
     IERC20(asset).safeTransferFrom(msg.sender, depositToken, amount);
 
@@ -185,7 +185,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     );
 
     uint256 liquidityIndex = reserve.updateStateForDeposit(asset);
-    reserve.updateInterestRatesBeforeTransferOut(asset, depositToken, amountToWithdraw);
+    reserve.updateInterestRates(asset, depositToken, 0, amountToWithdraw);
 
     if (amountToWithdraw == userBalance) {
       _usersConfig[msg.sender].setUsingAsCollateral(reserve.id, false);
@@ -282,7 +282,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     }
 
     address depositToken = reserve.aTokenAddress;
-    reserve.updateInterestRatesBeforeTransferFrom(asset, depositToken, paybackAmount);
+    reserve.updateInterestRates(asset, depositToken, paybackAmount, 0);
 
     if (stableDebt.add(variableDebt).sub(paybackAmount) == 0) {
       _usersConfig[onBehalfOf].setBorrowing(reserve.id, false);
@@ -341,7 +341,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
       );
     }
 
-    reserve.updateInterestRates(asset, reserve.aTokenAddress);
+    reserve.updateInterestRates(asset, reserve.aTokenAddress, 0, 0);
 
     emit Swap(asset, msg.sender, rateMode);
   }
@@ -382,7 +382,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
       reserve.currentStableBorrowRate
     );
 
-    reserve.updateInterestRates(asset, depositToken);
+    reserve.updateInterestRates(asset, depositToken, 0, 0);
 
     emit RebalanceStableBorrowRate(asset, user);
   }
@@ -452,7 +452,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
    * as long as the amount taken plus a fee is returned.
    * IMPORTANT There are security concerns for developers of flashloan receiver contracts that must be kept into consideration.
    * For further details please visit https://developers.aave.com
-   * @param receiverAddress The address of the contract receiving the funds, implementing the IFlashLoanReceiver interface
+   * @param receiver The address of the contract receiving the funds, implementing the IFlashLoanReceiver interface
    * @param assets The addresses of the assets being flash-borrowed
    * @param amounts The amounts amounts being flash-borrowed
    * @param modes Types of the debt to open if the flash loan is not returned:
@@ -465,7 +465,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
    *   0 if the action is executed directly by the user, without any middle-man
    **/
   function flashLoan(
-    address receiverAddress,
+    address receiver,
     address[] calldata assets,
     uint256[] calldata amounts,
     uint256[] calldata modes,
@@ -473,8 +473,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     bytes calldata params,
     uint256 referral
   ) external override whenNotPaused {
-    require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_RESTRICTED_FEATURE);
-    receiverAddress;
+    receiver;
     assets;
     amounts;
     modes;
@@ -485,7 +484,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
   }
 
   function sponsoredFlashLoan(
-    address receiverAddress,
+    address receiver,
     address[] calldata assets,
     uint256[] calldata amounts,
     uint256[] calldata modes,
@@ -497,7 +496,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
       _addressesProvider.hasAllOf(msg.sender, AccessFlags.POOL_SPONSORED_LOAN_USER),
       Errors.LP_IS_NOT_SPONSORED_LOAN
     );
-    receiverAddress;
+    receiver;
     assets;
     amounts;
     modes;

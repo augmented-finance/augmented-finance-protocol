@@ -178,10 +178,11 @@ contract LendingPoolCollateralManager is
       );
     }
 
-    debtReserve.updateInterestRatesBeforeTransferFrom(
+    debtReserve.updateInterestRates(
       debtAsset,
       debtReserve.aTokenAddress,
-      vars.actualDebtToLiquidate
+      vars.actualDebtToLiquidate,
+      0
     );
 
     if (receiveDepositToken) {
@@ -201,9 +202,10 @@ contract LendingPoolCollateralManager is
       }
     } else {
       uint256 liquidityIndex = collateralReserve.updateStateForDeposit(collateralAsset);
-      collateralReserve.updateInterestRatesBeforeTransferOut(
+      collateralReserve.updateInterestRates(
         collateralAsset,
         address(vars.collateralDepositToken),
+        0,
         vars.maxCollateralToLiquidate
       );
 
@@ -321,6 +323,29 @@ contract LendingPoolCollateralManager is
     bytes calldata params,
     uint256 referral
   ) external override countCalls {
+    require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_RESTRICTED_FEATURE);
+    _flashLoan(
+      receiver,
+      assets,
+      amounts,
+      modes,
+      onBehalfOf,
+      params,
+      referral,
+      _flashLoanPremiumPct
+    );
+  }
+
+  function flashLoan(
+    address receiver,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint16 referral
+  ) external override countCalls {
+    require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_RESTRICTED_FEATURE);
     _flashLoan(
       receiver,
       assets,
@@ -464,10 +489,11 @@ contract LendingPoolCollateralManager is
       IERC20(vars.currentDepositToken).totalSupply(),
       vars.currentPremium
     );
-    _reserves[vars.currentAsset].updateInterestRatesBeforeTransferFrom(
+    _reserves[vars.currentAsset].updateInterestRates(
       vars.currentAsset,
       vars.currentDepositToken,
-      vars.currentAmountPlusPremium
+      vars.currentAmountPlusPremium,
+      0
     );
 
     IERC20(vars.currentAsset).safeTransferFrom(
@@ -498,13 +524,34 @@ contract LendingPoolCollateralManager is
     );
   }
 
+  function borrow(
+    address asset,
+    uint256 amount,
+    uint256 interestRateMode,
+    uint16 referral,
+    address onBehalfOf
+  ) external override {
+    _executeBorrow(
+      ExecuteBorrowParams(
+        asset,
+        msg.sender,
+        onBehalfOf,
+        amount,
+        interestRateMode,
+        _reserves[asset].aTokenAddress,
+        referral,
+        true
+      )
+    );
+  }
+
   struct ExecuteBorrowParams {
     address asset;
     address user;
     address onBehalfOf;
     uint256 amount;
     uint256 interestRateMode;
-    address aTokenAddress;
+    address depositToken;
     uint256 referral;
     bool releaseUnderlying;
   }
@@ -567,12 +614,14 @@ contract LendingPoolCollateralManager is
       userConfig.setBorrowing(reserve.id, true);
     }
 
+    reserve.updateInterestRates(
+      vars.asset,
+      vars.depositToken,
+      0,
+      vars.releaseUnderlying ? vars.amount : 0
+    );
     if (vars.releaseUnderlying) {
-      reserve.updateInterestRatesBeforeTransferOut(vars.asset, vars.aTokenAddress, vars.amount);
-
-      IDepositToken(vars.aTokenAddress).transferUnderlyingTo(vars.user, vars.amount);
-    } else {
-      reserve.updateInterestRates(vars.asset, vars.aTokenAddress);
+      IDepositToken(vars.depositToken).transferUnderlyingTo(vars.user, vars.amount);
     }
 
     emit Borrow(

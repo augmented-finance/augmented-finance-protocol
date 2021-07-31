@@ -51,7 +51,7 @@ import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
 import { getFirstSigner, getFromJsonDb, hasInJsonDb } from './misc-utils';
 import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } from './types';
-import { TreasuryRewardPoolFactory } from '../types/TreasuryRewardPoolFactory';
+import { ILendingPoolAaveCompatibleFactory } from '../types/ILendingPoolAaveCompatibleFactory';
 
 const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
 
@@ -402,3 +402,6 @@ export const getAGFTokenV1Impl = async (address: tEthereumAddress) =>
 
 export const getIManagedRewardPool = async (address: tEthereumAddress) =>
   IManagedRewardPoolFactory.connect(address, await getFirstSigner());
+
+export const getILendingPoolAaveCompatible = async (address: tEthereumAddress) =>
+  ILendingPoolAaveCompatibleFactory.connect(address, await getFirstSigner());
