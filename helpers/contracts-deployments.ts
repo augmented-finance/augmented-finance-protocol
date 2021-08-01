@@ -28,9 +28,8 @@ import {
   DefaultReserveInterestRateStrategyFactory,
   DelegationAwareDepositTokenFactory,
   AddressesProviderRegistryFactory,
-  LendingPoolCollateralManagerFactory,
+  LendingPoolExtensionFactory,
   LendingPoolConfiguratorFactory,
-  LendingPoolFactory,
   LendingRateOracleFactory,
   MintableDelegationERC20Factory,
   MintableERC20Factory,
@@ -63,6 +62,7 @@ import {
   MockRewardedTokenLockerFactory,
   StaticPriceOracleFactory,
   ReferralRewardPoolFactory,
+  LendingPoolCompatibleFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -72,7 +72,6 @@ import {
   withSaveAndVerifyOnce,
 } from './contracts-helpers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { LendingPoolLibraryAddresses } from '../types/LendingPoolFactory';
 import { TreasuryRewardPoolFactory } from '../types/TreasuryRewardPoolFactory';
 import { ReferralRewardPoolV1Factory } from '../types/ReferralRewardPoolV1Factory';
 import { RewardBoosterV1Factory } from '../types/RewardBoosterV1Factory';
@@ -155,34 +154,46 @@ export const deployValidationLogic = async (
   return withSaveAndVerify(validationLogic, eContractid.ValidationLogic, [], verify);
 };
 
-export const deployLibraries = async (verify?: boolean): Promise<LendingPoolLibraryAddresses> => {
-  const reserveLogic = await deployReserveLogicLibrary(verify);
-  const genericLogic = await deployGenericLogic(reserveLogic, verify);
-  const validationLogic = await deployValidationLogic(reserveLogic, genericLogic, verify);
+// const deployLendingPoolLibraries = async (
+//   verify?: boolean
+// ): Promise<LendingPoolLibraryAddresses> => {
+//   const reserveLogic = await deployReserveLogicLibrary(verify);
+//   const genericLogic = await deployGenericLogic(reserveLogic, verify);
+//   const validationLogic = await deployValidationLogic(reserveLogic, genericLogic, verify);
 
-  // Hardcoded solidity placeholders, if any library changes path this will fail.
-  // tslint:disable-next-line:max-line-length
-  // The '__$PLACEHOLDER$__ can be calculated via solidity keccak, but the LendingPoolLibraryAddresses Type seems to
-  // require a hardcoded string.
-  //
-  //  how-to:
-  //  1. PLACEHOLDER = solidityKeccak256(['string'], `${libPath}:${libName}`).slice(2, 36)
-  //  2. LIB_PLACEHOLDER = `__$${PLACEHOLDER}$__`
-  // or grab placeholdes from LendingPoolLibraryAddresses at Typechain generation.
-  //
-  // libPath example: contracts/libraries/logic/GenericLogic.sol
-  // libName example: GenericLogic
-  return {
-    ['__$de8c0cf1a7d7c36c802af9a64fb9d86036$__']: validationLogic.address,
-    ['__$22cd43a9dda9ce44e9b92ba393b88fb9ac$__']: reserveLogic.address,
-  };
-};
+//   // Hardcoded solidity placeholders, if any library changes path this will fail.
+//   // tslint:disable-next-line:max-line-length
+//   // The '__$PLACEHOLDER$__ can be calculated via solidity keccak, but the LendingPoolLibraryAddresses Type seems to
+//   // require a hardcoded string.
+//   //
+//   //  how-to:
+//   //  1. PLACEHOLDER = solidityKeccak256(['string'], `${libPath}:${libName}`).slice(2, 36)
+//   //  2. LIB_PLACEHOLDER = `__$${PLACEHOLDER}$__`
+//   // or grab placeholdes from LendingPoolLibraryAddresses at Typechain generation.
+//   //
+//   // libPath example: contracts/libraries/logic/GenericLogic.sol
+//   // libName example: GenericLogic
+//   return {
+//     ['__$de8c0cf1a7d7c36c802af9a64fb9d86036$__']: validationLogic.address,
+//     ['__$22cd43a9dda9ce44e9b92ba393b88fb9ac$__']: reserveLogic.address,
+//   };
+// };
 
 export const deployLendingPoolImpl = async (verify: boolean, once: boolean) => {
-  const libraries = await deployLibraries(verify);
-  return withSaveAndVerifyOnce(
-    new LendingPoolFactory(libraries, await getFirstSigner()),
+  // const libraries = await deployLendingPoolLibraries(verify);
+  return await withSaveAndVerifyOnce(
+    new LendingPoolCompatibleFactory(/* libraries, */ await getFirstSigner()),
     eContractid.LendingPoolImpl,
+    [],
+    verify,
+    once
+  );
+};
+
+export const deployLendingPoolExtensionImpl = async (verify: boolean, once: boolean) => {
+  return await withSaveAndVerifyOnce(
+    new LendingPoolExtensionFactory(/* libraries, */ await getFirstSigner()),
+    eContractid.LendingPoolExtensionImpl,
     [],
     verify,
     once
@@ -239,15 +250,6 @@ export const deployStaticPriceOracle = async (
     eContractid.StaticPriceOracle,
     [],
     verify
-  );
-
-export const deployLendingPoolCollateralManagerImpl = async (verify: boolean, once: boolean) =>
-  withSaveAndVerifyOnce(
-    new LendingPoolCollateralManagerFactory(await getFirstSigner()),
-    eContractid.LendingPoolCollateralManagerImpl,
-    [],
-    verify,
-    once
   );
 
 export const deployMockFlashLoanReceiver = async (

@@ -12,7 +12,7 @@ import {IVariableDebtToken} from '../interfaces/IVariableDebtToken.sol';
 import {ReserveConfiguration} from '../protocol/libraries/configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../protocol/libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
-import {IReserveInterestRateStrategy} from '../interfaces/IReserveInterestRateStrategy.sol';
+import {IReserveStrategy} from '../interfaces/IReserveStrategy.sol';
 import {IPoolAddressProvider} from '../interfaces/IPoolAddressProvider.sol';
 import {IUiPoolDataProvider} from './interfaces/IUiPoolDataProvider.sol';
 import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
@@ -386,7 +386,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     );
   }
 
-  function getInterestRateStrategySlopes(IReserveInterestRateStrategy interestRateStrategy)
+  function getInterestRateStrategySlopes(IReserveStrategy interestRateStrategy)
     internal
     view
     returns (
@@ -465,7 +465,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       reserveData.depositTokenAddress = baseData.aTokenAddress;
       reserveData.stableDebtTokenAddress = baseData.stableDebtTokenAddress;
       reserveData.variableDebtTokenAddress = baseData.variableDebtTokenAddress;
-      reserveData.interestRateStrategyAddress = baseData.interestRateStrategyAddress;
+      reserveData.strategy = baseData.strategy;
       reserveData.priceInEth = oracle.getAssetPrice(reserveData.pricingAsset);
 
       reserveData.availableLiquidity = IERC20Detailed(reserveData.underlyingAsset).balanceOf(
@@ -505,9 +505,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         reserveData.variableRateSlope2,
         reserveData.stableRateSlope1,
         reserveData.stableRateSlope2
-      ) = getInterestRateStrategySlopes(
-        IReserveInterestRateStrategy(reserveData.interestRateStrategyAddress)
-      );
+      ) = getInterestRateStrategySlopes(IReserveStrategy(reserveData.strategy));
 
       if (user != address(0)) {
         // user reserve data

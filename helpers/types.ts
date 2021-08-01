@@ -61,7 +61,7 @@ export enum eContractid {
   VariableDebtTokenImpl = 'VariableDebtTokenImpl',
   LendingPoolImpl = 'LendingPoolImpl',
   LendingPoolConfiguratorImpl = 'LendingPoolConfiguratorImpl',
-  LendingPoolCollateralManagerImpl = 'LendingPoolCollateralManagerImpl',
+  LendingPoolExtensionImpl = 'LendingPoolExtensionImpl',
   StakeConfiguratorImpl = 'StakeConfiguratorImpl',
   StakeTokenImpl = 'StakeTokenImpl',
   TreasuryImpl = 'TreasuryImpl',
@@ -110,7 +110,7 @@ export enum eContractid {
  *  - LPAPR = AddressesProviderRegistry
  *  - LPC = LendingPoolConfiguration
  *  - RL = ReserveLogic
- *  - LPCM = LendingPoolCollateralManager
+ *  - LPCM = LendingPoolExtension
  *  - P = Pausable
  */
 export enum ProtocolErrors {

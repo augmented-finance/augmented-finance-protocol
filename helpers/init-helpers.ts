@@ -1,7 +1,5 @@
 import {
   eContractid,
-  eEthereumNetwork,
-  eNetwork,
   iMultiPoolsAssets,
   IReserveParams,
   ITokenNames,
@@ -11,7 +9,7 @@ import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, waitForTx } from './misc-utils';
 import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contracts-getters';
 import { registerContractInJsonDb } from './contracts-helpers';
-import { BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import {
   deployDefaultReserveInterestRateStrategy,
   deployDelegationAwareDepositToken,
@@ -57,7 +55,7 @@ export const initReservesByHelper = async (
     stableDebtTokenImpl: string;
     variableDebtTokenImpl: string;
     underlyingAssetDecimals: BigNumberish;
-    interestRateStrategyAddress: string;
+    strategy: string;
     underlyingAsset: string;
     treasury: string;
     incentivesController: string;
@@ -68,6 +66,7 @@ export const initReservesByHelper = async (
     variableDebtTokenSymbol: string;
     stableDebtTokenName: string;
     stableDebtTokenSymbol: string;
+    reserveFlags: BigNumberish;
     params: string;
   }[] = [];
 
@@ -184,7 +183,7 @@ export const initReservesByHelper = async (
       stableDebtTokenImpl: stableDebtTokenImpl.address,
       variableDebtTokenImpl: variableDebtTokenImpl.address,
       underlyingAssetDecimals: reserveInitDecimals[i],
-      interestRateStrategyAddress: strategyAddressPerAsset[reserveSymbol],
+      strategy: strategyAddressPerAsset[reserveSymbol],
       underlyingAsset: reserveTokens[i],
       treasury: treasuryAddress,
       incentivesController: ZERO_ADDRESS,
@@ -199,6 +198,7 @@ export const initReservesByHelper = async (
       stableDebtTokenName: `${names.StableDebtTokenNamePrefix} ${reserveSymbol}`,
       stableDebtTokenSymbol: `${names.StableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
 
+      reserveFlags: BigNumber.from(0),
       params: '0x10',
     });
   }

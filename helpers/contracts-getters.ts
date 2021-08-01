@@ -6,7 +6,7 @@ import {
   InitializableAdminUpgradeabilityProxyFactory,
   MarketAccessControllerFactory,
   AddressesProviderRegistryFactory,
-  LendingPoolCollateralManagerFactory,
+  LendingPoolExtensionFactory,
   LendingPoolConfiguratorFactory,
   LendingPoolFactory,
   LendingRateOracleFactory,
@@ -29,7 +29,6 @@ import {
   MockStakedAgfTokenFactory,
   TeamRewardPoolFactory,
   PermitFreezerRewardPoolFactory,
-  AccessControllerFactory,
   DepositToken,
   TokenWeightedRewardPoolFactory,
   RewardBoosterFactory,
@@ -51,7 +50,8 @@ import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 import { MockTokenMap } from './contracts-helpers';
 import { getFirstSigner, getFromJsonDb, hasInJsonDb } from './misc-utils';
 import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } from './types';
-import { TreasuryRewardPoolFactory } from '../types/TreasuryRewardPoolFactory';
+import { ILendingPoolAaveCompatibleFactory } from '../types/ILendingPoolAaveCompatibleFactory';
+import { IManagedLendingPoolFactory } from '../types/IManagedLendingPoolFactory';
 
 const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
 
@@ -256,9 +256,9 @@ export const getLendingPoolConfiguratorImpl = async (address?: tEthereumAddress)
     await getFirstSigner()
   );
 
-export const getLendingPoolCollateralManagerImpl = async (address?: tEthereumAddress) =>
-  LendingPoolCollateralManagerFactory.connect(
-    address || (await getAddr(eContractid.LendingPoolCollateralManagerImpl)),
+export const getLendingPoolExtensionImpl = async (address?: tEthereumAddress) =>
+  LendingPoolExtensionFactory.connect(
+    address || (await getAddr(eContractid.LendingPoolExtensionImpl)),
     await getFirstSigner()
   );
 
@@ -402,3 +402,9 @@ export const getAGFTokenV1Impl = async (address: tEthereumAddress) =>
 
 export const getIManagedRewardPool = async (address: tEthereumAddress) =>
   IManagedRewardPoolFactory.connect(address, await getFirstSigner());
+
+export const getILendingPoolAaveCompatible = async (address: tEthereumAddress) =>
+  ILendingPoolAaveCompatibleFactory.connect(address, await getFirstSigner());
+
+export const getIManagedLendingPool = async (address: tEthereumAddress) =>
+  IManagedLendingPoolFactory.connect(address, await getFirstSigner());

@@ -19,7 +19,7 @@ import {
   deployTreasuryImpl,
   deployLendingPoolConfiguratorImpl,
   deployLendingPoolImpl,
-  deployLendingPoolCollateralManagerImpl,
+  deployLendingPoolExtensionImpl,
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
 import { TokenContractId, tEthereumAddress, LendingPools } from '../../helpers/types';
@@ -101,12 +101,12 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const lendingPoolAddress = await addressProvider.getLendingPool();
   const lendingPoolProxy = await getLendingPoolProxy(lendingPoolAddress);
 
-  const collateralManager = await deployLendingPoolCollateralManagerImpl(false, false);
+  const poolExtensionImpl = await deployLendingPoolExtensionImpl(false, false);
   console.log(
     '\tSetting lending pool collateral manager implementation with address',
-    collateralManager.address
+    poolExtensionImpl.address
   );
-  await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address);
+  await lendingPoolProxy.setLendingPoolExtension(poolExtensionImpl.address);
 
   const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(false, false);
   await addressProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address);
