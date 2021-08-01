@@ -17,17 +17,7 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
   uint256 private _accumRate;
   mapping(uint32 => uint256) private _accumHistory;
 
-  uint256 private _maxWeightBase;
-  uint256 private constant minBitReserve = 32;
-
-  constructor(uint256 maxWeightBase) public {
-    require(maxWeightBase > 0, 'max total supply is unknown');
-
-    uint256 maxSupplyBits = BitUtils.bitLength(maxWeightBase);
-    require(maxSupplyBits + minBitReserve < 256, 'max total supply is too high');
-
-    _maxWeightBase = maxWeightBase; // (1 << maxSupplyBits) - 1;
-  }
+  uint256 private constant _maxWeightBase = 1e36;
 
   function internalTotalSupply() internal view virtual returns (uint256);
 

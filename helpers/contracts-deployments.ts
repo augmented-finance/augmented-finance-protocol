@@ -751,10 +751,7 @@ export const deployMockTokenLocker = async (
     controller: tEthereumAddress,
     initialRate: BigNumberish,
     baselinePercentage: BigNumberish,
-    underlying: tEthereumAddress,
-    pointPeriod: BigNumberish,
-    maxValuePeriod: BigNumberish,
-    maxWeightBase: BigNumberish
+    underlying: tEthereumAddress
   ],
   verify?: boolean
 ) =>
@@ -770,10 +767,7 @@ export const deployMockDecayingTokenLocker = async (
     controller: tEthereumAddress,
     initialRate: BigNumberish,
     baselinePercentage: BigNumberish,
-    underlying: tEthereumAddress,
-    pointPeriod: BigNumberish,
-    maxValuePeriod: BigNumberish,
-    maxWeightBase: BigNumberish
+    underlying: tEthereumAddress
   ],
   verify?: boolean
 ) =>
@@ -852,7 +846,7 @@ export const deployNamedPermitFreezerRewardPool = async (
   );
 
 export const deployTokenWeightedRewardPoolAGFBoosted = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -863,7 +857,7 @@ export const deployTokenWeightedRewardPoolAGFBoosted = async (
   );
 
 export const deployTokenWeightedRewardPoolAGFSeparate = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -874,7 +868,7 @@ export const deployTokenWeightedRewardPoolAGFSeparate = async (
   );
 
 export const deployTokenWeightedRewardPoolAG = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -885,7 +879,7 @@ export const deployTokenWeightedRewardPoolAG = async (
   );
 
 export const deployTokenWeightedRewardPoolAGBoosted = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -896,7 +890,7 @@ export const deployTokenWeightedRewardPoolAGBoosted = async (
   );
 
 export const deployTokenWeightedRewardPoolAGUSDCBoosted = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish, BigNumberish],
+  args: [tEthereumAddress, BigNumberish, BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(

@@ -42,9 +42,6 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
       1e6,
       0,
       agfToken.address,
-      WEEK,
-      MAX_LOCKER_PERIOD,
-      RAY_100,
     ]);
     await waitForTx(await rewardBooster.addRewardPool(decayLocker.address));
   }

@@ -12,22 +12,8 @@ contract MockRewardedTokenLocker is RewardedTokenLocker {
     IRewardController controller,
     uint256 initialRate,
     uint16 baselinePercentage,
-    address underlying,
-    uint32 pointPeriod,
-    uint32 maxValuePeriod,
-    uint256 maxWeightBase
-  )
-    public
-    RewardedTokenLocker(
-      controller,
-      initialRate,
-      baselinePercentage,
-      underlying,
-      pointPeriod,
-      maxValuePeriod,
-      maxWeightBase
-    )
-  {}
+    address underlying
+  ) public RewardedTokenLocker(controller, initialRate, baselinePercentage, underlying) {}
 
   function isController(address addr) internal view override returns (bool) {
     return addr != address(0);
