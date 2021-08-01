@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config';
 import {
-  deployLendingPoolCollateralManagerImpl,
+  deployLendingPoolExtensionImpl,
   deployLendingPoolConfiguratorImpl,
   deployLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
@@ -38,13 +38,13 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
     const lendingPoolProxy = await getLendingPoolProxy(lpAddress);
     console.log('Lending pool:', lpAddress);
 
-    let lpExt = newLendingPool ? '' : await lendingPoolProxy.getLendingPoolCollateralManager();
+    let lpExt = newLendingPool ? '' : await lendingPoolProxy.getLendingPoolExtension();
     if (falsyOrZeroAddress(lpExt)) {
       console.log('\tDeploying collateral manager...');
-      const collateralManager = await deployLendingPoolCollateralManagerImpl(verify, continuation);
+      const poolExtension = await deployLendingPoolExtensionImpl(verify, continuation);
       await addressProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN);
-      await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address);
-      lpExt = collateralManager.address;
+      await lendingPoolProxy.setLendingPoolExtension(poolExtension.address);
+      lpExt = poolExtension.address;
     }
     console.log('Collateral manager:', lpExt);
 

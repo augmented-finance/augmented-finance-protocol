@@ -26,13 +26,13 @@ contract LendingPoolCompatible is LendingPool, ILendingPoolAaveCompatible {
     uint256 interestRateMode,
     uint16 referral,
     address onBehalfOf
-  ) external override whenNotPaused notNested {
+  ) external override {
     asset;
     amount;
     interestRateMode;
     referral;
     onBehalfOf;
-    _delegate(_collateralManager);
+    _delegate(_extension);
   }
 
   /// @dev AAVE compatibility method
@@ -44,7 +44,7 @@ contract LendingPoolCompatible is LendingPool, ILendingPoolAaveCompatible {
     address onBehalfOf,
     bytes calldata params,
     uint16 referral
-  ) external override whenNotPaused {
+  ) external override {
     receiver;
     assets;
     amounts;
@@ -52,6 +52,6 @@ contract LendingPoolCompatible is LendingPool, ILendingPoolAaveCompatible {
     onBehalfOf;
     params;
     referral;
-    _delegate(_collateralManager);
+    _delegate(_extension);
   }
 }

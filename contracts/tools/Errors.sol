@@ -16,7 +16,7 @@ pragma solidity 0.6.12;
  *  - LPAPR = AddressesProviderRegistry
  *  - LPC = LendingPoolConfiguration
  *  - RL = ReserveLogic
- *  - LPCM = LendingPoolCollateralManager
+ *  - LPCM = LendingPoolExtension
  *  - P = Pausable
  */
 library Errors {

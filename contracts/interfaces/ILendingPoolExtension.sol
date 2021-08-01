@@ -5,10 +5,10 @@ import {ILendingPool} from './ILendingPool.sol';
 import {ILendingPoolAaveCompatible} from './ILendingPoolAaveCompatible.sol';
 
 /**
- * @title ILendingPoolCollateralManager
+ * @title ILendingPoolExtension
  * @notice Delegate of LendingPool for borrow, flashloan and collateral.
  **/
-interface ILendingPoolCollateralManager {
+interface ILendingPoolExtension {
   function liquidationCall(
     address collateralAsset,
     address debtAsset,
@@ -64,15 +64,19 @@ interface ILendingPoolCollateralManager {
   ) external;
 }
 
-/// @dev This interface is to ensure signature compatibility of calls delegated from ILendingPool to ILendingPoolCollateralManager
-interface DoNotUseLendingPoolChecker is ILendingPool, ILendingPoolCollateralManager {
+/// @dev This interface is to ensure signature compatibility of calls delegated from ILendingPool to ILendingPoolExtension
+interface DoNotUseLendingPoolChecker is
+  ILendingPool,
+  ILendingPoolAaveCompatible,
+  ILendingPoolExtension
+{
   function borrow(
     address,
     uint256,
     uint256,
     uint256,
     address
-  ) external override(ILendingPoolCollateralManager, ILendingPool);
+  ) external override(ILendingPoolExtension, ILendingPool);
 
   function liquidationCall(
     address,
@@ -80,7 +84,7 @@ interface DoNotUseLendingPoolChecker is ILendingPool, ILendingPoolCollateralMana
     address,
     uint256,
     bool
-  ) external override(ILendingPoolCollateralManager, ILendingPool);
+  ) external override(ILendingPoolExtension, ILendingPool);
 
   function flashLoan(
     address,
@@ -90,7 +94,7 @@ interface DoNotUseLendingPoolChecker is ILendingPool, ILendingPoolCollateralMana
     address,
     bytes calldata,
     uint256
-  ) external override(ILendingPoolCollateralManager, ILendingPool);
+  ) external override(ILendingPoolExtension, ILendingPool);
 
   function sponsoredFlashLoan(
     address,
@@ -100,21 +104,15 @@ interface DoNotUseLendingPoolChecker is ILendingPool, ILendingPoolCollateralMana
     address,
     bytes calldata,
     uint256
-  ) external override(ILendingPoolCollateralManager, ILendingPool);
-}
+  ) external override(ILendingPoolExtension, ILendingPool);
 
-/// @dev This interface is to ensure signature compatibility of calls delegated from ILendingPool to ILendingPoolCollateralManager
-interface DoNotUseLendingPoolCompatibleChecker is
-  ILendingPoolAaveCompatible,
-  ILendingPoolCollateralManager
-{
   function borrow(
     address,
     uint256,
     uint256,
     uint16,
     address
-  ) external override(ILendingPoolCollateralManager, ILendingPoolAaveCompatible);
+  ) external override(ILendingPoolExtension, ILendingPoolAaveCompatible);
 
   function flashLoan(
     address,
@@ -124,5 +122,5 @@ interface DoNotUseLendingPoolCompatibleChecker is
     address,
     bytes calldata,
     uint16
-  ) external override(ILendingPoolCollateralManager, ILendingPoolAaveCompatible);
+  ) external override(ILendingPoolExtension, ILendingPoolAaveCompatible);
 }

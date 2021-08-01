@@ -3,11 +3,10 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
-import {IEmergencyAccess} from '../interfaces/IEmergencyAccess.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
 import {ILendingPoolEvents} from './ILendingPoolEvents.sol';
 
-interface ILendingPool is IEmergencyAccess, ILendingPoolEvents {
+interface ILendingPool is ILendingPoolEvents {
   /**
    * @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
    * - E.g. User deposits 100 USDC and gets in return 100 aUSDC

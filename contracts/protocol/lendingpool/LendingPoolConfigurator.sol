@@ -15,7 +15,6 @@ import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
 import {IInitializablePoolToken} from '../tokenization/interfaces/IInitializablePoolToken.sol';
 import {PoolTokenConfig} from '../tokenization/interfaces/PoolTokenConfig.sol';
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
 import {ILendingPoolConfigurator} from '../../interfaces/ILendingPoolConfigurator.sol';
 
 /**

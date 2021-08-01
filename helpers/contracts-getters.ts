@@ -6,7 +6,7 @@ import {
   InitializableAdminUpgradeabilityProxyFactory,
   MarketAccessControllerFactory,
   AddressesProviderRegistryFactory,
-  LendingPoolCollateralManagerFactory,
+  LendingPoolExtensionFactory,
   LendingPoolConfiguratorFactory,
   LendingPoolFactory,
   LendingRateOracleFactory,
@@ -256,9 +256,9 @@ export const getLendingPoolConfiguratorImpl = async (address?: tEthereumAddress)
     await getFirstSigner()
   );
 
-export const getLendingPoolCollateralManagerImpl = async (address?: tEthereumAddress) =>
-  LendingPoolCollateralManagerFactory.connect(
-    address || (await getAddr(eContractid.LendingPoolCollateralManagerImpl)),
+export const getLendingPoolExtensionImpl = async (address?: tEthereumAddress) =>
+  LendingPoolExtensionFactory.connect(
+    address || (await getAddr(eContractid.LendingPoolExtensionImpl)),
     await getFirstSigner()
   );
 

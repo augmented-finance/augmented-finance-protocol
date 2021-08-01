@@ -8,7 +8,7 @@ import {IDepositToken} from '../../interfaces/IDepositToken.sol';
 import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
 import {IPriceOracleGetter} from '../../interfaces/IPriceOracleGetter.sol';
-import {ILendingPoolCollateralManager} from '../../interfaces/ILendingPoolCollateralManager.sol';
+import {ILendingPoolExtension} from '../../interfaces/ILendingPoolExtension.sol';
 import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
 import {GenericLogic} from '../libraries/logic/GenericLogic.sol';
 import {Helpers} from '../libraries/helpers/Helpers.sol';
@@ -18,21 +18,25 @@ import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
-import {LendingPoolStorage} from './LendingPoolStorage.sol';
 import {IFlashLoanReceiver} from '../../flashloan/interfaces/IFlashLoanReceiver.sol';
 import {ILendingPoolEvents} from '../../interfaces/ILendingPoolEvents.sol';
+import {IOnlyManagedLendingPool} from '../../interfaces/IManagedLendingPool.sol';
+import {LendingPoolBase} from './LendingPoolBase.sol';
+import {AccessFlags} from '../../access/AccessFlags.sol';
+import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
 
 /**
- * @title LendingPoolCollateralManager contract
- * @dev Delegate of LendingPool for borrow, flashloan and collateral.
+ * @title LendingPoolExtension contract
+ * @dev Delegate of LendingPool for borrow, flashloan, collateral etc.
  * IMPORTANT This contract runs via DELEGATECALL from the LendingPool, so the chain of inheritance
  * is the same as the LendingPool, to have compatible storage layouts
  **/
-contract LendingPoolCollateralManager is
+contract LendingPoolExtension is
   VersionedInitializable,
-  LendingPoolStorage,
-  ILendingPoolCollateralManager,
-  ILendingPoolEvents
+  LendingPoolBase,
+  ILendingPoolExtension,
+  ILendingPoolEvents,
+  IOnlyManagedLendingPool
 {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -85,7 +89,9 @@ contract LendingPoolCollateralManager is
     address user,
     uint256 debtToCover,
     bool receiveDepositToken
-  ) external override {
+  ) external override whenNotPaused {
+    require(_disabledFeatures & FEATURE_LIQUIDATION == 0, Errors.LP_RESTRICTED_FEATURE);
+
     DataTypes.ReserveData storage collateralReserve = _reserves[collateralAsset];
     DataTypes.ReserveData storage debtReserve = _reserves[debtAsset];
     DataTypes.UserConfigurationMap storage userConfig = _usersConfig[user];
@@ -322,8 +328,9 @@ contract LendingPoolCollateralManager is
     address onBehalfOf,
     bytes calldata params,
     uint256 referral
-  ) external override countCalls {
+  ) external override whenNotPaused countCalls {
     require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_RESTRICTED_FEATURE);
+
     _flashLoan(
       receiver,
       assets,
@@ -344,8 +351,9 @@ contract LendingPoolCollateralManager is
     address onBehalfOf,
     bytes calldata params,
     uint16 referral
-  ) external override countCalls {
+  ) external override whenNotPaused countCalls {
     require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_RESTRICTED_FEATURE);
+
     _flashLoan(
       receiver,
       assets,
@@ -367,6 +375,11 @@ contract LendingPoolCollateralManager is
     bytes calldata params,
     uint256 referral
   ) external override countCalls {
+    require(
+      _addressesProvider.hasAllOf(msg.sender, AccessFlags.POOL_SPONSORED_LOAN_USER),
+      Errors.LP_IS_NOT_SPONSORED_LOAN
+    );
+
     _flashLoan(receiver, assets, amounts, modes, onBehalfOf, params, referral, 0);
   }
 
@@ -509,7 +522,7 @@ contract LendingPoolCollateralManager is
     uint256 interestRateMode,
     uint256 referral,
     address onBehalfOf
-  ) external override {
+  ) external override whenNotPaused notNested {
     _executeBorrow(
       ExecuteBorrowParams(
         asset,
@@ -530,7 +543,7 @@ contract LendingPoolCollateralManager is
     uint256 interestRateMode,
     uint16 referral,
     address onBehalfOf
-  ) external override {
+  ) external override whenNotPaused notNested {
     _executeBorrow(
       ExecuteBorrowParams(
         asset,
@@ -635,5 +648,151 @@ contract LendingPoolCollateralManager is
         : reserve.currentVariableBorrowRate,
       vars.referral
     );
+  }
+
+  /**
+   * @dev Updates the address of the interest rate strategy contract
+   * - Only callable by the LendingPoolConfigurator contract
+   * @param asset The address of the underlying asset of the reserve
+   * @param strategy The address of the interest rate strategy contract
+   **/
+  function setReserveStrategy(address asset, address strategy)
+    external
+    override
+    onlyLendingPoolConfigurator
+  {
+    _reserves[asset].strategy = strategy;
+  }
+
+  /**
+   * @dev Sets the configuration bitmap of the reserve as a whole
+   * - Only callable by the LendingPoolConfigurator contract
+   * @param asset The address of the underlying asset of the reserve
+   * @param configuration The new configuration bitmap
+   **/
+  function setConfiguration(address asset, uint256 configuration)
+    external
+    override
+    onlyLendingPoolConfigurator
+  {
+    _reserves[asset].configuration.data = configuration;
+  }
+
+  function setPaused(bool val) external override {
+    require(
+      _addressesProvider.hasAllOf(msg.sender, AccessFlags.EMERGENCY_ADMIN),
+      Errors.CALLER_NOT_EMERGENCY_ADMIN
+    );
+
+    _paused = val;
+    emit EmergencyPaused(msg.sender, val);
+  }
+
+  /**
+   * @dev Returns if the LendingPool is paused
+   */
+  function isPaused() external view override returns (bool) {
+    return _paused;
+  }
+
+  function setFlashLoanPremium(uint16 premium) external onlyConfiguratorOrAdmin {
+    require(premium <= PercentageMath.ONE && premium > 0, Errors.LP_INVALID_PERCENTAGE);
+    _flashLoanPremiumPct = premium;
+  }
+
+  function _addReserveToList(address asset) internal {
+    uint256 reservesCount = _reservesCount;
+
+    require(reservesCount < _maxNumberOfReserves, Errors.LP_NO_MORE_RESERVES_ALLOWED);
+
+    bool reserveAlreadyAdded = _reserves[asset].id != 0 || _reservesList[0] == asset;
+
+    if (!reserveAlreadyAdded) {
+      _reserves[asset].id = uint8(reservesCount);
+      _reservesList[reservesCount] = asset;
+
+      _reservesCount = uint8(reservesCount) + 1;
+    }
+  }
+
+  function setDisabledFeatures(uint16 disabledFeatures) external onlyConfiguratorOrAdmin {
+    _disabledFeatures = disabledFeatures;
+  }
+
+  function getDisabledFeatures() external view returns (uint16 disabledFeatures) {
+    return _disabledFeatures;
+  }
+
+  /**
+   * @dev Initializes a reserve, activating it, assigning an deposit and debt tokens and an
+   * interest rate strategy
+   * - Only callable by the LendingPoolConfigurator contract
+   **/
+  function initReserve(DataTypes.InitReserveData calldata data)
+    external
+    override
+    onlyLendingPoolConfigurator
+  {
+    require(Address.isContract(data.asset), Errors.LP_NOT_CONTRACT);
+    _reserves[data.asset].init(data);
+    _addReserveToList(data.asset);
+  }
+
+  /**
+   * @dev Validates and finalizes an depositToken transfer
+   * - Only callable by the overlying depositToken of the `asset`
+   * @param asset The address of the underlying asset of the depositToken
+   * @param from The user from which the depositToken are transferred
+   * @param to The user receiving the depositToken
+   * @param amount The amount being transferred/withdrawn
+   * @param balanceFromBefore The depositToken balance of the `from` user before the transfer
+   * @param balanceToBefore The depositToken balance of the `to` user before the transfer
+   */
+  function finalizeTransfer(
+    address asset,
+    address from,
+    address to,
+    uint256 amount,
+    uint256 balanceFromBefore,
+    uint256 balanceToBefore
+  ) external override whenNotPaused {
+    require(msg.sender == _reserves[asset].aTokenAddress, Errors.LP_CALLER_MUST_BE_AN_ATOKEN);
+
+    ValidationLogic.validateTransfer(
+      from,
+      _reserves,
+      _usersConfig[from],
+      _reservesList,
+      _reservesCount,
+      _addressesProvider.getPriceOracle()
+    );
+
+    uint256 reserveId = _reserves[asset].id;
+
+    if (from != to) {
+      if (balanceFromBefore.sub(amount) == 0) {
+        DataTypes.UserConfigurationMap storage fromConfig = _usersConfig[from];
+        fromConfig.setUsingAsCollateral(reserveId, false);
+        emit ReserveUsedAsCollateralDisabled(asset, from);
+      }
+
+      if (balanceToBefore == 0 && amount != 0) {
+        DataTypes.UserConfigurationMap storage toConfig = _usersConfig[to];
+        toConfig.setUsingAsCollateral(reserveId, true);
+        emit ReserveUsedAsCollateralEnabled(asset, to);
+      }
+    }
+  }
+
+  function getLendingPoolExtension() external view override returns (address) {
+    return _extension;
+  }
+
+  /**
+   * @dev Updates the address of the LendingPoolExtension
+   * @param manager The new LendingPoolExtension address
+   **/
+  function setLendingPoolExtension(address manager) external override onlyConfiguratorOrAdmin {
+    _extension = manager;
   }
 }

@@ -8,7 +8,6 @@ import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol
 import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 import {AccessHelper} from '../../access/AccessHelper.sol';
-import {AccessFlags} from '../../access/AccessFlags.sol';
 import {IDepositToken} from '../../interfaces/IDepositToken.sol';
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
 import {IFlashLoanReceiver} from '../../flashloan/interfaces/IFlashLoanReceiver.sol';
@@ -21,8 +20,8 @@ import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {GenericLogic} from '../libraries/logic/GenericLogic.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
 import {DataTypes} from '../libraries/types/DataTypes.sol';
-import {LendingPoolStorage} from './LendingPoolStorage.sol';
-import {IManagedLendingPool} from '../../interfaces/IManagedLendingPool.sol';
+import {LendingPoolBase} from './LendingPoolBase.sol';
+import {ILendingPool} from '../../interfaces/ILendingPool.sol';
 import {Delegator} from '../../tools/upgradeability/Delegator.sol';
 
 import 'hardhat/console.sol';
@@ -43,7 +42,7 @@ import 'hardhat/console.sol';
  * - All admin functions are callable by the LendingPoolConfigurator contract defined also in the
  *   AddressesProvider
  **/
-contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLendingPool, Delegator {
+contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, Delegator {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -51,44 +50,6 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
   using AccessHelper for IMarketAccessController;
 
   uint256 private constant POOL_REVISION = 0x1;
-
-  function _whenNotPaused() private view {
-    require(!_paused, Errors.LP_IS_PAUSED);
-  }
-
-  modifier whenNotPaused() {
-    _whenNotPaused();
-    _;
-  }
-
-  function _onlyLendingPoolConfigurator() private view {
-    require(
-      _addressesProvider.hasAllOf(msg.sender, AccessFlags.LENDING_POOL_CONFIGURATOR),
-      Errors.LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR
-    );
-  }
-
-  modifier onlyLendingPoolConfigurator() {
-    // This trick makes generated code smaller when modifier is applied multiple times.
-    _onlyLendingPoolConfigurator();
-    _;
-  }
-
-  function _onlyConfiguratorOrAdmin() private view {
-    require(
-      _addressesProvider.hasAnyOf(
-        msg.sender,
-        AccessFlags.POOL_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR
-      ),
-      Errors.CALLER_NOT_POOL_ADMIN
-    );
-  }
-
-  modifier onlyConfiguratorOrAdmin() {
-    // This trick makes generated code smaller when modifier is applied multiple times.
-    _onlyConfiguratorOrAdmin();
-    _;
-  }
 
   function getRevision() internal pure virtual override returns (uint256) {
     return POOL_REVISION;
@@ -105,6 +66,11 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     _addressesProvider = provider;
     _maxStableRateBorrowSizePct = 25 * PercentageMath.PCT;
     _flashLoanPremiumPct = 9 * PercentageMath.BP;
+  }
+
+  fallback() external {
+    // all IManagedLendingPool etc functions should be delegated to the extension
+    _delegate(_extension);
   }
 
   /**
@@ -220,13 +186,14 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     uint256 interestRateMode,
     uint256 referral,
     address onBehalfOf
-  ) external override whenNotPaused notNested {
+  ) external override {
+    // this is for compatibility with ILendingPool
     asset;
     amount;
     interestRateMode;
     referral;
     onBehalfOf;
-    _delegate(_collateralManager);
+    _delegate(_extension);
   }
 
   /**
@@ -436,15 +403,14 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     address user,
     uint256 debtToCover,
     bool receiveAToken
-  ) external override whenNotPaused {
-    require(_disabledFeatures & FEATURE_LIQUIDATION == 0, Errors.LP_RESTRICTED_FEATURE);
-
+  ) external override {
+    // this is for compatibility with ILendingPool
     collateralAsset;
     debtAsset;
     user;
     debtToCover;
     receiveAToken;
-    _delegate(_collateralManager);
+    _delegate(_extension);
   }
 
   /**
@@ -472,7 +438,8 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     address onBehalfOf,
     bytes calldata params,
     uint256 referral
-  ) external override whenNotPaused {
+  ) external override {
+    // this is for compatibility with ILendingPool
     receiver;
     assets;
     amounts;
@@ -480,7 +447,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     onBehalfOf;
     params;
     referral;
-    _delegate(_collateralManager);
+    _delegate(_extension);
   }
 
   function sponsoredFlashLoan(
@@ -492,10 +459,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     bytes calldata params,
     uint256 referral
   ) external override {
-    require(
-      _addressesProvider.hasAllOf(msg.sender, AccessFlags.POOL_SPONSORED_LOAN_USER),
-      Errors.LP_IS_NOT_SPONSORED_LOAN
-    );
+    // this is for compatibility with ILendingPool
     receiver;
     assets;
     amounts;
@@ -503,16 +467,7 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
     onBehalfOf;
     params;
     referral;
-    _delegate(_collateralManager);
-  }
-
-  function _notNested() private view {
-    require(_nestedCalls == 0, Errors.LP_TOO_MANY_NESTED_CALLS);
-  }
-
-  modifier notNested {
-    _notNested();
-    _;
+    _delegate(_extension);
   }
 
   /**
@@ -632,13 +587,6 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
   }
 
   /**
-   * @dev Returns if the LendingPool is paused
-   */
-  function isPaused() external view override returns (bool) {
-    return _paused;
-  }
-
-  /**
    * @dev Returns the list of the initialized reserves
    **/
   function getReservesList() external view override returns (address[] memory) {
@@ -684,151 +632,20 @@ contract LendingPool is VersionedInitializable, LendingPoolStorage, IManagedLend
   }
 
   /**
-   * @dev Validates and finalizes an aToken transfer
-   * - Only callable by the overlying aToken of the `asset`
-   * @param asset The address of the underlying asset of the aToken
-   * @param from The user from which the aTokens are transferred
-   * @param to The user receiving the aTokens
-   * @param amount The amount being transferred/withdrawn
-   * @param balanceFromBefore The aToken balance of the `from` user before the transfer
-   * @param balanceToBefore The aToken balance of the `to` user before the transfer
-   */
-  function finalizeTransfer(
-    address asset,
-    address from,
-    address to,
-    uint256 amount,
-    uint256 balanceFromBefore,
-    uint256 balanceToBefore
-  ) external override whenNotPaused {
-    require(msg.sender == _reserves[asset].aTokenAddress, Errors.LP_CALLER_MUST_BE_AN_ATOKEN);
-
-    ValidationLogic.validateTransfer(
-      from,
-      _reserves,
-      _usersConfig[from],
-      _reservesList,
-      _reservesCount,
-      _addressesProvider.getPriceOracle()
-    );
-
-    uint256 reserveId = _reserves[asset].id;
-
-    if (from != to) {
-      if (balanceFromBefore.sub(amount) == 0) {
-        DataTypes.UserConfigurationMap storage fromConfig = _usersConfig[from];
-        fromConfig.setUsingAsCollateral(reserveId, false);
-        emit ReserveUsedAsCollateralDisabled(asset, from);
-      }
-
-      if (balanceToBefore == 0 && amount != 0) {
-        DataTypes.UserConfigurationMap storage toConfig = _usersConfig[to];
-        toConfig.setUsingAsCollateral(reserveId, true);
-        emit ReserveUsedAsCollateralEnabled(asset, to);
-      }
-    }
-  }
-
-  /**
-   * @dev Initializes a reserve, activating it, assigning an aToken and debt tokens and an
-   * interest rate strategy
-   * - Only callable by the LendingPoolConfigurator contract
-   **/
-  function initReserve(DataTypes.InitReserveData calldata data)
-    external
-    override
-    onlyLendingPoolConfigurator
-  {
-    require(Address.isContract(data.asset), Errors.LP_NOT_CONTRACT);
-    _reserves[data.asset].init(data);
-    _addReserveToList(data.asset);
-  }
-
-  /**
-   * @dev Updates the address of the interest rate strategy contract
-   * - Only callable by the LendingPoolConfigurator contract
-   * @param asset The address of the underlying asset of the reserve
-   * @param strategy The address of the interest rate strategy contract
-   **/
-  function setReserveStrategy(address asset, address strategy)
-    external
-    override
-    onlyLendingPoolConfigurator
-  {
-    _reserves[asset].strategy = strategy;
-  }
-
-  /**
-   * @dev Sets the configuration bitmap of the reserve as a whole
-   * - Only callable by the LendingPoolConfigurator contract
-   * @param asset The address of the underlying asset of the reserve
-   * @param configuration The new configuration bitmap
-   **/
-  function setConfiguration(address asset, uint256 configuration)
-    external
-    override
-    onlyLendingPoolConfigurator
-  {
-    _reserves[asset].configuration.data = configuration;
-  }
-
-  function setPaused(bool val) external override {
-    require(
-      _addressesProvider.hasAllOf(msg.sender, AccessFlags.EMERGENCY_ADMIN),
-      Errors.CALLER_NOT_EMERGENCY_ADMIN
-    );
-
-    _paused = val;
-    emit EmergencyPaused(msg.sender, val);
-  }
-
-  function setFlashLoanPremium(uint16 premium) external onlyConfiguratorOrAdmin {
-    require(premium <= PercentageMath.ONE && premium > 0, Errors.LP_INVALID_PERCENTAGE);
-    _flashLoanPremiumPct = premium;
-  }
-
-  function _addReserveToList(address asset) internal {
-    uint256 reservesCount = _reservesCount;
-
-    require(reservesCount < _maxNumberOfReserves, Errors.LP_NO_MORE_RESERVES_ALLOWED);
-
-    bool reserveAlreadyAdded = _reserves[asset].id != 0 || _reservesList[0] == asset;
-
-    if (!reserveAlreadyAdded) {
-      _reserves[asset].id = uint8(reservesCount);
-      _reservesList[reservesCount] = asset;
-
-      _reservesCount = uint8(reservesCount) + 1;
-    }
-  }
-
-  function setDisabledFeatures(uint16 disabledFeatures) external onlyConfiguratorOrAdmin {
-    _disabledFeatures = disabledFeatures;
-  }
-
-  function getDisabledFeatures() external view returns (uint16 disabledFeatures) {
-    return _disabledFeatures;
-  }
-
-  /**
-   * @dev Returns the address of the LendingPoolCollateralManager. Since the manager is used
+   * @dev Returns the address of the LendingPoolExtension. Since the manager is used
    * through delegateCall within the LendingPool contract
-   * @return The address of the LendingPoolCollateralManager
+   * @return The address of the LendingPoolExtension
    **/
 
-  function getLendingPoolCollateralManager() external view override returns (address) {
-    return _collateralManager;
+  function getLendingPoolExtension() external view returns (address) {
+    return _extension;
   }
 
   /**
-   * @dev Updates the address of the LendingPoolCollateralManager
-   * @param manager The new LendingPoolCollateralManager address
+   * @dev Updates the address of the LendingPoolExtension
+   * @param manager The new LendingPoolExtension address
    **/
-  function setLendingPoolCollateralManager(address manager)
-    external
-    override
-    onlyConfiguratorOrAdmin
-  {
-    _collateralManager = manager;
+  function setLendingPoolExtension(address manager) external onlyConfiguratorOrAdmin {
+    _extension = manager;
   }
 }

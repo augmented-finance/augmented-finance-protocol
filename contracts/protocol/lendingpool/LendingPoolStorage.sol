@@ -14,7 +14,7 @@ abstract contract LendingPoolStorage {
   using UserConfiguration for DataTypes.UserConfigurationMap;
 
   IMarketAccessController internal _addressesProvider;
-  address internal _collateralManager;
+  address internal _extension;
 
   mapping(address => DataTypes.ReserveData) internal _reserves;
   mapping(address => DataTypes.UserConfigurationMap) internal _usersConfig;

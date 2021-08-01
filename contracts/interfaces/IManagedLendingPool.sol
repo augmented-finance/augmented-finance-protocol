@@ -4,8 +4,10 @@ pragma experimental ABIEncoderV2;
 
 import {ILendingPool} from './ILendingPool.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
+import {IEmergencyAccess} from '../interfaces/IEmergencyAccess.sol';
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 
-interface IManagedLendingPool is ILendingPool {
+interface IOnlyManagedLendingPool is IEmergencyAccess {
   function initReserve(DataTypes.InitReserveData calldata data) external;
 
   function setReserveStrategy(address reserve, address rateStrategyAddress) external;
@@ -21,7 +23,9 @@ interface IManagedLendingPool is ILendingPool {
     uint256 balanceToBefore
   ) external;
 
-  function getLendingPoolCollateralManager() external view returns (address);
+  function getLendingPoolExtension() external view returns (address);
 
-  function setLendingPoolCollateralManager(address) external;
+  function setLendingPoolExtension(address) external;
 }
+
+interface IManagedLendingPool is ILendingPool, IOnlyManagedLendingPool {}

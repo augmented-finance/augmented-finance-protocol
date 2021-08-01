@@ -28,7 +28,7 @@ import {
   DefaultReserveInterestRateStrategyFactory,
   DelegationAwareDepositTokenFactory,
   AddressesProviderRegistryFactory,
-  LendingPoolCollateralManagerFactory,
+  LendingPoolExtensionFactory,
   LendingPoolConfiguratorFactory,
   LendingRateOracleFactory,
   MintableDelegationERC20Factory,
@@ -190,10 +190,10 @@ export const deployLendingPoolImpl = async (verify: boolean, once: boolean) => {
   );
 };
 
-export const deployLendingPoolCollateralManagerImpl = async (verify: boolean, once: boolean) => {
+export const deployLendingPoolExtensionImpl = async (verify: boolean, once: boolean) => {
   return await withSaveAndVerifyOnce(
-    new LendingPoolCollateralManagerFactory(/* libraries, */ await getFirstSigner()),
-    eContractid.LendingPoolCollateralManagerImpl,
+    new LendingPoolExtensionFactory(/* libraries, */ await getFirstSigner()),
+    eContractid.LendingPoolExtensionImpl,
     [],
     verify,
     once
