@@ -29,7 +29,6 @@ import {
   MockStakedAgfTokenFactory,
   TeamRewardPoolFactory,
   PermitFreezerRewardPoolFactory,
-  AccessControllerFactory,
   DepositToken,
   TokenWeightedRewardPoolFactory,
   RewardBoosterFactory,
@@ -52,6 +51,7 @@ import { MockTokenMap } from './contracts-helpers';
 import { getFirstSigner, getFromJsonDb, hasInJsonDb } from './misc-utils';
 import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } from './types';
 import { ILendingPoolAaveCompatibleFactory } from '../types/ILendingPoolAaveCompatibleFactory';
+import { IManagedLendingPoolFactory } from '../types/IManagedLendingPoolFactory';
 
 const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
 
@@ -405,3 +405,6 @@ export const getIManagedRewardPool = async (address: tEthereumAddress) =>
 
 export const getILendingPoolAaveCompatible = async (address: tEthereumAddress) =>
   ILendingPoolAaveCompatibleFactory.connect(address, await getFirstSigner());
+
+export const getIManagedLendingPool = async (address: tEthereumAddress) =>
+  IManagedLendingPoolFactory.connect(address, await getFirstSigner());
