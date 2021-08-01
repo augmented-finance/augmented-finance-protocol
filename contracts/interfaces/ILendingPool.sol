@@ -8,12 +8,12 @@ import {ILendingPoolEvents} from './ILendingPoolEvents.sol';
 
 interface ILendingPool is ILendingPoolEvents {
   /**
-   * @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
+   * @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying depositTokens.
    * - E.g. User deposits 100 USDC and gets in return 100 aUSDC
    * @param asset The address of the underlying asset to deposit
    * @param amount The amount to be deposited
-   * @param onBehalfOf The address that will receive the aTokens, same as msg.sender if the user
-   *   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens
+   * @param onBehalfOf The address that will receive the depositTokens, same as msg.sender if the user
+   *   wants to receive them on his own wallet, or a different address if the beneficiary of depositTokens
    *   is a different wallet
    * @param referral Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
@@ -26,11 +26,11 @@ interface ILendingPool is ILendingPoolEvents {
   ) external;
 
   /**
-   * @dev Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
+   * @dev Withdraws an `amount` of underlying asset from the reserve, burning the equivalent depositTokens owned
    * E.g. User has 100 aUSDC, calls withdraw() and receives 100 USDC, burning the 100 aUSDC
    * @param asset The address of the underlying asset to withdraw
    * @param amount The underlying amount to be withdrawn
-   *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
+   *   - Send the value type(uint256).max in order to withdraw the whole depositToken balance
    * @param to Address that will receive the underlying, same as msg.sender if the user
    *   wants to receive it on his own wallet, or a different address if the beneficiary is a
    *   different wallet
@@ -117,7 +117,7 @@ interface ILendingPool is ILendingPoolEvents {
    * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param user The address of the borrower getting liquidated
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
-   * @param receiveAToken `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants
+   * @param receiveDeposit `true` if the liquidators wants to receive the collateral depositTokens, `false` if he wants
    * to receive the underlying collateral asset directly
    **/
   function liquidationCall(
@@ -125,7 +125,7 @@ interface ILendingPool is ILendingPoolEvents {
     address debtAsset,
     address user,
     uint256 debtToCover,
-    bool receiveAToken
+    bool receiveDeposit
   ) external;
 
   /**

@@ -10,7 +10,7 @@ interface ILendingPoolEvents {
    * @dev Emitted on deposit()
    * @param reserve The address of the underlying asset of the reserve
    * @param user The address initiating the deposit
-   * @param onBehalfOf The beneficiary of the deposit, receiving the aTokens
+   * @param onBehalfOf The beneficiary of the deposit, receiving the depositTokens
    * @param amount The amount deposited
    * @param referral The referral code used
    **/
@@ -25,7 +25,7 @@ interface ILendingPoolEvents {
   /**
    * @dev Emitted on withdraw()
    * @param reserve The address of the underlyng asset being withdrawn
-   * @param user The address initiating the withdrawal, owner of aTokens
+   * @param user The address initiating the withdrawal, owner of depositTokens
    * @param to Address that will receive the underlying
    * @param amount The amount to be withdrawn
    **/

@@ -26,7 +26,7 @@ library DataTypes {
     //the id of the reserve. Represents the position in the list of the active reserves
     uint8 id;
     //tokens addresses
-    address aTokenAddress;
+    address depositTokenAddress;
     address stableDebtTokenAddress;
     address variableDebtTokenAddress;
     //address of the interest rate strategy

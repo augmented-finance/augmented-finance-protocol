@@ -103,9 +103,9 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Burns aTokens from `user` and sends the equivalent amount of underlying to `receiverOfUnderlying`
+   * @dev Burns depositTokens from `user` and sends the equivalent amount of underlying to `receiverOfUnderlying`
    * - Only callable by the LendingPool, as extra state updates there need to be managed
-   * @param user The owner of the aTokens, getting them burned
+   * @param user The owner of the depositTokens, getting them burned
    * @param receiverOfUnderlying The address that will receive the underlying
    * @param amount The amount being burned
    * @param index The new liquidity index of the reserve
@@ -181,7 +181,7 @@ abstract contract DepositTokenBase is
   /**
    * @dev Transfers on liquidation, in case the liquidator claims this token
    * - Only callable by the LendingPool
-   * @param from The address getting liquidated, current owner of the aTokens
+   * @param from The address getting liquidated, current owner of the depositTokens
    * @param to The recipient
    * @param value The amount of tokens getting transferred
    **/
@@ -232,7 +232,7 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev calculates the total supply of the specific aToken
+   * @dev calculates the total supply of the specific depositToken
    * since the balance of every single user increases over time, the total supply
    * does that too.
    * @return the current total supply
@@ -256,7 +256,7 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Returns the address of the Aave treasury, receiving the fees on this aToken
+   * @dev Returns the address of the Aave treasury, receiving the fees on this depositToken
    **/
   function RESERVE_TREASURY_ADDRESS() public view returns (address) {
     return _treasury;
@@ -299,7 +299,7 @@ abstract contract DepositTokenBase is
   /**
    * @dev Transfers the underlying asset to `target`. Used by the LendingPool to transfer
    * assets in borrow(), withdraw() and flashLoan()
-   * @param target The recipient of the aTokens
+   * @param target The recipient of the depositTokens
    * @param amount The amount getting transferred
    * @return The amount transferred
    **/
@@ -314,14 +314,14 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Invoked to execute actions on the aToken side after a repayment.
+   * @dev Invoked to execute actions on the depositToken side after a repayment.
    * @param user The user executing the repayment
    * @param amount The amount getting repaid
    **/
   function handleRepayment(address user, uint256 amount) external override onlyLendingPool {}
 
   /**
-   * @dev Transfers the aTokens between two users. Validates the transfer
+   * @dev Transfers the depositTokens between two users. Validates the transfer
    * (ie checks for valid HF after the transfer) if required
    * @param from The source address
    * @param to The destination address

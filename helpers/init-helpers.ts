@@ -29,7 +29,7 @@ export const chooseDepositTokenDeployment = (id: eContractid) => {
     case eContractid.DelegationAwareDepositTokenImpl:
       return deployDelegationAwareDepositToken;
     default:
-      throw Error(`Missing aToken deployment script for: ${id}`);
+      throw Error(`Missing depositToken deployment script for: ${id}`);
   }
 };
 
@@ -51,7 +51,7 @@ export const initReservesByHelper = async (
   let reserveSymbols: string[] = [];
 
   let initInputParams: {
-    aTokenImpl: string;
+    depositTokenImpl: string;
     stableDebtTokenImpl: string;
     variableDebtTokenImpl: string;
     underlyingAssetDecimals: BigNumberish;
@@ -60,8 +60,8 @@ export const initReservesByHelper = async (
     treasury: string;
     incentivesController: string;
     underlyingAssetName: string;
-    aTokenName: string;
-    aTokenSymbol: string;
+    depositTokenName: string;
+    depositTokenSymbol: string;
     variableDebtTokenName: string;
     variableDebtTokenSymbol: string;
     stableDebtTokenName: string;
@@ -89,7 +89,7 @@ export const initReservesByHelper = async (
   const depositTokenImpl = await deployDepositTokenImpl(verify, skipExistingAssets);
 
   const delegatedAwareReserves = Object.entries(reservesParams).filter(
-    ([_, { aTokenImpl }]) => aTokenImpl === eContractid.DelegationAwareDepositTokenImpl
+    ([_, { depositTokenImpl }]) => depositTokenImpl === eContractid.DelegationAwareDepositTokenImpl
   ) as [string, IReserveParams][];
 
   const delegationAwareTokenImpl =
@@ -106,9 +106,9 @@ export const initReservesByHelper = async (
   }
 
   const reserves = Object.entries(reservesParams).filter(
-    ([_, { aTokenImpl }]) =>
-      aTokenImpl === eContractid.DelegationAwareDepositTokenImpl ||
-      aTokenImpl === eContractid.DepositTokenImpl
+    ([_, { depositTokenImpl }]) =>
+      depositTokenImpl === eContractid.DelegationAwareDepositTokenImpl ||
+      depositTokenImpl === eContractid.DepositTokenImpl
   ) as [string, IReserveParams][];
 
   for (let [symbol, params] of reserves) {
@@ -123,7 +123,7 @@ export const initReservesByHelper = async (
       continue;
     }
 
-    const { strategy, aTokenImpl, reserveDecimals } = params;
+    const { strategy, depositTokenImpl, reserveDecimals } = params;
     const {
       optimalUtilizationRate,
       baseVariableBorrowRate,
@@ -153,10 +153,10 @@ export const initReservesByHelper = async (
     strategyAddressPerAsset[symbol] = strategyAddresses[strategy.name];
     console.log('Strategy address for asset %s: %s', symbol, strategyAddressPerAsset[symbol]);
 
-    if (aTokenImpl === eContractid.DepositTokenImpl) {
+    if (depositTokenImpl === eContractid.DepositTokenImpl) {
       depositTokenType[symbol] = false;
       console.log('---- generic:', symbol);
-    } else if (aTokenImpl === eContractid.DelegationAwareDepositTokenImpl) {
+    } else if (depositTokenImpl === eContractid.DelegationAwareDepositTokenImpl) {
       depositTokenType[symbol] = true;
       console.log('---- delegation aware:', symbol);
     }
@@ -179,7 +179,7 @@ export const initReservesByHelper = async (
     const reserveSymbol = reserveSymbols[i];
 
     initInputParams.push({
-      aTokenImpl: tokenToUse,
+      depositTokenImpl: tokenToUse,
       stableDebtTokenImpl: stableDebtTokenImpl.address,
       variableDebtTokenImpl: variableDebtTokenImpl.address,
       underlyingAssetDecimals: reserveInitDecimals[i],
@@ -189,8 +189,8 @@ export const initReservesByHelper = async (
       incentivesController: ZERO_ADDRESS,
       underlyingAssetName: reserveSymbol,
 
-      aTokenName: `${names.DepositTokenNamePrefix} ${reserveSymbol}`,
-      aTokenSymbol: `${names.DepositSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
+      depositTokenName: `${names.DepositTokenNamePrefix} ${reserveSymbol}`,
+      depositTokenSymbol: `${names.DepositSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
 
       variableDebtTokenName: `${names.VariableDebtTokenNamePrefix} ${reserveSymbol}`,
       variableDebtTokenSymbol: `${names.VariableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,

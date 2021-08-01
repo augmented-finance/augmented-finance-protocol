@@ -79,7 +79,7 @@ contract LendingPoolExtension is
    * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param user The address of the borrower getting liquidated
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
-   * @param receiveDepositToken `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants
+   * @param receiveDeposit `true` if the liquidators wants to receive the collateral depositTokens, `false` if he wants
    * to receive the underlying collateral asset directly
    **/
 
@@ -88,7 +88,7 @@ contract LendingPoolExtension is
     address debtAsset,
     address user,
     uint256 debtToCover,
-    bool receiveDepositToken
+    bool receiveDeposit
   ) external override whenNotPaused {
     require(_disabledFeatures & FEATURE_LIQUIDATION == 0, Errors.LP_RESTRICTED_FEATURE);
 
@@ -118,7 +118,7 @@ contract LendingPoolExtension is
       vars.userVariableDebt
     );
 
-    vars.collateralDepositToken = IDepositToken(collateralReserve.aTokenAddress);
+    vars.collateralDepositToken = IDepositToken(collateralReserve.depositTokenAddress);
 
     vars.userCollateralBalance = vars.collateralDepositToken.balanceOf(user);
 
@@ -152,7 +152,7 @@ contract LendingPoolExtension is
 
     // If the liquidator reclaims the underlying asset, we make sure there is enough available liquidity in the
     // collateral reserve
-    if (!receiveDepositToken) {
+    if (!receiveDeposit) {
       uint256 currentAvailableCollateral =
         IERC20(collateralAsset).balanceOf(address(vars.collateralDepositToken));
       require(
@@ -186,12 +186,12 @@ contract LendingPoolExtension is
 
     debtReserve.updateInterestRates(
       debtAsset,
-      debtReserve.aTokenAddress,
+      debtReserve.depositTokenAddress,
       vars.actualDebtToLiquidate,
       0
     );
 
-    if (receiveDepositToken) {
+    if (receiveDeposit) {
       vars.liquidatorPreviousDepositTokenBalance = IERC20(vars.collateralDepositToken).balanceOf(
         msg.sender
       );
@@ -234,7 +234,7 @@ contract LendingPoolExtension is
     // Transfers the debt asset being repaid to the depostToken, where the liquidity is kept
     IERC20(debtAsset).safeTransferFrom(
       msg.sender,
-      debtReserve.aTokenAddress,
+      debtReserve.depositTokenAddress,
       vars.actualDebtToLiquidate
     );
 
@@ -245,7 +245,7 @@ contract LendingPoolExtension is
       vars.actualDebtToLiquidate,
       vars.maxCollateralToLiquidate,
       msg.sender,
-      receiveDepositToken
+      receiveDeposit
     );
   }
 
@@ -444,7 +444,7 @@ contract LendingPoolExtension is
 
     for (uint256 i = 0; i < assets.length; i++) {
       premiums[i] = amounts[i].percentMul(flashLoanPremium);
-      IDepositToken(_reserves[assets[i]].aTokenAddress).transferUnderlyingTo(
+      IDepositToken(_reserves[assets[i]].depositTokenAddress).transferUnderlyingTo(
         receiverAddress,
         amounts[i]
       );
@@ -464,7 +464,7 @@ contract LendingPoolExtension is
       vars.currentAsset = assets[vars.i];
       vars.currentAmount = amounts[vars.i];
       vars.currentPremium = premiums[vars.i];
-      vars.currentDepositToken = _reserves[vars.currentAsset].aTokenAddress;
+      vars.currentDepositToken = _reserves[vars.currentAsset].depositTokenAddress;
       vars.currentAmountPlusPremium = vars.currentAmount.add(vars.currentPremium);
 
       if (DataTypes.InterestRateMode(modes[vars.i]) == DataTypes.InterestRateMode.NONE) {
@@ -530,7 +530,7 @@ contract LendingPoolExtension is
         onBehalfOf,
         amount,
         interestRateMode,
-        _reserves[asset].aTokenAddress,
+        _reserves[asset].depositTokenAddress,
         referral,
         true
       )
@@ -551,7 +551,7 @@ contract LendingPoolExtension is
         onBehalfOf,
         amount,
         interestRateMode,
-        _reserves[asset].aTokenAddress,
+        _reserves[asset].depositTokenAddress,
         referral,
         true
       )
@@ -756,7 +756,7 @@ contract LendingPoolExtension is
     uint256 balanceFromBefore,
     uint256 balanceToBefore
   ) external override whenNotPaused {
-    require(msg.sender == _reserves[asset].aTokenAddress, Errors.LP_CALLER_MUST_BE_AN_ATOKEN);
+    require(msg.sender == _reserves[asset].depositTokenAddress, Errors.LP_CALLER_MUST_BE_AN_ATOKEN);
 
     ValidationLogic.validateTransfer(
       from,

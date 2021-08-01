@@ -98,14 +98,14 @@ export const calcExpectedUserDataAfterWithdraw = (
 ): UserReserveData => {
   const expectedUserData = <UserReserveData>{};
 
-  const aTokenBalance = calcExpectedATokenBalance(
+  const depositTokenBalance = calcExpectedATokenBalance(
     reserveDataBeforeAction,
     userDataBeforeAction,
     txTimestamp
   );
 
   if (amountWithdrawn == MAX_UINT_AMOUNT) {
-    amountWithdrawn = aTokenBalance.toFixed(0);
+    amountWithdrawn = depositTokenBalance.toFixed(0);
   }
 
   expectedUserData.scaledATokenBalance = calcExpectedScaledATokenBalance(
@@ -115,7 +115,7 @@ export const calcExpectedUserDataAfterWithdraw = (
     new BigNumber(amountWithdrawn)
   );
 
-  expectedUserData.currentATokenBalance = aTokenBalance.minus(amountWithdrawn);
+  expectedUserData.currentATokenBalance = depositTokenBalance.minus(amountWithdrawn);
 
   expectedUserData.principalStableDebt = userDataBeforeAction.principalStableDebt;
   expectedUserData.scaledVariableDebt = userDataBeforeAction.scaledVariableDebt;

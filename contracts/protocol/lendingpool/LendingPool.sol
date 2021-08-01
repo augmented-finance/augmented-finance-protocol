@@ -74,12 +74,12 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
   }
 
   /**
-   * @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
+   * @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying depositTokens.
    * - E.g. User deposits 100 USDC and gets in return 100 aUSDC
    * @param asset The address of the underlying asset to deposit
    * @param amount The amount to be deposited
-   * @param onBehalfOf The address that will receive the aTokens, same as msg.sender if the user
-   *   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens
+   * @param onBehalfOf The address that will receive the depositTokens, same as msg.sender if the user
+   *   wants to receive them on his own wallet, or a different address if the beneficiary of depositTokens
    *   is a different wallet
    * @param referral Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
@@ -94,7 +94,7 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
 
     ValidationLogic.validateDeposit(reserve, amount);
 
-    address depositToken = reserve.aTokenAddress;
+    address depositToken = reserve.depositTokenAddress;
 
     uint256 liquidityIndex = reserve.updateStateForDeposit(asset);
     reserve.updateInterestRates(asset, depositToken, amount, 0);
@@ -112,11 +112,11 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
   }
 
   /**
-   * @dev Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
+   * @dev Withdraws an `amount` of underlying asset from the reserve, burning the equivalent depositTokens owned
    * E.g. User has 100 aUSDC, calls withdraw() and receives 100 USDC, burning the 100 aUSDC
    * @param asset The address of the underlying asset to withdraw
    * @param amount The underlying amount to be withdrawn
-   *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
+   *   - Send the value type(uint256).max in order to withdraw the whole depositToken balance
    * @param to Address that will receive the underlying, same as msg.sender if the user
    *   wants to receive it on his own wallet, or a different address if the beneficiary is a
    *   different wallet
@@ -129,7 +129,7 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
   ) external override whenNotPaused returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
-    address depositToken = reserve.aTokenAddress;
+    address depositToken = reserve.depositTokenAddress;
 
     uint256 userBalance = IDepositToken(depositToken).balanceOf(msg.sender);
 
@@ -248,7 +248,7 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
       );
     }
 
-    address depositToken = reserve.aTokenAddress;
+    address depositToken = reserve.depositTokenAddress;
     reserve.updateInterestRates(asset, depositToken, paybackAmount, 0);
 
     if (stableDebt.add(variableDebt).sub(paybackAmount) == 0) {
@@ -308,7 +308,7 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
       );
     }
 
-    reserve.updateInterestRates(asset, reserve.aTokenAddress, 0, 0);
+    reserve.updateInterestRates(asset, reserve.depositTokenAddress, 0, 0);
 
     emit Swap(asset, msg.sender, rateMode);
   }
@@ -327,7 +327,7 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
 
     IERC20 stableDebtToken = IERC20(reserve.stableDebtTokenAddress);
     IERC20 variableDebtToken = IERC20(reserve.variableDebtTokenAddress);
-    address depositToken = reserve.aTokenAddress;
+    address depositToken = reserve.depositTokenAddress;
 
     uint256 stableDebt = IERC20(stableDebtToken).balanceOf(user);
 
@@ -394,7 +394,7 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
    * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param user The address of the borrower getting liquidated
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
-   * @param receiveAToken `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants
+   * @param receiveDeposit `true` if the liquidators wants to receive the collateral depositTokens, `false` if he wants
    * to receive the underlying collateral asset directly
    **/
   function liquidationCall(
@@ -402,14 +402,14 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
     address debtAsset,
     address user,
     uint256 debtToCover,
-    bool receiveAToken
+    bool receiveDeposit
   ) external override {
     // this is for compatibility with ILendingPool
     collateralAsset;
     debtAsset;
     user;
     debtToCover;
-    receiveAToken;
+    receiveDeposit;
     _delegate(_extension);
   }
 

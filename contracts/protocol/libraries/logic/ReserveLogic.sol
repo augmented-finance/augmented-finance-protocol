@@ -203,11 +203,11 @@ library ReserveLogic {
   function init(DataTypes.ReserveData storage reserve, DataTypes.InitReserveData calldata data)
     internal
   {
-    require(reserve.aTokenAddress == address(0), Errors.RL_RESERVE_ALREADY_INITIALIZED);
+    require(reserve.depositTokenAddress == address(0), Errors.RL_RESERVE_ALREADY_INITIALIZED);
 
     reserve.liquidityIndex = uint128(WadRayMath.RAY);
     reserve.variableBorrowIndex = uint128(WadRayMath.RAY);
-    reserve.aTokenAddress = data.depositTokenAddress;
+    reserve.depositTokenAddress = data.depositTokenAddress;
     reserve.stableDebtTokenAddress = data.stableDebtAddress;
     reserve.variableDebtTokenAddress = data.variableDebtAddress;
     reserve.strategy = data.strategy;
@@ -369,7 +369,10 @@ library ReserveLogic {
     vars.amountToMint = vars.totalDebtAccrued.percentMul(vars.reserveFactor);
 
     if (vars.amountToMint != 0) {
-      IDepositToken(reserve.aTokenAddress).mintToTreasury(vars.amountToMint, newLiquidityIndex);
+      IDepositToken(reserve.depositTokenAddress).mintToTreasury(
+        vars.amountToMint,
+        newLiquidityIndex
+      );
     }
   }
 

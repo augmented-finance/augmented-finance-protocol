@@ -103,10 +103,10 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
 
   struct SwapAndDepositLocalVars {
     uint256 i;
-    uint256 aTokenInitiatorBalance;
+    uint256 depositInitiatorBalance;
     uint256 amountToSwap;
     uint256 receivedAmount;
-    address aToken;
+    address depositToken;
   }
 
   /**
@@ -146,16 +146,16 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     SwapAndDepositLocalVars memory vars;
 
     for (vars.i = 0; vars.i < assetToSwapFromList.length; vars.i++) {
-      vars.aToken = _getReserveData(assetToSwapFromList[vars.i]).aTokenAddress;
+      vars.depositToken = _getReserveData(assetToSwapFromList[vars.i]).depositTokenAddress;
 
-      vars.aTokenInitiatorBalance = IERC20(vars.aToken).balanceOf(msg.sender);
-      vars.amountToSwap = amountToSwapList[vars.i] > vars.aTokenInitiatorBalance
-        ? vars.aTokenInitiatorBalance
+      vars.depositInitiatorBalance = IERC20(vars.depositToken).balanceOf(msg.sender);
+      vars.amountToSwap = amountToSwapList[vars.i] > vars.depositInitiatorBalance
+        ? vars.depositInitiatorBalance
         : amountToSwapList[vars.i];
 
       _pullAToken(
         assetToSwapFromList[vars.i],
-        vars.aToken,
+        vars.depositToken,
         msg.sender,
         vars.amountToSwap,
         permitParams[vars.i]
@@ -189,8 +189,8 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
    */
 
   struct SwapLiquidityLocalVars {
-    address aToken;
-    uint256 aTokenInitiatorBalance;
+    address depositToken;
+    uint256 depositInitiatorBalance;
     uint256 amountToSwap;
     uint256 receivedAmount;
     uint256 flashLoanDebt;
@@ -210,11 +210,11 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
   ) internal {
     SwapLiquidityLocalVars memory vars;
 
-    vars.aToken = _getReserveData(assetFrom).aTokenAddress;
+    vars.depositToken = _getReserveData(assetFrom).depositTokenAddress;
 
-    vars.aTokenInitiatorBalance = IERC20(vars.aToken).balanceOf(initiator);
-    vars.amountToSwap = swapAllBalance && vars.aTokenInitiatorBalance.sub(premium) <= amount
-      ? vars.aTokenInitiatorBalance.sub(premium)
+    vars.depositInitiatorBalance = IERC20(vars.depositToken).balanceOf(initiator);
+    vars.amountToSwap = swapAllBalance && vars.depositInitiatorBalance.sub(premium) <= amount
+      ? vars.depositInitiatorBalance.sub(premium)
       : amount;
 
     vars.receivedAmount = _swapExactTokensForTokens(
@@ -233,7 +233,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     vars.flashLoanDebt = amount.add(premium);
     vars.amountToPull = vars.amountToSwap.add(premium);
 
-    _pullAToken(assetFrom, vars.aToken, initiator, vars.amountToPull, permitSignature);
+    _pullAToken(assetFrom, vars.depositToken, initiator, vars.amountToPull, permitSignature);
 
     // Repay flash loan
     IERC20(assetFrom).safeApprove(address(LENDING_POOL), 0);

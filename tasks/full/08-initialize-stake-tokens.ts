@@ -55,7 +55,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
 
       if (asset && mode == StakeMode.stakeAg) {
         const reserveData = await lendingPool.getReserveData(asset);
-        asset = reserveData.aTokenAddress;
+        asset = reserveData.depositTokenAddress;
       }
       if (falsyOrZeroAddress(asset)) {
         console.log('Stake asset is missing:', tokenName, mode);

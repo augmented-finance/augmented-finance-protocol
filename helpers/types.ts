@@ -105,7 +105,7 @@ export enum eContractid {
  * Error messages prefix glossary:
  *  - VL = ValidationLogic
  *  - MATH = Math libraries
- *  - AT = aToken or DebtTokens
+ *  - AT = depositToken or DebtTokens
  *  - LP = LendingPool
  *  - LPAPR = AddressesProviderRegistry
  *  - LPC = LendingPoolConfiguration
@@ -281,7 +281,7 @@ export const TokenContractId: iAssetBase<string> = {
 };
 
 export interface IReserveParams extends IReserveBorrowParams, IReserveCollateralParams {
-  aTokenImpl: eContractid;
+  depositTokenImpl: eContractid;
   reserveFactor: string;
   strategy: IInterestRateStrategyParams;
 }

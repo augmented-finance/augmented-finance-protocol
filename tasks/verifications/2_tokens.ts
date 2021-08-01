@@ -33,7 +33,7 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
       const {
         stableDebtTokenAddress,
         variableDebtTokenAddress,
-        aTokenAddress,
+        depositTokenAddress,
         strategy,
       } = await lendingPoolProxy.getReserveData(tokenAddress);
 
@@ -62,7 +62,7 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
 
       // Proxy Deposit Token
       console.log('\n- Verifying Deposit Token proxy...\n');
-      await verifyContract(aTokenAddress, [lendingPoolConfigurator.address]);
+      await verifyContract(depositTokenAddress, [lendingPoolConfigurator.address]);
 
       // Strategy Rate
       console.log(`\n- Verifying Strategy rate...\n`);
@@ -80,15 +80,15 @@ task('verify:tokens', 'Deploy oracles for dev enviroment')
       const stableDebtSymbol = `${Names.StableDebtSymbolPrefix}${token}`;
       const variableDebtSymbol = `${Names.DepositSymbolPrefix}${token}`;
 
-      const aToken = await getAddressById(depositSymbol);
+      const depositToken = await getAddressById(depositSymbol);
       const stableDebt = await getAddressById(stableDebtSymbol);
       const variableDebt = await getAddressById(variableDebtSymbol);
 
       const treasuryAddress = await addressesProvider.getTreasury();
 
-      if (aToken) {
+      if (depositToken) {
         console.log('\n- Verifying agToken...\n');
-        await verifyContract(aToken, [
+        await verifyContract(depositToken, [
           lendingPoolProxy.address,
           tokenAddress,
           treasuryAddress,

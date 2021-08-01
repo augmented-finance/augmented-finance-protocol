@@ -123,9 +123,9 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       }
 
       tokens[tokenCount] = TokenDescription(
-        reserveData.aTokenAddress,
-        reserveData.aTokenAddress,
-        IERC20Detailed(reserveData.aTokenAddress).symbol(),
+        reserveData.depositTokenAddress,
+        reserveData.depositTokenAddress,
+        IERC20Detailed(reserveData.depositTokenAddress).symbol(),
         token,
         decimals,
         TokenType.Deposit,
@@ -212,7 +212,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         tokenCount++;
       }
 
-      tokens[tokenCount] = reserveData.aTokenAddress;
+      tokens[tokenCount] = reserveData.depositTokenAddress;
       tokenCount++;
 
       if (reserveData.variableDebtTokenAddress != address(0)) {
@@ -246,7 +246,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       } else {
         DataTypes.ReserveData memory reserveData = pool.getReserveData(reserves[i]);
         if (tt == TokenType.Deposit) {
-          token = reserveData.aTokenAddress;
+          token = reserveData.depositTokenAddress;
         } else if (tt == TokenType.VariableDebt) {
           token = reserveData.variableDebtTokenAddress;
         } else if (tt == TokenType.StableDebt) {
@@ -320,7 +320,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
 
     return (
-      IERC20Detailed(asset).balanceOf(reserve.aTokenAddress),
+      IERC20Detailed(asset).balanceOf(reserve.depositTokenAddress),
       IERC20Detailed(reserve.stableDebtTokenAddress).totalSupply(),
       IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply(),
       reserve.currentLiquidityRate,
@@ -354,7 +354,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     DataTypes.UserConfigurationMap memory userConfig =
       ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getUserConfiguration(user);
 
-    currentDepositBalance = IERC20Detailed(reserve.aTokenAddress).balanceOf(user);
+    currentDepositBalance = IERC20Detailed(reserve.depositTokenAddress).balanceOf(user);
     currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);
     currentStableDebt = IERC20Detailed(reserve.stableDebtTokenAddress).balanceOf(user);
     principalStableDebt = IStableDebtToken(reserve.stableDebtTokenAddress).principalBalanceOf(user);
@@ -380,7 +380,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
 
     return (
-      reserve.aTokenAddress,
+      reserve.depositTokenAddress,
       reserve.stableDebtTokenAddress,
       reserve.variableDebtTokenAddress
     );
@@ -462,7 +462,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       reserveData.variableBorrowRate = baseData.currentVariableBorrowRate;
       reserveData.stableBorrowRate = baseData.currentStableBorrowRate;
       reserveData.lastUpdateTimestamp = baseData.lastUpdateTimestamp;
-      reserveData.depositTokenAddress = baseData.aTokenAddress;
+      reserveData.depositTokenAddress = baseData.depositTokenAddress;
       reserveData.stableDebtTokenAddress = baseData.stableDebtTokenAddress;
       reserveData.variableDebtTokenAddress = baseData.variableDebtTokenAddress;
       reserveData.strategy = baseData.strategy;
@@ -482,7 +482,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
 
       // reserve configuration
 
-      // we're getting this info from the aToken, because some of assets can be not compliant with ETC20Detailed
+      // we're getting this info from the depositToken, because some of assets can be not compliant with ETC20Detailed
       reserveData.symbol = IERC20Detailed(reserveData.depositTokenAddress).symbol();
       reserveData.name = '';
 

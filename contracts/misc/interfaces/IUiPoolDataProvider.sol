@@ -75,15 +75,6 @@ interface IUiPoolDataProvider {
     uint256 stableBorrowLastUpdateTimestamp;
   }
 
-  //
-  //  struct ATokenSupplyData {
-  //    string name;
-  //    string symbol;
-  //    uint8 decimals;
-  //    uint256 totalSupply;
-  //    address aTokenAddress;
-  //  }
-
   function getReservesDataOf(IPoolAddressProvider provider, address user)
     external
     view
@@ -112,7 +103,7 @@ interface IUiPoolDataProvider {
   //    view
   //    returns (ATokenSupplyData[] memory);
   //
-  //  function getATokenSupply(address[] calldata aTokens)
+  //  function getATokenSupply(address[] calldata depositTokens)
   //    external
   //    view
   //    returns (ATokenSupplyData[] memory);
