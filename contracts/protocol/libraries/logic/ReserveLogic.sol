@@ -438,16 +438,15 @@ library ReserveLogic {
 
       (lastUpdateTimestamp, liquidityIndex) = (state.lastUpdateTimestamp, state.liquidityIndex);
     } else {
-      return reserve.liquidityIndex;
-      // IReserveDelegatedStrategy.DelegatedState memory state =
-      //   IReserveDelegatedStrategy(reserve.strategy).getDelegatedState(asset);
+      IReserveDelegatedStrategy.DelegatedState memory state =
+        IReserveDelegatedStrategy(reserve.strategy).getDelegatedState(asset);
 
-      // reserve.variableBorrowIndex = state.variableBorrowIndex;
-      // reserve.currentLiquidityRate = state.liquidityRate;
-      // reserve.currentVariableBorrowRate = state.variableBorrowRate;
-      // reserve.currentStableBorrowRate = state.stableBorrowRate;
+      reserve.variableBorrowIndex = state.variableBorrowIndex;
+      reserve.currentLiquidityRate = state.liquidityRate;
+      reserve.currentVariableBorrowRate = state.variableBorrowRate;
+      reserve.currentStableBorrowRate = state.stableBorrowRate;
 
-      // (lastUpdateTimestamp, liquidityIndex) = (state.lastUpdateTimestamp, state.liquidityIndex);
+      (lastUpdateTimestamp, liquidityIndex) = (state.lastUpdateTimestamp, state.liquidityIndex);
     }
 
     if (lastUpdateTimestamp > block.timestamp) {
