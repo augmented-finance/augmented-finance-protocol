@@ -37,4 +37,6 @@ abstract contract LendingPoolStorage {
   uint8 internal _nestedCalls;
 
   bool internal _paused;
+
+  mapping(address => mapping(address => uint256)) internal _delegations;
 }

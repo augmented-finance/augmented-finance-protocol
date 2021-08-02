@@ -20,10 +20,6 @@ pragma solidity 0.6.12;
  *  - P = Pausable
  */
 library Errors {
-  //common errors
-  string public constant CALLER_NOT_POOL_ADMIN = '33'; // 'The caller must be the pool admin'
-  string public constant BORROW_ALLOWANCE_NOT_ENOUGH = '59'; // User borrows on behalf, but allowance are too small
-
   //contract specific errors
   string public constant VL_INVALID_AMOUNT = '1'; // 'Amount must be greater than 0'
   string public constant VL_NO_ACTIVE_RESERVE = '2'; // 'Action requires an active reserve'
@@ -57,6 +53,7 @@ library Errors {
   string public constant CT_CANNOT_GIVE_ALLOWANCE_TO_HIMSELF = '30'; // 'User cannot give allowance to himself'
   string public constant CT_TRANSFER_AMOUNT_NOT_GT_0 = '31'; // 'Transferred amount needs to be greater than zero'
   string public constant RL_RESERVE_ALREADY_INITIALIZED = '32'; // 'Reserve has already been initialized'
+  string public constant CALLER_NOT_POOL_ADMIN = '33'; // 'The caller must be the pool admin'
   string public constant LPC_RESERVE_LIQUIDITY_NOT_0 = '34'; // 'The liquidity of the reserve needs to be 0'
   string public constant LPC_INVALID_ATOKEN_POOL_ADDRESS = '35'; // 'The liquidity of the reserve needs to be 0'
   string public constant LPC_INVALID_STABLE_DEBT_TOKEN_POOL_ADDRESS = '36'; // 'The liquidity of the reserve needs to be 0'
@@ -69,7 +66,7 @@ library Errors {
   string public constant LPCM_COLLATERAL_CANNOT_BE_LIQUIDATED = '43'; // 'The collateral chosen cannot be liquidated'
   string public constant LPCM_SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER = '44'; // 'User did not borrow the specified currency'
   string public constant LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE = '45'; // "There isn't enough liquidity available to liquidate"
-  //  string public constant LPCM_NO_ERRORS = '46'; // 'No errors'
+  string public constant LP_RESTRICTED_ON_BEHALF = '46'; // 'Caller is not allow to act on behalf'
   string public constant LP_INVALID_FLASHLOAN_MODE = '47'; //Invalid flashloan mode selected
   string public constant MATH_MULTIPLICATION_OVERFLOW = '48';
   string public constant MATH_ADDITION_OVERFLOW = '49';
@@ -82,6 +79,7 @@ library Errors {
   string public constant CT_INVALID_MINT_AMOUNT = '56'; //invalid amount to mint
   string public constant LP_FAILED_REPAY_WITH_COLLATERAL = '57';
   string public constant CT_INVALID_BURN_AMOUNT = '58'; //invalid amount to burn
+  string public constant BORROW_ALLOWANCE_NOT_ENOUGH = '59'; // User borrows on behalf, but allowance are too small
   string public constant LP_FAILED_COLLATERAL_SWAP = '60';
   string public constant LP_INVALID_EQUAL_ASSETS_TO_SWAP = '61';
   string public constant LP_REENTRANCY_NOT_ALLOWED = '62';

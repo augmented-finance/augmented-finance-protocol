@@ -74,6 +74,36 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
   }
 
   /**
+   * @dev Sets a set of functions that the delegate can do on behalf of the caller.
+   * @param delegate The address of the delegate
+   * @param allowedFunctions A bitmask of allowed functions (see DataTypes.DEPOSIT_ON_BEHALF etc)
+   * When allowedFunctions = 0 then no functions can be called by the delegate.
+   **/
+  function allowOnBehalf(address delegate, uint256 allowedFunctions) external {
+    if (delegate == msg.sender) {
+      return;
+    }
+    _delegations[msg.sender][delegate] = allowedFunctions;
+  }
+
+  /**
+   * @dev Returns a set of functions that the delegate can do on behalf of the caller.
+   * @param delegate The address of the delegate
+   * @return allowedFunctions A bitmask of allowed functions (see DataTypes.DEPOSIT_ON_BEHALF etc)
+   * When allowedFunctions = 0 then no functions can be called by the delegate.
+   **/
+  function allowedOnBehalf(address delegator, address delegate)
+    external
+    view
+    returns (uint256 allowedFunctions)
+  {
+    if (delegate == msg.sender) {
+      return type(uint256).max;
+    }
+    return _delegations[delegator][delegate];
+  }
+
+  /**
    * @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
    * - E.g. User deposits 100 USDC and gets in return 100 aUSDC
    * @param asset The address of the underlying asset to deposit
@@ -90,6 +120,8 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
     address onBehalfOf,
     uint256 referral
   ) public override whenNotPaused notNested {
+    validateOnBehalf(onBehalfOf, DataTypes.DEPOSIT_ON_BEHALF);
+
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateDeposit(reserve, amount);
@@ -214,6 +246,8 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
     uint256 rateMode,
     address onBehalfOf
   ) external override whenNotPaused returns (uint256) {
+    validateOnBehalf(onBehalfOf, DataTypes.REPAY_ON_BEHALF);
+
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(onBehalfOf, reserve);

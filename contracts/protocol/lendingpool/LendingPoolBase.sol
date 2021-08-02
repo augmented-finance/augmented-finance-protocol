@@ -80,4 +80,10 @@ contract LendingPoolBase is LendingPoolStorage {
     _notNested();
     _;
   }
+
+  function validateOnBehalf(address onBehalf, uint256 mask) internal view {
+    if (msg.sender != onBehalf) {
+      require(_delegations[onBehalf][msg.sender] & mask == mask, Errors.LP_RESTRICTED_ON_BEHALF);
+    }
+  }
 }

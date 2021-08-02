@@ -61,4 +61,9 @@ library DataTypes {
     address strategy;
     uint64 reserveFlags;
   }
+
+  uint8 public constant DEPOSIT_ON_BEHALF = 1 << 1;
+  uint8 public constant BORROW_ON_BEHALF = 1 << 2;
+  uint8 public constant REPAY_ON_BEHALF = 1 << 3;
+  uint8 public constant FLASHLOAN_ON_BEHALF = 1 << 4;
 }

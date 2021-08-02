@@ -415,6 +415,7 @@ contract LendingPoolExtension is
     uint16 flPremium
   ) private {
     FlashLoanLocalVars memory vars;
+    validateOnBehalf(onBehalfOf, DataTypes.FLASHLOAN_ON_BEHALF);
     ValidationLogic.validateFlashloan(assets, amounts);
 
     (vars.receiver, vars.referral, vars.onBehalfOf, vars.premium) = (
@@ -424,7 +425,14 @@ contract LendingPoolExtension is
       flPremium
     );
 
-    vars.premiums = _flashLoanPre(address(vars.receiver), assets, amounts, vars.premium);
+    vars.premiums = _flashLoanPre(
+      address(vars.receiver),
+      assets,
+      amounts,
+      modes,
+      vars.onBehalfOf,
+      vars.premium
+    );
 
     require(
       vars.receiver.executeOperation(assets, amounts, vars.premiums, msg.sender, params),
@@ -435,19 +443,22 @@ contract LendingPoolExtension is
   }
 
   function _flashLoanPre(
-    address receiverAddress,
+    address receiver,
     address[] calldata assets,
     uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
     uint16 flashLoanPremium
   ) private returns (uint256[] memory premiums) {
     premiums = new uint256[](assets.length);
 
     for (uint256 i = 0; i < assets.length; i++) {
+      if (DataTypes.InterestRateMode(modes[i]) != DataTypes.InterestRateMode.NONE) {
+        validateOnBehalf(onBehalfOf, DataTypes.BORROW_ON_BEHALF);
+      }
+
       premiums[i] = amounts[i].percentMul(flashLoanPremium);
-      IDepositToken(_reserves[assets[i]].aTokenAddress).transferUnderlyingTo(
-        receiverAddress,
-        amounts[i]
-      );
+      IDepositToken(_reserves[assets[i]].aTokenAddress).transferUnderlyingTo(receiver, amounts[i]);
     }
 
     return premiums;
@@ -523,6 +534,7 @@ contract LendingPoolExtension is
     uint256 referral,
     address onBehalfOf
   ) external override whenNotPaused notNested {
+    validateOnBehalf(onBehalfOf, DataTypes.BORROW_ON_BEHALF);
     _executeBorrow(
       ExecuteBorrowParams(
         asset,
@@ -544,6 +556,7 @@ contract LendingPoolExtension is
     uint16 referral,
     address onBehalfOf
   ) external override whenNotPaused notNested {
+    validateOnBehalf(onBehalfOf, DataTypes.BORROW_ON_BEHALF);
     _executeBorrow(
       ExecuteBorrowParams(
         asset,
