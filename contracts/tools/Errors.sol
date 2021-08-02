@@ -17,7 +17,7 @@ pragma solidity 0.6.12;
  *  - LPC = LendingPoolConfiguration
  *  - RL = ReserveLogic
  *  - LPCM = LendingPoolExtension
- *  - P = Pausable
+ *  - ST = Stake
  */
 library Errors {
   //common errors
@@ -114,6 +114,14 @@ library Errors {
   string public constant CT_CALLER_MUST_BE_REWARD_CONTROLLER = '90';
   string public constant RW_REWARD_PAUSED = '91';
   string public constant CT_CALLER_MUST_BE_TEAM_MANAGER = '92';
+
+  string public constant STK_REDEEM_PAUSED = '93';
+  string public constant STK_INSUFFICIENT_COOLDOWN = '94';
+  string public constant STK_UNSTAKE_WINDOW_FINISHED = '95';
+  string public constant STK_INVALID_BALANCE_ON_COOLDOWN = '96';
+  string public constant STK_EXCESSIVE_SLASH_PCT = '97';
+  string public constant STK_EXCESSIVE_COOLDOWN_PERIOD = '98';
+  string public constant STK_WRONG_UNSTAKE_PERIOD = '98';
 
   string public constant TXT_OWNABLE_CALLER_NOT_OWNER = 'Ownable: caller is not the owner';
   string public constant TXT_CALLER_NOT_PROXY_OWNER = 'ProxyOwner: caller is not the owner';

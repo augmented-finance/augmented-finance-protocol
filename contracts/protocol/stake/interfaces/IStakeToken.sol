@@ -6,6 +6,21 @@ import {IRewardedToken} from '../../../interfaces/IRewardedToken.sol';
 import {IEmergencyAccess} from '../../../interfaces/IEmergencyAccess.sol';
 
 interface IStakeToken is IDerivedToken, IRewardedToken {
+  event Staked(address indexed from, address indexed to, uint256 amount, uint256 indexed referal);
+  event Redeemed(
+    address indexed from,
+    address indexed to,
+    uint256 amount,
+    uint256 underlyingAmount
+  );
+  event CooldownStarted(address indexed account, uint32 at);
+  event Slashed(address to, uint256 amount, uint256 totalBeforeSlash);
+
+  event MaxSlashUpdated(uint16 maxSlash);
+  event CooldownUpdated(uint32 cooldownPeriod, uint32 unstakePeriod);
+
+  event RedeemUpdated(bool redeemable);
+
   function stake(
     address to,
     uint256 underlyingAmount,

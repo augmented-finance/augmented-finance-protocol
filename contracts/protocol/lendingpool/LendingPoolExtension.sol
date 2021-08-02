@@ -698,6 +698,7 @@ contract LendingPoolExtension is
   function setFlashLoanPremium(uint16 premium) external onlyConfiguratorOrAdmin {
     require(premium <= PercentageMath.ONE && premium > 0, Errors.LP_INVALID_PERCENTAGE);
     _flashLoanPremiumPct = premium;
+    emit FlashLoanPremiumUpdated(premium);
   }
 
   function _addReserveToList(address asset) internal {
@@ -717,6 +718,7 @@ contract LendingPoolExtension is
 
   function setDisabledFeatures(uint16 disabledFeatures) external onlyConfiguratorOrAdmin {
     _disabledFeatures = disabledFeatures;
+    emit DisabledFeaturesUpdated(disabledFeatures);
   }
 
   function getDisabledFeatures() external view returns (uint16 disabledFeatures) {
@@ -790,9 +792,10 @@ contract LendingPoolExtension is
 
   /**
    * @dev Updates the address of the LendingPoolExtension
-   * @param manager The new LendingPoolExtension address
+   * @param extension The new LendingPoolExtension address
    **/
-  function setLendingPoolExtension(address manager) external override onlyConfiguratorOrAdmin {
-    _extension = manager;
+  function setLendingPoolExtension(address extension) external override onlyConfiguratorOrAdmin {
+    _extension = extension;
+    emit LendingPoolExtensionUpdated(extension);
   }
 }
