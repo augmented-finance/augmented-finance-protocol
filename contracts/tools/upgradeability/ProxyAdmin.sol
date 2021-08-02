@@ -2,14 +2,36 @@
 pragma solidity 0.6.12;
 
 import './IProxy.sol';
-import '../../dependencies/openzeppelin/contracts/Ownable.sol';
+import './ProxyAdminBase.sol';
+import '../Errors.sol';
 
 /**
  * @dev This is an auxiliary contract meant to be assigned as the admin of a {IProxy}. For an
  * explanation of why you would want to use this see the documentation for {IProxy}.
  * @author Adopted from the OpenZeppelin
  */
-contract ProxyAdmin is Ownable {
+contract ProxyAdmin is ProxyAdminBase {
+  address private _owner;
+
+  constructor() public {
+    _owner = msg.sender;
+  }
+
+  /**
+   * @dev Returns the address of the current owner.
+   */
+  function owner() public view returns (address) {
+    return _owner;
+  }
+
+  /**
+   * @dev Throws if called by any account other than the owner.
+   */
+  modifier onlyOwner() {
+    require(_owner == msg.sender, Errors.TXT_CALLER_NOT_PROXY_OWNER);
+    _;
+  }
+
   /**
    * @dev Returns the current implementation of `proxy`.
    *
@@ -18,11 +40,7 @@ contract ProxyAdmin is Ownable {
    * - This contract must be the admin of `proxy`.
    */
   function getProxyImplementation(IProxy proxy) public view virtual returns (address) {
-    // We need to manually run the static call since the getter cannot be flagged as view
-    // bytes4(keccak256("implementation()")) == 0x5c60da1b
-    (bool success, bytes memory returndata) = address(proxy).staticcall(hex'5c60da1b');
-    require(success);
-    return abi.decode(returndata, (address));
+    return _getProxyImplementation(proxy);
   }
 
   /**
@@ -33,11 +51,7 @@ contract ProxyAdmin is Ownable {
    * - This contract must be the admin of `proxy`.
    */
   function getProxyAdmin(IProxy proxy) public view virtual returns (address) {
-    // We need to manually run the static call since the getter cannot be flagged as view
-    // bytes4(keccak256("admin()")) == 0xf851a440
-    (bool success, bytes memory returndata) = address(proxy).staticcall(hex'f851a440');
-    require(success);
-    return abi.decode(returndata, (address));
+    return _getProxyAdmin(proxy);
   }
 
   /**
