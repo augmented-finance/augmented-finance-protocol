@@ -8,6 +8,7 @@ import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol
 import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
 import {AccessHelper} from '../../access/AccessHelper.sol';
+import {AccessFlags} from '../../access/AccessFlags.sol';
 import {IDepositToken} from '../../interfaces/IDepositToken.sol';
 import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
 import {IFlashLoanReceiver} from '../../flashloan/interfaces/IFlashLoanReceiver.sol';
@@ -80,7 +81,7 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
    * When allowedFunctions = 0 then no functions can be called by the delegate.
    * When allowOnBehalf was not called for the delegate, then see setDefaultAllowOnBehalf()
    **/
-  function allowOnBehalf(address delegate, uint256 allowedFunctions) external {
+  function allowOnBehalf(address delegate, uint256 allowedFunctions) public {
     if (delegate == msg.sender || delegate == address(0)) {
       return;
     }
@@ -112,6 +113,13 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
    * When setDefaultAllowOnBehalf was not called, then DataTypes.DEPOSIT_ON_BEHALF is used.
    **/
   function setDefaultAllowOnBehalf(uint256 allowedFunctions) external {
+    if (allowedFunctions & DataTypes.DEPOSIT_ON_BEHALF == 0) {
+      // Make sure that the user wont break WETH_GATEWAY unintentionally
+      address wethGateway = _addressesProvider.getAddress(AccessFlags.WETH_GATEWAY);
+      if (wethGateway != address(0) && _delegations[msg.sender][wethGateway] == 0) {
+        _delegations[msg.sender][wethGateway] = DataTypes.DEPOSIT_ON_BEHALF;
+      }
+    }
     _defaultDelegations[msg.sender] = allowedFunctions | DataTypes.ON_BEHALF_WAS_SET;
   }
 
