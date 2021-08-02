@@ -81,9 +81,31 @@ contract LendingPoolBase is LendingPoolStorage {
     _;
   }
 
+  function _allowedOnBehalf(address delegator, address delegate)
+    internal
+    view
+    returns (uint256 allowedFunctions)
+  {
+    allowedFunctions = _delegations[delegator][delegate];
+
+    if (allowedFunctions == 0) {
+      allowedFunctions = _defaultDelegations[delegator];
+
+      if (allowedFunctions == 0) {
+        allowedFunctions = DataTypes.DEFAULT_ON_BEHALF;
+      } else {
+        allowedFunctions = allowedFunctions & ~uint256(DataTypes.ON_BEHALF_WAS_SET);
+      }
+    }
+    return allowedFunctions;
+  }
+
   function validateOnBehalf(address onBehalf, uint256 mask) internal view {
     if (msg.sender != onBehalf) {
-      require(_delegations[onBehalf][msg.sender] & mask == mask, Errors.LP_RESTRICTED_ON_BEHALF);
+      require(
+        _allowedOnBehalf(onBehalf, msg.sender) & mask == mask,
+        Errors.LP_RESTRICTED_ON_BEHALF
+      );
     }
   }
 }

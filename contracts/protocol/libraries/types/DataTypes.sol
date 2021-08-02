@@ -62,8 +62,12 @@ library DataTypes {
     uint64 reserveFlags;
   }
 
-  uint8 public constant DEPOSIT_ON_BEHALF = 1 << 1;
-  uint8 public constant BORROW_ON_BEHALF = 1 << 2;
-  uint8 public constant REPAY_ON_BEHALF = 1 << 3;
-  uint8 public constant FLASHLOAN_ON_BEHALF = 1 << 4;
+  uint256 public constant ON_BEHALF_WAS_SET = 1 << 0;
+  uint256 public constant DEPOSIT_ON_BEHALF = 1 << 1;
+  uint256 public constant BORROW_ON_BEHALF = 1 << 2;
+  uint256 public constant REPAY_ON_BEHALF = 1 << 3;
+  uint256 public constant FLASHLOAN_ON_BEHALF = 1 << 4;
+
+  uint256 public constant SELF_ON_BEHALF = type(uint256).max << 1; // all but ON_BEHALF_WAS_SET
+  uint256 public constant DEFAULT_ON_BEHALF = DEPOSIT_ON_BEHALF;
 }

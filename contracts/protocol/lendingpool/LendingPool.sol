@@ -74,16 +74,17 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
   }
 
   /**
-   * @dev Sets a set of functions that the delegate can do on behalf of the caller.
+   * @dev Defines a set of functions that the delegate can do on behalf of the caller.
    * @param delegate The address of the delegate
    * @param allowedFunctions A bitmask of allowed functions (see DataTypes.DEPOSIT_ON_BEHALF etc)
    * When allowedFunctions = 0 then no functions can be called by the delegate.
+   * When allowOnBehalf was not called for the delegate, then see setDefaultAllowOnBehalf()
    **/
   function allowOnBehalf(address delegate, uint256 allowedFunctions) external {
-    if (delegate == msg.sender) {
+    if (delegate == msg.sender || delegate == address(0)) {
       return;
     }
-    _delegations[msg.sender][delegate] = allowedFunctions;
+    _delegations[msg.sender][delegate] = allowedFunctions | DataTypes.ON_BEHALF_WAS_SET;
   }
 
   /**
@@ -98,9 +99,20 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
     returns (uint256 allowedFunctions)
   {
     if (delegate == msg.sender) {
-      return type(uint256).max;
+      return DataTypes.SELF_ON_BEHALF;
     }
-    return _delegations[delegator][delegate];
+
+    return _allowedOnBehalf(delegator, delegate);
+  }
+
+  /**
+   * @dev Sets a default set of functions that an unknown delegate can do on behalf of the caller.
+   * @param allowedFunctions A bitmask of allowed functions (see DataTypes.DEPOSIT_ON_BEHALF etc)
+   * Use allowedOnBehalf(delegator, address(0)) to get default.
+   * When setDefaultAllowOnBehalf was not called, then DataTypes.DEPOSIT_ON_BEHALF is used.
+   **/
+  function setDefaultAllowOnBehalf(uint256 allowedFunctions) external {
+    _defaultDelegations[msg.sender] = allowedFunctions | DataTypes.ON_BEHALF_WAS_SET;
   }
 
   /**

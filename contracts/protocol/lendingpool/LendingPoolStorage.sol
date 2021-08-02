@@ -39,4 +39,5 @@ abstract contract LendingPoolStorage {
   bool internal _paused;
 
   mapping(address => mapping(address => uint256)) internal _delegations;
+  mapping(address => uint256) internal _defaultDelegations;
 }
