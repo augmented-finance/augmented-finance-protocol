@@ -6,7 +6,7 @@ import {
   tEthereumAddress,
 } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
-import { chunk, waitForTx } from './misc-utils';
+import { chunk, falsyOrZeroAddress, waitForTx } from './misc-utils';
 import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contracts-getters';
 import { registerContractInJsonDb } from './contracts-helpers';
 import { BigNumber, BigNumberish } from 'ethers';
@@ -290,6 +290,11 @@ export const configureReservesByHelper = async (
     const [, tokenAddress] = (Object.entries(tokenAddresses) as [string, string][])[
       assetAddressIndex
     ];
+    if (falsyOrZeroAddress(tokenAddress)) {
+      console.log(`- Token ${assetSymbol} has an invalid address, skipping`);
+      continue;
+    }
+
     const { usageAsCollateralEnabled: alreadyEnabled } = await helpers.getReserveConfigurationData(
       tokenAddress
     );
