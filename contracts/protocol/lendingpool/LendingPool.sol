@@ -643,9 +643,10 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
 
   /**
    * @dev Updates the address of the LendingPoolExtension
-   * @param manager The new LendingPoolExtension address
+   * @param extension The new LendingPoolExtension address
    **/
-  function setLendingPoolExtension(address manager) external onlyConfiguratorOrAdmin {
-    _extension = manager;
+  function setLendingPoolExtension(address extension) external onlyConfiguratorOrAdmin {
+    _extension = extension;
+    emit LendingPoolExtensionUpdated(extension);
   }
 }

@@ -141,7 +141,7 @@ interface ILendingPoolEvents {
    * in the ReserveLogic library and emitted in the updateInterestRates() function. Since the function is internal,
    * the event will actually be fired by the LendingPool contract. The event is therefore replicated here so it
    * gets added to the LendingPool ABI
-   * @param reserve The address of the underlying asset of the reserve
+   * @param underlying The address of the underlying asset of the reserve
    * @param liquidityRate The new liquidity rate
    * @param stableBorrowRate The new stable borrow rate
    * @param variableBorrowRate The new variable borrow rate
@@ -149,11 +149,17 @@ interface ILendingPoolEvents {
    * @param variableBorrowIndex The new variable borrow index
    **/
   event ReserveDataUpdated(
-    address indexed reserve,
+    address indexed underlying,
     uint256 liquidityRate,
     uint256 stableBorrowRate,
     uint256 variableBorrowRate,
     uint256 liquidityIndex,
     uint256 variableBorrowIndex
   );
+
+  event LendingPoolExtensionUpdated(address extension);
+
+  event DisabledFeaturesUpdated(uint16 disabledFeatures);
+
+  event FlashLoanPremiumUpdated(uint16 premium);
 }
