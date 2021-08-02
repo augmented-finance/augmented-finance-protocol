@@ -63,6 +63,7 @@ import {
   StaticPriceOracleFactory,
   ReferralRewardPoolFactory,
   LendingPoolCompatibleFactory,
+  MockLendingPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -197,6 +198,16 @@ export const deployLendingPoolExtensionImpl = async (verify: boolean, once: bool
     [],
     verify,
     once
+  );
+};
+
+export const deployMockLendingPoolImpl = async (verify?: boolean) => {
+  // const libraries = await deployLendingPoolLibraries(verify);
+  return await withSaveAndVerify(
+    await new MockLendingPoolFactory(/* libraries, */ await getFirstSigner()).deploy(),
+    eContractid.LendingPoolImpl,
+    [],
+    verify
   );
 };
 

@@ -18,8 +18,8 @@ import {
   deployFlashLiquidationAdapter,
   deployTreasuryImpl,
   deployLendingPoolConfiguratorImpl,
-  deployLendingPoolImpl,
   deployLendingPoolExtensionImpl,
+  deployMockLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
 import { TokenContractId, tEthereumAddress, LendingPools } from '../../helpers/types';
@@ -94,7 +94,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const addressesProviderRegistry = await deployAddressesProviderRegistry();
   await addressesProviderRegistry.registerAddressesProvider(addressProvider.address, 1);
 
-  const lendingPoolImpl = await deployLendingPoolImpl(false, false);
+  const lendingPoolImpl = await deployMockLendingPoolImpl();
 
   await waitForTx(await addressProvider.setLendingPoolImpl(lendingPoolImpl.address));
 
