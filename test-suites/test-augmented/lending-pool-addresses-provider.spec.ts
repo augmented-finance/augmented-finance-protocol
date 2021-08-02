@@ -16,13 +16,7 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
 
     await addressesProvider.transferOwnership(users[1].address);
 
-    for (const contractFunction of [
-      addressesProvider.setMarketId,
-      addressesProvider.setLendingPoolImpl,
-      addressesProvider.setLendingPoolConfiguratorImpl,
-      addressesProvider.setPriceOracle,
-      addressesProvider.setLendingRateOracle,
-    ]) {
+    for (const contractFunction of [addressesProvider.setMarketId]) {
       await expect(contractFunction(mockAddress)).to.be.revertedWith(INVALID_OWNER_REVERT_MSG);
     }
 

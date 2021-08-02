@@ -382,6 +382,7 @@ contract AccessController is Ownable, IManagedAccessController {
     address payable proxyAddress = payable(getAddress(id));
 
     if (proxyAddress != address(0)) {
+      require(_proxies & id != 0, 'use of setAddress is required');
       InitializableImmutableAdminUpgradeabilityProxy(proxyAddress).upgradeToAndCall(
         newAddress,
         params

@@ -34,7 +34,9 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     if (falsyOrZeroAddress(configuratorAddr)) {
       const impl = await deployRewardConfiguratorImpl(verify, continuation);
       console.log('Deployed RewardConfigurator implementation:', impl.address);
-      await waitForTx(await addressProvider.setRewardConfiguratorImpl(impl.address));
+      await waitForTx(
+        await addressProvider.setAddressAsProxy(AccessFlags.REWARD_CONFIGURATOR, impl.address)
+      );
       configuratorAddr = await addressProvider.getRewardConfigurator();
     }
     const configurator = await getRewardConfiguratorProxy(configuratorAddr);
@@ -77,7 +79,9 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     if (falsyOrZeroAddress(boosterAddr)) {
       const impl = await deployRewardBoosterV1Impl(verify, continuation);
       console.log('Deployed RewardBooster implementation:', impl.address);
-      await waitForTx(await addressProvider.setRewardControllerImpl(impl.address));
+      await waitForTx(
+        await addressProvider.setAddressAsProxy(AccessFlags.REWARD_CONTROLLER, impl.address)
+      );
       boosterAddr = await addressProvider.getRewardController();
     }
     console.log('RewardBooster', boosterAddr);

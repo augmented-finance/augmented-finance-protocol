@@ -29,7 +29,9 @@ task(`full:deploy-stake-configurator`, `Deploys the ${CONTRACT_NAME} contract fo
       console.log(`Deploy ${CONTRACT_NAME}`);
       const impl = await deployStakeConfiguratorImpl(verify, continuation);
       console.log(`${CONTRACT_NAME} implementation:`, impl.address);
-      await waitForTx(await addressProvider.setStakeConfiguratorImpl(impl.address));
+      await waitForTx(
+        await addressProvider.setAddressAsProxy(AccessFlags.STAKE_CONFIGURATOR, impl.address)
+      );
 
       stakeConfiguratorAddr = await addressProvider.getStakeConfigurator();
     }

@@ -39,24 +39,4 @@ interface IManagedMarketAccessController is IMarketAccessController {
   event MarketIdSet(string newMarketId);
 
   function setMarketId(string memory marketId) external;
-
-  function setLendingPoolImpl(address) external;
-
-  function setLendingPoolConfiguratorImpl(address) external;
-
-  function setPriceOracle(address) external;
-
-  function setLendingRateOracle(address) external;
-
-  function setTreasuryImpl(address) external;
-
-  function setRewardTokenImpl(address) external;
-
-  function setRewardStakeTokenImpl(address) external;
-
-  function setRewardControllerImpl(address) external;
-
-  function setRewardConfiguratorImpl(address) external;
-
-  function setStakeConfiguratorImpl(address) external;
 }

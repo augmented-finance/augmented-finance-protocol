@@ -57,7 +57,7 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
       allAggregatorsAddresses
     );
 
-    await deployOracleRouter(
+    const oracle = await deployOracleRouter(
       [
         addressProvider.address,
         tokens,
@@ -67,7 +67,7 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
       ],
       verify
     );
-    await addressProvider.setPriceOracle(fallbackOracle.address);
+    await addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracle.address);
 
     const lendingRateOracle = await deployLendingRateOracle([addressProvider.address], verify);
 
@@ -84,5 +84,5 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
       lendingRateOracle
     );
 
-    await addressProvider.setLendingRateOracle(lendingRateOracle.address);
+    await addressProvider.setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle.address);
   });
