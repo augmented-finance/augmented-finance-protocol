@@ -2,8 +2,6 @@
 pragma solidity ^0.6.12;
 
 import 'hardhat/console.sol';
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {IMarketAccessController} from './interfaces/IMarketAccessController.sol';
 import {AccessHelper} from './AccessHelper.sol';
 import {AccessFlags} from './AccessFlags.sol';
@@ -93,6 +91,15 @@ contract MarketAccessBitmask {
       msg.sender,
       AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR,
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
+    );
+    _;
+  }
+
+  modifier onlyRewardRateAdmin {
+    acl_requireAllOf(
+      msg.sender,
+      AccessFlags.REWARD_RATE_ADMIN,
+      Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN
     );
     _;
   }

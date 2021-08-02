@@ -22,6 +22,16 @@ library AccessFlags {
   // these roles can ONLY be assigned to a single address
   uint256 public constant ROLES = (uint256(1) << 16) - 1;
   uint256 public constant SINGLETONS = ((uint256(1) << 64) - 1) & ~ROLES;
+  uint256 public constant PROXIES =
+    LENDING_POOL |
+      LENDING_POOL_CONFIGURATOR |
+      TREASURY |
+      REWARD_TOKEN |
+      REWARD_STAKE_TOKEN |
+      REWARD_CONTROLLER |
+      REWARD_CONFIGURATOR |
+      REFERRAL_REGISTRY |
+      STAKE_CONFIGURATOR;
 
   uint256 public constant LENDING_POOL = 1 << 16; // use proxy
   uint256 public constant LENDING_POOL_CONFIGURATOR = 1 << 17; // use proxy
@@ -32,12 +42,12 @@ library AccessFlags {
 
   uint256 public constant REWARD_TOKEN = 1 << 22; // use proxy
   uint256 public constant REWARD_STAKE_TOKEN = 1 << 23; // use proxy
-  uint256 public constant REWARD_CONTROLLER = 1 << 24;
+  uint256 public constant REWARD_CONTROLLER = 1 << 24; // use proxy
   uint256 public constant REWARD_CONFIGURATOR = 1 << 25; // use proxy
 
   uint256 public constant STAKE_CONFIGURATOR = 1 << 26; // use proxy
 
-  uint256 public constant REFERRAL_REGISTRY = 1 << 27;
+  uint256 public constant REFERRAL_REGISTRY = 1 << 27; // use proxy
 
   uint256 public constant WETH_GATEWAY = 1 << 28;
 

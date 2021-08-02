@@ -7,7 +7,7 @@ import {
   getAGTokenByName,
   getMockAgfToken,
   getMockStakedAgfToken,
-  getRewardBooster,
+  getMockRewardBooster,
   getTokenWeightedRewardPoolAGBoosted,
   getTokenWeightedRewardPoolAGFBooster, getTokenWeightedRewardPoolAGUSDCBoosted,
 } from '../../helpers/contracts-getters';
@@ -48,7 +48,7 @@ describe('Staking with boosting', () => {
     blkBeforeDeploy = await takeSnapshot();
     [root, user1, user2, slasher] = await ethers.getSigners();
     await rawBRE.run('augmented:test-local-staking', CFG);
-    rb = await getRewardBooster();
+    rb = await getMockRewardBooster();
 
     agDAI = await getAGTokenByName('agDAI');
     agUSDC = await getAGTokenByName('agUSDC');

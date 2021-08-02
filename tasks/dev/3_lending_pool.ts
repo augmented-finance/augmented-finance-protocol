@@ -1,16 +1,12 @@
 import { task } from 'hardhat/config';
 import {
-  deployLendingPoolCollateralManagerImpl,
+  deployLendingPoolExtensionImpl,
   deployLendingPoolConfiguratorImpl,
-  deployLendingPoolImpl,
+  deployMockLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
-import { eContractid } from '../../helpers/types';
 import { waitForTx } from '../../helpers/misc-utils';
-import {
-  getMarketAddressController,
-  getLendingPoolProxy,
-  getLendingPoolConfiguratorProxy,
-} from '../../helpers/contracts-getters';
+import { getMarketAddressController, getLendingPoolProxy } from '../../helpers/contracts-getters';
+import { AccessFlags } from '../../helpers/access-flags';
 
 task('dev:deploy-lending-pool', 'Deploy lending pool for dev enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -19,27 +15,30 @@ task('dev:deploy-lending-pool', 'Deploy lending pool for dev enviroment')
 
     const addressesProvider = await getMarketAddressController();
 
-    const lendingPoolImpl = await deployLendingPoolImpl(verify);
+    const lendingPoolImpl = await deployMockLendingPoolImpl(verify);
+    const poolExtensionImpl = await deployLendingPoolExtensionImpl(verify, false);
 
     // Set lending pool impl to Address Provider
-    await waitForTx(await addressesProvider.setLendingPoolImpl(lendingPoolImpl.address));
+    await waitForTx(
+      await addressesProvider.setAddressAsProxy(AccessFlags.LENDING_POOL, lendingPoolImpl.address)
+    );
 
     const address = await addressesProvider.getLendingPool();
     const lendingPoolProxy = await getLendingPoolProxy(address);
 
-    const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(verify);
+    console.log(
+      '\tSetting lending pool collateral manager implementation with address',
+      poolExtensionImpl.address
+    );
+    await waitForTx(await lendingPoolProxy.setLendingPoolExtension(poolExtensionImpl.address));
+
+    const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(verify, false);
 
     // Set lending pool conf impl to Address Provider
     await waitForTx(
-      await addressesProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address)
-    );
-
-    const collateralManager = await deployLendingPoolCollateralManagerImpl(verify);
-    console.log(
-      '\tSetting lending pool collateral manager implementation with address',
-      collateralManager.address
-    );
-    await waitForTx(
-      await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address)
+      await addressesProvider.setAddressAsProxy(
+        AccessFlags.LENDING_POOL_CONFIGURATOR,
+        lendingPoolConfiguratorImpl.address
+      )
     );
   });

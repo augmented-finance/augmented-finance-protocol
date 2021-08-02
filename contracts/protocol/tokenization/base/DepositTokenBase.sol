@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ILendingPool} from '../../../interfaces/ILendingPool.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {PoolTokenBase} from './PoolTokenBase.sol';
 
@@ -128,19 +127,19 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Mints `amount` aTokens to `user`
+   * @dev Mints tokens to user
    * - Only callable by the LendingPool, as extra state updates there need to be managed
    * @param user The address receiving the minted tokens
    * @param amount The amount of tokens getting minted
    * @param index The new liquidity index of the reserve
-   * @return `true` if the the previous balance of the user was 0
+   * @return firstBalance as `true` when user's previous balance was 0
    */
   function mint(
     address user,
     uint256 amount,
     uint256 index
-  ) external override onlyLendingPool returns (bool) {
-    uint256 previousBalance = super.balanceOf(user);
+  ) external override onlyLendingPool returns (bool firstBalance) {
+    firstBalance = super.balanceOf(user) == 0;
 
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
@@ -149,7 +148,7 @@ abstract contract DepositTokenBase is
     emit Transfer(address(0), user, amount);
     emit Mint(user, amount, index);
 
-    return previousBalance == 0;
+    return firstBalance;
   }
 
   function setTreasury(address treasury) external override onlyLendingPool {
@@ -157,7 +156,7 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Mints aTokens to the reserve treasury
+   * @dev Mints tokens to the reserve treasury
    * - Only callable by the LendingPool
    * @param amount The amount of tokens getting minted
    * @param index The new liquidity index of the reserve
@@ -180,7 +179,7 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Transfers aTokens in the event of a borrow being liquidated, in case the liquidators reclaims the aToken
+   * @dev Transfers on liquidation, in case the liquidator claims this token
    * - Only callable by the LendingPool
    * @param from The address getting liquidated, current owner of the aTokens
    * @param to The recipient
@@ -336,9 +335,8 @@ abstract contract DepositTokenBase is
     bool validate
   ) internal {
     address underlyingAsset = _underlyingAsset;
-    ILendingPool pool = _pool;
 
-    uint256 index = pool.getReserveNormalizedIncome(underlyingAsset);
+    uint256 index = _pool.getReserveNormalizedIncome(underlyingAsset);
 
     uint256 fromBalanceBefore = super.balanceOf(from).rayMul(index);
     uint256 toBalanceBefore = super.balanceOf(to).rayMul(index);
@@ -346,7 +344,7 @@ abstract contract DepositTokenBase is
     super._transferBalance(from, to, amount.rayDiv(index), index);
 
     if (validate) {
-      pool.finalizeTransfer(underlyingAsset, from, to, amount, fromBalanceBefore, toBalanceBefore);
+      _pool.finalizeTransfer(underlyingAsset, from, to, amount, fromBalanceBefore, toBalanceBefore);
     }
 
     emit BalanceTransfer(from, to, amount, index);

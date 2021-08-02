@@ -46,7 +46,7 @@ interface IUiPoolDataProvider {
     address depositTokenAddress;
     address stableDebtTokenAddress;
     address variableDebtTokenAddress;
-    address interestRateStrategyAddress;
+    address strategy;
     //
     uint256 availableLiquidity;
     uint256 totalPrincipalStableDebt;

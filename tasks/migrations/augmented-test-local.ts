@@ -2,13 +2,13 @@ import { task, types } from 'hardhat/config';
 import {
   deployMarketAccessController,
   deployMockAgfToken,
-  deployRewardController,
+  deployMockRewardFreezer,
   deployTeamRewardPool,
   deployMockTokenLocker,
   deployPermitFreezerRewardPool,
   deployTokenWeightedRewardPoolAGFSeparate,
 } from '../../helpers/contracts-deployments';
-import { MAX_LOCKER_PERIOD, ONE_ADDRESS, RAY, RAY_100, WEEK } from '../../helpers/constants';
+import { ONE_ADDRESS, RAY } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
 import {
   ADAI_ADDRESS,
@@ -23,7 +23,7 @@ import { AccessFlags, ACCESS_REWARD_MINT } from '../../helpers/access-flags';
 task('augmented:test-local', 'Deploy Augmented test contracts.')
   .addOptionalParam('aDaiAddress', 'AAVE DAI address', ADAI_ADDRESS, types.string)
   .addOptionalParam('cDaiAddress', 'Compound DAI address', CDAI_ADDRESS, types.string)
-  .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', RAY, types.string)
+  .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', 1, types.string)
   .addOptionalParam('teamRewardBaselinePercentage', 'baseline percentage - bigNumber', 0, types.int)
   .addOptionalParam('stakeCooldownTicks', 'staking cooldown ticks', stakingCooldownTicks, types.int)
   .addOptionalParam(
@@ -74,19 +74,19 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       );
 
       console.log(`#3 deploying: RewardFreezer`);
-      const rewardCtl = await deployRewardController([ac.address, agfToken.address], verify);
+      const rewardCtl = await deployMockRewardFreezer([ac.address, agfToken.address], verify);
       await rewardCtl.setFreezePercentage(0);
       await ac.grantAnyRoles(rewardCtl.address, ACCESS_REWARD_MINT);
 
       const freezerRewardPool = await deployPermitFreezerRewardPool(
-        [rewardCtl.address, RAY, 'burners'],
+        [rewardCtl.address, RAY, 0, 'burners'],
         verify
       );
       await waitForTx(await rewardCtl.addRewardPool(freezerRewardPool.address));
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
       const tokenWeightedRewardPoolSeparate = await deployTokenWeightedRewardPoolAGFSeparate(
-        [rewardCtl.address, RAY_100, RAY, 0, RAY_100],
+        [rewardCtl.address, 100, 0],
         verify
       );
       await waitForTx(await rewardCtl.addRewardPool(tokenWeightedRewardPoolSeparate.address));
@@ -103,13 +103,9 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       const basicLocker = await deployMockTokenLocker([
         rewardCtl.address,
-        RAY,
-        RAY,
+        1e6,
         0,
         agfToken.address,
-        WEEK,
-        MAX_LOCKER_PERIOD,
-        RAY_100,
       ]);
       await waitForTx(await rewardCtl.addRewardPool(basicLocker.address));
 

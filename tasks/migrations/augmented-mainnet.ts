@@ -11,12 +11,28 @@ import {
 import { usingTenderly } from '../../helpers/tenderly-utils';
 import { exit } from 'process';
 
-task('augmented:mainnet', 'Deploy development enviroment')
+task('augmented:mainnet', 'Deploy enviroment')
+  .addFlag('incremental', 'Incremental installation')
   .addFlag('verify', 'Verify contracts at Etherscan')
-  .setAction(async ({ verify }, DRE) => {
+  .setAction(async ({ incremental, verify }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
+    const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+
     await DRE.run('set-DRE');
-    await cleanupJsonDb(DRE.network.name);
+
+    let renounce = true;
+    if (incremental) {
+      console.log('======================================================================');
+      console.log('======================================================================');
+      console.log('====================    ATTN! INCREMENTAL MODE    ====================');
+      console.log('======================================================================');
+      console.log(`=========== Delete 'deployed-contracts.json' to start anew ===========`);
+      console.log('======================================================================');
+      console.log('======================================================================');
+      renounce = false;
+    } else {
+      await cleanupJsonDb(DRE.network.name);
+    }
     await cleanupUiConfig();
 
     // Prevent loss of gas verifying all the needed ENVs for Etherscan verification
@@ -25,7 +41,6 @@ task('augmented:mainnet', 'Deploy development enviroment')
     }
 
     let success = false;
-    let renounce = true;
 
     try {
       console.log('Deployment started\n');
@@ -60,7 +75,6 @@ task('augmented:mainnet', 'Deploy development enviroment')
       console.log('10. Deploy reward pools');
       await DRE.run('full:init-reward-pools', { pool: POOL_NAME });
 
-      const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
       if (MAINNET_FORK) {
         console.log('Pluck');
         await DRE.run('dev:pluck-tokens', { pool: POOL_NAME });
@@ -75,12 +89,34 @@ task('augmented:mainnet', 'Deploy development enviroment')
         await DRE.run('verify:tokens', { pool: POOL_NAME });
       }
 
+      renounce = true;
+
+      const [entryMap, instanceCount, multiCount] = printContracts(
+        (await getFirstSigner()).address
+      );
+
+      if (multiCount > 0) {
+        throw 'multi-deployed contract(s) detected';
+      }
+      if (entryMap.size != instanceCount) {
+        throw 'unknown contract(s) detected';
+      }
+      entryMap.forEach((value, key, m) => {
+        if (key.startsWith('Mock')) {
+          throw 'mock contract(s) detected';
+        }
+      });
+
       success = true;
     } catch (err) {
       if (usingTenderly()) {
         console.error('Check tx error:', getTenderlyDashboardLink());
       }
-      console.error(err);
+      console.error(
+        '\n=========================================================\nERROR:',
+        err,
+        '\n'
+      );
     }
 
     if (renounce) {
@@ -109,5 +145,5 @@ task('augmented:mainnet', 'Deploy development enviroment')
     }
 
     console.log('\nFinished deployment');
-    printContracts((await getFirstSigner()).address);
+    //    await cleanupJsonDb(DRE.network.name);
   });

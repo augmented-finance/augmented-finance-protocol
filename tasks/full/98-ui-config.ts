@@ -1,17 +1,19 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { eNetwork } from '../../helpers/types';
-import { loadPoolConfig } from '../../helpers/configuration';
+import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { falsyOrZeroAddress, writeUiConfig } from '../../helpers/misc-utils';
 import {
   getAddressesProviderRegistry,
   getMarketAddressController,
+  getProtocolDataProvider,
 } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
 
 task('full:write-ui-config', 'Prepare UI config')
   .addFlag('verify', 'Verify contracts at Etherscan')
+  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE) => {
     await DRE.run('set-DRE');
 
@@ -40,7 +42,17 @@ task('full:write-ui-config', 'Prepare UI config')
     const dataHelperAddress = await addressProvider.getAddress(AccessFlags.DATA_HELPER);
     if (falsyOrZeroAddress(dataHelperAddress)) {
       console.log('Data Helper is unavailable, configuration is incomplete');
-    } else {
-      writeUiConfig(network, registry.address, addressProvider.address, dataHelperAddress);
+      return;
     }
+
+    writeUiConfig(network, registry.address, addressProvider.address, dataHelperAddress);
+
+    const dataHelper = await getProtocolDataProvider(dataHelperAddress);
+    const allTokens = await dataHelper.getAllTokenDescriptions(true);
+    console.log('All tokens:');
+    allTokens.tokens.slice(0, allTokens.tokenCount.toNumber()).map((x) => {
+      console.log(
+        ` ${x.tokenSymbol} (${x.tokenType} ${x.active} ${x.decimals}):\t${x.token} ${x.underlying} ${x.priceToken}`
+      );
+    });
   });

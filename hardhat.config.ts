@@ -18,6 +18,7 @@ import 'hardhat-typechain';
 import '@tenderly/hardhat-tenderly';
 import 'solidity-coverage';
 import 'hardhat-abi-exporter';
+// import 'hardhat-contract-sizer';
 
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
 const DEFAULT_BLOCK_GAS_LIMIT = 7000000;
@@ -62,7 +63,7 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
 
 const mainnetFork = MAINNET_FORK
   ? {
-      blockNumber: 12419283,
+      blockNumber: 12914827,
       // aave fixed block
       // blockNumber: 12413572,
       url: NETWORKS_RPC_URL['main'],

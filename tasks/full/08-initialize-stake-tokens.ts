@@ -1,12 +1,9 @@
 import { task } from 'hardhat/config';
 import { exit } from 'process';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
-import {
-  deployStakeConfiguratorImpl,
-  deployStakeTokenImpl,
-} from '../../helpers/contracts-deployments';
-import { eNetwork, ICommonConfiguration, StakeMode } from '../../helpers/types';
+import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
+import { deployStakeTokenImpl } from '../../helpers/contracts-deployments';
+import { eNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../../helpers/types';
 import {
   getIErc20Detailed,
   getLendingPoolProxy,
@@ -16,29 +13,26 @@ import {
 import { chunk, falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumberish } from 'ethers';
-
-const CONTRACT_NAME = 'StakeToken';
+import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
 task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .addFlag('verify', `Verify ${CONTRACT_NAME} contract via Etherscan API.`)
+  .addFlag('verify', `Verify contracts via Etherscan API.`)
   .setAction(async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const addressesProvider = await getMarketAddressController();
 
-    const impl = await deployStakeTokenImpl(verify);
-    console.log(`Deployed ${CONTRACT_NAME}.address`, impl.address);
+    const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
     const { ReserveAssets, Names } = poolConfig as ICommonConfiguration;
 
     const stakeConfigurator = await getStakeConfiguratorImpl(
-      await addressesProvider.getStakeConfigurator()
+      await addressProvider.getStakeConfigurator()
     );
 
     const reserveAssets = getParamPerNetwork(ReserveAssets, network);
-    const lendingPool = await getLendingPoolProxy(await addressesProvider.getLendingPool());
+    const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
     let initParams: {
       stakeTokenImpl: string;
       stakedToken: string;
@@ -52,11 +46,21 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
     let initSymbols: string[] = [];
 
     const stakeParams = poolConfig.StakeParams;
+    let tokenImplAddr: tEthereumAddress = '';
     for (const [tokenName, mode] of Object.entries(stakeParams.StakeToken)) {
       if (mode == undefined) {
         continue;
       }
       let asset = reserveAssets[tokenName];
+      if (falsyOrZeroAddress(asset)) {
+        console.log(`Token ${tokenName} has an invalid address, skipping`);
+        continue;
+      }
+
+      if (falsyOrZeroAddress(asset)) {
+        console.log('Stake asset is missing:', tokenName, mode);
+        continue;
+      }
 
       if (asset && mode == StakeMode.stakeAg) {
         const reserveData = await lendingPool.getReserveData(asset);
@@ -71,8 +75,17 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
         const existingToken = await stakeConfigurator.stakeTokenOf(asset);
         if (!falsyOrZeroAddress(existingToken)) {
           console.log('Stake asset is present:', tokenName, existingToken);
+          if (freshStart && !continuation) {
+            throw 'duplicate stake asset: ' + tokenName;
+          }
           continue;
         }
+      }
+
+      if (falsyOrZeroAddress(tokenImplAddr)) {
+        const impl = await deployStakeTokenImpl(verify, continuation);
+        console.log(`Deployed StakeToken implementation:`, impl.address);
+        tokenImplAddr = impl.address;
       }
 
       const assetDetailed = await getIErc20Detailed(asset);
@@ -82,7 +95,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
 
       initSymbols.push(symbol);
       initParams.push({
-        stakeTokenImpl: impl.address,
+        stakeTokenImpl: tokenImplAddr,
         stakedToken: asset,
         stkTokenName: `${Names.StakeTokenNamePrefix} ${tokenName}`,
         stkTokenSymbol: `${Names.StakeSymbolPrefix}${Names.SymbolPrefix}${symbol}`,
@@ -94,13 +107,13 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
     }
 
     // CHUNK CONFIGURATION
-    const initChunks = 1;
+    const initChunks = 4;
 
     const chunkedParams = chunk(initParams, initChunks);
     const chunkedSymbols = chunk(initSymbols, initChunks);
 
     await waitForTx(
-      await addressesProvider.grantRoles((await getFirstSigner()).address, AccessFlags.STAKE_ADMIN)
+      await addressProvider.grantRoles((await getFirstSigner()).address, AccessFlags.STAKE_ADMIN)
     );
 
     console.log(`- Stakes initialization with ${chunkedParams.length} txs`);

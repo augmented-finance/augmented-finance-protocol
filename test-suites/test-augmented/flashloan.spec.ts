@@ -2,12 +2,10 @@ import BigNumber from 'bignumber.js';
 
 import { TestEnv, makeSuite } from './helpers/make-suite';
 import { APPROVAL_AMOUNT_LENDING_POOL, oneRay } from '../../helpers/constants';
-import { convertToCurrencyDecimals, getContract } from '../../helpers/contracts-helpers';
+import { convertToCurrencyDecimals } from '../../helpers/contracts-helpers';
 import { ethers } from 'ethers';
 import { MockFlashLoanReceiver } from '../../types/MockFlashLoanReceiver';
-import { ProtocolErrors, eContractid } from '../../helpers/types';
-import { VariableDebtToken } from '../../types/VariableDebtToken';
-import { StableDebtToken } from '../../types/StableDebtToken';
+import { ProtocolErrors } from '../../helpers/types';
 import {
   getMockFlashLoanReceiver,
   getStableDebtToken,
@@ -277,7 +275,7 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
       .toString();
     const currentLiqudityRate = reserveData.liquidityRate.toString();
     const currentLiquidityIndex = reserveData.liquidityIndex.toString();
-    const currentUserBalance = userData.currentATokenBalance.toString();
+    const currentUserBalance = userData.currentDepositBalance.toString();
 
     const expectedLiquidity = await convertToCurrencyDecimals(usdc.address, '1000.450');
 

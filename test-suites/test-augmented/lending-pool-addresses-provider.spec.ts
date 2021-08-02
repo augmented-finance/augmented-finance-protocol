@@ -3,7 +3,6 @@ import { createRandomAddress } from '../../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ProtocolErrors } from '../../helpers/types';
 import { ethers } from 'ethers';
-import { ZERO_ADDRESS } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
 import { deployLendingPoolImpl } from '../../helpers/contracts-deployments';
 
@@ -17,13 +16,7 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
 
     await addressesProvider.transferOwnership(users[1].address);
 
-    for (const contractFunction of [
-      addressesProvider.setMarketId,
-      addressesProvider.setLendingPoolImpl,
-      addressesProvider.setLendingPoolConfiguratorImpl,
-      addressesProvider.setPriceOracle,
-      addressesProvider.setLendingRateOracle,
-    ]) {
+    for (const contractFunction of [addressesProvider.setMarketId]) {
       await expect(contractFunction(mockAddress)).to.be.revertedWith(INVALID_OWNER_REVERT_MSG);
     }
 
@@ -44,7 +37,7 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
 
     const currentAddressesProviderOwner = users[1];
 
-    const mockLendingPool = await deployLendingPoolImpl();
+    const mockLendingPool = await deployLendingPoolImpl(false, false);
     const proxiedAddressId = 1 << 62;
 
     const proxiedAddressSetReceipt = await waitForTx(
