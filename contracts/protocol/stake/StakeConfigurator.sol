@@ -14,7 +14,7 @@ import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.so
 import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
 import {IProxy} from '../../tools/upgradeability/IProxy.sol';
 import {AccessFlags} from '../../access/AccessFlags.sol';
-import {ProxyOwner} from '../../tools/upgradeability/ProxyOwner.sol';
+import {ProxyAdmin} from '../../tools/upgradeability/ProxyAdmin.sol';
 
 contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStakeConfigurator {
   uint256 private constant CONFIGURATOR_REVISION = 1;
@@ -23,10 +23,10 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
   uint256 private _entryCount;
   mapping(address => uint256) private _underlyings;
 
-  ProxyOwner internal immutable _proxies;
+  ProxyAdmin internal immutable _proxies;
 
   constructor() public MarketAccessBitmask(IMarketAccessController(0)) {
-    _proxies = new ProxyOwner();
+    _proxies = new ProxyAdmin();
   }
 
   function getRevision() internal pure virtual override returns (uint256) {
@@ -163,7 +163,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
   }
 
   function implementationOf(address token) external view returns (address) {
-    return _proxies.implementationOf(token);
+    return _proxies.getProxyImplementation(IProxy(token));
   }
 
   function updateStakeToken(UpdateStakeTokenData calldata input)
@@ -181,7 +181,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
         data.stkTokenDecimals
       );
 
-    _proxies.upgradeToAndCall(input.token, input.stakeTokenImpl, params);
+    _proxies.upgradeAndCall(IProxy(input.token), input.stakeTokenImpl, params);
 
     emit StakeTokenUpgraded(input.token, input);
   }
