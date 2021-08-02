@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 import {
   deployLendingPoolExtensionImpl,
   deployLendingPoolConfiguratorImpl,
-  deployLendingPoolImpl,
+  deployMockLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
 import { waitForTx } from '../../helpers/misc-utils';
 import { getMarketAddressController, getLendingPoolProxy } from '../../helpers/contracts-getters';
@@ -15,7 +15,7 @@ task('dev:deploy-lending-pool', 'Deploy lending pool for dev enviroment')
 
     const addressesProvider = await getMarketAddressController();
 
-    const lendingPoolImpl = await deployLendingPoolImpl(verify, false);
+    const lendingPoolImpl = await deployMockLendingPoolImpl(verify);
     const poolExtensionImpl = await deployLendingPoolExtensionImpl(verify, false);
 
     // Set lending pool impl to Address Provider
