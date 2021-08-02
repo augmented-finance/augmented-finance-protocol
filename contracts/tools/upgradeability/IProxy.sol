@@ -8,7 +8,3 @@ interface IProxy {
 
   function upgradeToAndCall(address newImplementation, bytes calldata data) external payable;
 }
-
-interface IProxyView {
-  function _proxy_view_implementation() external view returns (address admin, address impl);
-}
