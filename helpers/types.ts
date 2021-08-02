@@ -92,6 +92,7 @@ export enum eContractid {
   MockUniswapV2Router02 = 'MockUniswapV2Router02',
   MockTokenLocker = 'MockTokenLocker',
   MockDecayingTokenLocker = 'MockDecayingTokenLocker',
+  MockDelegationAwareDepositToken = 'MockDelegationAwareDepositToken',
 
   TokenWeightedRewardPoolAGFSeparate = 'MockRewardPoolAGFSeparate',
   TokenWeightedRewardPoolAGFBoosted = 'MockRewardPoolAGFBoosted',

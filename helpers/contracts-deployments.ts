@@ -63,6 +63,8 @@ import {
   StaticPriceOracleFactory,
   ReferralRewardPoolFactory,
   LendingPoolCompatibleFactory,
+  MockLendingPoolFactory,
+  MockDelegationAwareDepositTokenFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -197,6 +199,16 @@ export const deployLendingPoolExtensionImpl = async (verify: boolean, once: bool
     [],
     verify,
     once
+  );
+};
+
+export const deployMockLendingPoolImpl = async (verify?: boolean) => {
+  // const libraries = await deployLendingPoolLibraries(verify);
+  return await withSaveAndVerify(
+    await new MockLendingPoolFactory(/* libraries, */ await getFirstSigner()).deploy(),
+    eContractid.LendingPoolImpl,
+    [],
+    verify
   );
 };
 
@@ -416,6 +428,38 @@ export const deployDelegationAwareDepositToken = async (
   const instance = await withVerify(
     await new DelegationAwareDepositTokenFactory(await getFirstSigner()).deploy(),
     'DelegationAwareDepositToken',
+    [],
+    verify
+  );
+
+  await instance.initialize(
+    {
+      pool,
+      treasury: treasuryAddress,
+      underlyingAsset: underlyingAssetAddress,
+    },
+    name,
+    symbol,
+    '18',
+    '0x10'
+  );
+
+  return instance;
+};
+
+export const deployMockDelegationAwareDepositToken = async (
+  [pool, underlyingAssetAddress, treasuryAddress, name, symbol]: [
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    string,
+    string
+  ],
+  verify: boolean
+) => {
+  const instance = await withVerify(
+    await new MockDelegationAwareDepositTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.MockDelegationAwareDepositToken,
     [],
     verify
   );
