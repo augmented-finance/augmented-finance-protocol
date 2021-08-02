@@ -65,7 +65,12 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
           tokensAddressesWithoutUsd,
           lendingRateOracle
         );
-        await waitForTx(await addressProvider.setLendingRateOracle(lendingRateOracle.address));
+        await waitForTx(
+          await addressProvider.setAddress(
+            AccessFlags.LENDING_RATE_ORACLE,
+            lendingRateOracle.address
+          )
+        );
 
         lroAddress = lendingRateOracle.address;
       }
@@ -119,7 +124,9 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
         ],
         verify
       );
-      await addressProvider.setPriceOracle(oracleRouter.address);
+      await waitForTx(
+        await addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address)
+      );
 
       console.log('PriceOracle: ', oracleRouter.address);
     }

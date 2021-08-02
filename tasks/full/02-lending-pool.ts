@@ -31,7 +31,9 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
       console.log('\tDeploying lending pool...');
       const lendingPoolImpl = await deployLendingPoolImpl(verify, continuation);
       console.log('\tLending pool implementation:', lendingPoolImpl.address);
-      await waitForTx(await addressProvider.setLendingPoolImpl(lendingPoolImpl.address));
+      await waitForTx(
+        await addressProvider.setAddressAsProxy(AccessFlags.LENDING_POOL, lendingPoolImpl.address)
+      );
       lpAddress = await addressProvider.getLendingPool();
     }
 
@@ -62,7 +64,10 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
       );
 
       await waitForTx(
-        await addressProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address)
+        await addressProvider.setAddressAsProxy(
+          AccessFlags.LENDING_POOL_CONFIGURATOR,
+          lendingPoolConfiguratorImpl.address
+        )
       );
       lpConfigurator = await addressProvider.getLendingPoolConfigurator();
     }
