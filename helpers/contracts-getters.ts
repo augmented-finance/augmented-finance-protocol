@@ -42,6 +42,7 @@ import {
   AGFTokenV1Factory,
   TreasuryFactory,
   ReferralRewardPoolFactory,
+  MockLendingPoolFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -241,8 +242,11 @@ export const getMockStakedAgToken = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getProxy = async (address: tEthereumAddress) =>
-  InitializableAdminUpgradeabilityProxyFactory.connect(address, await getFirstSigner());
+export const getMockLendingPoolImpl = async (address?: tEthereumAddress) =>
+  MockLendingPoolFactory.connect(
+    address || (await getAddr(eContractid.LendingPoolImpl)),
+    await getFirstSigner()
+  );
 
 export const getLendingPoolImpl = async (address?: tEthereumAddress) =>
   LendingPoolFactory.connect(

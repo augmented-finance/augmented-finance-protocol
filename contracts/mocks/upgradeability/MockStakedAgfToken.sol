@@ -15,7 +15,10 @@ contract MockStakedAgfToken is SlashableStakeTokenBase, VersionedInitializable {
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor() public SlashableStakeTokenBase(zeroConfig(), NAME, SYMBOL, 0) {}
+  constructor() public SlashableStakeTokenBase(zeroConfig(), NAME, SYMBOL, 0) {
+    // enables use of this instance without a proxy
+    _unsafeResetVersionedInitializers();
+  }
 
   function zeroConfig() private pure returns (StakeTokenConfig memory) {}
 

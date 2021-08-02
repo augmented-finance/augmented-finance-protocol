@@ -52,6 +52,15 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
         continue;
       }
       let asset = reserveAssets[tokenName];
+      if (falsyOrZeroAddress(asset)) {
+        console.log(`Token ${tokenName} has an invalid address, skipping`);
+        continue;
+      }
+
+      if (falsyOrZeroAddress(asset)) {
+        console.log('Stake asset is missing:', tokenName, mode);
+        continue;
+      }
 
       if (asset && mode == StakeMode.stakeAg) {
         const reserveData = await lendingPool.getReserveData(asset);

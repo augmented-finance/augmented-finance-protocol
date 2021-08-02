@@ -16,7 +16,7 @@ import {
 } from '../../helpers/configuration';
 import { getTokenAggregatorPairs } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
-import { oneEther } from '../../helpers/constants';
+import { oneEther, ZERO_ADDRESS } from '../../helpers/constants';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
 task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
@@ -65,7 +65,12 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
           tokensAddressesWithoutUsd,
           lendingRateOracle
         );
-        await waitForTx(await addressProvider.setLendingRateOracle(lendingRateOracle.address));
+        await waitForTx(
+          await addressProvider.setAddress(
+            AccessFlags.LENDING_RATE_ORACLE,
+            lendingRateOracle.address
+          )
+        );
 
         lroAddress = lendingRateOracle.address;
       }
@@ -76,7 +81,11 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
 
     if (falsyOrZeroAddress(poAddress)) {
       if (typeof fallbackOracle == 'string') {
-        fallbackOracleAddress = fallbackOracle;
+        if (fallbackOracle == '') {
+          fallbackOracleAddress = ZERO_ADDRESS;
+        } else {
+          fallbackOracleAddress = fallbackOracle;
+        }
       } else {
         console.log('Deploying StaticPriceOracle as fallback');
         const tokenAddressList: string[] = [];
@@ -115,7 +124,9 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
         ],
         verify
       );
-      await addressProvider.setPriceOracle(oracleRouter.address);
+      await waitForTx(
+        await addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address)
+      );
 
       console.log('PriceOracle: ', oracleRouter.address);
     }

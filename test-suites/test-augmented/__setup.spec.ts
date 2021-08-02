@@ -18,8 +18,8 @@ import {
   deployFlashLiquidationAdapter,
   deployTreasuryImpl,
   deployLendingPoolConfiguratorImpl,
-  deployLendingPoolImpl,
   deployLendingPoolExtensionImpl,
+  deployMockLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
 import { TokenContractId, tEthereumAddress, LendingPools } from '../../helpers/types';
@@ -94,9 +94,11 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const addressesProviderRegistry = await deployAddressesProviderRegistry();
   await addressesProviderRegistry.registerAddressesProvider(addressProvider.address, 1);
 
-  const lendingPoolImpl = await deployLendingPoolImpl(false, false);
+  const lendingPoolImpl = await deployMockLendingPoolImpl();
 
-  await waitForTx(await addressProvider.setLendingPoolImpl(lendingPoolImpl.address));
+  await waitForTx(
+    await addressProvider.setAddressAsProxy(AccessFlags.LENDING_POOL, lendingPoolImpl.address)
+  );
 
   const lendingPoolAddress = await addressProvider.getLendingPool();
   const lendingPoolProxy = await getLendingPoolProxy(lendingPoolAddress);
@@ -109,7 +111,10 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   await lendingPoolProxy.setLendingPoolExtension(poolExtensionImpl.address);
 
   const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(false, false);
-  await addressProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address);
+  await addressProvider.setAddressAsProxy(
+    AccessFlags.LENDING_POOL_CONFIGURATOR,
+    lendingPoolConfiguratorImpl.address
+  );
 
   const fallbackOracle = await deployMockPriceOracle();
   await waitForTx(await fallbackOracle.setEthUsdPrice(MOCK_USD_PRICE_IN_WEI));
@@ -172,8 +177,8 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
     lendingRateOracle
   );
 
-  await addressProvider.setPriceOracle(fallbackOracle.address);
-  await addressProvider.setLendingRateOracle(lendingRateOracle.address);
+  await addressProvider.setAddress(AccessFlags.PRICE_ORACLE, fallbackOracle.address);
+  await addressProvider.setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle.address);
 
   const reservesParams = getReservesConfigByPool(LendingPools.augmented);
 
@@ -186,8 +191,8 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const { Names } = config;
 
   const treasuryImpl = await deployTreasuryImpl(false, false);
-  addressProvider.setTreasuryImpl(treasuryImpl.address);
-  const treasuryAddress = treasuryImpl.address;
+  await addressProvider.setAddressAsProxy(AccessFlags.TREASURY, treasuryImpl.address);
+  const treasuryAddress = await addressProvider.getTreasury();
 
   await initReservesByHelper(
     addressProvider,
