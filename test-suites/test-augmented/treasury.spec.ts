@@ -40,9 +40,13 @@ describe('Treasury rewards suite', () => {
     rewardController = await getMockRewardFreezer();
 
     ac = await getMarketAccessController();
+
+    await ac.unmarkProxies(AccessFlags.REWARD_TOKEN | AccessFlags.REWARD_CONTROLLER);
     await ac.setAddress(AccessFlags.REWARD_TOKEN, agf.address); // don't use proxy
     await ac.setAddress(AccessFlags.REWARD_CONTROLLER, rewardController.address); // don't use proxy
-    await ac.setTreasuryImpl((await deployTreasuryImpl(false, false)).address);
+
+    const treasuryImpl = await deployTreasuryImpl(false, false);
+    await ac.setAddressAsProxy(AccessFlags.TREASURY, treasuryImpl.address);
 
     treasury = await getTreasuryProxy(await ac.getTreasury());
     await ac.grantRoles(user1.address, AccessFlags.TREASURY_ADMIN);

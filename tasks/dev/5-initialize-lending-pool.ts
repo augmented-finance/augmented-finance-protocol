@@ -36,8 +36,8 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     const reservesParams = getReservesConfigByPool(LendingPools.augmented);
 
     const treasuryImpl = await deployTreasuryImpl(false, false);
-    addressesProvider.setTreasuryImpl(treasuryImpl.address);
-    const treasuryAddress = treasuryImpl.address;
+    await addressesProvider.setAddressAsProxy(AccessFlags.TREASURY, treasuryImpl.address);
+    const treasuryAddress = await addressesProvider.getTreasury();
 
     await initReservesByHelper(
       addressesProvider,
