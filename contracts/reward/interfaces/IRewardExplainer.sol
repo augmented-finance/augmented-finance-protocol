@@ -7,21 +7,21 @@ import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
 import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
 
 interface IRewardExplainer {
-  function explainReward(address holder) external view returns (RewardExplained memory);
+  function explainReward(address holder, uint32 at) external view returns (RewardExplained memory);
 }
 
 struct RewardExplained {
-  uint256 amountProvided;
+  uint256 amountAllocated;
   uint256 amountRetained;
-  RewardExplainEntry[] entries;
+  RewardExplainEntry[] allocations;
 }
 
-enum RewardType {WorkReward, BoostReward, FrozenReward, LockedReward}
+enum RewardType {WorkReward, BoostReward}
 
 struct RewardExplainEntry {
-  address origin;
   uint256 amount;
+  address pool;
   uint32 since;
+  uint32 factor;
   RewardType rewardType;
-  bool retained;
 }

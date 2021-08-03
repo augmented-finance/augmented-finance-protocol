@@ -56,7 +56,7 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRateAccum {
     return (0, 0);
   }
 
-  function internalCalcReward(address holder)
+  function internalCalcReward(address holder, uint32 at)
     internal
     view
     virtual
@@ -64,7 +64,7 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRateAccum {
     returns (uint256, uint32)
   {
     if (holder == _treasury) {
-      return (doCalcRewardAt(uint32(block.timestamp)), uint32(block.timestamp));
+      return (doCalcRewardAt(at), at);
     }
     return (0, 0);
   }

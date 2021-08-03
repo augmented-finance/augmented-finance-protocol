@@ -186,12 +186,11 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     return (claimableAmount, 0);
   }
 
-  function internalCalcClaimableReward(address holder, uint256 mask)
-    internal
-    view
-    override
-    returns (uint256 claimableAmount, uint256)
-  {
+  function internalCalcClaimableReward(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) internal view override returns (uint256 claimableAmount, uint256) {
     uint256 boostLimit;
     (claimableAmount, boostLimit) = (
       _workRewards[holder].claimableReward,
@@ -204,7 +203,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
       }
 
       IManagedRewardPool pool = getPool(i);
-      (uint256 amount_, ) = pool.calcRewardFor(holder);
+      (uint256 amount_, ) = pool.calcRewardFor(holder, at);
       if (amount_ == 0) {
         continue;
       }
@@ -216,7 +215,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     uint256 boost = _boostRewards[holder];
 
     if (_boostPool != IManagedRewardPool(0)) {
-      (uint256 boost_, ) = _boostPool.calcRewardFor(holder);
+      (uint256 boost_, ) = _boostPool.calcRewardFor(holder, at);
       boost = boost.add(boost_);
     }
 

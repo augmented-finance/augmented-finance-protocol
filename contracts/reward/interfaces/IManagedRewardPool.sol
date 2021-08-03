@@ -22,7 +22,10 @@ interface IManagedRewardPool is IEmergencyAccess {
     external
     returns (uint256 amount, uint32 since);
 
-  function calcRewardFor(address holder) external view returns (uint256 amount, uint32 since);
+  function calcRewardFor(address holder, uint32 at)
+    external
+    view
+    returns (uint256 amount, uint32 since);
 
   function addRewardProvider(address provider, address token) external;
 
