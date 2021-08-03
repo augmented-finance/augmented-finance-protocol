@@ -87,7 +87,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       tokens[tokenCount] = TokenDescription(
         token,
         token,
-        IRewardedToken(token).getIncentivesController(),
+        address(0),
         IERC20Detailed(token).symbol(),
         address(0),
         IERC20Detailed(token).decimals(),
