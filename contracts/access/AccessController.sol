@@ -6,6 +6,7 @@ import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {Errors} from '../tools/Errors.sol';
 
 import {BitUtils} from '../tools/math/BitUtils.sol';
+import {Address} from '../dependencies/openzeppelin/contracts/Address.sol';
 
 // prettier-ignore
 import {InitializableImmutableAdminUpgradeabilityProxy} from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
@@ -286,7 +287,7 @@ contract AccessController is Ownable, IManagedAccessController {
    * @param newAddress The address to set
    */
   function setAddress(uint256 id, address newAddress) public override onlyAdmin {
-    require(_proxies & id == 0, 'use of setAddressAsProxy is required');
+    require(_proxies & id == 0, 'setAddressAsProxy is required');
     _internalSetAddress(id, newAddress);
     emit AddressSet(id, newAddress, false);
   }
@@ -296,7 +297,6 @@ contract AccessController is Ownable, IManagedAccessController {
     if (_singletons & id == 0) {
       require(_nonSingletons & id == 0, 'id is not a singleton');
       _singletons |= id;
-      console.log('_internalSetAddress', newAddress, id);
     }
 
     address prev = _addresses[id];
@@ -304,6 +304,7 @@ contract AccessController is Ownable, IManagedAccessController {
       _masks[prev] = _masks[prev] & ~id;
     }
     if (newAddress != address(0)) {
+      require(Address.isContract(newAddress), 'must be contract');
       _masks[newAddress] = _masks[newAddress] | id;
     }
     _addresses[id] = newAddress;
