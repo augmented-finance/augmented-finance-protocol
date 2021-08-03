@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
 
 import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
 import {IChainlinkAggregator} from '../interfaces/IChainlinkAggregator.sol';
 import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
+import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import {AccessFlags} from '../access/AccessFlags.sol';
 
 /// @title OracleRouter
 /// @notice Proxy smart contract to get the price of an asset from a price source, with Chainlink Aggregator
@@ -14,7 +16,7 @@ import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 /// - If the returned price by a Chainlink aggregator is <= 0, the call is forwarded to a fallbackOracle
 /// - Owned by the governance system, allowed to add sources for assets, replace them
 ///   and change the fallbackOracle
-contract OracleRouter is IPriceOracleGetter, Ownable {
+contract OracleRouter is IPriceOracleGetter, MarketAccessBitmask {
   using SafeERC20 for IERC20;
 
   event WethSet(address indexed weth);
@@ -31,11 +33,12 @@ contract OracleRouter is IPriceOracleGetter, Ownable {
   /// @param fallbackOracle The address of the fallback oracle to use if the data of an
   ///        aggregator is not consistent
   constructor(
+    IMarketAccessController acl,
     address[] memory assets,
     address[] memory sources,
     address fallbackOracle,
     address weth
-  ) public {
+  ) public MarketAccessBitmask(acl) {
     _setFallbackOracle(fallbackOracle);
     _setAssetsSources(assets, sources);
     WETH = weth;
@@ -47,15 +50,14 @@ contract OracleRouter is IPriceOracleGetter, Ownable {
   /// @param sources The address of the source of each asset
   function setAssetSources(address[] calldata assets, address[] calldata sources)
     external
-    onlyOwner
+    aclHas(AccessFlags.ORACLE_ADMIN)
   {
     _setAssetsSources(assets, sources);
   }
 
   /// @notice Sets the fallbackOracle
-  /// - Callable only by the Aave governance
   /// @param fallbackOracle The address of the fallbackOracle
-  function setFallbackOracle(address fallbackOracle) external onlyOwner {
+  function setFallbackOracle(address fallbackOracle) external aclHas(AccessFlags.ORACLE_ADMIN) {
     _setFallbackOracle(fallbackOracle);
   }
 

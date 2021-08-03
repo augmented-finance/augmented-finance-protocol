@@ -5,8 +5,25 @@ pragma experimental ABIEncoderV2;
 import {IPoolAddressProvider} from '../../interfaces/IPoolAddressProvider.sol';
 
 interface IUiPoolDataProvider {
+  struct Addresses {
+    address addressProvider;
+    address lendingPool;
+    address stakeConfigurator;
+    address rewardConfigurator;
+    address rewardController;
+    address wethGateway;
+    address priceOracle;
+    address lendingPriceOracle;
+    address rewardToken;
+    address rewardStake;
+    address referralRegistry;
+  }
+
+  function getAddresses() external view returns (Addresses memory);
+
   struct AggregatedReserveData {
     address underlyingAsset;
+    address pricingAsset;
     string name;
     string symbol;
     uint256 decimals;
@@ -26,10 +43,10 @@ interface IUiPoolDataProvider {
     uint128 variableBorrowRate;
     uint128 stableBorrowRate;
     uint40 lastUpdateTimestamp;
-    address aTokenAddress;
+    address depositTokenAddress;
     address stableDebtTokenAddress;
     address variableDebtTokenAddress;
-    address interestRateStrategyAddress;
+    address strategy;
     //
     uint256 availableLiquidity;
     uint256 totalPrincipalStableDebt;
@@ -50,7 +67,7 @@ interface IUiPoolDataProvider {
 
   struct UserReserveData {
     address underlyingAsset;
-    uint256 scaledATokenBalance;
+    uint256 scaledDepositTokenBalance;
     bool usageAsCollateralEnabledOnUser;
     uint256 stableBorrowRate;
     uint256 scaledVariableDebt;
@@ -67,7 +84,16 @@ interface IUiPoolDataProvider {
   //    address aTokenAddress;
   //  }
 
-  function getReservesData(IPoolAddressProvider provider, address user)
+  function getReservesDataOf(IPoolAddressProvider provider, address user)
+    external
+    view
+    returns (
+      AggregatedReserveData[] memory,
+      UserReserveData[] memory,
+      uint256
+    );
+
+  function getReservesData(address user)
     external
     view
     returns (

@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
-import { oneEther, oneRay, RAY, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES } from '../../helpers/constants';
-import { ICommonConfiguration, eEthereumNetwork } from '../../helpers/types';
+import { ONE_ADDRESS, oneRay, RAY, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames } from '../../helpers/constants';
+import { ICommonConfiguration, eEthereumNetwork, StakeMode } from '../../helpers/types';
 
 // ----------------
 // PROTOCOL GLOBAL PARAMS
@@ -8,18 +8,13 @@ import { ICommonConfiguration, eEthereumNetwork } from '../../helpers/types';
 
 export const CommonsConfig: ICommonConfiguration = {
   MarketId: 'Commons',
-  ATokenNamePrefix: 'Augmented interest bearing',
-  StableDebtTokenNamePrefix: 'Augmented stable debt bearing',
-  VariableDebtTokenNamePrefix: 'Augmented variable debt bearing',
-  SymbolPrefix: '',
+  Names: DefaultTokenNames,
   ProviderId: 0, // Overriden in index.ts
   ProtocolGlobalParams: {
-    TokenDistributorPercentageBase: '10000',
     MockUsdPriceInWei: '5848466240000000',
     UsdAddress: '0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96',
     NilAddress: '0x0000000000000000000000000000000000000000',
     OneAddress: '0x0000000000000000000000000000000000000001',
-    AaveReferral: '0',
   },
 
   // ----------------
@@ -58,15 +53,16 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.coverage]: undefined,
     [eEthereumNetwork.coverage]: undefined,
     [eEthereumNetwork.hardhat]: undefined,
+    [eEthereumNetwork.docker]: undefined,
     [eEthereumNetwork.kovan]: undefined,
     [eEthereumNetwork.ropsten]: undefined,
     [eEthereumNetwork.rinkeby]: undefined,
     [eEthereumNetwork.main]: undefined,
     [eEthereumNetwork.tenderlyMain]: undefined,
   },
-  PoolAdminIndex: 0,
   EmergencyAdmin: {
     [eEthereumNetwork.hardhat]: undefined,
+    [eEthereumNetwork.docker]: undefined,
     [eEthereumNetwork.coverage]: undefined,
     [eEthereumNetwork.kovan]: undefined,
     [eEthereumNetwork.ropsten]: undefined,
@@ -74,93 +70,52 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.main]: undefined,
     [eEthereumNetwork.tenderlyMain]: undefined,
   },
-  EmergencyAdminIndex: 1,
   ProviderRegistry: {
     [eEthereumNetwork.kovan]: '',
-    [eEthereumNetwork.ropsten]: '0x7fDDBe70E51b81BC95535B7fb1076cb312c71Cfa',
-    [eEthereumNetwork.rinkeby]: '0x1cfDBe61a245e246D81bD51e9661A216f27d43AD',
+    [eEthereumNetwork.ropsten]: '',
+    [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: '',
+    [eEthereumNetwork.docker]: '',
     [eEthereumNetwork.tenderlyMain]: '',
   },
   ProviderRegistryOwner: {
     [eEthereumNetwork.kovan]: '',
     [eEthereumNetwork.ropsten]: '',
     [eEthereumNetwork.rinkeby]: '',
-    [eEthereumNetwork.main]: '0xbd723fc4f1d737dcfc48a07fe7336766d34cad5f',
+    [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.tenderlyMain]: '0xbd723fc4f1d737dcfc48a07fe7336766d34cad5f',
+    [eEthereumNetwork.docker]: '',
+    [eEthereumNetwork.tenderlyMain]: '',
   },
-  LendingRateOracle: {
-    [eEthereumNetwork.coverage]: '',
-    [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.kovan]: '', //'0xdCde9Bb6a49e37fA433990832AB541AE2d4FEB4a',
-    [eEthereumNetwork.ropsten]: '0x4DDa592490946E70Be97890bb627F74e4bC422C5',
-    [eEthereumNetwork.rinkeby]: '0xf790036f0e775d799F7415772c55Bc76c5fB577b',
-    [eEthereumNetwork.main]: '', // '0x8A32f49FFbA88aba6EFF96F45D8BD1D4b3f35c7D',
-    [eEthereumNetwork.tenderlyMain]: '0x8A32f49FFbA88aba6EFF96F45D8BD1D4b3f35c7D',
-  },
-  LendingPoolCollateralManager: {
-    [eEthereumNetwork.coverage]: '',
-    [eEthereumNetwork.hardhat]: '',
+  AddressProvider: {
     [eEthereumNetwork.kovan]: '',
     [eEthereumNetwork.ropsten]: '',
-    [eEthereumNetwork.rinkeby]: '0xb8828B197257c83991c95F3331Fc0663FF6dd42E',
-    [eEthereumNetwork.main]: '0xbd4765210d4167CE2A5b87280D9E8Ee316D5EC7C',
-    [eEthereumNetwork.tenderlyMain]: '0xbd4765210d4167CE2A5b87280D9E8Ee316D5EC7C',
-  },
-  LendingPoolConfigurator: {
-    [eEthereumNetwork.coverage]: '',
-    [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.kovan]: '',
-    [eEthereumNetwork.ropsten]: '0xF00e35b72908d8927F5B92B6AC7976ce93f62797',
-    [eEthereumNetwork.rinkeby]: '0xC44efe3b30BCa542733E4e0d2362f8d084Bf3E0C',
-    [eEthereumNetwork.main]: '',
-    [eEthereumNetwork.tenderlyMain]: '',
-  },
-  LendingPool: {
-    [eEthereumNetwork.coverage]: '',
-    [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.kovan]: '',
-    [eEthereumNetwork.ropsten]: '0x84645F11FACB532E9CF55B6956B04B00B2C68A4f',
-    [eEthereumNetwork.rinkeby]: '0x14BCCf4749eCFf75c3229a65fa2E1281A148617a',
-    [eEthereumNetwork.main]: '',
-    [eEthereumNetwork.tenderlyMain]: '',
-  },
-  WethGateway: {
-    [eEthereumNetwork.coverage]: '',
-    [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.kovan]: '', // '0xf99b8E67a0E044734B01EC4586D1c88C9a869718',
-    [eEthereumNetwork.ropsten]: '0x79D9875Fa925d9dEbEAd6e60Df3Bc67f6Fb58B40',
-    [eEthereumNetwork.rinkeby]: '0x1b9a49CffC303d8f8D3b6956792fa7Cf6edc86c7',
-    [eEthereumNetwork.main]: '',
-    [eEthereumNetwork.tenderlyMain]: '',
-  },
-  TokenDistributor: {
-    [eEthereumNetwork.coverage]: '',
-    [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.kovan]: '0x971efe90088f21dc6a36f610ffed77fc19710708',
-    [eEthereumNetwork.ropsten]: '', // '0xeba2ea67942b8250d870b12750b594696d02fc9c',
     [eEthereumNetwork.rinkeby]: '',
-    [eEthereumNetwork.main]: '0xe3d9988f676457123c5fd01297605efdd0cba1ae',
-    [eEthereumNetwork.tenderlyMain]: '0xe3d9988f676457123c5fd01297605efdd0cba1ae',
-  },
-  OracleRouter: {
+    [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.kovan]: '',//'0xB8bE51E6563BB312Cbb2aa26e352516c25c26ac1',
-    [eEthereumNetwork.ropsten]: '0xC7a9D2ef3B36Bb334DCdE29f140cD392BD123954',
-    [eEthereumNetwork.rinkeby]: '0xB1bABa14d4AE8E7442549a99Cd022f9166752f21',
-    [eEthereumNetwork.main]: '',//'0xA50ba011c48153De246E5192C8f9258A2ba79Ca9',
-    [eEthereumNetwork.tenderlyMain]: '0xA50ba011c48153De246E5192C8f9258A2ba79Ca9',
+    [eEthereumNetwork.docker]: '',
+    [eEthereumNetwork.tenderlyMain]: '',
+  },
+  AddressProviderOwner: {
+    [eEthereumNetwork.kovan]: '',
+    [eEthereumNetwork.ropsten]: '',
+    [eEthereumNetwork.rinkeby]: '',
+    [eEthereumNetwork.main]: '',
+    [eEthereumNetwork.coverage]: '',
+    [eEthereumNetwork.hardhat]: '',
+    [eEthereumNetwork.docker]: '',
+    [eEthereumNetwork.tenderlyMain]: '',
   },
   FallbackOracle: {
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: ZERO_ADDRESS,
-    [eEthereumNetwork.kovan]: ZERO_ADDRESS, // '0x50913E8E1c650E790F8a1E741FF9B1B1bB251dfe',
-    [eEthereumNetwork.ropsten]: ZERO_ADDRESS, // '0xAD1a978cdbb8175b2eaeC47B01404f8AEC5f4F0d',
+    [eEthereumNetwork.docker]: ZERO_ADDRESS,
+    [eEthereumNetwork.kovan]: ZERO_ADDRESS, 
+    [eEthereumNetwork.ropsten]: ZERO_ADDRESS, 
     [eEthereumNetwork.rinkeby]: ZERO_ADDRESS,
     [eEthereumNetwork.main]: ZERO_ADDRESS,
     [eEthereumNetwork.tenderlyMain]: ZERO_ADDRESS,
@@ -168,6 +123,7 @@ export const CommonsConfig: ICommonConfiguration = {
   ChainlinkAggregator: {
     [eEthereumNetwork.coverage]: {},
     [eEthereumNetwork.hardhat]: {},
+    [eEthereumNetwork.docker]: {},
     [eEthereumNetwork.kovan]: {
       AAVE: '0xd04647B7CB523bb9f26730E9B6dE1174db7591Ad',
       BAT: '0x0e4fcEC26c9f85c3D714370c98f43C4E02Fc35Ae',
@@ -233,7 +189,7 @@ export const CommonsConfig: ICommonConfiguration = {
       YFI: ZERO_ADDRESS,
       ZRX: ZERO_ADDRESS,
       USD: '0x8A753747A1Fa494EC906cE90E9f37563A8AF630e',
-    }, //TODO:
+    }, 
     [eEthereumNetwork.main]: {
       AAVE: '0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012',
       BAT: '0x0d16d4528239e9ee52fa531af613AcdB23D88c94',
@@ -282,6 +238,7 @@ export const CommonsConfig: ICommonConfiguration = {
   ReserveAssets: {
     [eEthereumNetwork.coverage]: {},
     [eEthereumNetwork.hardhat]: {},
+    [eEthereumNetwork.docker]: {},
     [eEthereumNetwork.main]: {},
     [eEthereumNetwork.kovan]: {},
     [eEthereumNetwork.ropsten]: {},
@@ -289,33 +246,154 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.tenderlyMain]: {},
   },
   ReservesConfig: {},
-  ATokenDomainSeparator: {
-    [eEthereumNetwork.coverage]:
-      '0x95b73a72c6ecf4ccbbba5178800023260bad8e75cdccdb8e4827a2977a37c820',
-    [eEthereumNetwork.hardhat]:
-      '0xbae024d959c6a022dc5ed37294cd39c141034b2ae5f02a955cce75c930a81bf5',
-    [eEthereumNetwork.kovan]: '',
-    [eEthereumNetwork.ropsten]: '',
-    [eEthereumNetwork.rinkeby]: '',
-    [eEthereumNetwork.main]: '',
-    [eEthereumNetwork.tenderlyMain]: '',
-  },
   WETH: {
     [eEthereumNetwork.coverage]: '', // deployed in local evm
     [eEthereumNetwork.hardhat]: '', // deployed in local evm
+    [eEthereumNetwork.docker]: '', // deployed in local evm
     [eEthereumNetwork.kovan]: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
     [eEthereumNetwork.ropsten]: '0xc778417e063141139fce010982780140aa0cd5ab',
     [eEthereumNetwork.rinkeby]: '0xdf032bc4b9dc2782bb09352007d4c57b75160b15',
     [eEthereumNetwork.main]: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
     [eEthereumNetwork.tenderlyMain]: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
   },
-  ReserveFactorTreasuryAddress: {
-    [eEthereumNetwork.coverage]: '0x464c71f6c2f760dda6093dcb91c24c39e5d6e18c',
-    [eEthereumNetwork.hardhat]: '0x464c71f6c2f760dda6093dcb91c24c39e5d6e18c',
-    [eEthereumNetwork.kovan]: '0x464c71f6c2f760dda6093dcb91c24c39e5d6e18c',
-    [eEthereumNetwork.ropsten]: '0x464c71f6c2f760dda6093dcb91c24c39e5d6e18c',
-    [eEthereumNetwork.rinkeby]: '0x464c71f6c2f760dda6093dcb91c24c39e5d6e18c',
-    [eEthereumNetwork.main]: '0x464c71f6c2f760dda6093dcb91c24c39e5d6e18c',
-    [eEthereumNetwork.tenderlyMain]: '0x464c71f6c2f760dda6093dcb91c24c39e5d6e18c',
+
+  StakeParams: {
+    MaxSlashBP: 3000, // 30%
+    CooldownPeriod: 2 * DAY,
+    UnstakePeriod: DAY,
+    StakeToken: {
+      DAI:  StakeMode.stakeAg,
+      USDC: StakeMode.stakeAg,
+      USDT: StakeMode.stakeAg,
+      WBTC: StakeMode.stakeAg,
+      WETH: StakeMode.stakeAg,
+    }
   },
+
+  RewardParams : {
+    InitialRateWad: 2.12,
+    TokenPools: {
+      DAI:   {
+        Share: {
+          deposit: {
+            BasePoints: 200,
+            BoostFactor: 3,
+          },
+          vDebt: {
+            BasePoints: 200,
+            BoostFactor: 3,
+          },
+          stake: {
+            BasePoints: 400,
+            BoostFactor: 3,
+          },
+        }
+      },
+      USDC:   {
+        Share: {
+          deposit: {
+            BasePoints: 200,
+            BoostFactor: 3,
+          },
+          vDebt: {
+            BasePoints: 200,
+            BoostFactor: 3,
+          },
+          stake: {
+            BasePoints: 400,
+            BoostFactor: 3,
+          },
+        }
+      },
+      USDT:   {
+        Share: {
+          deposit: {
+            BasePoints: 200,
+            BoostFactor: 3,
+          },
+          vDebt: {
+            BasePoints: 200,
+            BoostFactor: 3,
+          },
+          stake: {
+            BasePoints: 400,
+            BoostFactor: 3,
+          },
+        }
+      },
+      WBTC:   {
+        Share: {
+          deposit: {
+            BasePoints: 100,
+            BoostFactor: 3,
+          },
+          vDebt: {
+            BasePoints: 100,
+            BoostFactor: 3,
+          },
+          stake: {
+            BasePoints: 200,
+            BoostFactor: 3,
+          },
+        }
+      },
+      WETH:   {
+        Share: {
+          deposit: {
+            BasePoints: 100,
+            BoostFactor: 3,
+          },
+          vDebt: {
+            BasePoints: 100,
+            BoostFactor: 3,
+          },
+          stake: {
+            BasePoints: 200,
+            BoostFactor: 3,
+          },
+        }
+      },
+    },
+    ReferralPool: {
+      BasePoints: 100,
+      BoostFactor: 0,
+    },
+    TreasuryPool: {
+      BasePoints: 1000,
+      BoostFactor: 0,
+    },
+    BurnersPool: {
+      TotalWad: 1e6,
+      BoostFactor: 0,
+      MeltDownAt: new Date('2021-02-01'),
+    },
+    TeamPool: {
+      BasePoints: 1000,
+      UnlockAt: new Date('2021-11-01'),
+      Manager: ZERO_ADDRESS,
+      Members: {
+        '0x0000000000000000000000000000000000000001': 5000
+      }
+    }
+  },
+
+  ForkTest: {
+    Donors: {
+      [eEthereumNetwork.coverage]: {},
+      [eEthereumNetwork.hardhat]: {},
+      [eEthereumNetwork.kovan]: {},
+      [eEthereumNetwork.ropsten]: {},
+      [eEthereumNetwork.docker]: {},
+      [eEthereumNetwork.rinkeby]: {},
+      [eEthereumNetwork.main]: {
+        AAVE: '0xf977814e90da44bfa03b6295a0616a897441acec', // Binance pool
+        DAI: '0x503828976D22510aad0201ac7EC88293211D23Da', // Coinbase
+        USDC: '0x503828976D22510aad0201ac7EC88293211D23Da' // Coinbase
+      },
+      [eEthereumNetwork.tenderlyMain]: {},
+    },
+    DonatePct: 20,
+    DonateTo: '',
+    AutoDepositPct: 30,
+  }
 };

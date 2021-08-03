@@ -1,0 +1,6 @@
+abi/
+artifacts/
+cache/
+node_modules/
+types/
+deployed-contracts.json

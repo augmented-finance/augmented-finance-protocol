@@ -11,49 +11,80 @@ import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {AccessFlags} from '../../access/AccessFlags.sol';
 import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
 import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
+import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
+import {IDerivedToken} from '../../interfaces/IDerivedToken.sol';
 
-import {ForwardedRewardPool} from '../pools/ForwardedRewardPool.sol';
 import {CalcLinearRateReward} from '../calcs/CalcLinearRateReward.sol';
 
 import {Errors} from '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
+/**
+  @dev Curve-like locker, that locks an underlying token for some period and mints non-transferrable tokens for that period. 
+  Total amount of minted tokens = amount_of_locked_tokens * max_period / lock_period.
+  End of lock period is aligned to week.
+
+  Additionally, this contract recycles token excess of capped rewards by spreading the excess over some period. 
+ */
+
+abstract contract BaseTokenLocker is IERC20, IDerivedToken {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
   IERC20 private _underlyingToken;
 
+  // Total amount of minted tokens. This number is increased in situ for new locks, and decreased at week edges, when locks expire.
+  uint256 private _stakedTotal;
+  // Current extra rate that distributes the recycled excess. This number is increased in situ for new excess added, and decreased at week edges.
+  uint256 private _extraRate;
+  // Accumulated _extraRate
+  uint256 private _excessAccum;
+
+  /**
+    @dev A future point, contains deltas to be applied at the relevant time (period's edge):
+    - stakeDelta is amount to be subtracted from _stakedTotal
+    - rateDelta is amount to be subtracted from _extraRate
+  */
   struct Point {
     uint128 stakeDelta;
     uint128 rateDelta;
   }
-
-  uint256 private _stakedTotal;
-  uint256 private _extraRate;
-  uint256 private _excessAccum;
-
+  // Future points, indexed by point number (week number).
   mapping(uint32 => Point) _pointTotal;
 
+  // Absolute limit of future points - 255 periods (weeks).
   uint32 private constant _maxDurationPoints = 255;
-  uint32 private _maxValuePeriod; // = 208 weeks; // 4 * 52, must be less than _maxDurationPoints
-  uint32 private _pointPeriod;
+  // Period (in seconds) which gives 100% of lock tokens, must be less than _maxDurationPoints. Default = 208 weeks; // 4 * 52
+  uint32 private constant _maxValuePeriod = 4 * 52 weeks;
+  // Duration of a single period. All points are aligned to it. Default = 1 week.
+  uint32 private constant _pointPeriod = 1 weeks;
+  // Next (nearest future) known point.
   uint32 private _nextKnownPoint;
+  // Latest (farest future) known point.
   uint32 private _lastKnownPoint;
+  // Timestamp when internalUpdate() was invoked.
   uint32 private _lastUpdateTS;
-
+  // Re-entrance guard for some of internalUpdate() operations.
   bool private _updateEntered;
-  bool private _paused;
 
+  /**
+    @dev Details about user's lock
+  */
   struct UserBalance {
+    // Total amount of underlying token received from the user
     uint192 underlyingAmount;
+    // Timestamp (not point) when the lock was created
     uint32 startTS;
+    // Point number (week number), when the lock expired
     uint32 endPoint;
   }
 
+  // Balances of users
   mapping(address => UserBalance) private _balances;
+  // Addresses which are allowed to add to user's lock
+  // map[user][delegate]
   mapping(address => mapping(address => bool)) private _allowAdd;
 
   event Locked(
@@ -67,33 +98,30 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   );
   event Redeemed(address indexed from, address indexed to, uint256 underlyingAmount);
 
-  constructor(
-    IMarketAccessController accessCtl,
-    address underlying,
-    uint32 pointPeriod,
-    uint32 maxValuePeriod
-  ) public MarketAccessBitmask(accessCtl) {
-    _initialize(underlying, pointPeriod, maxValuePeriod);
+  /// @param underlying ERC20 token to be locked
+  constructor(address underlying) public {
+    _initialize(underlying);
   }
 
-  function _initialize(
-    address underlying,
-    uint32 pointPeriod,
-    uint32 maxValuePeriod
-  ) internal {
-    require(pointPeriod > 0, 'invalid pointPeriod');
-    require(maxValuePeriod > pointPeriod, 'invalid maxValuePeriod');
-    require(maxValuePeriod < pointPeriod * _maxDurationPoints, 'invalid maxValuePeriod');
-
+  /// @dev To be used for initializers only. Same as constructor.
+  function _initialize(address underlying) internal {
     _underlyingToken = IERC20(underlying);
-    _pointPeriod = pointPeriod;
-    _maxValuePeriod = maxValuePeriod;
   }
 
-  function UNDERLYING_ASSET_ADDRESS() external view returns (address) {
+  function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
     return address(_underlyingToken);
   }
 
+  /** @dev Creates a new lock or adds more underlying to an existing lock of the caller:
+      - with duration =0 this function adds to an existing unexpired lock without chaning lock's expiry, otherwise will fail (expired lock)
+      - when a lock exists, the expiry (end) of the lock will be maximum of the current lock and of to-be-lock with the given duration.
+      - when a lock has expired, but tokens were not redeemed these unredeemed tokens will also be added to the new locked.
+      @param underlyingAmount amount of underlying (>0) to be added to the lock. Must be approved for transferFrom.
+      @param duration in seconds of the lock. This duration will be rounded up to make sure that lock will end at a week's edge. 
+      Zero value indicates addition to an existing lock without changing expiry.
+      @param referral code to use for marketing campaings. Use 0 when not involved.      
+      @return total amount of lock tokens of the user.
+   */
   function lock(
     uint256 underlyingAmount,
     uint32 duration,
@@ -109,6 +137,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return stakeAmount;
   }
 
+  /** @dev Extends an existing lock of the caller without adding more underlying. 
+      @param duration in seconds (>0) of the lock. This duration will be rounded up to make sure that lock will end at a week's edge. 
+      @return total amount of lock tokens of the user.
+   */
   function lockExtend(uint32 duration) external returns (uint256) {
     require(duration > 0, 'ZERO_DURATION');
 
@@ -119,10 +151,19 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return stakeAmount;
   }
 
+  /** @dev Allows/disallows another user/contract to use lockAdd() function for the caller's lock.
+      @param to an address who will call lockAdd().
+      @param allow indicates if calls are allowed (true) or disallowed (false).
+   */
   function allowAdd(address to, bool allow) external {
     _allowAdd[msg.sender][to] = allow;
   }
 
+  /** @dev A function to add funds to a lock of another user. Must be explicitly allowed with allowAdd().
+      @param to an address to whose lock the given underlyingAmount shoud be added
+      @param underlyingAmount amount of underlying (>0) to be added to the lock. Must be approved for transferFrom.
+      @return total amount of lock tokens of the "to" address.
+   */
   function lockAdd(address to, uint256 underlyingAmount) external returns (uint256) {
     require(underlyingAmount > 0, 'ZERO_UNDERLYING');
     require(_allowAdd[to][msg.sender], 'ADD_TO_LOCK_RESTRICTED');
@@ -134,11 +175,13 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return stakeAmount;
   }
 
+  // These constants are "soft" errors - such errors can be detected by the autolock function so it can stop automatically
   uint256 private constant LOCK_ERR_NOTHING_IS_LOCKED = 1;
   uint256 private constant LOCK_ERR_DURATION_IS_TOO_LARGE = 2;
   uint256 private constant LOCK_ERR_UNDERLYING_OVERFLOW = 3;
   uint256 private constant LOCK_ERR_LOCK_OVERFLOW = 4;
 
+  /// @dev Converts "soft" errors into "hard" reverts
   function revertOnError(uint256 recoverableError) private pure {
     require(recoverableError != LOCK_ERR_LOCK_OVERFLOW, 'LOCK_ERR_LOCK_OVERFLOW');
     require(recoverableError != LOCK_ERR_UNDERLYING_OVERFLOW, 'LOCK_ERR_UNDERLYING_OVERFLOW');
@@ -147,6 +190,16 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     require(recoverableError == 0, 'UNKNOWN_RECOVERABLE_ERROR');
   }
 
+  /** @dev Creates a new lock or adds underlying to an existing lock or extends it.
+      @param from whom the funds (underlying) will be taken
+      @param to whom the funds will be locked
+      @param underlyingTransfer amount of underlying (=>0) to be added to the lock.
+      @param duration in seconds of the lock. This duration will be rounded up to make sure that lock will end at a week's edge. 
+      Zero value indicates addition to an existing lock without changing expiry.
+      @param transfer indicates when transferFrom should be called. E.g. autolock uses false, as tokens will be minted externally to this contract.
+      @param referral code to use for marketing campaings. Use 0 when not involved.
+      @return stakeAmount is total amount of lock tokens of the "to" address; recoverableError is the "soft" error code.
+   */
   function internalLock(
     address from,
     address to,
@@ -159,11 +212,13 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     require(to != address(0), 'ZERO_TO');
 
     uint32 currentPoint = internalUpdate(true, 0);
-    uint256 totalBefore = _stakedTotal;
+
+    // this call ensures that time-based reward calculations are pulled up to this moment
+    internalSyncRate(uint32(block.timestamp));
 
     UserBalance memory userBalance = _balances[to];
-    userBalance.startTS = uint32(block.timestamp);
 
+    uint256 prevStake;
     {
       // ======== ATTN! DO NOT APPLY STATE CHANGES STARTING FROM HERE ========
       {
@@ -181,24 +236,31 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       uint32 newEndPoint;
       if (duration < _pointPeriod) {
         // at least 1 full week is required
-        newEndPoint = 1 + (uint32(userBalance.startTS + _pointPeriod - 1) / _pointPeriod);
+        newEndPoint = 1 + (uint32(block.timestamp + _pointPeriod - 1) / _pointPeriod);
       } else {
-        newEndPoint = uint32(userBalance.startTS + duration + (_pointPeriod >> 1)) / _pointPeriod;
+        newEndPoint = uint32(block.timestamp + duration + (_pointPeriod >> 1)) / _pointPeriod;
       }
 
       if (newEndPoint > currentPoint + _maxDurationPoints) {
         return (0, LOCK_ERR_DURATION_IS_TOO_LARGE);
       }
 
-      uint256 prevStake;
       if (userBalance.endPoint > currentPoint) {
+        // lock is still valid - reuse it
+        // so keep startTS and use the farest endTS
+        require(userBalance.startTS > 0);
+
         prevStake = getStakeBalance(to);
 
         if (userBalance.endPoint > newEndPoint) {
           newEndPoint = userBalance.endPoint;
         }
       } else if (duration == 0) {
+        // can't add to an expired lock
         return (0, LOCK_ERR_NOTHING_IS_LOCKED);
+      } else {
+        // new lock -> new start
+        userBalance.startTS = uint32(block.timestamp);
       }
 
       {
@@ -219,11 +281,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
 
       // ======== ATTN! "DO NOT APPLY STATE CHANGES" ENDS HERE ========
 
-      if (userBalance.endPoint <= currentPoint) {
-        // sum up rewards for the previous balance
-        pushStakeBalance(to, userBalance.endPoint * _pointPeriod);
-      }
-
       if (prevStake > 0) {
         if (userBalance.endPoint == newEndPoint) {
           newStakeDelta = newStakeDelta.sub(prevStake);
@@ -235,15 +292,17 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
         _stakedTotal = _stakedTotal.sub(prevStake);
       }
 
+      if (userBalance.endPoint <= currentPoint) {
+        // sum up rewards for the previous balance
+        unsetStakeBalance(to, userBalance.endPoint * _pointPeriod, true);
+        prevStake = 0;
+      }
+
       userBalance.endPoint = newEndPoint;
 
       // range check is done above
       _pointTotal[newEndPoint].stakeDelta = uint128(newStakeDelta);
       _stakedTotal = _stakedTotal.add(stakeAmount);
-    }
-
-    if (transfer) {
-      _underlyingToken.safeTransferFrom(from, address(this), underlyingTransfer);
     }
 
     if (_nextKnownPoint > userBalance.endPoint || _nextKnownPoint == 0) {
@@ -254,9 +313,15 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       _lastKnownPoint = userBalance.endPoint;
     }
 
+    if (prevStake != stakeAmount) {
+      setStakeBalance(to, uint224(stakeAmount));
+    }
+
     _balances[to] = userBalance;
-    internalUpdateTotal(totalBefore, _stakedTotal, 0);
-    setStakeBalance(to, uint224(stakeAmount));
+
+    if (transfer) {
+      _underlyingToken.safeTransferFrom(from, address(this), underlyingTransfer);
+    }
 
     emit Locked(
       from,
@@ -270,10 +335,12 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return (stakeAmount, 0);
   }
 
+  /// @dev Returns amount of underlying for the given address
   function balanceOfUnderlying(address account) public view returns (uint256) {
     return _balances[account].underlyingAmount;
   }
 
+  /// @dev Returns amount of underlying and a timestamp when the lock expires. Funds can be redeemed after the timestamp.
   function balanceOfUnderlyingAndExpiry(address account)
     external
     view
@@ -295,10 +362,11 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
   }
 
   /**
-   * @dev Redeems staked tokens, and stop earning rewards
-   * @param to Address to redeem to
+   * @dev Attemps to redeem all underlying tokens of caller. Will not revert on zero or locked balance.
+   * @param to address to which all redeemed tokens should be transferred.
+   * @return underlyingAmount redeemed. Zero for an unexpired lock.
    **/
-  function redeem(address to) external notPaused returns (uint256 underlyingAmount) {
+  function redeem(address to) public virtual returns (uint256 underlyingAmount) {
     return internalRedeem(msg.sender, to);
   }
 
@@ -307,11 +375,12 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     UserBalance memory userBalance = _balances[from];
 
     if (userBalance.underlyingAmount == 0 || userBalance.endPoint > currentPoint) {
+      // not yet
       return 0;
     }
 
-    pushStakeBalance(from, userBalance.endPoint * _pointPeriod);
-    unsetStakeBalance(from);
+    // pay off rewards and stop
+    unsetStakeBalance(from, userBalance.endPoint * _pointPeriod, false);
 
     delete (_balances[from]);
 
@@ -321,6 +390,8 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return userBalance.underlyingAmount;
   }
 
+  /// @dev Explicit call to applies all future-in-past points. Only useful to handle a situation when there were no state-changing calls for a long time.
+  /// @param scanLimit defines a maximum number of points / updates to be processed at once.
   function update(uint256 scanLimit) public {
     internalUpdate(false, scanLimit);
   }
@@ -350,7 +421,6 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       maxPoint = uint32(_lastUpdateTS / _pointPeriod) + _maxDurationPoints + 1;
     }
 
-    // overflow is treated as no-limit
     if (scanLimit > 0 && scanLimit + fromPoint > scanLimit) {
       scanLimit += fromPoint;
       if (scanLimit < maxPoint) {
@@ -367,6 +437,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return (fromPoint, tillPoint, maxPoint);
   }
 
+  /// @dev returns a total locked amount of underlying
   function totalOfUnderlying() external view returns (uint256) {
     return _underlyingToken.balanceOf(address(this));
   }
@@ -375,13 +446,14 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return _stakedTotal;
   }
 
+  /// @dev returns a total amount of lock tokens
   function totalSupply() public view override returns (uint256 totalSupply_) {
     (uint32 fromPoint, uint32 tillPoint, ) =
       getScanRange(uint32(block.timestamp / _pointPeriod), 0);
 
     totalSupply_ = _stakedTotal;
 
-    console.log('totalSupply', fromPoint, tillPoint, totalSupply_);
+    //    console.log('totalSupply', fromPoint, tillPoint, totalSupply_);
 
     if (tillPoint == 0) {
       return totalSupply_;
@@ -401,6 +473,9 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return totalSupply_;
   }
 
+  /// @param preventReentry when true will revert the call on re-entry, otherwise will exit immediately
+  /// @param scanLimit limits number of updates to be applied. Must be zero (=unlimited) for all internal oprations, otherwise the state will be inconsisten.
+  /// @return currentPoint (week number)
   function internalUpdate(bool preventReentry, uint256 scanLimit)
     internal
     returns (uint32 currentPoint)
@@ -428,6 +503,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     return currentPoint;
   }
 
+  /// @dev searches and processes updates for future-in-past points and update next/last known points accordingly
+  /// @param nextPoint start of future-in-past points (inclusive)
+  /// @param tillPoint end of future-in-past points (inclusive)
+  /// @param maxPoint the farest future point till which the next known point will be searched for
   function walkPoints(
     uint32 nextPoint,
     uint32 tillPoint,
@@ -436,17 +515,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     Point memory delta = _pointTotal[nextPoint];
 
     for (; nextPoint <= tillPoint; ) {
-      if (delta.rateDelta > 0) {
-        uint256 rateBefore = _extraRate;
-        _extraRate = _extraRate.sub(delta.rateDelta);
-        internalExtraRateUpdated(rateBefore, _extraRate, nextPoint * _pointPeriod);
-      }
+      internalCheckpoint(nextPoint * _pointPeriod);
 
-      if (delta.stakeDelta > 0) {
-        uint256 totalBefore = _stakedTotal;
-        _stakedTotal = _stakedTotal.sub(delta.stakeDelta);
-        internalUpdateTotal(totalBefore, _stakedTotal, nextPoint * _pointPeriod);
-      }
+      _extraRate = _extraRate.sub(delta.rateDelta);
+      _stakedTotal = _stakedTotal.sub(delta.stakeDelta);
 
       bool found = false;
       // look for the next non-zero point
@@ -461,7 +533,10 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
         continue;
       }
 
-      nextPoint = 0;
+      // keep nextPoint to reduce gas for further calls
+      if (nextPoint > _lastKnownPoint) {
+        nextPoint = 0;
+      }
       break;
     }
 
@@ -471,37 +546,20 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     }
   }
 
-  modifier notPaused() {
-    require(!_paused);
-    _;
-  }
-
-  function isRedeemable() external view returns (bool) {
-    return !_paused;
-  }
-
-  function setPaused(bool paused) external onlyEmergencyAdmin {
-    _paused = paused;
-  }
-
-  function isPaused() external view returns (bool) {
-    return _paused;
-  }
-
   function getUnderlying() internal view returns (address) {
     return address(_underlyingToken);
   }
 
   function transfer(address, uint256) external override returns (bool) {
-    revert('NOT_SUPPORTED');
+    notSupported();
   }
 
   function allowance(address, address) external view override returns (uint256) {
-    revert('NOT_SUPPORTED');
+    notSupported();
   }
 
   function approve(address, uint256) external override returns (bool) {
-    revert('NOT_SUPPORTED');
+    notSupported();
   }
 
   function transferFrom(
@@ -509,48 +567,65 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     address,
     uint256
   ) external override returns (bool) {
+    notSupported();
+  }
+
+  function notSupported() private pure {
     revert('NOT_SUPPORTED');
   }
 
-  function internalGetExtraRate() internal view virtual returns (uint256 rate) {
-    return _extraRate;
-  }
-
+  /// @dev internalAddExcess recycles reward excess by spreading the given amount.
+  /// The given amount is distributed starting from now for the same period that has passed from (since) till now.
+  /// @param amount of reward to be redistributed.
+  /// @param since a timestamp (in the past) since which the given amount was accumulated.
+  /// No restrictions on since value - zero, current or event future timestamps are handled.
   function internalAddExcess(uint256 amount, uint32 since) internal {
-    uint32 expiresAt;
-    if (since == 0 || since >= block.timestamp) {
-      expiresAt = uint32(block.timestamp + 1);
+    uint32 at = uint32(block.timestamp);
+    uint32 expiry;
+
+    if (since == 0 || since >= at) {
+      expiry = 1;
     } else {
-      expiresAt = uint32(block.timestamp - since);
-      if (expiresAt > _maxValuePeriod) {
-        expiresAt = _maxValuePeriod;
+      expiry = at - since;
+      if (expiry > _maxValuePeriod) {
+        expiry = _maxValuePeriod;
       }
-      expiresAt = uint32(block.timestamp + expiresAt);
     }
 
-    uint32 expiryPt = uint32(expiresAt + _pointPeriod - 1) / _pointPeriod;
-    expiresAt = expiryPt * _pointPeriod;
+    uint32 expiryPt = 1 + uint32(expiry + at + _pointPeriod - 1) / _pointPeriod;
+    expiry = expiryPt * _pointPeriod;
 
-    console.log('internalAddExcess', amount, since, _excessAccum);
-    console.log('internalAddExcess_1', expiresAt, expiryPt);
+    // console.log('internalAddExcess', amount, since, _excessAccum);
+    // console.log('internalAddExcess_1', expiry, expiryPt, expiry - at);
 
+    expiry -= at;
     amount += _excessAccum;
-    uint256 excessRateIncrement = amount / (expiresAt - block.timestamp);
-    _excessAccum = amount - excessRateIncrement * (expiresAt - block.timestamp);
+    uint256 excessRateIncrement = amount / expiry;
+    // if (excessRateIncrement < _extraRate>>10) {
+    //   excessRateIncrement = 0;
+    // }
+    _excessAccum = amount - excessRateIncrement * expiry;
 
-    console.log(
-      'internalAddExcess_2',
-      excessRateIncrement,
-      expiresAt - block.timestamp,
-      _excessAccum
-    );
+    // console.log(
+    //   'internalAddExcess_2',
+    //   excessRateIncrement,
+    //   block.timestamp,
+    //   _excessAccum
+    // );
 
     if (excessRateIncrement == 0) {
       return;
     }
 
-    uint256 rateBefore = _extraRate;
-    _extraRate = rateBefore.add(excessRateIncrement);
+    internalSyncRate(at);
+
+    // console.log(
+    //   'internalAddExcess_3',
+    //   _extraRate,
+    //   _extraRate.add(excessRateIncrement)
+    // );
+
+    _extraRate = _extraRate.add(excessRateIncrement);
 
     excessRateIncrement = excessRateIncrement.add(_pointTotal[expiryPt].rateDelta);
     require(excessRateIncrement <= type(uint128).max);
@@ -563,35 +638,39 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     if (_lastKnownPoint < expiryPt || _lastKnownPoint == 0) {
       _lastKnownPoint = expiryPt;
     }
-
-    internalExtraRateUpdated(rateBefore, _extraRate, 0);
   }
 
-  function internalExtraRateUpdated(
-    uint256 rateBefore,
-    uint256 rateAfter,
-    uint32 at
+  /// @dev is called to syncronize reward accumulators
+  /// @param at timestamp till which accumulators should be updated
+  function internalSyncRate(uint32 at) internal virtual;
+
+  /// @dev is called to update rate history
+  /// @param at timestamp for which the current state should be records as a history point
+  function internalCheckpoint(uint32 at) internal virtual;
+
+  /// @dev is called to sum up reward and to stop issuing it
+  /// @param holder of reward
+  /// @param at timestamp till which reward should be calculated
+  /// @param interim is true when setStakeBalance will be called right after this one
+  function unsetStakeBalance(
+    address holder,
+    uint32 at,
+    bool interim
   ) internal virtual;
 
-  function pushStakeBalance(address holder, uint32 at) internal virtual;
-
+  /// @dev is called to sum up reward upto now and start calculation of the reward for the new stakeAmount
+  /// @param holder of reward
+  /// @param stakeAmount of lock tokens for reward calculation
   function setStakeBalance(address holder, uint224 stakeAmount) internal virtual;
 
-  function unsetStakeBalance(address holder) internal virtual;
-
   function getStakeBalance(address holder) internal view virtual returns (uint224 stakeAmount);
-
-  function internalUpdateTotal(
-    uint256 totalBefore,
-    uint256 totalAfter,
-    uint32 at
-  ) internal virtual;
 
   function convertLockedToUnderlying(uint256 lockedAmount, uint32 lockDuration)
     public
     view
     returns (uint256)
   {
+    this;
     if (lockDuration > _maxValuePeriod) {
       lockDuration = _maxValuePeriod;
     }
@@ -610,6 +689,7 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
     view
     returns (uint256 lockedAmount)
   {
+    this;
     if (lockDuration > _maxValuePeriod) {
       lockDuration = _maxValuePeriod;
     }
@@ -621,5 +701,17 @@ abstract contract BaseTokenLocker is IERC20, MarketAccessBitmask {
       return underlyingAmount.mul(lockDuration).div(_maxValuePeriod);
     }
     return underlyingAmount;
+  }
+
+  /// @dev returns current rate of reward excess / redistribution.
+  /// This function is used by decsendants.
+  function getExtraRate() internal view returns (uint256) {
+    return _extraRate;
+  }
+
+  /// @dev returns unadjusted (current state) amount of lock tokens.
+  /// This function is used by decsendants.
+  function getStakedTotal() internal view returns (uint256) {
+    return _stakedTotal;
   }
 }

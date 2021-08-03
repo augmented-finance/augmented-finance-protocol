@@ -5,7 +5,7 @@ import rawBRE, { ethers } from 'hardhat';
 
 import {
   getMockAgfToken,
-  getRewardFreezer,
+  getMockRewardFreezer,
   getTokenWeightedRewardPoolAGFSeparate,
 } from '../../helpers/contracts-getters';
 
@@ -19,6 +19,8 @@ import { deflateSync } from 'zlib';
 
 chai.use(solidity);
 const { expect } = chai;
+
+//TODO: separate out weighted pool and freezer logic
 
 describe('Token weighted reward pool tests', () => {
   let root: SignerWithAddress;
@@ -36,7 +38,7 @@ describe('Token weighted reward pool tests', () => {
     blkBeforeDeploy = await takeSnapshot();
     [root, user1, user2] = await ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
-    rc = await getRewardFreezer();
+    rc = await getMockRewardFreezer();
     wrp = await getTokenWeightedRewardPoolAGFSeparate();
     agf = await getMockAgfToken();
   });
@@ -62,8 +64,8 @@ describe('Token weighted reward pool tests', () => {
       TicksToMeltdown: 0,
       FreezePercentage: 0,
     } as TestInfo;
-    await rc.admin_setFreezePercentage(ti.FreezePercentage);
-    await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
+    await rc.setFreezePercentage(ti.FreezePercentage);
+    await rc.setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     console.log(`reward: ${reward}`);
@@ -91,8 +93,8 @@ describe('Token weighted reward pool tests', () => {
       TicksToMeltdown: 0,
       FreezePercentage: 0,
     } as TestInfo;
-    await rc.admin_setFreezePercentage(ti.FreezePercentage);
-    await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
+    await rc.setFreezePercentage(ti.FreezePercentage);
+    await rc.setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(
@@ -119,8 +121,8 @@ describe('Token weighted reward pool tests', () => {
       TicksToMeltdown: 20,
       FreezePercentage: 10000,
     } as TestInfo;
-    await rc.admin_setFreezePercentage(ti.FreezePercentage);
-    await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
+    await rc.setFreezePercentage(ti.FreezePercentage);
+    await rc.setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(
@@ -147,8 +149,8 @@ describe('Token weighted reward pool tests', () => {
       TicksToMeltdown: 40,
       FreezePercentage: 10000,
     } as TestInfo;
-    await rc.admin_setFreezePercentage(ti.FreezePercentage);
-    await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
+    await rc.setFreezePercentage(ti.FreezePercentage);
+    await rc.setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(520, rewardPrecision, 'reward is wrong');
@@ -171,8 +173,8 @@ describe('Token weighted reward pool tests', () => {
       TicksToMeltdown: 80,
       FreezePercentage: 10000,
     } as TestInfo;
-    await rc.admin_setFreezePercentage(ti.FreezePercentage);
-    await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
+    await rc.setFreezePercentage(ti.FreezePercentage);
+    await rc.setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(250, rewardPrecision, 'reward is wrong');
@@ -204,8 +206,8 @@ describe('Token weighted reward pool tests', () => {
       TicksToMeltdown: 0,
       FreezePercentage: 0,
     } as TestInfo;
-    await rc.admin_setFreezePercentage(ti.FreezePercentage);
-    await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
+    await rc.setFreezePercentage(ti.FreezePercentage);
+    await rc.setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     const reward2 = (await agf.balanceOf(user2.address)).toNumber();
@@ -239,8 +241,8 @@ describe('Token weighted reward pool tests', () => {
       TicksToMeltdown: 0,
       FreezePercentage: 0,
     } as TestInfo;
-    await rc.admin_setFreezePercentage(ti.FreezePercentage);
-    await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
+    await rc.setFreezePercentage(ti.FreezePercentage);
+    await rc.setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
     expect(reward).to.be.approximately(1000, rewardPrecision, 'reward is wrong');
@@ -310,8 +312,8 @@ describe('Token weighted reward pool tests', () => {
       TicksToMeltdown: 0,
       FreezePercentage: 0,
     } as TestInfo;
-    await rc.admin_setFreezePercentage(ti.FreezePercentage);
-    await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
+    await rc.setFreezePercentage(ti.FreezePercentage);
+    await rc.setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
 
     const expected1 = (100 + 50 + 25 + 33.33 + 50)*STEP + 100*(STEP-1); // -1 is because of the last tick is spent to claim for user2
@@ -367,8 +369,8 @@ describe('Token weighted reward pool tests', () => {
       TicksToMeltdown: 0,
       FreezePercentage: 0,
     } as TestInfo;
-    await rc.admin_setFreezePercentage(ti.FreezePercentage);
-    await rc.admin_setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
+    await rc.setFreezePercentage(ti.FreezePercentage);
+    await rc.setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
 
     const expected1 = (100 + 33.33 + 50) * STEP + 100*(STEP-1); // -1 is because of the last tick is spent to claim for user2

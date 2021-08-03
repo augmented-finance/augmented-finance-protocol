@@ -2,40 +2,23 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {BitUtils} from '../../tools/math/BitUtils.sol';
 
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-
-import {BaseTokenLocker} from './BaseTokenLocker.sol';
-import {ForwardedRewardPool} from '../pools/ForwardedRewardPool.sol';
-import {CalcLinearWeightedReward} from '../calcs/CalcLinearWeightedReward.sol';
 import {AllocationMode} from '../interfaces/IRewardController.sol';
-import {IForwardingRewardPool} from '../interfaces/IForwardingRewardPool.sol';
-import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
-
 import {RewardedTokenLocker} from './RewardedTokenLocker.sol';
-
-import {Errors} from '../../tools/Errors.sol';
-
 import 'hardhat/console.sol';
+
+import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 
 contract DecayingTokenLocker is RewardedTokenLocker {
   constructor(
-    IMarketAccessController accessCtl,
-    address underlying,
-    uint32 pointPeriod,
-    uint32 maxValuePeriod,
-    uint256 maxTotalSupply
-  )
-    public
-    RewardedTokenLocker(accessCtl, underlying, pointPeriod, maxValuePeriod, maxTotalSupply)
-  {}
+    IRewardController controller,
+    uint256 initialRate,
+    uint16 baselinePercentage,
+    address underlying
+  ) public RewardedTokenLocker(controller, initialRate, baselinePercentage, underlying) {}
 
   function balanceOf(address account) public view virtual override returns (uint256) {
     (uint32 startTS, uint32 endTS) = expiryOf(account);
@@ -53,8 +36,8 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return stakeDecayed;
   }
 
-  function calcReward(address holder)
-    external
+  function internalCalcReward(address holder)
+    internal
     view
     override
     returns (uint256 amount, uint32 since)
@@ -77,6 +60,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       return (0, 0);
     }
 
+    //    console.log('internalCalcReward_1', amount, since, getExtraRate());
     uint256 decayAmount = amount.rayMul(calcDecayForReward(startTS, endTS, since, current));
 
     amount =
@@ -89,6 +73,8 @@ contract DecayingTokenLocker is RewardedTokenLocker {
         calcDecayTimeCompensation(startTS, endTS, since, current)
       );
 
+    //    console.log('internalCalcReward_2', current - since, amount, decayAmount);
+
     if (amount == 0) {
       return (0, 0);
     }
@@ -96,7 +82,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return (amount, since);
   }
 
-  function internalClaimReward(address holder, uint256 limit)
+  function internalGetReward(address holder, uint256 limit)
     internal
     virtual
     override
@@ -125,11 +111,13 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       return (0, 0);
     }
 
+    //    console.log('internalGetReward_1', maxAmount, since, getExtraRate());
+
     uint256 decayAmount = maxAmount.rayMul(calcDecayForReward(startTS, endTS, since, current));
 
     if (limit <= maxAmount && limit + decayAmount <= maxAmount) {
       amount = limit;
-      console.log('internalClaimReward (limit below decay)', decayAmount, limit);
+      // console.log('internalClaimReward (limit below decay)', decayAmount, limit);
     } else {
       amount =
         maxAmount -
@@ -141,21 +129,24 @@ contract DecayingTokenLocker is RewardedTokenLocker {
           calcDecayTimeCompensation(startTS, endTS, since, current)
         );
 
-      console.log(
-        'internalClaimReward (compensated)',
-        maxAmount,
-        decayAmount,
-        decayAmount - (maxAmount - amount)
-      );
+      //      console.log('internalGetReward_2', current - since, amount, decayAmount);
+
+      // console.log(
+      //   'internalClaimReward (compensated)',
+      //   maxAmount,
+      //   decayAmount,
+      //   decayAmount - (maxAmount - amount)
+      // );
 
       if (amount > limit) {
-        console.log('internalClaimReward (limit applied)', limit);
+        // console.log('internalClaimReward (limit applied)', limit);
         amount = limit;
       }
     }
 
+    //    console.log('internalClaimReward', maxAmount, maxAmount - amount, getExtraRate());
     if (maxAmount > amount) {
-      console.log('internalClaimReward (excess)', maxAmount - amount);
+      //      console.log('internalClaimReward (excess)', maxAmount - amount);
       internalAddExcess(maxAmount - amount, since);
     }
 
@@ -166,14 +157,53 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return (amount, since);
   }
 
-  function pushStakeBalance(address holder, uint32 at) internal virtual override {
+  function setStakeBalance(address holder, uint224 stakeAmount) internal override {
+    // NB! Actually, total and balance for decay compensation should be taken before the update.
+    // Not doing it will give more to a user who increases balance - so it is better.
+
+    (uint256 amount, uint32 since, AllocationMode mode) =
+      doUpdateReward(
+        holder,
+        0, /* doesn't matter */
+        stakeAmount
+      );
+
+    amount = rewardForBalance(holder, stakeAmount, amount, since, uint32(block.timestamp));
+    internalAllocateReward(holder, amount, since, mode);
+  }
+
+  function unsetStakeBalance(
+    address holder,
+    uint32 at,
+    bool interim
+  ) internal override {
     (uint256 amount, uint32 since) = doGetRewardAt(holder, at);
-    if (amount == 0) {
+    uint256 stakeAmount = internalRemoveReward(holder);
+    AllocationMode mode = AllocationMode.Push;
+
+    if (!interim) {
+      mode = AllocationMode.UnsetPull;
+    } else if (amount == 0) {
       return;
     }
-    (uint32 startTS, uint32 endTS) = expiryOf(holder);
-    uint256 maxAmount = amount;
 
+    amount = rewardForBalance(holder, stakeAmount, amount, since, at);
+    internalAllocateReward(holder, amount, since, mode);
+  }
+
+  function rewardForBalance(
+    address holder,
+    uint256 stakeAmount,
+    uint256 amount,
+    uint32 since,
+    uint32 at
+  ) private returns (uint256) {
+    if (amount == 0) {
+      return 0;
+    }
+    (uint32 startTS, uint32 endTS) = expiryOf(holder);
+
+    uint256 maxAmount = amount;
     uint256 decayAmount = maxAmount.rayMul(calcDecayForReward(startTS, endTS, since, at));
 
     amount =
@@ -181,7 +211,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       calcCompensatedDecay(
         holder,
         decayAmount,
-        0,
+        stakeAmount,
         internalCurrentTotalSupply(),
         calcDecayTimeCompensation(startTS, endTS, since, at)
       );
@@ -189,8 +219,6 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     if (maxAmount > amount) {
       internalAddExcess(maxAmount - amount, since);
     }
-
-    super.internalAllocateReward(holder, amount, since, AllocationMode.Push);
   }
 
   /// @notice Calculates a range integral of the linear decay
@@ -205,6 +233,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     uint32 since,
     uint32 current
   ) public pure returns (uint256) {
+    require(startTS > 0);
     require(startTS < endTS);
     require(startTS <= since);
     require(current <= endTS);
@@ -248,7 +277,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     uint256 stakedTotal,
     uint256 compensationRatio
   ) public view returns (uint256) {
-    console.log('calcCompensatedDecay', decayAmount, stakeAmount, compensationRatio);
+    // console.log('calcCompensatedDecay', decayAmount, stakeAmount, compensationRatio);
     if (decayAmount == 0 || compensationRatio == 0) {
       return decayAmount;
     }

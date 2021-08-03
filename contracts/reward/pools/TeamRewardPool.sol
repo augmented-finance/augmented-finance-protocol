@@ -5,6 +5,7 @@ import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {ControlledRewardPool} from './ControlledRewardPool.sol';
 import {CalcLinearUnweightedReward} from '../calcs/CalcLinearUnweightedReward.sol';
+import {Errors} from '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 
@@ -12,25 +13,27 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   using PercentageMath for uint256;
 
   address private _teamManager;
-  uint256 private _accumRate;
   uint32 private _lockupTill;
   uint16 private _totalShare;
 
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage,
     address teamManager
-  ) public ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage) {
+  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _teamManager = teamManager;
   }
 
-  modifier onlyTeamManagerOrController() {
+  function _onlyTeamManagerOrConfigurator() private view {
     require(
-      msg.sender == _teamManager || isController(msg.sender),
-      'only team manager or controller'
+      msg.sender == _teamManager || _controller.isConfigAdmin(msg.sender),
+      Errors.CT_CALLER_MUST_BE_TEAM_MANAGER
     );
+  }
+
+  modifier onlyTeamManagerOrConfigurator {
+    _onlyTeamManagerOrConfigurator();
     _;
   }
 
@@ -75,13 +78,11 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return (rate, allocated, since);
   }
 
-  function addRewardProvider(address, address) external override {
-    revert('unsupported');
+  function addRewardProvider(address, address) external override onlyConfigAdmin {
+    revert('UNSUPPORTED');
   }
 
-  function removeRewardProvider(address) external override {
-    revert('unsupported');
-  }
+  function removeRewardProvider(address) external override onlyConfigAdmin {}
 
   function getAllocatedShares() external view returns (uint16) {
     return _totalShare;
@@ -91,10 +92,24 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return _lockupTill > 0 && _lockupTill < at;
   }
 
+  function updateTeamMembers(address[] calldata members, uint16[] calldata memberSharePct)
+    external
+    onlyTeamManagerOrConfigurator
+  {
+    require(members.length == memberSharePct.length);
+    for (uint256 i = 0; i < members.length; i++) {
+      _updateTeamMember(members[i], memberSharePct[i]);
+    }
+  }
+
   function updateTeamMember(address member, uint16 memberSharePct)
     external
-    onlyTeamManagerOrController
+    onlyTeamManagerOrConfigurator
   {
+    _updateTeamMember(member, memberSharePct);
+  }
+
+  function _updateTeamMember(address member, uint16 memberSharePct) private {
     require(member != address(0), 'member is required');
     require(memberSharePct <= PercentageMath.ONE, 'invalid share percentage');
 
@@ -114,7 +129,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     internalAllocateReward(member, allocated, since, mode);
   }
 
-  function removeTeamMember(address member) external onlyTeamManagerOrController {
+  function removeTeamMember(address member) external onlyTeamManagerOrConfigurator {
     require(member != address(0), 'member is required');
 
     uint256 lastShare = internalRemoveReward(member);
@@ -126,7 +141,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     internalAllocateReward(member, 0, 0, AllocationMode.UnsetPull);
   }
 
-  function setTeamManager(address member) external onlyTeamManagerOrController {
+  function setTeamManager(address member) external onlyTeamManagerOrConfigurator {
     _teamManager = member;
   }
 
@@ -134,9 +149,9 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return _teamManager;
   }
 
-  function setUnlockedAt(uint32 at) external onlyTeamManagerOrController {
+  function setUnlockedAt(uint32 at) external onlyConfigAdmin {
     require(at > 0, 'unlockAt is required');
-    console.log('setUnlockedAt', _lockupTill, getCurrentTick(), at);
+    // console.log('setUnlockedAt', _lockupTill, getCurrentTick(), at);
     require(_lockupTill == 0 || _lockupTill >= getCurrentTick(), 'lockup is finished');
     _lockupTill = at;
   }

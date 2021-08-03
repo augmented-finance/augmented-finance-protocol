@@ -4,8 +4,13 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { parseEther } from 'ethers/lib/utils';
 import { DRE, waitForTx } from '../../helpers/misc-utils';
 import { BigNumber } from 'ethers';
-import { getStableDebtToken, getVariableDebtToken } from '../../helpers/contracts-getters';
+import {
+  getMarketAccessController,
+  getStableDebtToken,
+  getVariableDebtToken,
+} from '../../helpers/contracts-getters';
 import { deploySelfdestructTransferMock } from '../../helpers/contracts-deployments';
+import { AccessFlags } from '../../helpers/access-flags';
 
 const { expect } = require('chai');
 
@@ -309,8 +314,8 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
     ).to.be.revertedWith('Fallback not allowed');
   });
 
-  it('Owner can do emergency token recovery', async () => {
-    const { users, dai, wethGateway, deployer } = testEnv;
+  it('Sweep admin can do emergency token recovery', async () => {
+    const { users, dai, wethGateway, deployer, addressesProvider } = testEnv;
     const user = users[0];
     const amount = parseEther('1');
 
@@ -324,9 +329,11 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
       'User should have lost the funds here.'
     );
 
-    await wethGateway
+    await addressesProvider
       .connect(deployer.signer)
-      .emergencyTokenTransfer(dai.address, user.address, amount);
+      .grantRoles(deployer.address, AccessFlags.SWEEP_ADMIN);
+
+    await wethGateway.connect(deployer.signer).sweepToken(dai.address, user.address, amount);
     const daiBalanceAfterRecovery = await dai.balanceOf(user.address);
 
     expect(daiBalanceAfterRecovery).to.be.eq(
@@ -335,8 +342,8 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
     );
   });
 
-  it('Owner can do emergency native ETH recovery', async () => {
-    const { users, wethGateway, deployer } = testEnv;
+  it('Sweep admin can do emergency native ETH recovery', async () => {
+    const { users, wethGateway, deployer, addressesProvider } = testEnv;
     const user = users[0];
     const amount = parseEther('1');
     const userBalancePriorCall = await user.signer.getBalance();
@@ -355,8 +362,12 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
     expect(userBalanceAfterCall).to.be.eq(userBalancePriorCall.sub(amount).sub(gasFees), '');
     ('User should have lost the funds');
 
+    await addressesProvider
+      .connect(deployer.signer)
+      .grantRoles(deployer.address, AccessFlags.SWEEP_ADMIN);
+
     // Recover the funds from the contract and sends back to the user
-    await wethGateway.connect(deployer.signer).emergencyEtherTransfer(user.address, amount);
+    await wethGateway.connect(deployer.signer).sweepEth(user.address, amount);
 
     const userBalanceAfterRecovery = await user.signer.getBalance();
     const wethGatewayAfterRecovery = await DRE.ethers.provider.getBalance(wethGateway.address);

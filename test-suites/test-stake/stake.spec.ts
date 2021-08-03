@@ -1,24 +1,20 @@
 import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
-import rawBRE, { ethers } from 'hardhat';
+import rawBRE from 'hardhat';
 
 import {
   getAGTokenByName,
+  getMarketAddressController,
   getMockAgfToken,
   getMockStakedAgfToken,
   getMockStakedAgToken,
-  getRewardFreezer,
-  getTokenWeightedRewardPoolAG,
-  getTokenWeightedRewardPoolAGF,
 } from '../../helpers/contracts-getters';
 
 import {
   DepositToken,
   MockAgfToken,
   MockStakedAgfToken,
-  RewardFreezer,
-  TokenWeightedRewardPool,
 } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
@@ -29,7 +25,7 @@ import {
 } from '../../tasks/migrations/defaultTestDeployConfig';
 import { mineTicks, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import { BigNumberish } from 'ethers';
-import { VL_INVALID_AMOUNT } from '../../helpers/contract_errors';
+import { ProtocolErrors } from '../../helpers/types';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -39,9 +35,6 @@ describe('Staking', () => {
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
   let slasher: SignerWithAddress;
-  let rpAGF: TokenWeightedRewardPool;
-  let rpAG: TokenWeightedRewardPool;
-  let rc: RewardFreezer;
   let AGF: MockAgfToken;
   let xAGF: MockStakedAgfToken;
   let AG: DepositToken;
@@ -51,17 +44,14 @@ describe('Staking', () => {
 
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
-    [root, user1, user2, slasher] = await ethers.getSigners();
+    [root, user1, user2, slasher] = await (<any>rawBRE).ethers.getSigners();
     await rawBRE.run('augmented:test-local-staking', CFG);
-    rc = await getRewardFreezer();
 
     AG = await getAGTokenByName('agDAI');
     xAG = await getMockStakedAgToken();
-    rpAG = await getTokenWeightedRewardPoolAG();
 
     AGF = await getMockAgfToken();
     xAGF = await getMockStakedAgfToken();
-    rpAGF = await getTokenWeightedRewardPoolAGF();
   });
 
   afterEach(async () => {
@@ -88,7 +78,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
     await xAGF.connect(user1).cooldown();
     await mineTicks(stakingUnstakeTicks + stakingCooldownTicks + 1);
     await expect(xAGF.connect(user1).redeem(user1.address, defaultStkAmount)).to.be.revertedWith(
-      'STK_UNSTAKE_WINDOW_FINISHED'
+      ProtocolErrors.STK_UNSTAKE_WINDOW_FINISHED
     );
   });
 
@@ -100,7 +90,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
 
   it('error when redeeming if amount is zero', async () => {
     await expect(xAGF.connect(user1).redeem(user1.address, 0)).to.be.revertedWith(
-      VL_INVALID_AMOUNT
+      ProtocolErrors.VL_INVALID_AMOUNT
     );
   });
 
@@ -108,7 +98,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
     await xAGF.connect(root).setPaused(true);
     await stake(user1, defaultStkAmount);
     await expect(xAGF.connect(user1).redeem(user1.address, defaultStkAmount)).to.be.revertedWith(
-      'STK_REDEEM_PAUSED'
+      ProtocolErrors.STK_REDEEM_PAUSED
     );
   });
 
@@ -131,14 +121,14 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
   });
 
   it('error calling cooldown if not staking', async () => {
-    await expect(xAGF.cooldown()).to.be.revertedWith('STK_INVALID_BALANCE_ON_COOLDOWN');
+    await expect(xAGF.cooldown()).to.be.revertedWith(ProtocolErrors.STK_INVALID_BALANCE_ON_COOLDOWN);
   });
 
   it('can set cooldown, and redeem afterwards', async () => {
     await stake(user1, defaultStkAmount);
     await xAGF.connect(user1).cooldown();
     await expect(xAGF.connect(user1).redeem(user1.address, defaultStkAmount)).to.be.revertedWith(
-      'STK_INSUFFICIENT_COOLDOWN'
+      ProtocolErrors.STK_INSUFFICIENT_COOLDOWN
     );
     await mineTicks(stakingCooldownTicks);
     await xAGF.connect(user1).redeem(user1.address, defaultStkAmount);
@@ -149,7 +139,7 @@ AGFBalance: ${await AGF.balanceOf(s.address)}`
   it('set slash incorrect percentage is reverted', async () => {
     await expect(xAGF.connect(root).setMaxSlashablePercentage(-1)).to.be.reverted;
     await expect(xAGF.connect(root).setMaxSlashablePercentage(10001)).to.be.revertedWith(
-      'STK_EXCESSIVE_SLASH_PCT'
+      ProtocolErrors.STK_EXCESSIVE_SLASH_PCT
     );
   });
 

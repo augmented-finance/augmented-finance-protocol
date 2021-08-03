@@ -2,12 +2,12 @@ import { task } from 'hardhat/config';
 
 import { UniswapRepayAdapterFactory } from '../../types';
 import { verifyContract } from '../../helpers/etherscan-verification';
-import { getFirstSigner } from '../../helpers/contracts-getters';
+import { getFirstSigner } from '../../helpers/misc-utils';
 
 const CONTRACT_NAME = 'UniswapRepayAdapter';
 
 task(`deploy-${CONTRACT_NAME}`, `Deploys the ${CONTRACT_NAME} contract`)
-  .addParam('provider', 'Address of the LendingPoolAddressesProvider')
+  .addParam('provider', 'Address of the MarketAccessController')
   .addParam('router', 'Address of the uniswap router')
   .addParam('weth', 'Address of the weth token')
   .addFlag('verify', `Verify ${CONTRACT_NAME} contract via Etherscan API.`)

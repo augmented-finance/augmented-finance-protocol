@@ -1,20 +1,25 @@
 import BigNumber from 'bignumber.js';
+import { ITokenNames } from './types';
 
 // ----------------
 // MATH
 // ----------------
 export const DAY = 60 * 60 * 24;
 export const WEEK = 7 * DAY;
-export const MAX_LOCKER_PERIOD = 4 * 52 * WEEK;
+export const MAX_LOCKER_WEEKS = 4 * 52;
+export const MAX_LOCKER_PERIOD = MAX_LOCKER_WEEKS * WEEK;
 export const PERCENTAGE_FACTOR = '10000';
 export const HALF_PERCENTAGE = '5000';
 export const PERC_100 = Number(PERCENTAGE_FACTOR);
-export const WAD = Math.pow(10, 18).toString();
+export const WAD_NUM = Math.pow(10, 18);
+export const WAD = WAD_NUM.toString();
 export const HALF_WAD = new BigNumber(WAD).multipliedBy(0.5).toString();
 export const RAY = new BigNumber(10).exponentiatedBy(27).toFixed();
 export const RAY_PER_WEEK = new BigNumber(10).exponentiatedBy(27).dividedBy(WEEK).toFixed(0);
 export const HALF_RAY = new BigNumber(RAY).multipliedBy(0.5).toFixed();
-export const WAD_RAY_RATIO = Math.pow(10, 9).toString();
+export const WAD_RAY_RATIO_NUM = Math.pow(10, 9);
+export const WAD_RAY_RATIO = WAD_RAY_RATIO_NUM.toString();
+export const oneWad = new BigNumber(Math.pow(10, 18));
 export const oneEther = new BigNumber(Math.pow(10, 18));
 export const oneRay = new BigNumber(Math.pow(10, 27));
 export const RAY_100 = oneRay.multipliedBy(100).toFixed();
@@ -44,4 +49,23 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   WETH: oneEther.toFixed(),
   WBTC: oneEther.multipliedBy('47.332685').toFixed(),
   USD: '5848466240000000',
+};
+
+export const DefaultTokenNames: ITokenNames = {
+  DepositTokenNamePrefix: 'Augmented deposit',
+  StableDebtTokenNamePrefix: 'Augmented stable debt',
+  VariableDebtTokenNamePrefix: 'Augmented debt',
+  StakeTokenNamePrefix: 'Augmented stake',
+
+  SymbolPrefix: '',
+  DepositSymbolPrefix: 'ag',
+  StableDebtSymbolPrefix: 'ags',
+  VariableDebtSymbolPrefix: 'agv',
+  StakeSymbolPrefix: 'xag',
+
+  RewardTokenName: 'Augmented reward',
+  RewardTokenSymbol: 'AGF',
+
+  RewardStakeTokenName: 'Augmented booster',
+  RewardStakeTokenSymbol: 'xAGF',
 };

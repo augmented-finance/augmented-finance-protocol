@@ -14,6 +14,7 @@ import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {AccessHelper} from '../../../access/AccessHelper.sol';
 import {AccessFlags} from '../../../access/AccessFlags.sol';
+import {IManagedLendingPool} from '../../../interfaces/IManagedLendingPool.sol';
 
 abstract contract PoolTokenBase is
   IERC20,
@@ -31,7 +32,7 @@ abstract contract PoolTokenBase is
   mapping(address => uint256) internal _balances;
   uint256 internal _totalSupply;
 
-  ILendingPool internal _pool;
+  IManagedLendingPool internal _pool;
   address internal _underlyingAsset;
   IBalanceHook private _incentivesController;
 
@@ -67,23 +68,28 @@ abstract contract PoolTokenBase is
     return _decimals;
   }
 
-  /**
-   * @dev Only lending pool can call functions marked by this modifier
-   **/
-  modifier onlyLendingPool {
+  function _onlyLendingPool() private view {
     require(_msgSender() == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
+  }
+
+  modifier onlyLendingPool {
+    _onlyLendingPool();
     _;
   }
 
-  modifier onlyRewardAdmin {
+  function _onlyRewardConfiguratorOrAdmin() private view {
     require(
-      AccessHelper.hasAllOf(
+      AccessHelper.hasAnyOf(
         _pool.getAccessController(),
         _msgSender(),
-        AccessFlags.REWARD_CONFIG_ADMIN
+        AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR
       ),
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
     );
+  }
+
+  modifier onlyRewardConfiguratorOrAdmin {
+    _onlyRewardConfiguratorOrAdmin();
     _;
   }
 
@@ -167,15 +173,15 @@ abstract contract PoolTokenBase is
   /**
    * @dev Updates the address of the incentives controller contract
    **/
-  function setIncentivesController(address hook) external override onlyRewardAdmin {
+  function setIncentivesController(address hook) external override onlyRewardConfiguratorOrAdmin {
     _setIncentivesController(hook);
   }
 
   /**
    * @dev Returns the address of the incentives controller contract
    **/
-  function getIncentivesController() public view returns (IBalanceHook) {
-    return _incentivesController;
+  function getIncentivesController() public view override returns (address) {
+    return address(_incentivesController);
   }
 
   function increaseAllowance(address, uint256) public virtual returns (bool);

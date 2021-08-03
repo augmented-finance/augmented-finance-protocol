@@ -4,21 +4,22 @@ pragma solidity ^0.6.12;
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {AllocationMode} from '../interfaces/IRewardController.sol';
+import {CalcBase} from './CalcBase.sol';
 
 import 'hardhat/console.sol';
 
-abstract contract CalcLinearRateReward {
+abstract contract CalcLinearRateReward is CalcBase {
   using SafeMath for uint256;
 
   mapping(address => RewardEntry) private _rewards;
   uint256 private _rate;
-  uint32 private _lastRateUpdateAt;
+  uint32 private _rateUpdatedAt;
 
-  mapping(address => uint256) _accumRates;
+  mapping(address => uint256) private _accumRates;
 
   struct RewardEntry {
     uint224 rewardBase;
-    uint32 lastUpdate;
+    uint32 claimedAt;
   }
 
   function setLinearRate(uint256 rate) internal {
@@ -29,30 +30,48 @@ abstract contract CalcLinearRateReward {
     if (_rate == rate) {
       return;
     }
-    uint256 prevRate = _rate;
-    uint32 prevTick = _lastRateUpdateAt;
-    internalMarkRateUpdate(at);
-    _rate = rate;
-    console.log('setLinearRateAt', _rate, prevRate, prevTick);
-    internalRateUpdated(prevRate, prevTick);
+
+    uint32 prevTick = _rateUpdatedAt;
+    if (at != prevTick) {
+      uint256 prevRate = _rate;
+      internalMarkRateUpdate(at);
+      _rate = rate;
+      internalRateUpdated(prevRate, prevTick, at);
+    }
+  }
+
+  function doSyncRateAt(uint32 at) internal {
+    uint32 prevTick = _rateUpdatedAt;
+    if (at != prevTick) {
+      internalMarkRateUpdate(at);
+      internalRateUpdated(_rate, prevTick, at);
+    }
   }
 
   function getCurrentTick() internal view virtual returns (uint32);
 
-  function internalRateUpdated(uint256 lastRate, uint32 lastAt) internal virtual;
+  function internalRateUpdated(
+    uint256 lastRate,
+    uint32 lastAt,
+    uint32 at
+  ) internal virtual;
 
   function internalMarkRateUpdate(uint32 currentTick) internal {
-    console.log('internalMarkRateUpdate', _lastRateUpdateAt, currentTick, block.timestamp);
-    require(currentTick >= _lastRateUpdateAt, 'retroactive update');
-    _lastRateUpdateAt = currentTick;
+    //    console.log('internalMarkRateUpdate', _rateUpdatedAt, currentTick, block.timestamp);
+    require(currentTick >= _rateUpdatedAt, 'retroactive update');
+    _rateUpdatedAt = currentTick;
   }
 
   function getLinearRate() internal view virtual returns (uint256) {
     return _rate;
   }
 
+  function getRateAndUpdatedAt() internal view virtual returns (uint256, uint32) {
+    return (_rate, _rateUpdatedAt);
+  }
+
   function getRateUpdatedAt() internal view returns (uint32) {
-    return _lastRateUpdateAt;
+    return _rateUpdatedAt;
   }
 
   function internalCalcRateAndReward(
@@ -92,7 +111,7 @@ abstract contract CalcLinearRateReward {
 
     if (newBalance == 0) {
       mode = AllocationMode.UnsetPull;
-    } else if (entry.lastUpdate == 0) {
+    } else if (entry.claimedAt == 0) {
       mode = AllocationMode.SetPull;
     } else {
       mode = AllocationMode.Push;
@@ -114,44 +133,6 @@ abstract contract CalcLinearRateReward {
     _accumRates[holder] = adjRate;
     _rewards[holder] = RewardEntry(uint224(newBalance), currentTick);
     return (allocated, since, mode);
-  }
-
-  function doOverrideReward(
-    address holder,
-    uint256 oldBalance,
-    uint256 newBalance
-  ) internal virtual returns (uint32 since, AllocationMode mode) {
-    require(newBalance <= type(uint224).max, 'balance is too high');
-
-    RewardEntry memory entry = _rewards[holder];
-
-    if (newBalance == 0) {
-      mode = AllocationMode.UnsetPull;
-    } else if (entry.lastUpdate == 0) {
-      mode = AllocationMode.SetPull;
-    } else {
-      mode = AllocationMode.Push;
-    }
-
-    newBalance = internalCalcBalance(entry, oldBalance, newBalance);
-    require(newBalance <= type(uint224).max, 'balance is too high');
-
-    uint32 currentTick = getCurrentTick();
-
-    entry.rewardBase = 0;
-    uint256 adjRate;
-    uint256 allocated;
-
-    (adjRate, allocated, since) = internalCalcRateAndReward(
-      entry,
-      _accumRates[holder],
-      currentTick
-    );
-    require(allocated == 0);
-
-    _accumRates[holder] = adjRate;
-    _rewards[holder] = RewardEntry(uint224(newBalance), currentTick);
-    return (since, mode);
   }
 
   function internalCalcBalance(
@@ -178,7 +159,7 @@ abstract contract CalcLinearRateReward {
 
   function internalRemoveReward(address holder) internal virtual returns (uint256 rewardBase) {
     rewardBase = _rewards[holder].rewardBase;
-    if (rewardBase == 0 && _rewards[holder].lastUpdate == 0) {
+    if (rewardBase == 0 && _rewards[holder].claimedAt == 0) {
       return 0;
     }
     delete (_rewards[holder]);
@@ -198,16 +179,11 @@ abstract contract CalcLinearRateReward {
       return (0, 0);
     }
 
-    // console.log('internalCalcRateAndReward: ', _rewards[holder].lastUpdate, currentTick);
-    // console.log(_accumRates[holder], _rewards[holder].rewardBase);
-
     (uint256 adjRate, uint256 allocated, uint32 since) =
       internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentTick);
 
-    // console.log(adjRate, allocated, since);
-
     _accumRates[holder] = adjRate;
-    _rewards[holder].lastUpdate = currentTick;
+    _rewards[holder].claimedAt = currentTick;
     return (allocated, since);
   }
 

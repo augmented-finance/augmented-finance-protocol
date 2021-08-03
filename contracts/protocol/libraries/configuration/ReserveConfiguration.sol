@@ -142,6 +142,19 @@ library ReserveConfiguration {
   }
 
   /**
+   * @dev Gets the decimals of the underlying asset of the reserve
+   * @param self The reserve configuration
+   * @return The decimals of the asset
+   **/
+  function getDecimalsMemory(DataTypes.ReserveConfigurationMap memory self)
+    internal
+    pure
+    returns (uint8)
+  {
+    return uint8((self.data & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION);
+  }
+
+  /**
    * @dev Sets the active state of the reserve
    * @param self The reserve configuration
    * @param active The active state

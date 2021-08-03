@@ -16,8 +16,6 @@ interface IMarketAccessController is IAccessController {
   // Deprecated, for backward compatibility & scritps. By contracts use AccessHelper and AccessFlags instead.
   function getLendingPoolConfigurator() external view returns (address);
 
-  function getLendingPoolCollateralManager() external view returns (address);
-
   function isPoolAdmin(address) external view returns (bool);
 
   function getPriceOracle() external view returns (address);
@@ -33,34 +31,12 @@ interface IMarketAccessController is IAccessController {
   function getRewardController() external view returns (address);
 
   function getRewardConfigurator() external view returns (address);
+
+  function getStakeConfigurator() external view returns (address);
 }
 
 interface IManagedMarketAccessController is IMarketAccessController {
   event MarketIdSet(string newMarketId);
 
   function setMarketId(string memory marketId) external;
-
-  function setLendingPoolImpl(address) external;
-
-  function setLendingPoolConfiguratorImpl(address) external;
-
-  function setLendingPoolCollateralManager(address) external;
-
-  function getPoolAdmin() external view returns (address);
-
-  function setPoolAdmin(address) external;
-
-  function setPriceOracle(address) external;
-
-  function setLendingRateOracle(address) external;
-
-  function setTreasuryImpl(address) external;
-
-  function setRewardTokenImpl(address) external;
-
-  function setRewardStakeTokenImpl(address) external;
-
-  function setRewardController(address) external;
-
-  function setRewardConfiguratorImpl(address) external;
 }

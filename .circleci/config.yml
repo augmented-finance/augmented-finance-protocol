@@ -22,13 +22,11 @@ jobs:
       - run: yarn install --immutable
       - run: yarn run compile
       - run: yarn run test:augmented:boost
-      - run: yarn run test:augmented:utils
       - run: yarn run test:augmented:pools
       - run: yarn run test
-      - run: yarn run test:main:augmented:migrator-zombie
-      - run: yarn run test:main:augmented:migrator-aave
-      - run: yarn run test:main:augmented:migrator-comp
       - run: yarn run test:augmented:stake
+      - run: yarn run augmented:main:fork
+      - run: yarn run augmented:test-incremental
       - run: yarn run build:package
       - save_cache:
           name: Save yarn package cache

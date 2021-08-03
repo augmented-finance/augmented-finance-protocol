@@ -4,7 +4,6 @@ pragma solidity ^0.6.12;
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-// import {AccessBitmask} from '../../access/AccessBitmask.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {IRewardPool} from '../interfaces/IRewardPool.sol';
 import {ControlledRewardPool} from './ControlledRewardPool.sol';
@@ -21,9 +20,8 @@ abstract contract BaseTokenAbsRewardPool is ControlledRewardPool, IRewardPool {
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage
-  ) public ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage) {}
+  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {}
 
   function handleBalanceUpdate(
     address,
@@ -66,17 +64,24 @@ abstract contract BaseTokenAbsRewardPool is ControlledRewardPool, IRewardPool {
     internalAllocateReward(holder, allocated, since, mode);
   }
 
-  function addRewardProvider(address provider, address) external virtual override onlyController {
+  function addRewardProvider(address provider, address token)
+    external
+    virtual
+    override
+    onlyConfigAdmin
+  {
     require(provider != address(0), 'provider is required');
     require(_provider == address(0), 'provider is already set');
     _provider = provider;
+    emit ProviderAdded(provider, token);
   }
 
-  function removeRewardProvider(address provider) external virtual override onlyController {
-    if (_provider != provider) {
+  function removeRewardProvider(address provider) external virtual override onlyConfigAdmin {
+    if (_provider != provider || provider == address(0)) {
       return;
     }
     _provider = address(0);
+    emit ProviderRemoved(provider);
   }
 
   function internalUpdateTotal(uint256 totalBalance) internal virtual;

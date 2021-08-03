@@ -7,9 +7,9 @@ import {
   strategyUSDC,
   strategyUSDT,
   strategyAAVE,
-  strategyLINK,
   strategyWBTC,
   strategyWETH,
+  strategyLINK,
 } from './reservesConfigs';
 
 // ----------------
@@ -29,8 +29,37 @@ export const AugmentedConfig: IAugmentedConfiguration = {
     WBTC: strategyWBTC,
     WETH: strategyWETH,
   },
+  FallbackOracle: {
+    [eEthereumNetwork.coverage]: '',
+    [eEthereumNetwork.hardhat]: '',
+    [eEthereumNetwork.docker]: '',
+    [eEthereumNetwork.kovan]: '',
+    [eEthereumNetwork.ropsten]: '',
+    [eEthereumNetwork.rinkeby]: '',
+    [eEthereumNetwork.main]: {
+      AAVE: 0.13308194,
+      LINK: 0.0077041609,
+      DAI: 0.0005022851,
+      USDC: 0.0005022851,
+      USDT: 0.00050314705,
+      WBTC: 16.08,
+      USD: 0.00050,
+    },
+    [eEthereumNetwork.tenderlyMain]: '',
+  },
+  ChainlinkAggregator: { // disable all oracles for testing
+    [eEthereumNetwork.coverage]: {},
+    [eEthereumNetwork.hardhat]: {},
+    [eEthereumNetwork.docker]: {},
+    [eEthereumNetwork.kovan]: {},
+    [eEthereumNetwork.ropsten]: {},
+    [eEthereumNetwork.rinkeby]: {}, 
+    [eEthereumNetwork.main]: {},
+    [eEthereumNetwork.tenderlyMain]: {},
+  },
   ReserveAssets: {
     [eEthereumNetwork.hardhat]: {},
+    [eEthereumNetwork.docker]: {},
     [eEthereumNetwork.coverage]: {},
     [eEthereumNetwork.kovan]: {
       AAVE: '0xB597cd8D3217ea6477232F9217fa70837ff667Af',

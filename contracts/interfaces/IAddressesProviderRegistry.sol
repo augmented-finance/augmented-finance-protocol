@@ -7,12 +7,15 @@ interface IAddressesProviderRegistry {
 
   function getAddressesProvidersList() external view returns (address[] memory);
 
-  function getAddressesProviderIdByAddress(address addressesProvider)
-    external
-    view
-    returns (uint256);
+  function getAddressesProviderIdByAddress(address) external view returns (uint256);
 
   function registerAddressesProvider(address provider, uint256 id) external;
 
   function unregisterAddressesProvider(address provider) external;
+
+  function setOneTimeRegistrar(address user, uint256 expectedId) external;
+
+  function getOneTimeRegistrar() external view returns (address user, uint256 expectedId);
+
+  function renounceOneTimeRegistrar() external;
 }

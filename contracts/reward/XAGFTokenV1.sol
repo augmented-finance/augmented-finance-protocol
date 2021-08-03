@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {AccessFlags} from '../access/AccessFlags.sol';
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 
-import {RewardedTokenLocker} from './locker/RewardedTokenLocker.sol';
+import {DecayingTokenLocker} from './locker/DecayingTokenLocker.sol';
 import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
+import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
+import {IRemoteAccessBitmask} from '../access/interfaces/IRemoteAccessBitmask.sol';
+import {IRewardController} from './interfaces/IRewardController.sol';
+import {WadRayMath} from '../tools/math/WadRayMath.sol';
 
 import 'hardhat/console.sol';
 
-contract XAGFTokenV1 is RewardedTokenLocker, VersionedInitializable {
+contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, VersionedInitializable {
   string internal constant NAME = 'Augmented Finance Locked Reward Token';
   string internal constant SYMBOL = 'xAGF';
   uint8 internal constant DECIMALS = 18;
@@ -19,14 +24,8 @@ contract XAGFTokenV1 is RewardedTokenLocker, VersionedInitializable {
   uint8 private _decimals;
 
   uint256 private constant TOKEN_REVISION = 1;
-  uint32 private constant ONE_PERIOD = 1 weeks;
-  uint32 private constant MAX_PERIOD = 4 * 52 weeks;
-  uint256 private constant MAX_SUPPLY = 1e36;
 
-  constructor()
-    public
-    RewardedTokenLocker(IMarketAccessController(0), address(0), ONE_PERIOD, MAX_PERIOD, MAX_SUPPLY)
-  {
+  constructor() public DecayingTokenLocker(IRewardController(address(this)), 0, 0, address(0)) {
     _initializeERC20(NAME, SYMBOL, DECIMALS);
   }
 
@@ -57,12 +56,23 @@ contract XAGFTokenV1 is RewardedTokenLocker, VersionedInitializable {
   }
 
   // This initializer is invoked by AccessController.setAddressAsImpl
-  function initialize(IMarketAccessController remoteAcl)
-    external
-    virtual
-    initializerRunAlways(TOKEN_REVISION)
-  {
-    _initialize(remoteAcl, remoteAcl.getRewardToken(), NAME, SYMBOL, DECIMALS);
+  function initialize(IMarketAccessController ac) external virtual initializer(TOKEN_REVISION) {
+    address controller = ac.getRewardController();
+    address underlying = ac.getRewardToken();
+
+    _initializeERC20(NAME, SYMBOL, DECIMALS);
+    super._initialize(underlying);
+    super._initialize(IRewardController(controller), 0, 0);
+  }
+
+  function initialize(InitData calldata data) public virtual override initializer(TOKEN_REVISION) {
+    IMarketAccessController ac = IMarketAccessController(address(data.remoteAcl));
+    address controller = ac.getRewardController();
+    address underlying = ac.getRewardToken();
+
+    _initializeERC20(data.name, data.symbol, data.decimals);
+    super._initialize(underlying);
+    super._initialize(IRewardController(controller), 0, 0);
   }
 
   function initializeToken(
@@ -71,20 +81,22 @@ contract XAGFTokenV1 is RewardedTokenLocker, VersionedInitializable {
     string calldata name_,
     string calldata symbol_,
     uint8 decimals_
-  ) public virtual initializerRunAlways(TOKEN_REVISION) {
-    _initialize(remoteAcl, underlying, name_, symbol_, decimals_);
+  ) public virtual initializer(TOKEN_REVISION) {
+    address controller = remoteAcl.getRewardController();
+
+    _initializeERC20(name_, symbol_, decimals_);
+    super._initialize(underlying);
+    super._initialize(IRewardController(controller), 0, 0);
   }
 
-  function _initialize(
-    IMarketAccessController remoteAcl,
+  function initializePool(
+    IRewardController controller,
     address underlying,
-    string memory name_,
-    string memory symbol_,
-    uint8 decimals_
-  ) private {
-    require(underlying != address(0), 'underlying is missing');
-    _remoteAcl = remoteAcl;
-    _initializeERC20(name_, symbol_, decimals_);
-    super._initialize(underlying, ONE_PERIOD, MAX_PERIOD);
+    uint256 initialRate,
+    uint16 baselinePercentage
+  ) public virtual initializer(TOKEN_REVISION) {
+    _initializeERC20(NAME, SYMBOL, DECIMALS);
+    super._initialize(underlying);
+    super._initialize(controller, initialRate, baselinePercentage);
   }
 }

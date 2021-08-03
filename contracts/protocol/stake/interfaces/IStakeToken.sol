@@ -2,9 +2,25 @@
 pragma solidity 0.6.12;
 
 import {IDerivedToken} from '../../../interfaces/IDerivedToken.sol';
+import {IRewardedToken} from '../../../interfaces/IRewardedToken.sol';
 import {IEmergencyAccess} from '../../../interfaces/IEmergencyAccess.sol';
 
-interface IStakeToken is IDerivedToken {
+interface IStakeToken is IDerivedToken, IRewardedToken {
+  event Staked(address indexed from, address indexed to, uint256 amount, uint256 indexed referal);
+  event Redeemed(
+    address indexed from,
+    address indexed to,
+    uint256 amount,
+    uint256 underlyingAmount
+  );
+  event CooldownStarted(address indexed account, uint32 at);
+  event Slashed(address to, uint256 amount, uint256 totalBeforeSlash);
+
+  event MaxSlashUpdated(uint16 maxSlash);
+  event CooldownUpdated(uint32 cooldownPeriod, uint32 unstakePeriod);
+
+  event RedeemUpdated(bool redeemable);
+
   function stake(
     address to,
     uint256 underlyingAmount,
@@ -25,19 +41,28 @@ interface IStakeToken is IDerivedToken {
 
   function isRedeemable() external view returns (bool);
 
-  function slashUnderlying(
-    address destination,
-    uint256 minAmount,
-    uint256 maxAmount
-  ) external returns (uint256);
+  function balanceAndCooldownOf(address holder)
+    external
+    view
+    returns (
+      uint256 balance,
+      uint32 windowStart,
+      uint32 windowEnd
+    );
 }
 
 interface IManagedStakeToken is IEmergencyAccess {
   function setRedeemable(bool redeemable) external;
 
-  function getMaxSlashablePercentage() external view returns (uint256);
+  function getMaxSlashablePercentage() external view returns (uint16);
 
-  function setMaxSlashablePercentage(uint256 percentage) external;
+  function setMaxSlashablePercentage(uint16 percentage) external;
 
   function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod) external;
+
+  function slashUnderlying(
+    address destination,
+    uint256 minAmount,
+    uint256 maxAmount
+  ) external returns (uint256);
 }

@@ -1,11 +1,11 @@
 import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
-import rawBRE, { ethers } from 'hardhat';
+import rawBRE from 'hardhat';
 
 import {
   getMockAgfToken,
-  getRewardFreezer,
+  getMockRewardFreezer,
   getTeamRewardPool,
 } from '../../helpers/contracts-getters';
 
@@ -28,15 +28,14 @@ describe('Team rewards suite', () => {
   let rewardController: RewardFreezer;
   let agf: MockAgfToken;
   let blkBeforeDeploy;
-  let blkAfterDeploy;
   let REWARD_UNLOCKED_AT;
   let rewardPrecision = 1.5;
 
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
-    [root, teamMember1, teamMember2] = await ethers.getSigners();
+    [root, teamMember1, teamMember2] = await (<any>rawBRE).ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
-    rewardController = await getRewardFreezer();
+    rewardController = await getMockRewardFreezer();
     trp = await getTeamRewardPool();
     agf = await getMockAgfToken();
     REWARD_UNLOCKED_AT = 10 + (await currentTick());
@@ -148,7 +147,7 @@ describe('Team rewards suite', () => {
     await trp.connect(root).setPaused(false);
     await mineTicks(1);
     await rewardController.connect(teamMember1).claimReward();
-    expect(await agf.balanceOf(teamMember1.address)).to.eq(2);
+    expect(await agf.balanceOf(teamMember1.address)).to.within(2, 3);
   });
 
   it('one team member with 100% share (0% frozen) claims all', async () => {
@@ -223,7 +222,7 @@ describe('Team rewards suite', () => {
     const userShare = PERC_100;
     const freezePercent = 3333;
 
-    await rewardController.admin_setFreezePercentage(freezePercent);
+    await rewardController.setFreezePercentage(freezePercent);
     await trp.connect(root).updateTeamMember(teamMember1.address, userShare);
 
     const blocksPassed = await mineToTicks(REWARD_UNLOCKED_AT + 1);
@@ -255,7 +254,7 @@ describe('Team rewards suite', () => {
     const userShare = PERC_100;
     const freezePercent = PERC_100;
 
-    await rewardController.admin_setFreezePercentage(freezePercent);
+    await rewardController.setFreezePercentage(freezePercent);
     await trp.connect(root).updateTeamMember(teamMember1.address, userShare);
 
     const blocksPassed = await mineToTicks(REWARD_UNLOCKED_AT + 1);
@@ -287,7 +286,7 @@ describe('Team rewards suite', () => {
     const userShare = PERC_100;
     const freezePercent = 3333;
 
-    await rewardController.admin_setFreezePercentage(freezePercent);
+    await rewardController.setFreezePercentage(freezePercent);
     await trp.connect(root).updateTeamMember(teamMember1.address, userShare);
 
     const blocksPassed = await mineToTicks(REWARD_UNLOCKED_AT + 1);

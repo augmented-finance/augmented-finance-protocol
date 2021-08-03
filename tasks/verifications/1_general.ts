@@ -1,25 +1,16 @@
 import { error } from 'console';
 import { zeroAddress } from 'ethereumjs-util';
 import { task } from 'hardhat/config';
-import {
-  loadPoolConfig,
-  ConfigNames,
-  getWethAddress,
-  getTreasuryAddress,
-} from '../../helpers/configuration';
+import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getProtocolDataProvider,
   getAddressById,
-  getLendingPool,
-  getLendingPoolAddressesProvider,
+  getMarketAddressController,
   getAddressesProviderRegistry,
-  getLendingPoolCollateralManager,
-  getLendingPoolCollateralManagerImpl,
+  getLendingPoolExtensionImpl,
   getLendingPoolConfiguratorImpl,
-  getLendingPoolConfiguratorProxy,
   getLendingPoolImpl,
-  getWalletProvider,
   getWETHGateway,
 } from '../../helpers/contracts-getters';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
@@ -39,53 +30,27 @@ task('verify:general', 'Verify contracts at Etherscan')
       ReservesConfig,
       ProviderRegistry,
       MarketId,
-      LendingPoolCollateralManager,
-      LendingPoolConfigurator,
-      LendingPool,
-      WethGateway,
     } = poolConfig as ICommonConfiguration;
-    const treasuryAddress = await getTreasuryAddress(poolConfig);
 
     const registryAddress = getParamPerNetwork(ProviderRegistry, network);
-    const addressesProvider = await getLendingPoolAddressesProvider();
     const addressesProviderRegistry = notFalsyOrZeroAddress(registryAddress)
       ? await getAddressesProviderRegistry(registryAddress)
       : await getAddressesProviderRegistry();
+
+    const addressesProvider = await getMarketAddressController();
+
     const lendingPoolAddress = await addressesProvider.getLendingPool();
-    const lendingPoolConfiguratorAddress = await addressesProvider.getLendingPoolConfigurator(); //getLendingPoolConfiguratorProxy();
-    const lendingPoolCollateralManagerAddress = await addressesProvider.getLendingPoolCollateralManager();
+    const lendingPoolConfiguratorAddress = await addressesProvider.getLendingPoolConfigurator();
+    const lendingPoolExtensionAddress = await addressesProvider.getLendingPoolExtension();
 
     if (all) {
-      const lendingPoolImplAddress = getParamPerNetwork(LendingPool, network);
-      const lendingPoolImpl = notFalsyOrZeroAddress(lendingPoolImplAddress)
-        ? await getLendingPoolImpl(lendingPoolImplAddress)
-        : await getLendingPoolImpl();
-
-      const lendingPoolConfiguratorImplAddress = getParamPerNetwork(
-        LendingPoolConfigurator,
-        network
-      );
-      const lendingPoolConfiguratorImpl = notFalsyOrZeroAddress(lendingPoolConfiguratorImplAddress)
-        ? await getLendingPoolConfiguratorImpl(lendingPoolConfiguratorImplAddress)
-        : await getLendingPoolConfiguratorImpl();
-
-      const lendingPoolCollateralManagerImplAddress = getParamPerNetwork(
-        LendingPoolCollateralManager,
-        network
-      );
-      const lendingPoolCollateralManagerImpl = notFalsyOrZeroAddress(
-        lendingPoolCollateralManagerImplAddress
-      )
-        ? await getLendingPoolCollateralManagerImpl(lendingPoolCollateralManagerImplAddress)
-        : await getLendingPoolCollateralManagerImpl();
+      const lendingPoolImpl = await getLendingPoolImpl();
+      const lendingPoolConfiguratorImpl = await getLendingPoolConfiguratorImpl();
+      const lendingPoolExtensionImpl = await getLendingPoolExtensionImpl();
 
       const dataProvider = await getProtocolDataProvider();
-      const walletProvider = await getWalletProvider();
 
-      const wethGatewayAddress = getParamPerNetwork(WethGateway, network);
-      const wethGateway = notFalsyOrZeroAddress(wethGatewayAddress)
-        ? await getWETHGateway(wethGatewayAddress)
-        : await getWETHGateway();
+      const wethGateway = await getWETHGateway();
 
       // Address Provider
       console.log('\n- Verifying address provider...\n');
@@ -103,17 +68,17 @@ task('verify:general', 'Verify contracts at Etherscan')
       console.log('\n- Verifying LendingPool Configurator Implementation...\n');
       await verifyContract(lendingPoolConfiguratorImpl.address, []);
 
-      // Lending Pool Collateral Manager implementation
-      console.log('\n- Verifying LendingPool Collateral Manager Implementation...\n');
-      await verifyContract(lendingPoolCollateralManagerImpl.address, []);
+      // Lending Pool Extension implementation
+      console.log('\n- Verifying LendingPool Extension Implementation...\n');
+      await verifyContract(lendingPoolExtensionImpl.address, []);
 
       // Test helpers
       console.log('\n- Verifying  Aave  Provider Helpers...\n');
       await verifyContract(dataProvider.address, [addressesProvider.address]);
 
-      // Wallet balance provider
-      console.log('\n- Verifying  Wallet Balance Provider...\n');
-      await verifyContract(walletProvider.address, []);
+      // // Wallet balance provider
+      // console.log('\n- Verifying  Wallet Balance Provider...\n');
+      // await verifyContract(walletProvider.address, []);
 
       // WETHGateway
       console.log('\n- Verifying  WETHGateway...\n');
@@ -128,8 +93,10 @@ task('verify:general', 'Verify contracts at Etherscan')
     await verifyContract(lendingPoolConfiguratorAddress, [addressesProvider.address]);
 
     // Proxy collateral manager
-    console.log('\n- Verifying  Lending Pool Collateral Manager Proxy...\n');
-    await verifyContract(lendingPoolCollateralManagerAddress, []);
+    console.log('\n- Verifying  Lending Pool Extension Proxy...\n');
+    await verifyContract(lendingPoolExtensionAddress, []);
+
+    const treasuryAddress = await addressesProvider.getTreasury();
 
     // DelegatedAwareAToken
     console.log('\n- Verifying DelegatedAwareAToken...\n');
@@ -141,7 +108,7 @@ task('verify:general', 'Verify contracts at Etherscan')
         lendingPoolAddress,
         UNI,
         treasuryAddress,
-        'Aave interest bearing UNI',
+        'Aave interest UNI',
         'aUNI',
         ZERO_ADDRESS,
       ]);

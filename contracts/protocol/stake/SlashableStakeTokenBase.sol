@@ -9,6 +9,7 @@ import {IStakeToken, IManagedStakeToken} from './interfaces/IStakeToken.sol';
 
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
@@ -31,6 +32,7 @@ abstract contract SlashableStakeTokenBase is
   IInitializableStakeToken
 {
   using SafeMath for uint256;
+  using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
@@ -39,15 +41,10 @@ abstract contract SlashableStakeTokenBase is
 
   mapping(address => uint32) private _stakersCooldowns;
 
-  uint256 private _maxSlashablePercentage;
   uint32 private _cooldownPeriod;
   uint32 private _unstakePeriod;
+  uint16 private _maxSlashablePercentage;
   bool private _redeemPaused;
-
-  event Staked(address indexed from, address indexed to, uint256 amount, uint256 indexed referal);
-  event Redeem(address indexed from, address indexed to, uint256 amount, uint256 underlyingAmount);
-  event Cooldown(address indexed account, uint32 at);
-  event Slashed(address by, address to, uint256 amount);
 
   constructor(
     StakeTokenConfig memory params,
@@ -62,14 +59,17 @@ abstract contract SlashableStakeTokenBase is
     _remoteAcl = params.stakeController;
     _stakedToken = params.stakedToken;
     _cooldownPeriod = params.cooldownPeriod;
+
     if (params.unstakePeriod == 0) {
       _unstakePeriod = 10;
     } else {
       _unstakePeriod = params.unstakePeriod;
     }
 
-    if (_maxSlashablePercentage == 0) {
-      _maxSlashablePercentage = 30 * PercentageMath.PCT;
+    if (params.maxSlashable >= PercentageMath.ONE) {
+      _maxSlashablePercentage = PercentageMath.ONE;
+    } else {
+      _maxSlashablePercentage = params.maxSlashable;
     }
   }
 
@@ -94,7 +94,7 @@ abstract contract SlashableStakeTokenBase is
   ) internal returns (uint256 stakeAmount) {
     require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
     uint256 oldReceiverBalance = balanceOf(to);
-    stakeAmount = underlyingAmount.percentDiv(exchangeRate());
+    stakeAmount = underlyingAmount.rayDiv(exchangeRate());
 
     _stakersCooldowns[to] = getNextCooldown(0, stakeAmount, to, oldReceiverBalance);
 
@@ -153,27 +153,23 @@ abstract contract SlashableStakeTokenBase is
     uint256 stakeAmount,
     uint256 underlyingAmount
   ) internal returns (uint256, uint256) {
-    require(!_redeemPaused, 'STK_REDEEM_PAUSED');
+    require(!_redeemPaused, Errors.STK_REDEEM_PAUSED);
 
     uint256 cooldownStartAt = _stakersCooldowns[from];
-    // console.log('internal redeem: ', from, to, address(this));
-    // console.log('block.timestamp: ', block.timestamp);
-    // console.log('cooldownStartAt: ', cooldownStartAt);
-    // console.log('cooldownPeriod: ', _cooldownPeriod);
-    // console.log('cooldownPeriod: ', _unstakePeriod);
 
     require(
       cooldownStartAt != 0 && block.timestamp > cooldownStartAt.add(_cooldownPeriod),
-      'STK_INSUFFICIENT_COOLDOWN'
+      Errors.STK_INSUFFICIENT_COOLDOWN
     );
     require(
       block.timestamp.sub(cooldownStartAt.add(_cooldownPeriod)) <= _unstakePeriod,
-      'STK_UNSTAKE_WINDOW_FINISHED'
+      Errors.STK_UNSTAKE_WINDOW_FINISHED
     );
 
     uint256 oldBalance = balanceOf(from);
     if (stakeAmount == 0) {
-      stakeAmount = underlyingAmount.percentDiv(exchangeRate());
+      uint256 rate = exchangeRate();
+      stakeAmount = underlyingAmount.rayDiv(rate);
 
       if (stakeAmount == 0) {
         // don't allow tiny withdrawals
@@ -181,13 +177,13 @@ abstract contract SlashableStakeTokenBase is
       }
       if (stakeAmount > oldBalance) {
         stakeAmount = oldBalance;
-        underlyingAmount = stakeAmount.percentMul(exchangeRate());
+        underlyingAmount = stakeAmount.rayMul(rate);
       }
     } else {
       if (stakeAmount > oldBalance) {
         stakeAmount = oldBalance;
       }
-      underlyingAmount = stakeAmount.percentMul(exchangeRate());
+      underlyingAmount = stakeAmount.rayMul(exchangeRate());
       if (underlyingAmount == 0) {
         // protect the user - don't waste balance without an outcome
         return (0, 0);
@@ -212,7 +208,7 @@ abstract contract SlashableStakeTokenBase is
 
     IERC20(_stakedToken).safeTransfer(to, underlyingAmount);
 
-    emit Redeem(from, to, stakeAmount, underlyingAmount);
+    emit Redeemed(from, to, stakeAmount, underlyingAmount);
     return (stakeAmount, underlyingAmount);
   }
 
@@ -221,29 +217,54 @@ abstract contract SlashableStakeTokenBase is
    * - It can't be called if the user is not staking
    **/
   function cooldown() external override {
-    require(balanceOf(msg.sender) != 0, 'STK_INVALID_BALANCE_ON_COOLDOWN');
+    require(balanceOf(msg.sender) != 0, Errors.STK_INVALID_BALANCE_ON_COOLDOWN);
 
     // console.log('cooldown: ', msg.sender, address(this));
     // console.log('block.timestamp: ', block.timestamp);
 
     _stakersCooldowns[msg.sender] = uint32(block.timestamp);
-    emit Cooldown(msg.sender, uint32(block.timestamp));
+    emit CooldownStarted(msg.sender, uint32(block.timestamp));
   }
 
   /**
    * @dev Gets end of the cooldown period.
-   * - Returns zero for a not staking user.
+   * - Returns zero for a non-staking user or .
    **/
   function getCooldown(address holder) external view override returns (uint32) {
     return _stakersCooldowns[holder];
   }
 
-  function exchangeRate() public view override returns (uint256) {
-    uint256 total = totalSupply();
-    if (total == 0) {
-      return PercentageMath.ONE; // 100%
+  function balanceAndCooldownOf(address holder)
+    external
+    view
+    override
+    returns (
+      uint256,
+      uint32 windowStart,
+      uint32 windowEnd
+    )
+  {
+    windowStart = _stakersCooldowns[holder];
+    if (windowStart != 0) {
+      windowEnd = windowStart + _unstakePeriod;
+      if (windowEnd < windowStart) {
+        windowEnd = type(uint32).max;
+      }
     }
-    return _stakedToken.balanceOf(address(this)).percentOf(total);
+    return (balanceOf(holder), windowStart, windowEnd);
+  }
+
+  function exchangeRate() public view override returns (uint256) {
+    uint256 total = super.totalSupply();
+    if (total == 0) {
+      return WadRayMath.RAY; // 100%
+    }
+    uint256 underlyingBalance = _stakedToken.balanceOf(address(this));
+    if (underlyingBalance >= total) {
+      return WadRayMath.RAY; // 100%
+    }
+
+    return underlyingBalance.rayBase(total);
   }
 
   function slashUnderlying(
@@ -251,38 +272,44 @@ abstract contract SlashableStakeTokenBase is
     uint256 minAmount,
     uint256 maxAmount
   ) external override aclHas(AccessFlags.LIQUIDITY_CONTROLLER) returns (uint256 amount) {
-    uint256 balance = _stakedToken.balanceOf(address(this));
-    console.log('balance: ', balance);
-    uint256 maxSlashable = balance.percentMul(_maxSlashablePercentage);
-    console.log('max slashable: ', maxSlashable);
+    uint256 underlyingBalance = _stakedToken.balanceOf(address(this));
+    uint256 maxSlashable = super.totalSupply();
+
+    if (underlyingBalance > maxSlashable) {
+      maxSlashable =
+        underlyingBalance -
+        maxSlashable +
+        maxSlashable.percentMul(_maxSlashablePercentage);
+    } else {
+      maxSlashable = underlyingBalance.percentMul(_maxSlashablePercentage);
+    }
 
     if (maxAmount > maxSlashable) {
       amount = maxSlashable;
     } else {
       amount = maxAmount;
     }
-    console.log('amount: ', amount);
     if (amount < minAmount) {
       return 0;
     }
-    console.log('transferring to destination: ', destination);
     _stakedToken.safeTransfer(destination, amount);
 
-    emit Slashed(msg.sender, destination, amount);
+    emit Slashed(destination, amount, underlyingBalance);
     return amount;
   }
 
-  function getMaxSlashablePercentage() external view override returns (uint256) {
+  function getMaxSlashablePercentage() external view override returns (uint16) {
     return _maxSlashablePercentage;
   }
 
-  function setMaxSlashablePercentage(uint256 percentageInRay)
+  function setMaxSlashablePercentage(uint16 slashPct)
     external
     override
     aclHas(AccessFlags.STAKE_ADMIN)
   {
-    require(percentageInRay <= PercentageMath.ONE, 'STK_EXCESSIVE_SLASH_PCT');
-    _maxSlashablePercentage = percentageInRay;
+    require(slashPct <= PercentageMath.HALF_ONE, Errors.STK_EXCESSIVE_SLASH_PCT);
+    _maxSlashablePercentage = slashPct;
+    emit MaxSlashUpdated(slashPct);
   }
 
   function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod)
@@ -290,8 +317,11 @@ abstract contract SlashableStakeTokenBase is
     override
     aclHas(AccessFlags.STAKE_ADMIN)
   {
+    require(cooldownPeriod <= 52 weeks, Errors.STK_EXCESSIVE_COOLDOWN_PERIOD);
+    require(unstakePeriod >= 1 hours && unstakePeriod <= 52 weeks, Errors.STK_WRONG_UNSTAKE_PERIOD);
     _cooldownPeriod = cooldownPeriod;
     _unstakePeriod = unstakePeriod;
+    emit CooldownUpdated(cooldownPeriod, unstakePeriod);
   }
 
   function isRedeemable() external view override returns (bool) {
@@ -304,10 +334,13 @@ abstract contract SlashableStakeTokenBase is
     aclHas(AccessFlags.LIQUIDITY_CONTROLLER)
   {
     _redeemPaused = !redeemable;
+    emit RedeemUpdated(redeemable);
   }
 
   function setPaused(bool paused) external override onlyEmergencyAdmin {
     _redeemPaused = paused;
+    emit RedeemUpdated(!paused);
+    emit EmergencyPaused(msg.sender, paused);
   }
 
   function isPaused() external view override returns (bool) {
@@ -366,7 +399,7 @@ abstract contract SlashableStakeTokenBase is
     uint256 amountToReceive,
     address toAddress,
     uint256 toBalance
-  ) public returns (uint32) {
+  ) internal returns (uint32) {
     uint32 toCooldownPeriod = _stakersCooldowns[toAddress];
     if (toCooldownPeriod == 0) {
       return 0;
@@ -403,5 +436,32 @@ abstract contract SlashableStakeTokenBase is
   /// @notice Seconds available to redeem once the cooldown period is fullfilled
   function UNSTAKE_PERIOD() external view returns (uint256) {
     return _unstakePeriod;
+  }
+
+  function initializedWith()
+    external
+    view
+    override
+    returns (
+      StakeTokenConfig memory params,
+      string memory name_,
+      string memory symbol_,
+      uint8 decimals_
+    )
+  {
+    params.stakeController = _remoteAcl;
+    params.stakedToken = _stakedToken;
+    params.cooldownPeriod = _cooldownPeriod;
+    params.unstakePeriod = _unstakePeriod;
+    params.maxSlashable = _maxSlashablePercentage;
+    return (params, name(), symbol(), decimals());
+  }
+
+  function setIncentivesController(address addr) external override onlyRewardConfiguratorOrAdmin {
+    _incentivesController = IBalanceHook(addr);
+  }
+
+  function getIncentivesController() public view override returns (address) {
+    return address(_incentivesController);
   }
 }

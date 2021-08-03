@@ -13,6 +13,7 @@ export enum eEthereumNetwork {
   main = 'main',
   coverage = 'coverage',
   hardhat = 'hardhat',
+  docker = 'docker',
   tenderlyMain = 'tenderlyMain',
 }
 
@@ -37,78 +38,72 @@ export enum LendingPools {
 }
 
 export enum eContractid {
-  LendingPoolAddressesProvider = 'LendingPoolAddressesProvider',
-  MintableERC20 = 'MintableERC20',
-  MintableDelegationERC20 = 'MintableDelegationERC20',
+  MarketAccessController = 'MarketAccessController',
+  PreDeployedMarketAccessController = '~MarketAccessController',
+
   AddressesProviderRegistry = 'AddressesProviderRegistry',
-  LendingPoolParametersProvider = 'LendingPoolParametersProvider',
-  LendingPoolConfigurator = 'LendingPoolConfigurator',
   ValidationLogic = 'ValidationLogic',
   ReserveLogic = 'ReserveLogic',
   GenericLogic = 'GenericLogic',
-  LendingPool = 'LendingPool',
-  PriceOracle = 'PriceOracle',
-  Proxy = 'Proxy',
-  MockAggregator = 'MockAggregator',
+
   LendingRateOracle = 'LendingRateOracle',
+  StaticPriceOracle = 'StaticPriceOracle',
   OracleRouter = 'OracleRouter',
+  ProtocolDataProvider = 'ProtocolDataProvider',
+  WETHGateway = 'WETHGateway',
+
+  TeamRewardPool = 'TeamRewardPool',
+  PermitFreezerRewardPool = 'PermitFreezerRewardPool',
+
   DefaultReserveInterestRateStrategy = 'DefaultReserveInterestRateStrategy',
-  LendingPoolCollateralManager = 'LendingPoolCollateralManager',
-  InitializableAdminUpgradeabilityProxy = 'InitializableAdminUpgradeabilityProxy',
+
+  DepositTokenImpl = 'DepositTokenImpl',
+  DelegationAwareDepositTokenImpl = 'DelegationAwareDepositTokenImpl',
+  StableDebtTokenImpl = 'StableDebtTokenImpl',
+  VariableDebtTokenImpl = 'VariableDebtTokenImpl',
+  LendingPoolImpl = 'LendingPoolImpl',
+  LendingPoolConfiguratorImpl = 'LendingPoolConfiguratorImpl',
+  LendingPoolExtensionImpl = 'LendingPoolExtensionImpl',
+  StakeConfiguratorImpl = 'StakeConfiguratorImpl',
+  StakeTokenImpl = 'StakeTokenImpl',
+  TreasuryImpl = 'TreasuryImpl',
+  RewardConfiguratorImpl = 'RewardConfiguratorImpl',
+  TokenWeightedRewardPoolImpl = 'TokenWeightedRewardPoolImpl',
+  XAGFTokenV1Impl = 'XAGFTokenV1Impl',
+  AGFTokenV1Impl = 'AGFTokenV1Impl',
+  ReferralRewardPoolV1Impl = 'ReferralRewardPoolV1Impl',
+  RewardBoosterImpl = 'RewardBoosterImpl',
+  TreasuryRewardPool = 'TreasuryRewardPool',
+
+  UniswapLiquiditySwapAdapter = 'UniswapLiquiditySwapAdapter',
+  UniswapRepayAdapter = 'UniswapRepayAdapter',
+  FlashLiquidationAdapter = 'FlashLiquidationAdapter',
+
+  MockRewardFreezer = 'MockRewardFreezer',
+  MockRewardBooster = 'MockRewardBooster',
+  MockPriceOracle = 'MockPriceOracle',
+  MockAggregator = 'MockAggregator',
   MockFlashLoanReceiver = 'MockFlashLoanReceiver',
-  WalletBalanceProvider = 'WalletBalanceProvider',
-  DepositToken = 'DepositToken',
   MockDepositToken = 'MockDepositToken',
-  DelegationAwareDepositToken = 'DelegationAwareDepositToken',
   MockStableDebtToken = 'MockStableDebtToken',
   MockVariableDebtToken = 'MockVariableDebtToken',
   MockAgfToken = 'MockAgfToken',
   MockStakedAgfToken = 'MockStakedAgfToken',
   MockStakedAgToken = 'MockStakedAgToken',
-  ProtocolDataProvider = 'ProtocolDataProvider',
-  IERC20Detailed = 'IERC20Detailed',
-  StableDebtToken = 'StableDebtToken',
-  VariableDebtToken = 'VariableDebtToken',
-  FeeProvider = 'FeeProvider',
-  TokenDistributor = 'TokenDistributor',
-  StableAndVariableTokensHelper = 'StableAndVariableTokensHelper',
-  ATokensAndRatesHelper = 'ATokensAndRatesHelper',
-  UiPoolDataProvider = 'UiPoolDataProvider',
-  WETHGateway = 'WETHGateway',
-  WETH = 'WETH',
-  WETHMocked = 'WETHMocked',
-  SelfdestructTransferMock = 'SelfdestructTransferMock',
-  LendingPoolImpl = 'LendingPoolImpl',
-  LendingPoolConfiguratorImpl = 'LendingPoolConfiguratorImpl',
-  LendingPoolCollateralManagerImpl = 'LendingPoolCollateralManagerImpl',
+  WETHMocked = 'MockWETH',
   MockUniswapV2Router02 = 'MockUniswapV2Router02',
-  UniswapLiquiditySwapAdapter = 'UniswapLiquiditySwapAdapter',
-  UniswapRepayAdapter = 'UniswapRepayAdapter',
-  FlashLiquidationAdapter = 'FlashLiquidationAdapter',
+  MockTokenLocker = 'MockTokenLocker',
+  MockDecayingTokenLocker = 'MockDecayingTokenLocker',
+  MockDelegationAwareDepositToken = 'MockDelegationAwareDepositToken',
+  MockMintableERC20 = 'MockMintableERC20',
+  MockMintableDelegationERC20 = 'MockMintableDelegationERC20',
 
-  AGFToken = 'AGFToken',
-  XAGFToken = 'XAGFToken',
-  RewardFreezer = 'RewardFreezer',
-  RewardBooster = 'RewardBooster',
-  TokenLocker = 'TokenLocker',
-  DecayingTokenLocker = 'DecayingTokenLocker',
-  TeamRewardPool = 'TeamRewardPool',
-  ZombieRewardPool = 'ZombieRewardPool',
-  MigratorWeightedRewardPool = 'MigratorWeightedRewardPool',
-  TokenWeightedRewardPoolAGFSeparate = 'TokenWeightedRewardPoolAGFSeparate',
-  TokenWeightedRewardPoolAGF = 'TokenWeightedRewardPoolAGF',
-  TokenWeightedRewardPoolAGFBoosted = 'TokenWeightedRewardPoolAGFBoosted',
-  TokenWeightedRewardPoolAG = 'TokenWeightedRewardPoolAG',
-  TokenWeightedRewardPoolAGBoosted = 'TokenWeightedRewardPoolAGBoosted',
-  TokenWeightedRewardPoolAGUSDCBoosted = 'TokenWeightedRewardPoolAGUSDCBoosted',
-  TokenUnweightedRewardPool = 'TokenUnweightedRewardPool',
-  ForwardingRewardPool = 'ForwardingRewardPool',
-  ForwardingRewardPoolDecay = 'ForwardingRewardPoolDecay',
-  Migrator = 'Migrator',
-  AaveAdapter = 'AaveAdapter',
-  CompAdapter = 'CompAdapter',
-  ZombieAdapter = 'ZombieAdapter',
-  AccessController = 'AccessController',
+  TokenWeightedRewardPoolAGFSeparate = 'MockRewardPoolAGFSeparate',
+  TokenWeightedRewardPoolAGFBoosted = 'MockRewardPoolAGFBoosted',
+  TokenWeightedRewardPoolAG = 'MockRewardPoolAG',
+  TokenWeightedRewardPoolAGBoosted = 'MockRewardPoolAGBoosted',
+  TokenWeightedRewardPoolAGUSDCBoosted = 'MockRewardPoolAGUSDCBoosted',
+  MockReferralRewardPool = 'MockReferralRewardPool',
 }
 
 /*
@@ -120,13 +115,10 @@ export enum eContractid {
  *  - LPAPR = AddressesProviderRegistry
  *  - LPC = LendingPoolConfiguration
  *  - RL = ReserveLogic
- *  - LPCM = LendingPoolCollateralManager
+ *  - LPCM = LendingPoolExtension
  *  - P = Pausable
  */
 export enum ProtocolErrors {
-  //common errors
-  CALLER_NOT_POOL_ADMIN = '33', // 'The caller must be the pool admin'
-
   //contract specific errors
   VL_INVALID_AMOUNT = '1', // 'Amount must be greater than 0'
   VL_NO_ACTIVE_RESERVE = '2', // 'Action requires an active reserve'
@@ -160,6 +152,7 @@ export enum ProtocolErrors {
   CT_CANNOT_GIVE_ALLOWANCE_TO_HIMSELF = '30', // 'User cannot give allowance to himself'
   CT_TRANSFER_AMOUNT_NOT_GT_0 = '31', // 'Transferred amount needs to be greater than zero'
   RL_RESERVE_ALREADY_INITIALIZED = '32', // 'Reserve has already been initialized'
+  CALLER_NOT_POOL_ADMIN = '33', // 'The caller must be the pool admin'
   LPC_RESERVE_LIQUIDITY_NOT_0 = '34', // 'The liquidity of the reserve needs to be 0'
   LPC_INVALID_ATOKEN_POOL_ADDRESS = '35', // 'The liquidity of the reserve needs to be 0'
   LPC_INVALID_STABLE_DEBT_TOKEN_POOL_ADDRESS = '36', // 'The liquidity of the reserve needs to be 0'
@@ -173,7 +166,7 @@ export enum ProtocolErrors {
   LPCM_COLLATERAL_CANNOT_BE_LIQUIDATED = '43', // 'The collateral chosen cannot be liquidated'
   LPCM_SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER = '44', // 'User did not borrow the specified currency'
   LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE = '45', // "There isn't enough liquidity available to liquidate"
-  LPCM_NO_ERRORS = '46', // 'No errors'
+
   LP_INVALID_FLASHLOAN_MODE = '47', //Invalid flashloan mode selected
   MATH_MULTIPLICATION_OVERFLOW = '48',
   MATH_ADDITION_OVERFLOW = '49',
@@ -200,6 +193,39 @@ export enum ProtocolErrors {
   RC_INVALID_DECIMALS = '70',
   RC_INVALID_RESERVE_FACTOR = '71',
   LPAPR_INVALID_ADDRESSES_PROVIDER_ID = '72',
+
+  VL_INCONSISTENT_FLASHLOAN_PARAMS = '73',
+  LP_INCONSISTENT_PARAMS_LENGTH = '74',
+  LPC_INVALID_CONFIGURATION = '75',
+  CALLER_NOT_EMERGENCY_ADMIN = '76',
+  UL_INVALID_INDEX = '77',
+  LP_NOT_CONTRACT = '78',
+  SDT_STABLE_DEBT_OVERFLOW = '79',
+  SDT_BURN_EXCEEDS_BALANCE = '80',
+  CT_CALLER_MUST_BE_REWARD_ADMIN = '81',
+  LP_INVALID_PERCENTAGE = '82',
+  LP_IS_NOT_SPONSORED_LOAN = '83',
+  CT_CALLER_MUST_BE_SWEEP_ADMIN = '84',
+  LP_FLASH_LOAN_RESTRICTED = '85',
+  CT_PUMP_DUMP_PROTECTION = '86',
+  LP_LIQUIDATION_DISABLED = '87',
+  RW_NOT_REWARD_CONFIG_ADMIN = '88',
+  RW_NOT_REWARD_RATE_ADMIN = '89',
+  RW_NOT_REWARD_CONTROLLER = '90',
+  RW_REWARD_PAUSED = '91',
+  RW_NOT_TEAM_MANAGER = '92',
+
+  STK_REDEEM_PAUSED = '93',
+  STK_INSUFFICIENT_COOLDOWN = '94',
+  STK_UNSTAKE_WINDOW_FINISHED = '95',
+  STK_INVALID_BALANCE_ON_COOLDOWN = '96',
+  STK_EXCESSIVE_SLASH_PCT = '97',
+  STK_EXCESSIVE_COOLDOWN_PERIOD = '98',
+  STK_WRONG_UNSTAKE_PERIOD = '98',
+
+  TXT_OWNABLE_CALLER_NOT_OWNER = 'Ownable: caller is not the owner',
+  TXT_CALLER_NOT_PROXY_OWNER = 'ProxyOwner: caller is not the owner',
+  TXT_ACCESS_RESTRICTED = 'RESTRICTED',
 
   // old
 
@@ -235,25 +261,35 @@ export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, 'ETH'>;
 
 export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, 'USD'>;
 
-export type iAugmentedPoolAssets<T> = Pick<
-  iAssetsWithoutUSD<T>,
-  'AAVE' | 'LINK' | 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH'
->;
+export type RecordOpt<K extends keyof any, T> = {
+  [P in K]?: T;
+};
+
+export type PickOpt<T, K extends keyof T> = {
+  [P in K]?: T[P];
+};
+
+type augmentedAssets = 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH';
+
+export type iAugmentedPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, augmentedAssets>;
+export type iAugmentedPoolAssetsOpt<T> = PickOpt<iAssetsWithoutUSD<T>, augmentedAssets>;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iAugmentedPoolAssets<T>;
 
 export type iAssetAggregatorBase<T> = iAssetsWithoutETH<T>;
 
-export enum TokenContractId {
-  DAI = 'DAI',
-  AAVE = 'AAVE',
-  WETH = 'WETH',
-  USDC = 'USDC',
-  USDT = 'USDT',
-  WBTC = 'WBTC',
-  LINK = 'LINK',
-  USD = 'USD',
-}
+export const TokenContractId: iAssetBase<string> = {
+  AAVE: 'AAVE',
+  LINK: 'LINK',
+
+  WETH: 'WETH',
+  DAI: 'DAI',
+  USDC: 'USDC',
+  USDT: 'USDT',
+  WBTC: 'WBTC',
+
+  USD: 'USD',
+};
 
 export interface IReserveParams extends IReserveBorrowParams, IReserveCollateralParams {
   aTokenImpl: eContractid;
@@ -305,6 +341,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.rinkeby]: T;
   [eEthereumNetwork.main]: T;
   [eEthereumNetwork.hardhat]: T;
+  [eEthereumNetwork.docker]: T;
   [eEthereumNetwork.tenderlyMain]: T;
 }
 
@@ -335,12 +372,10 @@ export interface ObjectString {
 }
 
 export interface IProtocolGlobalConfig {
-  TokenDistributorPercentageBase: string;
   MockUsdPriceInWei: string;
   UsdAddress: tEthereumAddress;
   NilAddress: tEthereumAddress;
   OneAddress: tEthereumAddress;
-  AaveReferral: string;
 }
 
 export interface IMocksConfig {
@@ -357,38 +392,39 @@ export interface ILendingRate {
 
 export interface ICommonConfiguration {
   MarketId: string;
-  ATokenNamePrefix: string;
-  StableDebtTokenNamePrefix: string;
-  VariableDebtTokenNamePrefix: string;
-  SymbolPrefix: string;
   ProviderId: number;
+
+  Names: ITokenNames;
+
   ProtocolGlobalParams: IProtocolGlobalConfig;
   Mocks: IMocksConfig;
   ProviderRegistry: iParamsPerNetwork<tEthereumAddress | undefined>;
   ProviderRegistryOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
-  LendingPoolCollateralManager: iParamsPerNetwork<tEthereumAddress>;
-  LendingPoolConfigurator: iParamsPerNetwork<tEthereumAddress>;
-  LendingPool: iParamsPerNetwork<tEthereumAddress>;
-  LendingRateOracleRatesCommon: iMultiPoolsAssets<IMarketRates>;
-  LendingRateOracle: iParamsPerNetwork<tEthereumAddress>;
-  TokenDistributor: iParamsPerNetwork<tEthereumAddress>;
-  OracleRouter: iParamsPerNetwork<tEthereumAddress>;
-  FallbackOracle: iParamsPerNetwork<tEthereumAddress>;
+  AddressProvider: iParamsPerNetwork<tEthereumAddress | undefined>;
+  AddressProviderOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
+
   ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
+
+  LendingRateOracleRatesCommon: iMultiPoolsAssets<IMarketRates>;
+
+  FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
+
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
-  PoolAdminIndex: number;
   EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
-  EmergencyAdminIndex: number;
+
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;
-  ATokenDomainSeparator: iParamsPerNetwork<string>;
   WETH: iParamsPerNetwork<tEthereumAddress>;
-  WethGateway: iParamsPerNetwork<tEthereumAddress>;
-  ReserveFactorTreasuryAddress: iParamsPerNetwork<tEthereumAddress>;
+
+  StakeParams: IStakeParams;
+
+  RewardParams: IRewardParams;
+
+  ForkTest: IForkTest;
 }
 
 export interface IAugmentedConfiguration extends ICommonConfiguration {
-  ReservesConfig: iAugmentedPoolAssets<IReserveParams>;
+  //  ReservesConfig: iAugmentedPoolAssets<IReserveParams>;
 }
 
 export interface ITokenAddress {
@@ -396,3 +432,88 @@ export interface ITokenAddress {
 }
 
 export type PoolConfiguration = ICommonConfiguration | IAugmentedConfiguration;
+
+export interface IStakeParams {
+  MaxSlashBP: number;
+  CooldownPeriod: number;
+  UnstakePeriod: number;
+  StakeToken: iAugmentedPoolAssetsOpt<StakeMode>;
+}
+
+export enum StakeMode {
+  stakeAg,
+  stakeRaw,
+}
+
+export interface ITokenNames {
+  DepositTokenNamePrefix: string;
+  StableDebtTokenNamePrefix: string;
+  VariableDebtTokenNamePrefix: string;
+  StakeTokenNamePrefix: string;
+
+  SymbolPrefix: string;
+  DepositSymbolPrefix: string;
+  StableDebtSymbolPrefix: string;
+  VariableDebtSymbolPrefix: string;
+  StakeSymbolPrefix: string;
+
+  RewardTokenName: string;
+  RewardStakeTokenName: string;
+  RewardTokenSymbol: string;
+  RewardStakeTokenSymbol: string;
+}
+
+export interface IRewardParams {
+  InitialRateWad: number;
+  TokenPools: iAugmentedPoolAssetsOpt<ITokenRewardPoolParams>;
+  TeamPool: ITeamPool;
+  ReferralPool: IBasicRewardPool;
+  TreasuryPool: IBasicRewardPool;
+  BurnersPool: IBurnersPool;
+}
+
+export interface ITeamPool {
+  BasePoints: number;
+  Manager: tEthereumAddress;
+  UnlockAt: Date;
+  Members: ITeamMembers;
+}
+
+export interface ITeamMembers {
+  [address: string]: number;
+}
+
+export interface IBasicRewardPool extends IRewardPoolParams {}
+
+export interface IBurnersPool {
+  TotalWad: number;
+  BoostFactor: number;
+  MeltDownAt: Date;
+}
+
+export interface ITokenRewardPoolParams {
+  Share: ITokenTypes<IRewardPoolParams>;
+}
+
+export interface ITokenTypes<T> {
+  deposit?: T;
+  vDebt?: T;
+  sDebt?: T;
+  stake?: T;
+}
+
+export interface IRewardPoolParams {
+  BasePoints: number;
+  BoostFactor: number;
+}
+
+export interface IForkTest {
+  Donors: iParamsPerNetwork<ITokenAddress>;
+  DonatePct: number;
+  DonateTo: tEthereumAddress;
+  AutoDepositPct: number;
+}
+
+export interface IPrices {
+  [token: string]: number;
+}

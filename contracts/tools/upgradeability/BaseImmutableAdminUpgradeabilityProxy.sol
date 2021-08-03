@@ -15,7 +15,7 @@ import './IProxy.sol';
  * feature proposal that would enable this to be done automatically.
  */
 contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy, IProxy {
-  address immutable ADMIN;
+  address internal immutable ADMIN;
 
   constructor(address admin) public {
     ADMIN = admin;
@@ -27,13 +27,6 @@ contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy, IProx
     } else {
       _fallback();
     }
-  }
-
-  /**
-   * @return The address of the proxy admin.
-   */
-  function admin() external override ifAdmin returns (address) {
-    return ADMIN;
   }
 
   /**

@@ -9,14 +9,15 @@ import {BaseRewardController} from './BaseRewardController.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {IRewardPool} from './interfaces/IRewardPool.sol';
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
+import {IManagedRewardBooster} from './interfaces/IRewardController.sol';
 import {IBoostExcessReceiver} from './interfaces/IBoostExcessReceiver.sol';
+import {IBoostRate} from './interfaces/IBoostRate.sol';
+
 import './interfaces/IAutolocker.sol';
 
 import 'hardhat/console.sol';
 
-enum BoostPoolRateUpdateMode {DefaultUpdateMode, BaselineLeftoverMode}
-
-contract RewardBooster is BaseRewardController {
+contract RewardBooster is IManagedRewardBooster, BaseRewardController {
   using SafeMath for uint256;
   using PercentageMath for uint256;
 
@@ -26,7 +27,7 @@ contract RewardBooster is BaseRewardController {
 
   address private _boostExcessDelegate;
   bool private _mintExcess;
-  BoostPoolRateUpdateMode private _boostRateMode;
+  bool private _updateBoostPool;
 
   mapping(address => uint256) private _boostRewards;
 
@@ -52,11 +53,7 @@ contract RewardBooster is BaseRewardController {
     }
   }
 
-  function setBoostFactor(address pool, uint32 pctFactor) external {
-    require(
-      isConfigurator(msg.sender) || isRateController(msg.sender),
-      'only owner, configurator or rate controller are allowed'
-    );
+  function setBoostFactor(address pool, uint32 pctFactor) external override onlyConfigOrRateAdmin {
     require(getPoolMask(pool) != 0, 'unknown pool');
     require(pool != address(_boostPool), 'factor for the boost pool');
     _boostFactor[pool] = pctFactor;
@@ -66,8 +63,8 @@ contract RewardBooster is BaseRewardController {
     return uint32(_boostFactor[pool]);
   }
 
-  function setBoostPoolRateUpdateMode(BoostPoolRateUpdateMode mode) external onlyConfigurator {
-    _boostRateMode = mode;
+  function setUpdateBoostPoolRate(bool updateBoostPool) external override onlyConfigAdmin {
+    _updateBoostPool = updateBoostPool;
   }
 
   function internalUpdateBaseline(uint256 baseline, uint256 baselineMask)
@@ -75,7 +72,7 @@ contract RewardBooster is BaseRewardController {
     override
     returns (uint256 totalRate, uint256)
   {
-    if (_boostPoolMask == 0 || _boostRateMode == BoostPoolRateUpdateMode.DefaultUpdateMode) {
+    if (_boostPoolMask == 0 || !_updateBoostPool) {
       return super.internalUpdateBaseline(baseline, baselineMask);
     }
 
@@ -84,16 +81,16 @@ contract RewardBooster is BaseRewardController {
       baselineMask & ~_boostPoolMask
     );
     if (totalRate < baseline) {
-      _boostPool.setRate(baseline - totalRate);
+      IBoostRate(address(_boostPool)).setBoostRate(baseline - totalRate);
       totalRate = baseline;
     } else {
-      _boostPool.setRate(0);
+      IBoostRate(address(_boostPool)).setBoostRate(0);
     }
 
     return (totalRate, baselineMask);
   }
 
-  function setBoostPool(address pool) external onlyConfigurator {
+  function setBoostPool(address pool) external override onlyConfigAdmin {
     if (pool == address(0)) {
       _boostPoolMask = 0;
     } else {
@@ -106,11 +103,11 @@ contract RewardBooster is BaseRewardController {
     _boostPool = IManagedRewardPool(pool);
   }
 
-  function getBoostPool() external view returns (address) {
-    return address(_boostPool);
+  function getBoostPool() external view override returns (address pool, uint256 mask) {
+    return (address(_boostPool), _boostPoolMask);
   }
 
-  function setBoostExcessTarget(address target, bool mintExcess) external onlyConfigurator {
+  function setBoostExcessTarget(address target, bool mintExcess) external override onlyConfigAdmin {
     _boostExcessDelegate = target;
     _mintExcess = mintExcess && (target != address(0));
   }
@@ -281,11 +278,7 @@ contract RewardBooster is BaseRewardController {
   mapping(address => AutolockEntry) private _autolocks;
   AutolockEntry private _defaultAutolock;
 
-  function disableAutolocks() external {
-    require(
-      isConfigurator(msg.sender) || isRateController(msg.sender),
-      'only owner, configurator or rate controller are allowed'
-    );
+  function disableAutolocks() external onlyConfigAdmin {
     _defaultAutolock = AutolockEntry(0, AutolockMode.Default, 0);
     emit RewardAutolockConfigured(address(this), AutolockMode.Default, 0, 0);
   }
@@ -294,11 +287,7 @@ contract RewardBooster is BaseRewardController {
     AutolockMode mode,
     uint32 lockDuration,
     uint224 param
-  ) external {
-    require(
-      isConfigurator(msg.sender) || isRateController(msg.sender),
-      'only owner, configurator or rate controller are allowed'
-    );
+  ) external onlyConfigAdmin {
     require(mode > AutolockMode.Default);
 
     _defaultAutolock = AutolockEntry(param, mode, fromDuration(lockDuration));
