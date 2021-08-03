@@ -55,6 +55,10 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
     return TOKEN_REVISION;
   }
 
+  function getPoolName() public view override returns (string memory) {
+    return _symbol;
+  }
+
   // This initializer is invoked by AccessController.setAddressAsImpl
   function initialize(IMarketAccessController ac) external virtual initializer(TOKEN_REVISION) {
     address controller = ac.getRewardController();

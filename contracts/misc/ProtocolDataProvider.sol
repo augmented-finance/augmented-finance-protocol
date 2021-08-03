@@ -18,6 +18,9 @@ import {IUiPoolDataProvider} from './interfaces/IUiPoolDataProvider.sol';
 import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
 import {IDepositToken} from '../interfaces/IDepositToken.sol';
 import {IDerivedToken} from '../interfaces/IDerivedToken.sol';
+import {IRewardedToken} from '../interfaces/IRewardedToken.sol';
+import '../reward/interfaces/IRewardExplainer.sol';
+
 import {IStakeConfigurator} from '../protocol/stake/interfaces/IStakeConfigurator.sol';
 import {IStakeToken} from '../protocol/stake/interfaces/IStakeToken.sol';
 
@@ -34,6 +37,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     address token;
     // priceToken == 0 for a non-transferrable token
     address priceToken;
+    address rewardPool;
     string tokenSymbol;
     address underlying;
     uint8 decimals;
@@ -80,6 +84,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     tokens[0] = TokenDescription(
       token,
       token,
+      IRewardedToken(token).getIncentivesController(),
       IERC20Detailed(token).symbol(),
       address(0),
       IERC20Detailed(token).decimals(),
@@ -91,6 +96,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     tokens[1] = TokenDescription(
       token,
       address(0),
+      IRewardedToken(token).getIncentivesController(),
       IERC20Detailed(token).symbol(),
       tokens[0].token,
       IERC20Detailed(token).decimals(),
@@ -113,6 +119,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         tokens[tokenCount] = TokenDescription(
           token,
           token,
+          address(0),
           IERC20Detailed(token).symbol(),
           address(0),
           decimals,
@@ -122,10 +129,12 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         tokenCount++;
       }
 
+      address subToken = reserveData.aTokenAddress;
       tokens[tokenCount] = TokenDescription(
-        reserveData.aTokenAddress,
-        reserveData.aTokenAddress,
-        IERC20Detailed(reserveData.aTokenAddress).symbol(),
+        subToken,
+        subToken,
+        IRewardedToken(subToken).getIncentivesController(),
+        IERC20Detailed(subToken).symbol(),
         token,
         decimals,
         TokenType.Deposit,
@@ -134,10 +143,12 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       tokenCount++;
 
       if (reserveData.variableDebtTokenAddress != address(0)) {
+        subToken = reserveData.variableDebtTokenAddress;
         tokens[tokenCount] = TokenDescription(
-          reserveData.variableDebtTokenAddress,
+          subToken,
           address(0),
-          IERC20Detailed(reserveData.variableDebtTokenAddress).symbol(),
+          IRewardedToken(subToken).getIncentivesController(),
+          IERC20Detailed(subToken).symbol(),
           token,
           decimals,
           TokenType.VariableDebt,
@@ -147,10 +158,12 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       }
 
       if (reserveData.stableDebtTokenAddress != address(0)) {
+        subToken = reserveData.stableDebtTokenAddress;
         tokens[tokenCount] = TokenDescription(
-          reserveData.stableDebtTokenAddress,
+          subToken,
           address(0),
-          IERC20Detailed(reserveData.stableDebtTokenAddress).symbol(),
+          IRewardedToken(subToken).getIncentivesController(),
+          IERC20Detailed(subToken).symbol(),
           token,
           decimals,
           TokenType.StableDebt,
@@ -165,6 +178,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       tokens[tokenCount] = TokenDescription(
         token,
         address(0),
+        IRewardedToken(token).getIncentivesController(),
         IERC20Detailed(token).symbol(),
         IDerivedToken(token).UNDERLYING_ASSET_ADDRESS(),
         IERC20Detailed(token).decimals(),
@@ -642,5 +656,16 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     }
 
     return (tokens, balances, tokenCount);
+  }
+
+  function explainReward(address holder, uint32 minDuration)
+    external
+    view
+    returns (RewardExplained memory, uint32 at)
+  {
+    IRewardExplainer re =
+      IRewardExplainer(ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_CONTROLLER));
+    at = uint32(block.timestamp) + minDuration;
+    return (re.explainReward(holder, at), at);
   }
 }

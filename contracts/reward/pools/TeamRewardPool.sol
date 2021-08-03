@@ -32,6 +32,10 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     );
   }
 
+  function getPoolName() public view override returns (string memory) {
+    return 'TeamPool';
+  }
+
   modifier onlyTeamManagerOrConfigurator {
     _onlyTeamManagerOrConfigurator();
     _;
