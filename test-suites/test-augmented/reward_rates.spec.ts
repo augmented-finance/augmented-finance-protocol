@@ -118,18 +118,21 @@ describe('Reward rates suite', () => {
     const preValues: string[] = [];
 
     for (const pool of pools) {
-      preValues.push((await pool.calcRewardFor(root.address)).amount.toString());
+      preValues.push((await pool.calcRewardFor(root.address, startedAt)).amount.toString());
     }
     preValues.push((await refPool.availableReward()).toString());
 
     await mineTicks(10);
-    const tickCount = (await currentTick()) - startedAt;
+    const tick = await currentTick();
+    const tickCount = tick - startedAt;
 
     const postValues: string[] = [];
 
     for (const pool of pools) {
       postValues.push(
-        (await pool.calcRewardFor(root.address)).amount.sub(tickCount * defaultRate).toString()
+        (await pool.calcRewardFor(root.address, tick)).amount
+          .sub(tickCount * defaultRate)
+          .toString()
       );
     }
     postValues.push((await refPool.availableReward()).sub(tickCount * defaultRate).toString());
@@ -157,11 +160,12 @@ describe('Reward rates suite', () => {
 
     await mineTicks(11);
 
-    const tickCount2 = (await currentTick()) - startedAt - tickCount;
+    const tick2 = await currentTick();
+    const tickCount2 = tick2 - startedAt - tickCount;
     const perPoolReward2 = tickCount * defaultRate + tickCount2 * defaultRate2;
 
     for (const pool of pools) {
-      expect((await pool.calcRewardFor(root.address)).amount).eq(perPoolReward2); // one tick less, as this has to be before claimReward
+      expect((await pool.calcRewardFor(root.address, tick2)).amount).eq(perPoolReward2); // one tick less, as this has to be before claimReward
     }
 
     await rewardController.claimReward();
