@@ -106,7 +106,13 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
     return (0, 0);
   }
 
-  function internalCalcReward(address) internal view virtual override returns (uint256, uint32) {
+  function internalCalcReward(address, uint32)
+    internal
+    view
+    virtual
+    override
+    returns (uint256, uint32)
+  {
     return (0, 0);
   }
 }

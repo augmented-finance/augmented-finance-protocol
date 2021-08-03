@@ -88,13 +88,13 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     return (allocated, uint32(block.timestamp));
   }
 
-  function internalCalcReward(address holder)
+  function internalCalcReward(address holder, uint32 at)
     internal
     view
     override
     returns (uint256 allocated, uint32)
   {
-    (allocated, ) = doCalcByPull(holder, 0, 0, false);
+    (allocated, ) = doCalcByPull(holder, 0, 0, at, false);
     return (allocated, uint32(block.timestamp));
   }
 

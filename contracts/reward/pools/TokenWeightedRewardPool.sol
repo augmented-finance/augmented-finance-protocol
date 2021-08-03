@@ -44,8 +44,13 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
     return doGetReward(holder);
   }
 
-  function internalCalcReward(address holder) internal view override returns (uint256, uint32) {
-    return doCalcReward(holder);
+  function internalCalcReward(address holder, uint32 at)
+    internal
+    view
+    override
+    returns (uint256, uint32)
+  {
+    return doCalcRewardAt(holder, at);
   }
 
   function internalUpdateReward(

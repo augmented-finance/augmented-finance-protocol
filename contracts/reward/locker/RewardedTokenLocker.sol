@@ -115,7 +115,7 @@ contract RewardedTokenLocker is
     return getStakeBalance(account);
   }
 
-  function internalCalcReward(address holder)
+  function internalCalcReward(address holder, uint32 current)
     internal
     view
     virtual
@@ -126,7 +126,6 @@ contract RewardedTokenLocker is
     if (expiry == 0) {
       return (0, 0);
     }
-    uint32 current = getCurrentTick();
     if (current > expiry) {
       current = expiry;
     }

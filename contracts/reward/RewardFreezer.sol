@@ -65,7 +65,13 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
     uint32 since,
     bool incremental
   ) internal view override returns (uint256 claimableAmount, uint256 frozenReward) {
-    (claimableAmount, frozenReward) = doCalcByPull(holder, allocated, since, incremental);
+    (claimableAmount, frozenReward) = doCalcByPull(
+      holder,
+      allocated,
+      since,
+      uint32(block.timestamp),
+      incremental
+    );
     claimableAmount = claimableAmount.add(_claimableRewards[holder]);
     return (claimableAmount, frozenReward);
   }
