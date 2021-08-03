@@ -11,8 +11,10 @@ interface IRewardExplainer {
 }
 
 struct RewardExplained {
-  uint256 amountAllocated;
-  uint256 amountRetained;
+  uint256 amountClaimable;
+  uint256 amountExtra;
+  uint256 maxBoost;
+  uint256 boostLimit;
   RewardExplainEntry[] allocations;
 }
 
