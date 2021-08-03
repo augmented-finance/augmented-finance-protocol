@@ -53,8 +53,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     }
   }
 
-  function getPoolName() public view virtual returns (string memory) {
-    this;
+  function getPoolName() public view virtual override returns (string memory) {
     return '';
   }
 

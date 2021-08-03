@@ -19,6 +19,7 @@ import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
 import {IDepositToken} from '../interfaces/IDepositToken.sol';
 import {IDerivedToken} from '../interfaces/IDerivedToken.sol';
 import {IRewardedToken} from '../interfaces/IRewardedToken.sol';
+import {IManagedRewardPool} from '../reward/interfaces/IManagedRewardPool.sol';
 import '../reward/interfaces/IRewardExplainer.sol';
 
 import {IStakeConfigurator} from '../protocol/stake/interfaces/IStakeConfigurator.sol';
@@ -80,36 +81,43 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
 
     tokens = new TokenDescription[](tokenCount);
 
+    tokenCount = 0;
     address token = ADDRESS_PROVIDER.getRewardToken();
-    tokens[0] = TokenDescription(
-      token,
-      token,
-      IRewardedToken(token).getIncentivesController(),
-      IERC20Detailed(token).symbol(),
-      address(0),
-      IERC20Detailed(token).decimals(),
-      TokenType.Reward,
-      true
-    );
+    if (token != address(0)) {
+      tokens[tokenCount] = TokenDescription(
+        token,
+        token,
+        IRewardedToken(token).getIncentivesController(),
+        IERC20Detailed(token).symbol(),
+        address(0),
+        IERC20Detailed(token).decimals(),
+        TokenType.Reward,
+        true
+      );
+      tokenCount++;
+    }
 
     token = ADDRESS_PROVIDER.getRewardStakeToken();
-    tokens[1] = TokenDescription(
-      token,
-      address(0),
-      IRewardedToken(token).getIncentivesController(),
-      IERC20Detailed(token).symbol(),
-      tokens[0].token,
-      IERC20Detailed(token).decimals(),
-      TokenType.RewardStake,
-      true
-    );
-    tokenCount = 2;
+    if (token != address(0)) {
+      tokens[tokenCount] = TokenDescription(
+        token,
+        address(0),
+        token,
+        IERC20Detailed(token).symbol(),
+        tokens[0].token,
+        IERC20Detailed(token).decimals(),
+        TokenType.RewardStake,
+        true
+      );
+      tokenCount++;
+    }
 
     for (uint256 i = 0; i < reserveList.length; i++) {
       token = reserveList[i];
       DataTypes.ReserveData memory reserveData = pool.getReserveData(token);
       (bool isActive, , bool canBorrow, bool canBorrowStable) =
         reserveData.configuration.getFlagsMemory();
+
       canBorrow = isActive && canBorrow;
       canBorrowStable = canBorrowStable && canBorrow;
 
@@ -667,5 +675,20 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       IRewardExplainer(ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_CONTROLLER));
     at = uint32(block.timestamp) + minDuration;
     return (re.explainReward(holder, at), at);
+  }
+
+  function rewardPoolNames(address[] calldata pools, uint256 ignoreMask)
+    external
+    view
+    returns (string[] memory names)
+  {
+    names = new string[](pools.length);
+    for (uint256 i = 0; i < pools.length; (i, ignoreMask) = (i + 1, ignoreMask >> 1)) {
+      if (ignoreMask & 1 != 0 || pools[i] == address(0)) {
+        continue;
+      }
+      names[i] = IManagedRewardPool(pools[i]).getPoolName();
+    }
+    return names;
   }
 }
