@@ -32,6 +32,10 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     );
   }
 
+  function getPoolName() public view override returns (string memory) {
+    return 'TeamPool';
+  }
+
   modifier onlyTeamManagerOrConfigurator {
     _onlyTeamManagerOrConfigurator();
     _;
@@ -52,11 +56,16 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return doGetReward(holder);
   }
 
-  function internalCalcReward(address holder) internal view override returns (uint256, uint32) {
-    if (!isUnlocked(getCurrentTick())) {
+  function internalCalcReward(address holder, uint32 at)
+    internal
+    view
+    override
+    returns (uint256, uint32)
+  {
+    if (!isUnlocked(at)) {
       return (0, 0);
     }
-    return doCalcReward(holder);
+    return doCalcRewardAt(holder, at);
   }
 
   function internalCalcRateAndReward(

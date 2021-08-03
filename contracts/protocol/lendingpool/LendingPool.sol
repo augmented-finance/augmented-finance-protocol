@@ -646,6 +646,7 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
    * @param extension The new LendingPoolExtension address
    **/
   function setLendingPoolExtension(address extension) external onlyConfiguratorOrAdmin {
+    require(Address.isContract(extension), Errors.VL_CONTRACT_REQUIRED);
     _extension = extension;
     emit LendingPoolExtensionUpdated(extension);
   }

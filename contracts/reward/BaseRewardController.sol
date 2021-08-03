@@ -172,24 +172,29 @@ abstract contract BaseRewardController is
     return _claimReward(holder, mask, holder);
   }
 
-  function claimableReward(address holder) public view returns (uint256 claimable, uint256 extra) {
-    return _calcReward(holder, ~uint256(0));
-  }
-
-  function claimableRewardFor(address holder, uint256 mask)
+  function claimableReward(address holder)
     public
     view
+    override
     returns (uint256 claimable, uint256 extra)
   {
+    return _calcReward(holder, ~uint256(0), uint32(block.timestamp));
+  }
+
+  function claimableRewardFor(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) public view returns (uint256 claimable, uint256 extra) {
     require(holder != address(0), 'holder is required');
-    return _calcReward(holder, mask);
+    return _calcReward(holder, mask, at);
   }
 
   function balanceOf(address holder) external view override returns (uint256) {
     if (holder == address(0)) {
       return 0;
     }
-    (uint256 claimable, uint256 extra) = _calcReward(holder, ~uint256(0));
+    (uint256 claimable, uint256 extra) = _calcReward(holder, ~uint256(0), uint32(block.timestamp));
     return claimable.add(extra);
   }
 
@@ -327,20 +332,20 @@ abstract contract BaseRewardController is
     virtual
     returns (uint256 claimed, uint256 extra);
 
-  function _calcReward(address holder, uint256 mask)
-    private
-    view
-    returns (uint256 claimableAmount, uint256 extraAmount)
-  {
+  function _calcReward(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) private view returns (uint256 claimableAmount, uint256 extraAmount) {
     mask = getClaimMask(holder, mask);
-    return internalCalcClaimableReward(holder, mask);
+    return internalCalcClaimableReward(holder, mask, at);
   }
 
-  function internalCalcClaimableReward(address holder, uint256 mask)
-    internal
-    view
-    virtual
-    returns (uint256 claimableAmount, uint256 extraAmount);
+  function internalCalcClaimableReward(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) internal view virtual returns (uint256 claimableAmount, uint256 extraAmount);
 
   function internalAllocatedByPool(
     address holder,

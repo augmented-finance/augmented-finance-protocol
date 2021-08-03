@@ -36,7 +36,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return stakeDecayed;
   }
 
-  function internalCalcReward(address holder)
+  function internalCalcReward(address holder, uint32 current)
     internal
     view
     override
@@ -48,7 +48,6 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     }
 
     uint256 stakeAmount;
-    uint32 current = getCurrentTick();
     if (current >= endTS) {
       // this is to emulate claimReward using calcCompensatedDecay when a balance has expired
       stakeAmount = getStakeBalance(holder);

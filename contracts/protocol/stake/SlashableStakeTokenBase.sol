@@ -9,6 +9,7 @@ import {IStakeToken, IManagedStakeToken} from './interfaces/IStakeToken.sol';
 
 import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 
 import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
@@ -31,6 +32,7 @@ abstract contract SlashableStakeTokenBase is
   IInitializableStakeToken
 {
   using SafeMath for uint256;
+  using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
@@ -92,7 +94,7 @@ abstract contract SlashableStakeTokenBase is
   ) internal returns (uint256 stakeAmount) {
     require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
     uint256 oldReceiverBalance = balanceOf(to);
-    stakeAmount = underlyingAmount.percentDiv(exchangeRate());
+    stakeAmount = underlyingAmount.rayDiv(exchangeRate());
 
     _stakersCooldowns[to] = getNextCooldown(0, stakeAmount, to, oldReceiverBalance);
 
@@ -166,7 +168,8 @@ abstract contract SlashableStakeTokenBase is
 
     uint256 oldBalance = balanceOf(from);
     if (stakeAmount == 0) {
-      stakeAmount = underlyingAmount.percentDiv(exchangeRate());
+      uint256 rate = exchangeRate();
+      stakeAmount = underlyingAmount.rayDiv(rate);
 
       if (stakeAmount == 0) {
         // don't allow tiny withdrawals
@@ -174,13 +177,13 @@ abstract contract SlashableStakeTokenBase is
       }
       if (stakeAmount > oldBalance) {
         stakeAmount = oldBalance;
-        underlyingAmount = stakeAmount.percentMul(exchangeRate());
+        underlyingAmount = stakeAmount.rayMul(rate);
       }
     } else {
       if (stakeAmount > oldBalance) {
         stakeAmount = oldBalance;
       }
-      underlyingAmount = stakeAmount.percentMul(exchangeRate());
+      underlyingAmount = stakeAmount.rayMul(exchangeRate());
       if (underlyingAmount == 0) {
         // protect the user - don't waste balance without an outcome
         return (0, 0);
@@ -252,11 +255,16 @@ abstract contract SlashableStakeTokenBase is
   }
 
   function exchangeRate() public view override returns (uint256) {
-    uint256 total = totalSupply();
+    uint256 total = super.totalSupply();
     if (total == 0) {
-      return PercentageMath.ONE; // 100%
+      return WadRayMath.RAY; // 100%
     }
-    return _stakedToken.balanceOf(address(this)).percentOf(total);
+    uint256 underlyingBalance = _stakedToken.balanceOf(address(this));
+    if (underlyingBalance >= total) {
+      return WadRayMath.RAY; // 100%
+    }
+
+    return underlyingBalance.rayBase(total);
   }
 
   function slashUnderlying(
@@ -264,8 +272,17 @@ abstract contract SlashableStakeTokenBase is
     uint256 minAmount,
     uint256 maxAmount
   ) external override aclHas(AccessFlags.LIQUIDITY_CONTROLLER) returns (uint256 amount) {
-    uint256 balance = _stakedToken.balanceOf(address(this));
-    uint256 maxSlashable = balance.percentMul(_maxSlashablePercentage);
+    uint256 underlyingBalance = _stakedToken.balanceOf(address(this));
+    uint256 maxSlashable = super.totalSupply();
+
+    if (underlyingBalance > maxSlashable) {
+      maxSlashable =
+        underlyingBalance -
+        maxSlashable +
+        maxSlashable.percentMul(_maxSlashablePercentage);
+    } else {
+      maxSlashable = underlyingBalance.percentMul(_maxSlashablePercentage);
+    }
 
     if (maxAmount > maxSlashable) {
       amount = maxSlashable;
@@ -277,7 +294,7 @@ abstract contract SlashableStakeTokenBase is
     }
     _stakedToken.safeTransfer(destination, amount);
 
-    emit Slashed(destination, amount, balance);
+    emit Slashed(destination, amount, underlyingBalance);
     return amount;
   }
 

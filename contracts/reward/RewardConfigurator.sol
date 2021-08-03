@@ -16,9 +16,10 @@ import {
 import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
 import {IInitializableRewardPool} from './interfaces/IInitializableRewardPool.sol';
-import {ProxyOwner} from '../tools/upgradeability/ProxyOwner.sol';
+import {ProxyAdmin} from '../tools/upgradeability/ProxyAdmin.sol';
 import {IRewardedToken} from '../interfaces/IRewardedToken.sol';
 import {TeamRewardPool} from './pools/TeamRewardPool.sol';
+import {IProxy} from '../tools/upgradeability/IProxy.sol';
 
 contract RewardConfigurator is
   MarketAccessBitmask(IMarketAccessController(0)),
@@ -31,11 +32,11 @@ contract RewardConfigurator is
     return CONFIGURATOR_REVISION;
   }
 
-  ProxyOwner internal immutable _proxies;
+  ProxyAdmin internal immutable _proxies;
   mapping(string => address) _namedPools;
 
   constructor() public {
-    _proxies = new ProxyOwner();
+    _proxies = new ProxyAdmin();
   }
 
   // This initializer is invoked by AccessController.setAddressAsImpl
@@ -136,14 +137,14 @@ contract RewardConfigurator is
   }
 
   function implementationOf(address token) external view returns (address) {
-    return _proxies.implementationOf(token);
+    return _proxies.getProxyImplementation(IProxy(token));
   }
 
   function updateRewardPool(PoolUpdateData calldata input) external onlyRewardAdmin {
     IInitializableRewardPool.InitData memory params =
       IInitializableRewardPool(input.pool).initializedWith();
-    _proxies.upgradeToAndCall(
-      input.pool,
+    _proxies.upgradeAndCall(
+      IProxy(input.pool),
       input.impl,
       abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
     );

@@ -795,6 +795,7 @@ contract LendingPoolExtension is
    * @param extension The new LendingPoolExtension address
    **/
   function setLendingPoolExtension(address extension) external override onlyConfiguratorOrAdmin {
+    require(Address.isContract(extension), Errors.VL_CONTRACT_REQUIRED);
     _extension = extension;
     emit LendingPoolExtensionUpdated(extension);
   }
