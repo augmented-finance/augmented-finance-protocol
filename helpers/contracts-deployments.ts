@@ -287,24 +287,24 @@ export const deployProtocolDataProvider = async (
   );
 
 export const deployMintableERC20 = async (
-  args: [string, string, string],
+  args: [string, string, BigNumberish],
   verify?: boolean
 ): Promise<MintableERC20> =>
   withVerify(
     await new MintableERC20Factory(await getFirstSigner()).deploy(...args),
-    'MintableERC20',
-    args,
+    eContractid.MockMintableERC20,
+    [],
     verify
   );
 
 export const deployMintableDelegationERC20 = async (
-  args: [string, string, string],
+  args: [string, string, BigNumberish],
   verify?: boolean
 ): Promise<MintableDelegationERC20> =>
   withVerify(
     await new MintableDelegationERC20Factory(await getFirstSigner()).deploy(...args),
-    'MintableDelegationERC20',
-    args,
+    eContractid.MockMintableDelegationERC20,
+    [],
     verify
   );
 
@@ -314,7 +314,7 @@ export const deployDefaultReserveInterestRateStrategy = async (
 ) =>
   withVerify(
     await new DefaultReserveInterestRateStrategyFactory(await getFirstSigner()).deploy(...args),
-    'DefaultReserveInterestRateStrategy',
+    eContractid.DefaultReserveInterestRateStrategy,
     args,
     verify
   );

@@ -55,6 +55,8 @@ export enum eContractid {
   TeamRewardPool = 'TeamRewardPool',
   PermitFreezerRewardPool = 'PermitFreezerRewardPool',
 
+  DefaultReserveInterestRateStrategy = 'DefaultReserveInterestRateStrategy',
+
   DepositTokenImpl = 'DepositTokenImpl',
   DelegationAwareDepositTokenImpl = 'DelegationAwareDepositTokenImpl',
   StableDebtTokenImpl = 'StableDebtTokenImpl',
@@ -93,6 +95,8 @@ export enum eContractid {
   MockTokenLocker = 'MockTokenLocker',
   MockDecayingTokenLocker = 'MockDecayingTokenLocker',
   MockDelegationAwareDepositToken = 'MockDelegationAwareDepositToken',
+  MockMintableERC20 = 'MockMintableERC20',
+  MockMintableDelegationERC20 = 'MockMintableDelegationERC20',
 
   TokenWeightedRewardPoolAGFSeparate = 'MockRewardPoolAGFSeparate',
   TokenWeightedRewardPoolAGFBoosted = 'MockRewardPoolAGFBoosted',
