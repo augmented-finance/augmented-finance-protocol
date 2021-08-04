@@ -65,7 +65,7 @@ export const CommonsConfig: ICommonConfiguration = {
   },
   ProviderRegistry: {
     [eEthereumNetwork.kovan]: '',
-    [eEthereumNetwork.ropsten]: '',
+    [eEthereumNetwork.ropsten]: '0x2931bAf940EE995E563BB27BCc7B60Aa8F9af298',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',
@@ -75,7 +75,7 @@ export const CommonsConfig: ICommonConfiguration = {
   },
   ProviderRegistryOwner: {
     [eEthereumNetwork.kovan]: '',
-    [eEthereumNetwork.ropsten]: '',
+    [eEthereumNetwork.ropsten]: '0x31B29E1d3524f281f513B34F3855Ee8E473c0264',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',

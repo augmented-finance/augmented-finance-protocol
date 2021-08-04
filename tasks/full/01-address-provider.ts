@@ -15,6 +15,7 @@ import { getAddressesProviderRegistry } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
 import { setPreDeployAccessController } from '../../helpers/deploy-helpers';
+import { BigNumber } from 'ethers';
 
 task('full:deploy-address-provider', 'Deploy address provider registry for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -24,7 +25,8 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
 
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const { ProviderId, MarketId } = poolConfig;
+    const { MarketId } = poolConfig;
+    let ProviderId = BigNumber.from(poolConfig.ProviderId);
 
     const deployer = await getFirstSigner();
 
@@ -41,6 +43,7 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
     const registryOwner = getParamPerNetwork(poolConfig.ProviderRegistryOwner, network);
 
     let registry: AddressesProviderRegistry;
+    let newRegistry = false;
 
     if (!falsyOrZeroAddress(registryAddress)) {
       console.log('Configured registry:', registryAddress);
@@ -75,6 +78,7 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
     } else if (continuation) {
       registry = await getAddressesProviderRegistry();
     } else {
+      newRegistry = true;
       registry = await deployAddressesProviderRegistry(verify);
       console.log('Deployed registry:', registry.address);
 
@@ -114,8 +118,24 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
     }
 
     const id = await registry.getAddressesProviderIdByAddress(addressProvider.address);
+    if (ProviderId.eq(0)) {
+      if (!id.eq(0)) {
+        ProviderId = id;
+      } else {
+        ProviderId = BigNumber.from(1);
+        if (!newRegistry) {
+          for (const addr of await registry.getAddressesProvidersList()) {
+            const knownId = await registry.getAddressesProviderIdByAddress(addr);
+            if (ProviderId.lte(knownId)) {
+              ProviderId = knownId.add(1);
+            }
+          }
+        }
+      }
+    }
+
     if (!id.eq(ProviderId)) {
-      console.log('Register provider with id: ', ProviderId);
+      console.log('Register provider with id: ', ProviderId.toString());
       await waitForTx(
         await registry.registerAddressesProvider(addressProvider.address, ProviderId)
       );
