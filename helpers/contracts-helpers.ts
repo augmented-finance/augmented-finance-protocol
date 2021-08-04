@@ -6,7 +6,7 @@ import {
   DRE,
   falsyOrZeroAddress,
   getFromJsonDb,
-  logContractInJsonDb,
+  addContractToJsonDb,
   waitForTx,
 } from './misc-utils';
 import {
@@ -21,15 +21,13 @@ import {
 } from './types';
 import { MintableERC20 } from '../types/MintableERC20';
 import { Artifact } from 'hardhat/types';
-import { verifyContract } from './etherscan-verification';
 import { getIErc20Detailed } from './contracts-getters';
 import { usingTenderly } from './tenderly-utils';
 
 export type MockTokenMap = { [symbol: string]: MintableERC20 };
 
-export const registerContractInJsonDb = async (contractId: string, contractInstance: Contract) => {
-  logContractInJsonDb(contractId, contractInstance, true);
-};
+export const registerContractInJsonDb = async (contractId: string, contractInstance: Contract) =>
+  addContractToJsonDb(contractId, contractInstance, true);
 
 export const getEthersSigners = async (): Promise<Signer[]> =>
   await Promise.all(await (<any>DRE).ethers.getSigners());
@@ -64,7 +62,6 @@ export interface ContractInstanceFactory<ContractType extends Contract> {
 export const withSaveAndVerifyOnce = async <ContractType extends Contract>(
   factory: ContractInstanceFactory<ContractType>,
   id: string,
-  args: (string | string[])[],
   verify: boolean,
   once: boolean
 ): Promise<ContractType> => {
@@ -74,51 +71,53 @@ export const withSaveAndVerifyOnce = async <ContractType extends Contract>(
       return factory.attach(addr);
     }
   }
-  return await withSaveAndVerify(await factory.deploy(), id, args, verify);
+  return await withSaveAndVerify(await factory.deploy(), id, [], verify);
 };
 
 export const withSaveAndVerify = async <ContractType extends Contract>(
   instance: ContractType,
   id: string,
-  args: (string | string[])[],
+  args: any[],
   verify?: boolean
 ): Promise<ContractType> => {
   await waitForTx(instance.deployTransaction);
-  await registerContractInJsonDb(id, instance);
-  await verifyOnTenderly(instance, id);
   if (verify) {
-    await verifyContract(instance.address, args);
+    await addContractToJsonDb(id, instance, true, args);
+  } else {
+    await addContractToJsonDb(id, instance, true);
   }
+  await verifyOnTenderly(instance, id);
   return instance;
 };
 
 export const registerAndVerify = async <ContractType extends Contract>(
   instance: ContractType,
   id: string,
-  args: (string | string[])[],
+  args: any[],
   verify?: boolean
 ): Promise<ContractType> => {
-  await registerContractInJsonDb(id, instance);
-  await verifyOnTenderly(instance, id);
   if (verify) {
-    await verifyContract(instance.address, args);
+    await addContractToJsonDb(id, instance, true, args);
+  } else {
+    await addContractToJsonDb(id, instance, true);
   }
+  await verifyOnTenderly(instance, id);
   return instance;
 };
 
 export const withVerify = async <ContractType extends Contract>(
   instance: ContractType,
   id: string,
-  args: (string | string[])[],
+  args: any[],
   verify?: boolean
 ): Promise<ContractType> => {
   await waitForTx(instance.deployTransaction);
-  logContractInJsonDb(id, instance, false);
-
-  await verifyOnTenderly(instance, id);
   if (verify) {
-    await verifyContract(instance.address, args);
+    addContractToJsonDb(id, instance, false, args);
+  } else {
+    addContractToJsonDb(id, instance, false);
   }
+  await verifyOnTenderly(instance, id);
   return instance;
 };
 

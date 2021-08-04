@@ -2,6 +2,7 @@ import { exit } from 'process';
 import fs from 'fs';
 import { file } from 'tmp-promise';
 import { DRE } from './misc-utils';
+import BigNumber from 'bignumber.js';
 
 const fatalErrors = [
   `The address provided as argument contains a contract, but its bytecode`,
@@ -20,21 +21,29 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export const stringifyArgs = (args: any) =>
+  JSON.stringify(args, (key, value) => {
+    if (typeof value == 'number') {
+      return new BigNumber(value).toFixed();
+    } else if (typeof value == 'object' && value instanceof BigNumber) {
+      return value.toFixed();
+    } else {
+      return value;
+    }
+  });
+
 export const verifyContract = async (
   address: string,
-  constructorArguments: (string | string[])[],
+  constructorArguments: string | string[],
+  libraries?: string
+) => verifyContractStringified(address, stringifyArgs(constructorArguments), libraries);
+
+export const verifyContractStringified = async (
+  address: string,
+  constructorArguments: string,
   libraries?: string
 ) => {
   const currentNetwork = DRE.network.name;
-
-  if (!process.env.ETHERSCAN_KEY) {
-    throw Error('Missing process.env.ETHERSCAN_KEY.');
-  }
-  if (!SUPPORTED_ETHERSCAN_NETWORKS.includes(currentNetwork)) {
-    throw Error(
-      `Current network ${currentNetwork} not supported. Please change to one of the next networks: ${SUPPORTED_ETHERSCAN_NETWORKS.toString()}`
-    );
-  }
 
   try {
     console.log(
@@ -47,7 +56,7 @@ export const verifyContract = async (
       prefix: 'verify-params-',
       postfix: '.js',
     });
-    fs.writeSync(fd, `module.exports = ${JSON.stringify([...constructorArguments])};`);
+    fs.writeSync(fd, `module.exports = ${constructorArguments};`);
 
     const params = {
       address: address,
@@ -55,7 +64,7 @@ export const verifyContract = async (
       constructorArgs: path,
       relatedSources: true,
     };
-    await runTaskWithRetry('verify', params, times, msDelay, cleanup);
+    await runTaskWithRetry('verify:verify', params, times, msDelay, cleanup);
   } catch (error) {}
 };
 
@@ -110,16 +119,12 @@ export const runTaskWithRetry = async (
   }
 };
 
-export const checkVerification = () => {
+export const checkEtherscanVerification = () => {
   const currentNetwork = DRE.network.name;
   if (!process.env.ETHERSCAN_KEY) {
-    console.error('Missing process.env.ETHERSCAN_KEY.');
-    exit(3);
+    throw 'Missing process.env.ETHERSCAN_KEY.';
   }
   if (!SUPPORTED_ETHERSCAN_NETWORKS.includes(currentNetwork)) {
-    console.error(
-      `Current network ${currentNetwork} not supported. Please change to one of the next networks: ${SUPPORTED_ETHERSCAN_NETWORKS.toString()}`
-    );
-    exit(5);
+    throw `Current network ${currentNetwork} not supported Etherscan. Use: ${SUPPORTED_ETHERSCAN_NETWORKS.toString()}`;
   }
 };
