@@ -5,7 +5,7 @@ import {
   eNetwork,
   iAssetCommon,
 } from './types';
-import { DRE, filterMapBy } from './misc-utils';
+import { DRE, falsyOrZeroAddress, filterMapBy } from './misc-utils';
 import { getParamPerNetwork } from './contracts-helpers';
 import { deployWETHMocked } from './contracts-deployments';
 import { AugmentedConfig, TestConfig } from '../markets/augmented';
@@ -34,12 +34,18 @@ export const getReservesTestConfig = (): iAssetCommon<IReserveParams> => TestCon
 
 export const getWethAddress = async (config: ICommonConfiguration) => {
   const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  const wethAddress = getParamPerNetwork(config.WETH, <eNetwork>currentNetwork);
-  if (wethAddress) {
-    return wethAddress;
+  const wethAddress = getParamPerNetwork(config.ReserveAssets, <eNetwork>currentNetwork).WETH;
+  if (falsyOrZeroAddress(wethAddress)) {
+    throw 'WETH address is required';
   }
-  if (currentNetwork.includes('main')) {
-    throw new Error('WETH not set at mainnet configuration.');
+  return wethAddress;
+};
+
+export const getOrCreateWethAddress = async (config: ICommonConfiguration) => {
+  const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
+  const wethAddress = getParamPerNetwork(config.ReserveAssets, <eNetwork>currentNetwork).WETH;
+  if (!falsyOrZeroAddress(wethAddress)) {
+    return wethAddress;
   }
   const weth = await deployWETHMocked();
   return weth.address;

@@ -29,7 +29,10 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumber } from 'ethers';
 import { oneRay, oneWad, RAY, WAD, WAD_RAY_RATIO_NUM, ZERO_ADDRESS } from '../../helpers/constants';
 import { transpose } from 'underscore';
-import { getDeployAccessController } from '../../helpers/deploy-helpers';
+import {
+  getDeployAccessController,
+  setAndGetAddressAsProxyWithInit,
+} from '../../helpers/deploy-helpers';
 import { MarketAccessController, RewardConfigurator } from '../../types';
 
 interface poolInitParams {
@@ -302,28 +305,27 @@ const deployExtraPools = async (
   const poolNames: string[] = [];
   const poolFactors: number[] = [];
 
-  if (!knownNamedPools.has(refPoolName)) {
-    const poolName = refPoolName;
-    const params = rewardParams.ReferralPool;
+  // if (!knownNamedPools.has(refPoolName)) {
+  //   const poolName = refPoolName;
+  //   const params = rewardParams.ReferralPool;
 
-    const impl = await deployReferralRewardPoolV1Impl(verify, continuation);
-    console.log(`Deployed ${poolName} implementation: `, impl.address);
+  //   const impl = await deployReferralRewardPoolV1Impl(verify, continuation);
+  //   console.log(`Deployed ${poolName} implementation: `, impl.address);
 
-    const baselinePct = params.BasePoints;
-    totalShare += baselinePct;
+  //   const baselinePct = params.BasePoints;
+  //   totalShare += baselinePct;
 
-    const initData = await configurator.buildRewardPoolInitData(poolName, 0, baselinePct);
-    await addressProvider.setAddressAsProxyWithInit(
-      AccessFlags.REFERRAL_REGISTRY,
-      impl.address,
-      initData
-    );
-    const poolAddr = await addressProvider.getAddress(AccessFlags.REFERRAL_REGISTRY);
+  //   const initData = await configurator.buildRewardPoolInitData(poolName, 0, baselinePct);
+  //   const poolAddr = await setAndGetAddressAsProxyWithInit(addressProvider,
+  //     AccessFlags.REFERRAL_REGISTRY,
+  //     impl.address,
+  //     initData,
+  //   );
 
-    poolAddrs.push(poolAddr);
-    poolNames.push(poolName);
-    poolFactors.push(params.BoostFactor);
-  }
+  //   poolAddrs.push(poolAddr);
+  //   poolNames.push(poolName);
+  //   poolFactors.push(params.BoostFactor);
+  // }
 
   if (!knownNamedPools.has(treasuryPoolName)) {
     const poolName = treasuryPoolName;

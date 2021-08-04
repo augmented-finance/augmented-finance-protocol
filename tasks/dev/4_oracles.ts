@@ -12,7 +12,7 @@ import {
 import { ICommonConfiguration, iAssetBase, TokenContractId } from '../../helpers/types';
 import { getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { getAllAggregatorsAddresses, getAllTokenAddresses } from '../../helpers/mock-helpers';
-import { ConfigNames, loadPoolConfig, getWethAddress } from '../../helpers/configuration';
+import { ConfigNames, loadPoolConfig, getOrCreateWethAddress } from '../../helpers/configuration';
 import {
   getAllMockedTokens,
   getMarketAddressController,
@@ -62,7 +62,7 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
         tokens,
         aggregators,
         fallbackOracle.address,
-        await getWethAddress(poolConfig),
+        await getOrCreateWethAddress(poolConfig),
       ],
       verify
     );

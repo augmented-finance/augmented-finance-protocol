@@ -1,11 +1,13 @@
-import { MarketAccessController } from '../types';
+import { ContractTransaction } from 'ethers';
+import { AccessController, MarketAccessController } from '../types';
+import { AccessFlags } from './access-flags';
 import {
   getMarketAddressController,
   getPreDeployedAddressController,
   hasMarketAddressController,
   hasPreDeployedAddressController,
 } from './contracts-getters';
-import { falsyOrZeroAddress, logExternalContractInJsonDb } from './misc-utils';
+import { falsyOrZeroAddress, logExternalContractInJsonDb, sleep, waitForTx } from './misc-utils';
 import { eContractid, tEthereumAddress } from './types';
 
 export const getDeployAccessController = async (): Promise<
@@ -35,4 +37,37 @@ export const setPreDeployAccessController = async (
   } else {
     return [false, undefined];
   }
+};
+
+export const setAndGetAddressAsProxy = async (
+  ac: AccessController,
+  id: AccessFlags,
+  addr: tEthereumAddress
+) => {
+  waitForTx(await ac.setAddressAsProxy(id, addr, { gasLimit: 2000000 }));
+  return await waitForAddress(ac, id);
+};
+
+export const setAndGetAddressAsProxyWithInit = async (
+  ac: AccessController,
+  id: AccessFlags,
+  addr: tEthereumAddress,
+  data: string
+) => {
+  waitForTx(await ac.setAddressAsProxyWithInit(id, addr, data, { gasLimit: 2000000 }));
+  return await waitForAddress(ac, id);
+};
+
+export const waitForAddress = async (ac: AccessController, id: AccessFlags) => {
+  for (let i = 0; i <= 10; i++) {
+    const result = await ac.getAddress(id);
+    if (!falsyOrZeroAddress(result)) {
+      return result;
+    }
+    await sleep(100 + 1000 * i);
+    if (i > 3) {
+      console.log('... waiting for address: ', id, i);
+    }
+  }
+  throw 'failed to get an address';
 };

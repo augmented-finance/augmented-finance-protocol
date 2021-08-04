@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
+import '../../dependencies/openzeppelin/contracts/Address.sol';
 import '../../dependencies/openzeppelin/upgradeability/BaseUpgradeabilityProxy.sol';
 import './IProxy.sol';
 
@@ -61,8 +62,7 @@ contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy, IProx
     ifAdmin
   {
     _upgradeTo(newImplementation);
-    (bool success, ) = newImplementation.delegatecall(data);
-    require(success);
+    Address.functionDelegateCall(newImplementation, data);
   }
 
   /**

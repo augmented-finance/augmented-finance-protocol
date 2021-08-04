@@ -259,8 +259,8 @@ export const CommonsConfig: ICommonConfiguration = {
       USDC: ZERO_ADDRESS,
       USDT: ZERO_ADDRESS,
       WBTC: '0xa63ad1ef1c6e2bc42a299b9d66fcdb895df85f01',
-      WETH: ZERO_ADDRESS,
-    }, // TODO:
+      WETH: '0xdf032bc4b9dc2782bb09352007d4c57b75160b15',
+    }, 
     [eEthereumNetwork.main]: {
       AAVE: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
       // BUSD: '0x4Fabb145d64652a948d72533023f6E7A623C7C53',
@@ -281,6 +281,7 @@ export const CommonsConfig: ICommonConfiguration = {
       WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     },
   },
+
   ReservesConfig: {
     AAVE: strategyAAVE,
     LINK: strategyLINK,
@@ -289,16 +290,6 @@ export const CommonsConfig: ICommonConfiguration = {
     USDT: strategyUSDT,
     WBTC: strategyWBTC,
     WETH: strategyWETH,
-  },
-  WETH: {
-    [eEthereumNetwork.coverage]: '', // deployed in local evm
-    [eEthereumNetwork.hardhat]: '', // deployed in local evm
-    [eEthereumNetwork.docker]: '', // deployed in local evm
-    [eEthereumNetwork.kovan]: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
-    [eEthereumNetwork.ropsten]: '0xc778417e063141139fce010982780140aa0cd5ab',
-    [eEthereumNetwork.rinkeby]: '0xdf032bc4b9dc2782bb09352007d4c57b75160b15',
-    [eEthereumNetwork.main]: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-    [eEthereumNetwork.tenderlyMain]: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
   },
 
   StakeParams: {

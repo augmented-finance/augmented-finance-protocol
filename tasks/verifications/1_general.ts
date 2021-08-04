@@ -1,5 +1,3 @@
-import { error } from 'console';
-import { zeroAddress } from 'ethereumjs-util';
 import { task } from 'hardhat/config';
 import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
 import { ZERO_ADDRESS } from '../../helpers/constants';

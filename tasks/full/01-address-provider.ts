@@ -6,7 +6,6 @@ import {
 } from '../../helpers/contracts-helpers';
 import {
   deployAddressesProviderRegistry,
-  deployMarketAccessController,
   deployMarketAccessControllerNoSave,
 } from '../../helpers/contracts-deployments';
 import { eContractid, eNetwork } from '../../helpers/types';
@@ -114,7 +113,13 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
       registerAndVerify(addressProvider, eContractid.MarketAccessController, [MarketId], verify);
     }
 
-    await waitForTx(await registry.registerAddressesProvider(addressProvider.address, ProviderId));
+    const id = await registry.getAddressesProviderIdByAddress(addressProvider.address);
+    if (!id.eq(ProviderId)) {
+      console.log('Register provider with id: ', ProviderId);
+      await waitForTx(
+        await registry.registerAddressesProvider(addressProvider.address, ProviderId)
+      );
+    }
 
     const poolAdmin = getParamPerNetwork(poolConfig.PoolAdmin, network);
     if (!falsyOrZeroAddress(poolAdmin)) {

@@ -381,7 +381,6 @@ export interface ICommonConfiguration {
 
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;
-  WETH: iParamsPerNetwork<tEthereumAddress>;
 
   StakeParams: IStakeParams;
 

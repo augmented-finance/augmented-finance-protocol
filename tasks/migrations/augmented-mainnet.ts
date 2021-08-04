@@ -80,14 +80,13 @@ task('augmented:mainnet', 'Deploy enviroment')
         await DRE.run('dev:pluck-tokens', { pool: POOL_NAME });
       }
 
-      if (verify) {
-        printContracts((await getFirstSigner()).address);
-        console.log('N-1. Veryfing contracts');
-        await DRE.run('verify:general', { all: true, pool: POOL_NAME });
+      // if (verify) {
+      //   console.log('N-1. Veryfing contracts');
+      //   await DRE.run('verify:general', { all: true, pool: POOL_NAME });
 
-        console.log('N. Veryfing depositTokens and debtTokens');
-        await DRE.run('verify:tokens', { pool: POOL_NAME });
-      }
+      //   console.log('N. Veryfing depositTokens and debtTokens');
+      //   await DRE.run('verify:tokens', { pool: POOL_NAME });
+      // }
 
       renounce = true;
 

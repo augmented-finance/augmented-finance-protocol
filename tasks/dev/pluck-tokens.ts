@@ -60,8 +60,8 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
       }
 
       const holder = await impersonateAndGetSigner(DRE, tokenHolder);
-      if (!holders.has(tokenHolder)) {
-        holders.add(tokenHolder);
+      if (!holders.has(tokenHolder.toUpperCase())) {
+        holders.add(tokenHolder.toUpperCase());
         await deployer.sendTransaction({
           to: tokenHolder,
           value: (<any>DRE).ethers.utils.hexlify(1e15),
