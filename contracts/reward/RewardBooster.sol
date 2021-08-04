@@ -273,11 +273,11 @@ contract RewardBooster is
     IBoostExcessReceiver(_boostExcessDelegate).receiveBoostExcess(boostExcess, since);
   }
 
-  function disableAutolocks() external onlyConfigAdmin {
-    internalDisableAutolocks();
+  function disableAutolock() external onlyConfigAdmin {
+    internalDisableAutolock();
   }
 
-  function setDefaultAutolock(
+  function enableAutolockAndSetDefault(
     AutolockMode mode,
     uint32 lockDuration,
     uint224 param
