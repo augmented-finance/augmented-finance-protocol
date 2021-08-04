@@ -118,7 +118,7 @@ interface DbNamedEntry {
   count: number;
 }
 
-interface DbInstanceEntry {
+export interface DbInstanceEntry {
   id: string;
   verify?: {
     args?: string;

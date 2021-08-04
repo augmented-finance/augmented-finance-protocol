@@ -2,7 +2,6 @@ import { eContractid, IReserveParams, ITokenNames, tEthereumAddress } from './ty
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, falsyOrZeroAddress, waitForTx } from './misc-utils';
 import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contracts-getters';
-import { registerContractInJsonDb } from './contracts-helpers';
 import { BigNumber, BigNumberish } from 'ethers';
 import {
   deployDelegationAwareDepositToken,
@@ -87,12 +86,6 @@ export const initReservesByHelper = async (
     reserves.forEach((addr) => existingAssets.add(addr.toUpperCase()));
     console.log('Existing assets:', existingAssets);
   }
-
-  // const reserves = Object.entries(reservesParams).filter(
-  //   ([_, { aTokenImpl }]) =>
-  //     aTokenImpl === eContractid.DelegationAwareDepositTokenImpl ||
-  //     aTokenImpl === eContractid.DepositTokenImpl
-  // ) as [string, IReserveParams][];
 
   let hasDelegationAware = false;
   for (let [symbol, params] of Object.entries(reservesParams)) {
