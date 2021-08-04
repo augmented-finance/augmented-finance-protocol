@@ -13,9 +13,7 @@ import {
   tEthereumAddress,
   tStringTokenSmallUnits,
   eEthereumNetwork,
-  LendingPools,
   iParamsPerNetwork,
-  iParamsPerPool,
   ePolygonNetwork,
   eNetwork,
   iEthereumParamsPerNetwork,
@@ -34,13 +32,13 @@ export const registerContractInJsonDb = async (contractId: string, contractInsta
 };
 
 export const getEthersSigners = async (): Promise<Signer[]> =>
-  await Promise.all(await DRE.ethers.getSigners());
+  await Promise.all(await (<any>DRE).ethers.getSigners());
 
 export const getEthersSignersAddresses = async (): Promise<tEthereumAddress[]> =>
-  await Promise.all((await DRE.ethers.getSigners()).map((signer) => signer.getAddress()));
+  await Promise.all((await (<any>DRE).ethers.getSigners()).map((signer) => signer.getAddress()));
 
 export const getCurrentBlock = async () => {
-  return DRE.ethers.provider.getBlockNumber();
+  return (<any>DRE).ethers.provider.getBlockNumber();
 };
 
 export const decodeAbiNumber = (data: string): number =>
@@ -50,7 +48,7 @@ export const deployContract = async <ContractType extends Contract>(
   contractName: string,
   args: any[]
 ): Promise<ContractType> => {
-  const contract = (await (await DRE.ethers.getContractFactory(contractName)).deploy(
+  const contract = (await (await (<any>DRE).ethers.getContractFactory(contractName)).deploy(
     ...args
   )) as ContractType;
   await waitForTx(contract.deployTransaction);
@@ -201,15 +199,6 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNet
       return matic;
     case ePolygonNetwork.mumbai:
       return mumbai;
-  }
-};
-
-export const getParamPerPool = <T>({ augmented }: iParamsPerPool<T>, pool: LendingPools) => {
-  switch (pool) {
-    case LendingPools.augmented:
-      return augmented;
-    default:
-      return augmented;
   }
 };
 

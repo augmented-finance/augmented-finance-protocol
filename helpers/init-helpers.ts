@@ -1,10 +1,4 @@
-import {
-  eContractid,
-  iMultiPoolsAssets,
-  IReserveParams,
-  ITokenNames,
-  tEthereumAddress,
-} from './types';
+import { eContractid, IReserveParams, ITokenNames, tEthereumAddress } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, falsyOrZeroAddress, waitForTx } from './misc-utils';
 import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contracts-getters';
@@ -35,7 +29,7 @@ export const chooseDepositTokenDeployment = (id: eContractid) => {
 
 export const initReservesByHelper = async (
   addressProvider: MarketAccessController,
-  reservesParams: iMultiPoolsAssets<IReserveParams>,
+  reservesParams: { [symbol: string]: IReserveParams },
   tokenAddresses: { [symbol: string]: tEthereumAddress },
   names: ITokenNames,
   skipExistingAssets: boolean,
@@ -255,7 +249,7 @@ export const getTokenAggregatorPairs = (
 
 export const configureReservesByHelper = async (
   addressProvider: MarketAccessController,
-  reservesParams: iMultiPoolsAssets<IReserveParams>,
+  reservesParams: { [symbol: string]: IReserveParams },
   tokenAddresses: { [symbol: string]: tEthereumAddress },
   helpers: ProtocolDataProvider
 ) => {

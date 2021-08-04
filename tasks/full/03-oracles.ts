@@ -27,7 +27,7 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
     const {
-      ProtocolGlobalParams: { UsdAddress },
+      Mocks: { UsdAddress },
       ReserveAssets,
       FallbackOracle,
       ChainlinkAggregator,

@@ -4,14 +4,11 @@ import {
   tEthereumAddress,
   eContractid,
   tStringTokenSmallUnits,
-  LendingPools,
   TokenContractId,
-  iMultiPoolsAssets,
-  IReserveParams,
   PoolConfiguration,
 } from './types';
 import { MockContract } from 'ethereum-waffle';
-import { getReservesConfigByPool } from './configuration';
+import { getReservesTestConfig } from './configuration';
 import { ZERO_ADDRESS } from './constants';
 import {
   MarketAccessControllerFactory,
@@ -518,7 +515,7 @@ export const deployDelegationAwareDepositTokenImpl = async (verify: boolean, onc
 export const deployAllMockTokens = async (verify?: boolean) => {
   const tokens: { [symbol: string]: MockContract | MintableERC20 } = {};
 
-  const protoConfigData = getReservesConfigByPool(LendingPools.augmented);
+  const protoConfigData = getReservesTestConfig();
 
   for (const tokenSymbol of Object.keys(TokenContractId)) {
     let decimals = '18';
@@ -536,18 +533,11 @@ export const deployAllMockTokens = async (verify?: boolean) => {
 
 export const deployMockTokens = async (config: PoolConfiguration, verify?: boolean) => {
   const tokens: { [symbol: string]: MockContract | MintableERC20 } = {};
-  const defaultDecimals = 18;
-
   const configData = config.ReservesConfig;
 
   for (const tokenSymbol of Object.keys(configData)) {
     tokens[tokenSymbol] = await deployMintableERC20(
-      [
-        tokenSymbol,
-        tokenSymbol,
-        configData[tokenSymbol as keyof iMultiPoolsAssets<IReserveParams>].reserveDecimals ||
-          defaultDecimals.toString(),
-      ],
+      [tokenSymbol, tokenSymbol, configData[tokenSymbol].reserveDecimals || '18'],
       verify
     );
     await registerContractInJsonDb(tokenSymbol.toUpperCase(), tokens[tokenSymbol]);

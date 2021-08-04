@@ -1,8 +1,6 @@
 import { expect } from 'chai';
-import { ethers } from 'ethers';
 import { ProtocolErrors } from '../../helpers/types';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import {
   deployMintableDelegationERC20,
   deployMockDelegationAwareDepositToken,
@@ -10,10 +8,7 @@ import {
 import { DelegationAwareDepositToken } from '../../types';
 import { MintableDelegationERC20 } from '../../types';
 
-const { parseEther } = ethers.utils;
-
 makeSuite('DepositToken: underlying delegation', (testEnv: TestEnv) => {
-  const poolConfig = loadPoolConfig(ConfigNames.Commons);
   let delegationToken = <DelegationAwareDepositToken>{};
   let delegationERC20 = <MintableDelegationERC20>{};
 

@@ -27,9 +27,8 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
     await localBRE.run('set-DRE');
     const poolConfig = loadPoolConfig(pool);
     const {
-      Mocks: { AllAssetsInitialPrices },
-      ProtocolGlobalParams: { UsdAddress, MockUsdPriceInWei },
-      LendingRateOracleRatesCommon,
+      Mocks: { UsdAddress, MockUsdPriceInWei, AllAssetsInitialPrices },
+      LendingRateOracleRates,
     } = poolConfig as ICommonConfiguration;
 
     const defaultTokenList = {
@@ -79,7 +78,7 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
       ...tokensAddressesWithoutUsd,
     };
     await setInitialMarketRatesInRatesOracleByHelper(
-      LendingRateOracleRatesCommon,
+      LendingRateOracleRates,
       allReservesAddresses,
       lendingRateOracle
     );

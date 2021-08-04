@@ -80,17 +80,23 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
           .transfer(receiver, donation, { gasLimit: 1000000, gasPrice: 1 });
       }
 
+      let canDepositToken = false;
       const deposit = balance.mul(mustDeposit && depositPct == 0 ? 20 : depositPct).div(100);
       if (deposit.gt(0)) {
         await token
           .connect(holder)
           .transfer(deployer.address, deposit, { gasLimit: 1000000, gasPrice: 1 });
 
-        await token
-          .connect(deployer)
-          .approve(lendingPool.address, deposit, { gasLimit: 1000000, gasPrice: 1 });
-        await lendingPool.connect(deployer).deposit(token.address, deposit, deployer.address, 0);
-        hasDeposits = true;
+        const rd = await lendingPool.getReserveData(tokenAddress);
+        canDepositToken = !falsyOrZeroAddress(rd.aTokenAddress);
+
+        if (canDepositToken) {
+          await token
+            .connect(deployer)
+            .approve(lendingPool.address, deposit, { gasLimit: 1000000, gasPrice: 1 });
+          await lendingPool.connect(deployer).deposit(token.address, deposit, deployer.address, 0);
+          hasDeposits = true;
+        }
       }
 
       let factor: BigNumber;
@@ -111,9 +117,9 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
       }
       if (deposit.gt(0)) {
         console.log(
-          `\t${tokenName}: ${
-            deposit.div(factor).toNumber() / divisor
-          } plucked & deposited from ${tokenHolder}`
+          `\t${tokenName}: ${deposit.div(factor).toNumber() / divisor} plucked & ${
+            canDepositToken ? 'deposited' : 'skipped deposit'
+          } from ${tokenHolder}`
         );
       }
     }
