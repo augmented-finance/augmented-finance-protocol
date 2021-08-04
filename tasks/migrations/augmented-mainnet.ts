@@ -85,8 +85,8 @@ task('augmented:mainnet', 'Deploy enviroment')
       }
 
       if (verify) {
-        // console.log('N. Veryfing depositTokens and debtTokens');
-        // await DRE.run('verify:tokens', { pool: POOL_NAME });
+        console.log('N. Verify all contracts');
+        await DRE.run('verify:verify-all-contracts', { pool: POOL_NAME });
       }
 
       renounce = true;

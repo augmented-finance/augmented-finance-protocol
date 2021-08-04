@@ -303,12 +303,40 @@ export const deployMintableDelegationERC20 = async (
   );
 
 export const deployDefaultReserveInterestRateStrategy = async (
-  args: [tEthereumAddress, string, string, string, string, string, string],
+  args: [
+    provider: string,
+    optimalUtilizationRate: BigNumberish,
+    baseVariableBorrowRate: BigNumberish,
+    variableRateSlope1: BigNumberish,
+    variableRateSlope2: BigNumberish,
+    stableRateSlope1: BigNumberish,
+    stableRateSlope2: BigNumberish
+  ],
   verify: boolean
 ) =>
-  withVerify(
+  withSaveAndVerify(
     await new DefaultReserveInterestRateStrategyFactory(await getFirstSigner()).deploy(...args),
-    eContractid.DefaultReserveInterestRateStrategy,
+    eContractid.MockDefaultReserveInterestRateStrategy,
+    args,
+    verify
+  );
+
+export const deployReserveInterestRateStrategy = async (
+  name: string,
+  args: [
+    provider: string,
+    optimalUtilizationRate: BigNumberish,
+    baseVariableBorrowRate: BigNumberish,
+    variableRateSlope1: BigNumberish,
+    variableRateSlope2: BigNumberish,
+    stableRateSlope1: BigNumberish,
+    stableRateSlope2: BigNumberish
+  ],
+  verify: boolean
+) =>
+  withSaveAndVerify(
+    await new DefaultReserveInterestRateStrategyFactory(await getFirstSigner()).deploy(...args),
+    name,
     args,
     verify
   );

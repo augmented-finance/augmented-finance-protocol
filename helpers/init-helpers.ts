@@ -5,11 +5,11 @@ import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contract
 import { registerContractInJsonDb } from './contracts-helpers';
 import { BigNumber, BigNumberish } from 'ethers';
 import {
-  deployDefaultReserveInterestRateStrategy,
   deployDelegationAwareDepositToken,
   deployDelegationAwareDepositTokenImpl,
   deployDepositToken,
   deployDepositTokenImpl,
+  deployReserveInterestRateStrategy,
   deployStableDebtTokenImpl,
   deployVariableDebtTokenImpl,
 } from './contracts-deployments';
@@ -127,13 +127,12 @@ export const initReservesByHelper = async (
         stableRateSlope1,
         stableRateSlope2,
       ];
-      const strategyContract = await deployDefaultReserveInterestRateStrategy(
-        //        strategy.name,
+      const strategyContract = await deployReserveInterestRateStrategy(
+        strategy.name,
         rateStrategies[strategy.name],
         verify
       );
       strategyAddresses[strategy.name] = strategyContract.address;
-      registerContractInJsonDb(strategy.name, strategyContract);
     }
     strategyAddressPerAsset[symbol] = strategyAddresses[strategy.name];
     console.log('Strategy address for asset %s: %s', symbol, strategyAddressPerAsset[symbol]);

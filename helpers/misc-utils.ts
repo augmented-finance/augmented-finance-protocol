@@ -114,14 +114,12 @@ export const getContractFactory = async (abi: any[], bytecode: string) =>
   await (<any>DRE).ethers.getContractFactory(abi, bytecode);
 
 interface DbNamedEntry {
-  //  deployer: string;
   address: string;
   count: number;
 }
 
-interface DbLogEntry {
+interface DbInstanceEntry {
   id: string;
-  //  deployer: string;
   verify?: {
     args?: string;
     impl?: string;
@@ -141,7 +139,7 @@ export const addContractToJsonDb = async (
 ) => {
   const currentNetwork = DRE.network.name;
   const db = getDb();
-  const deployer = contractInstance.deployTransaction.from;
+  // const deployer = contractInstance.deployTransaction.from;
 
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
   if (MAINNET_FORK || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
@@ -156,13 +154,11 @@ export const addContractToJsonDb = async (
     console.log();
   }
 
-  let logEntry: DbLogEntry = {
+  let logEntry: DbInstanceEntry = {
     id: contractId,
   };
 
   if (verifyArgs != undefined) {
-    console.log('verifyArgs: ', contractId, verifyArgs);
-    console.log('verifyArgs: ', stringifyArgs(verifyArgs!));
     logEntry.verify = {
       args: stringifyArgs(verifyArgs!),
     };
@@ -190,7 +186,7 @@ export const addProxyToJsonDb = async (
   const currentNetwork = DRE.network.name;
   const db = getDb();
 
-  let logEntry: DbLogEntry = {
+  let logEntry: DbInstanceEntry = {
     id: id,
     verify: {
       impl: implAddress,
@@ -201,7 +197,23 @@ export const addProxyToJsonDb = async (
     logEntry.verify!.args = stringifyArgs(verifyArgs!);
   }
 
-  await db.set(`${currentNetwork}.proxy.${proxyAddress}`, logEntry).write();
+  await db.set(`${currentNetwork}.external.${proxyAddress}`, logEntry).write();
+};
+
+export const addExternalToJsonDb = async (id: string, address: string, verifyArgs?: any[]) => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+
+  let logEntry: DbInstanceEntry = {
+    id: id,
+    verify: {},
+  };
+
+  if (verifyArgs != undefined) {
+    logEntry.verify!.args = stringifyArgs(verifyArgs!);
+  }
+
+  await db.set(`${currentNetwork}.external.${address}`, logEntry).write();
 };
 
 export const addNamedToJsonDb = async (contractId: string, contractAddress: string) => {
@@ -219,19 +231,26 @@ export const addNamedToJsonDb = async (contractId: string, contractAddress: stri
     .write();
 };
 
-export const getFromJsonDb = async (id: string) =>
-  await getDb().get(`${DRE.network.name}.named.${id}`).value();
+export const getInstancesFromJsonDb = () =>
+  Object.entries<DbInstanceEntry>(getDb().get(`${DRE.network.name}.instance`).value());
 
-export const getFromJsonDbByAddr = async (id: string) =>
-  await getDb().get(`${DRE.network.name}.instance.${id}`).value();
+export const getExternalsFromJsonDb = () =>
+  Object.entries<DbInstanceEntry>(getDb().get(`${DRE.network.name}.external`).value());
 
-export const hasInJsonDb = async (id: string) =>
-  !falsyOrZeroAddress((await getFromJsonDb(id))?.address);
+export const getNamedFromJsonDb = () =>
+  Object.entries<DbNamedEntry>(getDb().get(`${DRE.network.name}.named`).value());
+
+export const getFromJsonDb = (id: string) => getDb().get(`${DRE.network.name}.named.${id}`).value();
+
+export const getFromJsonDbByAddr = (id: string) =>
+  getDb().get(`${DRE.network.name}.instance.${id}`).value();
+
+export const hasInJsonDb = async (id: string) => !falsyOrZeroAddress(getFromJsonDb(id)?.address);
 
 export const getInstanceCountFromJsonDb = () => {
   const currentNetwork = DRE.network.name;
   const db = getDb();
-  return Object.entries<DbLogEntry>(db.get(`${currentNetwork}.instance`).value()).length;
+  return Object.entries(db.get(`${currentNetwork}.instance`).value()).length;
 };
 
 export const printContracts = (
@@ -243,8 +262,8 @@ export const printContracts = (
   console.log('Contracts deployed at', currentNetwork, 'by', deployer);
   console.log('---------------------------------');
 
-  const entries = Object.entries<DbNamedEntry>(db.get(`${currentNetwork}.named`).value());
-  const logEntries = Object.entries<DbLogEntry>(db.get(`${currentNetwork}.instance`).value());
+  const entries = getNamedFromJsonDb();
+  const logEntries = getInstancesFromJsonDb();
 
   let multiCount = 0;
   const entryMap = new Map<string, tEthereumAddress>();
