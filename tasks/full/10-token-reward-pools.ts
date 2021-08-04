@@ -27,7 +27,7 @@ import {
 import { chunk, falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumber } from 'ethers';
-import { oneRay, oneWad, RAY, WAD, WAD_RAY_RATIO_NUM, ZERO_ADDRESS } from '../../helpers/constants';
+import { oneWad } from '../../helpers/constants';
 import { transpose } from 'underscore';
 import {
   getDeployAccessController,

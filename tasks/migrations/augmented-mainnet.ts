@@ -75,6 +75,9 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('10. Deploy reward pools');
       await DRE.run('full:init-reward-pools', { pool: POOL_NAME });
 
+      console.log('11. Smoke test');
+      await DRE.run('full:smoke-test', { pool: POOL_NAME });
+
       if (MAINNET_FORK) {
         console.log('Pluck');
         await DRE.run('dev:pluck-tokens', { pool: POOL_NAME });
