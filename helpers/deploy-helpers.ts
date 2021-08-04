@@ -59,7 +59,7 @@ export const setAndGetAddressAsProxyWithInit = async (
 };
 
 export const waitForAddress = async (ac: AccessController, id: AccessFlags) => {
-  for (let i = 0; i <= 10; i++) {
+  for (let i = 0; i <= 20; i++) {
     const result = await ac.getAddress(id);
     if (!falsyOrZeroAddress(result)) {
       return result;

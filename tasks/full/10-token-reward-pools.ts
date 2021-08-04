@@ -247,10 +247,10 @@ const deployExtraPools = async (
   verify: boolean
 ): Promise<[string[], number]> => {
   const knownNamedPools = new Set<string>();
-  const teamPoolName = 'TeamPool';
+  const teamPoolName = 'TeamPool'; // NB! it is constant in a contract
   const refPoolName = 'RefPool';
   const burnPoolName = 'BurnersPool';
-  const treasuryPoolName = 'TreasuryPool';
+  const treasuryPoolName = 'TreasuryPool'; // NB! it is constant in a contract
 
   let totalShare: number = 0;
   const extraNames: string[] = [];
@@ -285,12 +285,14 @@ const deployExtraPools = async (
       [memberAddresses, memberShares] = transpose(members);
     }
 
-    await configurator.configureTeamRewardPool(
-      trp.address,
-      poolName,
-      unlockTimestamp,
-      memberAddresses,
-      memberShares
+    waitForTx(
+      await configurator.configureTeamRewardPool(
+        trp.address,
+        poolName,
+        unlockTimestamp,
+        memberAddresses,
+        memberShares
+      )
     );
 
     const allocation = await trp.getAllocatedShares();
@@ -305,27 +307,32 @@ const deployExtraPools = async (
   const poolNames: string[] = [];
   const poolFactors: number[] = [];
 
-  // if (!knownNamedPools.has(refPoolName)) {
-  //   const poolName = refPoolName;
-  //   const params = rewardParams.ReferralPool;
+  if (!knownNamedPools.has(refPoolName)) {
+    const poolName = refPoolName;
+    const params = rewardParams.ReferralPool;
 
-  //   const impl = await deployReferralRewardPoolV1Impl(verify, continuation);
-  //   console.log(`Deployed ${poolName} implementation: `, impl.address);
+    const baselinePct = params.BasePoints;
+    totalShare += baselinePct;
 
-  //   const baselinePct = params.BasePoints;
-  //   totalShare += baselinePct;
+    let poolAddr = await addressProvider.getAddress(AccessFlags.REFERRAL_REGISTRY);
+    if (falsyOrZeroAddress(poolAddr)) {
+      const impl = await deployReferralRewardPoolV1Impl(verify, continuation);
+      console.log(`Deployed ${poolName} implementation: `, impl.address);
 
-  //   const initData = await configurator.buildRewardPoolInitData(poolName, 0, baselinePct);
-  //   const poolAddr = await setAndGetAddressAsProxyWithInit(addressProvider,
-  //     AccessFlags.REFERRAL_REGISTRY,
-  //     impl.address,
-  //     initData,
-  //   );
+      const initData = await configurator.buildRewardPoolInitData(poolName, 0, baselinePct);
+      poolAddr = await setAndGetAddressAsProxyWithInit(
+        addressProvider,
+        AccessFlags.REFERRAL_REGISTRY,
+        impl.address,
+        initData
+      );
+    }
+    console.log(`Deployed ${poolName}: `, poolAddr);
 
-  //   poolAddrs.push(poolAddr);
-  //   poolNames.push(poolName);
-  //   poolFactors.push(params.BoostFactor);
-  // }
+    poolAddrs.push(poolAddr);
+    poolNames.push(poolName);
+    poolFactors.push(params.BoostFactor);
+  }
 
   if (!knownNamedPools.has(treasuryPoolName)) {
     const poolName = treasuryPoolName;
