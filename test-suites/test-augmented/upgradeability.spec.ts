@@ -28,7 +28,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
 
   before('deploying instances', async () => {
     const { dai, pool } = testEnv;
-    const aTokenInstance = await deployMockDepositToken([
+    const depositTokenInstance = await deployMockDepositToken([
       pool.address,
       dai.address,
       ZERO_ADDRESS,
@@ -59,7 +59,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       'AGF',
     ]);
 
-    newATokenAddress = aTokenInstance.address;
+    newATokenAddress = depositTokenInstance.address;
     newVariableTokenAddress = variableDebtTokenInstance.address;
     newStableTokenAddress = stableDebtTokenInstance.address;
     newAgfTokenAddress = agfTokenInstance.address;

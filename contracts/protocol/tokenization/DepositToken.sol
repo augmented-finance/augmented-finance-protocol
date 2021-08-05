@@ -24,11 +24,11 @@ contract DepositToken is DepositTokenBase, VersionedInitializable {
   }
 
   /**
-   * @dev Initializes the aToken
+   * @dev Initializes the depositToken
    * @param config The data about lending pool where this token will be used
-   * @param name The name of the aToken
-   * @param symbol The symbol of the aToken
-   * @param decimals The decimals of the aToken, same as the underlying asset's
+   * @param name The name of the depositToken
+   * @param symbol The symbol of the depositToken
+   * @param decimals The decimals of the depositToken, same as the underlying asset's
    */
   function initialize(
     PoolTokenConfig calldata config,

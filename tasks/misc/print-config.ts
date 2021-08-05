@@ -62,7 +62,7 @@ task('print-config', 'Inits the DRE, to have access to all the plugins')
       'isActive',
       'isFrozen',
     ];
-    const tokensFields = ['aToken', 'stableDebtToken', 'variableDebtToken'];
+    const tokensFields = ['depositToken', 'stableDebtToken', 'variableDebtToken'];
     for (const [symbol, address] of Object.entries(
       getParamPerNetwork(poolConfig.ReserveAssets, network)
     )) {

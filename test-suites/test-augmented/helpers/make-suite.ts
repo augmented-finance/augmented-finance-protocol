@@ -131,9 +131,11 @@ export async function initializeMakeSuite() {
   testEnv.helpersContract = await getProtocolDataProvider();
 
   const allTokens = await testEnv.helpersContract.getAllDepositTokens();
-  const aDaiAddress = allTokens.find((aToken) => aToken.symbol === 'agDAI')?.tokenAddress;
+  const aDaiAddress = allTokens.find((depositToken) => depositToken.symbol === 'agDAI')
+    ?.tokenAddress;
 
-  const aWEthAddress = allTokens.find((aToken) => aToken.symbol === 'agWETH')?.tokenAddress;
+  const aWEthAddress = allTokens.find((depositToken) => depositToken.symbol === 'agWETH')
+    ?.tokenAddress;
 
   const reservesTokens = await testEnv.helpersContract.getAllReserveTokens();
 

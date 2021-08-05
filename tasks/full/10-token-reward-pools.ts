@@ -146,19 +146,19 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       }
 
       const rd = await lendingPool.getReserveData(asset);
-      if (falsyOrZeroAddress(rd.aTokenAddress)) {
+      if (falsyOrZeroAddress(rd.depositTokenAddress)) {
         console.log('Reserve is missing for asset (underlying):', symbol);
         continue;
       }
 
-      await buildToken(tp.Share.deposit, rd.aTokenAddress, Names.DepositSymbolPrefix);
+      await buildToken(tp.Share.deposit, rd.depositTokenAddress, Names.DepositSymbolPrefix);
       await buildToken(tp.Share.vDebt, rd.variableDebtTokenAddress, Names.VariableDebtSymbolPrefix);
       await buildToken(tp.Share.sDebt, rd.stableDebtTokenAddress, Names.StableDebtSymbolPrefix);
 
       if (tp.Share.stake != undefined) {
         await buildToken(
           tp.Share.stake,
-          await stakeConfigurator.stakeTokenOf(rd.aTokenAddress),
+          await stakeConfigurator.stakeTokenOf(rd.depositTokenAddress),
           Names.StakeSymbolPrefix
         );
       }

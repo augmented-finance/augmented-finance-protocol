@@ -68,12 +68,12 @@ contract LendingPoolConfigurator is
 
     address depositTokenProxyAddress =
       _initTokenWithProxy(
-        input.aTokenImpl,
+        input.depositTokenImpl,
         abi.encodeWithSelector(
           IInitializablePoolToken.initialize.selector,
           config,
-          input.aTokenName,
-          input.aTokenSymbol,
+          input.depositTokenName,
+          input.depositTokenSymbol,
           input.underlyingAssetDecimals,
           input.params
         )
@@ -156,9 +156,9 @@ contract LendingPoolConfigurator is
         input.params
       );
 
-    IProxy(reserveData.aTokenAddress).upgradeToAndCall(input.implementation, encodedCall);
+    IProxy(reserveData.depositTokenAddress).upgradeToAndCall(input.implementation, encodedCall);
 
-    emit DepositTokenUpgraded(input.asset, reserveData.aTokenAddress, input.implementation);
+    emit DepositTokenUpgraded(input.asset, reserveData.depositTokenAddress, input.implementation);
   }
 
   /**
@@ -435,7 +435,7 @@ contract LendingPoolConfigurator is
   function _checkNoLiquidity(address asset) internal view {
     DataTypes.ReserveData memory reserveData = pool.getReserveData(asset);
 
-    uint256 availableLiquidity = IERC20Detailed(asset).balanceOf(reserveData.aTokenAddress);
+    uint256 availableLiquidity = IERC20Detailed(asset).balanceOf(reserveData.depositTokenAddress);
 
     require(
       availableLiquidity == 0 && reserveData.currentLiquidityRate == 0,

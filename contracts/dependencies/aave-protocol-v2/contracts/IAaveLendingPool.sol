@@ -42,7 +42,7 @@ library AaveDataTypes {
     uint128 currentStableBorrowRate;
     uint40 lastUpdateTimestamp;
     //tokens addresses
-    address aTokenAddress;
+    address depositTokenAddress;
     address stableDebtTokenAddress;
     address variableDebtTokenAddress;
     //address of the interest rate strategy

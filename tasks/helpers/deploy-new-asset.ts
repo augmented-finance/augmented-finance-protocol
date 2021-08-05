@@ -43,7 +43,7 @@ WRONG RESERVE ASSET SETUP:
     const strategyParams = reserveConfigs['strategy' + symbol];
     const reserveAssetAddress =
       marketConfigs.AugmentedConfig.ReserveAssets[localBRE.network.name][symbol];
-    const deployDepositToken = chooseDepositTokenDeployment(strategyParams.aTokenImpl);
+    const deployDepositToken = chooseDepositTokenDeployment(strategyParams.depositTokenImpl);
     const addressProvider = await getMarketAddressController(
       LENDING_POOL_ADDRESS_PROVIDER[network]
     );

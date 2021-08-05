@@ -30,10 +30,10 @@ contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
   }
 
   /**
-   * @dev deposits WETH into the reserve, using native ETH. A corresponding amount of the overlying asset (aTokens)
+   * @dev deposits WETH into the reserve, using native ETH. A corresponding amount of the overlying asset (depositTokens)
    * is minted.
    * @param lendingPool address of the targeted underlying lending pool
-   * @param onBehalfOf address of the user who will receive the aTokens representing the deposit
+   * @param onBehalfOf address of the user who will receive the depositTokens representing the deposit
    * @param referralCode integrators are assigned a referral code and can potentially receive rewards.
    **/
   function depositETH(
@@ -58,7 +58,7 @@ contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
     address to
   ) external override {
     IDepositToken aWETH =
-      IDepositToken(ILendingPool(lendingPool).getReserveData(address(WETH)).aTokenAddress);
+      IDepositToken(ILendingPool(lendingPool).getReserveData(address(WETH)).depositTokenAddress);
 
     // if amount is equal to uint(-1), the user wants to redeem everything
     if (amount == type(uint256).max) {

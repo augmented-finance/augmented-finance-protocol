@@ -48,7 +48,7 @@ const almostEqualOrEqual = function (
       key === 'lastUpdateTimestamp' ||
       key === 'marketStableRate' ||
       key === 'symbol' ||
-      key === 'aTokenAddress' ||
+      key === 'depositTokenAddress' ||
       key === 'decimals' ||
       key === 'totalStableDebtLastUpdated'
     ) {
@@ -223,7 +223,7 @@ export const withdraw = async (
   const { pool } = testEnv;
 
   const {
-    aTokenInstance,
+    depositTokenInstance,
     reserve,
     userData: userDataBefore,
     reserveData: reserveDataBefore,
@@ -714,7 +714,7 @@ interface ActionData {
   reserve: string;
   reserveData: ReserveData;
   userData: UserReserveData;
-  aTokenInstance: DepositToken;
+  depositTokenInstance: DepositToken;
 }
 
 const getDataBeforeAction = async (
@@ -725,12 +725,12 @@ const getDataBeforeAction = async (
   const reserve = await getReserveAddressFromSymbol(reserveSymbol);
 
   const { reserveData, userData } = await getContractsData(reserve, user, testEnv);
-  const aTokenInstance = await getDepositToken(reserveData.aTokenAddress);
+  const depositTokenInstance = await getDepositToken(reserveData.depositTokenAddress);
   return {
     reserve,
     reserveData,
     userData,
-    aTokenInstance,
+    depositTokenInstance,
   };
 };
 

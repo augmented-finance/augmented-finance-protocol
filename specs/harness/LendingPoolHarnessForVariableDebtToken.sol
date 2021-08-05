@@ -114,14 +114,14 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
 
   function initReserve(
     address asset,
-    address aTokenAddress,
+    address depositTokenAddress,
     address stableDebtAddress,
     address variableDebtAddress,
     address interestRateStrategyAddress
   ) external override {
     originalPool.initReserve(
       asset,
-      aTokenAddress,
+      depositTokenAddress,
       stableDebtAddress,
       variableDebtAddress,
       interestRateStrategyAddress
