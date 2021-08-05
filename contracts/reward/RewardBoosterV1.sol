@@ -2,9 +2,9 @@
 pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import '../access/interfaces/IMarketAccessController.sol';
 import {RewardBooster} from './RewardBooster.sol';
-import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
+import '../tools/upgradeability/VersionedInitializable.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 
 import 'hardhat/console.sol';

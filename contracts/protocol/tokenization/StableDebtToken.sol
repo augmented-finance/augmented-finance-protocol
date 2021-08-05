@@ -2,16 +2,16 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {PoolTokenBase} from './base/PoolTokenBase.sol';
 import {DebtTokenBase} from './base/DebtTokenBase.sol';
 import {MathUtils} from '../../tools/math/MathUtils.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
+import '../../interfaces/IStableDebtToken.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
-import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
+import '../../tools/upgradeability/VersionedInitializable.sol';
+import '../../interfaces/IBalanceHook.sol';
 
 /**
  * @title StableDebtToken

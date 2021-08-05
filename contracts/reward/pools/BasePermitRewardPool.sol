@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {IManagedRewardPool} from '../interfaces/IManagedRewardPool.sol';
+import '../interfaces/IManagedRewardPool.sol';
 import {ControlledRewardPool} from './ControlledRewardPool.sol';
 
 import 'hardhat/console.sol';

@@ -2,8 +2,8 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IRemoteAccessBitmask} from '../../access/interfaces/IRemoteAccessBitmask.sol';
-import {IRewardController} from './IRewardController.sol';
+import '../../access/interfaces/IRemoteAccessBitmask.sol';
+import './IRewardController.sol';
 
 interface IInitializableRewardPool {
   struct InitData {

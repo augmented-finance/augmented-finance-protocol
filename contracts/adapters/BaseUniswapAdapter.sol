@@ -2,19 +2,19 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {PercentageMath} from '../tools/math/PercentageMath.sol';
-import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IERC20Detailed} from '../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
-import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
-import {IFlashLoanAddressProvider} from '../interfaces/IFlashLoanAddressProvider.sol';
-import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
-import {IUniswapV2Router02} from '../interfaces/IUniswapV2Router02.sol';
-import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
-import {IERC20WithPermit} from '../interfaces/IERC20WithPermit.sol';
-import {FlashLoanReceiverBase} from '../flashloan/base/FlashLoanReceiverBase.sol';
-import {IBaseUniswapAdapter} from './interfaces/IBaseUniswapAdapter.sol';
+import '../tools/math/PercentageMath.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
+import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../dependencies/openzeppelin/contracts/Ownable.sol';
+import '../interfaces/IFlashLoanAddressProvider.sol';
+import '../protocol/libraries/types/DataTypes.sol';
+import '../interfaces/IUniswapV2Router02.sol';
+import '../interfaces/IPriceOracleGetter.sol';
+import '../interfaces/IERC20WithPermit.sol';
+import '../flashloan/base/FlashLoanReceiverBase.sol';
+import './interfaces/IBaseUniswapAdapter.sol';
 
 /**
  * @title BaseUniswapAdapter

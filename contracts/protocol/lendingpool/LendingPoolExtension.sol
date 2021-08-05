@@ -2,27 +2,27 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts//SafeMath.sol';
-import {IERC20} from '../../dependencies/openzeppelin/contracts//IERC20.sol';
-import {IDepositToken} from '../../interfaces/IDepositToken.sol';
-import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
-import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
-import {IPriceOracleGetter} from '../../interfaces/IPriceOracleGetter.sol';
+import '../../dependencies/openzeppelin/contracts//SafeMath.sol';
+import '../../dependencies/openzeppelin/contracts//IERC20.sol';
+import '../../interfaces/IDepositToken.sol';
+import '../../interfaces/IStableDebtToken.sol';
+import '../../interfaces/IVariableDebtToken.sol';
+import '../../interfaces/IPriceOracleGetter.sol';
 import {ILendingPoolExtension} from '../../interfaces/ILendingPoolExtension.sol';
-import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
+import '../../tools/upgradeability/VersionedInitializable.sol';
 import {GenericLogic} from '../libraries/logic/GenericLogic.sol';
-import {Helpers} from '../libraries/helpers/Helpers.sol';
+import '../libraries/helpers/Helpers.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../tools/math/PercentageMath.sol';
+import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
-import {DataTypes} from '../libraries/types/DataTypes.sol';
-import {IFlashLoanReceiver} from '../../flashloan/interfaces/IFlashLoanReceiver.sol';
-import {ILendingPoolEvents} from '../../interfaces/ILendingPoolEvents.sol';
+import '../libraries/types/DataTypes.sol';
+import '../../flashloan/interfaces/IFlashLoanReceiver.sol';
+import '../../interfaces/ILendingPoolEvents.sol';
 import {IOnlyManagedLendingPool} from '../../interfaces/IManagedLendingPool.sol';
 import {LendingPoolBase} from './LendingPoolBase.sol';
-import {AccessFlags} from '../../access/AccessFlags.sol';
+import '../../access/AccessFlags.sol';
 import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
 
 /**
@@ -798,5 +798,10 @@ contract LendingPoolExtension is
     require(Address.isContract(extension), Errors.VL_CONTRACT_REQUIRED);
     _extension = extension;
     emit LendingPoolExtensionUpdated(extension);
+  }
+
+  /// @dev getAddressesProvider is for backward compatibility, is deprecated, use getAccessController
+  function getAddressesProvider() external view returns (IMarketAccessController) {
+    return _addressesProvider;
   }
 }

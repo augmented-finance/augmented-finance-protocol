@@ -3,18 +3,18 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import {ERC20WithPermit} from '../../misc/ERC20WithPermit.sol';
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {IStakeToken, IManagedStakeToken} from './interfaces/IStakeToken.sol';
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
+import '../../tools/math/PercentageMath.sol';
+import '../../interfaces/IBalanceHook.sol';
+import '../../access/AccessFlags.sol';
+import '../../access/MarketAccessBitmask.sol';
+import '../../access/interfaces/IMarketAccessController.sol';
 import {Errors} from '../../tools/Errors.sol';
-import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
+import './interfaces/StakeTokenConfig.sol';
 import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.sol';
 
 abstract contract SlashableStakeTokenBase is

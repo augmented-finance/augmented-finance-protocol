@@ -2,14 +2,14 @@
 pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {PercentageMath} from '../tools/math/PercentageMath.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../tools/math/PercentageMath.sol';
 
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import '../access/interfaces/IMarketAccessController.sol';
 import {BaseRewardController} from './BaseRewardController.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
 import {IRewardPool} from './interfaces/IRewardPool.sol';
-import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
+import './interfaces/IManagedRewardPool.sol';
 import {IManagedRewardBooster} from './interfaces/IRewardController.sol';
 import {IBoostExcessReceiver} from './interfaces/IBoostExcessReceiver.sol';
 import {IBoostRate} from './interfaces/IBoostRate.sol';

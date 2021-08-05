@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
-import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
-import {AccessFlags} from '../access/AccessFlags.sol';
-import {IRewardCollector} from '../reward/interfaces/IRewardCollector.sol';
+import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../tools/upgradeability/VersionedInitializable.sol';
+import '../access/MarketAccessBitmask.sol';
+import '../access/interfaces/IMarketAccessController.sol';
+import '../access/AccessFlags.sol';
+import '../reward/interfaces/IRewardCollector.sol';
 
 import 'hardhat/console.sol';
 

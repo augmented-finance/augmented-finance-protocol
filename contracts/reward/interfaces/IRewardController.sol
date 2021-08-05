@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {IManagedRewardPool} from './IManagedRewardPool.sol';
+import './IManagedRewardPool.sol';
 import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
 import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
+import '../../access/interfaces/IMarketAccessController.sol';
 
 enum AllocationMode {Push, SetPull, UnsetPull}
 

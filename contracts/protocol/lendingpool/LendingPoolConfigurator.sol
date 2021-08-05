@@ -2,18 +2,18 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
-import {IProxy} from '../../tools/upgradeability/IProxy.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../tools/upgradeability/VersionedInitializable.sol';
+import '../../tools/upgradeability/IProxy.sol';
 import {ProxyAdminBase} from '../../tools/upgradeability/ProxyAdminBase.sol';
-import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
+import '../libraries/configuration/ReserveConfiguration.sol';
+import '../../access/interfaces/IMarketAccessController.sol';
+import '../../access/MarketAccessBitmask.sol';
 import {IManagedLendingPool} from '../../interfaces/IManagedLendingPool.sol';
-import {IERC20Detailed} from '../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-import {DataTypes} from '../libraries/types/DataTypes.sol';
+import '../../tools/math/PercentageMath.sol';
+import '../libraries/types/DataTypes.sol';
 import {IInitializablePoolToken} from '../tokenization/interfaces/IInitializablePoolToken.sol';
 import {PoolTokenConfig} from '../tokenization/interfaces/PoolTokenConfig.sol';
 import {ILendingPoolConfigurator} from '../../interfaces/ILendingPoolConfigurator.sol';

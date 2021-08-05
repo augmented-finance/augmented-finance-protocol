@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import {ICreditDelegationToken} from '../../../interfaces/ICreditDelegationToken.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {PoolTokenBase} from './PoolTokenBase.sol';
-import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {ERC20Events} from '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
 
 /**
@@ -13,11 +13,7 @@ import {ERC20Events} from '../../../dependencies/openzeppelin/contracts/ERC20Eve
  * @notice Base contract for debt tokens: StableDebtToken and VariableDebtToken
  */
 
-abstract contract DebtTokenBase is
-  PoolTokenBase('DEBT_STUB', 'DEBT_STUB', 0),
-  ERC20Events,
-  ICreditDelegationToken
-{
+abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICreditDelegationToken {
   using SafeMath for uint256;
 
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;

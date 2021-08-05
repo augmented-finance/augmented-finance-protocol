@@ -2,17 +2,17 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
+import '../../access/AccessFlags.sol';
+import '../../access/MarketAccessBitmask.sol';
+import '../../access/interfaces/IMarketAccessController.sol';
 import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
-import {IDerivedToken} from '../../interfaces/IDerivedToken.sol';
+import '../../interfaces/IDerivedToken.sol';
 
 import {CalcLinearRateReward} from '../calcs/CalcLinearRateReward.sol';
 

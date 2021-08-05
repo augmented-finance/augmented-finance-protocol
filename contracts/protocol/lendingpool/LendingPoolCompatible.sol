@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ILendingPoolAaveCompatible} from '../../interfaces/ILendingPoolAaveCompatible.sol';
+import '../../interfaces/ILendingPoolAaveCompatible.sol';
 import {LendingPool} from './LendingPool.sol';
 
 import 'hardhat/console.sol';

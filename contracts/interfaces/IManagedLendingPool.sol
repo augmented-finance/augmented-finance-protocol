@@ -2,10 +2,10 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ILendingPool} from './ILendingPool.sol';
-import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
+import './ILendingPool.sol';
+import '../protocol/libraries/types/DataTypes.sol';
 import {IEmergencyAccess} from '../interfaces/IEmergencyAccess.sol';
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import '../access/interfaces/IMarketAccessController.sol';
 
 interface IOnlyManagedLendingPool is IEmergencyAccess {
   function initReserve(DataTypes.InitReserveData calldata data) external;

@@ -5,20 +5,20 @@ pragma experimental ABIEncoderV2;
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {PoolTokenBase} from './PoolTokenBase.sol';
 
-import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {ERC20Events} from '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
 
-import {SafeERC20} from '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {IDepositToken} from '../../../interfaces/IDepositToken.sol';
+import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../../interfaces/IDepositToken.sol';
 import {WadRayMath} from '../../../tools/math/WadRayMath.sol';
-import {PermitForERC20} from '../../../misc/PermitForERC20.sol';
+import '../../../misc/PermitForERC20.sol';
 
 /**
  * @title Augmented Finance ERC20 deposit token (agToken)
  * @dev Implementation of the interest bearing token for the Augmented Finance protocol
  */
 abstract contract DepositTokenBase is
-  PoolTokenBase('DEPOSIT_STUB', 'DEPOSIT_STUB', 0),
+  PoolTokenBase('', '', 0),
   PermitForERC20,
   ERC20Events,
   IDepositToken
@@ -146,10 +146,6 @@ abstract contract DepositTokenBase is
     emit Mint(user, amount, index);
 
     return firstBalance;
-  }
-
-  function setTreasury(address treasury) external override onlyLendingPool {
-    _treasury = treasury;
   }
 
   /**

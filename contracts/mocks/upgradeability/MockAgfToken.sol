@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {AGFTokenV1} from '../../reward/AGFTokenV1.sol';
+import '../../reward/AGFTokenV1.sol';
 
 contract MockAgfToken is AGFTokenV1 {
   constructor() public {

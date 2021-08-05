@@ -2,8 +2,8 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IPriceOracleGetter} from '../../interfaces/IPriceOracleGetter.sol';
-import {IUniswapV2Router02} from '../../interfaces/IUniswapV2Router02.sol';
+import '../../interfaces/IPriceOracleGetter.sol';
+import '../../interfaces/IUniswapV2Router02.sol';
 
 interface IBaseUniswapAdapter {
   event Swapped(address fromAsset, address toAsset, uint256 fromAmount, uint256 receivedAmount);

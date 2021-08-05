@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IAccessController} from './IAccessController.sol';
+import './IAccessController.sol';
 
 /**
  * @title IMarketAccessController contract
@@ -33,10 +33,4 @@ interface IMarketAccessController is IAccessController {
   function getRewardConfigurator() external view returns (address);
 
   function getStakeConfigurator() external view returns (address);
-}
-
-interface IManagedMarketAccessController is IMarketAccessController {
-  event MarketIdSet(string newMarketId);
-
-  function setMarketId(string memory marketId) external;
 }

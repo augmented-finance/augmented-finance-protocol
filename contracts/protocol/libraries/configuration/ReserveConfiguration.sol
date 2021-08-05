@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 import {Errors} from '../helpers/Errors.sol';
-import {DataTypes} from '../types/DataTypes.sol';
+import '../types/DataTypes.sol';
 
 /**
  * @title ReserveConfiguration library

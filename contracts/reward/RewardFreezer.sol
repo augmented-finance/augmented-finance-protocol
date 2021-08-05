@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {PercentageMath} from '../tools/math/PercentageMath.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../tools/math/PercentageMath.sol';
 
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import '../access/interfaces/IMarketAccessController.sol';
 import {BasicRewardController} from './BasicRewardController.sol';
 import {CalcLinearFreezer} from './calcs/CalcLinearFreezer.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';

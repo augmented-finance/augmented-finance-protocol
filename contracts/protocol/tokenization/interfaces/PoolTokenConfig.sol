@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 import {IManagedLendingPool} from '../../../interfaces/IManagedLendingPool.sol';
-import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
+import '../../../interfaces/IBalanceHook.sol';
 
 struct PoolTokenConfig {
   // The address of the associated lending pool

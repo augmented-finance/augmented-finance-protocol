@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {BitUtils} from '../tools/math/BitUtils.sol';
-import {IRemoteAccessBitmask} from './interfaces/IRemoteAccessBitmask.sol';
+import '../tools/math/BitUtils.sol';
+import './interfaces/IRemoteAccessBitmask.sol';
 
-/**
- * @title AccessHelper
- * @dev Wrapper around IRemoteAccessBitmask
- */
+/// @dev Helper/wrapper around IRemoteAccessBitmask
 library AccessHelper {
   using BitUtils for uint256;
 

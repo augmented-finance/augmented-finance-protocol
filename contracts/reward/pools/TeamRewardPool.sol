@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
+import '../../tools/math/PercentageMath.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {ControlledRewardPool} from './ControlledRewardPool.sol';
 import {CalcLinearUnweightedReward} from '../calcs/CalcLinearUnweightedReward.sol';

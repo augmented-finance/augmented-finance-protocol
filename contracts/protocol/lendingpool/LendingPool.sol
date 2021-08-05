@@ -2,26 +2,26 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-import {AccessHelper} from '../../access/AccessHelper.sol';
-import {IDepositToken} from '../../interfaces/IDepositToken.sol';
-import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
-import {IFlashLoanReceiver} from '../../flashloan/interfaces/IFlashLoanReceiver.sol';
-import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
-import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
-import {Helpers} from '../libraries/helpers/Helpers.sol';
+import '../../access/interfaces/IMarketAccessController.sol';
+import '../../access/AccessHelper.sol';
+import '../../interfaces/IDepositToken.sol';
+import '../../interfaces/IVariableDebtToken.sol';
+import '../../flashloan/interfaces/IFlashLoanReceiver.sol';
+import '../../interfaces/IStableDebtToken.sol';
+import '../../tools/upgradeability/VersionedInitializable.sol';
+import '../libraries/helpers/Helpers.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
+import '../../tools/math/PercentageMath.sol';
 import {GenericLogic} from '../libraries/logic/GenericLogic.sol';
 import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
-import {DataTypes} from '../libraries/types/DataTypes.sol';
+import '../libraries/types/DataTypes.sol';
 import {LendingPoolBase} from './LendingPoolBase.sol';
-import {ILendingPool} from '../../interfaces/ILendingPool.sol';
+import '../../interfaces/ILendingPool.sol';
 import {Delegator} from '../../tools/upgradeability/Delegator.sol';
 
 import 'hardhat/console.sol';
@@ -596,13 +596,6 @@ contract LendingPool is VersionedInitializable, LendingPoolBase, ILendingPool, D
       _activeReserves[i] = _reservesList[i];
     }
     return _activeReserves;
-  }
-
-  /**
-   * @dev Returns the cached AddressesProvider connected to this contract
-   **/
-  function getAddressesProvider() external view override returns (IMarketAccessController) {
-    return _addressesProvider;
   }
 
   function getAccessController() external view override returns (IMarketAccessController) {

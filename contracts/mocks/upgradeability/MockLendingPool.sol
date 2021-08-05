@@ -2,8 +2,8 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {LendingPoolCompatible} from '../../protocol/lendingpool/LendingPoolCompatible.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
+import '../../protocol/lendingpool/LendingPoolCompatible.sol';
+import '../../access/interfaces/IMarketAccessController.sol';
 
 contract MockLendingPool is LendingPoolCompatible {
   constructor() public {

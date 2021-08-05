@@ -2,10 +2,10 @@
 pragma solidity ^0.6.12;
 
 import 'hardhat/console.sol';
-import {IMarketAccessController} from './interfaces/IMarketAccessController.sol';
-import {AccessHelper} from './AccessHelper.sol';
-import {AccessFlags} from './AccessFlags.sol';
-import {Errors} from '../tools/Errors.sol';
+import './interfaces/IMarketAccessController.sol';
+import './AccessHelper.sol';
+import './AccessFlags.sol';
+import '../tools/Errors.sol';
 
 contract MarketAccessBitmask {
   using AccessHelper for IMarketAccessController;

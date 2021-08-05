@@ -3,16 +3,16 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import {IERC20Details} from '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
-import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {ILendingPool} from '../../../interfaces/ILendingPool.sol';
+import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../../interfaces/ILendingPool.sol';
 import {IInitializablePoolToken} from '../interfaces/IInitializablePoolToken.sol';
-import {IPoolToken} from '../../../interfaces/IPoolToken.sol';
+import '../../../interfaces/IPoolToken.sol';
 import {PoolTokenConfig} from '../interfaces/PoolTokenConfig.sol';
-import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
+import '../../../interfaces/IBalanceHook.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
-import {AccessHelper} from '../../../access/AccessHelper.sol';
-import {AccessFlags} from '../../../access/AccessFlags.sol';
+import '../../../access/AccessHelper.sol';
+import '../../../access/AccessFlags.sol';
 import {IManagedLendingPool} from '../../../interfaces/IManagedLendingPool.sol';
 
 abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, IERC20Details {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IDerivedToken} from '../../../interfaces/IDerivedToken.sol';
-import {IRewardedToken} from '../../../interfaces/IRewardedToken.sol';
+import '../../../interfaces/IDerivedToken.sol';
+import '../../../interfaces/IRewardedToken.sol';
 import {IEmergencyAccess} from '../../../interfaces/IEmergencyAccess.sol';
 
 interface IStakeToken is IDerivedToken, IRewardedToken {

@@ -2,20 +2,20 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeERC20} from '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {IDepositToken} from '../../../interfaces/IDepositToken.sol';
-import {IStableDebtToken} from '../../../interfaces/IStableDebtToken.sol';
-import {IVariableDebtToken} from '../../../interfaces/IVariableDebtToken.sol';
-import {IReserveStrategy} from '../../../interfaces/IReserveStrategy.sol';
+import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../../interfaces/IDepositToken.sol';
+import '../../../interfaces/IStableDebtToken.sol';
+import '../../../interfaces/IVariableDebtToken.sol';
+import '../../../interfaces/IReserveStrategy.sol';
 import {IReserveDelegatedStrategy} from '../../../interfaces/IReserveDelegatedStrategy.sol';
-import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
+import '../configuration/ReserveConfiguration.sol';
 import {MathUtils} from '../../../tools/math/MathUtils.sol';
 import {WadRayMath} from '../../../tools/math/WadRayMath.sol';
-import {PercentageMath} from '../../../tools/math/PercentageMath.sol';
+import '../../../tools/math/PercentageMath.sol';
 import {Errors} from '../helpers/Errors.sol';
-import {DataTypes} from '../types/DataTypes.sol';
+import '../types/DataTypes.sol';
 import {
   IAaveLendingPool,
   AaveDataTypes

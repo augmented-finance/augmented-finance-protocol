@@ -2,14 +2,14 @@
 pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {AccessFlags} from '../access/AccessFlags.sol';
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import '../access/AccessFlags.sol';
+import '../access/interfaces/IMarketAccessController.sol';
 
 import {DecayingTokenLocker} from './locker/DecayingTokenLocker.sol';
-import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
+import '../tools/upgradeability/VersionedInitializable.sol';
 import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
-import {IRemoteAccessBitmask} from '../access/interfaces/IRemoteAccessBitmask.sol';
-import {IRewardController} from './interfaces/IRewardController.sol';
+import '../access/interfaces/IRemoteAccessBitmask.sol';
+import './interfaces/IRewardController.sol';
 import {WadRayMath} from '../tools/math/WadRayMath.sol';
 
 import 'hardhat/console.sol';

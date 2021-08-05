@@ -2,9 +2,7 @@
 pragma solidity ^0.6.12;
 
 interface IRewardMinter {
-  /**
-   * @dev mints a reward
-   */
+  /// @dev mints a reward
   function mintReward(
     address holder,
     uint256 amount,

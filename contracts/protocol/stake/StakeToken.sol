@@ -2,9 +2,9 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {SlashableStakeTokenBase} from './SlashableStakeTokenBase.sol';
-import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
-import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
+import './SlashableStakeTokenBase.sol';
+import './interfaces/StakeTokenConfig.sol';
+import '../../tools/upgradeability/VersionedInitializable.sol';
 
 /**
  * @title StakeToken

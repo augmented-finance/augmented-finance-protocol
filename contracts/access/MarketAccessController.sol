@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IManagedMarketAccessController} from './interfaces/IMarketAccessController.sol';
-import {AccessController} from './AccessController.sol';
-import {AccessFlags} from './AccessFlags.sol';
+import './interfaces/IManagedMarketAccessController.sol';
+import './AccessController.sol';
+import './AccessFlags.sol';
 
 /**
  * @title MarketAccessController contract

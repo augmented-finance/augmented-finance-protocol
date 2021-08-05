@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 import {MathUtils} from './MathUtils.sol';
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from './WadRayMath.sol';
 import 'hardhat/console.sol';
 import './BitUtils.sol';

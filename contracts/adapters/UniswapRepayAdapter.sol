@@ -2,11 +2,11 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {BaseUniswapAdapter} from './BaseUniswapAdapter.sol';
-import {IFlashLoanAddressProvider} from '../interfaces/IFlashLoanAddressProvider.sol';
-import {IUniswapV2Router02} from '../interfaces/IUniswapV2Router02.sol';
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
+import './BaseUniswapAdapter.sol';
+import '../interfaces/IFlashLoanAddressProvider.sol';
+import '../interfaces/IUniswapV2Router02.sol';
+import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../protocol/libraries/types/DataTypes.sol';
 
 /**
  * @title UniswapRepayAdapter

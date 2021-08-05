@@ -2,10 +2,10 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ILendingPool} from '../../interfaces/ILendingPool.sol';
+import '../../interfaces/ILendingPool.sol';
 import {IDelegationToken} from '../../interfaces/IDelegationToken.sol';
 import {Errors} from '../libraries/helpers/Errors.sol';
-import {DepositToken} from './DepositToken.sol';
+import './DepositToken.sol';
 
 /**
  * @title PoolToken enabled to delegate voting power of the underlying asset to a different address

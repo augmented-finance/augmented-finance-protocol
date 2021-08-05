@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {BitUtils} from '../tools/math/BitUtils.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../tools/math/BitUtils.sol';
 
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
-import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
-import {AccessFlags} from '../access/AccessFlags.sol';
+import '../access/interfaces/IMarketAccessController.sol';
+import '../access/MarketAccessBitmask.sol';
+import '../access/AccessFlags.sol';
 import {IManagedRewardController, AllocationMode} from './interfaces/IRewardController.sol';
 import {IRewardPool} from './interfaces/IRewardPool.sol';
-import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
+import './interfaces/IManagedRewardPool.sol';
 import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
-import {IRewardCollector} from './interfaces/IRewardCollector.sol';
-import {Errors} from '../tools/Errors.sol';
+import './interfaces/IRewardCollector.sol';
+import '../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 

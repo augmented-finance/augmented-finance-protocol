@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {BitUtils} from '../../tools/math/BitUtils.sol';
-
 interface IRemoteAccessBitmask {
   /// @notice Returns access flags granted to the given address and limited by the filterMask.
   /// @dev Zero value of filterMask has a special meaning.

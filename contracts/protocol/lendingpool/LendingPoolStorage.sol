@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
-import {UserConfiguration} from '../libraries/configuration/UserConfiguration.sol';
-import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
+import '../../tools/upgradeability/VersionedInitializable.sol';
+import '../libraries/configuration/UserConfiguration.sol';
+import '../libraries/configuration/ReserveConfiguration.sol';
 import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-import {DataTypes} from '../libraries/types/DataTypes.sol';
+import '../../access/interfaces/IMarketAccessController.sol';
+import '../libraries/types/DataTypes.sol';
 
 abstract contract LendingPoolStorage {
   using ReserveLogic for DataTypes.ReserveData;

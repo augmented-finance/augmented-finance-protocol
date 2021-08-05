@@ -2,12 +2,12 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {BitUtils} from '../../tools/math/BitUtils.sol';
+import '../../tools/math/BitUtils.sol';
 
 import {AllocationMode} from '../interfaces/IRewardController.sol';
-import {RewardedTokenLocker} from './RewardedTokenLocker.sol';
+import './RewardedTokenLocker.sol';
 import 'hardhat/console.sol';
 
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';

@@ -2,8 +2,8 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ILendingPool} from '../../../interfaces/ILendingPool.sol';
-import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
+import '../../../interfaces/ILendingPool.sol';
+import '../../../interfaces/IBalanceHook.sol';
 import {PoolTokenConfig} from './PoolTokenConfig.sol';
 
 /**
