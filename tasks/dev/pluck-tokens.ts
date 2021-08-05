@@ -88,7 +88,7 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
           .transfer(deployer.address, deposit, { gasLimit: 1000000, gasPrice: 1 });
 
         const rd = await lendingPool.getReserveData(tokenAddress);
-        canDepositToken = !falsyOrZeroAddress(rd.aTokenAddress);
+        canDepositToken = !falsyOrZeroAddress(rd.depositTokenAddress);
 
         if (canDepositToken) {
           await token
