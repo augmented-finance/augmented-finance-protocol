@@ -55,7 +55,6 @@ abstract contract CalcLinearRateReward is CalcBase {
   ) internal virtual;
 
   function internalMarkRateUpdate(uint32 currentTick) internal {
-    //    console.log('internalMarkRateUpdate', _rateUpdatedAt, currentTick, block.timestamp);
     require(currentTick >= _rateUpdatedAt, 'retroactive update');
     _rateUpdatedAt = currentTick;
   }
@@ -126,7 +125,6 @@ abstract contract CalcLinearRateReward is CalcBase {
       _accumRates[holder],
       currentTick
     );
-    // console.log('internalUpdateReward: ', adjRate, allocated);
 
     _accumRates[holder] = adjRate;
     _rewards[holder] = RewardEntry(uint224(newBalance), currentTick);

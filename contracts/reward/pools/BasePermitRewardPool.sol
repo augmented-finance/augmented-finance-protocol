@@ -7,8 +7,6 @@ import '../interfaces/IRewardController.sol';
 import '../interfaces/IManagedRewardPool.sol';
 import './ControlledRewardPool.sol';
 
-import 'hardhat/console.sol';
-
 abstract contract BasePermitRewardPool is ControlledRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;

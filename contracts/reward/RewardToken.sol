@@ -3,8 +3,6 @@ pragma solidity ^0.6.12;
 
 import '../misc/ERC20WithPermit.sol';
 
-import 'hardhat/console.sol';
-
 abstract contract RewardToken is ERC20WithPermit {
   constructor(
     string memory name,

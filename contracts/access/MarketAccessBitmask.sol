@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import 'hardhat/console.sol';
 import './interfaces/IMarketAccessController.sol';
 import './AccessHelper.sol';
 import './AccessFlags.sol';

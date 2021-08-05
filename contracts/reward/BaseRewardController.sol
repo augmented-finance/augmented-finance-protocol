@@ -14,8 +14,6 @@ import '../interfaces/IRewardMinter.sol';
 import './interfaces/IRewardCollector.sol';
 import '../tools/Errors.sol';
 
-import 'hardhat/console.sol';
-
 abstract contract BaseRewardController is
   IRewardCollector,
   MarketAccessBitmask,
@@ -301,7 +299,6 @@ abstract contract BaseRewardController is
     mask = getClaimMask(holder, mask);
     (claimed, extra) = internalClaimAndMintReward(holder, mask);
 
-    // console.log('RewardsClaimed', claimed);
     if (claimed > 0) {
       extra += internalClaimed(holder, receiver, claimed);
       emit RewardsClaimed(holder, receiver, claimed);

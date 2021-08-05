@@ -34,15 +34,11 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
     uint32 lastAt,
     uint32 at
   ) internal override {
-    // console.log('internalRateUpdated', lastRate, lastAt, at);
-
     if (at == lastAt) {
       return;
     }
 
     uint256 totalSupply = internalTotalSupply();
-    // console.log('internalRateUpdated', totalSupply, internalExtraRate(), _maxWeightBase);
-    // console.log('internalRateUpdated', _accumRate);
 
     if (totalSupply == 0) {
       return;
@@ -52,8 +48,6 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
     // the rate stays in RAY, but is weighted now vs _maxWeightBase
     lastRate = lastRate.mul(_maxWeightBase.div(totalSupply));
     _accumRate = _accumRate.add(lastRate.mul(at - lastAt));
-
-    // console.log('internalRateUpdated', _accumRate);
   }
 
   function isHistory(uint32 at) internal view virtual returns (bool);
@@ -84,7 +78,6 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
       if (totalSupply > 0) {
         (uint256 rate, uint32 updatedAt) = getRateAndUpdatedAt();
 
-        // console.log('internalCalcRateAndReward', rate, internalExtraRate());
         rate = rate.add(internalExtraRate());
         rate = rate.mul(_maxWeightBase.div(totalSupply));
         adjRate = adjRate.add(rate.mul(at - updatedAt));

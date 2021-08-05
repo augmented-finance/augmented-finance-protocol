@@ -9,8 +9,6 @@ import './BasePermitRewardPool.sol';
 import '../referral/BaseReferralRegistry.sol';
 import '../calcs/CalcLinearRateAccum.sol';
 
-import 'hardhat/console.sol';
-
 contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcLinearRateAccum {
   uint256 private _claimLimit;
 

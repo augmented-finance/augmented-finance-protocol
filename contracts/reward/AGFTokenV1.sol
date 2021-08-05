@@ -11,8 +11,6 @@ import './RewardToken.sol';
 import '../tools/upgradeability/VersionedInitializable.sol';
 import './interfaces/IInitializableRewardToken.sol';
 
-import 'hardhat/console.sol';
-
 contract AGFTokenV1 is
   RewardToken,
   MarketAccessBitmask,

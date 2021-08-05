@@ -10,8 +10,6 @@ import '../../access/AccessFlags.sol';
 import '../../access/AccessHelper.sol';
 import '../../tools/Errors.sol';
 
-import 'hardhat/console.sol';
-
 abstract contract ControlledRewardPool is IManagedRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;

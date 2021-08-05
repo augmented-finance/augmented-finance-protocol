@@ -12,8 +12,6 @@ import '../access/interfaces/IRemoteAccessBitmask.sol';
 import './interfaces/IRewardController.sol';
 import '../tools/math/WadRayMath.sol';
 
-import 'hardhat/console.sol';
-
 contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, VersionedInitializable {
   string internal constant NAME = 'Augmented Finance Locked Reward Token';
   string internal constant SYMBOL = 'xAGF';

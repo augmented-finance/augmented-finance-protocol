@@ -8,8 +8,6 @@ import '../interfaces/IManagedRewardPool.sol';
 import './BasePermitRewardPool.sol';
 import '../calcs/CalcLinearFreezer.sol';
 
-import 'hardhat/console.sol';
-
 contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
   uint256 private _rewardLimit;
 

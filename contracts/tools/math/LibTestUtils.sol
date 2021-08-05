@@ -4,8 +4,9 @@ pragma solidity 0.6.12;
 import './MathUtils.sol';
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import './WadRayMath.sol';
-import 'hardhat/console.sol';
 import './BitUtils.sol';
+
+import 'hardhat/console.sol';
 
 contract LibTestUtils {
   using BitUtils for uint256;

@@ -5,8 +5,6 @@ pragma experimental ABIEncoderV2;
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/Errors.sol';
 
-import 'hardhat/console.sol';
-
 abstract contract BaseReferralRegistry {
   using SafeMath for uint256;
 

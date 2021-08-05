@@ -6,8 +6,6 @@ import '../../tools/math/WadRayMath.sol';
 import '../interfaces/IRewardController.sol';
 import './CalcLinearRateReward.sol';
 
-// import 'hardhat/console.sol';
-
 abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
   using SafeMath for uint256;
   using WadRayMath for uint256;

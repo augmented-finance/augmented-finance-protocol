@@ -8,7 +8,6 @@ import '../../tools/math/BitUtils.sol';
 
 import '../interfaces/IRewardController.sol';
 import './RewardedTokenLocker.sol';
-import 'hardhat/console.sol';
 
 import '../interfaces/IRewardController.sol';
 
@@ -59,7 +58,6 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       return (0, 0);
     }
 
-    //    console.log('internalCalcReward_1', amount, since, getExtraRate());
     uint256 decayAmount = amount.rayMul(calcDecayForReward(startTS, endTS, since, current));
 
     amount =
@@ -71,8 +69,6 @@ contract DecayingTokenLocker is RewardedTokenLocker {
         totalSupply(),
         calcDecayTimeCompensation(startTS, endTS, since, current)
       );
-
-    //    console.log('internalCalcReward_2', current - since, amount, decayAmount);
 
     if (amount == 0) {
       return (0, 0);
@@ -110,13 +106,10 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       return (0, 0);
     }
 
-    //    console.log('internalGetReward_1', maxAmount, since, getExtraRate());
-
     uint256 decayAmount = maxAmount.rayMul(calcDecayForReward(startTS, endTS, since, current));
 
     if (limit <= maxAmount && limit + decayAmount <= maxAmount) {
       amount = limit;
-      // console.log('internalClaimReward (limit below decay)', decayAmount, limit);
     } else {
       amount =
         maxAmount -
@@ -128,24 +121,12 @@ contract DecayingTokenLocker is RewardedTokenLocker {
           calcDecayTimeCompensation(startTS, endTS, since, current)
         );
 
-      //      console.log('internalGetReward_2', current - since, amount, decayAmount);
-
-      // console.log(
-      //   'internalClaimReward (compensated)',
-      //   maxAmount,
-      //   decayAmount,
-      //   decayAmount - (maxAmount - amount)
-      // );
-
       if (amount > limit) {
-        // console.log('internalClaimReward (limit applied)', limit);
         amount = limit;
       }
     }
 
-    //    console.log('internalClaimReward', maxAmount, maxAmount - amount, getExtraRate());
     if (maxAmount > amount) {
-      //      console.log('internalClaimReward (excess)', maxAmount - amount);
       internalAddExcess(maxAmount - amount, since);
     }
 
@@ -256,17 +237,6 @@ contract DecayingTokenLocker is RewardedTokenLocker {
   ) public pure returns (uint256) {
     // parabolic approximation
     return ((uint256(current - since)**2) * WadRayMath.RAY) / (uint256(endTS - startTS)**2);
-
-    // uint32 width = endTS - startTS;
-    // // logariphmic component to give a large compensation for longer distance between (since) and (current)
-    // // bitLength provides a cheap alternative of log(x) when x is expanded to more bits
-    // uint256 v = (255 - BitUtils.bitLength((type(uint256).max / width) * (width - (current - since)))) * WadRayMath.RAY / 255;
-    // v *= 7;
-
-    // // linear component to give a small non-zero compensation for smaller distance between (since) and (current)
-    // v += uint256(current - since) * WadRayMath.RAY / width;
-
-    // return v>>3;
   }
 
   function calcCompensatedDecay(
@@ -276,13 +246,12 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     uint256 stakedTotal,
     uint256 compensationRatio
   ) public view returns (uint256) {
-    // console.log('calcCompensatedDecay', decayAmount, stakeAmount, compensationRatio);
     if (decayAmount == 0 || compensationRatio == 0) {
       return decayAmount;
     }
 
     if (stakeAmount == 0) {
-      // is included in the total
+      // is included into the total
       stakeAmount = getStakeBalance(holder);
     } else {
       // is excluded from the total

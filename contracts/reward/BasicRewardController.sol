@@ -8,8 +8,6 @@ import '../access/interfaces/IMarketAccessController.sol';
 import '../interfaces/IRewardMinter.sol';
 import './BaseRewardController.sol';
 
-import 'hardhat/console.sol';
-
 abstract contract BasicRewardController is BaseRewardController {
   using SafeMath for uint256;
 

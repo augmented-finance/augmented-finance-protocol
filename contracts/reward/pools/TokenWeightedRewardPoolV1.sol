@@ -10,8 +10,6 @@ import './TokenWeightedRewardPool.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import '../interfaces/IInitializableRewardPool.sol';
 
-import 'hardhat/console.sol';
-
 contract TokenWeightedRewardPoolV1 is
   IInitializableRewardPool,
   TokenWeightedRewardPool,

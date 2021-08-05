@@ -18,8 +18,6 @@ import '../calcs/CalcLinearRateReward.sol';
 
 import '../../tools/Errors.sol';
 
-import 'hardhat/console.sol';
-
 /**
   @dev Curve-like locker, that locks an underlying token for some period and mints non-transferrable tokens for that period. 
   Total amount of minted tokens = amount_of_locked_tokens * max_period / lock_period.
@@ -453,8 +451,6 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
     totalSupply_ = _stakedTotal;
 
-    //    console.log('totalSupply', fromPoint, tillPoint, totalSupply_);
-
     if (tillPoint == 0) {
       return totalSupply_;
     }
@@ -595,35 +591,16 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     uint32 expiryPt = 1 + uint32(expiry + at + _pointPeriod - 1) / _pointPeriod;
     expiry = expiryPt * _pointPeriod;
 
-    // console.log('internalAddExcess', amount, since, _excessAccum);
-    // console.log('internalAddExcess_1', expiry, expiryPt, expiry - at);
-
     expiry -= at;
     amount += _excessAccum;
     uint256 excessRateIncrement = amount / expiry;
-    // if (excessRateIncrement < _extraRate>>10) {
-    //   excessRateIncrement = 0;
-    // }
     _excessAccum = amount - excessRateIncrement * expiry;
-
-    // console.log(
-    //   'internalAddExcess_2',
-    //   excessRateIncrement,
-    //   block.timestamp,
-    //   _excessAccum
-    // );
 
     if (excessRateIncrement == 0) {
       return;
     }
 
     internalSyncRate(at);
-
-    // console.log(
-    //   'internalAddExcess_3',
-    //   _extraRate,
-    //   _extraRate.add(excessRateIncrement)
-    // );
 
     _extraRate = _extraRate.add(excessRateIncrement);
 

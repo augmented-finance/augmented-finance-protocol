@@ -15,8 +15,6 @@ import '../interfaces/IAutolocker.sol';
 
 import '../../tools/Errors.sol';
 
-import 'hardhat/console.sol';
-
 contract RewardedTokenLocker is
   BaseTokenLocker,
   ControlledRewardPool,
@@ -55,12 +53,10 @@ contract RewardedTokenLocker is
   function removeRewardProvider(address) external override onlyConfigAdmin {}
 
   function internalSyncRate(uint32 at) internal override {
-    // console.log('internalSyncRate', at, getExtraRate(), getStakedTotal());
     doSyncRateAt(at);
   }
 
   function internalCheckpoint(uint32 at) internal override {
-    // console.log('internalCheckpoint', at, getExtraRate(), getStakedTotal());
     doCheckpoint(at);
   }
 

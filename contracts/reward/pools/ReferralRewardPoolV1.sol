@@ -10,8 +10,6 @@ import './ReferralRewardPool.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import '../interfaces/IInitializableRewardPool.sol';
 
-import 'hardhat/console.sol';
-
 contract ReferralRewardPoolV1 is
   IInitializableRewardPool,
   ReferralRewardPool,

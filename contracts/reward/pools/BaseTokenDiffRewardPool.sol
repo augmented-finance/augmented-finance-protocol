@@ -8,8 +8,6 @@ import '../interfaces/IRewardController.sol';
 import '../interfaces/IRewardPool.sol';
 import './ControlledRewardPool.sol';
 
-import 'hardhat/console.sol';
-
 abstract contract BaseTokenDiffRewardPool is ControlledRewardPool, IRewardPool {
   using SafeMath for uint256;
   using WadRayMath for uint256;

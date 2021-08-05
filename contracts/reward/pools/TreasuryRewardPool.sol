@@ -8,8 +8,6 @@ import '../interfaces/IManagedRewardPool.sol';
 import './ControlledRewardPool.sol';
 import '../calcs/CalcLinearRateAccum.sol';
 
-import 'hardhat/console.sol';
-
 contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRateAccum {
   address private _treasury;
 

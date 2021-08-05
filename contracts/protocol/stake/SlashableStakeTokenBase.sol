@@ -210,9 +210,6 @@ abstract contract SlashableStakeTokenBase is
   function cooldown() external override {
     require(balanceOf(msg.sender) != 0, Errors.STK_INVALID_BALANCE_ON_COOLDOWN);
 
-    // console.log('cooldown: ', msg.sender, address(this));
-    // console.log('block.timestamp: ', block.timestamp);
-
     _stakersCooldowns[msg.sender] = uint32(block.timestamp);
     emit CooldownStarted(msg.sender, uint32(block.timestamp));
   }

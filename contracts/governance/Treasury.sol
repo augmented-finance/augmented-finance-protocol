@@ -9,8 +9,6 @@ import '../access/interfaces/IMarketAccessController.sol';
 import '../access/AccessFlags.sol';
 import '../reward/interfaces/IRewardCollector.sol';
 
-import 'hardhat/console.sol';
-
 contract Treasury is VersionedInitializable, MarketAccessBitmask {
   using SafeERC20 for IERC20;
   uint256 private constant TREASURY_REVISION = 1;

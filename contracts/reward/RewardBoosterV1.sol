@@ -7,8 +7,6 @@ import './RewardBooster.sol';
 import '../tools/upgradeability/VersionedInitializable.sol';
 import '../interfaces/IRewardMinter.sol';
 
-import 'hardhat/console.sol';
-
 contract RewardBoosterV1 is RewardBooster, VersionedInitializable {
   uint256 private constant CONTRACT_REVISION = 1;
 

@@ -8,8 +8,6 @@ import '../interfaces/IRewardController.sol';
 import '../calcs/CalcLinearWeightedReward.sol';
 import './BaseTokenAbsRewardPool.sol';
 
-import 'hardhat/console.sol';
-
 contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedReward {
   using SafeMath for uint256;
   using WadRayMath for uint256;

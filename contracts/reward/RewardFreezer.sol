@@ -9,8 +9,6 @@ import './BasicRewardController.sol';
 import './calcs/CalcLinearFreezer.sol';
 import '../interfaces/IRewardMinter.sol';
 
-import 'hardhat/console.sol';
-
 // TODO: remove after refactoring of tests
 contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
   using SafeMath for uint256;

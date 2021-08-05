@@ -17,8 +17,6 @@ import './interfaces/IRewardExplainer.sol';
 import './autolock/AutolockBase.sol';
 import './interfaces/IAutolocker.sol';
 
-import 'hardhat/console.sol';
-
 contract RewardBooster is
   IManagedRewardBooster,
   IRewardExplainer,
