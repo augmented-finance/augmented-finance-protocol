@@ -6,7 +6,7 @@ import '../../contracts/protocol/tokenization/StableDebtToken.sol';
 import {IncentivizedERC20} from '../../contracts/protocol/tokenization/IncentivizedERC20.sol';
 import '../../contracts/interfaces/ILendingPool.sol';
 import '../../contracts/interfaces/IBalanceHook.sol';
-import {PoolTokenConfig} from '../../contracts/protocol/tokenization/interfaces/PoolTokenConfig.sol';
+import '../../contracts/protocol/tokenization/interfaces/PoolTokenConfig.sol';
 
 contract StableDebtTokenHarness is StableDebtToken {
   constructor(

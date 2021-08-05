@@ -2,34 +2,28 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import '../../tools/upgradeability/IProxy.sol';
-import {ProxyAdminBase} from '../../tools/upgradeability/ProxyAdminBase.sol';
+import '../../tools/upgradeability/ProxyAdminBase.sol';
 import '../libraries/configuration/ReserveConfiguration.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
 import '../../access/MarketAccessBitmask.sol';
-import {IManagedLendingPool} from '../../interfaces/IManagedLendingPool.sol';
-import '../../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
-import {Errors} from '../libraries/helpers/Errors.sol';
+import '../../interfaces/IManagedLendingPool.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../tools/Errors.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../libraries/types/DataTypes.sol';
-import {IInitializablePoolToken} from '../tokenization/interfaces/IInitializablePoolToken.sol';
-import {PoolTokenConfig} from '../tokenization/interfaces/PoolTokenConfig.sol';
-import {ILendingPoolConfigurator} from '../../interfaces/ILendingPoolConfigurator.sol';
+import '../tokenization/interfaces/IInitializablePoolToken.sol';
+import '../tokenization/interfaces/PoolTokenConfig.sol';
+import '../../interfaces/ILendingPoolConfigurator.sol';
 
-/**
- * @title LendingPoolConfigurator contract
- * @dev Implements the configuration methods for the protocol
- **/
-
+/// @dev Implements configuration methods for the LendingPool
 contract LendingPoolConfigurator is
   ProxyAdminBase,
   VersionedInitializable,
   MarketAccessBitmask(IMarketAccessController(0)),
   ILendingPoolConfigurator
 {
-  using SafeMath for uint256;
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
@@ -49,9 +43,7 @@ contract LendingPoolConfigurator is
     pool = IManagedLendingPool(provider.getLendingPool());
   }
 
-  /**
-   * @dev Initializes reserves in batch
-   **/
+  /// @dev Initializes reserves in batch
   function batchInitReserve(InitReserveInput[] calldata input) external onlyPoolAdmin {
     for (uint256 i = 0; i < input.length; i++) {
       _initReserve(input[i]);
@@ -135,12 +127,28 @@ contract LendingPoolConfigurator is
     );
   }
 
-  /**
-   * @dev Updates DepositToken implementation for the reserve
-   **/
-  function updateDepositToken(UpdateDepositTokenInput calldata input) external onlyPoolAdmin {
-    DataTypes.ReserveData memory reserveData = pool.getReserveData(input.asset);
+  function updateDepositToken(UpdatePoolTokenInput calldata input) external onlyPoolAdmin {
+    address token = pool.getReserveData(input.asset).depositTokenAddress;
 
+    _updatePoolToken(input, token);
+    emit DepositTokenUpgraded(input.asset, token, input.implementation);
+  }
+
+  function updateStableDebtToken(UpdatePoolTokenInput calldata input) external onlyPoolAdmin {
+    address token = pool.getReserveData(input.asset).stableDebtTokenAddress;
+
+    _updatePoolToken(input, token);
+    emit StableDebtTokenUpgraded(input.asset, token, input.implementation);
+  }
+
+  function updateVariableDebtToken(UpdatePoolTokenInput calldata input) external onlyPoolAdmin {
+    address token = pool.getReserveData(input.asset).variableDebtTokenAddress;
+
+    _updatePoolToken(input, token);
+    emit VariableDebtTokenUpgraded(input.asset, token, input.implementation);
+  }
+
+  function _updatePoolToken(UpdatePoolTokenInput calldata input, address token) private {
     (, , , uint256 decimals, ) = pool.getConfiguration(input.asset).getParamsMemory();
 
     PoolTokenConfig memory config =
@@ -156,83 +164,13 @@ contract LendingPoolConfigurator is
         input.params
       );
 
-    IProxy(reserveData.depositTokenAddress).upgradeToAndCall(input.implementation, encodedCall);
-
-    emit DepositTokenUpgraded(input.asset, reserveData.depositTokenAddress, input.implementation);
-  }
-
-  /**
-   * @dev Updates the stable debt token implementation for the reserve
-   **/
-  function updateStableDebtToken(UpdateDebtTokenInput calldata input) external onlyPoolAdmin {
-    DataTypes.ReserveData memory reserveData = pool.getReserveData(input.asset);
-
-    (, , , uint256 decimals, ) = pool.getConfiguration(input.asset).getParamsMemory();
-
-    PoolTokenConfig memory config =
-      PoolTokenConfig({pool: pool, treasury: address(0), underlyingAsset: input.asset});
-
-    bytes memory encodedCall =
-      abi.encodeWithSelector(
-        IInitializablePoolToken.initialize.selector,
-        config,
-        input.name,
-        input.symbol,
-        decimals,
-        input.params
-      );
-
-    IProxy(reserveData.stableDebtTokenAddress).upgradeToAndCall(input.implementation, encodedCall);
-
-    emit StableDebtTokenUpgraded(
-      input.asset,
-      reserveData.stableDebtTokenAddress,
-      input.implementation
-    );
-  }
-
-  /**
-   * @dev Updates the variable debt token implementation for the asset
-   **/
-  function updateVariableDebtToken(UpdateDebtTokenInput calldata input) external onlyPoolAdmin {
-    DataTypes.ReserveData memory reserveData = pool.getReserveData(input.asset);
-
-    (, , , uint256 decimals, ) = pool.getConfiguration(input.asset).getParamsMemory();
-
-    PoolTokenConfig memory config =
-      PoolTokenConfig({pool: pool, treasury: address(0), underlyingAsset: input.asset});
-
-    bytes memory encodedCall =
-      abi.encodeWithSelector(
-        IInitializablePoolToken.initialize.selector,
-        config,
-        input.name,
-        input.symbol,
-        decimals,
-        input.params
-      );
-
-    IProxy(reserveData.variableDebtTokenAddress).upgradeToAndCall(
-      input.implementation,
-      encodedCall
-    );
-
-    emit VariableDebtTokenUpgraded(
-      input.asset,
-      reserveData.variableDebtTokenAddress,
-      input.implementation
-    );
+    IProxy(token).upgradeToAndCall(input.implementation, encodedCall);
   }
 
   function implementationOf(address token) external view returns (address) {
     return _getProxyImplementation(IProxy(token));
   }
 
-  /**
-   * @dev Enables borrowing on a reserve
-   * @param asset The address of the underlying asset of the reserve
-   * @param stableBorrowRateEnabled True if stable borrow rate needs to be enabled by default on this reserve
-   **/
   function enableBorrowingOnReserve(address asset, bool stableBorrowRateEnabled)
     public
     onlyPoolAdmin
@@ -250,10 +188,6 @@ contract LendingPoolConfigurator is
     emit BorrowingEnabledOnReserve(asset, stableBorrowRateEnabled);
   }
 
-  /**
-   * @dev Disables borrowing on a reserve
-   * @param asset The address of the underlying asset of the reserve
-   **/
   function disableBorrowingOnReserve(address asset) public onlyPoolAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
 
@@ -316,10 +250,6 @@ contract LendingPoolConfigurator is
     emit CollateralConfigurationChanged(asset, ltv, liquidationThreshold, liquidationBonus);
   }
 
-  /**
-   * @dev Enable stable rate borrowing on a reserve
-   * @param asset The address of the underlying asset of the reserve
-   **/
   function enableReserveStableRate(address asset) external onlyPoolAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
 
@@ -330,10 +260,6 @@ contract LendingPoolConfigurator is
     emit StableRateEnabledOnReserve(asset);
   }
 
-  /**
-   * @dev Disable stable rate borrowing on a reserve
-   * @param asset The address of the underlying asset of the reserve
-   **/
   function disableReserveStableRate(address asset) external onlyPoolAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
 
@@ -344,10 +270,6 @@ contract LendingPoolConfigurator is
     emit StableRateDisabledOnReserve(asset);
   }
 
-  /**
-   * @dev Activates a reserve
-   * @param asset The address of the underlying asset of the reserve
-   **/
   function activateReserve(address asset) external onlyPoolAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
 
@@ -358,10 +280,6 @@ contract LendingPoolConfigurator is
     emit ReserveActivated(asset);
   }
 
-  /**
-   * @dev Deactivates a reserve
-   * @param asset The address of the underlying asset of the reserve
-   **/
   function deactivateReserve(address asset) external onlyPoolAdmin {
     _checkNoLiquidity(asset);
 
@@ -374,11 +292,8 @@ contract LendingPoolConfigurator is
     emit ReserveDeactivated(asset);
   }
 
-  /**
-   * @dev Freezes a reserve. A frozen reserve doesn't allow any new deposit, borrow or rate swap
-   *  but allows repayments, liquidations, rate rebalances and withdrawals
-   * @param asset The address of the underlying asset of the reserve
-   **/
+  /// @dev Freezes a reserve. A frozen reserve doesn't allow any new deposit, borrow or rate swap
+  /// but allows repayments, liquidations, rate rebalances and withdrawals
   function freezeReserve(address asset) external onlyPoolAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
 
@@ -389,10 +304,6 @@ contract LendingPoolConfigurator is
     emit ReserveFrozen(asset);
   }
 
-  /**
-   * @dev Unfreezes a reserve
-   * @param asset The address of the underlying asset of the reserve
-   **/
   function unfreezeReserve(address asset) external onlyPoolAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
 
@@ -403,11 +314,6 @@ contract LendingPoolConfigurator is
     emit ReserveUnfrozen(asset);
   }
 
-  /**
-   * @dev Updates the reserve factor of a reserve
-   * @param asset The address of the underlying asset of the reserve
-   * @param reserveFactor The new reserve factor of the reserve
-   **/
   function setReserveFactor(address asset, uint256 reserveFactor) public onlyPoolAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
 
@@ -418,11 +324,6 @@ contract LendingPoolConfigurator is
     emit ReserveFactorChanged(asset, reserveFactor);
   }
 
-  /**
-   * @dev Sets the interest rate strategy of a reserve
-   * @param asset The address of the underlying asset of the reserve
-   * @param strategy The new address of the interest strategy contract
-   **/
   function setReserveStrategy(address asset, address strategy) external onlyPoolAdmin {
     pool.setReserveStrategy(asset, strategy);
     emit ReserveStrategyChanged(asset, strategy);
@@ -435,7 +336,7 @@ contract LendingPoolConfigurator is
   function _checkNoLiquidity(address asset) internal view {
     DataTypes.ReserveData memory reserveData = pool.getReserveData(asset);
 
-    uint256 availableLiquidity = IERC20Detailed(asset).balanceOf(reserveData.depositTokenAddress);
+    uint256 availableLiquidity = IERC20(asset).balanceOf(reserveData.depositTokenAddress);
 
     require(
       availableLiquidity == 0 && reserveData.currentLiquidityRate == 0,

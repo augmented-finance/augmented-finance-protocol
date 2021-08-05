@@ -3,7 +3,6 @@ pragma solidity 0.6.12;
 
 import '../../../interfaces/IDerivedToken.sol';
 import '../../../interfaces/IRewardedToken.sol';
-import {IEmergencyAccess} from '../../../interfaces/IEmergencyAccess.sol';
 
 interface IStakeToken is IDerivedToken, IRewardedToken {
   event Staked(address indexed from, address indexed to, uint256 amount, uint256 indexed referal);
@@ -49,20 +48,4 @@ interface IStakeToken is IDerivedToken, IRewardedToken {
       uint32 windowStart,
       uint32 windowEnd
     );
-}
-
-interface IManagedStakeToken is IEmergencyAccess {
-  function setRedeemable(bool redeemable) external;
-
-  function getMaxSlashablePercentage() external view returns (uint16);
-
-  function setMaxSlashablePercentage(uint16 percentage) external;
-
-  function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod) external;
-
-  function slashUnderlying(
-    address destination,
-    uint256 minAmount,
-    uint256 maxAmount
-  ) external returns (uint256);
 }

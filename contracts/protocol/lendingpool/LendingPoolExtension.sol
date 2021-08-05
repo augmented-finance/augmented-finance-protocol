@@ -8,31 +8,27 @@ import '../../interfaces/IDepositToken.sol';
 import '../../interfaces/IStableDebtToken.sol';
 import '../../interfaces/IVariableDebtToken.sol';
 import '../../interfaces/IPriceOracleGetter.sol';
-import {ILendingPoolExtension} from '../../interfaces/ILendingPoolExtension.sol';
+import '../../interfaces/ILendingPoolExtension.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
-import {GenericLogic} from '../libraries/logic/GenericLogic.sol';
+import '../libraries/logic/GenericLogic.sol';
 import '../libraries/helpers/Helpers.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {Errors} from '../libraries/helpers/Errors.sol';
-import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
+import '../../tools/Errors.sol';
+import '../libraries/logic/ValidationLogic.sol';
+import '../libraries/logic/ReserveLogic.sol';
 import '../libraries/types/DataTypes.sol';
 import '../../flashloan/interfaces/IFlashLoanReceiver.sol';
 import '../../interfaces/ILendingPoolEvents.sol';
-import {IOnlyManagedLendingPool} from '../../interfaces/IManagedLendingPool.sol';
-import {LendingPoolBase} from './LendingPoolBase.sol';
+import '../../interfaces/IManagedLendingPool.sol';
+import './LendingPoolBase.sol';
 import '../../access/AccessFlags.sol';
-import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
+import '../../dependencies/openzeppelin/contracts/Address.sol';
 
-/**
- * @title LendingPoolExtension contract
- * @dev Delegate of LendingPool for borrow, flashloan, collateral etc.
- * IMPORTANT This contract runs via DELEGATECALL from the LendingPool, so the chain of inheritance
- * is the same as the LendingPool, to have compatible storage layouts
- **/
+/// @dev Delegatee of LendingPool for borrow, flashloan, collateral etc. Runs via delegateCall, retain storage layout
+/// WARNING! This contract runs via delegateCall and must have a compatible storage layout with LendingPool.
 contract LendingPoolExtension is
-  VersionedInitializable,
   LendingPoolBase,
   ILendingPoolExtension,
   ILendingPoolEvents,
@@ -42,6 +38,7 @@ contract LendingPoolExtension is
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
+  using ReserveLogic for DataTypes.ReserveData;
 
   uint256 internal constant LIQUIDATION_CLOSE_FACTOR_PERCENT = 5000;
 
@@ -63,25 +60,10 @@ contract LendingPoolExtension is
     DataTypes.InterestRateMode borrowRateMode;
   }
 
-  /**
-   * @dev As this contract extends the VersionedInitializable contract to match the state
-   * of the LendingPool contract, the getRevision() function is needed, but should never be called
-   */
+  /// @dev This should never be called
   function getRevision() internal pure override returns (uint256) {
     revert('IMPOSSIBLE');
   }
-
-  /**
-   * @dev Function to liquidate a position if its Health Factor drops below 1
-   * - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives
-   *   a proportionally amount of the `collateralAsset` plus a bonus to cover market risk
-   * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation
-   * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
-   * @param user The address of the borrower getting liquidated
-   * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
-   * @param receiveDeposit `true` if the liquidators wants to receive the collateral depositTokens, `false` if he wants
-   * to receive the underlying collateral asset directly
-   **/
 
   function liquidationCall(
     address collateralAsset,
@@ -650,12 +632,6 @@ contract LendingPoolExtension is
     );
   }
 
-  /**
-   * @dev Updates the address of the interest rate strategy contract
-   * - Only callable by the LendingPoolConfigurator contract
-   * @param asset The address of the underlying asset of the reserve
-   * @param strategy The address of the interest rate strategy contract
-   **/
   function setReserveStrategy(address asset, address strategy)
     external
     override
@@ -664,12 +640,6 @@ contract LendingPoolExtension is
     _reserves[asset].strategy = strategy;
   }
 
-  /**
-   * @dev Sets the configuration bitmap of the reserve as a whole
-   * - Only callable by the LendingPoolConfigurator contract
-   * @param asset The address of the underlying asset of the reserve
-   * @param configuration The new configuration bitmap
-   **/
   function setConfiguration(address asset, uint256 configuration)
     external
     override
@@ -688,9 +658,6 @@ contract LendingPoolExtension is
     emit EmergencyPaused(msg.sender, val);
   }
 
-  /**
-   * @dev Returns if the LendingPool is paused
-   */
   function isPaused() external view override returns (bool) {
     return _paused;
   }
@@ -725,11 +692,7 @@ contract LendingPoolExtension is
     return _disabledFeatures;
   }
 
-  /**
-   * @dev Initializes a reserve, activating it, assigning an deposit and debt tokens and an
-   * interest rate strategy
-   * - Only callable by the LendingPoolConfigurator contract
-   **/
+  /// @dev Initializes a reserve, activates it, assigns an deposit and debt tokens and an interest rate strategy
   function initReserve(DataTypes.InitReserveData calldata data)
     external
     override
@@ -790,17 +753,13 @@ contract LendingPoolExtension is
     return _extension;
   }
 
-  /**
-   * @dev Updates the address of the LendingPoolExtension
-   * @param extension The new LendingPoolExtension address
-   **/
   function setLendingPoolExtension(address extension) external override onlyConfiguratorOrAdmin {
     require(Address.isContract(extension), Errors.VL_CONTRACT_REQUIRED);
     _extension = extension;
     emit LendingPoolExtensionUpdated(extension);
   }
 
-  /// @dev getAddressesProvider is for backward compatibility, is deprecated, use getAccessController
+  /// @dev getAddressesProvider is for backward compatibility, is deprecated, use getAccessController() instead
   function getAddressesProvider() external view returns (IMarketAccessController) {
     return _addressesProvider;
   }

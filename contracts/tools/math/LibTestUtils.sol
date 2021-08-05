@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {MathUtils} from './MathUtils.sol';
+import './MathUtils.sol';
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from './WadRayMath.sol';
+import './WadRayMath.sol';
 import 'hardhat/console.sol';
 import './BitUtils.sol';
 

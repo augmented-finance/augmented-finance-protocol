@@ -6,17 +6,17 @@ import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import '../../tools/math/WadRayMath.sol';
 
 import '../../access/AccessFlags.sol';
 import '../../access/MarketAccessBitmask.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
-import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
+import '../../interfaces/IEmergencyAccess.sol';
 import '../../interfaces/IDerivedToken.sol';
 
 import {CalcLinearRateReward} from '../calcs/CalcLinearRateReward.sol';
 
-import {Errors} from '../../tools/Errors.sol';
+import '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 

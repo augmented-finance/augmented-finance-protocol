@@ -4,12 +4,10 @@ pragma solidity 0.6.12;
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import '../libraries/configuration/UserConfiguration.sol';
 import '../libraries/configuration/ReserveConfiguration.sol';
-import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
 import '../libraries/types/DataTypes.sol';
 
-abstract contract LendingPoolStorage {
-  using ReserveLogic for DataTypes.ReserveData;
+abstract contract LendingPoolStorage is VersionedInitializable {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using UserConfiguration for DataTypes.UserConfigurationMap;
 

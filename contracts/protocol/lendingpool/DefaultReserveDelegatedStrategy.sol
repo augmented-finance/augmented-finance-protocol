@@ -2,13 +2,12 @@
 pragma solidity 0.6.12;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IReserveDelegatedStrategy} from '../../interfaces/IReserveDelegatedStrategy.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import '../../interfaces/IReserveDelegatedStrategy.sol';
+import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../interfaces/IPriceOracleProvider.sol';
-import {ILendingRateOracle} from '../../interfaces/ILendingRateOracle.sol';
+import '../../interfaces/ILendingRateOracle.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import 'hardhat/console.sol';
 
 abstract contract DefaultReserveDelegatedStrategy is IReserveDelegatedStrategy {
   using WadRayMath for uint256;

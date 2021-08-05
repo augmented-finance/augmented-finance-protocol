@@ -3,17 +3,15 @@ pragma solidity 0.6.12;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../interfaces/IReserveStrategy.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../interfaces/IPriceOracleProvider.sol';
-import {ILendingRateOracle} from '../../interfaces/ILendingRateOracle.sol';
+import '../../interfaces/ILendingRateOracle.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import 'hardhat/console.sol';
 
 /**
- * @title DefaultReserveInterestRateStrategy contract
- * @notice Implements the calculation of the interest rates depending on the reserve state
- * @dev The model of interest rate is based on 2 slopes, one before the `OPTIMAL_UTILIZATION_RATE`
+ * @dev Implements the calculation of the interest rates depending on the reserve state
+ * The model of interest rate is based on 2 slopes, one before the `OPTIMAL_UTILIZATION_RATE`
  * point of utilization and another from that one to 100%
  **/
 contract DefaultReserveInterestRateStrategy is IReserveStrategy {
@@ -21,18 +19,10 @@ contract DefaultReserveInterestRateStrategy is IReserveStrategy {
   using SafeMath for uint256;
   using PercentageMath for uint256;
 
-  /**
-   * @dev this constant represents the utilization rate at which the pool aims to obtain most competitive borrow rates.
-   * Expressed in ray
-   **/
+  /// @dev the utilization rate at which the pool aims to obtain most competitive borrow rates. Expressed in ray
   uint256 public immutable OPTIMAL_UTILIZATION_RATE;
 
-  /**
-   * @dev This constant represents the excess utilization rate above the optimal. It's always equal to
-   * 1-optimal utilization rate. Added as a constant here for gas optimizations.
-   * Expressed in ray
-   **/
-
+  /// @dev the excess utilization = (1- optimal utilization rate). For gas optimizations.
   uint256 public immutable EXCESS_UTILIZATION_RATE;
 
   IPriceOracleProvider public immutable addressesProvider;
@@ -95,17 +85,6 @@ contract DefaultReserveInterestRateStrategy is IReserveStrategy {
     return _baseVariableBorrowRate.add(_variableRateSlope1).add(_variableRateSlope2);
   }
 
-  /**
-   * @dev Calculates the interest rates depending on the reserve's state and configurations
-   * @param reserve The address of the reserve
-   * @param liquidityAdded The liquidity added during the operation
-   * @param liquidityTaken The liquidity taken during the operation
-   * @param totalStableDebt The total borrowed from the reserve a stable rate
-   * @param totalVariableDebt The total borrowed from the reserve at a variable rate
-   * @param averageStableBorrowRate The weighted average of all the stable rate loans
-   * @param reserveFactor The reserve portion of the interest that goes to the treasury of the market
-   * @return The liquidity rate, the stable borrow rate and the variable borrow rate
-   **/
   function calculateInterestRates(
     address reserve,
     address depositToken,
@@ -148,18 +127,7 @@ contract DefaultReserveInterestRateStrategy is IReserveStrategy {
     uint256 utilizationRate;
   }
 
-  /**
-   * @dev Calculates the interest rates depending on the reserve's state and configurations.
-   * NOTE This function is kept for compatibility with the previous DefaultInterestRateStrategy interface.
-   * New protocol implementation uses the new calculateInterestRates() interface
-   * @param reserve The address of the reserve
-   * @param availableLiquidity The liquidity available in the corresponding depositToken
-   * @param totalStableDebt The total borrowed from the reserve a stable rate
-   * @param totalVariableDebt The total borrowed from the reserve at a variable rate
-   * @param averageStableBorrowRate The weighted average of all the stable rate loans
-   * @param reserveFactor The reserve portion of the interest that goes to the treasury of the market
-   * @return The liquidity rate, the stable borrow rate and the variable borrow rate
-   **/
+  /// @dev Calculates the interest rates depending on the reserve's state and configurations. Backward compatibility.
   function calculateInterestRates(
     address reserve,
     uint256 availableLiquidity,
@@ -227,14 +195,8 @@ contract DefaultReserveInterestRateStrategy is IReserveStrategy {
     );
   }
 
-  /**
-   * @dev Calculates the overall borrow rate as the weighted average between the total variable debt and total stable debt
-   * @param totalStableDebt The total borrowed from the reserve a stable rate
-   * @param totalVariableDebt The total borrowed from the reserve at a variable rate
-   * @param currentVariableBorrowRate The current variable borrow rate of the reserve
-   * @param currentAverageStableBorrowRate The current weighted average of all the stable rate loans
-   * @return The weighted averaged borrow rate
-   **/
+  /// @dev Calculates the overall borrow rate as the weighted average between the total variable debt and total stable debt
+  /// @return The weighted averaged borrow rate
   function _getOverallBorrowRate(
     uint256 totalStableDebt,
     uint256 totalVariableDebt,

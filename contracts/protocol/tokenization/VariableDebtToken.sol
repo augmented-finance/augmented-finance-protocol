@@ -3,19 +3,15 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {PoolTokenBase} from './base/PoolTokenBase.sol';
+import './base/PoolTokenBase.sol';
 import '../../interfaces/IVariableDebtToken.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {Errors} from '../libraries/helpers/Errors.sol';
-import {DebtTokenBase} from './base/DebtTokenBase.sol';
-import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
+import '../../tools/math/WadRayMath.sol';
+import '../../tools/Errors.sol';
+import './base/DebtTokenBase.sol';
+import './interfaces/PoolTokenConfig.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 
-/**
- * @title VariableDebtToken
- * @notice Implements a variable debt token to track the borrowing positions of users
- * at variable rate mode
- **/
+/// @dev A variable debt token to track the borrowing positions of users
 contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDebtToken {
   using WadRayMath for uint256;
 
@@ -32,18 +28,10 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     _initializePoolToken(config, name, symbol, decimals, params);
   }
 
-  /**
-   * @dev Gets the revision of the stable debt token implementation
-   * @return The debt token implementation revision
-   **/
   function getRevision() internal pure virtual override returns (uint256) {
     return DEBT_TOKEN_REVISION;
   }
 
-  /**
-   * @dev Calculates the accumulated debt balance of the user
-   * @return The debt balance of the user
-   **/
   function balanceOf(address user)
     public
     view
@@ -60,16 +48,6 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     return scaledBalance.rayMul(_pool.getReserveNormalizedVariableDebt(_underlyingAsset));
   }
 
-  /**
-   * @dev Mints debt token to the `onBehalfOf` address
-   * -  Only callable by the LendingPool
-   * @param user The address receiving the borrowed underlying, being the delegatee in case
-   * of credit delegate, or same as `onBehalfOf` otherwise
-   * @param onBehalfOf The address receiving the debt tokens
-   * @param amount The amount of debt being minted
-   * @param index The variable debt index of the reserve
-   * @return `true` if the the previous balance of the user is 0
-   **/
   function mint(
     address user,
     address onBehalfOf,
@@ -92,13 +70,6 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     return previousBalance == 0;
   }
 
-  /**
-   * @dev Burns user variable debt
-   * - Only callable by the LendingPool
-   * @param user The user whose debt is getting burned
-   * @param amount The amount getting burned
-   * @param index The variable debt index of the reserve
-   **/
   function burn(
     address user,
     uint256 amount,
@@ -113,36 +84,18 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     emit Burn(user, amount, index);
   }
 
-  /**
-   * @dev Returns the principal debt balance of the user from
-   * @return The debt balance of the user since the last burn/mint action
-   **/
   function scaledBalanceOf(address user) public view virtual override returns (uint256) {
     return super.balanceOf(user);
   }
 
-  /**
-   * @dev Returns the total supply of the variable debt token. Represents the total debt accrued by the users
-   * @return The total supply
-   **/
   function totalSupply() public view virtual override(IERC20, PoolTokenBase) returns (uint256) {
     return super.totalSupply().rayMul(_pool.getReserveNormalizedVariableDebt(_underlyingAsset));
   }
 
-  /**
-   * @dev Returns the scaled total supply of the variable debt token. Represents sum(debt/index)
-   * @return the scaled total supply
-   **/
   function scaledTotalSupply() public view virtual override returns (uint256) {
     return super.totalSupply();
   }
 
-  /**
-   * @dev Returns the principal balance of the user and principal total supply.
-   * @param user The address of the user
-   * @return The principal balance of the user
-   * @return The principal total supply
-   **/
   function getScaledUserBalanceAndSupply(address user)
     external
     view

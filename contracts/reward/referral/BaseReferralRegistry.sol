@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {Errors} from '../../tools/Errors.sol';
+import '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 

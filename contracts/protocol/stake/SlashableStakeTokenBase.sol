@@ -2,20 +2,21 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ERC20WithPermit} from '../../misc/ERC20WithPermit.sol';
+import '../../misc/ERC20WithPermit.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IStakeToken, IManagedStakeToken} from './interfaces/IStakeToken.sol';
+import './interfaces/IStakeToken.sol';
+import './interfaces/IManagedStakeToken.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../interfaces/IBalanceHook.sol';
 import '../../access/AccessFlags.sol';
 import '../../access/MarketAccessBitmask.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
-import {Errors} from '../../tools/Errors.sol';
+import '../../tools/Errors.sol';
 import './interfaces/StakeTokenConfig.sol';
-import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.sol';
+import './interfaces/IInitializableStakeToken.sol';
 
 abstract contract SlashableStakeTokenBase is
   IStakeToken,
@@ -205,10 +206,7 @@ abstract contract SlashableStakeTokenBase is
     return (stakeAmount, underlyingAmount);
   }
 
-  /**
-   * @dev Activates the cooldown period to unstake
-   * - It can't be called if the user is not staking
-   **/
+  /// @dev Activates the cooldown period to unstake. Reverts if the user has no stake.
   function cooldown() external override {
     require(balanceOf(msg.sender) != 0, Errors.STK_INVALID_BALANCE_ON_COOLDOWN);
 
@@ -219,10 +217,7 @@ abstract contract SlashableStakeTokenBase is
     emit CooldownStarted(msg.sender, uint32(block.timestamp));
   }
 
-  /**
-   * @dev Gets end of the cooldown period.
-   * - Returns zero for a non-staking user or .
-   **/
+  /// @dev Returns the end of the current cooldown period or zero for a user without a stake.
   function getCooldown(address holder) external view override returns (uint32) {
     return _stakersCooldowns[holder];
   }

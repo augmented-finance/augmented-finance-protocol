@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import '../../tools/math/WadRayMath.sol';
 
 import {BaseTokenLocker} from './BaseTokenLocker.sol';
 import {IBoostRate} from '../interfaces/IBoostRate.sol';
@@ -13,7 +13,7 @@ import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import '../interfaces/IAutolocker.sol';
 
-import {Errors} from '../../tools/Errors.sol';
+import '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 

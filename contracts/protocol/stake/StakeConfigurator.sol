@@ -3,18 +3,16 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IERC20Details} from '../../dependencies/openzeppelin/contracts/IERC20Details.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
 import '../../interfaces/IDerivedToken.sol';
 import '../../access/MarketAccessBitmask.sol';
-import {Errors} from '../../tools/Errors.sol';
 import './interfaces/IStakeConfigurator.sol';
-import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.sol';
+import './interfaces/IInitializableStakeToken.sol';
 import './interfaces/StakeTokenConfig.sol';
 import '../../tools/upgradeability/IProxy.sol';
 import '../../access/AccessFlags.sol';
-import {ProxyAdmin} from '../../tools/upgradeability/ProxyAdmin.sol';
+import '../../tools/upgradeability/ProxyAdmin.sol';
 
 contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStakeConfigurator {
   uint256 private constant CONFIGURATOR_REVISION = 1;

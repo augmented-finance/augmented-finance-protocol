@@ -22,17 +22,9 @@ interface ILendingPoolConfigurator {
     bytes params;
   }
 
-  struct UpdateDepositTokenInput {
+  struct UpdatePoolTokenInput {
     address asset;
     address treasury;
-    string name;
-    string symbol;
-    address implementation;
-    bytes params;
-  }
-
-  struct UpdateDebtTokenInput {
-    address asset;
     string name;
     string symbol;
     address implementation;

@@ -3,14 +3,11 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../interfaces/ILendingPool.sol';
-import {IDelegationToken} from '../../interfaces/IDelegationToken.sol';
-import {Errors} from '../libraries/helpers/Errors.sol';
+import '../../interfaces/IDelegationToken.sol';
+import '../../tools/Errors.sol';
 import './DepositToken.sol';
 
-/**
- * @title PoolToken enabled to delegate voting power of the underlying asset to a different address
- * @dev The underlying asset needs to be compatible with the COMP delegation interface
- */
+/// @dev Token able delegate voting power of the underlying asset (COMP delegation interface) to a different address.
 contract DelegationAwareDepositToken is DepositToken {
   modifier onlyPoolAdmin {
     require(
@@ -20,10 +17,7 @@ contract DelegationAwareDepositToken is DepositToken {
     _;
   }
 
-  /**
-   * @dev Delegates voting power of the underlying asset to a `delegatee` address
-   * @param delegatee The address that will receive the delegation
-   **/
+  /// @dev Delegates voting power of the underlying asset to a `delegatee` address
   function delegateUnderlyingTo(address delegatee) external onlyPoolAdmin {
     IDelegationToken(_underlyingAsset).delegate(delegatee);
   }

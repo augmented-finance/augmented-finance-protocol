@@ -2,18 +2,18 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20Details} from '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
+import '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../interfaces/ILendingPool.sol';
-import {IInitializablePoolToken} from '../interfaces/IInitializablePoolToken.sol';
+import '../interfaces/IInitializablePoolToken.sol';
 import '../../../interfaces/IPoolToken.sol';
-import {PoolTokenConfig} from '../interfaces/PoolTokenConfig.sol';
+import '../interfaces/PoolTokenConfig.sol';
 import '../../../interfaces/IBalanceHook.sol';
-import {Errors} from '../../libraries/helpers/Errors.sol';
+import '../../../tools/Errors.sol';
 import '../../../access/AccessHelper.sol';
 import '../../../access/AccessFlags.sol';
-import {IManagedLendingPool} from '../../../interfaces/IManagedLendingPool.sol';
+import '../../../interfaces/IManagedLendingPool.sol';
 
 abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, IERC20Details {
   using SafeMath for uint256;
@@ -107,16 +107,10 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     );
   }
 
-  /**
-   * @dev Returns the address of the underlying asset of this depositToken (E.g. WETH for aWETH)
-   **/
   function UNDERLYING_ASSET_ADDRESS() public view override returns (address) {
     return _underlyingAsset;
   }
 
-  /**
-   * @dev Returns the address of the lending pool where this depositToken is used
-   **/
   function POOL() public view override returns (ILendingPool) {
     return _pool;
   }
@@ -163,16 +157,10 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     _incentivesController = IBalanceHook(hook);
   }
 
-  /**
-   * @dev Updates the address of the incentives controller contract
-   **/
   function setIncentivesController(address hook) external override onlyRewardConfiguratorOrAdmin {
     _setIncentivesController(hook);
   }
 
-  /**
-   * @dev Returns the address of the incentives controller contract
-   **/
   function getIncentivesController() public view override returns (address) {
     return address(_incentivesController);
   }

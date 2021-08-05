@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
+import '../../interfaces/IEmergencyAccess.sol';
 
 interface IManagedRewardPool is IEmergencyAccess {
   function updateBaseline(uint256) external returns (bool hasBaseline, uint256 appliedRate);

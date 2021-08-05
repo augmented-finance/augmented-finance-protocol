@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import './ILendingPool.sol';
 import '../protocol/libraries/types/DataTypes.sol';
-import {IEmergencyAccess} from '../interfaces/IEmergencyAccess.sol';
+import '../interfaces/IEmergencyAccess.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 
 interface IOnlyManagedLendingPool is IEmergencyAccess {

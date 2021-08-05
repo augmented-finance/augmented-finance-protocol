@@ -3,7 +3,7 @@ pragma solidity ^0.6.12;
 
 import './IManagedRewardPool.sol';
 import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
-import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
+import '../../interfaces/IEmergencyAccess.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
 
 enum AllocationMode {Push, SetPull, UnsetPull}

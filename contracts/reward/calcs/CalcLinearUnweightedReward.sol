@@ -2,7 +2,7 @@
 pragma solidity ^0.6.12;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import '../../tools/math/WadRayMath.sol';
 import '../interfaces/IRewardController.sol';
 import {CalcLinearRateReward} from './CalcLinearRateReward.sol';
 

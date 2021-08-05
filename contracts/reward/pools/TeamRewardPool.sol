@@ -5,7 +5,7 @@ import '../../tools/math/PercentageMath.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {ControlledRewardPool} from './ControlledRewardPool.sol';
 import {CalcLinearUnweightedReward} from '../calcs/CalcLinearUnweightedReward.sol';
-import {Errors} from '../../tools/Errors.sol';
+import '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 

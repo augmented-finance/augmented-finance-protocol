@@ -3,13 +3,10 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../interfaces/ILendingPoolAaveCompatible.sol';
-import {LendingPool} from './LendingPool.sol';
-
-import 'hardhat/console.sol';
+import './LendingPool.sol';
 
 /// @dev LendingPoolCompatible is a wrapper for backward compatibility with AAVE due to modified referral field format.
 contract LendingPoolCompatible is LendingPool, ILendingPoolAaveCompatible {
-  /// @dev AAVE compatibility method
   function deposit(
     address asset,
     uint256 amount,
@@ -19,39 +16,25 @@ contract LendingPoolCompatible is LendingPool, ILendingPoolAaveCompatible {
     super.deposit(asset, amount, onBehalfOf, uint256(referral));
   }
 
-  /// @dev AAVE compatibility method
   function borrow(
-    address asset,
-    uint256 amount,
-    uint256 interestRateMode,
-    uint16 referral,
-    address onBehalfOf
+    address,
+    uint256,
+    uint256,
+    uint16,
+    address
   ) external override {
-    asset;
-    amount;
-    interestRateMode;
-    referral;
-    onBehalfOf;
     _delegate(_extension);
   }
 
-  /// @dev AAVE compatibility method
   function flashLoan(
-    address receiver,
-    address[] calldata assets,
-    uint256[] calldata amounts,
-    uint256[] calldata modes,
-    address onBehalfOf,
-    bytes calldata params,
-    uint16 referral
+    address,
+    address[] calldata,
+    uint256[] calldata,
+    uint256[] calldata,
+    address,
+    bytes calldata,
+    uint16
   ) external override {
-    receiver;
-    assets;
-    amounts;
-    modes;
-    onBehalfOf;
-    params;
-    referral;
     _delegate(_extension);
   }
 }

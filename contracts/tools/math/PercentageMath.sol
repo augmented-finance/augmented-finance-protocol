@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {Errors} from '../Errors.sol';
+import '../Errors.sol';
 
 /**
  * @title PercentageMath library

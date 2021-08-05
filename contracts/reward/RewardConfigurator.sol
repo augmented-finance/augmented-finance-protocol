@@ -16,7 +16,7 @@ import {
 import './interfaces/IManagedRewardPool.sol';
 import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
 import {IInitializableRewardPool} from './interfaces/IInitializableRewardPool.sol';
-import {ProxyAdmin} from '../tools/upgradeability/ProxyAdmin.sol';
+import '../tools/upgradeability/ProxyAdmin.sol';
 import '../interfaces/IRewardedToken.sol';
 import {TeamRewardPool} from './pools/TeamRewardPool.sol';
 import '../tools/upgradeability/IProxy.sol';

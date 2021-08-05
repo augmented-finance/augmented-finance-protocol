@@ -2,13 +2,13 @@
 pragma solidity ^0.6.12;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import '../interfaces/IManagedRewardPool.sol';
 import '../../access/AccessFlags.sol';
 import '../../access/AccessHelper.sol';
-import {Errors} from '../../tools/Errors.sol';
+import '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';
 

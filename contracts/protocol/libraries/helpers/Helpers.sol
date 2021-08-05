@@ -4,17 +4,8 @@ pragma solidity 0.6.12;
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../types/DataTypes.sol';
 
-/**
- * @title Helpers library
- * @author Aave
- */
 library Helpers {
-  /**
-   * @dev Fetches the user current stable and variable debt balances
-   * @param user The user address
-   * @param reserve The reserve data object
-   * @return The stable and variable debt balance
-   **/
+  /// @dev Fetches the user current stable and variable debt balances
   function getUserCurrentDebt(address user, DataTypes.ReserveData storage reserve)
     internal
     view

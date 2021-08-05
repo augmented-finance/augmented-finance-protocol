@@ -3,21 +3,17 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {PoolTokenBase} from './base/PoolTokenBase.sol';
-import {DebtTokenBase} from './base/DebtTokenBase.sol';
-import {MathUtils} from '../../tools/math/MathUtils.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import './base/PoolTokenBase.sol';
+import './base/DebtTokenBase.sol';
+import '../../tools/math/MathUtils.sol';
+import '../../tools/math/WadRayMath.sol';
 import '../../interfaces/IStableDebtToken.sol';
-import {Errors} from '../libraries/helpers/Errors.sol';
-import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
+import '../../tools/Errors.sol';
+import './interfaces/PoolTokenConfig.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import '../../interfaces/IBalanceHook.sol';
 
-/**
- * @title StableDebtToken
- * @notice Implements a stable debt token to track the borrowing positions of users
- * at stable rate mode
- **/
+/// @dev A stable debt token to track the borrowing positions of users
 contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtToken {
   using WadRayMath for uint256;
 
@@ -41,43 +37,22 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     _initializePoolToken(config, name, symbol, decimals, params);
   }
 
-  /**
-   * @dev Gets the revision of the stable debt token implementation
-   * @return The debt token implementation revision
-   **/
   function getRevision() internal pure virtual override returns (uint256) {
     return DEBT_TOKEN_REVISION;
   }
 
-  /**
-   * @dev Returns the average stable rate across all the stable rate debt
-   * @return the average stable rate
-   **/
   function getAverageStableRate() external view virtual override returns (uint256) {
     return _avgStableRate;
   }
 
-  /**
-   * @dev Returns the timestamp of the last user action
-   * @return The last update timestamp
-   **/
   function getUserLastUpdated(address user) external view virtual override returns (uint40) {
     return _timestamps[user];
   }
 
-  /**
-   * @dev Returns the stable rate of the user
-   * @param user The address of the user
-   * @return The stable rate of user
-   **/
   function getUserStableRate(address user) external view virtual override returns (uint256) {
     return _usersStableRate[user];
   }
 
-  /**
-   * @dev Calculates the current user debt balance
-   * @return The accumulated debt of the user
-   **/
   function balanceOf(address account)
     public
     view
@@ -104,17 +79,6 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     uint256 currentAvgStableRate;
   }
 
-  /**
-   * @dev Mints debt token to the `onBehalfOf` address.
-   * -  Only callable by the LendingPool
-   * - The resulting rate is the weighted average between the rate of the new debt
-   * and the rate of the previous debt
-   * @param user The address receiving the borrowed underlying, being the delegatee in case
-   * of credit delegate, or same as `onBehalfOf` otherwise
-   * @param onBehalfOf The address receiving the debt tokens
-   * @param amount The amount of debt tokens to mint
-   * @param rate The rate of the debt being minted
-   **/
   function mint(
     address user,
     address onBehalfOf,
@@ -171,11 +135,6 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     return currentBalance == 0;
   }
 
-  /**
-   * @dev Burns debt of `user`
-   * @param user The address of the user getting his debt burned
-   * @param amount The amount of debt tokens getting burned
-   **/
   function burn(address user, uint256 amount) external override onlyLendingPool {
     (, uint256 currentBalance, uint256 balanceIncrease) = _calculateBalanceIncrease(user);
 
@@ -238,11 +197,8 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     emit Transfer(user, address(0), amount);
   }
 
-  /**
-   * @dev Calculates the increase in balance since the last user interaction
-   * @param user The address of the user for which the interest is being accumulated
-   * @return The previous principal balance, the new principal balance and the balance increase
-   **/
+  /// @dev Calculates the increase in balance since the last user interaction.
+  /// @return The previous principal balance, the new principal balance and the balance increase
   function _calculateBalanceIncrease(address user)
     internal
     view
@@ -268,9 +224,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     );
   }
 
-  /**
-   * @dev Returns the principal and total supply, the average borrow rate and the last supply update timestamp
-   **/
+  /// @dev Returns the principal and total supply, the average borrow rate and the last supply update timestamp
   function getSupplyData()
     public
     view
@@ -286,42 +240,29 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     return (super.totalSupply(), _calcTotalSupply(avgRate), avgRate, _totalSupplyTimestamp);
   }
 
-  /**
-   * @dev Returns the the total supply and the average stable rate
-   **/
+  /// @dev Returns the the total supply and the average stable rate
   function getTotalSupplyAndAvgRate() public view override returns (uint256, uint256) {
     uint256 avgRate = _avgStableRate;
     return (_calcTotalSupply(avgRate), avgRate);
   }
 
-  /**
-   * @dev Returns the total supply
-   **/
+  /// @dev Returns the total supply
   function totalSupply() public view override(IERC20, PoolTokenBase) returns (uint256) {
     return _calcTotalSupply(_avgStableRate);
   }
 
-  /**
-   * @dev Returns the timestamp at which the total supply was updated
-   **/
+  /// @dev Returns the timestamp at which the total supply was updated
   function getTotalSupplyLastUpdated() public view override returns (uint40) {
     return _totalSupplyTimestamp;
   }
 
-  /**
-   * @dev Returns the principal debt balance of the user from
-   * @param user The user's address
-   * @return The debt balance of the user since the last burn/mint action
-   **/
+  /// @dev Returns the principal debt balance of the user since the last burn/mint action
   function principalBalanceOf(address user) external view virtual override returns (uint256) {
     return super.balanceOf(user);
   }
 
-  /**
-   * @dev Calculates the total supply
-   * @param avgRate The average rate at which the total supply increases
-   * @return The debt balance of the user since the last burn/mint action
-   **/
+  /// @dev Calculates the total supply
+  /// @param avgRate The average rate at which the total supply increases
   function _calcTotalSupply(uint256 avgRate) internal view virtual returns (uint256) {
     uint256 principalSupply = super.totalSupply();
 

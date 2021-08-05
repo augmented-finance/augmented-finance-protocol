@@ -4,14 +4,14 @@ pragma experimental ABIEncoderV2;
 
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {ReserveLogic} from './ReserveLogic.sol';
-import {GenericLogic} from './GenericLogic.sol';
-import {WadRayMath} from '../../../tools/math/WadRayMath.sol';
+import './ReserveLogic.sol';
+import './GenericLogic.sol';
+import '../../../tools/math/WadRayMath.sol';
 import '../../../tools/math/PercentageMath.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../configuration/ReserveConfiguration.sol';
 import '../configuration/UserConfiguration.sol';
-import {Errors} from '../helpers/Errors.sol';
+import '../../../tools/Errors.sol';
 import '../helpers/Helpers.sol';
 import '../../../interfaces/IReserveStrategy.sol';
 import '../types/DataTypes.sol';

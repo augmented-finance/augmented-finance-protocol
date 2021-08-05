@@ -10,7 +10,7 @@ import '../tools/upgradeability/VersionedInitializable.sol';
 import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
 import '../access/interfaces/IRemoteAccessBitmask.sol';
 import './interfaces/IRewardController.sol';
-import {WadRayMath} from '../tools/math/WadRayMath.sol';
+import '../tools/math/WadRayMath.sol';
 
 import 'hardhat/console.sol';
 

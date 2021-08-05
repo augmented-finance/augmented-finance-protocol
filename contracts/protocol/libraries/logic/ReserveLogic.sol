@@ -9,17 +9,14 @@ import '../../../interfaces/IDepositToken.sol';
 import '../../../interfaces/IStableDebtToken.sol';
 import '../../../interfaces/IVariableDebtToken.sol';
 import '../../../interfaces/IReserveStrategy.sol';
-import {IReserveDelegatedStrategy} from '../../../interfaces/IReserveDelegatedStrategy.sol';
+import '../../../interfaces/IReserveDelegatedStrategy.sol';
 import '../configuration/ReserveConfiguration.sol';
-import {MathUtils} from '../../../tools/math/MathUtils.sol';
-import {WadRayMath} from '../../../tools/math/WadRayMath.sol';
+import '../../../tools/math/MathUtils.sol';
+import '../../../tools/math/WadRayMath.sol';
 import '../../../tools/math/PercentageMath.sol';
-import {Errors} from '../helpers/Errors.sol';
+import '../../../tools/Errors.sol';
 import '../types/DataTypes.sol';
-import {
-  IAaveLendingPool,
-  AaveDataTypes
-} from '../../../dependencies/aave-protocol-v2/contracts/IAaveLendingPool.sol';
+import '../../../dependencies/aave-protocol-v2/contracts/IAaveLendingPool.sol';
 
 /**
  * @title ReserveLogic library

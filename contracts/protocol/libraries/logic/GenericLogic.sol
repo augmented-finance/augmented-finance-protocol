@@ -4,10 +4,10 @@ pragma experimental ABIEncoderV2;
 
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {ReserveLogic} from './ReserveLogic.sol';
+import './ReserveLogic.sol';
 import '../configuration/ReserveConfiguration.sol';
 import '../configuration/UserConfiguration.sol';
-import {WadRayMath} from '../../../tools/math/WadRayMath.sol';
+import '../../../tools/math/WadRayMath.sol';
 import '../../../tools/math/PercentageMath.sol';
 import '../../../interfaces/IPriceOracleGetter.sol';
 import '../types/DataTypes.sol';

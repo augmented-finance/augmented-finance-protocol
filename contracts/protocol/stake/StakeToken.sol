@@ -6,10 +6,6 @@ import './SlashableStakeTokenBase.sol';
 import './interfaces/StakeTokenConfig.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 
-/**
- * @title StakeToken
- * @notice Contract to stake a token for a system reserve.
- **/
 contract StakeToken is SlashableStakeTokenBase, VersionedInitializable {
   uint256 private constant TOKEN_REVISION = 1;
 
@@ -29,10 +25,6 @@ contract StakeToken is SlashableStakeTokenBase, VersionedInitializable {
     emit Initialized(params, name, symbol, decimals);
   }
 
-  /**
-   * @dev returns the revision of the implementation contract
-   * @return The revision
-   */
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
   }

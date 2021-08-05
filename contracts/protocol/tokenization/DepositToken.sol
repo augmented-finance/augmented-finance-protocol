@@ -4,15 +4,12 @@ pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import '../../tools/math/WadRayMath.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
-import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
-import {DepositTokenBase} from './base/DepositTokenBase.sol';
+import './interfaces/PoolTokenConfig.sol';
+import './base/DepositTokenBase.sol';
 
-/**
- * @title Augmented Finance ERC20 deposit token (agToken)
- * @dev Implementation of the interest bearing token for the Augmented Finance protocol
- */
+/// @dev Deposit token, an interest bearing token for the Augmented Finance protocol
 contract DepositToken is DepositTokenBase, VersionedInitializable {
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
@@ -23,13 +20,6 @@ contract DepositToken is DepositTokenBase, VersionedInitializable {
     return TOKEN_REVISION;
   }
 
-  /**
-   * @dev Initializes the depositToken
-   * @param config The data about lending pool where this token will be used
-   * @param name The name of the depositToken
-   * @param symbol The symbol of the depositToken
-   * @param decimals The decimals of the depositToken, same as the underlying asset's
-   */
   function initialize(
     PoolTokenConfig calldata config,
     string calldata name,

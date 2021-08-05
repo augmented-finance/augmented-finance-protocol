@@ -3,7 +3,7 @@ pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
+import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/BitUtils.sol';
 import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
 import {ReferralRewardPool} from './ReferralRewardPool.sol';

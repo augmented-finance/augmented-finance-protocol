@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from './WadRayMath.sol';
+import './WadRayMath.sol';
 
 library MathUtils {
   using SafeMath for uint256;

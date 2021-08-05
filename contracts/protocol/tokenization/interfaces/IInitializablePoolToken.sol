@@ -4,45 +4,32 @@ pragma experimental ABIEncoderV2;
 
 import '../../../interfaces/ILendingPool.sol';
 import '../../../interfaces/IBalanceHook.sol';
-import {PoolTokenConfig} from './PoolTokenConfig.sol';
+import './PoolTokenConfig.sol';
 
-/**
- * @title IInitializablePoolToken
- * @notice Interface for the initialize function on PoolToken or DeptToken
- **/
+/// @dev Interface for the initialize function on PoolToken or DebtToken
 interface IInitializablePoolToken {
-  /**
-   * @dev Emitted when a token is initialized
-   * @param underlyingAsset The address of the underlying asset
-   * @param pool The address of the associated lending pool
-   * @param treasury The address of the treasury
-   * @param depositTokenName the name of the depositToken
-   * @param depositTokenSymbol the symbol of the depositToken
-   * @param depositTokenDecimals the decimals of the underlying
-   * @param params A set of encoded parameters for additional initialization
-   **/
   event Initialized(
     address indexed underlyingAsset,
     address indexed pool,
     address treasury,
-    string depositTokenName,
-    string depositTokenSymbol,
-    uint8 depositTokenDecimals,
+    string tokenName,
+    string tokenSymbol,
+    uint8 tokenDecimals,
     bytes params
   );
 
   /**
    * @dev Initializes the depositToken
    * @param config The data about lending pool where this token will be used
-   * @param depositTokenName The name of the depositToken
-   * @param depositTokenSymbol The symbol of the depositToken
-   * @param depositTokenDecimals The decimals of the depositToken, same as the underlying asset's
+   * @param tokenName The name of the token
+   * @param tokenSymbol The symbol of the token
+   * @param tokenDecimals The decimals of the token, same with the underlying asset
    */
   function initialize(
     PoolTokenConfig calldata config,
-    string calldata depositTokenName,
-    string calldata depositTokenSymbol,
-    uint8 depositTokenDecimals,
+    string calldata tokenName,
+    string calldata tokenSymbol,
+    uint8 tokenDecimals,
     bytes calldata params
   ) external;
 }

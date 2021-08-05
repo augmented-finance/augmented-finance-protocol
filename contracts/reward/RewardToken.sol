@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {ERC20WithPermit} from '../misc/ERC20WithPermit.sol';
+import '../misc/ERC20WithPermit.sol';
 
 import 'hardhat/console.sol';
 

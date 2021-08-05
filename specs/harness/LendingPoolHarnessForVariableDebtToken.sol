@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../contracts/interfaces/ILendingPool.sol';
-import {LendingPool} from '../../contracts/protocol/lendingpool/LendingPool.sol';
+import '../../contracts/protocol/lendingpool/LendingPool.sol';
 import {
   IMarketAccessController
 } from '../../contracts/access/interfaces/IMarketAccessController.sol';
