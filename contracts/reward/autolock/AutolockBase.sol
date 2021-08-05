@@ -31,9 +31,13 @@ abstract contract AutolockBase {
   mapping(address => AutolockEntry) private _autolocks;
   AutolockEntry private _defaultAutolock;
 
-  function internalDisableAutolocks() internal {
+  function internalDisableAutolock() internal {
     _defaultAutolock = AutolockEntry(0, AutolockMode.Default, 0);
     emit RewardAutolockConfigured(address(this), AutolockMode.Default, 0, 0);
+  }
+
+  function isAutolockEnabled() public view returns (bool) {
+    return _defaultAutolock.mode != AutolockMode.Default;
   }
 
   function internalSetDefaultAutolock(

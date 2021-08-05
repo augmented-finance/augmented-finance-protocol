@@ -106,6 +106,10 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
       });
     }
 
+    if (initSymbols.length == 0) {
+      return;
+    }
+
     // CHUNK CONFIGURATION
     const initChunks = 4;
 

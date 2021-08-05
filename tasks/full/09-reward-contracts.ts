@@ -14,7 +14,11 @@ import {
 } from '../../helpers/contracts-getters';
 import { getFirstSigner, falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
-import { getDeployAccessController } from '../../helpers/deploy-helpers';
+import {
+  getDeployAccessController,
+  setAndGetAddressAsProxy,
+  setAndGetAddressAsProxyWithInit,
+} from '../../helpers/deploy-helpers';
 
 task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tokens`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
@@ -34,10 +38,11 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     if (falsyOrZeroAddress(configuratorAddr)) {
       const impl = await deployRewardConfiguratorImpl(verify, continuation);
       console.log('Deployed RewardConfigurator implementation:', impl.address);
-      await waitForTx(
-        await addressProvider.setAddressAsProxy(AccessFlags.REWARD_CONFIGURATOR, impl.address)
+      configuratorAddr = await setAndGetAddressAsProxy(
+        addressProvider,
+        AccessFlags.REWARD_CONFIGURATOR,
+        impl.address
       );
-      configuratorAddr = await addressProvider.getRewardConfigurator();
     }
     const configurator = await getRewardConfiguratorProxy(configuratorAddr);
 
@@ -52,22 +57,16 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       );
       const impl = await deployAGFTokenV1Impl(verify, continuation);
       console.log('Deployed AGF token implementation:', impl.address);
-      await addressProvider.setAddressAsProxyWithInit(
+      agfAddr = await setAndGetAddressAsProxyWithInit(
+        addressProvider,
         AccessFlags.REWARD_TOKEN,
         impl.address,
         initData
       );
+      console.log('AGF token:', agfAddr);
 
-      const agf = await getAGFTokenV1Impl(await addressProvider.getRewardToken());
-      console.log(
-        'AGF token:',
-        agf.address,
-        await agf.name(),
-        await agf.symbol(),
-        await agf.decimals()
-      );
-
-      agfAddr = agf.address;
+      const agf = await getAGFTokenV1Impl(agfAddr);
+      console.log('\t', await agf.name(), await agf.symbol(), await agf.decimals());
     } else {
       console.log('AGF token:', agfAddr);
     }
@@ -79,10 +78,11 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     if (falsyOrZeroAddress(boosterAddr)) {
       const impl = await deployRewardBoosterV1Impl(verify, continuation);
       console.log('Deployed RewardBooster implementation:', impl.address);
-      await waitForTx(
-        await addressProvider.setAddressAsProxy(AccessFlags.REWARD_CONTROLLER, impl.address)
+      boosterAddr = await setAndGetAddressAsProxy(
+        addressProvider,
+        AccessFlags.REWARD_CONTROLLER,
+        impl.address
       );
-      boosterAddr = await addressProvider.getRewardController();
     }
     console.log('RewardBooster', boosterAddr);
     const booster = await getRewardBooster(boosterAddr);
@@ -100,20 +100,16 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       const impl = await deployXAGFTokenV1Impl(verify, continuation);
       console.log('Deployed xAGF token implementation:', impl.address);
 
-      await addressProvider.setAddressAsProxyWithInit(
+      xagfAddr = await setAndGetAddressAsProxyWithInit(
+        addressProvider,
         AccessFlags.REWARD_STAKE_TOKEN,
         impl.address,
         xagfInitData
       );
-      const xagf = await getAGFTokenV1Impl(await addressProvider.getRewardStakeToken());
+      console.log('xAGF token:', xagfAddr);
 
-      console.log(
-        'xAGF token: ',
-        xagf.address,
-        await xagf.name(),
-        await xagf.symbol(),
-        await xagf.decimals()
-      );
+      const xagf = await getAGFTokenV1Impl(xagfAddr);
+      console.log('\t', await xagf.name(), await xagf.symbol(), await xagf.decimals());
 
       xagfAddr = xagf.address;
     } else {

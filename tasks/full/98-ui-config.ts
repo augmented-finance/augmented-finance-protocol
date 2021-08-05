@@ -10,6 +10,7 @@ import {
 } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
+import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
 task('full:write-ui-config', 'Prepare UI config')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -21,6 +22,8 @@ task('full:write-ui-config', 'Prepare UI config')
     const poolConfig = loadPoolConfig(pool);
     const { ProviderId, MarketId } = poolConfig;
 
+    const [freshStart, continuation, addressProvider] = await getDeployAccessController();
+
     const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
     let registry: AddressesProviderRegistry;
 
@@ -30,15 +33,6 @@ task('full:write-ui-config', 'Prepare UI config')
       registry = await getAddressesProviderRegistry(registryAddress);
     }
 
-    const addressProviderAddress = undefined; // = getParamPerNetwork(poolConfig.AddressProvider, network);
-    let addressProvider: MarketAccessController;
-
-    if (falsyOrZeroAddress(addressProviderAddress)) {
-      addressProvider = await getMarketAddressController();
-    } else {
-      addressProvider = await getMarketAddressController(addressProviderAddress);
-    }
-
     const dataHelperAddress = await addressProvider.getAddress(AccessFlags.DATA_HELPER);
     if (falsyOrZeroAddress(dataHelperAddress)) {
       console.log('Data Helper is unavailable, configuration is incomplete');
@@ -46,13 +40,4 @@ task('full:write-ui-config', 'Prepare UI config')
     }
 
     writeUiConfig(network, registry.address, addressProvider.address, dataHelperAddress);
-
-    const dataHelper = await getProtocolDataProvider(dataHelperAddress);
-    const allTokens = await dataHelper.getAllTokenDescriptions(true);
-    console.log('All tokens:');
-    allTokens.tokens.slice(0, allTokens.tokenCount.toNumber()).map((x) => {
-      console.log(
-        ` ${x.tokenSymbol} (${x.tokenType} ${x.active} ${x.decimals}):\t${x.token} ${x.underlying} ${x.priceToken}`
-      );
-    });
   });

@@ -131,7 +131,10 @@ task('augmented:test-incremental', 'Test incremental deploy').setAction(async ({
       stop = true;
     }
 
-    console.log('Deposit as functionality test');
+    console.log('Smoke test');
+    await DRE.run('full:smoke-test', { pool: POOL_NAME });
+
+    console.log('Deposit test');
     await DRE.run('dev:pluck-tokens', { pool: POOL_NAME, mustDeposit: true });
   } catch (err) {
     console.error(err);

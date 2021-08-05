@@ -15,6 +15,7 @@ abstract contract Delegator {
    * @param implementation Address to delegate.
    */
   function _delegate(address implementation) internal {
+    require(implementation != address(0));
     //solium-disable-next-line
     assembly {
       // Copy msg.data. We take full control of memory in this inline assembly

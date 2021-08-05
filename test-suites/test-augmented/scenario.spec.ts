@@ -4,8 +4,7 @@ import { configuration as calculationsConfiguration } from './helpers/utils/calc
 import fs from 'fs';
 import BigNumber from 'bignumber.js';
 import { makeSuite } from './helpers/make-suite';
-import { getReservesConfigByPool } from '../../helpers/configuration';
-import { LendingPools, iAugmentedPoolAssets, IReserveParams } from '../../helpers/types';
+import { getReservesTestConfig } from '../../helpers/configuration';
 import { executeStory } from './helpers/scenario-engine';
 
 const scenarioFolder = './test-suites/test-augmented/helpers/scenarios/';
@@ -24,9 +23,7 @@ fs.readdirSync(scenarioFolder).forEach((file) => {
 
       actionsConfiguration.skipIntegrityCheck = false; //set this to true to execute solidity-coverage
 
-      calculationsConfiguration.reservesParams = <iAugmentedPoolAssets<IReserveParams>>(
-        getReservesConfigByPool(LendingPools.augmented)
-      );
+      calculationsConfiguration.reservesParams = getReservesTestConfig();
     });
     after('Reset', () => {
       // Reset BigNumber
