@@ -1,10 +1,6 @@
-import { task } from 'hardhat/config';
+import { task, types } from 'hardhat/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { ConfigNames } from '../../helpers/configuration';
-import {
-  checkEtherscanVerification,
-  verifyContractStringified,
-} from '../../helpers/etherscan-verification';
+import { verifyContractStringified } from '../../helpers/etherscan-verification';
 import {
   DbInstanceEntry,
   getExternalsFromJsonDb,
@@ -12,32 +8,92 @@ import {
 } from '../../helpers/misc-utils';
 
 task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
-  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .setAction(async ({ pool }, DRE: HardhatRuntimeEnvironment) => {
+  .addOptionalParam('n', 'Batch index, 0 <= n < total number of batches', 0, types.int)
+  .addOptionalParam('of', 'Total number of batches, > 0', 1, types.int)
+  .addOptionalVariadicPositionalParam(
+    'filter',
+    'Names or addresses of contracts to verify',
+    [],
+    types.string
+  )
+  .setAction(async ({ n, of, filter }, DRE: HardhatRuntimeEnvironment) => {
     await DRE.run('set-DRE');
 
-    checkEtherscanVerification();
+    if (n >= of) {
+      throw 'invalid batch parameters';
+    }
+
+    const filterSet = new Set<string>();
+    (<string[]>filter).forEach((value) => {
+      filterSet.add(value.toUpperCase());
+    });
+
+    const addrList: string[] = [];
+    const entryList: DbInstanceEntry[] = [];
+    let batchIndex = 0;
+
+    const addEntry = (addr: string, entry: DbInstanceEntry) => {
+      if (!entry.verify) {
+        return;
+      }
+      if (filterSet.size > 0) {
+        if (!filterSet.has(addr.toUpperCase()) && !filterSet.has(entry.id.toUpperCase())) {
+          return;
+        }
+      }
+
+      if (batchIndex++ % of != n) {
+        return;
+      }
+      addrList.push(addr);
+      entryList.push(entry);
+    };
 
     for (const [key, entry] of getInstancesFromJsonDb()) {
-      await verifyEntry(key, entry);
+      addEntry(key, entry);
     }
 
     for (const [key, entry] of getExternalsFromJsonDb()) {
-      await verifyEntry(key, entry);
+      addEntry(key, entry);
     }
+
+    console.log('======================================================================');
+    console.log('======================================================================');
+    console.log(
+      `Verification batch ${n} of ${of} with ${addrList.length} entries of ${batchIndex} total.`
+    );
+    console.log('======================================================================');
+
+    const summary: string[] = [];
+    for (let i = 0; i < addrList.length; i++) {
+      const addr = addrList[i];
+      const entry = entryList[i];
+
+      const params = entry.verify!;
+
+      console.log('\n======================================================================');
+      console.log(`[${i}/${addrList.length}] Verify contract: ${entry.id} ${addr}`);
+      console.log('\tArgs:', params.args);
+
+      if (params.impl) {
+        console.log('\tProxy impl: ', params.impl);
+        console.log('\nUnable to verify proxy, skipping');
+        continue;
+      }
+
+      const [ok, err] = await verifyContractStringified(addr, params.args!);
+      if (err) {
+        console.log(err);
+      }
+      if (!ok) {
+        summary.push(`${addr} ${entry.id}: ${err}`);
+      }
+    }
+
+    console.log(`\n`);
+    console.log('======================================================================');
+    console.log(`Verification batch ${n} of ${of} has finished with ${summary.length} issue(s).`);
+    console.log('======================================================================');
+    console.log(summary.join('\n'));
+    console.log('======================================================================');
   });
-
-const verifyEntry = async (addr: string, entry: DbInstanceEntry) => {
-  if (!entry.verify) {
-    return;
-  }
-
-  const params = entry.verify!;
-  if (params.impl) {
-    console.log('\tProxy:   ', entry.id, addr);
-    // TODO verify proxy
-    return;
-  }
-  console.log('\tContract:', entry.id, addr, params.args);
-  await verifyContractStringified(addr, entry.verify.args || '');
-};

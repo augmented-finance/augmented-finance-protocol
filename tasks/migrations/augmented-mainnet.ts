@@ -10,6 +10,7 @@ import {
 } from '../../helpers/misc-utils';
 import { usingTenderly } from '../../helpers/tenderly-utils';
 import { exit } from 'process';
+import { BigNumber } from 'ethers';
 
 task('augmented:mainnet', 'Deploy enviroment')
   .addFlag('incremental', 'Incremental installation')
@@ -17,18 +18,21 @@ task('augmented:mainnet', 'Deploy enviroment')
   .setAction(async ({ incremental, verify }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
     const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-
     await DRE.run('set-DRE');
+
+    const deployer = await getFirstSigner();
+    const startBalance: BigNumber = await deployer.getBalance();
 
     let renounce = false;
     let success = false;
 
     try {
       await cleanupUiConfig();
+      console.log('Deployer start balance: ', startBalance.div(1e12).toNumber() / 1e6);
 
       // Check if Etherscan verification is eligible for the current configuration before wasting any gas
       if (verify) {
-        //      checkEtherscanVerification();
+        checkEtherscanVerification();
       }
 
       if (incremental) {
@@ -45,36 +49,37 @@ task('augmented:mainnet', 'Deploy enviroment')
       }
 
       console.log('Deployment started\n');
+      const trackVerify = true;
 
       console.log('01. Deploy address provider registry');
-      await DRE.run('full:deploy-address-provider', { pool: POOL_NAME, verify });
+      await DRE.run('full:deploy-address-provider', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('02. Deploy lending pool');
-      await DRE.run('full:deploy-lending-pool', { pool: POOL_NAME, verify });
+      await DRE.run('full:deploy-lending-pool', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('03. Deploy oracles');
-      await DRE.run('full:deploy-oracles', { pool: POOL_NAME, verify });
+      await DRE.run('full:deploy-oracles', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('04. Deploy Data Provider');
-      await DRE.run('full:data-provider', { pool: POOL_NAME, verify });
+      await DRE.run('full:data-provider', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('05. Deploy WETH Gateway');
-      await DRE.run('full-deploy-weth-gateway', { pool: POOL_NAME, verify });
+      await DRE.run('full-deploy-weth-gateway', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('06. Initialize lending pool');
-      await DRE.run('full:initialize-lending-pool', { pool: POOL_NAME, verify });
+      await DRE.run('full:initialize-lending-pool', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('07. Deploy StakeConfigurator');
-      await DRE.run('full:deploy-stake-configurator', { pool: POOL_NAME, verify });
+      await DRE.run('full:deploy-stake-configurator', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('08. Deploy and initialize stake tokens');
-      await DRE.run('full:init-stake-tokens', { pool: POOL_NAME, verify });
+      await DRE.run('full:init-stake-tokens', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('09. Deploy reward contracts and AGF token');
-      await DRE.run('full:deploy-reward-contracts', { pool: POOL_NAME, verify });
+      await DRE.run('full:deploy-reward-contracts', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('10. Deploy reward pools');
-      await DRE.run('full:init-reward-pools', { pool: POOL_NAME, verify });
+      await DRE.run('full:init-reward-pools', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('11. Smoke test');
       await DRE.run('full:smoke-test', { pool: POOL_NAME });
@@ -82,11 +87,6 @@ task('augmented:mainnet', 'Deploy enviroment')
       if (MAINNET_FORK) {
         console.log('Pluck');
         await DRE.run('dev:pluck-tokens', { pool: POOL_NAME });
-      }
-
-      if (verify) {
-        // console.log('N. Verify all contracts');
-        // await DRE.run('verify:verify-all-contracts', { pool: POOL_NAME });
       }
 
       renounce = true;
@@ -129,6 +129,11 @@ task('augmented:mainnet', 'Deploy enviroment')
       }
     }
 
+    const endBalance: BigNumber = await deployer.getBalance();
+    console.log('======================================================================');
+    console.log('Deployer end balance: ', endBalance.div(1e12).toNumber() / 1e6);
+    console.log('Deploy expenses: ', startBalance.sub(endBalance).div(1e12).toNumber() / 1e6);
+
     if (!success) {
       exit(1);
     }
@@ -146,4 +151,9 @@ task('augmented:mainnet', 'Deploy enviroment')
 
     console.log('\nFinished deployment');
     //    await cleanupJsonDb(DRE.network.name);
+
+    if (verify) {
+      console.log('N. Verify all contracts');
+      await DRE.run('verify:verify-all-contracts', { pool: POOL_NAME });
+    }
   });
