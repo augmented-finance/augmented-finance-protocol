@@ -46,12 +46,12 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Allows `spender` to spend the tokens owned by _msgSender()
-   * @param spender The user allowed to spend _msgSender() tokens
+   * @dev Allows `spender` to spend the tokens owned by msg.sender
+   * @param spender The user allowed to spend msg.sender tokens
    * @return `true`
    **/
   function approve(address spender, uint256 amount) public virtual override returns (bool) {
-    _approve(_msgSender(), spender, amount);
+    _approve(msg.sender, spender, amount);
     return true;
   }
 
@@ -68,7 +68,7 @@ abstract contract DepositTokenBase is
    * - `spender` cannot be the zero address.
    */
   function increaseAllowance(address spender, uint256 addedValue) public override returns (bool) {
-    _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+    _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
     return true;
   }
 
@@ -92,12 +92,9 @@ abstract contract DepositTokenBase is
     returns (bool)
   {
     _approve(
-      _msgSender(),
+      msg.sender,
       spender,
-      _allowances[_msgSender()][spender].sub(
-        subtractedValue,
-        'ERC20: decreased allowance below zero'
-      )
+      _allowances[msg.sender][spender].sub(subtractedValue, 'ERC20: decreased allowance below zero')
     );
     return true;
   }
@@ -263,19 +260,19 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Executes a transfer of tokens from _msgSender() to recipient
+   * @dev Executes a transfer of tokens from msg.sender to recipient
    * @param recipient The recipient of the tokens
    * @param amount The amount of tokens being transferred
    * @return `true` if the transfer succeeds, `false` otherwise
    **/
   function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-    _transfer(_msgSender(), recipient, amount, true);
-    emit Transfer(_msgSender(), recipient, amount);
+    _transfer(msg.sender, recipient, amount, true);
+    emit Transfer(msg.sender, recipient, amount);
     return true;
   }
 
   /**
-   * @dev Executes a transfer of token from sender to recipient, if _msgSender() is allowed to do so
+   * @dev Executes a transfer of token from sender to recipient, if msg.sender is allowed to do so
    * @param sender The owner of the tokens
    * @param recipient The recipient of the tokens
    * @param amount The amount of tokens being transferred
@@ -289,8 +286,8 @@ abstract contract DepositTokenBase is
     _transfer(sender, recipient, amount, true);
     _approve(
       sender,
-      _msgSender(),
-      _allowances[sender][_msgSender()].sub(amount, 'ERC20: transfer amount exceeds allowance')
+      msg.sender,
+      _allowances[sender][msg.sender].sub(amount, 'ERC20: transfer amount exceeds allowance')
     );
     emit Transfer(sender, recipient, amount);
     return true;

@@ -11,22 +11,18 @@ import '../Errors.sol';
  * @author Adopted from the OpenZeppelin
  */
 contract ProxyAdmin is ProxyAdminBase {
-  address private _owner;
+  address private immutable _owner;
 
   constructor() public {
     _owner = msg.sender;
   }
 
-  /**
-   * @dev Returns the address of the current owner.
-   */
+  /// @dev Returns the address of the current owner.
   function owner() public view returns (address) {
     return _owner;
   }
 
-  /**
-   * @dev Throws if called by any account other than the owner.
-   */
+  /// @dev Throws if called by any account other than the owner.
   modifier onlyOwner() {
     require(_owner == msg.sender, Errors.TXT_CALLER_NOT_PROXY_OWNER);
     _;
@@ -41,17 +37,6 @@ contract ProxyAdmin is ProxyAdminBase {
    */
   function getProxyImplementation(IProxy proxy) public view virtual returns (address) {
     return _getProxyImplementation(proxy);
-  }
-
-  /**
-   * @dev Returns the current admin of `proxy`.
-   *
-   * Requirements:
-   *
-   * - This contract must be the admin of `proxy`.
-   */
-  function getProxyAdmin(IProxy proxy) public view virtual returns (address) {
-    return _getProxyAdmin(proxy);
   }
 
   /**

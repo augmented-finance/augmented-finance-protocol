@@ -13,8 +13,8 @@ pragma solidity 0.6.12;
  * To override this protection, call _unsafeResetVersionedInitializers() from a constructor.
  *
  * WARNING: Unlike constructors, initializer functions must be manually
- * invoked. This applies both to deploying an Initializable contract, as well
- * as extending an Initializable contract via inheritance.
+ * invoked. This applies both to deploying an initializable contract, as well
+ * as extending an initializable contract via inheritance.
  *
  * ATTN: When used with inheritance, parent initializers with `initializer` modifier are prevented by calling twice,
  * but can only be called in child-to-parent sequence.
@@ -27,14 +27,10 @@ abstract contract VersionedInitializable {
   // This revision number is applied to implementations
   uint256 private constant IMPL_REVISION = BLOCK_REVISION - 1;
 
-  /**
-   * @dev Indicates that the contract has been initialized. The default value blocks initializers from being called on an implementation.
-   */
+  /// @dev Indicates that the contract has been initialized. The default value blocks initializers from being called on an implementation.
   uint256 private lastInitializedRevision = IMPL_REVISION;
 
-  /**
-   * @dev Indicates that the contract is in the process of being initialized.
-   */
+  /// @dev Indicates that the contract is in the process of being initialized.
   uint256 private lastInitializingRevision = 0;
 
   /**
@@ -53,9 +49,7 @@ abstract contract VersionedInitializable {
     }
   }
 
-  /**
-   * @dev Modifier to use in the initializer function of a contract.
-   */
+  /// @dev Modifier to use in the initializer function of a contract.
   modifier initializer(uint256 localRevision) {
     (uint256 topRevision, bool initializing, bool skip) = _preInitializer(localRevision);
 
@@ -152,15 +146,8 @@ abstract contract VersionedInitializable {
    **/
   function getRevision() internal pure virtual returns (uint256);
 
-  /**
-   * @dev Returns true if and only if the function is running in the constructor
-   **/
+  /// @dev Returns true if and only if the function is running in the constructor
   function isConstructor() private view returns (bool) {
-    // extcodesize checks the size of the code stored in an address, and
-    // address returns the current address. Since the code is still not
-    // deployed when running a constructor, any checks on its code size will
-    // yield zero, making it an effective way to detect if a contract is
-    // under construction or not.
     uint256 cs;
     //solium-disable-next-line
     assembly {

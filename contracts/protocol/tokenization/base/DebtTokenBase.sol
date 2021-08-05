@@ -30,8 +30,8 @@ abstract contract DebtTokenBase is
    * force a delegator HF to go below 1)
    **/
   function approveDelegation(address delegatee, uint256 amount) external override {
-    _borrowAllowances[_msgSender()][delegatee] = amount;
-    emit BorrowAllowanceDelegated(_msgSender(), delegatee, _underlyingAsset, amount);
+    _borrowAllowances[msg.sender][delegatee] = amount;
+    emit BorrowAllowanceDelegated(msg.sender, delegatee, _underlyingAsset, amount);
   }
 
   /**

@@ -1,17 +1,12 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import 'hardhat/console.sol';
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {Errors} from '../tools/Errors.sol';
-
 import {BitUtils} from '../tools/math/BitUtils.sol';
 import {Address} from '../dependencies/openzeppelin/contracts/Address.sol';
-
-// prettier-ignore
-import {InitializableImmutableAdminUpgradeabilityProxy} from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
+import {TransparentProxy} from '../tools/upgradeability/TransparentProxy.sol';
 import {IProxy} from '../tools/upgradeability/IProxy.sol';
-
 import {IManagedAccessController} from './interfaces/IAccessController.sol';
 
 contract AccessController is Ownable, IManagedAccessController {
@@ -384,10 +379,7 @@ contract AccessController is Ownable, IManagedAccessController {
 
     if (proxyAddress != address(0)) {
       require(_proxies & id != 0, 'use of setAddress is required');
-      InitializableImmutableAdminUpgradeabilityProxy(proxyAddress).upgradeToAndCall(
-        newAddress,
-        params
-      );
+      TransparentProxy(proxyAddress).upgradeToAndCall(newAddress, params);
       return;
     }
 
@@ -401,10 +393,8 @@ contract AccessController is Ownable, IManagedAccessController {
     address adminAddress,
     address implAddress,
     bytes memory params
-  ) private returns (InitializableImmutableAdminUpgradeabilityProxy) {
-    InitializableImmutableAdminUpgradeabilityProxy proxy =
-      new InitializableImmutableAdminUpgradeabilityProxy(adminAddress);
-    proxy.initialize(implAddress, params);
+  ) private returns (TransparentProxy) {
+    TransparentProxy proxy = new TransparentProxy(adminAddress, implAddress, params);
     return proxy;
   }
 

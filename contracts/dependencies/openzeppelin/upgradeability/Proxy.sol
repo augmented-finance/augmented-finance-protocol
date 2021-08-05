@@ -1,18 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.0;
+pragma solidity 0.6.12;
 
-/**
- * @title Proxy
- * @dev Implements delegation of calls to other contracts, with proper
- * forwarding of return values and bubbling of failures.
- * It defines a fallback function that delegates all calls to the address
- * returned by the abstract _implementation() internal function.
- */
 abstract contract Proxy {
-  /**
-   * @dev Fallback function.
-   * Implemented entirely in `_fallback`.
-   */
   fallback() external payable {
     _fallback();
   }
@@ -21,9 +10,7 @@ abstract contract Proxy {
     _fallback();
   }
 
-  /**
-   * @return The Address of the implementation.
-   */
+  /// @return The Address of the implementation.
   function _implementation() internal view virtual returns (address);
 
   /**
@@ -58,17 +45,10 @@ abstract contract Proxy {
     }
   }
 
-  /**
-   * @dev Function that is run as the first thing in the fallback function.
-   * Can be redefined in derived contracts to add functionality.
-   * Redefinitions must call super._willFallback().
-   */
+  /// @dev Function that is run as the first thing in the fallback function. Must call super._willFallback()
   function _willFallback() internal virtual {}
 
-  /**
-   * @dev fallback implementation.
-   * Extracted to enable manual triggering.
-   */
+  /// @dev fallback implementation.
   function _fallback() internal {
     _willFallback();
     _delegate(_implementation());

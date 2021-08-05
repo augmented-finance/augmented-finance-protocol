@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 import {IERC20Details} from '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
 import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {Context} from '../../../dependencies/openzeppelin/contracts/Context.sol';
 import {ILendingPool} from '../../../interfaces/ILendingPool.sol';
 import {IInitializablePoolToken} from '../interfaces/IInitializablePoolToken.sol';
 import {IPoolToken} from '../../../interfaces/IPoolToken.sol';
@@ -16,13 +15,7 @@ import {AccessHelper} from '../../../access/AccessHelper.sol';
 import {AccessFlags} from '../../../access/AccessFlags.sol';
 import {IManagedLendingPool} from '../../../interfaces/IManagedLendingPool.sol';
 
-abstract contract PoolTokenBase is
-  IERC20,
-  Context,
-  IInitializablePoolToken,
-  IPoolToken,
-  IERC20Details
-{
+abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, IERC20Details {
   using SafeMath for uint256;
 
   string private _name;
@@ -69,7 +62,7 @@ abstract contract PoolTokenBase is
   }
 
   function _onlyLendingPool() private view {
-    require(_msgSender() == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
+    require(msg.sender == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
   }
 
   modifier onlyLendingPool {
@@ -81,7 +74,7 @@ abstract contract PoolTokenBase is
     require(
       AccessHelper.hasAnyOf(
         _pool.getAccessController(),
-        _msgSender(),
+        msg.sender,
         AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR
       ),
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
