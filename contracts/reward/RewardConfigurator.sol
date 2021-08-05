@@ -7,18 +7,14 @@ import '../tools/upgradeability/VersionedInitializable.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 import '../access/MarketAccessBitmask.sol';
 import '../tools/Errors.sol';
-import {IRewardConfigurator} from './interfaces/IRewardConfigurator.sol';
-import {
-  IManagedRewardController,
-  IUntypedRewardControllerPools,
-  IManagedRewardBooster
-} from './interfaces/IRewardController.sol';
+import './interfaces/IRewardConfigurator.sol';
+import './interfaces/IRewardController.sol';
 import './interfaces/IManagedRewardPool.sol';
-import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
-import {IInitializableRewardPool} from './interfaces/IInitializableRewardPool.sol';
+import './interfaces/IInitializableRewardToken.sol';
+import './interfaces/IInitializableRewardPool.sol';
 import '../tools/upgradeability/ProxyAdmin.sol';
 import '../interfaces/IRewardedToken.sol';
-import {TeamRewardPool} from './pools/TeamRewardPool.sol';
+import './pools/TeamRewardPool.sol';
 import '../tools/upgradeability/IProxy.sol';
 
 contract RewardConfigurator is

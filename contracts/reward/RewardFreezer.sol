@@ -5,9 +5,9 @@ import '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../tools/math/PercentageMath.sol';
 
 import '../access/interfaces/IMarketAccessController.sol';
-import {BasicRewardController} from './BasicRewardController.sol';
-import {CalcLinearFreezer} from './calcs/CalcLinearFreezer.sol';
-import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
+import './BasicRewardController.sol';
+import './calcs/CalcLinearFreezer.sol';
+import '../interfaces/IRewardMinter.sol';
 
 import 'hardhat/console.sol';
 

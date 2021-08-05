@@ -5,8 +5,8 @@ import '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../tools/math/BitUtils.sol';
 
 import '../access/interfaces/IMarketAccessController.sol';
-import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
-import {BaseRewardController} from './BaseRewardController.sol';
+import '../interfaces/IRewardMinter.sol';
+import './BaseRewardController.sol';
 
 import 'hardhat/console.sol';
 

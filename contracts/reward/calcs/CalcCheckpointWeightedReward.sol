@@ -5,10 +5,8 @@ import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/BitUtils.sol';
 import '../interfaces/IRewardController.sol';
-import {AllocationMode} from '../interfaces/IRewardController.sol';
-import {CalcLinearRateReward} from './CalcLinearRateReward.sol';
-
-import 'hardhat/console.sol';
+import '../interfaces/IRewardController.sol';
+import './CalcLinearRateReward.sol';
 
 abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
   using SafeMath for uint256;

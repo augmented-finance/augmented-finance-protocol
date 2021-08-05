@@ -10,7 +10,6 @@ import '../Errors.sol';
  * @dev Percentages are defined in basis points. The precision is indicated by ONE
  * @dev Operations are rounded half up
  **/
-
 library PercentageMath {
   uint16 constant BP = 1; // basis point
   uint16 constant PCT = 100 * BP; // basis points per percentage point

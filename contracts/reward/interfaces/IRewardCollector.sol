@@ -3,7 +3,7 @@ pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
 import './IManagedRewardPool.sol';
-import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
+import '../../interfaces/IRewardMinter.sol';
 import '../../interfaces/IEmergencyAccess.sol';
 
 interface IRewardCollector {

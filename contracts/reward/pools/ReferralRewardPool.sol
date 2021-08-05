@@ -3,11 +3,11 @@ pragma solidity ^0.6.12;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
-import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
+import '../interfaces/IRewardController.sol';
 import '../interfaces/IManagedRewardPool.sol';
-import {BasePermitRewardPool} from './BasePermitRewardPool.sol';
-import {BaseReferralRegistry} from '../referral/BaseReferralRegistry.sol';
-import {CalcLinearRateAccum} from '../calcs/CalcLinearRateAccum.sol';
+import './BasePermitRewardPool.sol';
+import '../referral/BaseReferralRegistry.sol';
+import '../calcs/CalcLinearRateAccum.sol';
 
 import 'hardhat/console.sol';
 

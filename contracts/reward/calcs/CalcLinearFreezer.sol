@@ -4,10 +4,8 @@ pragma solidity ^0.6.12;
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../tools/math/WadRayMath.sol';
-import {AllocationMode} from '../interfaces/IRewardController.sol';
-import {CalcBase} from './CalcBase.sol';
-
-import 'hardhat/console.sol';
+import '../interfaces/IRewardController.sol';
+import './CalcBase.sol';
 
 abstract contract CalcLinearFreezer is CalcBase {
   using SafeMath for uint256;

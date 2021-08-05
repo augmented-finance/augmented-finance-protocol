@@ -6,10 +6,10 @@ import '../access/AccessFlags.sol';
 import '../access/MarketAccessBitmask.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 
-import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
-import {RewardToken} from './RewardToken.sol';
+import '../interfaces/IRewardMinter.sol';
+import './RewardToken.sol';
 import '../tools/upgradeability/VersionedInitializable.sol';
-import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
+import './interfaces/IInitializableRewardToken.sol';
 
 import 'hardhat/console.sol';
 

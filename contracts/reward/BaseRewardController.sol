@@ -7,10 +7,10 @@ import '../tools/math/BitUtils.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 import '../access/MarketAccessBitmask.sol';
 import '../access/AccessFlags.sol';
-import {IManagedRewardController, AllocationMode} from './interfaces/IRewardController.sol';
-import {IRewardPool} from './interfaces/IRewardPool.sol';
+import './interfaces/IRewardController.sol';
+import './interfaces/IRewardPool.sol';
 import './interfaces/IManagedRewardPool.sol';
-import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
+import '../interfaces/IRewardMinter.sol';
 import './interfaces/IRewardCollector.sol';
 import '../tools/Errors.sol';
 

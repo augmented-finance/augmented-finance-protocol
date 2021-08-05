@@ -4,9 +4,9 @@ pragma solidity ^0.6.12;
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../interfaces/IRewardController.sol';
-import {CalcLinearRateReward} from './CalcLinearRateReward.sol';
+import './CalcLinearRateReward.sol';
 
-import 'hardhat/console.sol';
+// import 'hardhat/console.sol';
 
 abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
   using SafeMath for uint256;

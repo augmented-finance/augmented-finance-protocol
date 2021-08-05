@@ -14,7 +14,7 @@ import '../../access/interfaces/IMarketAccessController.sol';
 import '../../interfaces/IEmergencyAccess.sol';
 import '../../interfaces/IDerivedToken.sol';
 
-import {CalcLinearRateReward} from '../calcs/CalcLinearRateReward.sol';
+import '../calcs/CalcLinearRateReward.sol';
 
 import '../../tools/Errors.sol';
 

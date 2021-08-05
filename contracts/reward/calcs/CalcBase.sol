@@ -3,10 +3,8 @@ pragma solidity ^0.6.12;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
-import {AllocationMode} from '../interfaces/IRewardController.sol';
+import '../interfaces/IRewardController.sol';
 import '../../tools/math/BitUtils.sol';
-
-import 'hardhat/console.sol';
 
 abstract contract CalcBase {
   using SafeMath for uint256;

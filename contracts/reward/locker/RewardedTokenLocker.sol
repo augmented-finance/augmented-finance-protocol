@@ -5,12 +5,12 @@ pragma experimental ABIEncoderV2;
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
 
-import {BaseTokenLocker} from './BaseTokenLocker.sol';
-import {IBoostRate} from '../interfaces/IBoostRate.sol';
-import {ControlledRewardPool} from '../pools/ControlledRewardPool.sol';
-import {CalcCheckpointWeightedReward} from '../calcs/CalcCheckpointWeightedReward.sol';
-import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
-import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
+import './BaseTokenLocker.sol';
+import '../interfaces/IBoostRate.sol';
+import '../pools/ControlledRewardPool.sol';
+import '../calcs/CalcCheckpointWeightedReward.sol';
+import '../interfaces/IBoostExcessReceiver.sol';
+import '../interfaces/IRewardController.sol';
 import '../interfaces/IAutolocker.sol';
 
 import '../../tools/Errors.sol';

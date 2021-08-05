@@ -2,9 +2,9 @@
 pragma solidity ^0.6.12;
 
 import '../../tools/math/PercentageMath.sol';
-import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {ControlledRewardPool} from './ControlledRewardPool.sol';
-import {CalcLinearUnweightedReward} from '../calcs/CalcLinearUnweightedReward.sol';
+import '../interfaces/IRewardController.sol';
+import './ControlledRewardPool.sol';
+import '../calcs/CalcLinearUnweightedReward.sol';
 import '../../tools/Errors.sol';
 
 import 'hardhat/console.sol';

@@ -5,9 +5,9 @@ pragma experimental ABIEncoderV2;
 import '../access/AccessFlags.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 
-import {DecayingTokenLocker} from './locker/DecayingTokenLocker.sol';
+import './locker/DecayingTokenLocker.sol';
 import '../tools/upgradeability/VersionedInitializable.sol';
-import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
+import './interfaces/IInitializableRewardToken.sol';
 import '../access/interfaces/IRemoteAccessBitmask.sol';
 import './interfaces/IRewardController.sol';
 import '../tools/math/WadRayMath.sol';
