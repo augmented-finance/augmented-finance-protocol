@@ -1,6 +1,5 @@
 import {
   tEthereumAddress,
-  iMultiPoolsAssets,
   IMarketRates,
   iAssetBase,
   iAssetAggregatorBase,
@@ -14,7 +13,7 @@ import { chunk, waitForTx } from './misc-utils';
 import { MockPriceOracle } from '../types';
 
 export const setInitialMarketRatesInRatesOracleByHelper = async (
-  marketRates: iMultiPoolsAssets<IMarketRates>,
+  marketRates: { [key: string]: IMarketRates },
   assetsAddresses: { [x: string]: tEthereumAddress },
   lendingRateOracleInstance: LendingRateOracle
 ) => {
@@ -25,6 +24,10 @@ export const setInitialMarketRatesInRatesOracleByHelper = async (
     string,
     IMarketRates
   ][]) {
+    if (borrowRate == '') {
+      continue;
+    }
+
     const assetAddressIndex = Object.keys(assetsAddresses).findIndex(
       (value) => value === assetSymbol
     );

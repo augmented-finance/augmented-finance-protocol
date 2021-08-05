@@ -74,4 +74,8 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRateAccum {
   }
 
   function removeRewardProvider(address) external override onlyConfigAdmin {}
+
+  function getPoolName() public view override returns (string memory) {
+    return 'TreasuryPool';
+  }
 }

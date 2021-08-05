@@ -5,12 +5,12 @@ import {
   deployLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
-import { falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, getFirstSigner } from '../../helpers/misc-utils';
 import { getLendingPoolProxy } from '../../helpers/contracts-getters';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { AccessFlags } from '../../helpers/access-flags';
-import { getDeployAccessController } from '../../helpers/deploy-helpers';
+import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
 
 task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -31,10 +31,11 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
       console.log('\tDeploying lending pool...');
       const lendingPoolImpl = await deployLendingPoolImpl(verify, continuation);
       console.log('\tLending pool implementation:', lendingPoolImpl.address);
-      await waitForTx(
-        await addressProvider.setAddressAsProxy(AccessFlags.LENDING_POOL, lendingPoolImpl.address)
+      lpAddress = await setAndGetAddressAsProxy(
+        addressProvider,
+        AccessFlags.LENDING_POOL,
+        lendingPoolImpl.address
       );
-      lpAddress = await addressProvider.getLendingPool();
     }
 
     const lendingPoolProxy = await getLendingPoolProxy(lpAddress);
@@ -63,13 +64,11 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
         lendingPoolConfiguratorImpl.address
       );
 
-      await waitForTx(
-        await addressProvider.setAddressAsProxy(
-          AccessFlags.LENDING_POOL_CONFIGURATOR,
-          lendingPoolConfiguratorImpl.address
-        )
+      lpConfigurator = await setAndGetAddressAsProxy(
+        addressProvider,
+        AccessFlags.LENDING_POOL_CONFIGURATOR,
+        lendingPoolConfiguratorImpl.address
       );
-      lpConfigurator = await addressProvider.getLendingPoolConfigurator();
     }
 
     console.log('Lending pool configurator:', lpConfigurator);

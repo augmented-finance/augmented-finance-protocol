@@ -1,19 +1,13 @@
 import BigNumber from 'bignumber.js';
 import { ONE_YEAR, RAY, MAX_UINT_AMOUNT, PERCENTAGE_FACTOR } from '../../../../helpers/constants';
-import {
-  IReserveParams,
-  iAugmentedPoolAssets,
-  RateMode,
-  tEthereumAddress,
-} from '../../../../helpers/types';
+import { IReserveParams, RateMode, iAssetCommon } from '../../../../helpers/types';
 import './math';
 import { ReserveData, UserReserveData } from './interfaces';
-import { expect } from 'chai';
 
 export const strToBN = (amount: string): BigNumber => new BigNumber(amount);
 
 interface Configuration {
-  reservesParams: iAugmentedPoolAssets<IReserveParams>;
+  reservesParams: iAssetCommon<IReserveParams>;
 }
 
 export const configuration: Configuration = <Configuration>{};

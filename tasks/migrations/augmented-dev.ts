@@ -1,10 +1,10 @@
 import { task } from 'hardhat/config';
-import { checkVerification } from '../../helpers/etherscan-verification';
+import { checkEtherscanVerification } from '../../helpers/etherscan-verification';
 import { ConfigNames } from '../../helpers/configuration';
 import { getFirstSigner, printContracts } from '../../helpers/misc-utils';
 
 task('augmented:dev', 'Deploy development enviroment')
-  .addOptionalParam('verify', 'Verify contracts at Etherscan')
+  .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(async ({ verify }, localBRE) => {
     const POOL_NAME = ConfigNames.Augmented;
 
@@ -12,7 +12,7 @@ task('augmented:dev', 'Deploy development enviroment')
 
     // Prevent loss of gas verifying all the needed ENVs for Etherscan verification
     if (verify) {
-      checkVerification();
+      checkEtherscanVerification();
     }
 
     console.log('Deployment started\n');
