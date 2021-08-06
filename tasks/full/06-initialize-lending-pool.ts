@@ -30,7 +30,8 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
     );
 
     // Treasury implementation is updated for existing installations
-    let treasuryAddress = freshStart && continuation ? await addressProvider.getTreasury() : '';
+    let treasuryAddress =
+      freshStart && continuation ? await addressProvider.getAddress(AccessFlags.TREASURY) : '';
 
     if (falsyOrZeroAddress(treasuryAddress)) {
       const treasuryImpl = await deployTreasuryImpl(verify, continuation);

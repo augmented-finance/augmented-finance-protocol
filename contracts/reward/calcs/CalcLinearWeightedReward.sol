@@ -2,8 +2,11 @@
 pragma solidity ^0.6.12;
 
 import './CalcLinearRateReward.sol';
+import '../../tools/math/WadRayMath.sol';
 
 abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
+  using WadRayMath for uint256;
+
   uint256 private _accumRate;
   uint256 private _totalSupply;
 

@@ -3,12 +3,10 @@ pragma solidity ^0.6.0;
 
 import './IERC20WithEvents.sol';
 import './SafeMath.sol';
-import './Address.sol';
 
 /// @dev Implementation of the {IERC20} interface.
 contract ERC20 is IERC20WithEvents {
   using SafeMath for uint256;
-  using Address for address;
 
   mapping(address => uint256) private _balances;
 

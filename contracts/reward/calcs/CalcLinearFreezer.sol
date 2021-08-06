@@ -3,9 +3,10 @@ pragma solidity ^0.6.12;
 
 import '../../tools/math/PercentageMath.sol';
 import '../interfaces/IRewardController.sol';
-import './CalcBase.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 
-abstract contract CalcLinearFreezer is CalcBase {
+abstract contract CalcLinearFreezer {
+  using SafeMath for uint256;
   using PercentageMath for uint256;
 
   struct FrozenReward {

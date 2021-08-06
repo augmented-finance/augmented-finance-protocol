@@ -37,14 +37,17 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
     address recipient,
     uint256 amount
   ) external aclHas(AccessFlags.TREASURY_ADMIN) {
-    if (token == _remoteAcl.getRewardToken() && IERC20(token).balanceOf(address(this)) < amount) {
+    if (
+      token == _remoteAcl.getAddress(AccessFlags.REWARD_TOKEN) &&
+      IERC20(token).balanceOf(address(this)) < amount
+    ) {
       _claimRewards();
     }
     IERC20(token).safeTransfer(recipient, amount);
   }
 
   function _claimRewards() private {
-    address rc = _remoteAcl.getRewardController();
+    address rc = _remoteAcl.getAddress(AccessFlags.REWARD_CONTROLLER);
     if (rc != address(0)) {
       IRewardCollector(rc).claimReward();
     }

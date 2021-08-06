@@ -9,6 +9,7 @@ import '../access/MarketAccessBitmask.sol';
 import '../tools/Errors.sol';
 import './interfaces/IRewardConfigurator.sol';
 import './interfaces/IRewardController.sol';
+import './interfaces/IManagedRewardController.sol';
 import './interfaces/IManagedRewardPool.sol';
 import './interfaces/IInitializableRewardToken.sol';
 import './interfaces/IInitializableRewardPool.sol';
@@ -41,7 +42,7 @@ contract RewardConfigurator is
   }
 
   function getDefaultController() public view returns (IManagedRewardController) {
-    address ctl = _remoteAcl.getRewardController();
+    address ctl = _remoteAcl.getAddress(AccessFlags.REWARD_CONTROLLER);
     require(ctl != address(0), 'incomplete configuration');
     return IManagedRewardController(ctl);
   }

@@ -8,6 +8,7 @@ import '../access/interfaces/IMarketAccessController.sol';
 import '../access/MarketAccessBitmask.sol';
 import '../access/AccessFlags.sol';
 import './interfaces/IRewardController.sol';
+import './interfaces/IManagedRewardController.sol';
 import './interfaces/IRewardPool.sol';
 import './interfaces/IManagedRewardPool.sol';
 import '../interfaces/IRewardMinter.sol';

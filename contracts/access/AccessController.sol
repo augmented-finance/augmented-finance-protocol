@@ -4,7 +4,7 @@ pragma solidity ^0.6.12;
 import '../dependencies/openzeppelin/contracts/Ownable.sol';
 import '../tools/Errors.sol';
 import '../tools/math/BitUtils.sol';
-import '../dependencies/openzeppelin/contracts/Address.sol';
+import '../dependencies/openzeppelin/contracts/Addr.sol';
 import '../tools/upgradeability/TransparentProxy.sol';
 import '../tools/upgradeability/IProxy.sol';
 import './interfaces/IAccessController.sol';
@@ -300,7 +300,7 @@ contract AccessController is Ownable, IManagedAccessController {
       _masks[prev] = _masks[prev] & ~id;
     }
     if (newAddress != address(0)) {
-      require(Address.isContract(newAddress), 'must be contract');
+      require(Addr.isContract(newAddress), 'must be contract');
       _masks[newAddress] = _masks[newAddress] | id;
     }
     _addresses[id] = newAddress;

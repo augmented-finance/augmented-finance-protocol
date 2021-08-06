@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import '../dependencies/openzeppelin/contracts/Address.sol';
 import '../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 import '../access/AccessFlags.sol';
@@ -67,7 +66,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     view
     returns (TokenDescription[] memory tokens, uint256 tokenCount)
   {
-    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getStakeConfigurator());
+    IStakeConfigurator stakeCfg =
+      IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
     address[] memory stakeList = stakeCfg.list();
 
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
@@ -81,7 +81,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     tokens = new TokenDescription[](tokenCount);
 
     tokenCount = 0;
-    address token = ADDRESS_PROVIDER.getRewardToken();
+    address token = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_TOKEN);
     if (token != address(0)) {
       tokens[tokenCount] = TokenDescription(
         token,
@@ -96,7 +96,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       tokenCount++;
     }
 
-    token = ADDRESS_PROVIDER.getRewardStakeToken();
+    token = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_STAKE_TOKEN);
     if (token != address(0)) {
       tokens[tokenCount] = TokenDescription(
         token,
@@ -203,7 +203,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     view
     returns (address[] memory tokens, uint256 tokenCount)
   {
-    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getStakeConfigurator());
+    IStakeConfigurator stakeCfg =
+      IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
     address[] memory stakeList = stakeCfg.list();
 
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
@@ -215,8 +216,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     }
     tokens = new address[](tokenCount);
 
-    tokens[0] = ADDRESS_PROVIDER.getRewardToken();
-    tokens[1] = ADDRESS_PROVIDER.getRewardStakeToken();
+    tokens[0] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_TOKEN);
+    tokens[1] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_STAKE_TOKEN);
 
     tokenCount = 2;
 
@@ -615,10 +616,9 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   function balanceOf(address user, address token) public view returns (uint256) {
     if (token == ETH) {
       return user.balance; // ETH balance
-    } else if (Address.isContract(token)) {
+    } else {
       return IERC20Detailed(token).balanceOf(user);
     }
-    return 0;
   }
 
   /**

@@ -2,9 +2,11 @@
 pragma solidity ^0.6.12;
 
 import '../interfaces/IRewardController.sol';
-import './CalcBase.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 
-abstract contract CalcLinearRateReward is CalcBase {
+abstract contract CalcLinearRateReward {
+  using SafeMath for uint256;
+
   mapping(address => RewardEntry) private _rewards;
   uint256 private _rate;
   uint32 private _rateUpdatedAt;
@@ -136,18 +138,6 @@ abstract contract CalcLinearRateReward is CalcBase {
     oldBalance;
     return newBalance;
   }
-
-  // function internalCalcBalance(
-  //   RewardEntry memory entry,
-  //   uint256 oldBalance,
-  //   uint256 newBalance
-  // ) internal view virtual returns (uint256) {
-  //   this;
-  //   if (newBalance >= oldBalance) {
-  //     return uint256(entry.rewardBase).add(newBalance - oldBalance);
-  //   }
-  //   return uint256(entry.rewardBase).sub(oldBalance - newBalance);
-  // }
 
   function internalRemoveReward(address holder) internal virtual returns (uint256 rewardBase) {
     rewardBase = _rewards[holder].rewardBase;

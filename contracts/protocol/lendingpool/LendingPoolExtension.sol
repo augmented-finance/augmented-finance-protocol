@@ -9,22 +9,22 @@ import '../../interfaces/IStableDebtToken.sol';
 import '../../interfaces/IVariableDebtToken.sol';
 import '../../interfaces/IPriceOracleGetter.sol';
 import '../../interfaces/ILendingPoolExtension.sol';
+import '../../interfaces/ILendingPoolEvents.sol';
+import '../../interfaces/IManagedLendingPool.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
-import '../libraries/logic/GenericLogic.sol';
-import '../libraries/helpers/Helpers.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
-import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../tools/Errors.sol';
+import '../../dependencies/openzeppelin/contracts/Addr.sol';
+import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../flashloan/interfaces/IFlashLoanReceiver.sol';
+import '../../access/AccessFlags.sol';
+import '../libraries/logic/GenericLogic.sol';
+import '../libraries/helpers/Helpers.sol';
 import '../libraries/logic/ValidationLogic.sol';
 import '../libraries/logic/ReserveLogic.sol';
 import '../libraries/types/DataTypes.sol';
-import '../../flashloan/interfaces/IFlashLoanReceiver.sol';
-import '../../interfaces/ILendingPoolEvents.sol';
-import '../../interfaces/IManagedLendingPool.sol';
 import './LendingPoolBase.sol';
-import '../../access/AccessFlags.sol';
-import '../../dependencies/openzeppelin/contracts/Address.sol';
 
 /// @dev Delegatee of LendingPool for borrow, flashloan, collateral etc. Runs via delegateCall, retain storage layout
 /// WARNING! This contract runs via delegateCall and must have a compatible storage layout with LendingPool.
@@ -698,7 +698,7 @@ contract LendingPoolExtension is
     override
     onlyLendingPoolConfigurator
   {
-    require(Address.isContract(data.asset), Errors.LP_NOT_CONTRACT);
+    require(Addr.isContract(data.asset), Errors.VL_CONTRACT_REQUIRED);
     _reserves[data.asset].init(data);
     _addReserveToList(data.asset);
   }
@@ -708,7 +708,7 @@ contract LendingPoolExtension is
   }
 
   function setLendingPoolExtension(address extension) external override onlyConfiguratorOrAdmin {
-    require(Address.isContract(extension), Errors.VL_CONTRACT_REQUIRED);
+    require(Addr.isContract(extension), Errors.VL_CONTRACT_REQUIRED);
     _extension = extension;
     emit LendingPoolExtensionUpdated(extension);
   }

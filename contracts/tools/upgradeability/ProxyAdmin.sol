@@ -29,11 +29,6 @@ contract ProxyAdmin is ProxyAdminBase {
     return _getProxyImplementation(proxy);
   }
 
-  /// @dev Upgrades `proxy` to `implementation`.
-  function upgrade(IProxy proxy, address implementation) public virtual onlyOwner {
-    proxy.upgradeTo(implementation);
-  }
-
   /// @dev Upgrades `proxy` to `implementation` and calls a function on the new implementation.
   function upgradeAndCall(
     IProxy proxy,

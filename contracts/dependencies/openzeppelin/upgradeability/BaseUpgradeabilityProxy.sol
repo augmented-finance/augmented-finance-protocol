@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 import './Proxy.sol';
-import '../contracts/Address.sol';
+import '../contracts/Addr.sol';
 
 contract BaseUpgradeabilityProxy is Proxy {
   /// @dev Emitted when the implementation is upgraded.
@@ -30,7 +30,7 @@ contract BaseUpgradeabilityProxy is Proxy {
   /// @dev Sets the implementation address of the proxy.
   function _setImplementation(address newImplementation) internal {
     require(
-      Address.isContract(newImplementation),
+      Addr.isContract(newImplementation),
       'Cannot set a proxy implementation to a non-contract address'
     );
 

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import './CalcBase.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 
-abstract contract CalcLinearRateAccum is CalcBase {
+abstract contract CalcLinearRateAccum {
+  using SafeMath for uint256;
+
   uint256 private _rate;
   uint256 private _accumRate;
   uint256 private _consumed;

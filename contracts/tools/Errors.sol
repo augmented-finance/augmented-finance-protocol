@@ -100,7 +100,7 @@ library Errors {
   string public constant LPC_INVALID_CONFIGURATION = '75'; // 'Invalid risk parameters for the reserve'
   string public constant CALLER_NOT_EMERGENCY_ADMIN = '76'; // 'The caller must be the emergency admin'
   string public constant UL_INVALID_INDEX = '77';
-  string public constant LP_NOT_CONTRACT = '78';
+  string public constant VL_CONTRACT_REQUIRED = '78';
   string public constant SDT_STABLE_DEBT_OVERFLOW = '79';
   string public constant SDT_BURN_EXCEEDS_BALANCE = '80';
   string public constant CT_CALLER_MUST_BE_REWARD_ADMIN = '81'; // 'The caller of this function must be a reward admin'
@@ -122,8 +122,6 @@ library Errors {
   string public constant STK_EXCESSIVE_SLASH_PCT = '97';
   string public constant STK_EXCESSIVE_COOLDOWN_PERIOD = '98';
   string public constant STK_WRONG_UNSTAKE_PERIOD = '98';
-
-  string public constant VL_CONTRACT_REQUIRED = '99'; // The address is not a contract
 
   string public constant TXT_OWNABLE_CALLER_NOT_OWNER = 'Ownable: caller is not the owner';
   string public constant TXT_CALLER_NOT_PROXY_OWNER = 'ProxyOwner: caller is not the owner';

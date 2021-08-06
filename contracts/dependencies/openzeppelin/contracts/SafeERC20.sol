@@ -3,12 +3,11 @@ pragma solidity 0.6.12;
 
 import './IERC20.sol';
 import './SafeMath.sol';
-import './Address.sol';
+import './Addr.sol';
 
 /// @dev Wrappers around ERC20 operations that throw on failure (when the token contract returns false).
 library SafeERC20 {
   using SafeMath for uint256;
-  using Address for address;
 
   function safeTransfer(
     IERC20 token,
@@ -40,7 +39,7 @@ library SafeERC20 {
   }
 
   function callOptionalReturn(IERC20 token, bytes memory data) private {
-    require(address(token).isContract(), 'SafeERC20: call to non-contract');
+    require(Addr.isContract(address(token)), 'SafeERC20: call to non-contract');
 
     // solhint-disable-next-line avoid-low-level-calls
     (bool success, bytes memory returndata) = address(token).call(data);

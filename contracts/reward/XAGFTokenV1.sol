@@ -59,18 +59,23 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
 
   // This initializer is invoked by AccessController.setAddressAsImpl
   function initialize(IMarketAccessController ac) external virtual initializer(TOKEN_REVISION) {
-    address controller = ac.getRewardController();
-    address underlying = ac.getRewardToken();
+    address controller = ac.getAddress(AccessFlags.REWARD_CONTROLLER);
+    address underlying = ac.getAddress(AccessFlags.REWARD_TOKEN);
 
     _initializeERC20(NAME, SYMBOL, DECIMALS);
     super._initialize(underlying);
     super._initialize(IRewardController(controller), 0, 0);
   }
 
-  function initialize(InitData calldata data) public virtual override initializer(TOKEN_REVISION) {
+  function initialize(InitData calldata data)
+    external
+    virtual
+    override
+    initializer(TOKEN_REVISION)
+  {
     IMarketAccessController ac = IMarketAccessController(address(data.remoteAcl));
-    address controller = ac.getRewardController();
-    address underlying = ac.getRewardToken();
+    address controller = ac.getAddress(AccessFlags.REWARD_CONTROLLER);
+    address underlying = ac.getAddress(AccessFlags.REWARD_TOKEN);
 
     _initializeERC20(data.name, data.symbol, data.decimals);
     super._initialize(underlying);
@@ -84,7 +89,7 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
     string calldata symbol_,
     uint8 decimals_
   ) public virtual initializer(TOKEN_REVISION) {
-    address controller = remoteAcl.getRewardController();
+    address controller = remoteAcl.getAddress(AccessFlags.REWARD_CONTROLLER);
 
     _initializeERC20(name_, symbol_, decimals_);
     super._initialize(underlying);

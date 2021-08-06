@@ -58,7 +58,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
 
     const reserveAssets = getParamPerNetwork(ReserveAssets, network);
     const stakeConfigurator = await getStakeConfiguratorImpl(
-      await addressProvider.getStakeConfigurator()
+      await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
     );
 
     await waitForTx(
@@ -116,9 +116,11 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
 
     const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
 
-    const rewardController = await getRewardBooster(await addressProvider.getRewardController());
+    const rewardController = await getRewardBooster(
+      await addressProvider.getAddress(AccessFlags.REWARD_CONTROLLER)
+    );
     const configurator = await getRewardConfiguratorProxy(
-      await addressProvider.getRewardConfigurator()
+      await addressProvider.getAddress(AccessFlags.REWARD_CONFIGURATOR)
     );
 
     let totalShare = 0;
@@ -344,7 +346,7 @@ const deployExtraPools = async (
     const baselinePct = params.BasePoints;
     totalShare += baselinePct;
 
-    const treasury = await addressProvider.getTreasury();
+    const treasury = await addressProvider.getAddress(AccessFlags.TREASURY);
 
     const impl = await deployTreasuryRewardPool(
       [rewardCtlAddress, 0, baselinePct, treasury],

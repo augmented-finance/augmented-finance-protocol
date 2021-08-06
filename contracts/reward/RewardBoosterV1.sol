@@ -18,7 +18,7 @@ contract RewardBoosterV1 is RewardBooster, VersionedInitializable {
 
   // This initializer is invoked by AccessController.setAddressAsImpl
   function initialize(IMarketAccessController ac) external virtual initializer(CONTRACT_REVISION) {
-    address underlying = ac.getRewardToken();
+    address underlying = ac.getAddress(AccessFlags.REWARD_TOKEN);
     require(underlying != address(0));
     _initialize(ac, IRewardMinter(underlying));
   }
