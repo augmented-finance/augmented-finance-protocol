@@ -121,6 +121,20 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       await addressProvider.getRewardConfigurator()
     );
 
+    let totalShare = 0;
+    let newPoolsOffset = 0;
+    const newNames: string[] = [];
+    if (!freshStart || continuation) {
+      const totals = await configurator.getPoolTotals(true);
+      // console.log('Existing pool totals: ', totals);
+      totalShare += totals.totalBaselinePercentage.toNumber();
+      newPoolsOffset = totals.listCount.toNumber();
+    }
+    if (freshStart && newPoolsOffset <= 1) {
+      newPoolsOffset = 0;
+      newNames.push(Names.RewardStakeTokenSymbol);
+    }
+
     const [extraNames, extraShare] = await deployExtraPools(
       addressProvider,
       freshStart,
@@ -130,7 +144,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       rewardController.address,
       verify
     );
-    let totalShare = extraShare;
+    totalShare += extraShare;
 
     for (const [sym, opt] of Object.entries(rewardParams.TokenPools)) {
       if (opt == undefined) {
@@ -162,18 +176,6 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
           Names.StakeSymbolPrefix
         );
       }
-    }
-
-    let newPoolsOffset = 0;
-    const newNames: string[] = [];
-    if (!freshStart || continuation) {
-      const totals = await configurator.getPoolTotals(true);
-      totalShare = totals.totalBaselinePercentage.toNumber();
-      newPoolsOffset = totals.listCount.toNumber();
-    }
-    if (freshStart && newPoolsOffset <= 1) {
-      newPoolsOffset = 0;
-      newNames.push(Names.RewardStakeTokenSymbol);
     }
 
     for (const params of initParams) {
@@ -263,6 +265,7 @@ const deployExtraPools = async (
         knownNamedPools.add(allNames[i]);
       }
     }
+    console.log('Known named pools: ', knownNamedPools);
   }
 
   if (!knownNamedPools.has(teamPoolName)) {

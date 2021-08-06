@@ -121,8 +121,13 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
         (await getFirstSigner()).address,
         AccessFlags.REWARD_CONFIG_ADMIN
       );
+      console.log('Granted REWARD_CONFIG_ADMIN');
 
-      await waitForTx(await configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false));
+      await waitForTx(
+        await configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false, {
+          gasLimit: 2000000,
+        })
+      );
       console.log('Boost pool and excess recevier: ', xagfAddr);
     }
   });
