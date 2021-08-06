@@ -2,9 +2,6 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../tools/math/WadRayMath.sol';
-import '../../tools/Errors.sol';
 import '../interfaces/IBoostRate.sol';
 import '../interfaces/IBoostExcessReceiver.sol';
 import '../interfaces/IRewardController.sol';
@@ -21,9 +18,6 @@ contract RewardedTokenLocker is
   IBoostRate,
   IAutolocker
 {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
-
   constructor(
     IRewardController controller,
     uint256 initialRate,

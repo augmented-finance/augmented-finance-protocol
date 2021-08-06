@@ -1,17 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../tools/math/WadRayMath.sol';
-import '../../tools/math/BitUtils.sol';
-import '../interfaces/IRewardController.sol';
-import '../interfaces/IRewardController.sol';
 import './CalcLinearRateReward.sol';
 
 abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
-
   uint256 private _accumRate;
   mapping(uint32 => uint256) private _accumHistory;
 
@@ -88,7 +80,7 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
       return (adjRate, 0, entry.claimedAt);
     }
 
-    allocated = mulDiv(entry.rewardBase, adjRate.sub(lastAccumRate), _maxWeightBase);
+    allocated = uint256(entry.rewardBase).mulDiv(adjRate.sub(lastAccumRate), _maxWeightBase);
     return (adjRate, allocated, entry.claimedAt);
   }
 }

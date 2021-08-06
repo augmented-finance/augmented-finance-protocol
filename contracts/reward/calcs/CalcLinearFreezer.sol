@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/PercentageMath.sol';
-import '../../tools/math/WadRayMath.sol';
 import '../interfaces/IRewardController.sol';
 import './CalcBase.sol';
 
 abstract contract CalcLinearFreezer is CalcBase {
-  using SafeMath for uint256;
   using PercentageMath for uint256;
 
   struct FrozenReward {
