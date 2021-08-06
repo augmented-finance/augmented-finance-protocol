@@ -32,7 +32,7 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
 
     // user 0 deposits 1000 DAI
     await dai.connect(users[0].signer).approve(pool.address, APPROVAL_AMOUNT_LENDING_POOL);
-    await pool
+    await testEnv.pool
       .connect(users[0].signer)
       .deposit(dai.address, amountDAItoDeposit, users[0].address, '0');
 
@@ -89,7 +89,9 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
 
     await pool.connect(users[1].signer).setPaused(true);
     await expect(
-      pool.connect(users[0].signer).deposit(dai.address, amountDAItoDeposit, users[0].address, '0')
+      testEnv.pool
+        .connect(users[0].signer)
+        .deposit(dai.address, amountDAItoDeposit, users[0].address, '0')
     ).to.revertedWith(LP_IS_PAUSED);
 
     await pool.connect(users[1].signer).setPaused(false);
@@ -105,7 +107,7 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
 
     // user 0 deposits 1000 DAI
     await dai.connect(users[0].signer).approve(pool.address, APPROVAL_AMOUNT_LENDING_POOL);
-    await pool
+    await testEnv.pool
       .connect(users[0].signer)
       .deposit(dai.address, amountDAItoDeposit, users[0].address, '0');
 
@@ -113,7 +115,9 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
 
     // user tries to burn
     await expect(
-      pool.connect(users[0].signer).withdraw(dai.address, amountDAItoDeposit, users[0].address)
+      testEnv.pool
+        .connect(users[0].signer)
+        .withdraw(dai.address, amountDAItoDeposit, users[0].address)
     ).to.revertedWith(LP_IS_PAUSED);
 
     await pool.connect(users[1].signer).setPaused(false);
@@ -128,7 +132,7 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
 
     // Try to execute liquidation
     await expect(
-      pool.connect(user.signer).borrow(dai.address, '1', '1', '0', user.address)
+      testEnv.pool.connect(user.signer).borrow(dai.address, '1', '1', '0', user.address)
     ).revertedWith(LP_IS_PAUSED);
 
     await pool.connect(users[1].signer).setPaused(false);
@@ -142,9 +146,9 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
     await pool.connect(users[1].signer).setPaused(true);
 
     // Try to execute liquidation
-    await expect(pool.connect(user.signer).repay(dai.address, '1', '1', user.address)).revertedWith(
-      LP_IS_PAUSED
-    );
+    await expect(
+      testEnv.pool.connect(user.signer).repay(dai.address, '1', '1', user.address)
+    ).revertedWith(LP_IS_PAUSED);
 
     await pool.connect(users[1].signer).setPaused(false);
   });
@@ -162,7 +166,7 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
     await pool.connect(users[1].signer).setPaused(true);
 
     await expect(
-      pool
+      testEnv.pool
         .connect(caller.signer)
         .flashLoan(
           _mockFlashLoanReceiver.address,
@@ -196,7 +200,7 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
     //user 3 deposits 1000 USDC
     const amountUSDCtoDeposit = await convertToCurrencyDecimals(usdc.address, '1000');
 
-    await pool
+    await testEnv.pool
       .connect(depositor.signer)
       .deposit(usdc.address, amountUSDCtoDeposit, depositor.address, '0');
 
@@ -209,12 +213,12 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
     //approve protocol to access borrower wallet
     await weth.connect(borrower.signer).approve(pool.address, APPROVAL_AMOUNT_LENDING_POOL);
 
-    await pool
+    await testEnv.pool
       .connect(borrower.signer)
       .deposit(weth.address, amountETHtoDeposit, borrower.address, '0');
 
     //user 4 borrows
-    const userGlobalData = await pool.getUserAccountData(borrower.address);
+    const userGlobalData = await testEnv.pool.getUserAccountData(borrower.address);
 
     const usdcPrice = await oracle.getAssetPrice(usdc.address);
 
@@ -226,7 +230,7 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
         .toFixed(0)
     );
 
-    await pool
+    await testEnv.pool
       .connect(borrower.signer)
       .borrow(usdc.address, amountUSDCToBorrow, RateMode.Stable, '0', borrower.address);
 
@@ -253,7 +257,13 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
 
     // Do liquidation
     await expect(
-      pool.liquidationCall(weth.address, usdc.address, borrower.address, amountToLiquidate, true)
+      testEnv.pool.liquidationCall(
+        weth.address,
+        usdc.address,
+        borrower.address,
+        amountToLiquidate,
+        true
+      )
     ).revertedWith(LP_IS_PAUSED);
 
     await pool.connect(users[1].signer).setPaused(false);
@@ -270,19 +280,25 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
 
     await weth.connect(user.signer).mint(amountWETHToDeposit);
     await weth.connect(user.signer).approve(pool.address, APPROVAL_AMOUNT_LENDING_POOL);
-    await pool.connect(user.signer).deposit(weth.address, amountWETHToDeposit, user.address, '0');
+    await testEnv.pool
+      .connect(user.signer)
+      .deposit(weth.address, amountWETHToDeposit, user.address, '0');
 
     await dai.connect(user.signer).mint(amountDAIToDeposit);
     await dai.connect(user.signer).approve(pool.address, APPROVAL_AMOUNT_LENDING_POOL);
-    await pool.connect(user.signer).deposit(dai.address, amountDAIToDeposit, user.address, '0');
+    await testEnv.pool
+      .connect(user.signer)
+      .deposit(dai.address, amountDAIToDeposit, user.address, '0');
 
-    await pool.connect(user.signer).borrow(usdc.address, amountToBorrow, 2, 0, user.address);
+    await testEnv.pool
+      .connect(user.signer)
+      .borrow(usdc.address, amountToBorrow, 2, 0, user.address);
 
     await pool.connect(users[1].signer).setPaused(true);
 
     // Try to repay
     await expect(
-      pool.connect(user.signer).swapBorrowRateMode(usdc.address, RateMode.Stable)
+      testEnv.pool.connect(user.signer).swapBorrowRateMode(usdc.address, RateMode.Stable)
     ).revertedWith(LP_IS_PAUSED);
 
     await pool.connect(users[1].signer).setPaused(false);
@@ -296,7 +312,7 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
     await pool.connect(users[1].signer).setPaused(true);
 
     await expect(
-      pool.connect(user.signer).rebalanceStableBorrowRate(dai.address, user.address)
+      testEnv.pool.connect(user.signer).rebalanceStableBorrowRate(dai.address, user.address)
     ).revertedWith(LP_IS_PAUSED);
 
     await pool.connect(users[1].signer).setPaused(false);
@@ -311,12 +327,14 @@ makeSuite('Pausable Pool', (testEnv: TestEnv) => {
     const amountWETHToDeposit = parseEther('1');
     await weth.connect(user.signer).mint(amountWETHToDeposit);
     await weth.connect(user.signer).approve(pool.address, APPROVAL_AMOUNT_LENDING_POOL);
-    await pool.connect(user.signer).deposit(weth.address, amountWETHToDeposit, user.address, '0');
+    await testEnv.pool
+      .connect(user.signer)
+      .deposit(weth.address, amountWETHToDeposit, user.address, '0');
 
     await pool.connect(users[1].signer).setPaused(true);
 
     await expect(
-      pool.connect(user.signer).setUserUseReserveAsCollateral(weth.address, false)
+      testEnv.pool.connect(user.signer).setUserUseReserveAsCollateral(weth.address, false)
     ).revertedWith(LP_IS_PAUSED);
 
     await pool.connect(users[1].signer).setPaused(false);
