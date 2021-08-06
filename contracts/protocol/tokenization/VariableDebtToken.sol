@@ -3,13 +3,13 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import './base/PoolTokenBase.sol';
 import '../../interfaces/IVariableDebtToken.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/Errors.sol';
-import './base/DebtTokenBase.sol';
-import './interfaces/PoolTokenConfig.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
+import './interfaces/PoolTokenConfig.sol';
+import './base/PoolTokenBase.sol';
+import './base/DebtTokenBase.sol';
 
 /// @dev A variable debt token to track the borrowing positions of users
 contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDebtToken {

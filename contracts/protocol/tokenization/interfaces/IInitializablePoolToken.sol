@@ -18,13 +18,7 @@ interface IInitializablePoolToken {
     bytes params
   );
 
-  /**
-   * @dev Initializes the depositToken
-   * @param config The data about lending pool where this token will be used
-   * @param tokenName The name of the token
-   * @param tokenSymbol The symbol of the token
-   * @param tokenDecimals The decimals of the token, same with the underlying asset
-   */
+  /// @dev Initializes the depositToken
   function initialize(
     PoolTokenConfig calldata config,
     string calldata tokenName,

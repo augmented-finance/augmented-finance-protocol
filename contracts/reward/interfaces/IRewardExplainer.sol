@@ -2,10 +2,6 @@
 pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
-import './IManagedRewardPool.sol';
-import '../../interfaces/IRewardMinter.sol';
-import '../../interfaces/IEmergencyAccess.sol';
-
 interface IRewardExplainer {
   function explainReward(address holder, uint32 at) external view returns (RewardExplained memory);
 }

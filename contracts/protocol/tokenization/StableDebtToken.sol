@@ -3,15 +3,15 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import './base/PoolTokenBase.sol';
-import './base/DebtTokenBase.sol';
 import '../../tools/math/MathUtils.sol';
 import '../../tools/math/WadRayMath.sol';
-import '../../interfaces/IStableDebtToken.sol';
 import '../../tools/Errors.sol';
-import './interfaces/PoolTokenConfig.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
+import '../../interfaces/IStableDebtToken.sol';
 import '../../interfaces/IBalanceHook.sol';
+import './interfaces/PoolTokenConfig.sol';
+import './base/PoolTokenBase.sol';
+import './base/DebtTokenBase.sol';
 
 /// @dev A stable debt token to track the borrowing positions of users
 contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtToken {

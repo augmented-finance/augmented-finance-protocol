@@ -5,11 +5,7 @@ import './IProxy.sol';
 import './ProxyAdminBase.sol';
 import '../Errors.sol';
 
-/**
- * @dev This is an auxiliary contract meant to be assigned as the admin of a {IProxy}. For an
- * explanation of why you would want to use this see the documentation for {IProxy}.
- * @author Adopted from the OpenZeppelin
- */
+/// @dev This contract meant to be assigned as the admin of a {IProxy}. Adopted from the OpenZeppelin
 contract ProxyAdmin is ProxyAdminBase {
   address private immutable _owner;
 
@@ -28,36 +24,17 @@ contract ProxyAdmin is ProxyAdminBase {
     _;
   }
 
-  /**
-   * @dev Returns the current implementation of `proxy`.
-   *
-   * Requirements:
-   *
-   * - This contract must be the admin of `proxy`.
-   */
+  /// @dev Returns the current implementation of `proxy`.
   function getProxyImplementation(IProxy proxy) public view virtual returns (address) {
     return _getProxyImplementation(proxy);
   }
 
-  /**
-   * @dev Upgrades `proxy` to `implementation`. See {TransparentUpgradeableProxy-upgradeTo}.
-   *
-   * Requirements:
-   *
-   * - This contract must be the admin of `proxy`.
-   */
+  /// @dev Upgrades `proxy` to `implementation`.
   function upgrade(IProxy proxy, address implementation) public virtual onlyOwner {
     proxy.upgradeTo(implementation);
   }
 
-  /**
-   * @dev Upgrades `proxy` to `implementation` and calls a function on the new implementation. See
-   * {TransparentUpgradeableProxy-upgradeToAndCall}.
-   *
-   * Requirements:
-   *
-   * - This contract must be the admin of `proxy`.
-   */
+  /// @dev Upgrades `proxy` to `implementation` and calls a function on the new implementation.
   function upgradeAndCall(
     IProxy proxy,
     address implementation,

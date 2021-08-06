@@ -2,16 +2,14 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import '../../../tools/Errors.sol';
-import './PoolTokenBase.sol';
-
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
-
 import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../../interfaces/IDepositToken.sol';
 import '../../../tools/math/WadRayMath.sol';
+import '../../../tools/Errors.sol';
 import '../../../misc/PermitForERC20.sol';
+import './PoolTokenBase.sol';
 
 /// @dev Implementation of the interest bearing token for the Augmented Finance protocol
 abstract contract DepositTokenBase is

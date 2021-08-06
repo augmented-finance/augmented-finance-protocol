@@ -5,15 +5,14 @@ pragma experimental ABIEncoderV2;
 import '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../../interfaces/ILendingPool.sol';
-import '../interfaces/IInitializablePoolToken.sol';
 import '../../../interfaces/IPoolToken.sol';
-import '../interfaces/PoolTokenConfig.sol';
 import '../../../interfaces/IBalanceHook.sol';
+import '../../../interfaces/ILendingPoolForTokens.sol';
 import '../../../tools/Errors.sol';
 import '../../../access/AccessHelper.sol';
 import '../../../access/AccessFlags.sol';
-import '../../../interfaces/IManagedLendingPool.sol';
+import '../interfaces/IInitializablePoolToken.sol';
+import '../interfaces/PoolTokenConfig.sol';
 
 abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, IERC20Details {
   using SafeMath for uint256;
@@ -25,7 +24,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
   mapping(address => uint256) internal _balances;
   uint256 internal _totalSupply;
 
-  IManagedLendingPool internal _pool;
+  ILendingPoolForTokens internal _pool;
   address internal _underlyingAsset;
   IBalanceHook private _incentivesController;
 
@@ -93,7 +92,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     uint8 debtTokenDecimals,
     bytes calldata params
   ) internal {
-    _pool = config.pool;
+    _pool = ILendingPoolForTokens(config.pool);
     _underlyingAsset = config.underlyingAsset;
 
     emit Initialized(
@@ -111,8 +110,8 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     return _underlyingAsset;
   }
 
-  function POOL() public view override returns (ILendingPool) {
-    return _pool;
+  function POOL() public view override returns (address) {
+    return address(_pool);
   }
 
   function handleBalanceUpdate(

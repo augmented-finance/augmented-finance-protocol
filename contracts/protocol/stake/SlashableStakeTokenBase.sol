@@ -2,21 +2,21 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import '../../misc/ERC20WithPermit.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import './interfaces/IStakeToken.sol';
-import './interfaces/IManagedStakeToken.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../misc/ERC20WithPermit.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
+import '../../tools/Errors.sol';
 import '../../interfaces/IBalanceHook.sol';
 import '../../access/AccessFlags.sol';
 import '../../access/MarketAccessBitmask.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
-import '../../tools/Errors.sol';
 import './interfaces/StakeTokenConfig.sol';
 import './interfaces/IInitializableStakeToken.sol';
+import './interfaces/IStakeToken.sol';
+import './interfaces/IManagedStakeToken.sol';
 
 abstract contract SlashableStakeTokenBase is
   IStakeToken,

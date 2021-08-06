@@ -5,17 +5,18 @@ pragma experimental ABIEncoderV2;
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import '../../tools/upgradeability/IProxy.sol';
 import '../../tools/upgradeability/ProxyAdminBase.sol';
-import '../libraries/configuration/ReserveConfiguration.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
 import '../../access/MarketAccessBitmask.sol';
+import '../../interfaces/ILendingPoolConfigurator.sol';
 import '../../interfaces/IManagedLendingPool.sol';
+import '../../interfaces/ILendingPoolForTokens.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../tools/Errors.sol';
 import '../../tools/math/PercentageMath.sol';
+import '../libraries/configuration/ReserveConfiguration.sol';
 import '../libraries/types/DataTypes.sol';
 import '../tokenization/interfaces/IInitializablePoolToken.sol';
 import '../tokenization/interfaces/PoolTokenConfig.sol';
-import '../../interfaces/ILendingPoolConfigurator.sol';
 
 /// @dev Implements configuration methods for the LendingPool
 contract LendingPoolConfigurator is
@@ -27,7 +28,7 @@ contract LendingPoolConfigurator is
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-  IManagedLendingPool internal pool;
+  ICombinedPool internal pool;
 
   uint256 private constant CONFIGURATOR_REVISION = 0x1;
 
@@ -40,7 +41,7 @@ contract LendingPoolConfigurator is
     initializerRunAlways(CONFIGURATOR_REVISION)
   {
     _remoteAcl = provider;
-    pool = IManagedLendingPool(provider.getLendingPool());
+    pool = ICombinedPool(provider.getLendingPool());
   }
 
   /// @dev Initializes reserves in batch
@@ -53,7 +54,7 @@ contract LendingPoolConfigurator is
   function _initReserve(InitReserveInput calldata input) internal {
     PoolTokenConfig memory config =
       PoolTokenConfig({
-        pool: pool,
+        pool: address(pool),
         treasury: input.treasury,
         underlyingAsset: input.underlyingAsset
       });
@@ -152,7 +153,11 @@ contract LendingPoolConfigurator is
     (, , , uint256 decimals, ) = pool.getConfiguration(input.asset).getParamsMemory();
 
     PoolTokenConfig memory config =
-      PoolTokenConfig({pool: pool, treasury: input.treasury, underlyingAsset: input.asset});
+      PoolTokenConfig({
+        pool: address(pool),
+        treasury: input.treasury,
+        underlyingAsset: input.asset
+      });
 
     bytes memory encodedCall =
       abi.encodeWithSelector(
@@ -362,3 +367,5 @@ contract LendingPoolConfigurator is
     }
   }
 }
+
+interface ICombinedPool is ILendingPoolForTokens, IManagedLendingPool {}

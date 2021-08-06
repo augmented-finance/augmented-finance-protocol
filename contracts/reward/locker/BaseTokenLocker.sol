@@ -3,20 +3,16 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
-
+import '../../tools/Errors.sol';
 import '../../access/AccessFlags.sol';
 import '../../access/MarketAccessBitmask.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
 import '../../interfaces/IEmergencyAccess.sol';
 import '../../interfaces/IDerivedToken.sol';
-
 import '../calcs/CalcLinearRateReward.sol';
-
-import '../../tools/Errors.sol';
 
 /**
   @dev Curve-like locker, that locks an underlying token for some period and mints non-transferrable tokens for that period. 

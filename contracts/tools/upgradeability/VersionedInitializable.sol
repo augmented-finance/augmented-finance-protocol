@@ -140,9 +140,8 @@ abstract contract VersionedInitializable {
   }
 
   /**
-   * @dev returns the revision number of the contract
-   * Needs to be defined in the inherited class as a constant.
-   * Can only use values less than (type(uint256).max - 1).
+   * @dev returns the revision number (< type(uint256).max - 1) of the contract.
+   * The number should be defined as a private constant.
    **/
   function getRevision() internal pure virtual returns (uint256);
 

@@ -2,10 +2,6 @@
 pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
-import './IManagedRewardPool.sol';
-import '../../interfaces/IRewardMinter.sol';
-import '../../interfaces/IEmergencyAccess.sol';
-
 interface IRewardCollector {
   function claimReward() external returns (uint256 claimed, uint256 extra);
 

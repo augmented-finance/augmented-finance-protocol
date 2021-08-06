@@ -5,11 +5,9 @@ pragma experimental ABIEncoderV2;
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/BitUtils.sol';
-
+import '../interfaces/IRewardController.sol';
 import '../interfaces/IRewardController.sol';
 import './RewardedTokenLocker.sol';
-
-import '../interfaces/IRewardController.sol';
 
 contract DecayingTokenLocker is RewardedTokenLocker {
   constructor(

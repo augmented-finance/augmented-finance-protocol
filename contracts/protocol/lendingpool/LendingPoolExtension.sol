@@ -32,7 +32,7 @@ contract LendingPoolExtension is
   LendingPoolBase,
   ILendingPoolExtension,
   ILendingPoolEvents,
-  IOnlyManagedLendingPool
+  IManagedLendingPool
 {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -703,52 +703,6 @@ contract LendingPoolExtension is
     _addReserveToList(data.asset);
   }
 
-  /**
-   * @dev Validates and finalizes an depositToken transfer
-   * - Only callable by the overlying depositToken of the `asset`
-   * @param asset The address of the underlying asset of the depositToken
-   * @param from The user from which the depositToken are transferred
-   * @param to The user receiving the depositToken
-   * @param amount The amount being transferred/withdrawn
-   * @param balanceFromBefore The depositToken balance of the `from` user before the transfer
-   * @param balanceToBefore The depositToken balance of the `to` user before the transfer
-   */
-  function finalizeTransfer(
-    address asset,
-    address from,
-    address to,
-    uint256 amount,
-    uint256 balanceFromBefore,
-    uint256 balanceToBefore
-  ) external override whenNotPaused {
-    require(msg.sender == _reserves[asset].depositTokenAddress, Errors.LP_CALLER_MUST_BE_AN_ATOKEN);
-
-    ValidationLogic.validateTransfer(
-      from,
-      _reserves,
-      _usersConfig[from],
-      _reservesList,
-      _reservesCount,
-      _addressesProvider.getPriceOracle()
-    );
-
-    uint256 reserveId = _reserves[asset].id;
-
-    if (from != to) {
-      if (balanceFromBefore.sub(amount) == 0) {
-        DataTypes.UserConfigurationMap storage fromConfig = _usersConfig[from];
-        fromConfig.setUsingAsCollateral(reserveId, false);
-        emit ReserveUsedAsCollateralDisabled(asset, from);
-      }
-
-      if (balanceToBefore == 0 && amount != 0) {
-        DataTypes.UserConfigurationMap storage toConfig = _usersConfig[to];
-        toConfig.setUsingAsCollateral(reserveId, true);
-        emit ReserveUsedAsCollateralEnabled(asset, to);
-      }
-    }
-  }
-
   function getLendingPoolExtension() external view override returns (address) {
     return _extension;
   }
@@ -757,10 +711,5 @@ contract LendingPoolExtension is
     require(Address.isContract(extension), Errors.VL_CONTRACT_REQUIRED);
     _extension = extension;
     emit LendingPoolExtensionUpdated(extension);
-  }
-
-  /// @dev getAddressesProvider is for backward compatibility, is deprecated, use getAccessController() instead
-  function getAddressesProvider() external view returns (IMarketAccessController) {
-    return _addressesProvider;
   }
 }

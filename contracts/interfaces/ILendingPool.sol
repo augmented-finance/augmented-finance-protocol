@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import '../access/interfaces/IMarketAccessController.sol';
 import '../protocol/libraries/types/DataTypes.sol';
 import './ILendingPoolEvents.sol';
 
@@ -231,5 +230,5 @@ interface ILendingPool is ILendingPoolEvents {
 
   function getReservesList() external view returns (address[] memory);
 
-  function getAccessController() external view returns (IMarketAccessController);
+  function getAddressesProvider() external view returns (address);
 }

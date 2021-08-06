@@ -23,6 +23,7 @@ import '../libraries/logic/ReserveLogic.sol';
 import '../libraries/types/DataTypes.sol';
 import './LendingPoolBase.sol';
 import '../../interfaces/ILendingPool.sol';
+import '../../interfaces/ILendingPoolForTokens.sol';
 import '../../tools/upgradeability/Delegator.sol';
 
 /**
@@ -38,7 +39,7 @@ import '../../tools/upgradeability/Delegator.sol';
  *   # Liquidate positions
  *   # Execute Flash Loans
  **/
-contract LendingPool is LendingPoolBase, ILendingPool, Delegator {
+contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolForTokens {
   using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -343,7 +344,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator {
   function getReserveData(address asset)
     external
     view
-    override
+    override(ILendingPool, ILendingPoolForTokens)
     returns (DataTypes.ReserveData memory)
   {
     return _reserves[asset];
@@ -387,7 +388,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator {
   function getConfiguration(address asset)
     external
     view
-    override
+    override(ILendingPool, ILendingPoolForTokens)
     returns (DataTypes.ReserveConfigurationMap memory)
   {
     return _reserves[asset].configuration;
@@ -406,7 +407,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator {
     external
     view
     virtual
-    override
+    override(ILendingPool, ILendingPoolForTokens)
     returns (uint256)
   {
     return _reserves[asset].getNormalizedIncome(asset);
@@ -415,7 +416,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator {
   function getReserveNormalizedVariableDebt(address asset)
     external
     view
-    override
+    override(ILendingPool, ILendingPoolForTokens)
     returns (uint256)
   {
     return _reserves[asset].getNormalizedDebt();
@@ -444,6 +445,10 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator {
     return _flashLoanPremiumPct;
   }
 
+  function getAddressesProvider() external view override returns (address) {
+    return address(_addressesProvider);
+  }
+
   /// @dev Returns the address of the LendingPoolExtension
   function getLendingPoolExtension() external view returns (address) {
     return _extension;
@@ -454,5 +459,41 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator {
     require(Address.isContract(extension), Errors.VL_CONTRACT_REQUIRED);
     _extension = extension;
     emit LendingPoolExtensionUpdated(extension);
+  }
+
+  function finalizeTransfer(
+    address asset,
+    address from,
+    address to,
+    uint256 amount,
+    uint256 balanceFromBefore,
+    uint256 balanceToBefore
+  ) external override whenNotPaused {
+    require(msg.sender == _reserves[asset].depositTokenAddress, Errors.LP_CALLER_MUST_BE_AN_ATOKEN);
+
+    ValidationLogic.validateTransfer(
+      from,
+      _reserves,
+      _usersConfig[from],
+      _reservesList,
+      _reservesCount,
+      _addressesProvider.getPriceOracle()
+    );
+
+    uint256 reserveId = _reserves[asset].id;
+
+    if (from != to) {
+      if (balanceFromBefore.sub(amount) == 0) {
+        DataTypes.UserConfigurationMap storage fromConfig = _usersConfig[from];
+        fromConfig.setUsingAsCollateral(reserveId, false);
+        emit ReserveUsedAsCollateralDisabled(asset, from);
+      }
+
+      if (balanceToBefore == 0 && amount != 0) {
+        DataTypes.UserConfigurationMap storage toConfig = _usersConfig[to];
+        toConfig.setUsingAsCollateral(reserveId, true);
+        emit ReserveUsedAsCollateralEnabled(asset, to);
+      }
+    }
   }
 }
