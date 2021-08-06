@@ -164,10 +164,6 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     return address(_incentivesController);
   }
 
-  function increaseAllowance(address, uint256) public virtual returns (bool);
-
-  function decreaseAllowance(address, uint256) public virtual returns (bool);
-
   function totalSupply() public view virtual override returns (uint256) {
     return _totalSupply;
   }

@@ -39,20 +39,6 @@ abstract contract DepositTokenBase is
     return true;
   }
 
-  function increaseAllowance(address spender, uint256 addedValue) public override returns (bool) {
-    _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
-    return true;
-  }
-
-  function decreaseAllowance(address spender, uint256 subtValue) public override returns (bool) {
-    _approve(
-      msg.sender,
-      spender,
-      _allowances[msg.sender][spender].sub(subtValue, 'ERC20: decreased allowance below zero')
-    );
-    return true;
-  }
-
   function burn(
     address user,
     address receiverOfUnderlying,

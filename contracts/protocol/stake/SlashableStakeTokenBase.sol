@@ -249,7 +249,7 @@ abstract contract SlashableStakeTokenBase is
       return WadRayMath.RAY; // 100%
     }
 
-    return underlyingBalance.rayBase(total);
+    return underlyingBalance.mul(WadRayMath.RAY).div(total);
   }
 
   function slashUnderlying(

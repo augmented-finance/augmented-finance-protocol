@@ -58,14 +58,6 @@ abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICredi
 
   function _mutable() private {}
 
-  function increaseAllowance(address, uint256) public override returns (bool) {
-    notSupported();
-  }
-
-  function decreaseAllowance(address, uint256) public override returns (bool) {
-    notSupported();
-  }
-
   function _decreaseBorrowAllowance(
     address delegator,
     address delegatee,

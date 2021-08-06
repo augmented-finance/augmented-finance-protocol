@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import '../../tools/math/MathUtils.sol';
+import '../../tools/math/InterestMath.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/Errors.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
@@ -68,7 +68,8 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
   }
 
   function cumulatedInterest(address account) public view virtual returns (uint256) {
-    return MathUtils.calculateCompoundedInterest(_usersStableRate[account], _timestamps[account]);
+    return
+      InterestMath.calculateCompoundedInterest(_usersStableRate[account], _timestamps[account]);
   }
 
   struct MintLocalVars {
@@ -270,7 +271,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
       return 0;
     }
 
-    uint256 cumInterest = MathUtils.calculateCompoundedInterest(avgRate, _totalSupplyTimestamp);
+    uint256 cumInterest = InterestMath.calculateCompoundedInterest(avgRate, _totalSupplyTimestamp);
     return principalSupply.rayMul(cumInterest);
   }
 

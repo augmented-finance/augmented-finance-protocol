@@ -105,28 +105,6 @@ contract ERC20 is IERC20WithEvents {
     return true;
   }
 
-  /// @dev Atomically increases the allowance granted to `spender` by the caller.
-  /// - `spender` cannot be the zero address.
-  function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-    _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
-    return true;
-  }
-
-  /// @dev Atomically decreases the allowance granted to `spender` by the caller.
-  /// - `spender` cannot be the zero address.
-  function decreaseAllowance(address spender, uint256 subtractedValue)
-    public
-    virtual
-    returns (bool)
-  {
-    _approve(
-      msg.sender,
-      spender,
-      _allowances[msg.sender][spender].sub(subtractedValue, 'ERC20: decreased allowance below zero')
-    );
-    return true;
-  }
-
   /// @dev Moves tokens `amount` from `sender` to `recipient`.
   /// - both `sender` and `recipient` cannot be the zero address.
   function _transfer(

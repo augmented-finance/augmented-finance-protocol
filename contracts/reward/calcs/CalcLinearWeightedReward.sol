@@ -101,7 +101,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
       return (adjRate, 0, entry.claimedAt);
     }
 
-    allocated = uint256(entry.rewardBase).mulDiv(adjRate.sub(lastAccumRate), _maxWeightBase);
+    allocated = uint256(entry.rewardBase).mul(adjRate.sub(lastAccumRate)).div(_maxWeightBase);
     return (adjRate, allocated, entry.claimedAt);
   }
 }

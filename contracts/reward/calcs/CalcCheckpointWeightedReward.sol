@@ -2,11 +2,8 @@
 pragma solidity ^0.6.12;
 
 import './CalcLinearRateReward.sol';
-import '../../tools/math/WadRayMath.sol';
 
 abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
-  using WadRayMath for uint256;
-
   uint256 private _accumRate;
   mapping(uint32 => uint256) private _accumHistory;
 
@@ -83,7 +80,7 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
       return (adjRate, 0, entry.claimedAt);
     }
 
-    allocated = uint256(entry.rewardBase).mulDiv(adjRate.sub(lastAccumRate), _maxWeightBase);
+    allocated = uint256(entry.rewardBase).mul(adjRate.sub(lastAccumRate)).div(_maxWeightBase);
     return (adjRate, allocated, entry.claimedAt);
   }
 }

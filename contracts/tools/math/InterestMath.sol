@@ -4,7 +4,7 @@ pragma solidity 0.6.12;
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import './WadRayMath.sol';
 
-library MathUtils {
+library InterestMath {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 

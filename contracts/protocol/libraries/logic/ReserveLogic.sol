@@ -11,7 +11,7 @@ import '../../../interfaces/IVariableDebtToken.sol';
 import '../../../interfaces/IReserveStrategy.sol';
 import '../../../interfaces/IReserveDelegatedStrategy.sol';
 import '../configuration/ReserveConfiguration.sol';
-import '../../../tools/math/MathUtils.sol';
+import '../../../tools/math/InterestMath.sol';
 import '../../../tools/math/WadRayMath.sol';
 import '../../../tools/math/PercentageMath.sol';
 import '../../../tools/Errors.sol';
@@ -76,7 +76,7 @@ library ReserveLogic {
     }
 
     return
-      MathUtils.calculateLinearInterest(reserve.currentLiquidityRate, timestamp).rayMul(
+      InterestMath.calculateLinearInterest(reserve.currentLiquidityRate, timestamp).rayMul(
         reserve.liquidityIndex
       );
   }
@@ -105,7 +105,7 @@ library ReserveLogic {
     }
 
     uint256 cumulated =
-      MathUtils.calculateCompoundedInterest(reserve.currentVariableBorrowRate, timestamp).rayMul(
+      InterestMath.calculateCompoundedInterest(reserve.currentVariableBorrowRate, timestamp).rayMul(
         reserve.variableBorrowIndex
       );
 
@@ -348,7 +348,7 @@ library ReserveLogic {
     vars.currentVariableDebt = scaledVariableDebt.rayMul(newVariableBorrowIndex);
 
     //calculate the stable debt until the last timestamp update
-    vars.cumulatedStableInterest = MathUtils.calculateCompoundedInterest(
+    vars.cumulatedStableInterest = InterestMath.calculateCompoundedInterest(
       vars.avgStableRate,
       vars.stableSupplyUpdatedTimestamp,
       timestamp
@@ -395,7 +395,7 @@ library ReserveLogic {
     //only cumulating if there is any income being produced
     if (currentLiquidityRate > 0) {
       uint256 cumulatedLiquidityInterest =
-        MathUtils.calculateLinearInterest(currentLiquidityRate, timestamp);
+        InterestMath.calculateLinearInterest(currentLiquidityRate, timestamp);
       newLiquidityIndex = cumulatedLiquidityInterest.rayMul(liquidityIndex);
       require(newLiquidityIndex <= type(uint128).max, Errors.RL_LIQUIDITY_INDEX_OVERFLOW);
 
@@ -405,7 +405,7 @@ library ReserveLogic {
       //that there is actual variable debt before accumulating
       if (scaledVariableDebt != 0) {
         uint256 cumulatedVariableBorrowInterest =
-          MathUtils.calculateCompoundedInterest(reserve.currentVariableBorrowRate, timestamp);
+          InterestMath.calculateCompoundedInterest(reserve.currentVariableBorrowRate, timestamp);
         newVariableBorrowIndex = cumulatedVariableBorrowInterest.rayMul(variableBorrowIndex);
         require(
           newVariableBorrowIndex <= type(uint128).max,
