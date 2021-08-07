@@ -15,19 +15,18 @@ export enum AccessFlags {
   LENDING_POOL = 1 << 16, // use proxy
   LENDING_POOL_CONFIGURATOR = 1 << 17, // use proxy
   LIQUIDITY_CONTROLLER = 1 << 18, // use proxy, can slash & pause stakes
+  TREASURY = 1 << 19, // use proxy
+  REWARD_TOKEN = 1 << 20, // use proxy
+  REWARD_STAKE_TOKEN = 1 << 21, // use proxy
+  REWARD_CONTROLLER = 1 << 22, // use proxy
+  REWARD_CONFIGURATOR = 1 << 23, // use proxy
+  STAKE_CONFIGURATOR = 1 << 24, // use proxy
+  REFERRAL_REGISTRY = 1 << 25, // use proxy
 
-  TREASURY = 1 << 21, // use proxy
-  REWARD_TOKEN = 1 << 22, // use proxy
-  REWARD_STAKE_TOKEN = 1 << 23, // use proxy
-  REWARD_CONTROLLER = 1 << 24, // use proxy
-  REWARD_CONFIGURATOR = 1 << 25, // use proxy
-  STAKE_CONFIGURATOR = 1 << 26, // use proxy
-  REFERRAL_REGISTRY = 1 << 27, // use proxy
-
-  WETH_GATEWAY = 1 << 59,
-  DATA_HELPER = 1 << 60,
-  PRICE_ORACLE = 1 << 61,
-  LENDING_RATE_ORACLE = 1 << 62,
+  WETH_GATEWAY = 1 << 27,
+  DATA_HELPER = 1 << 28,
+  PRICE_ORACLE = 1 << 29,
+  LENDING_RATE_ORACLE = 1 << 30,
 }
 
 export const ACCESS_REWARD_MINT = ethers.BigNumber.from(2).pow(64);

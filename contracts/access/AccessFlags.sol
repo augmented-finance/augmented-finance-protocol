@@ -23,22 +23,21 @@ library AccessFlags {
   uint256 public constant LENDING_POOL = 1 << 16;
   uint256 public constant LENDING_POOL_CONFIGURATOR = 1 << 17;
   uint256 public constant LIQUIDITY_CONTROLLER = 1 << 18;
+  uint256 public constant TREASURY = 1 << 19;
+  uint256 public constant REWARD_TOKEN = 1 << 20;
+  uint256 public constant REWARD_STAKE_TOKEN = 1 << 21;
+  uint256 public constant REWARD_CONTROLLER = 1 << 22;
+  uint256 public constant REWARD_CONFIGURATOR = 1 << 23;
+  uint256 public constant STAKE_CONFIGURATOR = 1 << 24;
+  uint256 public constant REFERRAL_REGISTRY = 1 << 25;
 
-  uint256 public constant TREASURY = 1 << 21;
-  uint256 public constant REWARD_TOKEN = 1 << 22;
-  uint256 public constant REWARD_STAKE_TOKEN = 1 << 23;
-  uint256 public constant REWARD_CONTROLLER = 1 << 24;
-  uint256 public constant REWARD_CONFIGURATOR = 1 << 25;
-  uint256 public constant STAKE_CONFIGURATOR = 1 << 26;
-  uint256 public constant REFERRAL_REGISTRY = 1 << 27;
+  uint256 public constant PROXIES = ((uint256(1) << 26) - 1) & ~ROLES;
 
-  uint256 public constant PROXIES = ((uint256(1) << 28) - 1) & ~ROLES;
-
-  // non-proxied singletons, numbered down from 62
-  uint256 public constant WETH_GATEWAY = 1 << 59;
-  uint256 public constant DATA_HELPER = 1 << 60;
-  uint256 public constant PRICE_ORACLE = 1 << 61;
-  uint256 public constant LENDING_RATE_ORACLE = 1 << 62;
+  // non-proxied singletons, numbered down from 31 (as JS has problems with bitmasks over 31 bits)
+  uint256 public constant WETH_GATEWAY = 1 << 27;
+  uint256 public constant DATA_HELPER = 1 << 28;
+  uint256 public constant PRICE_ORACLE = 1 << 29;
+  uint256 public constant LENDING_RATE_ORACLE = 1 << 30;
 
   // any other roles - use range [64..]
   // these roles can be assigned to multiple addresses
