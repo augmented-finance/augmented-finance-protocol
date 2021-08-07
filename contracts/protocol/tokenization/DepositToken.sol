@@ -2,18 +2,12 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import '../../tools/math/WadRayMath.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import './interfaces/PoolTokenConfig.sol';
 import './base/DepositTokenBase.sol';
 
 /// @dev Deposit token, an interest bearing token for the Augmented Finance protocol
 contract DepositToken is DepositTokenBase, VersionedInitializable {
-  using WadRayMath for uint256;
-  using SafeERC20 for IERC20;
-
   uint256 private constant TOKEN_REVISION = 0x1;
 
   function getRevision() internal pure virtual override returns (uint256) {

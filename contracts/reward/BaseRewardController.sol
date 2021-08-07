@@ -3,13 +3,10 @@ pragma solidity ^0.6.12;
 
 import '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../tools/math/BitUtils.sol';
-
 import '../access/interfaces/IMarketAccessController.sol';
 import '../access/MarketAccessBitmask.sol';
 import '../access/AccessFlags.sol';
-import './interfaces/IRewardController.sol';
 import './interfaces/IManagedRewardController.sol';
-import './interfaces/IRewardPool.sol';
 import './interfaces/IManagedRewardPool.sol';
 import '../interfaces/IRewardMinter.sol';
 import './interfaces/IRewardCollector.sol';
@@ -279,7 +276,7 @@ abstract contract BaseRewardController is
     if (!hasRemoteAcl()) {
       return addr == address(this);
     }
-    return acl_hasAllOf(addr, AccessFlags.EMERGENCY_ADMIN);
+    return acl_hasAnyOf(addr, AccessFlags.EMERGENCY_ADMIN);
   }
 
   function getClaimMask(address holder, uint256 mask) internal view virtual returns (uint256) {

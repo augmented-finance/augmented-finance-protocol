@@ -2,10 +2,10 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
+import '../../tools/Errors.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../tools/math/InterestMath.sol';
 import '../../tools/math/WadRayMath.sol';
-import '../../tools/Errors.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import '../../interfaces/IStableDebtToken.sol';
 import '../../interfaces/IBalanceHook.sol';

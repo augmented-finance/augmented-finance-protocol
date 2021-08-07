@@ -2,11 +2,11 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import '../../../interfaces/ICreditDelegationToken.sol';
 import '../../../tools/Errors.sol';
-import './PoolTokenBase.sol';
+import '../../../interfaces/ICreditDelegationToken.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
+import './PoolTokenBase.sol';
 
 /// @dev Base contract for a non-transferrable debt tokens: StableDebtToken and VariableDebtToken
 abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICreditDelegationToken {

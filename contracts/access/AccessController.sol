@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
+import '../dependencies/openzeppelin/contracts/Addr.sol';
 import '../dependencies/openzeppelin/contracts/Ownable.sol';
 import '../tools/Errors.sol';
 import '../tools/math/BitUtils.sol';
-import '../dependencies/openzeppelin/contracts/Addr.sol';
 import '../tools/upgradeability/TransparentProxy.sol';
 import '../tools/upgradeability/IProxy.sol';
 import './interfaces/IAccessController.sol';

@@ -237,7 +237,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   function _onlyRefAdmin() private view {
     require(
-      AccessHelper.hasAllOf(
+      AccessHelper.hasAnyOf(
         _controller.getAccessController(),
         msg.sender,
         AccessFlags.REFERRAL_ADMIN

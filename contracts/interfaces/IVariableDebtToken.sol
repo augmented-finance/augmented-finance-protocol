@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 
 import './IScaledBalanceToken.sol';
-import './IBalanceHook.sol';
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
 
 /// @dev Defines the basic interface for a variable debt token.

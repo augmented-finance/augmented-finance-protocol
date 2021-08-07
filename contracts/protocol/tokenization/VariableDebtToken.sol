@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../interfaces/IVariableDebtToken.sol';
 import '../../tools/math/WadRayMath.sol';
-import '../../tools/Errors.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import './interfaces/PoolTokenConfig.sol';
 import './base/PoolTokenBase.sol';

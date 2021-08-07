@@ -7,7 +7,6 @@ import '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../../interfaces/IDepositToken.sol';
 import '../../../tools/math/WadRayMath.sol';
-import '../../../tools/Errors.sol';
 import '../../../misc/PermitForERC20.sol';
 import './PoolTokenBase.sol';
 
@@ -80,9 +79,7 @@ abstract contract DepositTokenBase is
     address treasury = _treasury;
 
     // Compared to the normal mint, we don't check for rounding errors.
-    // The amount to mint can easily be very small since it is a fraction of the interest ccrued.
-    // In that case, the treasury will experience a (very small) loss, but it
-    // wont cause potentially valid transactions to fail.
+    // The treasury may experience a very small loss, but it wont revert a valid transactions.
     _mintBalance(treasury, amount.rayDiv(index), index);
 
     emit Transfer(address(0), treasury, amount);
@@ -121,7 +118,6 @@ abstract contract DepositTokenBase is
 
   function totalSupply() public view override(IERC20, PoolTokenBase) returns (uint256) {
     uint256 currentSupplyScaled = super.totalSupply();
-
     if (currentSupplyScaled == 0) {
       return 0;
     }

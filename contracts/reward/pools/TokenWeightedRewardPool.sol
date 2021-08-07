@@ -1,17 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../tools/math/WadRayMath.sol';
-import '../../tools/math/BitUtils.sol';
 import '../interfaces/IRewardController.sol';
 import '../calcs/CalcLinearWeightedReward.sol';
 import './BaseTokenAbsRewardPool.sol';
 
 contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedReward {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
-
   constructor(
     IRewardController controller,
     uint256 initialRate,

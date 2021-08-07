@@ -122,8 +122,8 @@ abstract contract VersionedInitializable {
     if (localRevision <= lastInitializedRevision) {
       // prevent calling of parent's initializer when it was called before
       if (initializing) {
-        // Can't set zero yet, as it is not a top-level call, otherwise "initializing" will become false.
-        // Further calls will fail with the 'incorrect order' assertion above.
+        // Can't set zero yet, as it is not a top-level call, otherwise `initializing` will become false.
+        // Further calls will fail with the `incorrect order` assertion above.
         lastInitializingRevision = 1;
       }
       return (topRevision, initializing, true);

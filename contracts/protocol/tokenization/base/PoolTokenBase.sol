@@ -2,13 +2,13 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
+import '../../../tools/Errors.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../interfaces/IPoolToken.sol';
 import '../../../interfaces/IBalanceHook.sol';
 import '../../../interfaces/ILendingPoolForTokens.sol';
-import '../../../tools/Errors.sol';
 import '../../../access/AccessHelper.sol';
 import '../../../access/AccessFlags.sol';
 import '../interfaces/IInitializablePoolToken.sol';

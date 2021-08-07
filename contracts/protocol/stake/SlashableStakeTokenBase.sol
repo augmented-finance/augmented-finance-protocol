@@ -361,11 +361,11 @@ abstract contract SlashableStakeTokenBase is
 
   /**
    * @dev Calculates the how is gonna be a new cooldown time depending on the sender/receiver situation
-   *  - If the time of the sender is "better" or the time of the recipient is 0, we take the one of the recipient
+   *  - If the time of the sender is better or the time of the recipient is 0, we take the one of the recipient
    *  - Weighted average of from/to cooldown time if:
    *    # The sender doesn't have the cooldown activated (time 0).
    *    # The sender time is passed
-   *    # The sender has a "worse" time
+   *    # The sender has a worse time
    *  - If the receiver's cooldown time passed (too old), the next is 0
    * @param fromCooldownPeriod Cooldown time of the sender
    * @param amountToReceive Amount

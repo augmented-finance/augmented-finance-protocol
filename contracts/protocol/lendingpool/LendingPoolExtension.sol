@@ -358,7 +358,7 @@ contract LendingPoolExtension is
     uint256 referral
   ) external override countCalls {
     require(
-      _addressesProvider.hasAllOf(msg.sender, AccessFlags.POOL_SPONSORED_LOAN_USER),
+      _addressesProvider.hasAnyOf(msg.sender, AccessFlags.POOL_SPONSORED_LOAN_USER),
       Errors.LP_IS_NOT_SPONSORED_LOAN
     );
 
@@ -650,7 +650,7 @@ contract LendingPoolExtension is
 
   function setPaused(bool val) external override {
     require(
-      _addressesProvider.hasAllOf(msg.sender, AccessFlags.EMERGENCY_ADMIN),
+      _addressesProvider.hasAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN),
       Errors.CALLER_NOT_EMERGENCY_ADMIN
     );
 

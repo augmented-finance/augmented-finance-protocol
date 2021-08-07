@@ -148,7 +148,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
   /** @dev A function to add funds to a lock of another user. Must be explicitly allowed with allowAdd().
       @param to an address to whose lock the given underlyingAmount shoud be added
       @param underlyingAmount amount of underlying (>0) to be added to the lock. Must be approved for transferFrom.
-      @return total amount of lock tokens of the "to" address.
+      @return total amount of lock tokens of the `to` address.
    */
   function lockAdd(address to, uint256 underlyingAmount) external returns (uint256) {
     require(underlyingAmount > 0, 'ZERO_UNDERLYING');
@@ -161,13 +161,13 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     return stakeAmount;
   }
 
-  // These constants are "soft" errors - such errors can be detected by the autolock function so it can stop automatically
+  // These constants are soft errors - such errors can be detected by the autolock function so it can stop automatically
   uint256 private constant LOCK_ERR_NOTHING_IS_LOCKED = 1;
   uint256 private constant LOCK_ERR_DURATION_IS_TOO_LARGE = 2;
   uint256 private constant LOCK_ERR_UNDERLYING_OVERFLOW = 3;
   uint256 private constant LOCK_ERR_LOCK_OVERFLOW = 4;
 
-  /// @dev Converts "soft" errors into "hard" reverts
+  /// @dev Converts soft errors into hard reverts
   function revertOnError(uint256 recoverableError) private pure {
     require(recoverableError != LOCK_ERR_LOCK_OVERFLOW, 'LOCK_ERR_LOCK_OVERFLOW');
     require(recoverableError != LOCK_ERR_UNDERLYING_OVERFLOW, 'LOCK_ERR_UNDERLYING_OVERFLOW');
@@ -184,7 +184,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
       Zero value indicates addition to an existing lock without changing expiry.
       @param transfer indicates when transferFrom should be called. E.g. autolock uses false, as tokens will be minted externally to this contract.
       @param referral code to use for marketing campaings. Use 0 when not involved.
-      @return stakeAmount is total amount of lock tokens of the "to" address; recoverableError is the "soft" error code.
+      @return stakeAmount is total amount of lock tokens of the `to` address; recoverableError is the soft error code.
    */
   function internalLock(
     address from,
@@ -265,7 +265,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
         return (0, LOCK_ERR_LOCK_OVERFLOW);
       }
 
-      // ======== ATTN! "DO NOT APPLY STATE CHANGES" ENDS HERE ========
+      // ======== ATTN! DO NOT APPLY STATE CHANGES ENDS HERE ========
 
       if (prevStake > 0) {
         if (userBalance.endPoint == newEndPoint) {

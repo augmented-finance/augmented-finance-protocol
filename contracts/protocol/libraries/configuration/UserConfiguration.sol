@@ -21,7 +21,7 @@ library UserConfiguration {
       (uint256(borrowing ? 1 : 0) << (reserveIndex * 2));
   }
 
-  /// @dev Sets the user's "using as collateral" flag on the reserve identified by reserveIndex
+  /// @dev Sets the user's `using as collateral` flag on the reserve identified by reserveIndex
   function setUsingAsCollateral(
     DataTypes.UserConfigurationMap storage self,
     uint256 reserveIndex,

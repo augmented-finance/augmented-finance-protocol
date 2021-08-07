@@ -22,7 +22,7 @@ abstract contract LendingPoolBase is LendingPoolStorage {
 
   function _onlyLendingPoolConfigurator() private view {
     require(
-      _addressesProvider.hasAllOf(msg.sender, AccessFlags.LENDING_POOL_CONFIGURATOR),
+      _addressesProvider.hasAnyOf(msg.sender, AccessFlags.LENDING_POOL_CONFIGURATOR),
       Errors.LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR
     );
   }

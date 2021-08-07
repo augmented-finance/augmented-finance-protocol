@@ -2,8 +2,6 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import '../../../interfaces/ILendingPool.sol';
-import '../../../interfaces/IBalanceHook.sol';
 import './PoolTokenConfig.sol';
 
 /// @dev Interface for the initialize function on PoolToken or DebtToken

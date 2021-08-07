@@ -2,22 +2,16 @@
 pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../tools/math/WadRayMath.sol';
-import '../../tools/math/BitUtils.sol';
-import '../interfaces/IRewardController.sol';
-import './ReferralRewardPool.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
+import '../interfaces/IRewardController.sol';
 import '../interfaces/IInitializableRewardPool.sol';
+import './ReferralRewardPool.sol';
 
 contract ReferralRewardPoolV1 is
   IInitializableRewardPool,
   ReferralRewardPool,
   VersionedInitializable
 {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
-
   uint256 private constant POOL_REVISION = 1;
 
   function getRevision() internal pure virtual override returns (uint256) {
