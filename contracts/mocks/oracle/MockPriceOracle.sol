@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IPriceOracle} from '../../interfaces/IPriceOracle.sol';
+import '../../interfaces/IPriceOracleGetter.sol';
 
-contract MockPriceOracle is IPriceOracle {
+contract MockPriceOracle is IPriceOracleGetter {
   mapping(address => uint256) prices;
   uint256 ethPriceUsd;
 
@@ -14,7 +14,7 @@ contract MockPriceOracle is IPriceOracle {
     return prices[_asset];
   }
 
-  function setAssetPrice(address _asset, uint256 _price) external override {
+  function setAssetPrice(address _asset, uint256 _price) external {
     prices[_asset] = _price;
     emit AssetPriceUpdated(_asset, _price, block.timestamp);
   }

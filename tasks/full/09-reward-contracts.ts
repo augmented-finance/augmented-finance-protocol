@@ -33,7 +33,9 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
 
     // configurator is always updated
     let configuratorAddr =
-      freshStart && continuation ? await addressProvider.getRewardConfigurator() : '';
+      freshStart && continuation
+        ? await addressProvider.getAddress(AccessFlags.REWARD_CONFIGURATOR)
+        : '';
 
     if (falsyOrZeroAddress(configuratorAddr)) {
       const impl = await deployRewardConfiguratorImpl(verify, continuation);
@@ -47,7 +49,8 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     const configurator = await getRewardConfiguratorProxy(configuratorAddr);
 
     // AGF token is always updated
-    let agfAddr = freshStart && continuation ? await addressProvider.getRewardToken() : '';
+    let agfAddr =
+      freshStart && continuation ? await addressProvider.getAddress(AccessFlags.REWARD_TOKEN) : '';
 
     if (falsyOrZeroAddress(agfAddr)) {
       const initData = await configurator.buildRewardTokenInitData(
@@ -73,7 +76,9 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
 
     // Reward controller is not updated
     let boosterAddr =
-      freshStart && !continuation ? '' : await addressProvider.getRewardController();
+      freshStart && !continuation
+        ? ''
+        : await addressProvider.getAddress(AccessFlags.REWARD_CONTROLLER);
 
     if (falsyOrZeroAddress(boosterAddr)) {
       const impl = await deployRewardBoosterV1Impl(verify, continuation);
@@ -88,7 +93,10 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     const booster = await getRewardBooster(boosterAddr);
 
     // xAGF token is always updated
-    let xagfAddr = freshStart && continuation ? await addressProvider.getRewardStakeToken() : '';
+    let xagfAddr =
+      freshStart && continuation
+        ? await addressProvider.getAddress(AccessFlags.REWARD_STAKE_TOKEN)
+        : '';
 
     if (falsyOrZeroAddress(xagfAddr)) {
       const xagfInitData = await configurator.buildRewardTokenInitData(
@@ -123,8 +131,13 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
         ).address,
         AccessFlags.REWARD_CONFIG_ADMIN
       );
+      console.log('Granted REWARD_CONFIG_ADMIN');
 
-      await waitForTx(await configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false));
+      await waitForTx(
+        await configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false, {
+          gasLimit: 2000000,
+        })
+      );
       console.log('Boost pool and excess recevier: ', xagfAddr);
     }
   });

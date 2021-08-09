@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {Errors} from '../helpers/Errors.sol';
-import {DataTypes} from '../types/DataTypes.sol';
+import '../../../tools/Errors.sol';
+import '../types/DataTypes.sol';
 
-/**
- * @title ReserveConfiguration library
- * @author Aave
- * @notice Implements the bitmap logic to handle the reserve configuration
- */
+/// @dev ReserveConfiguration library, implements the bitmap logic to handle the reserve configuration
 library ReserveConfiguration {
   uint256 constant LTV_MASK =                   0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000; // prettier-ignore
   uint256 constant LIQUIDATION_THRESHOLD_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000FFFF; // prettier-ignore
@@ -36,31 +32,18 @@ library ReserveConfiguration {
   uint256 constant MAX_VALID_DECIMALS = 255;
   uint256 constant MAX_VALID_RESERVE_FACTOR = 65535;
 
-  /**
-   * @dev Sets the Loan to Value of the reserve
-   * @param self The reserve configuration
-   * @param ltv the new ltv
-   **/
+  /// @dev Sets the Loan to Value of the reserve
   function setLtv(DataTypes.ReserveConfigurationMap memory self, uint256 ltv) internal pure {
     require(ltv <= MAX_VALID_LTV, Errors.RC_INVALID_LTV);
 
     self.data = (self.data & LTV_MASK) | ltv;
   }
 
-  /**
-   * @dev Gets the Loan to Value of the reserve
-   * @param self The reserve configuration
-   * @return The loan to value
-   **/
+  /// @dev Gets the Loan to Value of the reserve
   function getLtv(DataTypes.ReserveConfigurationMap storage self) internal view returns (uint256) {
     return self.data & ~LTV_MASK;
   }
 
-  /**
-   * @dev Sets the liquidation threshold of the reserve
-   * @param self The reserve configuration
-   * @param threshold The new liquidation threshold
-   **/
   function setLiquidationThreshold(DataTypes.ReserveConfigurationMap memory self, uint256 threshold)
     internal
     pure
@@ -72,11 +55,6 @@ library ReserveConfiguration {
       (threshold << LIQUIDATION_THRESHOLD_START_BIT_POSITION);
   }
 
-  /**
-   * @dev Gets the liquidation threshold of the reserve
-   * @param self The reserve configuration
-   * @return The liquidation threshold
-   **/
   function getLiquidationThreshold(DataTypes.ReserveConfigurationMap storage self)
     internal
     view
@@ -85,11 +63,6 @@ library ReserveConfiguration {
     return (self.data & ~LIQUIDATION_THRESHOLD_MASK) >> LIQUIDATION_THRESHOLD_START_BIT_POSITION;
   }
 
-  /**
-   * @dev Sets the liquidation bonus of the reserve
-   * @param self The reserve configuration
-   * @param bonus The new liquidation bonus
-   **/
   function setLiquidationBonus(DataTypes.ReserveConfigurationMap memory self, uint256 bonus)
     internal
     pure
@@ -101,11 +74,6 @@ library ReserveConfiguration {
       (bonus << LIQUIDATION_BONUS_START_BIT_POSITION);
   }
 
-  /**
-   * @dev Gets the liquidation bonus of the reserve
-   * @param self The reserve configuration
-   * @return The liquidation bonus
-   **/
   function getLiquidationBonus(DataTypes.ReserveConfigurationMap storage self)
     internal
     view
@@ -114,11 +82,6 @@ library ReserveConfiguration {
     return (self.data & ~LIQUIDATION_BONUS_MASK) >> LIQUIDATION_BONUS_START_BIT_POSITION;
   }
 
-  /**
-   * @dev Sets the decimals of the underlying asset of the reserve
-   * @param self The reserve configuration
-   * @param decimals The decimals
-   **/
   function setDecimals(DataTypes.ReserveConfigurationMap memory self, uint256 decimals)
     internal
     pure
@@ -128,11 +91,6 @@ library ReserveConfiguration {
     self.data = (self.data & DECIMALS_MASK) | (decimals << RESERVE_DECIMALS_START_BIT_POSITION);
   }
 
-  /**
-   * @dev Gets the decimals of the underlying asset of the reserve
-   * @param self The reserve configuration
-   * @return The decimals of the asset
-   **/
   function getDecimals(DataTypes.ReserveConfigurationMap storage self)
     internal
     view
@@ -141,11 +99,6 @@ library ReserveConfiguration {
     return (self.data & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION;
   }
 
-  /**
-   * @dev Gets the decimals of the underlying asset of the reserve
-   * @param self The reserve configuration
-   * @return The decimals of the asset
-   **/
   function getDecimalsMemory(DataTypes.ReserveConfigurationMap memory self)
     internal
     pure
@@ -154,51 +107,26 @@ library ReserveConfiguration {
     return uint8((self.data & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION);
   }
 
-  /**
-   * @dev Sets the active state of the reserve
-   * @param self The reserve configuration
-   * @param active The active state
-   **/
   function setActive(DataTypes.ReserveConfigurationMap memory self, bool active) internal pure {
     self.data =
       (self.data & ACTIVE_MASK) |
       (uint256(active ? 1 : 0) << IS_ACTIVE_START_BIT_POSITION);
   }
 
-  /**
-   * @dev Gets the active state of the reserve
-   * @param self The reserve configuration
-   * @return The active state
-   **/
   function getActive(DataTypes.ReserveConfigurationMap storage self) internal view returns (bool) {
     return (self.data & ~ACTIVE_MASK) != 0;
   }
 
-  /**
-   * @dev Sets the frozen state of the reserve
-   * @param self The reserve configuration
-   * @param frozen The frozen state
-   **/
   function setFrozen(DataTypes.ReserveConfigurationMap memory self, bool frozen) internal pure {
     self.data =
       (self.data & FROZEN_MASK) |
       (uint256(frozen ? 1 : 0) << IS_FROZEN_START_BIT_POSITION);
   }
 
-  /**
-   * @dev Gets the frozen state of the reserve
-   * @param self The reserve configuration
-   * @return The frozen state
-   **/
   function getFrozen(DataTypes.ReserveConfigurationMap storage self) internal view returns (bool) {
     return (self.data & ~FROZEN_MASK) != 0;
   }
 
-  /**
-   * @dev Enables or disables borrowing on the reserve
-   * @param self The reserve configuration
-   * @param enabled True if the borrowing needs to be enabled, false otherwise
-   **/
   function setBorrowingEnabled(DataTypes.ReserveConfigurationMap memory self, bool enabled)
     internal
     pure
@@ -208,11 +136,6 @@ library ReserveConfiguration {
       (uint256(enabled ? 1 : 0) << BORROWING_ENABLED_START_BIT_POSITION);
   }
 
-  /**
-   * @dev Gets the borrowing state of the reserve
-   * @param self The reserve configuration
-   * @return The borrowing state
-   **/
   function getBorrowingEnabled(DataTypes.ReserveConfigurationMap storage self)
     internal
     view
@@ -221,11 +144,6 @@ library ReserveConfiguration {
     return (self.data & ~BORROWING_MASK) != 0;
   }
 
-  /**
-   * @dev Enables or disables stable rate borrowing on the reserve
-   * @param self The reserve configuration
-   * @param enabled True if the stable rate borrowing needs to be enabled, false otherwise
-   **/
   function setStableRateBorrowingEnabled(
     DataTypes.ReserveConfigurationMap memory self,
     bool enabled
@@ -235,11 +153,6 @@ library ReserveConfiguration {
       (uint256(enabled ? 1 : 0) << STABLE_BORROWING_ENABLED_START_BIT_POSITION);
   }
 
-  /**
-   * @dev Gets the stable rate borrowing state of the reserve
-   * @param self The reserve configuration
-   * @return The stable rate borrowing state
-   **/
   function getStableRateBorrowingEnabled(DataTypes.ReserveConfigurationMap storage self)
     internal
     view
@@ -248,11 +161,6 @@ library ReserveConfiguration {
     return (self.data & ~STABLE_BORROWING_MASK) != 0;
   }
 
-  /**
-   * @dev Sets the reserve factor of the reserve
-   * @param self The reserve configuration
-   * @param reserveFactor The reserve factor
-   **/
   function setReserveFactor(DataTypes.ReserveConfigurationMap memory self, uint256 reserveFactor)
     internal
     pure
@@ -264,11 +172,6 @@ library ReserveConfiguration {
       (reserveFactor << RESERVE_FACTOR_START_BIT_POSITION);
   }
 
-  /**
-   * @dev Gets the reserve factor of the reserve
-   * @param self The reserve configuration
-   * @return The reserve factor
-   **/
   function getReserveFactor(DataTypes.ReserveConfigurationMap storage self)
     internal
     view
@@ -277,11 +180,7 @@ library ReserveConfiguration {
     return (self.data & ~RESERVE_FACTOR_MASK) >> RESERVE_FACTOR_START_BIT_POSITION;
   }
 
-  /**
-   * @dev Gets the configuration flags of the reserve
-   * @param self The reserve configuration
-   * @return The state flags representing active, frozen, borrowing enabled, stableRateBorrowing enabled
-   **/
+  /// @dev Returns flags: active, frozen, borrowing enabled, stableRateBorrowing enabled
   function getFlags(DataTypes.ReserveConfigurationMap storage self)
     internal
     view
@@ -292,21 +191,41 @@ library ReserveConfiguration {
       bool
     )
   {
-    uint256 dataLocal = self.data;
+    return _getFlags(self.data);
+  }
 
+  function getFlagsMemory(DataTypes.ReserveConfigurationMap memory self)
+    internal
+    pure
+    returns (
+      bool active,
+      bool frozen,
+      bool borrowEnable,
+      bool stableBorrowEnable
+    )
+  {
+    return _getFlags(self.data);
+  }
+
+  function _getFlags(uint256 data)
+    private
+    pure
+    returns (
+      bool,
+      bool,
+      bool,
+      bool
+    )
+  {
     return (
-      (dataLocal & ~ACTIVE_MASK) != 0,
-      (dataLocal & ~FROZEN_MASK) != 0,
-      (dataLocal & ~BORROWING_MASK) != 0,
-      (dataLocal & ~STABLE_BORROWING_MASK) != 0
+      (data & ~ACTIVE_MASK) != 0,
+      (data & ~FROZEN_MASK) != 0,
+      (data & ~BORROWING_MASK) != 0,
+      (data & ~STABLE_BORROWING_MASK) != 0
     );
   }
 
-  /**
-   * @dev Gets the configuration paramters of the reserve
-   * @param self The reserve configuration
-   * @return The state params representing ltv, liquidation threshold, liquidation bonus, the reserve decimals
-   **/
+  /// @dev Paramters of the reserve: ltv, liquidation threshold, liquidation bonus, the reserve decimals
   function getParams(DataTypes.ReserveConfigurationMap storage self)
     internal
     view
@@ -318,22 +237,10 @@ library ReserveConfiguration {
       uint256
     )
   {
-    uint256 dataLocal = self.data;
-
-    return (
-      dataLocal & ~LTV_MASK,
-      (dataLocal & ~LIQUIDATION_THRESHOLD_MASK) >> LIQUIDATION_THRESHOLD_START_BIT_POSITION,
-      (dataLocal & ~LIQUIDATION_BONUS_MASK) >> LIQUIDATION_BONUS_START_BIT_POSITION,
-      (dataLocal & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION,
-      (dataLocal & ~RESERVE_FACTOR_MASK) >> RESERVE_FACTOR_START_BIT_POSITION
-    );
+    return _getParams(self.data);
   }
 
-  /**
-   * @dev Gets the configuration paramters of the reserve from a memory object
-   * @param self The reserve configuration
-   * @return The state params representing ltv, liquidation threshold, liquidation bonus, the reserve decimals
-   **/
+  /// @dev Paramters of the reserve: ltv, liquidation threshold, liquidation bonus, the reserve decimals
   function getParamsMemory(DataTypes.ReserveConfigurationMap memory self)
     internal
     pure
@@ -345,35 +252,26 @@ library ReserveConfiguration {
       uint256
     )
   {
-    return (
-      self.data & ~LTV_MASK,
-      (self.data & ~LIQUIDATION_THRESHOLD_MASK) >> LIQUIDATION_THRESHOLD_START_BIT_POSITION,
-      (self.data & ~LIQUIDATION_BONUS_MASK) >> LIQUIDATION_BONUS_START_BIT_POSITION,
-      (self.data & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION,
-      (self.data & ~RESERVE_FACTOR_MASK) >> RESERVE_FACTOR_START_BIT_POSITION
-    );
+    return _getParams(self.data);
   }
 
-  /**
-   * @dev Gets the configuration flags of the reserve from a memory object
-   * @param self The reserve configuration
-   * @return The state flags representing active, frozen, borrowing enabled, stableRateBorrowing enabled
-   **/
-  function getFlagsMemory(DataTypes.ReserveConfigurationMap memory self)
-    internal
+  function _getParams(uint256 dataLocal)
+    private
     pure
     returns (
-      bool,
-      bool,
-      bool,
-      bool
+      uint256,
+      uint256,
+      uint256,
+      uint256,
+      uint256
     )
   {
     return (
-      (self.data & ~ACTIVE_MASK) != 0,
-      (self.data & ~FROZEN_MASK) != 0,
-      (self.data & ~BORROWING_MASK) != 0,
-      (self.data & ~STABLE_BORROWING_MASK) != 0
+      dataLocal & ~LTV_MASK,
+      (dataLocal & ~LIQUIDATION_THRESHOLD_MASK) >> LIQUIDATION_THRESHOLD_START_BIT_POSITION,
+      (dataLocal & ~LIQUIDATION_BONUS_MASK) >> LIQUIDATION_BONUS_START_BIT_POSITION,
+      (dataLocal & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION,
+      (dataLocal & ~RESERVE_FACTOR_MASK) >> RESERVE_FACTOR_START_BIT_POSITION
     );
   }
 }

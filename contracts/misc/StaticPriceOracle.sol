@@ -2,10 +2,10 @@
 pragma solidity 0.6.12;
 
 import '../interfaces/ILendingRateOracle.sol';
-import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
-import {AccessFlags} from '../access/AccessFlags.sol';
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
-import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
+import '../access/MarketAccessBitmask.sol';
+import '../access/AccessFlags.sol';
+import '../access/interfaces/IMarketAccessController.sol';
+import '../interfaces/IPriceOracleGetter.sol';
 
 contract StaticPriceOracle is MarketAccessBitmask, IPriceOracleGetter {
   mapping(address => uint256) prices;

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from './WadRayMath.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import './WadRayMath.sol';
 
-library MathUtils {
+library InterestMath {
   using SafeMath for uint256;
   using WadRayMath for uint256;
 
@@ -17,7 +17,6 @@ library MathUtils {
    * @param lastUpdateTimestamp The timestamp of the last update of the interest
    * @return The interest rate linearly accumulated during the timeDelta, in ray
    **/
-
   function calculateLinearInterest(uint256 rate, uint40 lastUpdateTimestamp)
     internal
     view

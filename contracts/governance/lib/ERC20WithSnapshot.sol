@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {ERC20} from '../../dependencies/openzeppelin/contracts/ERC20.sol';
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../dependencies/openzeppelin/contracts/ERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {ITransferHook} from '../interfaces/ITransferHook.sol';
 
 /**
@@ -70,7 +70,7 @@ contract ERC20WithSnapshot is ERC20 {
 
   /**
    * @dev Writes a snapshot before any operation involving transfer of value: _transfer, _mint and _burn
-   * - On _transfer, it writes snapshots for both "from" and "to"
+   * - On _transfer, it writes snapshots for both `from` and `to`
    * - On _mint, only for _to
    * - On _burn, only for _from
    * @param from the from address

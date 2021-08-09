@@ -6,8 +6,11 @@ import { ethers } from 'ethers';
 import { waitForTx } from '../../helpers/misc-utils';
 import { deployLendingPoolImpl, deployMintableERC20 } from '../../helpers/contracts-deployments';
 import { ONE_ADDRESS } from '../../helpers/constants';
+import BigNumber from 'bignumber.js';
 
 const { utils } = ethers;
+
+const BIT62 = new BigNumber(2).pow(62).toFixed();
 
 makeSuite('MarketAccessController', (testEnv: TestEnv) => {
   it('Test access to the MarketAccessController (should revert)', async () => {
@@ -21,13 +24,11 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
       await expect(contractFunction(mockAddress)).to.be.revertedWith(INVALID_OWNER_REVERT_MSG);
     }
 
-    const addressId = 1 << 62;
-
-    await expect(addressesProvider.setAddress(addressId, mockAddress)).to.be.revertedWith(
+    await expect(addressesProvider.setAddress(BIT62, mockAddress)).to.be.revertedWith(
       INVALID_OWNER_REVERT_MSG
     );
 
-    await expect(addressesProvider.setAddressAsProxy(addressId, mockAddress)).to.be.revertedWith(
+    await expect(addressesProvider.setAddressAsProxy(BIT62, mockAddress)).to.be.revertedWith(
       INVALID_OWNER_REVERT_MSG
     );
   });
@@ -38,12 +39,13 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
     const currentAddressesProviderOwner = users[1];
 
     const mockLendingPool = await deployLendingPoolImpl(false, false);
-    const proxiedAddressId = 1 << 62;
+
+    // await addressesProvider.connect(currentAddressesProviderOwner.signer).markProxies(BIT62);
 
     const proxiedAddressSetReceipt = await waitForTx(
       await addressesProvider
         .connect(currentAddressesProviderOwner.signer)
-        .setAddressAsProxy(proxiedAddressId, mockLendingPool.address)
+        .setAddressAsProxy(BIT62, mockLendingPool.address)
     );
 
     if (!proxiedAddressSetReceipt.events || proxiedAddressSetReceipt.events?.length < 1) {
@@ -52,7 +54,7 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
 
     expect(proxiedAddressSetReceipt.events[0].event).to.be.equal('ProxyCreated');
     expect(proxiedAddressSetReceipt.events[1].event).to.be.equal('AddressSet');
-    expect(proxiedAddressSetReceipt.events[1].args?.id).to.be.equal(proxiedAddressId);
+    expect(proxiedAddressSetReceipt.events[1].args?.id).to.be.equal(BIT62);
     expect(proxiedAddressSetReceipt.events[1].args?.newAddress).to.be.equal(
       mockLendingPool.address
     );

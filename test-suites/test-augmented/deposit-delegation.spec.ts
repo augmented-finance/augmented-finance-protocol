@@ -7,6 +7,7 @@ import {
 } from '../../helpers/contracts-deployments';
 import { DelegationAwareDepositToken } from '../../types';
 import { MintableDelegationERC20 } from '../../types';
+import { AccessFlags } from '../../helpers/access-flags';
 
 makeSuite('DepositToken: underlying delegation', (testEnv: TestEnv) => {
   let delegationToken = <DelegationAwareDepositToken>{};
@@ -21,7 +22,7 @@ makeSuite('DepositToken: underlying delegation', (testEnv: TestEnv) => {
       [
         pool.address,
         delegationERC20.address,
-        await addressesProvider.getTreasury(),
+        await addressesProvider.getAddress(AccessFlags.TREASURY),
         'aDEL',
         'aDEL',
       ],

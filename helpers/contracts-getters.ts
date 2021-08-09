@@ -3,7 +3,6 @@ import {
   DepositTokenFactory,
   OracleRouterFactory,
   GenericLogicFactory,
-  InitializableAdminUpgradeabilityProxyFactory,
   MarketAccessControllerFactory,
   AddressesProviderRegistryFactory,
   LendingPoolExtensionFactory,

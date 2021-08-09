@@ -1,4 +1,4 @@
-import { ContractTransaction } from 'ethers';
+import { ethers } from 'ethers';
 import { AccessController, MarketAccessController } from '../types';
 import { AccessFlags } from './access-flags';
 import {
@@ -45,6 +45,8 @@ export const setPreDeployAccessController = async (
   }
 };
 
+const initEncoder = new ethers.utils.Interface(['function initialize(address)']);
+
 export const setAndGetAddressAsProxy = async (
   ac: AccessController,
   id: AccessFlags,
@@ -52,7 +54,9 @@ export const setAndGetAddressAsProxy = async (
 ) => {
   waitForTx(await ac.setAddressAsProxy(id, addr, { gasLimit: 2000000 }));
   const proxyAddr = await waitForAddress(ac, id);
-  await addProxyToJsonDb(AccessFlags[id], proxyAddr, addr);
+
+  const data = initEncoder.encodeFunctionData('initialize', [ac.address]);
+  await addProxyToJsonDb(AccessFlags[id], proxyAddr, addr, [ac.address, addr, data]);
   return proxyAddr;
 };
 
@@ -64,7 +68,7 @@ export const setAndGetAddressAsProxyWithInit = async (
 ) => {
   waitForTx(await ac.setAddressAsProxyWithInit(id, addr, data, { gasLimit: 2000000 }));
   const proxyAddr = await waitForAddress(ac, id);
-  await addProxyToJsonDb(AccessFlags[id], proxyAddr, addr);
+  await addProxyToJsonDb(AccessFlags[id], proxyAddr, addr, [ac.address, addr, data]);
   return proxyAddr;
 };
 

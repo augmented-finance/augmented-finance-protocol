@@ -2,20 +2,8 @@
 pragma solidity 0.6.12;
 
 library BitUtils {
-  function hasAnyOf(uint256 v, uint256 flags) internal pure returns (bool) {
-    return v & flags != 0;
-  }
-
-  function hasAllOf(uint256 v, uint256 flags) internal pure returns (bool) {
-    return v & flags == flags;
-  }
-
   function isBit(uint256 v, uint8 index) internal pure returns (bool) {
     return v & (uint256(1) << index) != 0;
-  }
-
-  function hasNoneOf(uint256 v, uint256 flags) internal pure returns (bool) {
-    return v & flags == 0;
   }
 
   function nextPowerOf2(uint256 v) internal pure returns (uint256) {

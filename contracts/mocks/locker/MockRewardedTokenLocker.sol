@@ -2,8 +2,8 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {RewardedTokenLocker} from '../../reward/locker/RewardedTokenLocker.sol';
-import {IRewardController} from '../../reward/interfaces/IRewardController.sol';
+import '../../reward/locker/RewardedTokenLocker.sol';
+import '../../reward/interfaces/IRewardController.sol';
 
 import 'hardhat/console.sol';
 

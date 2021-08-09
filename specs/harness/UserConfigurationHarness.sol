@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import {
   UserConfiguration
 } from '../../contracts/protocol/libraries/configuration/UserConfiguration.sol';
-import {DataTypes} from '../../contracts/protocol/libraries/types/DataTypes.sol';
+import '../../contracts/protocol/libraries/types/DataTypes.sol';
 
 /*
 A wrapper contract for calling functions from the library UserConfiguration.

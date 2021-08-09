@@ -22,6 +22,7 @@ task('augmented:mainnet', 'Deploy enviroment')
 
     const deployer = await getFirstSigner();
     const startBalance: BigNumber = await deployer.getBalance();
+    let spentOnPluck: BigNumber = BigNumber.from(0);
 
     let renounce = false;
     let success = false;
@@ -84,10 +85,12 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('11. Smoke test');
       await DRE.run('full:smoke-test', { pool: POOL_NAME });
 
+      const balanceBeforePluck = await deployer.getBalance();
       if (MAINNET_FORK) {
         console.log('Pluck');
         await DRE.run('dev:pluck-tokens', { pool: POOL_NAME });
       }
+      spentOnPluck = balanceBeforePluck.sub(await deployer.getBalance());
 
       renounce = true;
 
@@ -129,10 +132,23 @@ task('augmented:mainnet', 'Deploy enviroment')
       }
     }
 
-    const endBalance: BigNumber = await deployer.getBalance();
-    console.log('======================================================================');
-    console.log('Deployer end balance: ', endBalance.div(1e12).toNumber() / 1e6);
-    console.log('Deploy expenses: ', startBalance.sub(endBalance).div(1e12).toNumber() / 1e6);
+    {
+      const endBalance = await deployer.getBalance();
+      console.log('======================================================================');
+      console.log('Deployer end balance: ', endBalance.div(1e12).toNumber() / 1e6);
+      console.log('Deploy expenses: ', startBalance.sub(endBalance).div(1e12).toNumber() / 1e6);
+      const gasPrice = DRE.network.config.gasPrice;
+      if (gasPrice != 'auto') {
+        console.log(
+          'Deploy gas     : ',
+          startBalance.sub(endBalance).sub(spentOnPluck).div(gasPrice).toNumber(),
+          '@',
+          gasPrice / 1e9,
+          ' gwei'
+        );
+      }
+      console.log('======================================================================');
+    }
 
     if (!success) {
       exit(1);

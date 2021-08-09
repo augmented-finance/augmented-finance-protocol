@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {DepositToken} from '../../protocol/tokenization/DepositToken.sol';
+import '../../protocol/tokenization/DepositToken.sol';
 
 contract MockDepositToken is DepositToken {
   constructor() public {

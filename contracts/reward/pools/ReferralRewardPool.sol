@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {IManagedRewardPool} from '../interfaces/IManagedRewardPool.sol';
-import {BasePermitRewardPool} from './BasePermitRewardPool.sol';
-import {BaseReferralRegistry} from '../referral/BaseReferralRegistry.sol';
-import {CalcLinearRateAccum} from '../calcs/CalcLinearRateAccum.sol';
-
-import 'hardhat/console.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../tools/math/WadRayMath.sol';
+import '../interfaces/IRewardController.sol';
+import '../interfaces/IManagedRewardPool.sol';
+import './BasePermitRewardPool.sol';
+import '../referral/BaseReferralRegistry.sol';
+import '../calcs/CalcLinearRateAccum.sol';
 
 contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcLinearRateAccum {
   uint256 private _claimLimit;

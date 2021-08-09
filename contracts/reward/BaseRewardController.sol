@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {BitUtils} from '../tools/math/BitUtils.sol';
-
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
-import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
-import {AccessFlags} from '../access/AccessFlags.sol';
-import {IManagedRewardController, AllocationMode} from './interfaces/IRewardController.sol';
-import {IRewardPool} from './interfaces/IRewardPool.sol';
-import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
-import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
-import {IRewardCollector} from './interfaces/IRewardCollector.sol';
-import {Errors} from '../tools/Errors.sol';
-
-import 'hardhat/console.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../tools/math/BitUtils.sol';
+import '../access/interfaces/IMarketAccessController.sol';
+import '../access/MarketAccessBitmask.sol';
+import '../access/AccessFlags.sol';
+import './interfaces/IManagedRewardController.sol';
+import './interfaces/IManagedRewardPool.sol';
+import '../interfaces/IRewardMinter.sol';
+import './interfaces/IRewardCollector.sol';
+import '../tools/Errors.sol';
 
 abstract contract BaseRewardController is
   IRewardCollector,
@@ -280,7 +276,7 @@ abstract contract BaseRewardController is
     if (!hasRemoteAcl()) {
       return addr == address(this);
     }
-    return acl_hasAllOf(addr, AccessFlags.EMERGENCY_ADMIN);
+    return acl_hasAnyOf(addr, AccessFlags.EMERGENCY_ADMIN);
   }
 
   function getClaimMask(address holder, uint256 mask) internal view virtual returns (uint256) {
@@ -301,7 +297,6 @@ abstract contract BaseRewardController is
     mask = getClaimMask(holder, mask);
     (claimed, extra) = internalClaimAndMintReward(holder, mask);
 
-    // console.log('RewardsClaimed', claimed);
     if (claimed > 0) {
       extra += internalClaimed(holder, receiver, claimed);
       emit RewardsClaimed(holder, receiver, claimed);

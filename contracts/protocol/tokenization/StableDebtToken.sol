@@ -2,16 +2,16 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {PoolTokenBase} from './base/PoolTokenBase.sol';
-import {DebtTokenBase} from './base/DebtTokenBase.sol';
-import {MathUtils} from '../../tools/math/MathUtils.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
-import {Errors} from '../libraries/helpers/Errors.sol';
-import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
-import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
+import '../../tools/Errors.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../tools/math/InterestMath.sol';
+import '../../tools/math/WadRayMath.sol';
+import '../../tools/upgradeability/VersionedInitializable.sol';
+import '../../interfaces/IStableDebtToken.sol';
+import '../../interfaces/IBalanceHook.sol';
+import './interfaces/PoolTokenConfig.sol';
+import './base/PoolTokenBase.sol';
+import './base/DebtTokenBase.sol';
 
 /**
  * @title StableDebtToken
@@ -93,7 +93,8 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
   }
 
   function cumulatedInterest(address account) public view virtual returns (uint256) {
-    return MathUtils.calculateCompoundedInterest(_usersStableRate[account], _timestamps[account]);
+    return
+      InterestMath.calculateCompoundedInterest(_usersStableRate[account], _timestamps[account]);
   }
 
   struct MintLocalVars {
@@ -268,9 +269,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     );
   }
 
-  /**
-   * @dev Returns the principal and total supply, the average borrow rate and the last supply update timestamp
-   **/
+  /// @dev Returns the principal and total supply, the average borrow rate and the last supply update timestamp
   function getSupplyData()
     public
     view
@@ -286,24 +285,18 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     return (super.totalSupply(), _calcTotalSupply(avgRate), avgRate, _totalSupplyTimestamp);
   }
 
-  /**
-   * @dev Returns the the total supply and the average stable rate
-   **/
+  /// @dev Returns the the total supply and the average stable rate
   function getTotalSupplyAndAvgRate() public view override returns (uint256, uint256) {
     uint256 avgRate = _avgStableRate;
     return (_calcTotalSupply(avgRate), avgRate);
   }
 
-  /**
-   * @dev Returns the total supply
-   **/
+  /// @dev Returns the total supply
   function totalSupply() public view override(IERC20, PoolTokenBase) returns (uint256) {
     return _calcTotalSupply(_avgStableRate);
   }
 
-  /**
-   * @dev Returns the timestamp at which the total supply was updated
-   **/
+  /// @dev Returns the timestamp at which the total supply was updated
   function getTotalSupplyLastUpdated() public view override returns (uint40) {
     return _totalSupplyTimestamp;
   }
@@ -329,7 +322,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
       return 0;
     }
 
-    uint256 cumInterest = MathUtils.calculateCompoundedInterest(avgRate, _totalSupplyTimestamp);
+    uint256 cumInterest = InterestMath.calculateCompoundedInterest(avgRate, _totalSupplyTimestamp);
     return principalSupply.rayMul(cumInterest);
   }
 

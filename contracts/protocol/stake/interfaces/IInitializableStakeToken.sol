@@ -2,12 +2,9 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {StakeTokenConfig} from './StakeTokenConfig.sol';
+import './StakeTokenConfig.sol';
 
-/**
- * @title IInitializableStakeToken
- * @notice Interface for the initialize function on StakeToken
- **/
+/// @dev Interface for the initialize function on StakeToken
 interface IInitializableStakeToken {
   event Initialized(StakeTokenConfig params, string tokenName, string tokenSymbol, uint8 decimals);
 

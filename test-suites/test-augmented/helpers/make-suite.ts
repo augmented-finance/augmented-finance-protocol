@@ -39,6 +39,7 @@ import { AugmentedConfig } from '../../../markets/augmented';
 import { FlashLiquidationAdapter, MarketAccessController } from '../../../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { usingTenderly } from '../../../helpers/tenderly-utils';
+import { AccessFlags } from '../../../helpers/access-flags';
 
 chai.use(bignumberChai());
 chai.use(almostEqual());
@@ -125,7 +126,7 @@ export async function initializeMakeSuite() {
 
   testEnv.pool = await getLendingPoolProxy(await testEnv.addressesProvider.getLendingPool());
   testEnv.configurator = await getLendingPoolConfiguratorProxy(
-    await testEnv.addressesProvider.getLendingPoolConfigurator()
+    await testEnv.addressesProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR)
   );
 
   testEnv.helpersContract = await getProtocolDataProvider();

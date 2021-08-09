@@ -194,7 +194,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const treasuryImpl = await deployTreasuryImpl(false, false);
   await addressProvider.setAddressAsProxy(AccessFlags.TREASURY, treasuryImpl.address);
-  const treasuryAddress = await addressProvider.getTreasury();
+  const treasuryAddress = await addressProvider.getAddress(AccessFlags.TREASURY);
 
   await initReservesByHelper(
     addressProvider,

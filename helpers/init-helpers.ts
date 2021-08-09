@@ -3,6 +3,7 @@ import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, falsyOrZeroAddress, waitForTx } from './misc-utils';
 import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contracts-getters';
 import { BigNumber, BigNumberish } from 'ethers';
+import { AccessFlags } from './access-flags';
 import {
   deployDelegationAwareDepositToken,
   deployDelegationAwareDepositTokenImpl,
@@ -198,7 +199,7 @@ export const initReservesByHelper = async (
   const chunkedInitInputParams = chunk(initInputParams, initChunks);
 
   const configurator = await getLendingPoolConfiguratorProxy(
-    await addressProvider.getLendingPoolConfigurator()
+    await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR)
   );
 
   console.log(`- Reserves initialization in ${chunkedInitInputParams.length} txs`);
@@ -311,7 +312,7 @@ export const configureReservesByHelper = async (
   }
 
   const configurator = await getLendingPoolConfiguratorProxy(
-    await addressProvider.getLendingPoolConfigurator()
+    await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR)
   );
 
   // Deploy init per chunks
