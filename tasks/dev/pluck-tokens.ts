@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
-import { falsyOrZeroAddress, getFirstSigner } from '../../helpers/misc-utils';
+import { DRE, falsyOrZeroAddress, getFirstSigner } from '../../helpers/misc-utils';
 import { eNetwork } from '../../helpers/types';
 import {
   getIErc20Detailed,
@@ -9,7 +9,7 @@ import {
   getMarketAddressController,
 } from '../../helpers/contracts-getters';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { BigNumber } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 
 task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
@@ -45,6 +45,15 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
       }
       return;
     }
+
+    // const ethers = (<any>DRE).ethers;
+    // for (const receiver of receivers) {
+    //   await ethers.provider.sendTransaction({
+    //     to: receiver,
+    //     value: BigNumber.from(10),
+    //   })
+    //   console.log('Send 1 ETH to ', receiver);
+    // }
 
     for (const receiver of receivers) {
       let hasDeposits = false;
