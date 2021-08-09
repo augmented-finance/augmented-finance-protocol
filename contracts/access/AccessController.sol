@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import '../dependencies/openzeppelin/contracts/Addr.sol';
+import '../dependencies/openzeppelin/contracts/Address.sol';
 import '../dependencies/openzeppelin/contracts/Ownable.sol';
 import '../tools/Errors.sol';
 import '../tools/math/BitUtils.sol';
@@ -300,7 +300,7 @@ contract AccessController is Ownable, IManagedAccessController {
       _masks[prev] = _masks[prev] & ~id;
     }
     if (newAddress != address(0)) {
-      require(Addr.isContract(newAddress), 'must be contract');
+      require(Address.isContract(newAddress), 'must be contract');
       _masks[newAddress] = _masks[newAddress] | id;
     }
     _addresses[id] = newAddress;

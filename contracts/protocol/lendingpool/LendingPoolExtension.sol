@@ -4,6 +4,8 @@ pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts//SafeMath.sol';
 import '../../dependencies/openzeppelin/contracts//IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/Address.sol';
+import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../interfaces/IDepositToken.sol';
 import '../../interfaces/IStableDebtToken.sol';
 import '../../interfaces/IVariableDebtToken.sol';
@@ -11,12 +13,9 @@ import '../../interfaces/IPriceOracleGetter.sol';
 import '../../interfaces/ILendingPoolExtension.sol';
 import '../../interfaces/ILendingPoolEvents.sol';
 import '../../interfaces/IManagedLendingPool.sol';
-import '../../tools/upgradeability/VersionedInitializable.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../tools/Errors.sol';
-import '../../dependencies/openzeppelin/contracts/Addr.sol';
-import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../flashloan/interfaces/IFlashLoanReceiver.sol';
 import '../../access/AccessFlags.sol';
 import '../libraries/logic/GenericLogic.sol';
@@ -698,7 +697,7 @@ contract LendingPoolExtension is
     override
     onlyLendingPoolConfigurator
   {
-    require(Addr.isContract(data.asset), Errors.VL_CONTRACT_REQUIRED);
+    require(Address.isContract(data.asset), Errors.VL_CONTRACT_REQUIRED);
     _reserves[data.asset].init(data);
     _addReserveToList(data.asset);
   }
@@ -708,7 +707,7 @@ contract LendingPoolExtension is
   }
 
   function setLendingPoolExtension(address extension) external override onlyConfiguratorOrAdmin {
-    require(Addr.isContract(extension), Errors.VL_CONTRACT_REQUIRED);
+    require(Address.isContract(extension), Errors.VL_CONTRACT_REQUIRED);
     _extension = extension;
     emit LendingPoolExtensionUpdated(extension);
   }

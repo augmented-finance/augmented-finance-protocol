@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import '../../dependencies/openzeppelin/contracts/Addr.sol';
-import '../../dependencies/openzeppelin/contracts/AddrCall.sol';
+import '../../dependencies/openzeppelin/contracts/Address.sol';
 import '../../dependencies/openzeppelin/upgradeability/BaseUpgradeabilityProxy.sol';
 import './IProxy.sol';
 
@@ -33,15 +32,10 @@ contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
     return _implementation();
   }
 
-  /// @dev Upgrade the backing implementation of the proxy.
-  function upgradeTo(address logic) external ifAdmin {
-    _upgradeTo(logic);
-  }
-
   /// @dev Upgrade the backing implementation of the proxy and call a function on it.
   function upgradeToAndCall(address logic, bytes calldata data) external payable override ifAdmin {
     _upgradeTo(logic);
-    AddrCall.functionDelegateCall(logic, data);
+    Address.functionDelegateCall(logic, data);
   }
 
   /// @dev Only fall back when the sender is not the admin.
@@ -55,7 +49,7 @@ contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
     assert(IMPLEMENTATION_SLOT == bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1));
     _setImplementation(logic);
     if (data.length > 0) {
-      AddrCall.functionDelegateCall(logic, data);
+      Address.functionDelegateCall(logic, data);
     }
   }
 }

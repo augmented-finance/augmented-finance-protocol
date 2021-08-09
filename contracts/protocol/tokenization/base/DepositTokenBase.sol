@@ -38,6 +38,20 @@ abstract contract DepositTokenBase is
     return true;
   }
 
+  function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
+    _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
+    return true;
+  }
+
+  function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
+    _approve(
+      msg.sender,
+      spender,
+      _allowances[msg.sender][spender].sub(subtractedValue, 'ERC20: decreased allowance below zero')
+    );
+    return true;
+  }
+
   function burn(
     address user,
     address receiverOfUnderlying,
@@ -86,6 +100,12 @@ abstract contract DepositTokenBase is
     emit Mint(treasury, amount, index);
   }
 
+  /**
+   * @dev Transfers on liquidation, in case the liquidator claims this token. Only callable by the LendingPool.
+   * @param from The address getting liquidated, current owner of the depositTokens
+   * @param to The recipient
+   * @param value The amount of tokens getting transferred
+   **/
   function transferOnLiquidation(
     address from,
     address to,
@@ -165,6 +185,11 @@ abstract contract DepositTokenBase is
     return amount;
   }
 
+  /**
+   * @dev Invoked to execute actions on the depositToken side after a repayment.
+   * @param user The user executing the repayment
+   * @param amount The amount getting repaid
+   **/
   function handleRepayment(address user, uint256 amount) external override onlyLendingPool {}
 
   /**

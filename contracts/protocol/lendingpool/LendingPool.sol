@@ -5,26 +5,25 @@ pragma experimental ABIEncoderV2;
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../dependencies/openzeppelin/contracts/Address.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
 import '../../access/AccessHelper.sol';
 import '../../interfaces/IDepositToken.sol';
 import '../../interfaces/IVariableDebtToken.sol';
+import '../../interfaces/ILendingPool.sol';
+import '../../interfaces/ILendingPoolForTokens.sol';
 import '../../flashloan/interfaces/IFlashLoanReceiver.sol';
 import '../../interfaces/IStableDebtToken.sol';
-import '../../tools/upgradeability/VersionedInitializable.sol';
-import '../libraries/helpers/Helpers.sol';
-import '../../dependencies/openzeppelin/contracts/Addr.sol';
+import '../../tools/upgradeability/Delegator.sol';
 import '../../tools/Errors.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
+import '../libraries/helpers/Helpers.sol';
 import '../libraries/logic/GenericLogic.sol';
 import '../libraries/logic/ValidationLogic.sol';
 import '../libraries/logic/ReserveLogic.sol';
 import '../libraries/types/DataTypes.sol';
 import './LendingPoolBase.sol';
-import '../../interfaces/ILendingPool.sol';
-import '../../interfaces/ILendingPoolForTokens.sol';
-import '../../tools/upgradeability/Delegator.sol';
 
 /**
  * @title LendingPool contract
@@ -456,7 +455,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
 
   /// @dev Updates the address of the LendingPoolExtension
   function setLendingPoolExtension(address extension) external onlyConfiguratorOrAdmin {
-    require(Addr.isContract(extension), Errors.VL_CONTRACT_REQUIRED);
+    require(Address.isContract(extension), Errors.VL_CONTRACT_REQUIRED);
     _extension = extension;
     emit LendingPoolExtensionUpdated(extension);
   }

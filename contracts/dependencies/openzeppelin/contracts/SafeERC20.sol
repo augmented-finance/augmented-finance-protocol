@@ -1,13 +1,23 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity 0.6.12;
 
 import './IERC20.sol';
 import './SafeMath.sol';
-import './Addr.sol';
+import './Address.sol';
 
-/// @dev Wrappers around ERC20 operations that throw on failure (when the token contract returns false).
+/**
+ * @title SafeERC20
+ * @dev Wrappers around ERC20 operations that throw on failure (when the token
+ * contract returns false). Tokens that return no value (and instead revert or
+ * throw on failure) are also supported, non-reverting calls are assumed to be
+ * successful.
+ * To use this library you can add a `using SafeERC20 for IERC20;` statement to your contract,
+ * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
+ */
 library SafeERC20 {
   using SafeMath for uint256;
+  using Address for address;
 
   function safeTransfer(
     IERC20 token,
@@ -39,7 +49,7 @@ library SafeERC20 {
   }
 
   function callOptionalReturn(IERC20 token, bytes memory data) private {
-    require(Addr.isContract(address(token)), 'SafeERC20: call to non-contract');
+    require(address(token).isContract(), 'SafeERC20: call to non-contract');
 
     // solhint-disable-next-line avoid-low-level-calls
     (bool success, bytes memory returndata) = address(token).call(data);
