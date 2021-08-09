@@ -439,8 +439,12 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     return _maxStableRateBorrowSizePct;
   }
 
-  /// @dev Returns the fee of flash loans
-  function FLASHLOAN_PREMIUM_TOTAL() public view override returns (uint256) {
+  /// @dev Returns the fee of flash loans - backward compatible
+  function FLASHLOAN_PREMIUM_TOTAL() public view returns (uint256) {
+    return _flashLoanPremiumPct;
+  }
+
+  function getFlashloanPremiumPct() public view override returns (uint16) {
     return _flashLoanPremiumPct;
   }
 
