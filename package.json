@@ -40,6 +40,7 @@
     "test-weth": "hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/weth-gateway.spec.ts",
     "test-uniswap": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented-uniswap/*.spec.ts",
     "test-upgradeability": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/upgradeability.spec.ts",
+    "test-access": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/access.spec.ts",
     
     "test:main:check-list": "MAINNET_FORK=true TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/mainnet/check-list.spec.ts",
     "test:augmented:stake": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-stake/stake.spec.ts",
@@ -57,6 +58,9 @@
     "test:augmented:compatibility": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/compatibility.spec.ts",    
 
     "coverage": "TS_NODE_TRANSPILE_ONLY=1 hardhat compile --force && TS_NODE_TRANSPILE_ONLY=1 hardhat coverage --network coverage --testfiles \"test-suites/test-augmented/*.spec.ts\"",
+
+    "deploy:ropsten": "npm run compile && npm run hardhat:ropsten -- augmented:mainnet --incremental --verify",
+
     "aave:evm:dev:migration": "npm run compile && hardhat aave:dev",
     "aave:docker:full:migration": "npm run compile && npm run hardhat:docker -- augmented:mainnet",
     "aave:kovan:full:migration": "npm run compile && npm run hardhat:kovan -- augmented:mainnet --verify",

@@ -3,7 +3,6 @@ import {
   DepositTokenFactory,
   OracleRouterFactory,
   GenericLogicFactory,
-  InitializableAdminUpgradeabilityProxyFactory,
   MarketAccessControllerFactory,
   AddressesProviderRegistryFactory,
   LendingPoolExtensionFactory,
@@ -49,7 +48,7 @@ import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 
 import { MockTokenMap } from './contracts-helpers';
-import { getFirstSigner, getFromJsonDb, hasInJsonDb } from './misc-utils';
+import { falsyOrZeroAddress, getFirstSigner, getFromJsonDb, hasInJsonDb } from './misc-utils';
 import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } from './types';
 import { ILendingPoolAaveCompatibleFactory } from '../types/ILendingPoolAaveCompatibleFactory';
 import { IManagedLendingPoolFactory } from '../types/IManagedLendingPoolFactory';
@@ -168,8 +167,11 @@ export const getTokenAggregatorPairs = (
   const aggregators: string[] = [];
 
   for (const [tokenSymbol, tokenAddress] of Object.entries(assetsAddressesWithoutEth)) {
+    if (falsyOrZeroAddress(tokenAddress)) {
+      continue;
+    }
     const aggregatorAddress = aggregatorAddresses[tokenSymbol];
-    if (aggregatorAddress == undefined) {
+    if (falsyOrZeroAddress(aggregatorAddress)) {
       continue;
     }
     assets.push(tokenAddress);

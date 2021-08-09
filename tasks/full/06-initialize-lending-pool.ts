@@ -4,10 +4,10 @@ import { deployTreasuryImpl } from '../../helpers/contracts-deployments';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
-import { getDeployAccessController } from '../../helpers/deploy-helpers';
+import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getProtocolDataProvider } from '../../helpers/contracts-getters';
-import { falsyOrZeroAddress } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 
 task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -30,13 +30,18 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
     );
 
     // Treasury implementation is updated for existing installations
-    let treasuryAddress = freshStart && continuation ? await addressProvider.getTreasury() : '';
+    let treasuryAddress =
+      freshStart && continuation ? await addressProvider.getAddress(AccessFlags.TREASURY) : '';
 
     if (falsyOrZeroAddress(treasuryAddress)) {
       const treasuryImpl = await deployTreasuryImpl(verify, continuation);
-      await addressProvider.setAddressAsProxy(AccessFlags.TREASURY, treasuryImpl.address);
       console.log('\tTreasury implementation:', treasuryImpl.address);
-      treasuryAddress = await addressProvider.getTreasury();
+
+      treasuryAddress = await setAndGetAddressAsProxy(
+        addressProvider,
+        AccessFlags.TREASURY,
+        treasuryImpl.address
+      );
     }
     console.log('\tTreasury:', treasuryAddress);
 

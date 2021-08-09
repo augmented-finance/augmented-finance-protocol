@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 interface IEmergencyAccess {
-  function setPaused(bool paused) external; // for emergency admin
+  function setPaused(bool paused) external;
 
   function isPaused() external view returns (bool);
 

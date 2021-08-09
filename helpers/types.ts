@@ -31,12 +31,6 @@ export enum EthereumNetworkNames {
   mumbai = 'mumbai',
 }
 
-export enum LendingPools {
-  // proto = 'proto',
-  // matic = 'matic',
-  augmented = 'augmented',
-}
-
 export enum eContractid {
   MarketAccessController = 'MarketAccessController',
   PreDeployedMarketAccessController = '~MarketAccessController',
@@ -93,6 +87,8 @@ export enum eContractid {
   MockTokenLocker = 'MockTokenLocker',
   MockDecayingTokenLocker = 'MockDecayingTokenLocker',
   MockDelegationAwareDepositToken = 'MockDelegationAwareDepositToken',
+  MockMintableERC20 = 'MockMintableERC20',
+  MockMintableDelegationERC20 = 'MockMintableDelegationERC20',
 
   TokenWeightedRewardPoolAGFSeparate = 'MockRewardPoolAGFSeparate',
   TokenWeightedRewardPoolAGFBoosted = 'MockRewardPoolAGFBoosted',
@@ -100,13 +96,14 @@ export enum eContractid {
   TokenWeightedRewardPoolAGBoosted = 'MockRewardPoolAGBoosted',
   TokenWeightedRewardPoolAGUSDCBoosted = 'MockRewardPoolAGUSDCBoosted',
   MockReferralRewardPool = 'MockReferralRewardPool',
+  MockDefaultReserveInterestRateStrategy = 'MockDefaultReserveInterestRateStrategy',
 }
 
 /*
  * Error messages prefix glossary:
  *  - VL = ValidationLogic
  *  - MATH = Math libraries
- *  - AT = aToken or DebtTokens
+ *  - AT = depositToken or DebtTokens
  *  - LP = LendingPool
  *  - LPAPR = AddressesProviderRegistry
  *  - LPC = LendingPoolConfiguration
@@ -253,8 +250,6 @@ export interface iAssetBase<T> {
   LINK: T;
 }
 
-export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, 'ETH'>;
-
 export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, 'USD'>;
 
 export type RecordOpt<K extends keyof any, T> = {
@@ -270,9 +265,9 @@ type augmentedAssets = 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH';
 export type iAugmentedPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, augmentedAssets>;
 export type iAugmentedPoolAssetsOpt<T> = PickOpt<iAssetsWithoutUSD<T>, augmentedAssets>;
 
-export type iMultiPoolsAssets<T> = iAssetCommon<T> | iAugmentedPoolAssets<T>;
+type iMultiPoolsAssets<T> = iAssetsWithoutUSD<T> | iAugmentedPoolAssets<T>;
 
-export type iAssetAggregatorBase<T> = iAssetsWithoutETH<T>;
+export type iAssetAggregatorBase<T> = iAssetBase<T>;
 
 export const TokenContractId: iAssetBase<string> = {
   AAVE: 'AAVE',
@@ -288,7 +283,7 @@ export const TokenContractId: iAssetBase<string> = {
 };
 
 export interface IReserveParams extends IReserveBorrowParams, IReserveCollateralParams {
-  aTokenImpl: eContractid;
+  depositTokenImpl: eContractid;
   reserveFactor: string;
   strategy: IInterestRateStrategyParams;
 }
@@ -346,17 +341,6 @@ export interface iPolygonParamsPerNetwork<T> {
   [ePolygonNetwork.mumbai]: T;
 }
 
-export interface iParamsPerPool<T> {
-  // [LendingPools.proto]: T;
-  // [LendingPools.matic]: T;
-  [LendingPools.augmented]: T;
-}
-
-export interface iBasicDistributionParams {
-  receivers: string[];
-  percentages: string[];
-}
-
 export enum RateMode {
   None = '0',
   Stable = '1',
@@ -367,23 +351,10 @@ export interface ObjectString {
   [key: string]: string;
 }
 
-export interface IProtocolGlobalConfig {
+export interface IMocksConfig {
   MockUsdPriceInWei: string;
   UsdAddress: tEthereumAddress;
-  NilAddress: tEthereumAddress;
-  OneAddress: tEthereumAddress;
-}
-
-export interface IMocksConfig {
   AllAssetsInitialPrices: iAssetBase<string>;
-}
-
-export interface ILendingRateOracleRatesCommon {
-  [token: string]: ILendingRate;
-}
-
-export interface ILendingRate {
-  borrowRate: string;
 }
 
 export interface ICommonConfiguration {
@@ -392,7 +363,6 @@ export interface ICommonConfiguration {
 
   Names: ITokenNames;
 
-  ProtocolGlobalParams: IProtocolGlobalConfig;
   Mocks: IMocksConfig;
   ProviderRegistry: iParamsPerNetwork<tEthereumAddress | undefined>;
   ProviderRegistryOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
@@ -401,7 +371,7 @@ export interface ICommonConfiguration {
 
   ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
 
-  LendingRateOracleRatesCommon: iMultiPoolsAssets<IMarketRates>;
+  LendingRateOracleRates: iAssetsWithoutUSD<IMarketRates>;
 
   FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
 
@@ -410,7 +380,6 @@ export interface ICommonConfiguration {
 
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
   ReservesConfig: iMultiPoolsAssets<IReserveParams>;
-  WETH: iParamsPerNetwork<tEthereumAddress>;
 
   StakeParams: IStakeParams;
 
@@ -420,7 +389,7 @@ export interface ICommonConfiguration {
 }
 
 export interface IAugmentedConfiguration extends ICommonConfiguration {
-  //  ReservesConfig: iAugmentedPoolAssets<IReserveParams>;
+  ReservesConfig: iAugmentedPoolAssets<IReserveParams>;
 }
 
 export interface ITokenAddress {

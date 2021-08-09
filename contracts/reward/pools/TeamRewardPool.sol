@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {ControlledRewardPool} from './ControlledRewardPool.sol';
-import {CalcLinearUnweightedReward} from '../calcs/CalcLinearUnweightedReward.sol';
-import {Errors} from '../../tools/Errors.sol';
-
-import 'hardhat/console.sol';
+import '../../tools/math/PercentageMath.sol';
+import '../interfaces/IRewardController.sol';
+import './ControlledRewardPool.sol';
+import '../calcs/CalcLinearUnweightedReward.sol';
+import '../../tools/Errors.sol';
 
 contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   using PercentageMath for uint256;
@@ -32,6 +30,10 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     );
   }
 
+  function getPoolName() public view override returns (string memory) {
+    return 'TeamPool';
+  }
+
   modifier onlyTeamManagerOrConfigurator {
     _onlyTeamManagerOrConfigurator();
     _;
@@ -52,11 +54,16 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return doGetReward(holder);
   }
 
-  function internalCalcReward(address holder) internal view override returns (uint256, uint32) {
-    if (!isUnlocked(getCurrentTick())) {
+  function internalCalcReward(address holder, uint32 at)
+    internal
+    view
+    override
+    returns (uint256, uint32)
+  {
+    if (!isUnlocked(at)) {
       return (0, 0);
     }
-    return doCalcReward(holder);
+    return doCalcRewardAt(holder, at);
   }
 
   function internalCalcRateAndReward(
@@ -151,7 +158,6 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
 
   function setUnlockedAt(uint32 at) external onlyConfigAdmin {
     require(at > 0, 'unlockAt is required');
-    // console.log('setUnlockedAt', _lockupTill, getCurrentTick(), at);
     require(_lockupTill == 0 || _lockupTill >= getCurrentTick(), 'lockup is finished');
     _lockupTill = at;
   }

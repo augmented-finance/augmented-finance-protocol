@@ -1,19 +1,13 @@
 import BigNumber from 'bignumber.js';
 import { ONE_YEAR, RAY, MAX_UINT_AMOUNT, PERCENTAGE_FACTOR } from '../../../../helpers/constants';
-import {
-  IReserveParams,
-  iAugmentedPoolAssets,
-  RateMode,
-  tEthereumAddress,
-} from '../../../../helpers/types';
+import { IReserveParams, RateMode, iAssetCommon } from '../../../../helpers/types';
 import './math';
 import { ReserveData, UserReserveData } from './interfaces';
-import { expect } from 'chai';
 
 export const strToBN = (amount: string): BigNumber => new BigNumber(amount);
 
 interface Configuration {
-  reservesParams: iAugmentedPoolAssets<IReserveParams>;
+  reservesParams: iAssetCommon<IReserveParams>;
 }
 
 export const configuration: Configuration = <Configuration>{};
@@ -98,14 +92,14 @@ export const calcExpectedUserDataAfterWithdraw = (
 ): UserReserveData => {
   const expectedUserData = <UserReserveData>{};
 
-  const aTokenBalance = calcExpectedATokenBalance(
+  const depositTokenBalance = calcExpectedATokenBalance(
     reserveDataBeforeAction,
     userDataBeforeAction,
     txTimestamp
   );
 
   if (amountWithdrawn == MAX_UINT_AMOUNT) {
-    amountWithdrawn = aTokenBalance.toFixed(0);
+    amountWithdrawn = depositTokenBalance.toFixed(0);
   }
 
   expectedUserData.scaledATokenBalance = calcExpectedScaledATokenBalance(
@@ -115,7 +109,7 @@ export const calcExpectedUserDataAfterWithdraw = (
     new BigNumber(amountWithdrawn)
   );
 
-  expectedUserData.currentATokenBalance = aTokenBalance.minus(amountWithdrawn);
+  expectedUserData.currentATokenBalance = depositTokenBalance.minus(amountWithdrawn);
 
   expectedUserData.principalStableDebt = userDataBeforeAction.principalStableDebt;
   expectedUserData.scaledVariableDebt = userDataBeforeAction.scaledVariableDebt;

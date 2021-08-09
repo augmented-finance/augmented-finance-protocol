@@ -2,27 +2,21 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ERC20WithPermit} from '../../misc/ERC20WithPermit.sol';
-
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IStakeToken, IManagedStakeToken} from './interfaces/IStakeToken.sol';
-
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
-
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-
-import {Errors} from '../../tools/Errors.sol';
-import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
-import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.sol';
-
-import 'hardhat/console.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../misc/ERC20WithPermit.sol';
+import '../../tools/math/WadRayMath.sol';
+import '../../tools/math/PercentageMath.sol';
+import '../../tools/Errors.sol';
+import '../../interfaces/IBalanceHook.sol';
+import '../../access/AccessFlags.sol';
+import '../../access/MarketAccessBitmask.sol';
+import '../../access/interfaces/IMarketAccessController.sol';
+import './interfaces/StakeTokenConfig.sol';
+import './interfaces/IInitializableStakeToken.sol';
+import './interfaces/IStakeToken.sol';
+import './interfaces/IManagedStakeToken.sol';
 
 abstract contract SlashableStakeTokenBase is
   IStakeToken,
@@ -212,24 +206,15 @@ abstract contract SlashableStakeTokenBase is
     return (stakeAmount, underlyingAmount);
   }
 
-  /**
-   * @dev Activates the cooldown period to unstake
-   * - It can't be called if the user is not staking
-   **/
+  /// @dev Activates the cooldown period to unstake. Reverts if the user has no stake.
   function cooldown() external override {
     require(balanceOf(msg.sender) != 0, Errors.STK_INVALID_BALANCE_ON_COOLDOWN);
-
-    // console.log('cooldown: ', msg.sender, address(this));
-    // console.log('block.timestamp: ', block.timestamp);
 
     _stakersCooldowns[msg.sender] = uint32(block.timestamp);
     emit CooldownStarted(msg.sender, uint32(block.timestamp));
   }
 
-  /**
-   * @dev Gets end of the cooldown period.
-   * - Returns zero for a non-staking user or .
-   **/
+  /// @dev Returns the end of the current cooldown period or zero for a user without a stake.
   function getCooldown(address holder) external view override returns (uint32) {
     return _stakersCooldowns[holder];
   }
@@ -264,7 +249,7 @@ abstract contract SlashableStakeTokenBase is
       return WadRayMath.RAY; // 100%
     }
 
-    return underlyingBalance.rayBase(total);
+    return underlyingBalance.mul(WadRayMath.RAY).div(total);
   }
 
   function slashUnderlying(
@@ -351,12 +336,6 @@ abstract contract SlashableStakeTokenBase is
     return address(_stakedToken);
   }
 
-  /**
-   * @dev Internal ERC20 _transfer of the tokenized staked tokens
-   * @param from Address to transfer from
-   * @param to Address to transfer to
-   * @param amount Amount to transfer
-   **/
   function _transfer(
     address from,
     address to,
@@ -382,11 +361,11 @@ abstract contract SlashableStakeTokenBase is
 
   /**
    * @dev Calculates the how is gonna be a new cooldown time depending on the sender/receiver situation
-   *  - If the time of the sender is "better" or the time of the recipient is 0, we take the one of the recipient
+   *  - If the time of the sender is better or the time of the recipient is 0, we take the one of the recipient
    *  - Weighted average of from/to cooldown time if:
    *    # The sender doesn't have the cooldown activated (time 0).
    *    # The sender time is passed
-   *    # The sender has a "worse" time
+   *    # The sender has a worse time
    *  - If the receiver's cooldown time passed (too old), the next is 0
    * @param fromCooldownPeriod Cooldown time of the sender
    * @param amountToReceive Amount

@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import 'hardhat/console.sol';
-import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
-import {Errors} from '../tools/Errors.sol';
-
-import {BitUtils} from '../tools/math/BitUtils.sol';
-
-// prettier-ignore
-import {InitializableImmutableAdminUpgradeabilityProxy} from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
-import {IProxy} from '../tools/upgradeability/IProxy.sol';
-
-import {IManagedAccessController} from './interfaces/IAccessController.sol';
+import '../dependencies/openzeppelin/contracts/Address.sol';
+import '../dependencies/openzeppelin/contracts/Ownable.sol';
+import '../tools/Errors.sol';
+import '../tools/math/BitUtils.sol';
+import '../tools/upgradeability/TransparentProxy.sol';
+import '../tools/upgradeability/IProxy.sol';
+import './interfaces/IAccessController.sol';
+import './interfaces/IManagedAccessController.sol';
 
 contract AccessController is Ownable, IManagedAccessController {
   using BitUtils for uint256;
@@ -286,7 +283,7 @@ contract AccessController is Ownable, IManagedAccessController {
    * @param newAddress The address to set
    */
   function setAddress(uint256 id, address newAddress) public override onlyAdmin {
-    require(_proxies & id == 0, 'use of setAddressAsProxy is required');
+    require(_proxies & id == 0, 'setAddressAsProxy is required');
     _internalSetAddress(id, newAddress);
     emit AddressSet(id, newAddress, false);
   }
@@ -296,7 +293,6 @@ contract AccessController is Ownable, IManagedAccessController {
     if (_singletons & id == 0) {
       require(_nonSingletons & id == 0, 'id is not a singleton');
       _singletons |= id;
-      console.log('_internalSetAddress', newAddress, id);
     }
 
     address prev = _addresses[id];
@@ -304,6 +300,7 @@ contract AccessController is Ownable, IManagedAccessController {
       _masks[prev] = _masks[prev] & ~id;
     }
     if (newAddress != address(0)) {
+      require(Address.isContract(newAddress), 'must be contract');
       _masks[newAddress] = _masks[newAddress] | id;
     }
     _addresses[id] = newAddress;
@@ -339,28 +336,22 @@ contract AccessController is Ownable, IManagedAccessController {
   /**
    * @dev General function to update the implementation of a proxy registered with
    * certain `id`. If there is no proxy registered, it will instantiate one and
-   * set as implementation the `implementationAddress`
-   * IMPORTANT Use this function carefully, only for ids that don't have an explicit
-   * setter function, in order to avoid unexpected consequences
+   * set as implementation the `implAddress`
    * @param id The id
-   * @param implementationAddress The address of the new implementation
+   * @param implAddress The address of the new implementation
    */
-  function setAddressAsProxy(uint256 id, address implementationAddress) public override onlyAdmin {
-    _updateImpl(
-      id,
-      implementationAddress,
-      abi.encodeWithSignature('initialize(address)', address(this))
-    );
-    emit AddressSet(id, implementationAddress, true);
+  function setAddressAsProxy(uint256 id, address implAddress) public override onlyAdmin {
+    _updateImpl(id, implAddress, abi.encodeWithSignature('initialize(address)', address(this)));
+    emit AddressSet(id, implAddress, true);
   }
 
   function setAddressAsProxyWithInit(
     uint256 id,
-    address implementationAddress,
+    address implAddress,
     bytes calldata params
   ) public override onlyAdmin {
-    _updateImpl(id, implementationAddress, params);
-    emit AddressSet(id, implementationAddress, true);
+    _updateImpl(id, implAddress, params);
+    emit AddressSet(id, implAddress, true);
   }
 
   /**
@@ -383,10 +374,7 @@ contract AccessController is Ownable, IManagedAccessController {
 
     if (proxyAddress != address(0)) {
       require(_proxies & id != 0, 'use of setAddress is required');
-      InitializableImmutableAdminUpgradeabilityProxy(proxyAddress).upgradeToAndCall(
-        newAddress,
-        params
-      );
+      TransparentProxy(proxyAddress).upgradeToAndCall(newAddress, params);
       return;
     }
 
@@ -400,10 +388,8 @@ contract AccessController is Ownable, IManagedAccessController {
     address adminAddress,
     address implAddress,
     bytes memory params
-  ) private returns (InitializableImmutableAdminUpgradeabilityProxy) {
-    InitializableImmutableAdminUpgradeabilityProxy proxy =
-      new InitializableImmutableAdminUpgradeabilityProxy(adminAddress);
-    proxy.initialize(implAddress, params);
+  ) private returns (TransparentProxy) {
+    TransparentProxy proxy = new TransparentProxy(adminAddress, implAddress, params);
     return proxy;
   }
 

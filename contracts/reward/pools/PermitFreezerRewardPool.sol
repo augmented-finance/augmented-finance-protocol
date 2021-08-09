@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {IManagedRewardPool} from '../interfaces/IManagedRewardPool.sol';
-import {BasePermitRewardPool} from './BasePermitRewardPool.sol';
-import {CalcLinearFreezer} from '../calcs/CalcLinearFreezer.sol';
-
-import 'hardhat/console.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../tools/math/WadRayMath.sol';
+import '../interfaces/IRewardController.sol';
+import '../interfaces/IManagedRewardPool.sol';
+import './BasePermitRewardPool.sol';
+import '../calcs/CalcLinearFreezer.sol';
 
 contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
   uint256 private _rewardLimit;
@@ -88,13 +86,13 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     return (allocated, uint32(block.timestamp));
   }
 
-  function internalCalcReward(address holder)
+  function internalCalcReward(address holder, uint32 at)
     internal
     view
     override
     returns (uint256 allocated, uint32)
   {
-    (allocated, ) = doCalcByPull(holder, 0, 0, false);
+    (allocated, ) = doCalcByPull(holder, 0, 0, at, false);
     return (allocated, uint32(block.timestamp));
   }
 

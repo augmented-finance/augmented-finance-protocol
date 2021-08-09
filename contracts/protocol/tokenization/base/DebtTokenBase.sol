@@ -2,22 +2,14 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ICreditDelegationToken} from '../../../interfaces/ICreditDelegationToken.sol';
-import {Errors} from '../../libraries/helpers/Errors.sol';
-import {PoolTokenBase} from './PoolTokenBase.sol';
-import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {ERC20Events} from '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
+import '../../../tools/Errors.sol';
+import '../../../interfaces/ICreditDelegationToken.sol';
+import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
+import './PoolTokenBase.sol';
 
-/**
- * @title DebtTokenBase
- * @notice Base contract for debt tokens: StableDebtToken and VariableDebtToken
- */
-
-abstract contract DebtTokenBase is
-  PoolTokenBase('DEBT_STUB', 'DEBT_STUB', 0),
-  ERC20Events,
-  ICreditDelegationToken
-{
+/// @dev Base contract for a non-transferrable debt tokens: StableDebtToken and VariableDebtToken
+abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICreditDelegationToken {
   using SafeMath for uint256;
 
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
@@ -30,8 +22,8 @@ abstract contract DebtTokenBase is
    * force a delegator HF to go below 1)
    **/
   function approveDelegation(address delegatee, uint256 amount) external override {
-    _borrowAllowances[_msgSender()][delegatee] = amount;
-    emit BorrowAllowanceDelegated(_msgSender(), delegatee, _underlyingAsset, amount);
+    _borrowAllowances[msg.sender][delegatee] = amount;
+    emit BorrowAllowanceDelegated(msg.sender, delegatee, _underlyingAsset, amount);
   }
 
   /**
@@ -49,10 +41,6 @@ abstract contract DebtTokenBase is
     return _borrowAllowances[fromUser][toUser];
   }
 
-  /**
-   * @dev Being non transferrable, the debt token does not implement any of the
-   * standard ERC20 functions for transfer and allowance.
-   **/
   function transfer(address, uint256) public override returns (bool) {
     notSupported();
     _mutable();
@@ -82,14 +70,6 @@ abstract contract DebtTokenBase is
   }
 
   function _mutable() private {}
-
-  function increaseAllowance(address, uint256) public override returns (bool) {
-    notSupported();
-  }
-
-  function decreaseAllowance(address, uint256) public override returns (bool) {
-    notSupported();
-  }
 
   function _decreaseBorrowAllowance(
     address delegator,

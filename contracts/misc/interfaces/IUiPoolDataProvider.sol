@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IPoolAddressProvider} from '../../interfaces/IPoolAddressProvider.sol';
+import '../../interfaces/IPoolAddressProvider.sol';
 
 interface IUiPoolDataProvider {
   struct Addresses {
@@ -59,11 +59,6 @@ interface IUiPoolDataProvider {
     uint256 stableRateSlope1;
     uint256 stableRateSlope2;
   }
-  //
-  //  struct ReserveData {
-  //    uint256 averageStableBorrowRate;
-  //    uint256 totalLiquidity;
-  //  }
 
   struct UserReserveData {
     address underlyingAsset;
@@ -74,15 +69,6 @@ interface IUiPoolDataProvider {
     uint256 principalStableDebt;
     uint256 stableBorrowLastUpdateTimestamp;
   }
-
-  //
-  //  struct ATokenSupplyData {
-  //    string name;
-  //    string symbol;
-  //    uint8 decimals;
-  //    uint256 totalSupply;
-  //    address aTokenAddress;
-  //  }
 
   function getReservesDataOf(IPoolAddressProvider provider, address user)
     external
@@ -101,19 +87,4 @@ interface IUiPoolDataProvider {
       UserReserveData[] memory,
       uint256
     );
-
-  //  function getUserReservesData(ILendingPoolAddressesProvider provider, address user)
-  //    external
-  //    view
-  //    returns (UserReserveData[] memory);
-  //
-  //  function getAllATokenSupply(ILendingPoolAddressesProvider provider)
-  //    external
-  //    view
-  //    returns (ATokenSupplyData[] memory);
-  //
-  //  function getATokenSupply(address[] calldata aTokens)
-  //    external
-  //    view
-  //    returns (ATokenSupplyData[] memory);
 }

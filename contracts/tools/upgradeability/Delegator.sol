@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.0;
 
-/**
- * @title Delegator
- * @dev Implements delegation of calls to other contracts, with proper
- * forwarding of return values and bubbling of failures.
- * It does NOT define a fallback function. Based on OpenZeppelin Proxy.
- */
+/// @dev Provides delegation of calls with proper forwarding of return values and bubbling of failures. Based on OpenZeppelin Proxy.
 abstract contract Delegator {
   /**
    * @dev Delegates execution to an implementation contract.
@@ -15,6 +10,7 @@ abstract contract Delegator {
    * @param implementation Address to delegate.
    */
   function _delegate(address implementation) internal {
+    require(implementation != address(0));
     //solium-disable-next-line
     assembly {
       // Copy msg.data. We take full control of memory in this inline assembly

@@ -27,9 +27,12 @@ import {
 import { chunk, falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumber } from 'ethers';
-import { oneRay, oneWad, RAY, WAD, WAD_RAY_RATIO_NUM, ZERO_ADDRESS } from '../../helpers/constants';
+import { oneWad } from '../../helpers/constants';
 import { transpose } from 'underscore';
-import { getDeployAccessController } from '../../helpers/deploy-helpers';
+import {
+  getDeployAccessController,
+  setAndGetAddressAsProxyWithInit,
+} from '../../helpers/deploy-helpers';
 import { MarketAccessController, RewardConfigurator } from '../../types';
 
 interface poolInitParams {
@@ -55,7 +58,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
 
     const reserveAssets = getParamPerNetwork(ReserveAssets, network);
     const stakeConfigurator = await getStakeConfiguratorImpl(
-      await addressProvider.getStakeConfigurator()
+      await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
     );
 
     await waitForTx(
@@ -113,10 +116,26 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
 
     const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
 
-    const rewardController = await getRewardBooster(await addressProvider.getRewardController());
-    const configurator = await getRewardConfiguratorProxy(
-      await addressProvider.getRewardConfigurator()
+    const rewardController = await getRewardBooster(
+      await addressProvider.getAddress(AccessFlags.REWARD_CONTROLLER)
     );
+    const configurator = await getRewardConfiguratorProxy(
+      await addressProvider.getAddress(AccessFlags.REWARD_CONFIGURATOR)
+    );
+
+    let totalShare = 0;
+    let newPoolsOffset = 0;
+    const newNames: string[] = [];
+    if (!freshStart || continuation) {
+      const totals = await configurator.getPoolTotals(true);
+      // console.log('Existing pool totals: ', totals);
+      totalShare += totals.totalBaselinePercentage.toNumber();
+      newPoolsOffset = totals.listCount.toNumber();
+    }
+    if (freshStart && newPoolsOffset <= 1) {
+      newPoolsOffset = 0;
+      newNames.push(Names.RewardStakeTokenSymbol);
+    }
 
     const [extraNames, extraShare] = await deployExtraPools(
       addressProvider,
@@ -127,7 +146,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       rewardController.address,
       verify
     );
-    let totalShare = extraShare;
+    totalShare += extraShare;
 
     for (const [sym, opt] of Object.entries(rewardParams.TokenPools)) {
       if (opt == undefined) {
@@ -143,34 +162,22 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       }
 
       const rd = await lendingPool.getReserveData(asset);
-      if (falsyOrZeroAddress(rd.aTokenAddress)) {
+      if (falsyOrZeroAddress(rd.depositTokenAddress)) {
         console.log('Reserve is missing for asset (underlying):', symbol);
         continue;
       }
 
-      await buildToken(tp.Share.deposit, rd.aTokenAddress, Names.DepositSymbolPrefix);
+      await buildToken(tp.Share.deposit, rd.depositTokenAddress, Names.DepositSymbolPrefix);
       await buildToken(tp.Share.vDebt, rd.variableDebtTokenAddress, Names.VariableDebtSymbolPrefix);
       await buildToken(tp.Share.sDebt, rd.stableDebtTokenAddress, Names.StableDebtSymbolPrefix);
 
       if (tp.Share.stake != undefined) {
         await buildToken(
           tp.Share.stake,
-          await stakeConfigurator.stakeTokenOf(rd.aTokenAddress),
+          await stakeConfigurator.stakeTokenOf(rd.depositTokenAddress),
           Names.StakeSymbolPrefix
         );
       }
-    }
-
-    let newPoolsOffset = 0;
-    const newNames: string[] = [];
-    if (!freshStart || continuation) {
-      const totals = await configurator.getPoolTotals(true);
-      totalShare = totals.totalBaselinePercentage.toNumber();
-      newPoolsOffset = totals.listCount.toNumber();
-    }
-    if (freshStart && newPoolsOffset <= 1) {
-      newPoolsOffset = 0;
-      newNames.push(Names.RewardStakeTokenSymbol);
     }
 
     for (const params of initParams) {
@@ -244,10 +251,10 @@ const deployExtraPools = async (
   verify: boolean
 ): Promise<[string[], number]> => {
   const knownNamedPools = new Set<string>();
-  const teamPoolName = 'TeamPool';
+  const teamPoolName = 'TeamPool'; // NB! it is constant in a contract
   const refPoolName = 'RefPool';
   const burnPoolName = 'BurnersPool';
-  const treasuryPoolName = 'TreasuryPool';
+  const treasuryPoolName = 'TreasuryPool'; // NB! it is constant in a contract
 
   let totalShare: number = 0;
   const extraNames: string[] = [];
@@ -260,6 +267,7 @@ const deployExtraPools = async (
         knownNamedPools.add(allNames[i]);
       }
     }
+    console.log('Known named pools: ', knownNamedPools);
   }
 
   if (!knownNamedPools.has(teamPoolName)) {
@@ -282,12 +290,14 @@ const deployExtraPools = async (
       [memberAddresses, memberShares] = transpose(members);
     }
 
-    await configurator.configureTeamRewardPool(
-      trp.address,
-      poolName,
-      unlockTimestamp,
-      memberAddresses,
-      memberShares
+    waitForTx(
+      await configurator.configureTeamRewardPool(
+        trp.address,
+        poolName,
+        unlockTimestamp,
+        memberAddresses,
+        memberShares
+      )
     );
 
     const allocation = await trp.getAllocatedShares();
@@ -306,19 +316,23 @@ const deployExtraPools = async (
     const poolName = refPoolName;
     const params = rewardParams.ReferralPool;
 
-    const impl = await deployReferralRewardPoolV1Impl(verify, continuation);
-    console.log(`Deployed ${poolName} implementation: `, impl.address);
-
     const baselinePct = params.BasePoints;
     totalShare += baselinePct;
 
-    const initData = await configurator.buildRewardPoolInitData(poolName, 0, baselinePct);
-    await addressProvider.setAddressAsProxyWithInit(
-      AccessFlags.REFERRAL_REGISTRY,
-      impl.address,
-      initData
-    );
-    const poolAddr = await addressProvider.getAddress(AccessFlags.REFERRAL_REGISTRY);
+    let poolAddr = await addressProvider.getAddress(AccessFlags.REFERRAL_REGISTRY);
+    if (falsyOrZeroAddress(poolAddr)) {
+      const impl = await deployReferralRewardPoolV1Impl(verify, continuation);
+      console.log(`Deployed ${poolName} implementation: `, impl.address);
+
+      const initData = await configurator.buildRewardPoolInitData(poolName, 0, baselinePct);
+      poolAddr = await setAndGetAddressAsProxyWithInit(
+        addressProvider,
+        AccessFlags.REFERRAL_REGISTRY,
+        impl.address,
+        initData
+      );
+    }
+    console.log(`Deployed ${poolName}: `, poolAddr);
 
     poolAddrs.push(poolAddr);
     poolNames.push(poolName);
@@ -332,7 +346,7 @@ const deployExtraPools = async (
     const baselinePct = params.BasePoints;
     totalShare += baselinePct;
 
-    const treasury = await addressProvider.getTreasury();
+    const treasury = await addressProvider.getAddress(AccessFlags.TREASURY);
 
     const impl = await deployTreasuryRewardPool(
       [rewardCtlAddress, 0, baselinePct, treasury],

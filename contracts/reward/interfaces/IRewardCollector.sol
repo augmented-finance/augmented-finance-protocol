@@ -2,10 +2,6 @@
 pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IManagedRewardPool} from './IManagedRewardPool.sol';
-import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
-import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
-
 interface IRewardCollector {
   function claimReward() external returns (uint256 claimed, uint256 extra);
 
@@ -13,13 +9,5 @@ interface IRewardCollector {
 
   function balanceOf(address holder) external view returns (uint256);
 
-  //  function explainRewardFor(address holder) external returns (uint256 amount, RewardExplainEntry[] memory explainRecords);
+  function claimableReward(address holder) external view returns (uint256 claimed, uint256 extra);
 }
-
-// enum RewardType {BasicReward, BoostReward, UnfrozenReward, FrozenReward}
-
-// struct RewardExplainEntry {
-//   uint256 amount;
-//   uint32 since;
-//   RewardType rewardType;
-// }

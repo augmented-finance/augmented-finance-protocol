@@ -2,15 +2,15 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {ReserveLogic} from './ReserveLogic.sol';
-import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
-import {UserConfiguration} from '../configuration/UserConfiguration.sol';
-import {WadRayMath} from '../../../tools/math/WadRayMath.sol';
-import {PercentageMath} from '../../../tools/math/PercentageMath.sol';
-import {IPriceOracleGetter} from '../../../interfaces/IPriceOracleGetter.sol';
-import {DataTypes} from '../types/DataTypes.sol';
+import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
+import './ReserveLogic.sol';
+import '../configuration/ReserveConfiguration.sol';
+import '../configuration/UserConfiguration.sol';
+import '../../../tools/math/WadRayMath.sol';
+import '../../../tools/math/PercentageMath.sol';
+import '../../../interfaces/IPriceOracleGetter.sol';
+import '../types/DataTypes.sol';
 
 /**
  * @title GenericLogic library
@@ -186,7 +186,9 @@ library GenericLogic {
       vars.reserveUnitPrice = IPriceOracleGetter(oracle).getAssetPrice(vars.currentReserveAddress);
 
       if (vars.liquidationThreshold != 0 && userConfig.isUsingAsCollateral(vars.i)) {
-        vars.compoundedLiquidityBalance = IERC20(currentReserve.aTokenAddress).balanceOf(user);
+        vars.compoundedLiquidityBalance = IERC20(currentReserve.depositTokenAddress).balanceOf(
+          user
+        );
 
         uint256 liquidityBalanceETH =
           vars.reserveUnitPrice.mul(vars.compoundedLiquidityBalance).div(vars.tokenUnit);

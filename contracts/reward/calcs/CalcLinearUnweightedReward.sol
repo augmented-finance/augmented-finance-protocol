@@ -1,17 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {IRewardController} from '../interfaces/IRewardController.sol';
-import {CalcLinearRateReward} from './CalcLinearRateReward.sol';
-
-import 'hardhat/console.sol';
+import './CalcLinearRateReward.sol';
 
 abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
-
   uint256 private _accumRate;
 
   function internalRateUpdated(

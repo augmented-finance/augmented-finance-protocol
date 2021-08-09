@@ -2,22 +2,16 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IReserveStrategy} from './IReserveStrategy.sol';
+import './IReserveStrategy.sol';
 
-/**
- * @dev Interface to access the interest rate of an external asset
- */
+/// @dev Interface to access the interest rate of an external asset
 interface IReserveDelegatedStrategy is IReserveStrategy {
+  /// @dev all indexes and rates are expressed in ray
   struct DelegatedState {
-    //the liquidity index. Expressed in ray
     uint128 liquidityIndex;
-    //variable borrow index. Expressed in ray
     uint128 variableBorrowIndex;
-    //the current supply rate. Expressed in ray
     uint128 liquidityRate;
-    //the current variable borrow rate. Expressed in ray
     uint128 variableBorrowRate;
-    //the current stable borrow rate. Expressed in ray
     uint128 stableBorrowRate;
     uint40 lastUpdateTimestamp;
   }

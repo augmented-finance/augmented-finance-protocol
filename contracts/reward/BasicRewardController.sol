@@ -1,18 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {BitUtils} from '../tools/math/BitUtils.sol';
-
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
-import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
-import {BaseRewardController} from './BaseRewardController.sol';
-
-import 'hardhat/console.sol';
+import '../access/interfaces/IMarketAccessController.sol';
+import '../interfaces/IRewardMinter.sol';
+import './BaseRewardController.sol';
 
 abstract contract BasicRewardController is BaseRewardController {
-  using SafeMath for uint256;
-
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
     public
     BaseRewardController(accessController, rewardMinter)
@@ -61,12 +54,11 @@ abstract contract BasicRewardController is BaseRewardController {
     return (claimableAmount, delayedAmount);
   }
 
-  function internalCalcClaimableReward(address holder, uint256 mask)
-    internal
-    view
-    override
-    returns (uint256 claimableAmount, uint256 delayedAmount)
-  {
+  function internalCalcClaimableReward(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) internal view override returns (uint256 claimableAmount, uint256 delayedAmount) {
     uint32 since = 0;
     uint256 amountSince = 0;
     bool incremental = false;
@@ -76,7 +68,7 @@ abstract contract BasicRewardController is BaseRewardController {
         continue;
       }
 
-      (uint256 amount_, uint32 since_) = getPool(i).calcRewardFor(holder);
+      (uint256 amount_, uint32 since_) = getPool(i).calcRewardFor(holder, at);
       if (amount_ == 0) {
         continue;
       }

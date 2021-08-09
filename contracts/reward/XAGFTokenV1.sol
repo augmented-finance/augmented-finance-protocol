@@ -2,17 +2,15 @@
 pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {AccessFlags} from '../access/AccessFlags.sol';
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import '../access/AccessFlags.sol';
+import '../access/interfaces/IMarketAccessController.sol';
 
-import {DecayingTokenLocker} from './locker/DecayingTokenLocker.sol';
-import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
-import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
-import {IRemoteAccessBitmask} from '../access/interfaces/IRemoteAccessBitmask.sol';
-import {IRewardController} from './interfaces/IRewardController.sol';
-import {WadRayMath} from '../tools/math/WadRayMath.sol';
-
-import 'hardhat/console.sol';
+import './locker/DecayingTokenLocker.sol';
+import '../tools/upgradeability/VersionedInitializable.sol';
+import './interfaces/IInitializableRewardToken.sol';
+import '../access/interfaces/IRemoteAccessBitmask.sol';
+import './interfaces/IRewardController.sol';
+import '../tools/math/WadRayMath.sol';
 
 contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, VersionedInitializable {
   string internal constant NAME = 'Augmented Finance Locked Reward Token';
@@ -55,20 +53,29 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
     return TOKEN_REVISION;
   }
 
+  function getPoolName() public view override returns (string memory) {
+    return _symbol;
+  }
+
   // This initializer is invoked by AccessController.setAddressAsImpl
   function initialize(IMarketAccessController ac) external virtual initializer(TOKEN_REVISION) {
-    address controller = ac.getRewardController();
-    address underlying = ac.getRewardToken();
+    address controller = ac.getAddress(AccessFlags.REWARD_CONTROLLER);
+    address underlying = ac.getAddress(AccessFlags.REWARD_TOKEN);
 
     _initializeERC20(NAME, SYMBOL, DECIMALS);
     super._initialize(underlying);
     super._initialize(IRewardController(controller), 0, 0);
   }
 
-  function initialize(InitData calldata data) public virtual override initializer(TOKEN_REVISION) {
+  function initialize(InitData calldata data)
+    external
+    virtual
+    override
+    initializer(TOKEN_REVISION)
+  {
     IMarketAccessController ac = IMarketAccessController(address(data.remoteAcl));
-    address controller = ac.getRewardController();
-    address underlying = ac.getRewardToken();
+    address controller = ac.getAddress(AccessFlags.REWARD_CONTROLLER);
+    address underlying = ac.getAddress(AccessFlags.REWARD_TOKEN);
 
     _initializeERC20(data.name, data.symbol, data.decimals);
     super._initialize(underlying);
@@ -82,7 +89,7 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
     string calldata symbol_,
     uint8 decimals_
   ) public virtual initializer(TOKEN_REVISION) {
-    address controller = remoteAcl.getRewardController();
+    address controller = remoteAcl.getAddress(AccessFlags.REWARD_CONTROLLER);
 
     _initializeERC20(name_, symbol_, decimals_);
     super._initialize(underlying);

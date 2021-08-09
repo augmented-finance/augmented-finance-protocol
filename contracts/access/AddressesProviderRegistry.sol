@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
-import {IAddressesProviderRegistry} from '../interfaces/IAddressesProviderRegistry.sol';
-import {Errors} from '../tools/Errors.sol';
+import '../dependencies/openzeppelin/contracts/Ownable.sol';
+import '../interfaces/IAddressesProviderRegistry.sol';
+import '../tools/Errors.sol';
 
 /**
  * @title AddressesProviderRegistry contract

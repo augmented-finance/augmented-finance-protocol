@@ -2,12 +2,12 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ILendingPool} from '../../contracts/interfaces/ILendingPool.sol';
-import {LendingPool} from '../../contracts/protocol/lendingpool/LendingPool.sol';
+import '../../contracts/interfaces/ILendingPool.sol';
+import '../../contracts/protocol/lendingpool/LendingPool.sol';
 import {
   IMarketAccessController
 } from '../../contracts/access/interfaces/IMarketAccessController.sol';
-import {DataTypes} from '../../contracts/protocol/libraries/types/DataTypes.sol';
+import '../../contracts/protocol/libraries/types/DataTypes.sol';
 
 /*
 Certora: Harness that delegates calls to the original LendingPool.
@@ -114,14 +114,14 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
 
   function initReserve(
     address asset,
-    address aTokenAddress,
+    address depositTokenAddress,
     address stableDebtAddress,
     address variableDebtAddress,
     address interestRateStrategyAddress
   ) external override {
     originalPool.initReserve(
       asset,
-      aTokenAddress,
+      depositTokenAddress,
       stableDebtAddress,
       variableDebtAddress,
       interestRateStrategyAddress

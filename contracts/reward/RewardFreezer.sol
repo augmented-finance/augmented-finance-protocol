@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {PercentageMath} from '../tools/math/PercentageMath.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../tools/math/PercentageMath.sol';
 
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
-import {BasicRewardController} from './BasicRewardController.sol';
-import {CalcLinearFreezer} from './calcs/CalcLinearFreezer.sol';
-import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
-
-import 'hardhat/console.sol';
+import '../access/interfaces/IMarketAccessController.sol';
+import './BasicRewardController.sol';
+import './calcs/CalcLinearFreezer.sol';
+import '../interfaces/IRewardMinter.sol';
 
 // TODO: remove after refactoring of tests
 contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
@@ -65,7 +63,13 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
     uint32 since,
     bool incremental
   ) internal view override returns (uint256 claimableAmount, uint256 frozenReward) {
-    (claimableAmount, frozenReward) = doCalcByPull(holder, allocated, since, incremental);
+    (claimableAmount, frozenReward) = doCalcByPull(
+      holder,
+      allocated,
+      since,
+      uint32(block.timestamp),
+      incremental
+    );
     claimableAmount = claimableAmount.add(_claimableRewards[holder]);
     return (claimableAmount, frozenReward);
   }

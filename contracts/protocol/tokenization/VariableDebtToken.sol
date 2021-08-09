@@ -2,14 +2,13 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {PoolTokenBase} from './base/PoolTokenBase.sol';
-import {IVariableDebtToken} from '../../interfaces/IVariableDebtToken.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {Errors} from '../libraries/helpers/Errors.sol';
-import {DebtTokenBase} from './base/DebtTokenBase.sol';
-import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
-import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../interfaces/IVariableDebtToken.sol';
+import '../../tools/math/WadRayMath.sol';
+import '../../tools/upgradeability/VersionedInitializable.sol';
+import './interfaces/PoolTokenConfig.sol';
+import './base/PoolTokenBase.sol';
+import './base/DebtTokenBase.sol';
 
 /**
  * @title VariableDebtToken

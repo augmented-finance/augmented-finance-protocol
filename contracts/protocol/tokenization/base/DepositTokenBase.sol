@@ -2,23 +2,17 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {Errors} from '../../libraries/helpers/Errors.sol';
-import {PoolTokenBase} from './PoolTokenBase.sol';
+import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
+import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../../interfaces/IDepositToken.sol';
+import '../../../tools/math/WadRayMath.sol';
+import '../../../misc/PermitForERC20.sol';
+import './PoolTokenBase.sol';
 
-import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {ERC20Events} from '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
-
-import {SafeERC20} from '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {IDepositToken} from '../../../interfaces/IDepositToken.sol';
-import {WadRayMath} from '../../../tools/math/WadRayMath.sol';
-import {PermitForERC20} from '../../../misc/PermitForERC20.sol';
-
-/**
- * @title Augmented Finance ERC20 deposit token (agToken)
- * @dev Implementation of the interest bearing token for the Augmented Finance protocol
- */
+/// @dev Implementation of the interest bearing token for the Augmented Finance protocol
 abstract contract DepositTokenBase is
-  PoolTokenBase('DEPOSIT_STUB', 'DEPOSIT_STUB', 0),
+  PoolTokenBase('', '', 0),
   PermitForERC20,
   ERC20Events,
   IDepositToken
@@ -29,12 +23,6 @@ abstract contract DepositTokenBase is
   mapping(address => mapping(address => uint256)) private _allowances;
   address internal _treasury;
 
-  /**
-   * @dev Returns the allowance of spender on the tokens owned by owner
-   * @param owner The owner of the tokens
-   * @param spender The user allowed to spend the owner's tokens
-   * @return The amount of owner's tokens spender is allowed to spend
-   **/
   function allowance(address owner, address spender)
     public
     view
@@ -45,71 +33,25 @@ abstract contract DepositTokenBase is
     return _allowances[owner][spender];
   }
 
-  /**
-   * @dev Allows `spender` to spend the tokens owned by _msgSender()
-   * @param spender The user allowed to spend _msgSender() tokens
-   * @return `true`
-   **/
   function approve(address spender, uint256 amount) public virtual override returns (bool) {
-    _approve(_msgSender(), spender, amount);
+    _approve(msg.sender, spender, amount);
     return true;
   }
 
-  /**
-   * @dev Atomically increases the allowance granted to `spender` by the caller.
-   *
-   * This is an alternative to {approve} that can be used as a mitigation for
-   * problems described in {IERC20-approve}.
-   *
-   * Emits an {Approval} event indicating the updated allowance.
-   *
-   * Requirements:
-   *
-   * - `spender` cannot be the zero address.
-   */
-  function increaseAllowance(address spender, uint256 addedValue) public override returns (bool) {
-    _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+  function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
+    _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
     return true;
   }
 
-  /**
-   * @dev Atomically decreases the allowance granted to `spender` by the caller.
-   *
-   * This is an alternative to {approve} that can be used as a mitigation for
-   * problems described in {IERC20-approve}.
-   *
-   * Emits an {Approval} event indicating the updated allowance.
-   *
-   * Requirements:
-   *
-   * - `spender` cannot be the zero address.
-   * - `spender` must have allowance for the caller of at least
-   * `subtractedValue`.
-   */
-  function decreaseAllowance(address spender, uint256 subtractedValue)
-    public
-    override
-    returns (bool)
-  {
+  function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
     _approve(
-      _msgSender(),
+      msg.sender,
       spender,
-      _allowances[_msgSender()][spender].sub(
-        subtractedValue,
-        'ERC20: decreased allowance below zero'
-      )
+      _allowances[msg.sender][spender].sub(subtractedValue, 'ERC20: decreased allowance below zero')
     );
     return true;
   }
 
-  /**
-   * @dev Burns aTokens from `user` and sends the equivalent amount of underlying to `receiverOfUnderlying`
-   * - Only callable by the LendingPool, as extra state updates there need to be managed
-   * @param user The owner of the aTokens, getting them burned
-   * @param receiverOfUnderlying The address that will receive the underlying
-   * @param amount The amount being burned
-   * @param index The new liquidity index of the reserve
-   **/
   function burn(
     address user,
     address receiverOfUnderlying,
@@ -126,20 +68,12 @@ abstract contract DepositTokenBase is
     emit Burn(user, receiverOfUnderlying, amount, index);
   }
 
-  /**
-   * @dev Mints tokens to user
-   * - Only callable by the LendingPool, as extra state updates there need to be managed
-   * @param user The address receiving the minted tokens
-   * @param amount The amount of tokens getting minted
-   * @param index The new liquidity index of the reserve
-   * @return firstBalance as `true` when user's previous balance was 0
-   */
   function mint(
     address user,
     uint256 amount,
     uint256 index
-  ) external override onlyLendingPool returns (bool firstBalance) {
-    firstBalance = super.balanceOf(user) == 0;
+  ) external override onlyLendingPool returns (bool) {
+    bool firstBalance = super.balanceOf(user) == 0;
 
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
@@ -151,16 +85,6 @@ abstract contract DepositTokenBase is
     return firstBalance;
   }
 
-  function setTreasury(address treasury) external override onlyLendingPool {
-    _treasury = treasury;
-  }
-
-  /**
-   * @dev Mints tokens to the reserve treasury
-   * - Only callable by the LendingPool
-   * @param amount The amount of tokens getting minted
-   * @param index The new liquidity index of the reserve
-   */
   function mintToTreasury(uint256 amount, uint256 index) external override onlyLendingPool {
     if (amount == 0) {
       return;
@@ -169,9 +93,7 @@ abstract contract DepositTokenBase is
     address treasury = _treasury;
 
     // Compared to the normal mint, we don't check for rounding errors.
-    // The amount to mint can easily be very small since it is a fraction of the interest ccrued.
-    // In that case, the treasury will experience a (very small) loss, but it
-    // wont cause potentially valid transactions to fail.
+    // The treasury may experience a very small loss, but it wont revert a valid transactions.
     _mintBalance(treasury, amount.rayDiv(index), index);
 
     emit Transfer(address(0), treasury, amount);
@@ -179,9 +101,8 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Transfers on liquidation, in case the liquidator claims this token
-   * - Only callable by the LendingPool
-   * @param from The address getting liquidated, current owner of the aTokens
+   * @dev Transfers on liquidation, in case the liquidator claims this token. Only callable by the LendingPool.
+   * @param from The address getting liquidated, current owner of the depositTokens
    * @param to The recipient
    * @param value The amount of tokens getting transferred
    **/
@@ -197,31 +118,15 @@ abstract contract DepositTokenBase is
     emit Transfer(from, to, value);
   }
 
-  /**
-   * @dev Calculates the balance of the user: principal balance + interest generated by the principal
-   * @param user The user whose balance is calculated
-   * @return The balance of the user
-   **/
+  /// @dev Calculates the balance of the user: principal balance + interest generated by the principal
   function balanceOf(address user) public view override(IERC20, PoolTokenBase) returns (uint256) {
     return super.balanceOf(user).rayMul(_pool.getReserveNormalizedIncome(_underlyingAsset));
   }
 
-  /**
-   * @dev Returns the scaled balance of the user. The scaled balance is the sum of all the
-   * updated stored balance divided by the reserve's liquidity index at the moment of the update
-   * @param user The user whose balance is calculated
-   * @return The scaled balance of the user
-   **/
   function scaledBalanceOf(address user) external view override returns (uint256) {
     return super.balanceOf(user);
   }
 
-  /**
-   * @dev Returns the scaled balance of the user and the scaled total supply.
-   * @param user The address of the user
-   * @return The scaled balance of the user
-   * @return The scaled balance and the scaled total supply
-   **/
   function getScaledUserBalanceAndSupply(address user)
     external
     view
@@ -231,15 +136,8 @@ abstract contract DepositTokenBase is
     return (super.balanceOf(user), super.totalSupply());
   }
 
-  /**
-   * @dev calculates the total supply of the specific aToken
-   * since the balance of every single user increases over time, the total supply
-   * does that too.
-   * @return the current total supply
-   **/
   function totalSupply() public view override(IERC20, PoolTokenBase) returns (uint256) {
     uint256 currentSupplyScaled = super.totalSupply();
-
     if (currentSupplyScaled == 0) {
       return 0;
     }
@@ -247,40 +145,21 @@ abstract contract DepositTokenBase is
     return currentSupplyScaled.rayMul(_pool.getReserveNormalizedIncome(_underlyingAsset));
   }
 
-  /**
-   * @dev Returns the scaled total supply of the variable debt token. Represents sum(debt/index)
-   * @return the scaled total supply
-   **/
   function scaledTotalSupply() public view virtual override returns (uint256) {
     return super.totalSupply();
   }
 
-  /**
-   * @dev Returns the address of the Aave treasury, receiving the fees on this aToken
-   **/
+  /// @dev Returns the address of the treasury, receiving the fees on this depositToken
   function RESERVE_TREASURY_ADDRESS() public view returns (address) {
     return _treasury;
   }
 
-  /**
-   * @dev Executes a transfer of tokens from _msgSender() to recipient
-   * @param recipient The recipient of the tokens
-   * @param amount The amount of tokens being transferred
-   * @return `true` if the transfer succeeds, `false` otherwise
-   **/
   function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-    _transfer(_msgSender(), recipient, amount, true);
-    emit Transfer(_msgSender(), recipient, amount);
+    _transfer(msg.sender, recipient, amount, true);
+    emit Transfer(msg.sender, recipient, amount);
     return true;
   }
 
-  /**
-   * @dev Executes a transfer of token from sender to recipient, if _msgSender() is allowed to do so
-   * @param sender The owner of the tokens
-   * @param recipient The recipient of the tokens
-   * @param amount The amount of tokens being transferred
-   * @return `true` if the transfer succeeds, `false` otherwise
-   **/
   function transferFrom(
     address sender,
     address recipient,
@@ -289,20 +168,13 @@ abstract contract DepositTokenBase is
     _transfer(sender, recipient, amount, true);
     _approve(
       sender,
-      _msgSender(),
-      _allowances[sender][_msgSender()].sub(amount, 'ERC20: transfer amount exceeds allowance')
+      msg.sender,
+      _allowances[sender][msg.sender].sub(amount, 'ERC20: transfer amount exceeds allowance')
     );
     emit Transfer(sender, recipient, amount);
     return true;
   }
 
-  /**
-   * @dev Transfers the underlying asset to `target`. Used by the LendingPool to transfer
-   * assets in borrow(), withdraw() and flashLoan()
-   * @param target The recipient of the aTokens
-   * @param amount The amount getting transferred
-   * @return The amount transferred
-   **/
   function transferUnderlyingTo(address target, uint256 amount)
     external
     override
@@ -314,15 +186,14 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Invoked to execute actions on the aToken side after a repayment.
+   * @dev Invoked to execute actions on the depositToken side after a repayment.
    * @param user The user executing the repayment
    * @param amount The amount getting repaid
    **/
   function handleRepayment(address user, uint256 amount) external override onlyLendingPool {}
 
   /**
-   * @dev Transfers the aTokens between two users. Validates the transfer
-   * (ie checks for valid HF after the transfer) if required
+   * @dev Validates and executes a transfer.
    * @param from The source address
    * @param to The destination address
    * @param amount The amount getting transferred

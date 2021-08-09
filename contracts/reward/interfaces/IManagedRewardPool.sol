@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
+import '../../interfaces/IEmergencyAccess.sol';
 
 interface IManagedRewardPool is IEmergencyAccess {
   function updateBaseline(uint256) external returns (bool hasBaseline, uint256 appliedRate);
@@ -18,11 +18,16 @@ interface IManagedRewardPool is IEmergencyAccess {
 
   function setRate(uint256) external;
 
+  function getPoolName() external view returns (string memory);
+
   function claimRewardFor(address holder, uint256 limit)
     external
     returns (uint256 amount, uint32 since);
 
-  function calcRewardFor(address holder) external view returns (uint256 amount, uint32 since);
+  function calcRewardFor(address holder, uint32 at)
+    external
+    view
+    returns (uint256 amount, uint32 since);
 
   function addRewardProvider(address provider, address token) external;
 

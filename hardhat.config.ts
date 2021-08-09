@@ -22,7 +22,7 @@ import 'hardhat-abi-exporter';
 
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
 const DEFAULT_BLOCK_GAS_LIMIT = 7000000;
-const DEFAULT_GAS_MUL = 1;
+const DEFAULT_GAS_MUL = 2;
 const HARDFORK = 'istanbul';
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || '';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
@@ -32,7 +32,7 @@ const COINMARKETCAP_KEY = process.env.COINMARKETCAP_KEY || '';
 
 // Prevent to load scripts before compilation and typechain
 if (!SKIP_LOAD) {
-  ['misc', 'migrations', 'dev', 'full', 'verifications', 'deployments', 'helpers'].forEach(
+  ['misc', 'migrations', 'dev', 'full', 'deployments', 'helpers'].forEach(
     (folder) => {
       const tasksPath = path.join(__dirname, 'tasks', folder);
       fs.readdirSync(tasksPath)

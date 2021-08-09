@@ -44,4 +44,3 @@ export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork<number> = {
   [ePolygonNetwork.mumbai]: 1 * GWEI,
   [ePolygonNetwork.matic]: 2 * GWEI,
 };
- // 0x1cfDBe61a245e246D81bD51e9661A216f27d43AD AddressesProviderRegistry - ropsten

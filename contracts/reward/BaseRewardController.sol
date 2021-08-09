@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {BitUtils} from '../tools/math/BitUtils.sol';
-
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
-import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
-import {AccessFlags} from '../access/AccessFlags.sol';
-import {IManagedRewardController, AllocationMode} from './interfaces/IRewardController.sol';
-import {IRewardPool} from './interfaces/IRewardPool.sol';
-import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
-import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
-import {IRewardCollector} from './interfaces/IRewardCollector.sol';
-import {Errors} from '../tools/Errors.sol';
-
-import 'hardhat/console.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../tools/math/BitUtils.sol';
+import '../access/interfaces/IMarketAccessController.sol';
+import '../access/MarketAccessBitmask.sol';
+import '../access/AccessFlags.sol';
+import './interfaces/IManagedRewardController.sol';
+import './interfaces/IManagedRewardPool.sol';
+import '../interfaces/IRewardMinter.sol';
+import './interfaces/IRewardCollector.sol';
+import '../tools/Errors.sol';
 
 abstract contract BaseRewardController is
   IRewardCollector,
@@ -172,24 +168,29 @@ abstract contract BaseRewardController is
     return _claimReward(holder, mask, holder);
   }
 
-  function claimableReward(address holder) public view returns (uint256 claimable, uint256 extra) {
-    return _calcReward(holder, ~uint256(0));
-  }
-
-  function claimableRewardFor(address holder, uint256 mask)
+  function claimableReward(address holder)
     public
     view
+    override
     returns (uint256 claimable, uint256 extra)
   {
+    return _calcReward(holder, ~uint256(0), uint32(block.timestamp));
+  }
+
+  function claimableRewardFor(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) public view returns (uint256 claimable, uint256 extra) {
     require(holder != address(0), 'holder is required');
-    return _calcReward(holder, mask);
+    return _calcReward(holder, mask, at);
   }
 
   function balanceOf(address holder) external view override returns (uint256) {
     if (holder == address(0)) {
       return 0;
     }
-    (uint256 claimable, uint256 extra) = _calcReward(holder, ~uint256(0));
+    (uint256 claimable, uint256 extra) = _calcReward(holder, ~uint256(0), uint32(block.timestamp));
     return claimable.add(extra);
   }
 
@@ -275,7 +276,7 @@ abstract contract BaseRewardController is
     if (!hasRemoteAcl()) {
       return addr == address(this);
     }
-    return acl_hasAllOf(addr, AccessFlags.EMERGENCY_ADMIN);
+    return acl_hasAnyOf(addr, AccessFlags.EMERGENCY_ADMIN);
   }
 
   function getClaimMask(address holder, uint256 mask) internal view virtual returns (uint256) {
@@ -296,7 +297,6 @@ abstract contract BaseRewardController is
     mask = getClaimMask(holder, mask);
     (claimed, extra) = internalClaimAndMintReward(holder, mask);
 
-    // console.log('RewardsClaimed', claimed);
     if (claimed > 0) {
       extra += internalClaimed(holder, receiver, claimed);
       emit RewardsClaimed(holder, receiver, claimed);
@@ -327,20 +327,20 @@ abstract contract BaseRewardController is
     virtual
     returns (uint256 claimed, uint256 extra);
 
-  function _calcReward(address holder, uint256 mask)
-    private
-    view
-    returns (uint256 claimableAmount, uint256 extraAmount)
-  {
+  function _calcReward(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) private view returns (uint256 claimableAmount, uint256 extraAmount) {
     mask = getClaimMask(holder, mask);
-    return internalCalcClaimableReward(holder, mask);
+    return internalCalcClaimableReward(holder, mask, at);
   }
 
-  function internalCalcClaimableReward(address holder, uint256 mask)
-    internal
-    view
-    virtual
-    returns (uint256 claimableAmount, uint256 extraAmount);
+  function internalCalcClaimableReward(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) internal view virtual returns (uint256 claimableAmount, uint256 extraAmount);
 
   function internalAllocatedByPool(
     address holder,

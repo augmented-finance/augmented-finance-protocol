@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {AllocationMode} from '../interfaces/IRewardController.sol';
-import {CalcBase} from './CalcBase.sol';
+import '../interfaces/IRewardController.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 
-import 'hardhat/console.sol';
-
-abstract contract CalcLinearRateReward is CalcBase {
+abstract contract CalcLinearRateReward {
   using SafeMath for uint256;
 
   mapping(address => RewardEntry) private _rewards;
@@ -57,7 +53,6 @@ abstract contract CalcLinearRateReward is CalcBase {
   ) internal virtual;
 
   function internalMarkRateUpdate(uint32 currentTick) internal {
-    //    console.log('internalMarkRateUpdate', _rateUpdatedAt, currentTick, block.timestamp);
     require(currentTick >= _rateUpdatedAt, 'retroactive update');
     _rateUpdatedAt = currentTick;
   }
@@ -128,7 +123,6 @@ abstract contract CalcLinearRateReward is CalcBase {
       _accumRates[holder],
       currentTick
     );
-    // console.log('internalUpdateReward: ', adjRate, allocated);
 
     _accumRates[holder] = adjRate;
     _rewards[holder] = RewardEntry(uint224(newBalance), currentTick);
@@ -144,18 +138,6 @@ abstract contract CalcLinearRateReward is CalcBase {
     oldBalance;
     return newBalance;
   }
-
-  // function internalCalcBalance(
-  //   RewardEntry memory entry,
-  //   uint256 oldBalance,
-  //   uint256 newBalance
-  // ) internal view virtual returns (uint256) {
-  //   this;
-  //   if (newBalance >= oldBalance) {
-  //     return uint256(entry.rewardBase).add(newBalance - oldBalance);
-  //   }
-  //   return uint256(entry.rewardBase).sub(oldBalance - newBalance);
-  // }
 
   function internalRemoveReward(address holder) internal virtual returns (uint256 rewardBase) {
     rewardBase = _rewards[holder].rewardBase;

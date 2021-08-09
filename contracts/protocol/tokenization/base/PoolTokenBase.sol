@@ -2,27 +2,19 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20Details} from '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
-import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {Context} from '../../../dependencies/openzeppelin/contracts/Context.sol';
-import {ILendingPool} from '../../../interfaces/ILendingPool.sol';
-import {IInitializablePoolToken} from '../interfaces/IInitializablePoolToken.sol';
-import {IPoolToken} from '../../../interfaces/IPoolToken.sol';
-import {PoolTokenConfig} from '../interfaces/PoolTokenConfig.sol';
-import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
-import {Errors} from '../../libraries/helpers/Errors.sol';
-import {AccessHelper} from '../../../access/AccessHelper.sol';
-import {AccessFlags} from '../../../access/AccessFlags.sol';
-import {IManagedLendingPool} from '../../../interfaces/IManagedLendingPool.sol';
+import '../../../tools/Errors.sol';
+import '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
+import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../../interfaces/IPoolToken.sol';
+import '../../../interfaces/IBalanceHook.sol';
+import '../../../interfaces/ILendingPoolForTokens.sol';
+import '../../../access/AccessHelper.sol';
+import '../../../access/AccessFlags.sol';
+import '../interfaces/IInitializablePoolToken.sol';
+import '../interfaces/PoolTokenConfig.sol';
 
-abstract contract PoolTokenBase is
-  IERC20,
-  Context,
-  IInitializablePoolToken,
-  IPoolToken,
-  IERC20Details
-{
+abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, IERC20Details {
   using SafeMath for uint256;
 
   string private _name;
@@ -32,7 +24,7 @@ abstract contract PoolTokenBase is
   mapping(address => uint256) internal _balances;
   uint256 internal _totalSupply;
 
-  IManagedLendingPool internal _pool;
+  ILendingPoolForTokens internal _pool;
   address internal _underlyingAsset;
   IBalanceHook private _incentivesController;
 
@@ -69,7 +61,7 @@ abstract contract PoolTokenBase is
   }
 
   function _onlyLendingPool() private view {
-    require(_msgSender() == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
+    require(msg.sender == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
   }
 
   modifier onlyLendingPool {
@@ -81,7 +73,7 @@ abstract contract PoolTokenBase is
     require(
       AccessHelper.hasAnyOf(
         _pool.getAccessController(),
-        _msgSender(),
+        msg.sender,
         AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR
       ),
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
@@ -100,7 +92,7 @@ abstract contract PoolTokenBase is
     uint8 debtTokenDecimals,
     bytes calldata params
   ) internal {
-    _pool = config.pool;
+    _pool = ILendingPoolForTokens(config.pool);
     _underlyingAsset = config.underlyingAsset;
 
     emit Initialized(
@@ -114,18 +106,12 @@ abstract contract PoolTokenBase is
     );
   }
 
-  /**
-   * @dev Returns the address of the underlying asset of this aToken (E.g. WETH for aWETH)
-   **/
   function UNDERLYING_ASSET_ADDRESS() public view override returns (address) {
     return _underlyingAsset;
   }
 
-  /**
-   * @dev Returns the address of the lending pool where this aToken is used
-   **/
-  function POOL() public view override returns (ILendingPool) {
-    return _pool;
+  function POOL() public view override returns (address) {
+    return address(_pool);
   }
 
   function handleBalanceUpdate(
@@ -170,23 +156,13 @@ abstract contract PoolTokenBase is
     _incentivesController = IBalanceHook(hook);
   }
 
-  /**
-   * @dev Updates the address of the incentives controller contract
-   **/
   function setIncentivesController(address hook) external override onlyRewardConfiguratorOrAdmin {
     _setIncentivesController(hook);
   }
 
-  /**
-   * @dev Returns the address of the incentives controller contract
-   **/
   function getIncentivesController() public view override returns (address) {
     return address(_incentivesController);
   }
-
-  function increaseAllowance(address, uint256) public virtual returns (bool);
-
-  function decreaseAllowance(address, uint256) public virtual returns (bool);
 
   function totalSupply() public view virtual override returns (uint256) {
     return _totalSupply;

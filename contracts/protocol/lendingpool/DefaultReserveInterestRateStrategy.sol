@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IReserveStrategy} from '../../interfaces/IReserveStrategy.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-import {IPriceOracleProvider} from '../../interfaces/IPriceOracleProvider.sol';
-import {ILendingRateOracle} from '../../interfaces/ILendingRateOracle.sol';
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import 'hardhat/console.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../interfaces/IReserveStrategy.sol';
+import '../../tools/math/WadRayMath.sol';
+import '../../tools/math/PercentageMath.sol';
+import '../../interfaces/IPriceOracleProvider.sol';
+import '../../interfaces/ILendingRateOracle.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 
 /**
  * @title DefaultReserveInterestRateStrategy contract
@@ -153,7 +152,7 @@ contract DefaultReserveInterestRateStrategy is IReserveStrategy {
    * NOTE This function is kept for compatibility with the previous DefaultInterestRateStrategy interface.
    * New protocol implementation uses the new calculateInterestRates() interface
    * @param reserve The address of the reserve
-   * @param availableLiquidity The liquidity available in the corresponding aToken
+   * @param availableLiquidity The liquidity available in the corresponding depositToken
    * @param totalStableDebt The total borrowed from the reserve a stable rate
    * @param totalVariableDebt The total borrowed from the reserve at a variable rate
    * @param averageStableBorrowRate The weighted average of all the stable rate loans

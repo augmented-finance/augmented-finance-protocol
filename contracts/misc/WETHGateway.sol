@@ -2,20 +2,23 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IWETH} from './interfaces/IWETH.sol';
-import {IWETHGateway} from './interfaces/IWETHGateway.sol';
-import {ISweeper} from '../interfaces/ISweeper.sol';
-import {ILendingPool} from '../interfaces/ILendingPool.sol';
-import {IDepositToken} from '../interfaces/IDepositToken.sol';
-import {ReserveConfiguration} from '../protocol/libraries/configuration/ReserveConfiguration.sol';
-import {UserConfiguration} from '../protocol/libraries/configuration/UserConfiguration.sol';
-import {Helpers} from '../protocol/libraries/helpers/Helpers.sol';
-import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
-import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import './interfaces/IWETH.sol';
+import './interfaces/IWETHGateway.sol';
+import '../interfaces/ISweeper.sol';
+import '../interfaces/ILendingPool.sol';
+import '../interfaces/IDepositToken.sol';
+import '../protocol/libraries/configuration/ReserveConfiguration.sol';
+import '../protocol/libraries/configuration/UserConfiguration.sol';
+import '../protocol/libraries/helpers/Helpers.sol';
+import '../protocol/libraries/types/DataTypes.sol';
+import '../access/MarketAccessBitmask.sol';
+import '../access/interfaces/IMarketAccessController.sol';
 
 contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
+  using SafeERC20 for IERC20;
+
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using UserConfiguration for DataTypes.UserConfigurationMap;
 
@@ -30,10 +33,10 @@ contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
   }
 
   /**
-   * @dev deposits WETH into the reserve, using native ETH. A corresponding amount of the overlying asset (aTokens)
+   * @dev deposits WETH into the reserve, using native ETH. A corresponding amount of the overlying asset (depositTokens)
    * is minted.
    * @param lendingPool address of the targeted underlying lending pool
-   * @param onBehalfOf address of the user who will receive the aTokens representing the deposit
+   * @param onBehalfOf address of the user who will receive the depositTokens representing the deposit
    * @param referralCode integrators are assigned a referral code and can potentially receive rewards.
    **/
   function depositETH(
@@ -58,13 +61,13 @@ contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
     address to
   ) external override {
     IDepositToken aWETH =
-      IDepositToken(ILendingPool(lendingPool).getReserveData(address(WETH)).aTokenAddress);
+      IDepositToken(ILendingPool(lendingPool).getReserveData(address(WETH)).depositTokenAddress);
 
     // if amount is equal to uint(-1), the user wants to redeem everything
     if (amount == type(uint256).max) {
       amount = aWETH.balanceOf(msg.sender);
     }
-    aWETH.transferFrom(msg.sender, address(this), amount);
+    IERC20(aWETH).safeTransferFrom(msg.sender, address(this), amount);
     ILendingPool(lendingPool).withdraw(address(WETH), amount, address(this));
     WETH.withdraw(amount);
     _safeTransferETH(to, amount);
@@ -172,16 +175,12 @@ contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
     return address(WETH);
   }
 
-  /**
-   * @dev Only WETH contract is allowed to transfer ETH here. Prevent other addresses to send Ether to this contract.
-   */
+  /// @dev Only WETH contract is allowed to transfer ETH here. Prevent other addresses to send Ether to this contract.
   receive() external payable {
     require(msg.sender == address(WETH), 'Receive not allowed');
   }
 
-  /**
-   * @dev Revert fallback calls
-   */
+  /// @dev Revert fallback calls
   fallback() external payable {
     revert('Fallback not allowed');
   }

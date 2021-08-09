@@ -27,7 +27,7 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
     const {
-      ProtocolGlobalParams: { UsdAddress },
+      Mocks: { UsdAddress },
       ReserveAssets,
       FallbackOracle,
       ChainlinkAggregator,
@@ -101,11 +101,10 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
           tokenPriceList.push(ethPrice.toString());
           console.log(`\t${tokenSymbol}: ${tokenPrice} (${ethPrice} ether)`);
         }
-        const oracle = await deployStaticPriceOracle([
-          addressProvider.address,
-          tokenAddressList,
-          tokenPriceList,
-        ]);
+        const oracle = await deployStaticPriceOracle(
+          [addressProvider.address, tokenAddressList, tokenPriceList],
+          verify
+        );
         fallbackOracleAddress = oracle.address;
       }
       console.log('Fallback oracle: ', fallbackOracleAddress);
