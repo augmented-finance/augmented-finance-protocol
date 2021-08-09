@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {ILendingPool} from '../../../interfaces/ILendingPool.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {PoolTokenBase} from './PoolTokenBase.sol';
 
@@ -104,9 +103,9 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Burns aTokens from `user` and sends the equivalent amount of underlying to `receiverOfUnderlying`
+   * @dev Burns depositTokens from `user` and sends the equivalent amount of underlying to `receiverOfUnderlying`
    * - Only callable by the LendingPool, as extra state updates there need to be managed
-   * @param user The owner of the aTokens, getting them burned
+   * @param user The owner of the depositTokens, getting them burned
    * @param receiverOfUnderlying The address that will receive the underlying
    * @param amount The amount being burned
    * @param index The new liquidity index of the reserve
@@ -128,19 +127,19 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Mints `amount` aTokens to `user`
+   * @dev Mints tokens to user
    * - Only callable by the LendingPool, as extra state updates there need to be managed
    * @param user The address receiving the minted tokens
    * @param amount The amount of tokens getting minted
    * @param index The new liquidity index of the reserve
-   * @return `true` if the the previous balance of the user was 0
+   * @return firstBalance as `true` when user's previous balance was 0
    */
   function mint(
     address user,
     uint256 amount,
     uint256 index
-  ) external override onlyLendingPool returns (bool) {
-    uint256 previousBalance = super.balanceOf(user);
+  ) external override onlyLendingPool returns (bool firstBalance) {
+    firstBalance = super.balanceOf(user) == 0;
 
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
@@ -149,7 +148,7 @@ abstract contract DepositTokenBase is
     emit Transfer(address(0), user, amount);
     emit Mint(user, amount, index);
 
-    return previousBalance == 0;
+    return firstBalance;
   }
 
   function setTreasury(address treasury) external override onlyLendingPool {
@@ -157,7 +156,7 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Mints aTokens to the reserve treasury
+   * @dev Mints tokens to the reserve treasury
    * - Only callable by the LendingPool
    * @param amount The amount of tokens getting minted
    * @param index The new liquidity index of the reserve
@@ -180,9 +179,9 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Transfers aTokens in the event of a borrow being liquidated, in case the liquidators reclaims the aToken
+   * @dev Transfers on liquidation, in case the liquidator claims this token
    * - Only callable by the LendingPool
-   * @param from The address getting liquidated, current owner of the aTokens
+   * @param from The address getting liquidated, current owner of the depositTokens
    * @param to The recipient
    * @param value The amount of tokens getting transferred
    **/
@@ -233,7 +232,7 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev calculates the total supply of the specific aToken
+   * @dev calculates the total supply of the specific depositToken
    * since the balance of every single user increases over time, the total supply
    * does that too.
    * @return the current total supply
@@ -257,7 +256,7 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Returns the address of the Aave treasury, receiving the fees on this aToken
+   * @dev Returns the address of the Aave treasury, receiving the fees on this depositToken
    **/
   function RESERVE_TREASURY_ADDRESS() public view returns (address) {
     return _treasury;
@@ -300,7 +299,7 @@ abstract contract DepositTokenBase is
   /**
    * @dev Transfers the underlying asset to `target`. Used by the LendingPool to transfer
    * assets in borrow(), withdraw() and flashLoan()
-   * @param target The recipient of the aTokens
+   * @param target The recipient of the depositTokens
    * @param amount The amount getting transferred
    * @return The amount transferred
    **/
@@ -315,14 +314,14 @@ abstract contract DepositTokenBase is
   }
 
   /**
-   * @dev Invoked to execute actions on the aToken side after a repayment.
+   * @dev Invoked to execute actions on the depositToken side after a repayment.
    * @param user The user executing the repayment
    * @param amount The amount getting repaid
    **/
   function handleRepayment(address user, uint256 amount) external override onlyLendingPool {}
 
   /**
-   * @dev Transfers the aTokens between two users. Validates the transfer
+   * @dev Transfers the depositTokens between two users. Validates the transfer
    * (ie checks for valid HF after the transfer) if required
    * @param from The source address
    * @param to The destination address
@@ -336,9 +335,8 @@ abstract contract DepositTokenBase is
     bool validate
   ) internal {
     address underlyingAsset = _underlyingAsset;
-    ILendingPool pool = _pool;
 
-    uint256 index = pool.getReserveNormalizedIncome(underlyingAsset);
+    uint256 index = _pool.getReserveNormalizedIncome(underlyingAsset);
 
     uint256 fromBalanceBefore = super.balanceOf(from).rayMul(index);
     uint256 toBalanceBefore = super.balanceOf(to).rayMul(index);
@@ -346,7 +344,7 @@ abstract contract DepositTokenBase is
     super._transferBalance(from, to, amount.rayDiv(index), index);
 
     if (validate) {
-      pool.finalizeTransfer(underlyingAsset, from, to, amount, fromBalanceBefore, toBalanceBefore);
+      _pool.finalizeTransfer(underlyingAsset, from, to, amount, fromBalanceBefore, toBalanceBefore);
     }
 
     emit BalanceTransfer(from, to, amount, index);

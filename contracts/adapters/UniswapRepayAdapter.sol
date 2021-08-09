@@ -119,10 +119,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
         _getAmountsIn(collateralAsset, debtAsset, amountToRepay, useEthPath);
       require(amounts[0] <= maxCollateralToSwap, 'slippage too high');
 
-      // Pull aTokens from user
+      // Pull depositTokens from user
       _pullAToken(
         collateralAsset,
-        collateralReserveData.aTokenAddress,
+        collateralReserveData.depositTokenAddress,
         msg.sender,
         amounts[0],
         permitSignature
@@ -131,10 +131,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       // Swap collateral for debt asset
       _swapTokensForExactTokens(collateralAsset, debtAsset, amounts[0], amountToRepay, useEthPath);
     } else {
-      // Pull aTokens from user
+      // Pull depositTokens from user
       _pullAToken(
         collateralAsset,
-        collateralReserveData.aTokenAddress,
+        collateralReserveData.depositTokenAddress,
         msg.sender,
         amountToRepay,
         permitSignature
@@ -190,10 +190,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
         _getAmountsIn(collateralAsset, debtAsset, neededForFlashLoanDebt, useEthPath);
       require(amounts[0] <= maxCollateralToSwap, 'slippage too high');
 
-      // Pull aTokens from user
+      // Pull depositTokens from user
       _pullAToken(
         collateralAsset,
-        collateralReserveData.aTokenAddress,
+        collateralReserveData.depositTokenAddress,
         initiator,
         amounts[0],
         permitSignature
@@ -208,10 +208,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
         useEthPath
       );
     } else {
-      // Pull aTokens from user
+      // Pull depositTokens from user
       _pullAToken(
         collateralAsset,
-        collateralReserveData.aTokenAddress,
+        collateralReserveData.depositTokenAddress,
         initiator,
         repaidAmount.add(premium),
         permitSignature

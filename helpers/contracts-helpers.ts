@@ -1,15 +1,19 @@
-import { Contract, Signer, utils, ethers, BigNumberish } from 'ethers';
+import { Contract, Signer, utils, ethers, BigNumberish, Overrides } from 'ethers';
 import { signTypedData_v4 } from 'eth-sig-util';
 import { fromRpcSig, ECDSASignature } from 'ethereumjs-util';
 import BigNumber from 'bignumber.js';
-import { DRE, logContractInJsonDb, waitForTx } from './misc-utils';
+import {
+  DRE,
+  falsyOrZeroAddress,
+  getFromJsonDb,
+  addContractToJsonDb,
+  waitForTx,
+} from './misc-utils';
 import {
   tEthereumAddress,
   tStringTokenSmallUnits,
   eEthereumNetwork,
-  LendingPools,
   iParamsPerNetwork,
-  iParamsPerPool,
   ePolygonNetwork,
   eNetwork,
   iEthereumParamsPerNetwork,
@@ -17,24 +21,22 @@ import {
 } from './types';
 import { MintableERC20 } from '../types/MintableERC20';
 import { Artifact } from 'hardhat/types';
-import { verifyContract } from './etherscan-verification';
 import { getIErc20Detailed } from './contracts-getters';
 import { usingTenderly } from './tenderly-utils';
 
 export type MockTokenMap = { [symbol: string]: MintableERC20 };
 
-export const registerContractInJsonDb = async (contractId: string, contractInstance: Contract) => {
-  logContractInJsonDb(contractId, contractInstance, true);
-};
+export const registerContractInJsonDb = async (contractId: string, contractInstance: Contract) =>
+  addContractToJsonDb(contractId, contractInstance, true);
 
 export const getEthersSigners = async (): Promise<Signer[]> =>
-  await Promise.all(await DRE.ethers.getSigners());
+  await Promise.all(await (<any>DRE).ethers.getSigners());
 
 export const getEthersSignersAddresses = async (): Promise<tEthereumAddress[]> =>
-  await Promise.all((await DRE.ethers.getSigners()).map((signer) => signer.getAddress()));
+  await Promise.all((await (<any>DRE).ethers.getSigners()).map((signer) => signer.getAddress()));
 
 export const getCurrentBlock = async () => {
-  return DRE.ethers.provider.getBlockNumber();
+  return (<any>DRE).ethers.provider.getBlockNumber();
 };
 
 export const decodeAbiNumber = (data: string): number =>
@@ -44,47 +46,85 @@ export const deployContract = async <ContractType extends Contract>(
   contractName: string,
   args: any[]
 ): Promise<ContractType> => {
-  const contract = (await (await DRE.ethers.getContractFactory(contractName)).deploy(
-    ...args
-  )) as ContractType;
+  const contract = (await (
+    await (<any>DRE).ethers.getContractFactory(contractName)
+  ).deploy(...args)) as ContractType;
   await waitForTx(contract.deployTransaction);
   await registerContractInJsonDb(contractName, contract);
   return contract;
 };
 
+export interface ContractInstanceFactory<ContractType extends Contract> {
+  deploy(overrides?: Overrides): Promise<ContractType>;
+  attach(address: string): ContractType;
+}
+
+export const withSaveAndVerifyOnce = async <ContractType extends Contract>(
+  factory: ContractInstanceFactory<ContractType>,
+  id: string,
+  verify: boolean,
+  once: boolean
+): Promise<ContractType> => {
+  if (once) {
+    const addr = (await getFromJsonDb(id))?.address;
+    if (!falsyOrZeroAddress(addr)) {
+      return factory.attach(addr);
+    }
+  }
+  return await withSaveAndVerify(await factory.deploy(), id, [], verify);
+};
+
 export const withSaveAndVerify = async <ContractType extends Contract>(
   instance: ContractType,
   id: string,
-  args: (string | string[])[],
+  args: any[],
   verify?: boolean
 ): Promise<ContractType> => {
   await waitForTx(instance.deployTransaction);
-  await registerContractInJsonDb(id, instance);
-  if (usingTenderly()) {
-    console.log();
-    console.log('Doing Tenderly contract verification of', id);
-    await (DRE as any).tenderlyNetwork.verify({
-      name: id,
-      address: instance.address,
-    });
-    console.log(`Verified ${id} at Tenderly!`);
-    console.log();
-  }
   if (verify) {
-    await verifyContract(instance.address, args);
+    await addContractToJsonDb(id, instance, true, args);
+  } else {
+    await addContractToJsonDb(id, instance, true);
   }
+  await verifyOnTenderly(instance, id);
+  return instance;
+};
+
+export const registerAndVerify = async <ContractType extends Contract>(
+  instance: ContractType,
+  id: string,
+  args: any[],
+  verify?: boolean
+): Promise<ContractType> => {
+  if (verify) {
+    await addContractToJsonDb(id, instance, true, args);
+  } else {
+    await addContractToJsonDb(id, instance, true);
+  }
+  await verifyOnTenderly(instance, id);
   return instance;
 };
 
 export const withVerify = async <ContractType extends Contract>(
   instance: ContractType,
   id: string,
-  args: (string | string[])[],
+  args: any[],
   verify?: boolean
 ): Promise<ContractType> => {
   await waitForTx(instance.deployTransaction);
-  logContractInJsonDb(id, instance, false);
+  if (verify) {
+    addContractToJsonDb(id, instance, false, args);
+  } else {
+    addContractToJsonDb(id, instance, false);
+  }
+  await verifyOnTenderly(instance, id);
+  return instance;
+};
 
+const verifyOnTenderly = async <ContractType extends Contract>(
+  instance: ContractType,
+  id: string
+) => {
   if (usingTenderly()) {
     console.log();
     console.log('Doing Tenderly contract verification of', id);
@@ -95,10 +135,6 @@ export const withVerify = async <ContractType extends Contract>(
     console.log(`Verified ${id} at Tenderly!`);
     console.log();
   }
-  if (verify) {
-    await verifyContract(instance.address, args);
-  }
-  return instance;
 };
 
 export const linkBytecode = (artifact: Artifact, libraries: any) => {
@@ -125,16 +161,8 @@ export const linkBytecode = (artifact: Artifact, libraries: any) => {
 };
 
 export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNetwork) => {
-  const {
-    main,
-    ropsten,
-    rinkeby,
-    kovan,
-    hardhat,
-    docker,
-    coverage,
-    tenderlyMain,
-  } = param as iEthereumParamsPerNetwork<T>;
+  const { main, ropsten, rinkeby, kovan, hardhat, docker, coverage, tenderlyMain } =
+    param as iEthereumParamsPerNetwork<T>;
   const { matic, mumbai } = param as iPolygonParamsPerNetwork<T>;
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
   if (MAINNET_FORK) {
@@ -162,15 +190,6 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNet
       return matic;
     case ePolygonNetwork.mumbai:
       return mumbai;
-  }
-};
-
-export const getParamPerPool = <T>({ augmented }: iParamsPerPool<T>, pool: LendingPools) => {
-  switch (pool) {
-    case LendingPools.augmented:
-      return augmented;
-    default:
-      return augmented;
   }
 };
 

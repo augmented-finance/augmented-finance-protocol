@@ -12,7 +12,7 @@ import {
 import { ICommonConfiguration, iAssetBase, TokenContractId } from '../../helpers/types';
 import { getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { getAllAggregatorsAddresses, getAllTokenAddresses } from '../../helpers/mock-helpers';
-import { ConfigNames, loadPoolConfig, getWethAddress } from '../../helpers/configuration';
+import { ConfigNames, loadPoolConfig, getOrCreateWethAddress } from '../../helpers/configuration';
 import {
   getAllMockedTokens,
   getMarketAddressController,
@@ -27,9 +27,8 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
     await localBRE.run('set-DRE');
     const poolConfig = loadPoolConfig(pool);
     const {
-      Mocks: { AllAssetsInitialPrices },
-      ProtocolGlobalParams: { UsdAddress, MockUsdPriceInWei },
-      LendingRateOracleRatesCommon,
+      Mocks: { UsdAddress, MockUsdPriceInWei, AllAssetsInitialPrices },
+      LendingRateOracleRates,
     } = poolConfig as ICommonConfiguration;
 
     const defaultTokenList = {
@@ -57,17 +56,17 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
       allAggregatorsAddresses
     );
 
-    await deployOracleRouter(
+    const oracle = await deployOracleRouter(
       [
         addressProvider.address,
         tokens,
         aggregators,
         fallbackOracle.address,
-        await getWethAddress(poolConfig),
+        await getOrCreateWethAddress(poolConfig),
       ],
       verify
     );
-    await addressProvider.setPriceOracle(fallbackOracle.address);
+    await addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracle.address);
 
     const lendingRateOracle = await deployLendingRateOracle([addressProvider.address], verify);
 
@@ -79,10 +78,10 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
       ...tokensAddressesWithoutUsd,
     };
     await setInitialMarketRatesInRatesOracleByHelper(
-      LendingRateOracleRatesCommon,
+      LendingRateOracleRates,
       allReservesAddresses,
       lendingRateOracle
     );
 
-    await addressProvider.setLendingRateOracle(lendingRateOracle.address);
+    await addressProvider.setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle.address);
   });

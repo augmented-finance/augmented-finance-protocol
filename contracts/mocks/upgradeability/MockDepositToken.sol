@@ -5,6 +5,11 @@ pragma experimental ABIEncoderV2;
 import {DepositToken} from '../../protocol/tokenization/DepositToken.sol';
 
 contract MockDepositToken is DepositToken {
+  constructor() public {
+    // enables use of this instance without a proxy
+    _unsafeResetVersionedInitializers();
+  }
+
   function getRevision() internal pure override returns (uint256) {
     return super.getRevision() + 1;
   }

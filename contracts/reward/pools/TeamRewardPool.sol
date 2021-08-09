@@ -21,15 +21,19 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     uint256 initialRate,
     uint16 baselinePercentage,
     address teamManager
-  ) public ControlledRewardPool(controller, initialRate, NO_SCALE, baselinePercentage) {
+  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _teamManager = teamManager;
   }
 
   function _onlyTeamManagerOrConfigurator() private view {
     require(
-      msg.sender == _teamManager || _controller.isConfigurator(msg.sender),
-      Errors.RW_NOT_TEAM_MANAGER
+      msg.sender == _teamManager || _controller.isConfigAdmin(msg.sender),
+      Errors.CT_CALLER_MUST_BE_TEAM_MANAGER
     );
+  }
+
+  function getPoolName() public view override returns (string memory) {
+    return 'TeamPool';
   }
 
   modifier onlyTeamManagerOrConfigurator {
@@ -52,11 +56,16 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return doGetReward(holder);
   }
 
-  function internalCalcReward(address holder) internal view override returns (uint256, uint32) {
-    if (!isUnlocked(getCurrentTick())) {
+  function internalCalcReward(address holder, uint32 at)
+    internal
+    view
+    override
+    returns (uint256, uint32)
+  {
+    if (!isUnlocked(at)) {
       return (0, 0);
     }
-    return doCalcReward(holder);
+    return doCalcRewardAt(holder, at);
   }
 
   function internalCalcRateAndReward(
@@ -78,11 +87,11 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return (rate, allocated, since);
   }
 
-  function addRewardProvider(address, address) external override onlyConfigurator {
+  function addRewardProvider(address, address) external override onlyConfigAdmin {
     revert('UNSUPPORTED');
   }
 
-  function removeRewardProvider(address) external override onlyConfigurator {}
+  function removeRewardProvider(address) external override onlyConfigAdmin {}
 
   function getAllocatedShares() external view returns (uint16) {
     return _totalShare;
@@ -149,7 +158,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return _teamManager;
   }
 
-  function setUnlockedAt(uint32 at) external onlyConfigurator {
+  function setUnlockedAt(uint32 at) external onlyConfigAdmin {
     require(at > 0, 'unlockAt is required');
     // console.log('setUnlockedAt', _lockupTill, getCurrentTick(), at);
     require(_lockupTill == 0 || _lockupTill >= getCurrentTick(), 'lockup is finished');

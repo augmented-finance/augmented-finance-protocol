@@ -2,12 +2,17 @@
 pragma solidity 0.6.12;
 
 import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
+import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
 import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
 import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
 import {AccessFlags} from '../access/AccessFlags.sol';
+import {IRewardCollector} from '../reward/interfaces/IRewardCollector.sol';
+
+import 'hardhat/console.sol';
 
 contract Treasury is VersionedInitializable, MarketAccessBitmask {
+  using SafeERC20 for IERC20;
   uint256 private constant TREASURY_REVISION = 1;
 
   constructor() public MarketAccessBitmask(IMarketAccessController(0)) {}
@@ -26,7 +31,7 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
     address recipient,
     uint256 amount
   ) external aclHas(AccessFlags.TREASURY_ADMIN) {
-    IERC20(token).approve(recipient, amount);
+    IERC20(token).safeApprove(recipient, amount);
   }
 
   function transfer(
@@ -34,6 +39,32 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
     address recipient,
     uint256 amount
   ) external aclHas(AccessFlags.TREASURY_ADMIN) {
-    IERC20(token).transfer(recipient, amount);
+    if (token == _remoteAcl.getRewardToken() && IERC20(token).balanceOf(address(this)) < amount) {
+      _claimRewards();
+    }
+    IERC20(token).safeTransfer(recipient, amount);
+  }
+
+  function _claimRewards() private {
+    address rc = _remoteAcl.getRewardController();
+    if (rc != address(0)) {
+      IRewardCollector(rc).claimReward();
+    }
+  }
+
+  function claimRewardsForTreasury() external aclHas(AccessFlags.TREASURY_ADMIN) {
+    _claimRewards();
+  }
+
+  function _safeTransferETH(address to, uint256 value) internal {
+    (bool success, ) = to.call{value: value}(new bytes(0));
+    require(success, 'ETH_TRANSFER_FAILED');
+  }
+
+  function transferEth(address recipient, uint256 amount)
+    external
+    aclHas(AccessFlags.TREASURY_ADMIN)
+  {
+    _safeTransferETH(recipient, amount);
   }
 }

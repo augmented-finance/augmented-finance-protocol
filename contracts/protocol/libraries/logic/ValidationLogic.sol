@@ -13,7 +13,7 @@ import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../configuration/UserConfiguration.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {Helpers} from '../helpers/Helpers.sol';
-import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
+import {IReserveStrategy} from '../../../interfaces/IReserveStrategy.sol';
 import {DataTypes} from '../types/DataTypes.sol';
 
 /**
@@ -38,7 +38,7 @@ library ValidationLogic {
    * @param reserve The reserve object on which the user is depositing
    * @param amount The amount to be deposited
    */
-  function validateDeposit(DataTypes.ReserveData storage reserve, uint256 amount) external view {
+  function validateDeposit(DataTypes.ReserveData storage reserve, uint256 amount) internal view {
     (bool isActive, bool isFrozen, , ) = reserve.configuration.getFlags();
 
     require(amount != 0, Errors.VL_INVALID_AMOUNT);
@@ -66,7 +66,7 @@ library ValidationLogic {
     mapping(uint256 => address) storage reserves,
     uint256 reservesCount,
     address oracle
-  ) external view {
+  ) internal view {
     require(amount != 0, Errors.VL_INVALID_AMOUNT);
     require(amount <= userBalance, Errors.VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE);
 
@@ -130,7 +130,7 @@ library ValidationLogic {
     mapping(uint256 => address) storage reserves,
     uint256 reservesCount,
     address oracle
-  ) external view {
+  ) internal view {
     ValidateBorrowLocalVars memory vars;
 
     (vars.isActive, vars.isFrozen, vars.borrowingEnabled, vars.stableRateBorrowingEnabled) = reserve
@@ -198,11 +198,11 @@ library ValidationLogic {
       require(
         !userConfig.isUsingAsCollateral(reserve.id) ||
           reserve.configuration.getLtv() == 0 ||
-          amount > IERC20(reserve.aTokenAddress).balanceOf(userAddress),
+          amount > IERC20(reserve.depositTokenAddress).balanceOf(userAddress),
         Errors.VL_COLLATERAL_SAME_AS_BORROWING_CURRENCY
       );
 
-      vars.availableLiquidity = IERC20(asset).balanceOf(reserve.aTokenAddress);
+      vars.availableLiquidity = IERC20(asset).balanceOf(reserve.depositTokenAddress);
 
       //calculate the max available loan size in stable rate mode as a percentage of the
       //available liquidity
@@ -227,7 +227,7 @@ library ValidationLogic {
     address onBehalfOf,
     uint256 stableDebt,
     uint256 variableDebt
-  ) external view {
+  ) internal view {
     bool isActive = reserve.configuration.getActive();
 
     require(isActive, Errors.VL_NO_ACTIVE_RESERVE);
@@ -262,7 +262,7 @@ library ValidationLogic {
     uint256 stableDebt,
     uint256 variableDebt,
     DataTypes.InterestRateMode currentRateMode
-  ) external view {
+  ) internal view {
     (bool isActive, bool isFrozen, , bool stableRateEnabled) = reserve.configuration.getFlags();
 
     require(isActive, Errors.VL_NO_ACTIVE_RESERVE);
@@ -284,7 +284,7 @@ library ValidationLogic {
       require(
         !userConfig.isUsingAsCollateral(reserve.id) ||
           reserve.configuration.getLtv() == 0 ||
-          stableDebt.add(variableDebt) > IERC20(reserve.aTokenAddress).balanceOf(msg.sender),
+          stableDebt.add(variableDebt) > IERC20(reserve.depositTokenAddress).balanceOf(msg.sender),
         Errors.VL_COLLATERAL_SAME_AS_BORROWING_CURRENCY
       );
     } else {
@@ -298,15 +298,15 @@ library ValidationLogic {
    * @param reserveAddress The address of the reserve
    * @param stableDebtToken The stable debt token instance
    * @param variableDebtToken The variable debt token instance
-   * @param aTokenAddress The address of the aToken contract
+   * @param depositTokenAddress The address of the depositToken contract
    */
   function validateRebalanceStableBorrowRate(
     DataTypes.ReserveData storage reserve,
     address reserveAddress,
     IERC20 stableDebtToken,
     IERC20 variableDebtToken,
-    address aTokenAddress
-  ) external view {
+    address depositTokenAddress
+  ) internal view {
     (bool isActive, , , ) = reserve.configuration.getFlags();
 
     require(isActive, Errors.VL_NO_ACTIVE_RESERVE);
@@ -314,15 +314,14 @@ library ValidationLogic {
     //if the usage ratio is below 95%, no rebalances are needed
     uint256 totalDebt =
       stableDebtToken.totalSupply().add(variableDebtToken.totalSupply()).wadToRay();
-    uint256 availableLiquidity = IERC20(reserveAddress).balanceOf(aTokenAddress).wadToRay();
+    uint256 availableLiquidity = IERC20(reserveAddress).balanceOf(depositTokenAddress).wadToRay();
     uint256 usageRatio = totalDebt == 0 ? 0 : totalDebt.rayDiv(availableLiquidity.add(totalDebt));
 
     //if the liquidity rate is below REBALANCE_UP_THRESHOLD of the max variable APR at 95% usage,
     //then we allow rebalancing of the stable rate positions.
 
     uint256 currentLiquidityRate = reserve.currentLiquidityRate;
-    uint256 maxVariableBorrowRate =
-      IReserveInterestRateStrategy(reserve.interestRateStrategyAddress).getMaxVariableBorrowRate();
+    uint256 maxVariableBorrowRate = IReserveStrategy(reserve.strategy).getMaxVariableBorrowRate();
 
     require(
       usageRatio >= REBALANCE_UP_USAGE_RATIO_THRESHOLD &&
@@ -350,8 +349,8 @@ library ValidationLogic {
     mapping(uint256 => address) storage reserves,
     uint256 reservesCount,
     address oracle
-  ) external view {
-    uint256 underlyingBalance = IERC20(reserve.aTokenAddress).balanceOf(msg.sender);
+  ) internal view {
+    uint256 underlyingBalance = IERC20(reserve.depositTokenAddress).balanceOf(msg.sender);
 
     require(underlyingBalance > 0, Errors.VL_UNDERLYING_BALANCE_NOT_GREATER_THAN_0);
 
@@ -396,48 +395,33 @@ library ValidationLogic {
     uint256 userHealthFactor,
     uint256 userStableDebt,
     uint256 userVariableDebt
-  ) internal view returns (uint256, string memory) {
-    if (
-      !collateralReserve.configuration.getActive() || !principalReserve.configuration.getActive()
-    ) {
-      return (
-        uint256(Errors.CollateralManagerErrors.NO_ACTIVE_RESERVE),
-        Errors.VL_NO_ACTIVE_RESERVE
-      );
-    }
+  ) internal view {
+    require(
+      collateralReserve.configuration.getActive() && principalReserve.configuration.getActive(),
+      Errors.VL_NO_ACTIVE_RESERVE
+    );
 
-    if (userHealthFactor >= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD) {
-      return (
-        uint256(Errors.CollateralManagerErrors.HEALTH_FACTOR_ABOVE_THRESHOLD),
-        Errors.LPCM_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
-      );
-    }
-
-    bool isCollateralEnabled =
-      collateralReserve.configuration.getLiquidationThreshold() > 0 &&
-        userConfig.isUsingAsCollateral(collateralReserve.id);
+    require(
+      userHealthFactor < GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+      Errors.LPCM_HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+    );
 
     //if collateral isn't enabled as collateral by user, it cannot be liquidated
-    if (!isCollateralEnabled) {
-      return (
-        uint256(Errors.CollateralManagerErrors.COLLATERAL_CANNOT_BE_LIQUIDATED),
-        Errors.LPCM_COLLATERAL_CANNOT_BE_LIQUIDATED
-      );
-    }
+    require(
+      collateralReserve.configuration.getLiquidationThreshold() > 0 &&
+        userConfig.isUsingAsCollateral(collateralReserve.id),
+      Errors.LPCM_COLLATERAL_CANNOT_BE_LIQUIDATED
+    );
 
-    if (userStableDebt == 0 && userVariableDebt == 0) {
-      return (
-        uint256(Errors.CollateralManagerErrors.CURRRENCY_NOT_BORROWED),
-        Errors.LPCM_SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER
-      );
-    }
-
-    return (uint256(Errors.CollateralManagerErrors.NO_ERROR), Errors.LPCM_NO_ERRORS);
+    require(
+      userStableDebt != 0 || userVariableDebt != 0,
+      Errors.LPCM_SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER
+    );
   }
 
   /**
-   * @dev Validates an aToken transfer
-   * @param from The user from which the aTokens are being transferred
+   * @dev Validates an depositToken transfer
+   * @param from The user from which the depositTokens are being transferred
    * @param reservesData The state of all the reserves
    * @param userConfig The state of the user for the specific reserve
    * @param reserves The addresses of all the active reserves

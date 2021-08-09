@@ -3,27 +3,21 @@ import { createRandomAddress } from '../../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ProtocolErrors } from '../../helpers/types';
 import { ethers } from 'ethers';
-import { ZERO_ADDRESS } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
-import { deployLendingPoolImpl } from '../../helpers/contracts-deployments';
+import { deployLendingPoolImpl, deployMintableERC20 } from '../../helpers/contracts-deployments';
+import { ONE_ADDRESS } from '../../helpers/constants';
 
 const { utils } = ethers;
 
 makeSuite('MarketAccessController', (testEnv: TestEnv) => {
-  it('Test the accessibility of the MarketAccessController', async () => {
+  it('Test access to the MarketAccessController (should revert)', async () => {
     const { addressesProvider, users } = testEnv;
     const mockAddress = createRandomAddress();
     const { INVALID_OWNER_REVERT_MSG } = ProtocolErrors;
 
     await addressesProvider.transferOwnership(users[1].address);
 
-    for (const contractFunction of [
-      addressesProvider.setMarketId,
-      addressesProvider.setLendingPoolImpl,
-      addressesProvider.setLendingPoolConfiguratorImpl,
-      addressesProvider.setPriceOracle,
-      addressesProvider.setLendingRateOracle,
-    ]) {
+    for (const contractFunction of [addressesProvider.setMarketId]) {
       await expect(contractFunction(mockAddress)).to.be.revertedWith(INVALID_OWNER_REVERT_MSG);
     }
 
@@ -40,11 +34,10 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
 
   it('Tests adding a proxied address with `setAddressAsProxy()`', async () => {
     const { addressesProvider, users } = testEnv;
-    const { INVALID_OWNER_REVERT_MSG } = ProtocolErrors;
 
     const currentAddressesProviderOwner = users[1];
 
-    const mockLendingPool = await deployLendingPoolImpl();
+    const mockLendingPool = await deployLendingPoolImpl(false, false);
     const proxiedAddressId = 1 << 62;
 
     const proxiedAddressSetReceipt = await waitForTx(
@@ -68,38 +61,52 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
 
   it('Tests adding an address with `setAddress()` at proxied address id (should revert)', async () => {
     const { addressesProvider, users } = testEnv;
-    const { INVALID_OWNER_REVERT_MSG } = ProtocolErrors;
 
     const currentAddressesProviderOwner = users[1];
     const mockNonProxiedAddress = createRandomAddress();
     const proxiedAddressId = 1 << 62;
 
-    await waitForTx(
-      await addressesProvider
-        .connect(currentAddressesProviderOwner.signer)
-        .markProxies(proxiedAddressId)
-    );
+    await addressesProvider
+      .connect(currentAddressesProviderOwner.signer)
+      .markProxies(proxiedAddressId);
 
     await expect(
       addressesProvider
         .connect(currentAddressesProviderOwner.signer)
         .setAddress(proxiedAddressId, mockNonProxiedAddress)
-    ).to.be.revertedWith('use of setAddressAsProxy is required');
+    ).to.be.revertedWith('setAddressAsProxy is required');
   });
 
-  it('Tests adding a non proxied address with `setAddress()`', async () => {
+  it('Tests adding a non contract address with `setAddress()` (should revert)', async () => {
     const { addressesProvider, users } = testEnv;
-    const { INVALID_OWNER_REVERT_MSG } = ProtocolErrors;
 
     const currentAddressesProviderOwner = users[1];
-    const mockNonProxiedAddress = createRandomAddress();
+
     const nonProxiedAddressId = 1 << 62;
 
-    await waitForTx(
-      await addressesProvider
+    await addressesProvider
+      .connect(currentAddressesProviderOwner.signer)
+      .unmarkProxies(nonProxiedAddressId);
+
+    await expect(
+      addressesProvider
         .connect(currentAddressesProviderOwner.signer)
-        .unmarkProxies(nonProxiedAddressId)
-    );
+        .setAddress(nonProxiedAddressId, ONE_ADDRESS)
+    ).to.be.revertedWith('must be contract');
+  });
+
+  it('Tests adding an address with `setAddress()`', async () => {
+    const { addressesProvider, users } = testEnv;
+
+    const currentAddressesProviderOwner = users[1];
+
+    // must be a contract address
+    const mockNonProxiedAddress = (await deployMintableERC20(['', '', 0])).address;
+    const nonProxiedAddressId = 1 << 62;
+
+    await addressesProvider
+      .connect(currentAddressesProviderOwner.signer)
+      .unmarkProxies(nonProxiedAddressId);
 
     const nonProxiedAddressSetReceipt = await waitForTx(
       await addressesProvider

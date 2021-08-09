@@ -31,7 +31,7 @@ export interface ReserveData {
   utilizationRate: BigNumber;
   liquidityIndex: BigNumber;
   variableBorrowIndex: BigNumber;
-  aTokenAddress: string;
+  depositTokenAddress: string;
   marketStableRate: BigNumber;
   lastUpdateTimestamp: BigNumber;
   totalStableDebtLastUpdated: BigNumber;

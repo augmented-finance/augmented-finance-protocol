@@ -209,6 +209,7 @@ abstract contract CalcLinearFreezer is CalcBase {
     address holder,
     uint256 allocated,
     uint32 since,
+    uint32 at,
     bool incremental
   ) internal view returns (uint256 claimableAmount, uint256 frozenReward) {
     uint256 frozenBefore = _frozenRewards[holder].frozenReward;
@@ -217,7 +218,7 @@ abstract contract CalcLinearFreezer is CalcBase {
       holder,
       allocated,
       since,
-      uint32(block.timestamp),
+      at,
       incremental
     );
 

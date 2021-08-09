@@ -7,19 +7,20 @@ import {IRewardController, AllocationMode} from '../interfaces/IRewardController
 import {IManagedRewardPool} from '../interfaces/IManagedRewardPool.sol';
 import {BasePermitRewardPool} from './BasePermitRewardPool.sol';
 import {BaseReferralRegistry} from '../referral/BaseReferralRegistry.sol';
+import {CalcLinearRateAccum} from '../calcs/CalcLinearRateAccum.sol';
 
 import 'hardhat/console.sol';
 
-contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry {
+contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcLinearRateAccum {
   uint256 private _claimLimit;
 
   constructor(
     IRewardController controller,
-    uint256 rewardLimit,
-    uint256 claimLimit,
+    uint256 initialRate,
+    uint16 baselinePercentage,
     string memory rewardPoolName
-  ) public BasePermitRewardPool(controller, rewardLimit, rewardPoolName) {
-    _claimLimit = claimLimit;
+  ) public BasePermitRewardPool(controller, initialRate, baselinePercentage, rewardPoolName) {
+    _claimLimit = type(uint256).max;
   }
 
   function getClaimTypeHash() internal pure override returns (bytes32) {
@@ -41,7 +42,7 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry {
   ) external notPaused {
     uint256 currentValidNonce = _nonces[spender];
     require(issuedAt > currentValidNonce, 'EXPIRED_ISSUANCE');
-    require(value > _claimLimit, 'EXCESSIVE_VALUE');
+    require(value <= _claimLimit, 'EXCESSIVE_VALUE');
     require(uint32(issuedAt) == issuedAt);
 
     bytes32 encodedHash =
@@ -69,7 +70,49 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry {
     return issuedAt;
   }
 
+  function internalUpdateFunds(uint256 value) internal override {
+    doGetReward(value);
+  }
+
+  function availableReward() public view override returns (uint256) {
+    return doCalcReward();
+  }
+
+  function claimLimit() public view returns (uint256) {
+    return _claimLimit;
+  }
+
+  function setClaimLimit(uint256 value) public onlyRateAdmin {
+    _claimLimit = value;
+  }
+
   function registerShortCode(uint32 shortRefCode, address to) public onlyRefAdmin {
     internalRegisterCode(shortRefCode, to);
+  }
+
+  function internalSetRate(uint256 rate) internal override {
+    super.setLinearRate(rate);
+  }
+
+  function internalGetRate() internal view override returns (uint256) {
+    return super.getLinearRate();
+  }
+
+  function getCurrentTick() internal view override returns (uint32) {
+    return uint32(block.timestamp);
+  }
+
+  function internalGetReward(address, uint256) internal virtual override returns (uint256, uint32) {
+    return (0, 0);
+  }
+
+  function internalCalcReward(address, uint32)
+    internal
+    view
+    virtual
+    override
+    returns (uint256, uint32)
+  {
+    return (0, 0);
   }
 }

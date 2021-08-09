@@ -31,17 +31,13 @@ contract RewardedTokenLocker is
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage,
-    address underlying,
-    uint32 pointPeriod,
-    uint32 maxValuePeriod,
-    uint256 maxWeightBase
+    address underlying
   )
     public
-    CalcCheckpointWeightedReward(maxWeightBase)
-    BaseTokenLocker(underlying, pointPeriod, maxValuePeriod)
-    ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage)
+    CalcCheckpointWeightedReward()
+    BaseTokenLocker(underlying)
+    ControlledRewardPool(controller, initialRate, baselinePercentage)
   {}
 
   function redeem(address to) public override notPaused returns (uint256 underlyingAmount) {
@@ -52,11 +48,11 @@ contract RewardedTokenLocker is
     return !isPaused();
   }
 
-  function addRewardProvider(address, address) external override onlyConfigurator {
+  function addRewardProvider(address, address) external override onlyConfigAdmin {
     revert('UNSUPPORTED');
   }
 
-  function removeRewardProvider(address) external override onlyConfigurator {}
+  function removeRewardProvider(address) external override onlyConfigAdmin {}
 
   function internalSyncRate(uint32 at) internal override {
     // console.log('internalSyncRate', at, getExtraRate(), getStakedTotal());
@@ -119,7 +115,7 @@ contract RewardedTokenLocker is
     return getStakeBalance(account);
   }
 
-  function internalCalcReward(address holder)
+  function internalCalcReward(address holder, uint32 current)
     internal
     view
     virtual
@@ -130,7 +126,6 @@ contract RewardedTokenLocker is
     if (expiry == 0) {
       return (0, 0);
     }
-    uint32 current = getCurrentTick();
     if (current > expiry) {
       current = expiry;
     }
@@ -183,7 +178,7 @@ contract RewardedTokenLocker is
 
   function receiveBoostExcess(uint256 amount, uint32 since) external override onlyController {
     internalUpdate(false, 0);
-    internalAddExcess(scaleRate(amount), since);
+    internalAddExcess(amount, since);
   }
 
   function applyAutolock(
@@ -263,6 +258,7 @@ contract RewardedTokenLocker is
     uint256 limit,
     uint32 lockDuration
   ) private view returns (uint256) {
+    this;
     if (balance >= limit) {
       return 0;
     }

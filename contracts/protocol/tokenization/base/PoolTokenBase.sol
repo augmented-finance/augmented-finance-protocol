@@ -14,6 +14,7 @@ import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
 import {Errors} from '../../libraries/helpers/Errors.sol';
 import {AccessHelper} from '../../../access/AccessHelper.sol';
 import {AccessFlags} from '../../../access/AccessFlags.sol';
+import {IManagedLendingPool} from '../../../interfaces/IManagedLendingPool.sol';
 
 abstract contract PoolTokenBase is
   IERC20,
@@ -31,7 +32,7 @@ abstract contract PoolTokenBase is
   mapping(address => uint256) internal _balances;
   uint256 internal _totalSupply;
 
-  ILendingPool internal _pool;
+  IManagedLendingPool internal _pool;
   address internal _underlyingAsset;
   IBalanceHook private _incentivesController;
 
@@ -114,14 +115,14 @@ abstract contract PoolTokenBase is
   }
 
   /**
-   * @dev Returns the address of the underlying asset of this aToken (E.g. WETH for aWETH)
+   * @dev Returns the address of the underlying asset of this depositToken (E.g. WETH for aWETH)
    **/
   function UNDERLYING_ASSET_ADDRESS() public view override returns (address) {
     return _underlyingAsset;
   }
 
   /**
-   * @dev Returns the address of the lending pool where this aToken is used
+   * @dev Returns the address of the lending pool where this depositToken is used
    **/
   function POOL() public view override returns (ILendingPool) {
     return _pool;

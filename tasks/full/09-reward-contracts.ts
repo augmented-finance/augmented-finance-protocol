@@ -2,25 +2,25 @@ import { task } from 'hardhat/config';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import {
   deployAGFTokenV1Impl,
-  deployRewardBooster,
+  deployRewardBoosterV1Impl,
   deployRewardConfiguratorImpl,
   deployXAGFTokenV1Impl,
 } from '../../helpers/contracts-deployments';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import {
   getAGFTokenV1Impl,
-  getMarketAddressController,
-  getRewardConfiguratorProxy,
   getRewardBooster,
+  getRewardConfiguratorProxy,
 } from '../../helpers/contracts-getters';
-import { waitForTx } from '../../helpers/misc-utils';
+import { getFirstSigner, falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
-import { MarketAccessController } from '../../types';
+import {
+  getDeployAccessController,
+  setAndGetAddressAsProxy,
+  setAndGetAddressAsProxyWithInit,
+} from '../../helpers/deploy-helpers';
 
-task(
-  `full:deploy-reward-contracts`,
-  `Deploys reward contracts, AGF and xAGF tokens for prod enviroment`
-)
+task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tokens`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .addFlag('verify', `Verify contracts via Etherscan API.`)
   .setAction(async ({ verify, pool }, localBRE) => {
@@ -29,96 +29,102 @@ task(
     const poolConfig = loadPoolConfig(pool);
     const { Names } = poolConfig as ICommonConfiguration;
 
-    const addressesProvider = await getMarketAddressController();
+    const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-    await waitForTx(
-      await addressesProvider.setRewardConfiguratorImpl(
-        await deployedContractImpl(
-          addressesProvider,
-          'RewardConfiguratorV1',
-          await deployRewardConfiguratorImpl(verify)
-        )
-      )
-    );
+    // configurator is always updated
+    let configuratorAddr =
+      freshStart && continuation ? await addressProvider.getRewardConfigurator() : '';
 
-    const configurator = await getRewardConfiguratorProxy(
-      await addressesProvider.getRewardConfigurator()
-    );
+    if (falsyOrZeroAddress(configuratorAddr)) {
+      const impl = await deployRewardConfiguratorImpl(verify, continuation);
+      console.log('Deployed RewardConfigurator implementation:', impl.address);
+      configuratorAddr = await setAndGetAddressAsProxy(
+        addressProvider,
+        AccessFlags.REWARD_CONFIGURATOR,
+        impl.address
+      );
+    }
+    const configurator = await getRewardConfiguratorProxy(configuratorAddr);
 
-    const agfInitData = await configurator.buildRewardTokenInitData(
-      Names.RewardTokenName,
-      Names.RewardTokenSymbol,
-      18
-    );
+    // AGF token is always updated
+    let agfAddr = freshStart && continuation ? await addressProvider.getRewardToken() : '';
 
-    await addressesProvider.setAddressAsProxyWithInit(
-      AccessFlags.REWARD_TOKEN,
-      await deployedContractImpl(
-        addressesProvider,
-        'AGFTokenV1',
-        await deployAGFTokenV1Impl(verify)
-      ),
-      agfInitData
-    );
+    if (falsyOrZeroAddress(agfAddr)) {
+      const initData = await configurator.buildRewardTokenInitData(
+        Names.RewardTokenName,
+        Names.RewardTokenSymbol,
+        18
+      );
+      const impl = await deployAGFTokenV1Impl(verify, continuation);
+      console.log('Deployed AGF token implementation:', impl.address);
+      agfAddr = await setAndGetAddressAsProxyWithInit(
+        addressProvider,
+        AccessFlags.REWARD_TOKEN,
+        impl.address,
+        initData
+      );
+      console.log('AGF token:', agfAddr);
 
-    const agf = await getAGFTokenV1Impl(await addressesProvider.getRewardToken());
+      const agf = await getAGFTokenV1Impl(agfAddr);
+      console.log('\t', await agf.name(), await agf.symbol(), await agf.decimals());
+    } else {
+      console.log('AGF token:', agfAddr);
+    }
 
-    console.log(
-      'AGF token: ',
-      agf.address,
-      await agf.name(),
-      await agf.symbol(),
-      await agf.decimals()
-    );
+    // Reward controller is not updated
+    let boosterAddr =
+      freshStart && !continuation ? '' : await addressProvider.getRewardController();
 
-    await waitForTx(
-      await addressesProvider.setRewardController(
-        await deployedContractImpl(
-          addressesProvider,
-          'RewardBooster',
-          await deployRewardBooster([addressesProvider.address, agf.address], verify)
-        )
-      )
-    );
+    if (falsyOrZeroAddress(boosterAddr)) {
+      const impl = await deployRewardBoosterV1Impl(verify, continuation);
+      console.log('Deployed RewardBooster implementation:', impl.address);
+      boosterAddr = await setAndGetAddressAsProxy(
+        addressProvider,
+        AccessFlags.REWARD_CONTROLLER,
+        impl.address
+      );
+    }
+    console.log('RewardBooster', boosterAddr);
+    const booster = await getRewardBooster(boosterAddr);
 
-    const booster = await getRewardBooster(await addressesProvider.getRewardController());
+    // xAGF token is always updated
+    let xagfAddr = freshStart && continuation ? await addressProvider.getRewardStakeToken() : '';
 
-    const xagfInitData = await configurator.buildRewardTokenInitData(
-      Names.RewardStakeTokenName,
-      Names.RewardStakeTokenSymbol,
-      18
-    );
+    if (falsyOrZeroAddress(xagfAddr)) {
+      const xagfInitData = await configurator.buildRewardTokenInitData(
+        Names.RewardStakeTokenName,
+        Names.RewardStakeTokenSymbol,
+        18
+      );
 
-    await addressesProvider.setAddressAsProxyWithInit(
-      AccessFlags.REWARD_STAKE_TOKEN,
-      await deployedContractImpl(
-        addressesProvider,
-        'XAGFTokenV1',
-        await deployXAGFTokenV1Impl(verify)
-      ),
-      xagfInitData
-    );
+      const impl = await deployXAGFTokenV1Impl(verify, continuation);
+      console.log('Deployed xAGF token implementation:', impl.address);
 
-    const xagf = await getAGFTokenV1Impl(await addressesProvider.getRewardStakeToken());
-    await waitForTx(
-      await configurator.configureRewardBoost(xagf.address, true, xagf.address, false)
-    );
+      xagfAddr = await setAndGetAddressAsProxyWithInit(
+        addressProvider,
+        AccessFlags.REWARD_STAKE_TOKEN,
+        impl.address,
+        xagfInitData
+      );
+      console.log('xAGF token:', xagfAddr);
 
-    console.log(
-      'xAGF token: ',
-      xagf.address,
-      await xagf.name(),
-      await xagf.symbol(),
-      await xagf.decimals()
-    );
+      const xagf = await getAGFTokenV1Impl(xagfAddr);
+      console.log('\t', await xagf.name(), await xagf.symbol(), await xagf.decimals());
+
+      xagfAddr = xagf.address;
+    } else {
+      console.log('xAGF token:', xagfAddr);
+    }
+
+    if (freshStart && (!continuation || falsyOrZeroAddress((await booster.getBoostPool()).pool))) {
+      await addressProvider.grantRoles(
+        (
+          await getFirstSigner()
+        ).address,
+        AccessFlags.REWARD_CONFIG_ADMIN
+      );
+
+      await waitForTx(await configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false));
+      console.log('Boost pool and excess recevier: ', xagfAddr);
+    }
   });
-
-export const deployedContractImpl = async (
-  ac: MarketAccessController,
-  contractName: string,
-  impl: any
-) => {
-  const implAddr: string = impl.address;
-  console.log(`Deployed ${contractName}: `, implAddr);
-  return implAddr;
-};

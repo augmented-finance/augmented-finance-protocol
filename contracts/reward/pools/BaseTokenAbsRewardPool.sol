@@ -20,9 +20,8 @@ abstract contract BaseTokenAbsRewardPool is ControlledRewardPool, IRewardPool {
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage
-  ) public ControlledRewardPool(controller, initialRate, rateScale, baselinePercentage) {}
+  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {}
 
   function handleBalanceUpdate(
     address,
@@ -69,7 +68,7 @@ abstract contract BaseTokenAbsRewardPool is ControlledRewardPool, IRewardPool {
     external
     virtual
     override
-    onlyConfigurator
+    onlyConfigAdmin
   {
     require(provider != address(0), 'provider is required');
     require(_provider == address(0), 'provider is already set');
@@ -77,7 +76,7 @@ abstract contract BaseTokenAbsRewardPool is ControlledRewardPool, IRewardPool {
     emit ProviderAdded(provider, token);
   }
 
-  function removeRewardProvider(address provider) external virtual override onlyConfigurator {
+  function removeRewardProvider(address provider) external virtual override onlyConfigAdmin {
     if (_provider != provider || provider == address(0)) {
       return;
     }

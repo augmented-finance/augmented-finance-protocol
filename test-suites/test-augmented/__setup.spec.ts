@@ -18,13 +18,13 @@ import {
   deployFlashLiquidationAdapter,
   deployTreasuryImpl,
   deployLendingPoolConfiguratorImpl,
-  deployLendingPoolImpl,
-  deployLendingPoolCollateralManagerImpl,
+  deployLendingPoolExtensionImpl,
+  deployMockLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
-import { TokenContractId, tEthereumAddress, LendingPools } from '../../helpers/types';
+import { TokenContractId, tEthereumAddress } from '../../helpers/types';
 import { MintableERC20 } from '../../types';
-import { ConfigNames, getReservesConfigByPool, loadPoolConfig } from '../../helpers/configuration';
+import { ConfigNames, getReservesTestConfig, loadPoolConfig } from '../../helpers/configuration';
 import { initializeMakeSuite } from './helpers/make-suite';
 
 import {
@@ -34,21 +34,22 @@ import {
 } from '../../helpers/oracles-helpers';
 import { DRE, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
-import AugmentedConfig from '../../markets/augmented';
 import { getLendingPoolProxy, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
 import { WETH9Mocked } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
+import { TestConfig } from '../../markets/augmented';
 
-const MOCK_USD_PRICE_IN_WEI = AugmentedConfig.ProtocolGlobalParams.MockUsdPriceInWei;
-const ALL_ASSETS_INITIAL_PRICES = AugmentedConfig.Mocks.AllAssetsInitialPrices;
-const USD_ADDRESS = AugmentedConfig.ProtocolGlobalParams.UsdAddress;
-const MOCK_CHAINLINK_AGGREGATORS_PRICES = AugmentedConfig.Mocks.AllAssetsInitialPrices;
-const LENDING_RATE_ORACLE_RATES_COMMON = AugmentedConfig.LendingRateOracleRatesCommon;
+const deployConfig = TestConfig;
+const MOCK_USD_PRICE_IN_WEI = deployConfig.Mocks.MockUsdPriceInWei;
+const ALL_ASSETS_INITIAL_PRICES = deployConfig.Mocks.AllAssetsInitialPrices;
+const USD_ADDRESS = deployConfig.Mocks.UsdAddress;
+const MOCK_CHAINLINK_AGGREGATORS_PRICES = deployConfig.Mocks.AllAssetsInitialPrices;
+const LENDING_RATE_ORACLE_RATES = deployConfig.LendingRateOracleRates;
 
 const deployAllMockTokens = async (deployer: Signer) => {
   const tokens: { [symbol: string]: MockContract | MintableERC20 | WETH9Mocked } = {};
 
-  const protoConfigData = getReservesConfigByPool(LendingPools.augmented);
+  const protoConfigData = getReservesTestConfig();
 
   for (const tokenSymbol of Object.keys(TokenContractId)) {
     if (tokenSymbol === 'WETH') {
@@ -80,7 +81,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const mockTokens = await deployAllMockTokens(deployer);
   console.log('Deployed mocks');
-  const addressProvider = await deployMarketAccessController(AugmentedConfig.MarketId);
+  const addressProvider = await deployMarketAccessController(deployConfig.MarketId);
   await addressProvider.setAnyRoleMode(true);
   await addressProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN);
 
@@ -94,24 +95,30 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const addressesProviderRegistry = await deployAddressesProviderRegistry();
   await addressesProviderRegistry.registerAddressesProvider(addressProvider.address, 1);
 
-  const lendingPoolImpl = await deployLendingPoolImpl();
+  const lendingPoolImpl = await deployMockLendingPoolImpl();
 
-  await waitForTx(await addressProvider.setLendingPoolImpl(lendingPoolImpl.address));
+  await waitForTx(
+    await addressProvider.setAddressAsProxy(AccessFlags.LENDING_POOL, lendingPoolImpl.address)
+  );
 
   const lendingPoolAddress = await addressProvider.getLendingPool();
   const lendingPoolProxy = await getLendingPoolProxy(lendingPoolAddress);
 
-  const collateralManager = await deployLendingPoolCollateralManagerImpl();
+  const poolExtensionImpl = await deployLendingPoolExtensionImpl(false, false);
   console.log(
     '\tSetting lending pool collateral manager implementation with address',
-    collateralManager.address
+    poolExtensionImpl.address
   );
-  await lendingPoolProxy.setLendingPoolCollateralManager(collateralManager.address);
+  await lendingPoolProxy.setLendingPoolExtension(poolExtensionImpl.address);
 
-  const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl();
-  await addressProvider.setLendingPoolConfiguratorImpl(lendingPoolConfiguratorImpl.address);
+  const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(false, false);
+  await addressProvider.setAddressAsProxy(
+    AccessFlags.LENDING_POOL_CONFIGURATOR,
+    lendingPoolConfiguratorImpl.address
+  );
 
   const fallbackOracle = await deployMockPriceOracle();
+
   await waitForTx(await fallbackOracle.setEthUsdPrice(MOCK_USD_PRICE_IN_WEI));
   await setInitialAssetPricesInOracle(
     ALL_ASSETS_INITIAL_PRICES,
@@ -167,31 +174,44 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
     ...tokensAddressesWithoutUsd,
   };
   await setInitialMarketRatesInRatesOracleByHelper(
-    LENDING_RATE_ORACLE_RATES_COMMON,
+    LENDING_RATE_ORACLE_RATES,
     allReservesAddresses,
     lendingRateOracle
   );
 
-  await addressProvider.setPriceOracle(fallbackOracle.address);
-  await addressProvider.setLendingRateOracle(lendingRateOracle.address);
+  await addressProvider.setAddress(AccessFlags.PRICE_ORACLE, fallbackOracle.address);
+  await addressProvider.setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle.address);
 
-  const reservesParams = getReservesConfigByPool(LendingPools.augmented);
+  const reservesParams = getReservesTestConfig();
 
   const testHelpers = await deployProtocolDataProvider(addressProvider.address);
 
   console.log('Initialize configuration');
 
-  const config = loadPoolConfig(ConfigNames.Augmented);
+  const config = loadPoolConfig(ConfigNames.Test);
 
   const { Names } = config;
 
-  const treasuryImpl = await deployTreasuryImpl();
-  addressProvider.setTreasuryImpl(treasuryImpl.address);
-  const treasuryAddress = treasuryImpl.address;
+  const treasuryImpl = await deployTreasuryImpl(false, false);
+  await addressProvider.setAddressAsProxy(AccessFlags.TREASURY, treasuryImpl.address);
+  const treasuryAddress = await addressProvider.getTreasury();
 
-  await initReservesByHelper(reservesParams, allReservesAddresses, Names, treasuryAddress, false);
+  await initReservesByHelper(
+    addressProvider,
+    reservesParams,
+    allReservesAddresses,
+    Names,
+    false,
+    treasuryAddress,
+    false
+  );
 
-  await configureReservesByHelper(reservesParams, allReservesAddresses, testHelpers);
+  await configureReservesByHelper(
+    addressProvider,
+    reservesParams,
+    allReservesAddresses,
+    testHelpers
+  );
 
   await deployMockFlashLoanReceiver(addressProvider.address);
 

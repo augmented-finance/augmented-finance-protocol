@@ -18,28 +18,24 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   using PercentageMath for uint256;
 
   uint16 internal constant NO_BASELINE = type(uint16).max;
-  uint224 internal constant NO_SCALE = 1e27; // WadRayMath.RAY
 
   IRewardController internal _controller;
 
   uint256 private _pausedRate;
-  uint224 private _rateScale;
   uint16 private _baselinePercentage;
   bool private _paused;
 
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage
   ) public {
-    _initialize(controller, initialRate, rateScale, baselinePercentage);
+    _initialize(controller, initialRate, baselinePercentage);
   }
 
   function _initialize(
     IRewardController controller,
     uint256 initialRate,
-    uint224 rateScale,
     uint16 baselinePercentage
   ) internal virtual {
     require(address(controller) != address(0), 'controller is required');
@@ -52,10 +48,13 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
       internalSetBaselinePercentage(baselinePercentage);
     }
 
-    internalSetRateScale(rateScale);
     if (initialRate > 0) {
       _setRate(initialRate);
     }
+  }
+
+  function getPoolName() public view virtual override returns (string memory) {
+    return '';
   }
 
   function updateBaseline(uint256 baseline)
@@ -66,7 +65,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     returns (bool hasBaseline, uint256 appliedRate)
   {
     if (_baselinePercentage == NO_BASELINE) {
-      return (false, internalGetRate().rayDiv(_rateScale));
+      return (false, internalGetRate());
     }
     appliedRate = baseline.percentMul(_baselinePercentage);
     _setRate(appliedRate);
@@ -83,14 +82,21 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _pausedRate = 0;
     internalSetRate(0);
     emit BaselineDisabled();
-    emit RateUpdated(0, _rateScale);
+    emit RateUpdated(0);
   }
 
   function setBaselinePercentage(uint16 factor) external override onlyRateAdmin {
     internalSetBaselinePercentage(factor);
   }
 
-  function getBaselinePercentage() internal view returns (uint16) {
+  function getBaselinePercentage() external view override returns (bool, uint16) {
+    if (_baselinePercentage == NO_BASELINE) {
+      return (false, 0);
+    }
+    return (true, _baselinePercentage);
+  }
+
+  function internalGetBaselinePercentage() internal view returns (uint16) {
     return _baselinePercentage;
   }
 
@@ -109,30 +115,12 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
       _pausedRate = rate;
       return;
     }
-    internalSetRate(rate.rayMul(_rateScale));
-    emit RateUpdated(rate, _rateScale);
-  }
-
-  function scaleRate(uint256 rate) internal view returns (uint256) {
-    return rate.rayMul(_rateScale);
+    internalSetRate(rate);
+    emit RateUpdated(rate);
   }
 
   function getRate() external view override returns (uint256) {
-    return internalGetRate().rayDiv(_rateScale);
-  }
-
-  function internalSetRateScale(uint256 rateScale) private {
-    require(rateScale > 0, 'rate scale is required');
-    require(rateScale <= type(uint224).max, 'rate scale is excessive');
-    _rateScale = uint224(rateScale);
-  }
-
-  function setRateScale(uint256 rateScale) external override onlyRateAdmin {
-    internalSetRateScale(rateScale);
-  }
-
-  function getRateScale() public view returns (uint256) {
-    return _rateScale;
+    return internalGetRate();
   }
 
   function internalGetRate() internal view virtual returns (uint256);
@@ -173,8 +161,14 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return internalGetReward(holder, limit);
   }
 
-  function calcRewardFor(address holder) external view override returns (uint256, uint32) {
-    return internalCalcReward(holder);
+  function calcRewardFor(address holder, uint32 at)
+    external
+    view
+    override
+    returns (uint256, uint32)
+  {
+    require(at >= uint32(block.timestamp));
+    return internalCalcReward(holder, at);
   }
 
   function internalAllocateReward(
@@ -191,14 +185,24 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     virtual
     returns (uint256, uint32);
 
-  function internalCalcReward(address holder) internal view virtual returns (uint256, uint32);
+  function internalCalcReward(address holder, uint32 at)
+    internal
+    view
+    virtual
+    returns (uint256, uint32);
+
+  function attachedToRewardController() external override onlyController {
+    internalAttachedToRewardController();
+  }
+
+  function internalAttachedToRewardController() internal virtual {}
 
   function isController(address addr) internal view virtual returns (bool) {
     return address(_controller) == addr;
   }
 
   function _onlyController() private view {
-    require(isController(msg.sender), Errors.RW_NOT_REWARD_CONTROLLER);
+    require(isController(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_CONTROLLER);
   }
 
   modifier onlyController() {
@@ -206,17 +210,17 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _;
   }
 
-  function _onlyConfigurator() private view {
-    require(_controller.isConfigurator(msg.sender), Errors.RW_NOT_REWARD_CONFIG_ADMIN);
+  function _onlyConfigAdmin() private view {
+    require(_controller.isConfigAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_ADMIN);
   }
 
-  modifier onlyConfigurator() {
-    _onlyConfigurator();
+  modifier onlyConfigAdmin() {
+    _onlyConfigAdmin();
     _;
   }
 
   function _onlyRateAdmin() private view {
-    require(_controller.isRateAdmin(msg.sender), Errors.RW_NOT_REWARD_RATE_ADMIN);
+    require(_controller.isRateAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN);
   }
 
   modifier onlyRateAdmin() {

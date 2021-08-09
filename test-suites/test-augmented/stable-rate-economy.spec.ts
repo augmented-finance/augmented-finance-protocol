@@ -23,7 +23,7 @@
 //   let _testEnvProvider: ITestEnvWithoutInstances
 //   let _lendingPoolInstance: LendingPoolInstance
 //   let _lendingPoolCoreInstance: LendingPoolCoreInstance
-//   let _aTokenInstances: iATokenBase<ATokenInstance>
+//   let _depositTokenInstances: iATokenBase<ATokenInstance>
 //   let _tokenInstances: iAssetsWithoutETH<MintableERC20Instance>
 
 //   let _daiAddress: string
@@ -58,7 +58,7 @@
 //     ])
 //     _lendingPoolInstance = instances[0]
 //     _lendingPoolCoreInstance = instances[1]
-//     _aTokenInstances = instances[2]
+//     _depositTokenInstances = instances[2]
 //     _tokenInstances = instances[3]
 //     _daiAddress = _tokenInstances.DAI.address
 //     _depositorAddress = await getFirstDepositorAddressOnTests()
@@ -69,7 +69,7 @@
 //   })
 
 //   it("BORROW - Test user cannot borrow using the same currency as collateral", async () => {
-//     const {aDAI: aDaiInstance} = _aTokenInstances
+//     const {aDAI: aDaiInstance} = _depositTokenInstances
 //     const {DAI: daiInstance} = _tokenInstances
 
 //     //mints DAI to depositor
@@ -120,7 +120,7 @@
 //   })
 
 //   it("BORROW - Test user cannot borrow more than 25% of the liquidity available", async () => {
-//     const {aDAI: aDaiInstance} = _aTokenInstances
+//     const {aDAI: aDaiInstance} = _depositTokenInstances
 //     const {DAI: daiInstance} = _tokenInstances
 
 //     //redeem the DAI previously deposited
@@ -150,7 +150,7 @@
 //   })
 
 //   it("BORROW - Test user can still borrow  a currency that he previously deposited as a collateral but he transferred/redeemed", async () => {
-//     const {aDAI: aDaiInstance} = _aTokenInstances
+//     const {aDAI: aDaiInstance} = _depositTokenInstances
 //     const {DAI: daiInstance} = _tokenInstances
 
 //     const user = users[2]

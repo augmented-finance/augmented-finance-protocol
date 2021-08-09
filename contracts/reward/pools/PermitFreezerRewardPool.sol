@@ -11,11 +11,17 @@ import {CalcLinearFreezer} from '../calcs/CalcLinearFreezer.sol';
 import 'hardhat/console.sol';
 
 contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
+  uint256 private _rewardLimit;
+
   constructor(
     IRewardController controller,
     uint256 rewardLimit,
+    uint32 meltDownAt,
     string memory rewardPoolName
-  ) public BasePermitRewardPool(controller, rewardLimit, rewardPoolName) {}
+  ) public BasePermitRewardPool(controller, 0, NO_BASELINE, rewardPoolName) {
+    _rewardLimit = rewardLimit;
+    internalSetMeltDownAt(meltDownAt);
+  }
 
   function getClaimTypeHash() internal pure override returns (bytes32) {
     return
@@ -24,12 +30,16 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
       );
   }
 
-  function setFreezePercentage(uint32 freezePortion) external onlyConfigurator {
+  function setFreezePercentage(uint32 freezePortion) external onlyConfigAdmin {
     internalSetFreezePercentage(freezePortion);
   }
 
-  function setMeltDownAt(uint32 at) external onlyConfigurator {
+  function setMeltDownAt(uint32 at) external onlyConfigAdmin {
     internalSetMeltDownAt(at);
+  }
+
+  function availableReward() public view override returns (uint256) {
+    return _rewardLimit;
   }
 
   function claimRewardByPermit(
@@ -78,13 +88,13 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     return (allocated, uint32(block.timestamp));
   }
 
-  function internalCalcReward(address holder)
+  function internalCalcReward(address holder, uint32 at)
     internal
     view
     override
     returns (uint256 allocated, uint32)
   {
-    (allocated, ) = doCalcByPull(holder, 0, 0, false);
+    (allocated, ) = doCalcByPull(holder, 0, 0, at, false);
     return (allocated, uint32(block.timestamp));
   }
 
@@ -100,5 +110,23 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
       return;
     }
     internalAllocateReward(holder, allocated, since, mode);
+  }
+
+  function internalUpdateFunds(uint256 value) internal override {
+    _rewardLimit = _rewardLimit.sub(value, 'INSUFFICIENT_FUNDS');
+  }
+
+  function internalSetBaselinePercentage(uint16) internal override {
+    revert('UNSUPPORTED');
+  }
+
+  function internalSetRate(uint256 rate) internal override {
+    if (rate != 0) {
+      revert('UNSUPPORTED');
+    }
+  }
+
+  function internalGetRate() internal view override returns (uint256) {
+    return 0;
   }
 }

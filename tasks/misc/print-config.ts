@@ -32,10 +32,7 @@ task('print-config', 'Inits the DRE, to have access to all the plugins')
     console.log('Addresses Providers', providers.join(', '));
     console.log('Market Id: ', await addressProvider.getMarketId());
     console.log('LendingPool Proxy:', await addressProvider.getLendingPool());
-    console.log(
-      'Lending Pool Collateral Manager',
-      await addressProvider.getLendingPoolCollateralManager()
-    );
+    console.log('Lending Pool Extension', await addressProvider.getLendingPoolExtension());
     console.log(
       'Lending Pool Configurator proxy',
       await addressProvider.getLendingPoolConfigurator()
@@ -65,7 +62,7 @@ task('print-config', 'Inits the DRE, to have access to all the plugins')
       'isActive',
       'isFrozen',
     ];
-    const tokensFields = ['aToken', 'stableDebtToken', 'variableDebtToken'];
+    const tokensFields = ['depositToken', 'stableDebtToken', 'variableDebtToken'];
     for (const [symbol, address] of Object.entries(
       getParamPerNetwork(poolConfig.ReserveAssets, network)
     )) {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
@@ -7,17 +8,21 @@ import {SafeERC20} from '../../../dependencies/openzeppelin/contracts/SafeERC20.
 import {IDepositToken} from '../../../interfaces/IDepositToken.sol';
 import {IStableDebtToken} from '../../../interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../../../interfaces/IVariableDebtToken.sol';
-import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
+import {IReserveStrategy} from '../../../interfaces/IReserveStrategy.sol';
+import {IReserveDelegatedStrategy} from '../../../interfaces/IReserveDelegatedStrategy.sol';
 import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
 import {MathUtils} from '../../../tools/math/MathUtils.sol';
 import {WadRayMath} from '../../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../../tools/math/PercentageMath.sol';
 import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../types/DataTypes.sol';
+import {
+  IAaveLendingPool,
+  AaveDataTypes
+} from '../../../dependencies/aave-protocol-v2/contracts/IAaveLendingPool.sol';
 
 /**
  * @title ReserveLogic library
- * @author Aave
  * @notice Implements the logic to update the reserves state
  */
 library ReserveLogic {
@@ -25,6 +30,8 @@ library ReserveLogic {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
+
+  uint256 private constant externalPastLimit = 10 minutes;
 
   /**
    * @dev Emitted when the state of a reserve is updated
@@ -54,7 +61,7 @@ library ReserveLogic {
    * @param reserve The reserve object
    * @return the normalized income. expressed in ray
    **/
-  function getNormalizedIncome(DataTypes.ReserveData storage reserve)
+  function getNormalizedIncome(DataTypes.ReserveData storage reserve, address asset)
     internal
     view
     returns (uint256)
@@ -67,12 +74,14 @@ library ReserveLogic {
       return reserve.liquidityIndex;
     }
 
-    uint256 cumulated =
+    if (reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE != DataTypes.ASSET_TYPE_INTERNAL) {
+      return _getExternalDepositIndex(reserve, asset);
+    }
+
+    return
       MathUtils.calculateLinearInterest(reserve.currentLiquidityRate, timestamp).rayMul(
         reserve.liquidityIndex
       );
-
-    return cumulated;
   }
 
   /**
@@ -90,7 +99,10 @@ library ReserveLogic {
     uint40 timestamp = reserve.lastUpdateTimestamp;
 
     //solium-disable-next-line
-    if (timestamp == uint40(block.timestamp)) {
+    if (
+      timestamp == uint40(block.timestamp) ||
+      reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE != DataTypes.ASSET_TYPE_INTERNAL
+    ) {
       //if the index was updated in the same block, no need to perform any calculation
       return reserve.variableBorrowIndex;
     }
@@ -107,7 +119,35 @@ library ReserveLogic {
    * @dev Updates the liquidity cumulative index and the variable borrow index.
    * @param reserve the reserve object
    **/
-  function updateState(DataTypes.ReserveData storage reserve) internal {
+  function updateStateForDeposit(DataTypes.ReserveData storage reserve, address asset)
+    internal
+    returns (uint256)
+  {
+    if (reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE != DataTypes.ASSET_TYPE_INTERNAL) {
+      return _updateExternalIndexes(reserve, asset);
+    }
+    return _updateState(reserve);
+  }
+
+  /**
+   * @dev Updates the liquidity cumulative index and the variable borrow index.
+   * @param reserve the reserve object
+   **/
+  function updateState(DataTypes.ReserveData storage reserve, address asset) internal {
+    if (reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE != DataTypes.ASSET_TYPE_INTERNAL) {
+      if (reserve.lastUpdateTimestamp < uint40(block.timestamp)) {
+        _updateExternalIndexes(reserve, asset);
+      }
+    } else {
+      _updateState(reserve);
+    }
+  }
+
+  /**
+   * @dev Updates the liquidity cumulative index and the variable borrow index.
+   * @param reserve the reserve object
+   **/
+  function _updateState(DataTypes.ReserveData storage reserve) private returns (uint256) {
     uint256 scaledVariableDebt =
       IVariableDebtToken(reserve.variableDebtTokenAddress).scaledTotalSupply();
     uint256 previousVariableBorrowIndex = reserve.variableBorrowIndex;
@@ -131,6 +171,8 @@ library ReserveLogic {
       newVariableBorrowIndex,
       lastUpdatedTimestamp
     );
+
+    return newLiquidityIndex;
   }
 
   /**
@@ -157,29 +199,22 @@ library ReserveLogic {
 
   /**
    * @dev Initializes a reserve
-   * @param reserve The reserve object
-   * @param aTokenAddress The address of the overlying atoken contract
-   * @param interestRateStrategyAddress The address of the interest rate strategy contract
    **/
-  function init(
-    DataTypes.ReserveData storage reserve,
-    address aTokenAddress,
-    address stableDebtTokenAddress,
-    address variableDebtTokenAddress,
-    address interestRateStrategyAddress
-  ) external {
-    require(reserve.aTokenAddress == address(0), Errors.RL_RESERVE_ALREADY_INITIALIZED);
+  function init(DataTypes.ReserveData storage reserve, DataTypes.InitReserveData calldata data)
+    internal
+  {
+    require(reserve.depositTokenAddress == address(0), Errors.RL_RESERVE_ALREADY_INITIALIZED);
 
-    reserve.liquidityIndex = uint128(WadRayMath.ray());
-    reserve.variableBorrowIndex = uint128(WadRayMath.ray());
-    reserve.aTokenAddress = aTokenAddress;
-    reserve.stableDebtTokenAddress = stableDebtTokenAddress;
-    reserve.variableDebtTokenAddress = variableDebtTokenAddress;
-    reserve.interestRateStrategyAddress = interestRateStrategyAddress;
+    reserve.liquidityIndex = uint128(WadRayMath.RAY);
+    reserve.variableBorrowIndex = uint128(WadRayMath.RAY);
+    reserve.depositTokenAddress = data.depositTokenAddress;
+    reserve.stableDebtTokenAddress = data.stableDebtAddress;
+    reserve.variableDebtTokenAddress = data.variableDebtAddress;
+    reserve.strategy = data.strategy;
+    reserve.reserveFlags = data.reserveFlags;
   }
 
   struct UpdateInterestRatesLocalVars {
-    address stableDebtTokenAddress;
     uint256 availableLiquidity;
     uint256 totalStableDebt;
     uint256 newLiquidityRate;
@@ -192,21 +227,35 @@ library ReserveLogic {
   /**
    * @dev Updates the reserve current stable borrow rate, the current variable borrow rate and the current liquidity rate
    * @param reserve The address of the reserve to be updated
-   * @param liquidityAdded The amount of liquidity added to the protocol (deposit or repay) in the previous action
+   * @param liquidityAdded The amount of liquidity added to the protocol (deposit or repay)
    * @param liquidityTaken The amount of liquidity taken from the protocol (redeem or borrow)
    **/
   function updateInterestRates(
     DataTypes.ReserveData storage reserve,
     address reserveAddress,
-    address aTokenAddress,
+    address depositToken,
     uint256 liquidityAdded,
     uint256 liquidityTaken
   ) internal {
+    if (reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE == DataTypes.ASSET_TYPE_INTERNAL) {
+      _updateInterestRates(reserve, reserveAddress, depositToken, liquidityAdded, liquidityTaken);
+    }
+    // // There is no need to be exactly at external's asset rate when we don't send or receive funds
+    // if (reserve.lastUpdateTimestamp < uint40(block.timestamp) || liquidityAdded != 0 || liquidityTaken != 0) {
+    //   _updateExternalRates(reserve, reserveAddress);
+    // }
+  }
+
+  function _updateInterestRates(
+    DataTypes.ReserveData storage reserve,
+    address reserveAddress,
+    address depositToken,
+    uint256 liquidityAdded,
+    uint256 liquidityTaken
+  ) private {
     UpdateInterestRatesLocalVars memory vars;
 
-    vars.stableDebtTokenAddress = reserve.stableDebtTokenAddress;
-
-    (vars.totalStableDebt, vars.avgStableRate) = IStableDebtToken(vars.stableDebtTokenAddress)
+    (vars.totalStableDebt, vars.avgStableRate) = IStableDebtToken(reserve.stableDebtTokenAddress)
       .getTotalSupplyAndAvgRate();
 
     //calculates the total variable debt locally using the scaled total supply instead
@@ -216,13 +265,13 @@ library ReserveLogic {
       .scaledTotalSupply()
       .rayMul(reserve.variableBorrowIndex);
 
-    (
-      vars.newLiquidityRate,
-      vars.newStableRate,
-      vars.newVariableRate
-    ) = IReserveInterestRateStrategy(reserve.interestRateStrategyAddress).calculateInterestRates(
+    (vars.newLiquidityRate, vars.newStableRate, vars.newVariableRate) = IReserveStrategy(
+      reserve
+        .strategy
+    )
+      .calculateInterestRates(
       reserveAddress,
-      aTokenAddress,
+      depositToken,
       liquidityAdded,
       liquidityTaken,
       vars.totalStableDebt,
@@ -278,7 +327,7 @@ library ReserveLogic {
     uint256 newLiquidityIndex,
     uint256 newVariableBorrowIndex,
     uint40 timestamp
-  ) internal {
+  ) private {
     MintToTreasuryLocalVars memory vars;
 
     vars.reserveFactor = reserve.configuration.getReserveFactor();
@@ -320,7 +369,10 @@ library ReserveLogic {
     vars.amountToMint = vars.totalDebtAccrued.percentMul(vars.reserveFactor);
 
     if (vars.amountToMint != 0) {
-      IDepositToken(reserve.aTokenAddress).mintToTreasury(vars.amountToMint, newLiquidityIndex);
+      IDepositToken(reserve.depositTokenAddress).mintToTreasury(
+        vars.amountToMint,
+        newLiquidityIndex
+      );
     }
   }
 
@@ -337,7 +389,7 @@ library ReserveLogic {
     uint256 liquidityIndex,
     uint256 variableBorrowIndex,
     uint40 timestamp
-  ) internal returns (uint256, uint256) {
+  ) private returns (uint256, uint256) {
     uint256 currentLiquidityRate = reserve.currentLiquidityRate;
 
     uint256 newLiquidityIndex = liquidityIndex;
@@ -369,5 +421,60 @@ library ReserveLogic {
     //solium-disable-next-line
     reserve.lastUpdateTimestamp = uint40(block.timestamp);
     return (newLiquidityIndex, newVariableBorrowIndex);
+  }
+
+  function _updateExternalIndexes(DataTypes.ReserveData storage reserve, address asset)
+    private
+    returns (uint256)
+  {
+    uint40 lastUpdateTimestamp = uint40(block.timestamp);
+    uint128 liquidityIndex;
+
+    if (reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE == DataTypes.ASSET_TYPE_AAVE) {
+      AaveDataTypes.ReserveData memory state =
+        IAaveLendingPool(reserve.strategy).getReserveData(asset);
+
+      reserve.variableBorrowIndex = state.variableBorrowIndex;
+      reserve.currentLiquidityRate = state.currentLiquidityRate;
+      reserve.currentVariableBorrowRate = state.currentVariableBorrowRate;
+      reserve.currentStableBorrowRate = state.currentStableBorrowRate;
+
+      (lastUpdateTimestamp, liquidityIndex) = (state.lastUpdateTimestamp, state.liquidityIndex);
+    } else {
+      IReserveDelegatedStrategy.DelegatedState memory state =
+        IReserveDelegatedStrategy(reserve.strategy).getDelegatedState(asset);
+
+      reserve.variableBorrowIndex = state.variableBorrowIndex;
+      reserve.currentLiquidityRate = state.liquidityRate;
+      reserve.currentVariableBorrowRate = state.variableBorrowRate;
+      reserve.currentStableBorrowRate = state.stableBorrowRate;
+
+      (lastUpdateTimestamp, liquidityIndex) = (state.lastUpdateTimestamp, state.liquidityIndex);
+    }
+
+    if (lastUpdateTimestamp > block.timestamp) {
+      lastUpdateTimestamp = uint40(block.timestamp);
+    } else if (lastUpdateTimestamp < block.timestamp - externalPastLimit) {
+      lastUpdateTimestamp = uint40(block.timestamp - externalPastLimit);
+    }
+
+    (reserve.lastUpdateTimestamp, reserve.liquidityIndex) = (lastUpdateTimestamp, liquidityIndex);
+    return liquidityIndex;
+  }
+
+  // function _updateExternalRates(DataTypes.ReserveData storage reserve, address asset) private {
+  //   // nothing to do - all was updated inside _updateExternalIndexes
+  // }
+
+  function _getExternalDepositIndex(DataTypes.ReserveData storage reserve, address asset)
+    private
+    view
+    returns (uint256)
+  {
+    if (reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE == DataTypes.ASSET_TYPE_AAVE) {
+      return IAaveLendingPool(reserve.strategy).getReserveNormalizedIncome(asset);
+    } else {
+      return IReserveDelegatedStrategy(reserve.strategy).getDelegatedDepositIndex(asset);
+    }
   }
 }

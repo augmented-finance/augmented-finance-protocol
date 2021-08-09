@@ -43,14 +43,18 @@ abstract contract BaseRewardController is
     _rewardMinter = rewardMinter;
   }
 
+  function _initialize(IMarketAccessController ac, IRewardMinter rewardMinter) internal {
+    _remoteAcl = ac;
+    _rewardMinter = rewardMinter;
+  }
+
   function getAccessController() public view override returns (IMarketAccessController) {
     return _remoteAcl;
   }
 
-  function addRewardPool(IManagedRewardPool pool) external override onlyConfigurator {
+  function addRewardPool(IManagedRewardPool pool) external override onlyConfigAdmin {
     require(address(pool) != address(0), 'reward pool required');
     require(_poolMask[address(pool)] == 0, 'already registered');
-    pool.claimRewardFor(address(this), 0); // access check
     require(_poolList.length <= 255, 'too many pools');
 
     uint256 poolMask = 1 << _poolList.length;
@@ -58,10 +62,12 @@ abstract contract BaseRewardController is
     _baselineMask |= poolMask;
     _poolList.push(pool);
 
+    pool.attachedToRewardController(); // access check
+
     emit RewardPoolAdded(address(pool), poolMask);
   }
 
-  function removeRewardPool(IManagedRewardPool pool) external override onlyConfigurator {
+  function removeRewardPool(IManagedRewardPool pool) external override onlyConfigAdmin {
     require(address(pool) != address(0), 'reward pool required');
     uint256 poolMask = _poolMask[address(pool)];
     if (poolMask == 0) {
@@ -125,7 +131,7 @@ abstract contract BaseRewardController is
     return (totalRate, baselineMask);
   }
 
-  function setRewardMinter(IRewardMinter minter) external override onlyConfigurator {
+  function setRewardMinter(IRewardMinter minter) external override onlyConfigAdmin {
     _rewardMinter = minter;
     emit RewardMinterSet(address(minter));
   }
@@ -166,24 +172,29 @@ abstract contract BaseRewardController is
     return _claimReward(holder, mask, holder);
   }
 
-  function claimableReward(address holder) public view returns (uint256 claimable, uint256 extra) {
-    return _calcReward(holder, ~uint256(0));
-  }
-
-  function claimableRewardFor(address holder, uint256 mask)
+  function claimableReward(address holder)
     public
     view
+    override
     returns (uint256 claimable, uint256 extra)
   {
+    return _calcReward(holder, ~uint256(0), uint32(block.timestamp));
+  }
+
+  function claimableRewardFor(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) public view returns (uint256 claimable, uint256 extra) {
     require(holder != address(0), 'holder is required');
-    return _calcReward(holder, mask);
+    return _calcReward(holder, mask, at);
   }
 
   function balanceOf(address holder) external view override returns (uint256) {
     if (holder == address(0)) {
       return 0;
     }
-    (uint256 claimable, uint256 extra) = _calcReward(holder, ~uint256(0));
+    (uint256 claimable, uint256 extra) = _calcReward(holder, ~uint256(0), uint32(block.timestamp));
     return claimable.add(extra);
   }
 
@@ -225,11 +236,11 @@ abstract contract BaseRewardController is
     if (!hasRemoteAcl()) {
       return addr == address(this);
     }
-    return acl_hasAllOf(addr, AccessFlags.REWARD_RATE_ADMIN);
+    return acl_hasAnyOf(addr, AccessFlags.REWARD_RATE_ADMIN | AccessFlags.REWARD_CONFIGURATOR);
   }
 
   function _onlyRateAdmin() private view {
-    require(isRateAdmin(msg.sender), Errors.RW_NOT_REWARD_RATE_ADMIN);
+    require(isRateAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN);
   }
 
   modifier onlyRateAdmin {
@@ -237,28 +248,31 @@ abstract contract BaseRewardController is
     _;
   }
 
-  function isConfigurator(address addr) public view override returns (bool) {
+  function isConfigAdmin(address addr) public view override returns (bool) {
     if (!hasRemoteAcl()) {
       return addr == address(this);
     }
     return acl_hasAnyOf(addr, AccessFlags.REWARD_CONFIGURATOR | AccessFlags.REWARD_CONFIG_ADMIN);
   }
 
-  function _onlyConfigurator() private view {
-    require(isConfigurator(msg.sender), Errors.RW_NOT_REWARD_CONFIG_ADMIN);
+  function _onlyConfigAdmin() private view {
+    require(isConfigAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_ADMIN);
   }
 
-  modifier onlyConfigurator {
-    _onlyConfigurator();
+  modifier onlyConfigAdmin {
+    _onlyConfigAdmin();
     _;
   }
 
-  function _onlyConfiguratorOrAdmin() private view {
-    require(isConfigurator(msg.sender) || isRateAdmin(msg.sender), Errors.RW_NOT_REWARD_RATE_ADMIN);
+  function _onlyConfigOrRateAdmin() private view {
+    require(
+      isConfigAdmin(msg.sender) || isRateAdmin(msg.sender),
+      Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN
+    );
   }
 
-  modifier onlyConfiguratorOrAdmin {
-    _onlyConfiguratorOrAdmin();
+  modifier onlyConfigOrRateAdmin {
+    _onlyConfigOrRateAdmin();
     _;
   }
 
@@ -318,20 +332,20 @@ abstract contract BaseRewardController is
     virtual
     returns (uint256 claimed, uint256 extra);
 
-  function _calcReward(address holder, uint256 mask)
-    private
-    view
-    returns (uint256 claimableAmount, uint256 extraAmount)
-  {
+  function _calcReward(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) private view returns (uint256 claimableAmount, uint256 extraAmount) {
     mask = getClaimMask(holder, mask);
-    return internalCalcClaimableReward(holder, mask);
+    return internalCalcClaimableReward(holder, mask, at);
   }
 
-  function internalCalcClaimableReward(address holder, uint256 mask)
-    internal
-    view
-    virtual
-    returns (uint256 claimableAmount, uint256 extraAmount);
+  function internalCalcClaimableReward(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) internal view virtual returns (uint256 claimableAmount, uint256 extraAmount);
 
   function internalAllocatedByPool(
     address holder,

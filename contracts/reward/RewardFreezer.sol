@@ -23,11 +23,11 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
     BasicRewardController(accessController, rewardMinter)
   {}
 
-  function setFreezePercentage(uint32 freezePortion) external onlyConfigurator {
+  function setFreezePercentage(uint32 freezePortion) external onlyConfigAdmin {
     internalSetFreezePercentage(freezePortion);
   }
 
-  function setMeltDownAt(uint32 at) external onlyConfigurator {
+  function setMeltDownAt(uint32 at) external onlyConfigAdmin {
     internalSetMeltDownAt(at);
   }
 
@@ -65,7 +65,13 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
     uint32 since,
     bool incremental
   ) internal view override returns (uint256 claimableAmount, uint256 frozenReward) {
-    (claimableAmount, frozenReward) = doCalcByPull(holder, allocated, since, incremental);
+    (claimableAmount, frozenReward) = doCalcByPull(
+      holder,
+      allocated,
+      since,
+      uint32(block.timestamp),
+      incremental
+    );
     claimableAmount = claimableAmount.add(_claimableRewards[holder]);
     return (claimableAmount, frozenReward);
   }

@@ -61,12 +61,11 @@ abstract contract BasicRewardController is BaseRewardController {
     return (claimableAmount, delayedAmount);
   }
 
-  function internalCalcClaimableReward(address holder, uint256 mask)
-    internal
-    view
-    override
-    returns (uint256 claimableAmount, uint256 delayedAmount)
-  {
+  function internalCalcClaimableReward(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) internal view override returns (uint256 claimableAmount, uint256 delayedAmount) {
     uint32 since = 0;
     uint256 amountSince = 0;
     bool incremental = false;
@@ -76,7 +75,7 @@ abstract contract BasicRewardController is BaseRewardController {
         continue;
       }
 
-      (uint256 amount_, uint32 since_) = getPool(i).calcRewardFor(holder);
+      (uint256 amount_, uint32 since_) = getPool(i).calcRewardFor(holder, at);
       if (amount_ == 0) {
         continue;
       }

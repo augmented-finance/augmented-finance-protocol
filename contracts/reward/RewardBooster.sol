@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {PercentageMath} from '../tools/math/PercentageMath.sol';
@@ -12,16 +13,22 @@ import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
 import {IManagedRewardBooster} from './interfaces/IRewardController.sol';
 import {IBoostExcessReceiver} from './interfaces/IBoostExcessReceiver.sol';
 import {IBoostRate} from './interfaces/IBoostRate.sol';
-
-import './interfaces/IAutolocker.sol';
+import './interfaces/IRewardExplainer.sol';
+import {AutolockBase} from './autolock/AutolockBase.sol';
+import {AutolockMode} from './interfaces/IAutolocker.sol';
 
 import 'hardhat/console.sol';
 
-contract RewardBooster is IManagedRewardBooster, BaseRewardController {
+contract RewardBooster is
+  IManagedRewardBooster,
+  IRewardExplainer,
+  BaseRewardController,
+  AutolockBase
+{
   using SafeMath for uint256;
   using PercentageMath for uint256;
 
-  mapping(address => uint256) private _boostFactor;
+  mapping(address => uint32) private _boostFactor;
   IManagedRewardPool private _boostPool;
   uint256 private _boostPoolMask;
 
@@ -53,11 +60,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     }
   }
 
-  function setBoostFactor(address pool, uint32 pctFactor)
-    external
-    override
-    onlyConfiguratorOrAdmin
-  {
+  function setBoostFactor(address pool, uint32 pctFactor) external override onlyConfigOrRateAdmin {
     require(getPoolMask(pool) != 0, 'unknown pool');
     require(pool != address(_boostPool), 'factor for the boost pool');
     _boostFactor[pool] = pctFactor;
@@ -67,7 +70,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     return uint32(_boostFactor[pool]);
   }
 
-  function setUpdateBoostPoolRate(bool updateBoostPool) external override onlyConfigurator {
+  function setUpdateBoostPoolRate(bool updateBoostPool) external override onlyConfigAdmin {
     _updateBoostPool = updateBoostPool;
   }
 
@@ -94,7 +97,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     return (totalRate, baselineMask);
   }
 
-  function setBoostPool(address pool) external override onlyConfigurator {
+  function setBoostPool(address pool) external override onlyConfigAdmin {
     if (pool == address(0)) {
       _boostPoolMask = 0;
     } else {
@@ -107,15 +110,11 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     _boostPool = IManagedRewardPool(pool);
   }
 
-  function getBoostPool() external view returns (address) {
-    return address(_boostPool);
+  function getBoostPool() external view override returns (address pool, uint256 mask) {
+    return (address(_boostPool), _boostPoolMask);
   }
 
-  function setBoostExcessTarget(address target, bool mintExcess)
-    external
-    override
-    onlyConfigurator
-  {
+  function setBoostExcessTarget(address target, bool mintExcess) external override onlyConfigAdmin {
     _boostExcessDelegate = target;
     _mintExcess = mintExcess && (target != address(0));
   }
@@ -160,8 +159,8 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
       boostLimit = boostLimit.add(amount_.percentMul(_boostFactor[address(pool)]));
     }
 
-    uint256 boost = _boostRewards[holder];
-    if (boost > 0) {
+    uint256 boostAmount = _boostRewards[holder];
+    if (boostAmount > 0) {
       delete (_boostRewards[holder]);
     }
 
@@ -173,33 +172,30 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
         (boost_, boostSince) = _boostPool.claimRewardFor(holder, type(uint256).max);
       } else {
         uint256 boostLimit_;
-        if (boostLimit > boost) {
-          boostLimit_ = boostLimit - boost;
+        if (boostLimit > boostAmount) {
+          boostLimit_ = boostLimit - boostAmount;
         }
         (boost_, boostSince) = _boostPool.claimRewardFor(holder, boostLimit_);
       }
 
-      boost = boost.add(boost_);
+      boostAmount = boostAmount.add(boost_);
     }
 
-    // console.log('internalClaimAndMintReward', claimableAmount, boostLimit, boost);
-
-    if (boost <= boostLimit) {
-      claimableAmount = claimableAmount.add(boost);
+    if (boostAmount <= boostLimit) {
+      claimableAmount = claimableAmount.add(boostAmount);
     } else {
       claimableAmount = claimableAmount.add(boostLimit);
-      internalStoreBoostExcess(boost - boostLimit, boostSince);
+      internalStoreBoostExcess(boostAmount - boostLimit, boostSince);
     }
 
     return (claimableAmount, 0);
   }
 
-  function internalCalcClaimableReward(address holder, uint256 mask)
-    internal
-    view
-    override
-    returns (uint256 claimableAmount, uint256)
-  {
+  function internalCalcClaimableReward(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) internal view override returns (uint256 claimableAmount, uint256) {
     uint256 boostLimit;
     (claimableAmount, boostLimit) = (
       _workRewards[holder].claimableReward,
@@ -212,7 +208,7 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
       }
 
       IManagedRewardPool pool = getPool(i);
-      (uint256 amount_, ) = pool.calcRewardFor(holder);
+      (uint256 amount_, ) = pool.calcRewardFor(holder, at);
       if (amount_ == 0) {
         continue;
       }
@@ -221,15 +217,15 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
       boostLimit = boostLimit.add(amount_.percentMul(_boostFactor[address(pool)]));
     }
 
-    uint256 boost = _boostRewards[holder];
+    uint256 boostAmount = _boostRewards[holder];
 
     if (_boostPool != IManagedRewardPool(0)) {
-      (uint256 boost_, ) = _boostPool.calcRewardFor(holder);
-      boost = boost.add(boost_);
+      (uint256 boost_, ) = _boostPool.calcRewardFor(holder, at);
+      boostAmount = boostAmount.add(boost_);
     }
 
-    if (boost <= boostLimit) {
-      claimableAmount = claimableAmount.add(boost);
+    if (boostAmount <= boostLimit) {
+      claimableAmount = claimableAmount.add(boostAmount);
     } else {
       claimableAmount = claimableAmount.add(boostLimit);
     }
@@ -254,9 +250,9 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     require(v <= type(uint128).max);
     workReward.claimableReward = uint128(v);
 
-    uint256 factor = _boostFactor[pool];
+    uint32 factor = _boostFactor[pool];
     if (factor != 0) {
-      v = uint256(workReward.boostLimit).add(allocated.mul(factor));
+      v = uint256(workReward.boostLimit).add(allocated.percentMul(factor));
       require(v <= type(uint128).max);
       workReward.boostLimit = uint128(v);
     }
@@ -277,133 +273,16 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     IBoostExcessReceiver(_boostExcessDelegate).receiveBoostExcess(boostExcess, since);
   }
 
-  struct AutolockEntry {
-    uint224 param;
-    AutolockMode mode;
-    uint8 lockDuration;
+  function disableAutolock() external onlyConfigAdmin {
+    internalDisableAutolock();
   }
 
-  mapping(address => AutolockEntry) private _autolocks;
-  AutolockEntry private _defaultAutolock;
-
-  function disableAutolocks() external onlyConfigurator {
-    _defaultAutolock = AutolockEntry(0, AutolockMode.Default, 0);
-    emit RewardAutolockConfigured(address(this), AutolockMode.Default, 0, 0);
-  }
-
-  function setDefaultAutolock(
+  function enableAutolockAndSetDefault(
     AutolockMode mode,
     uint32 lockDuration,
     uint224 param
-  ) external onlyConfigurator {
-    require(mode > AutolockMode.Default);
-
-    _defaultAutolock = AutolockEntry(param, mode, fromDuration(lockDuration));
-    emit RewardAutolockConfigured(address(this), mode, lockDuration, param);
-  }
-
-  function fromDuration(uint32 lockDuration) private pure returns (uint8) {
-    require(lockDuration % 1 weeks == 0, 'duration must be in weeks');
-    uint256 v = lockDuration / 1 weeks;
-    require(v <= 4 * 52, 'duration must be less than 209 weeks');
-    return uint8(v);
-  }
-
-  event RewardAutolockConfigured(
-    address indexed account,
-    AutolockMode mode,
-    uint32 lockDuration,
-    uint224 param
-  );
-
-  function _setAutolock(
-    address account,
-    AutolockMode mode,
-    uint32 lockDuration,
-    uint224 param
-  ) private {
-    _autolocks[account] = AutolockEntry(param, mode, fromDuration(lockDuration));
-    emit RewardAutolockConfigured(account, mode, lockDuration, param);
-  }
-
-  function autolockProlongate(uint32 minLockDuration) external {
-    _setAutolock(msg.sender, AutolockMode.Prolongate, minLockDuration, 0);
-  }
-
-  function autolockAccumulateUnderlying(uint256 maxAmount, uint32 lockDuration) external {
-    require(maxAmount > 0, 'max amount is required');
-    if (maxAmount > type(uint224).max) {
-      maxAmount = type(uint224).max;
-    }
-
-    _setAutolock(msg.sender, AutolockMode.AccumulateUnderlying, lockDuration, uint224(maxAmount));
-  }
-
-  function autolockAccumulateTill(uint256 timestamp, uint32 lockDuration) external {
-    require(timestamp > block.timestamp, 'future timestamp is required');
-    if (timestamp > type(uint224).max) {
-      timestamp = type(uint224).max;
-    }
-    _setAutolock(msg.sender, AutolockMode.AccumulateTill, lockDuration, uint224(timestamp));
-  }
-
-  function autolockKeepUpBalance(uint256 minAmount, uint32 lockDuration) external {
-    require(minAmount > 0, 'min amount is required');
-    require(lockDuration > 0, 'lock duration is required');
-
-    if (minAmount > type(uint224).max) {
-      minAmount = type(uint224).max;
-    }
-    _setAutolock(msg.sender, AutolockMode.KeepUpBalance, lockDuration, uint224(minAmount));
-  }
-
-  function autolockDefault() external {
-    _setAutolock(msg.sender, AutolockMode.Default, 0, 0);
-  }
-
-  function autolockStop() external {
-    _setAutolock(msg.sender, AutolockMode.Stop, 0, 0);
-  }
-
-  function autolockOf(address account)
-    public
-    view
-    returns (
-      AutolockMode mode,
-      uint32 lockDuration,
-      uint256 param
-    )
-  {
-    AutolockEntry memory entry = _autolocks[account];
-    if (entry.mode == AutolockMode.Default) {
-      entry = _defaultAutolock;
-    }
-    return (entry.mode, entry.lockDuration * 1 weeks, entry.param);
-  }
-
-  function applyAutolock(
-    address holder,
-    uint256 amount,
-    AutolockEntry memory entry
-  ) private returns (uint256) {
-    (address receiver, uint256 lockAmount, bool stop) =
-      IAutolocker(address(_boostPool)).applyAutolock(
-        holder,
-        amount,
-        entry.mode,
-        entry.lockDuration * 1 weeks,
-        entry.param
-      );
-
-    if (stop) {
-      _setAutolock(msg.sender, AutolockMode.Stop, 0, 0);
-    }
-
-    if (receiver != address(0) && lockAmount > 0) {
-      internalMint(receiver, lockAmount, true);
-      return lockAmount;
-    }
-    return 0;
+  ) external onlyConfigAdmin {
+    internalSetDefaultAutolock(mode, lockDuration, param);
   }
 
   function internalClaimed(
@@ -411,28 +290,83 @@ contract RewardBooster is IManagedRewardBooster, BaseRewardController {
     address mintTo,
     uint256 amount
   ) internal override returns (uint256 lockAmount) {
-    if (address(_boostPool) == address(0)) {
-      internalMint(mintTo, amount, false);
-      return 0;
+    address lockReceiver;
+    (lockAmount, lockReceiver) = internalApplyAutolock(address(_boostPool), holder, amount);
+    if (lockAmount > 0) {
+      amount = amount.sub(lockAmount);
+      internalMint(lockReceiver, lockAmount, true);
     }
-
-    AutolockEntry memory entry = _autolocks[holder];
-    if (entry.mode == AutolockMode.Stop || _defaultAutolock.mode == AutolockMode.Default) {
+    if (amount > 0) {
       internalMint(mintTo, amount, false);
-      return 0;
     }
+    return lockAmount;
+  }
 
-    if (entry.mode == AutolockMode.Default) {
-      entry = _defaultAutolock;
-      if (entry.mode == AutolockMode.Stop) {
-        internalMint(mintTo, amount, false);
-        return 0;
+  function explainReward(address holder, uint32 at)
+    external
+    view
+    override
+    returns (RewardExplained memory)
+  {
+    require(at >= uint32(block.timestamp));
+    return internalExplainReward(holder, ~uint256(0), at);
+  }
+
+  function internalExplainReward(
+    address holder,
+    uint256 mask,
+    uint32 at
+  ) internal view returns (RewardExplained memory r) {
+    mask = getClaimMask(holder, mask) | _boostPoolMask;
+
+    (r.amountClaimable, r.boostLimit) = (
+      _workRewards[holder].claimableReward,
+      _workRewards[holder].boostLimit
+    );
+
+    uint256 n;
+    for (uint256 mask_ = mask; mask_ != 0; mask_ >>= 1) {
+      if (mask_ & 1 != 0) {
+        n++;
       }
     }
+    r.allocations = new RewardExplainEntry[](n);
 
-    lockAmount = applyAutolock(holder, amount, entry);
-    internalMint(mintTo, amount.sub(lockAmount), false);
+    n = 0;
+    for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
+      if (mask & 1 == 0) {
+        continue;
+      }
 
-    return lockAmount;
+      IManagedRewardPool pool = getPool(i);
+      uint256 amount_;
+      (amount_, r.allocations[n].since) = pool.calcRewardFor(holder, at);
+
+      r.allocations[n].pool = address(pool);
+      r.allocations[n].amount = amount_;
+
+      if (pool == _boostPool) {
+        r.allocations[n].rewardType = RewardType.BoostReward;
+        r.maxBoost = _boostRewards[holder] + amount_;
+      } else {
+        r.allocations[n].rewardType = RewardType.WorkReward;
+        r.allocations[n].factor = _boostFactor[address(pool)];
+
+        if (amount_ > 0) {
+          r.amountClaimable = r.amountClaimable.add(amount_);
+          r.boostLimit = r.boostLimit.add(amount_.percentMul(r.allocations[n].factor));
+        }
+      }
+
+      n++;
+    }
+
+    if (r.maxBoost <= r.boostLimit) {
+      r.amountClaimable = r.amountClaimable.add(r.maxBoost);
+    } else {
+      r.amountClaimable = r.amountClaimable.add(r.boostLimit);
+    }
+
+    return r;
   }
 }

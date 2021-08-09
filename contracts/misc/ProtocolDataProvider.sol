@@ -12,12 +12,16 @@ import {IVariableDebtToken} from '../interfaces/IVariableDebtToken.sol';
 import {ReserveConfiguration} from '../protocol/libraries/configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../protocol/libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
-import {IReserveInterestRateStrategy} from '../interfaces/IReserveInterestRateStrategy.sol';
+import {IReserveStrategy} from '../interfaces/IReserveStrategy.sol';
 import {IPoolAddressProvider} from '../interfaces/IPoolAddressProvider.sol';
 import {IUiPoolDataProvider} from './interfaces/IUiPoolDataProvider.sol';
 import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
 import {IDepositToken} from '../interfaces/IDepositToken.sol';
 import {IDerivedToken} from '../interfaces/IDerivedToken.sol';
+import {IRewardedToken} from '../interfaces/IRewardedToken.sol';
+import {IManagedRewardPool} from '../reward/interfaces/IManagedRewardPool.sol';
+import '../reward/interfaces/IRewardExplainer.sol';
+
 import {IStakeConfigurator} from '../protocol/stake/interfaces/IStakeConfigurator.sol';
 import {IStakeToken} from '../protocol/stake/interfaces/IStakeToken.sol';
 
@@ -34,6 +38,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     address token;
     // priceToken == 0 for a non-transferrable token
     address priceToken;
+    address rewardPool;
     string tokenSymbol;
     address underlying;
     uint8 decimals;
@@ -76,34 +81,43 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
 
     tokens = new TokenDescription[](tokenCount);
 
+    tokenCount = 0;
     address token = ADDRESS_PROVIDER.getRewardToken();
-    tokens[0] = TokenDescription(
-      token,
-      token,
-      IERC20Detailed(token).symbol(),
-      address(0),
-      IERC20Detailed(token).decimals(),
-      TokenType.Reward,
-      true
-    );
+    if (token != address(0)) {
+      tokens[tokenCount] = TokenDescription(
+        token,
+        token,
+        address(0),
+        IERC20Detailed(token).symbol(),
+        address(0),
+        IERC20Detailed(token).decimals(),
+        TokenType.Reward,
+        true
+      );
+      tokenCount++;
+    }
 
     token = ADDRESS_PROVIDER.getRewardStakeToken();
-    tokens[1] = TokenDescription(
-      token,
-      address(0),
-      IERC20Detailed(token).symbol(),
-      tokens[0].token,
-      IERC20Detailed(token).decimals(),
-      TokenType.RewardStake,
-      true
-    );
-    tokenCount = 2;
+    if (token != address(0)) {
+      tokens[tokenCount] = TokenDescription(
+        token,
+        address(0),
+        token,
+        IERC20Detailed(token).symbol(),
+        tokens[0].token,
+        IERC20Detailed(token).decimals(),
+        TokenType.RewardStake,
+        true
+      );
+      tokenCount++;
+    }
 
     for (uint256 i = 0; i < reserveList.length; i++) {
       token = reserveList[i];
       DataTypes.ReserveData memory reserveData = pool.getReserveData(token);
       (bool isActive, , bool canBorrow, bool canBorrowStable) =
         reserveData.configuration.getFlagsMemory();
+
       canBorrow = isActive && canBorrow;
       canBorrowStable = canBorrowStable && canBorrow;
 
@@ -113,6 +127,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         tokens[tokenCount] = TokenDescription(
           token,
           token,
+          address(0),
           IERC20Detailed(token).symbol(),
           address(0),
           decimals,
@@ -122,10 +137,12 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         tokenCount++;
       }
 
+      address subToken = reserveData.depositTokenAddress;
       tokens[tokenCount] = TokenDescription(
-        reserveData.aTokenAddress,
-        reserveData.aTokenAddress,
-        IERC20Detailed(reserveData.aTokenAddress).symbol(),
+        subToken,
+        subToken,
+        IRewardedToken(subToken).getIncentivesController(),
+        IERC20Detailed(subToken).symbol(),
         token,
         decimals,
         TokenType.Deposit,
@@ -134,10 +151,12 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       tokenCount++;
 
       if (reserveData.variableDebtTokenAddress != address(0)) {
+        subToken = reserveData.variableDebtTokenAddress;
         tokens[tokenCount] = TokenDescription(
-          reserveData.variableDebtTokenAddress,
+          subToken,
           address(0),
-          IERC20Detailed(reserveData.variableDebtTokenAddress).symbol(),
+          IRewardedToken(subToken).getIncentivesController(),
+          IERC20Detailed(subToken).symbol(),
           token,
           decimals,
           TokenType.VariableDebt,
@@ -147,10 +166,12 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       }
 
       if (reserveData.stableDebtTokenAddress != address(0)) {
+        subToken = reserveData.stableDebtTokenAddress;
         tokens[tokenCount] = TokenDescription(
-          reserveData.stableDebtTokenAddress,
+          subToken,
           address(0),
-          IERC20Detailed(reserveData.stableDebtTokenAddress).symbol(),
+          IRewardedToken(subToken).getIncentivesController(),
+          IERC20Detailed(subToken).symbol(),
           token,
           decimals,
           TokenType.StableDebt,
@@ -165,6 +186,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       tokens[tokenCount] = TokenDescription(
         token,
         address(0),
+        IRewardedToken(token).getIncentivesController(),
         IERC20Detailed(token).symbol(),
         IDerivedToken(token).UNDERLYING_ASSET_ADDRESS(),
         IERC20Detailed(token).decimals(),
@@ -212,7 +234,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         tokenCount++;
       }
 
-      tokens[tokenCount] = reserveData.aTokenAddress;
+      tokens[tokenCount] = reserveData.depositTokenAddress;
       tokenCount++;
 
       if (reserveData.variableDebtTokenAddress != address(0)) {
@@ -246,7 +268,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       } else {
         DataTypes.ReserveData memory reserveData = pool.getReserveData(reserves[i]);
         if (tt == TokenType.Deposit) {
-          token = reserveData.aTokenAddress;
+          token = reserveData.depositTokenAddress;
         } else if (tt == TokenType.VariableDebt) {
           token = reserveData.variableDebtTokenAddress;
         } else if (tt == TokenType.StableDebt) {
@@ -320,7 +342,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
 
     return (
-      IERC20Detailed(asset).balanceOf(reserve.aTokenAddress),
+      IERC20Detailed(asset).balanceOf(reserve.depositTokenAddress),
       IERC20Detailed(reserve.stableDebtTokenAddress).totalSupply(),
       IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply(),
       reserve.currentLiquidityRate,
@@ -354,7 +376,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     DataTypes.UserConfigurationMap memory userConfig =
       ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getUserConfiguration(user);
 
-    currentDepositBalance = IERC20Detailed(reserve.aTokenAddress).balanceOf(user);
+    currentDepositBalance = IERC20Detailed(reserve.depositTokenAddress).balanceOf(user);
     currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);
     currentStableDebt = IERC20Detailed(reserve.stableDebtTokenAddress).balanceOf(user);
     principalStableDebt = IStableDebtToken(reserve.stableDebtTokenAddress).principalBalanceOf(user);
@@ -380,13 +402,13 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
 
     return (
-      reserve.aTokenAddress,
+      reserve.depositTokenAddress,
       reserve.stableDebtTokenAddress,
       reserve.variableDebtTokenAddress
     );
   }
 
-  function getInterestRateStrategySlopes(IReserveInterestRateStrategy interestRateStrategy)
+  function getInterestRateStrategySlopes(IReserveStrategy interestRateStrategy)
     internal
     view
     returns (
@@ -462,10 +484,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       reserveData.variableBorrowRate = baseData.currentVariableBorrowRate;
       reserveData.stableBorrowRate = baseData.currentStableBorrowRate;
       reserveData.lastUpdateTimestamp = baseData.lastUpdateTimestamp;
-      reserveData.depositTokenAddress = baseData.aTokenAddress;
+      reserveData.depositTokenAddress = baseData.depositTokenAddress;
       reserveData.stableDebtTokenAddress = baseData.stableDebtTokenAddress;
       reserveData.variableDebtTokenAddress = baseData.variableDebtTokenAddress;
-      reserveData.interestRateStrategyAddress = baseData.interestRateStrategyAddress;
+      reserveData.strategy = baseData.strategy;
       reserveData.priceInEth = oracle.getAssetPrice(reserveData.pricingAsset);
 
       reserveData.availableLiquidity = IERC20Detailed(reserveData.underlyingAsset).balanceOf(
@@ -482,7 +504,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
 
       // reserve configuration
 
-      // we're getting this info from the aToken, because some of assets can be not compliant with ETC20Detailed
+      // we're getting this info from the depositToken, because some of assets can be not compliant with ETC20Detailed
       reserveData.symbol = IERC20Detailed(reserveData.depositTokenAddress).symbol();
       reserveData.name = '';
 
@@ -505,9 +527,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         reserveData.variableRateSlope2,
         reserveData.stableRateSlope1,
         reserveData.stableRateSlope2
-      ) = getInterestRateStrategySlopes(
-        IReserveInterestRateStrategy(reserveData.interestRateStrategyAddress)
-      );
+      ) = getInterestRateStrategySlopes(IReserveStrategy(reserveData.strategy));
 
       if (user != address(0)) {
         // user reserve data
@@ -644,5 +664,31 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     }
 
     return (tokens, balances, tokenCount);
+  }
+
+  function explainReward(address holder, uint32 minDuration)
+    external
+    view
+    returns (RewardExplained memory, uint32 at)
+  {
+    IRewardExplainer re =
+      IRewardExplainer(ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_CONTROLLER));
+    at = uint32(block.timestamp) + minDuration;
+    return (re.explainReward(holder, at), at);
+  }
+
+  function rewardPoolNames(address[] calldata pools, uint256 ignoreMask)
+    external
+    view
+    returns (string[] memory names)
+  {
+    names = new string[](pools.length);
+    for (uint256 i = 0; i < pools.length; (i, ignoreMask) = (i + 1, ignoreMask >> 1)) {
+      if (ignoreMask & 1 != 0 || pools[i] == address(0)) {
+        continue;
+      }
+      names[i] = IManagedRewardPool(pools[i]).getPoolName();
+    }
+    return names;
   }
 }

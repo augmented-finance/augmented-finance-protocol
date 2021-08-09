@@ -67,7 +67,7 @@ export const getReserveData = async (
     principalStableDebt: new BigNumber(principalStableDebt.toString()),
     scaledVariableDebt: new BigNumber(scaledVariableDebt.toString()),
     address: reserve,
-    aTokenAddress: tokenAddresses.depositTokenAddress,
+    depositTokenAddress: tokenAddresses.depositTokenAddress,
     symbol,
     decimals,
     marketStableRate: new BigNumber(rate),
@@ -120,8 +120,8 @@ const getDepositTokenUserData = async (
   const depositTokenAddress: string = (await helpersContract.getReserveTokensAddresses(reserve))
     .depositTokenAddress;
 
-  const aToken = await getDepositToken(depositTokenAddress);
+  const depositToken = await getDepositToken(depositTokenAddress);
 
-  const scaledBalance = await aToken.scaledBalanceOf(user);
+  const scaledBalance = await depositToken.scaledBalanceOf(user);
   return scaledBalance.toString();
 };

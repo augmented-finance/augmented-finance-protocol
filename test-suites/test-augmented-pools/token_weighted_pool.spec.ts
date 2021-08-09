@@ -5,7 +5,7 @@ import rawBRE, { ethers } from 'hardhat';
 
 import {
   getMockAgfToken,
-  getRewardController,
+  getMockRewardFreezer,
   getTokenWeightedRewardPoolAGFSeparate,
 } from '../../helpers/contracts-getters';
 
@@ -38,7 +38,7 @@ describe('Token weighted reward pool tests', () => {
     blkBeforeDeploy = await takeSnapshot();
     [root, user1, user2] = await ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
-    rc = await getRewardController();
+    rc = await getMockRewardFreezer();
     wrp = await getTokenWeightedRewardPoolAGFSeparate();
     agf = await getMockAgfToken();
   });

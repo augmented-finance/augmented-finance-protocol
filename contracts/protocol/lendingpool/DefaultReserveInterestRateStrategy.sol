@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IReserveInterestRateStrategy} from '../../interfaces/IReserveInterestRateStrategy.sol';
+import {IReserveStrategy} from '../../interfaces/IReserveStrategy.sol';
 import {WadRayMath} from '../../tools/math/WadRayMath.sol';
 import {PercentageMath} from '../../tools/math/PercentageMath.sol';
 import {IPriceOracleProvider} from '../../interfaces/IPriceOracleProvider.sol';
@@ -16,7 +16,7 @@ import 'hardhat/console.sol';
  * @dev The model of interest rate is based on 2 slopes, one before the `OPTIMAL_UTILIZATION_RATE`
  * point of utilization and another from that one to 100%
  **/
-contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
+contract DefaultReserveInterestRateStrategy is IReserveStrategy {
   using WadRayMath for uint256;
   using SafeMath for uint256;
   using PercentageMath for uint256;
@@ -108,7 +108,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
    **/
   function calculateInterestRates(
     address reserve,
-    address aToken,
+    address depositToken,
     uint256 liquidityAdded,
     uint256 liquidityTaken,
     uint256 totalStableDebt,
@@ -125,7 +125,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
       uint256
     )
   {
-    uint256 availableLiquidity = IERC20(reserve).balanceOf(aToken);
+    uint256 availableLiquidity = IERC20(reserve).balanceOf(depositToken);
     //avoid stack too deep
     availableLiquidity = availableLiquidity.add(liquidityAdded).sub(liquidityTaken);
 
@@ -153,7 +153,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
    * NOTE This function is kept for compatibility with the previous DefaultInterestRateStrategy interface.
    * New protocol implementation uses the new calculateInterestRates() interface
    * @param reserve The address of the reserve
-   * @param availableLiquidity The liquidity available in the corresponding aToken
+   * @param availableLiquidity The liquidity available in the corresponding depositToken
    * @param totalStableDebt The total borrowed from the reserve a stable rate
    * @param totalVariableDebt The total borrowed from the reserve at a variable rate
    * @param averageStableBorrowRate The weighted average of all the stable rate loans
@@ -170,7 +170,6 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
   )
     public
     view
-    override
     returns (
       uint256,
       uint256,

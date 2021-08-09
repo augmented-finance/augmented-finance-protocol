@@ -57,11 +57,11 @@ library GenericLogic {
     address user,
     uint256 amount,
     mapping(address => DataTypes.ReserveData) storage reservesData,
-    DataTypes.UserConfigurationMap calldata userConfig,
+    DataTypes.UserConfigurationMap memory userConfig,
     mapping(uint256 => address) storage reserves,
     uint256 reservesCount,
     address oracle
-  ) external view returns (bool) {
+  ) internal view returns (bool) {
     if (!userConfig.isBorrowingAny() || !userConfig.isUsingAsCollateral(reservesData[asset].id)) {
       return true;
     }
@@ -186,7 +186,9 @@ library GenericLogic {
       vars.reserveUnitPrice = IPriceOracleGetter(oracle).getAssetPrice(vars.currentReserveAddress);
 
       if (vars.liquidationThreshold != 0 && userConfig.isUsingAsCollateral(vars.i)) {
-        vars.compoundedLiquidityBalance = IERC20(currentReserve.aTokenAddress).balanceOf(user);
+        vars.compoundedLiquidityBalance = IERC20(currentReserve.depositTokenAddress).balanceOf(
+          user
+        );
 
         uint256 liquidityBalanceETH =
           vars.reserveUnitPrice.mul(vars.compoundedLiquidityBalance).div(vars.tokenUnit);

@@ -257,8 +257,8 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
   }
 
   /**
-   * @dev Get the aToken associated to the asset
-   * @return address of the aToken
+   * @dev Get the depositToken associated to the asset
+   * @return address of the depositToken
    */
   function _getReserveData(address asset) internal view returns (DataTypes.ReserveData memory) {
     return LENDING_POOL.getReserveData(asset);
@@ -267,7 +267,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
   /**
    * @dev Pull the ATokens from the user
    * @param reserve address of the asset
-   * @param reserveAToken address of the aToken of the reserve
+   * @param reserveAToken address of the depositToken of the reserve
    * @param user address
    * @param amount of tokens to be transferred to the contract
    * @param permitSignature struct containing the permit signature

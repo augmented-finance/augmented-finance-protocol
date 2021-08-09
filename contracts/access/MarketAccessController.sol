@@ -15,7 +15,7 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
 
   constructor(string memory marketId)
     public
-    AccessController(AccessFlags.SINGLETONS, AccessFlags.ROLES, 0)
+    AccessController(AccessFlags.SINGLETONS, AccessFlags.ROLES, AccessFlags.PROXIES)
   {
     _setMarketId(marketId);
   }
@@ -50,29 +50,11 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
   }
 
   /**
-   * @dev Updates the implementation of the LendingPool, or creates the proxy
-   * setting the new `pool` implementation on the first time calling it
-   * @param pool The new LendingPool implementation
-   **/
-  function setLendingPoolImpl(address pool) external override onlyAdmin {
-    setAddressAsProxy(AccessFlags.LENDING_POOL, pool);
-  }
-
-  /**
    * @dev Returns the address of the LendingPoolConfigurator proxy
    * @return The LendingPoolConfigurator proxy address
    **/
   function getLendingPoolConfigurator() external view override returns (address) {
     return getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR);
-  }
-
-  /**
-   * @dev Updates the implementation of the LendingPoolConfigurator, or creates the proxy
-   * setting the new `configurator` implementation on the first time calling it
-   * @param configurator The new LendingPoolConfigurator implementation
-   **/
-  function setLendingPoolConfiguratorImpl(address configurator) external override onlyAdmin {
-    setAddressAsProxy(AccessFlags.LENDING_POOL_CONFIGURATOR, configurator);
   }
 
   /**
@@ -88,24 +70,12 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
     return getAddress(AccessFlags.PRICE_ORACLE);
   }
 
-  function setPriceOracle(address priceOracle) external override onlyAdmin {
-    setAddress(AccessFlags.PRICE_ORACLE, priceOracle);
-  }
-
   function getLendingRateOracle() external view override returns (address) {
     return getAddress(AccessFlags.LENDING_RATE_ORACLE);
   }
 
-  function setLendingRateOracle(address lendingRateOracle) external override onlyAdmin {
-    setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle);
-  }
-
   function getTreasury() external view override returns (address) {
     return getAddress(AccessFlags.TREASURY);
-  }
-
-  function setTreasuryImpl(address treasury) external override onlyAdmin {
-    setAddressAsProxy(AccessFlags.TREASURY, treasury);
   }
 
   function getRewardToken() external view override returns (address) {
@@ -126,25 +96,5 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
 
   function getStakeConfigurator() external view override returns (address) {
     return getAddress(AccessFlags.STAKE_CONFIGURATOR);
-  }
-
-  function setRewardTokenImpl(address addr) external override onlyAdmin {
-    setAddressAsProxy(AccessFlags.REWARD_TOKEN, addr);
-  }
-
-  function setRewardStakeTokenImpl(address addr) external override {
-    setAddressAsProxy(AccessFlags.REWARD_STAKE_TOKEN, addr);
-  }
-
-  function setRewardController(address addr) external override {
-    setAddress(AccessFlags.REWARD_CONTROLLER, addr);
-  }
-
-  function setRewardConfiguratorImpl(address addr) external override {
-    setAddressAsProxy(AccessFlags.REWARD_CONFIGURATOR, addr);
-  }
-
-  function setStakeConfiguratorImpl(address addr) external override {
-    setAddressAsProxy(AccessFlags.STAKE_CONFIGURATOR, addr);
   }
 }

@@ -2,20 +2,17 @@
 pragma solidity ^0.6.12;
 
 import 'hardhat/console.sol';
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeERC20} from '../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {Context} from '../dependencies/openzeppelin/contracts/Context.sol';
 import {Ownable} from '../dependencies/openzeppelin/contracts/Ownable.sol';
 import {Errors} from '../tools/Errors.sol';
 
 import {BitUtils} from '../tools/math/BitUtils.sol';
+import {Address} from '../dependencies/openzeppelin/contracts/Address.sol';
 
 // prettier-ignore
 import {InitializableImmutableAdminUpgradeabilityProxy} from '../tools/upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
 import {IProxy} from '../tools/upgradeability/IProxy.sol';
 
 import {IManagedAccessController} from './interfaces/IAccessController.sol';
-import {AccessFlags} from './AccessFlags.sol';
 
 contract AccessController is Ownable, IManagedAccessController {
   using BitUtils for uint256;
@@ -290,7 +287,7 @@ contract AccessController is Ownable, IManagedAccessController {
    * @param newAddress The address to set
    */
   function setAddress(uint256 id, address newAddress) public override onlyAdmin {
-    require(_proxies & id == 0, 'use of setAddressAsProxy is required');
+    require(_proxies & id == 0, 'setAddressAsProxy is required');
     _internalSetAddress(id, newAddress);
     emit AddressSet(id, newAddress, false);
   }
@@ -300,7 +297,6 @@ contract AccessController is Ownable, IManagedAccessController {
     if (_singletons & id == 0) {
       require(_nonSingletons & id == 0, 'id is not a singleton');
       _singletons |= id;
-      console.log('_internalSetAddress', newAddress, id);
     }
 
     address prev = _addresses[id];
@@ -308,6 +304,7 @@ contract AccessController is Ownable, IManagedAccessController {
       _masks[prev] = _masks[prev] & ~id;
     }
     if (newAddress != address(0)) {
+      require(Address.isContract(newAddress), 'must be contract');
       _masks[newAddress] = _masks[newAddress] | id;
     }
     _addresses[id] = newAddress;
@@ -386,6 +383,7 @@ contract AccessController is Ownable, IManagedAccessController {
     address payable proxyAddress = payable(getAddress(id));
 
     if (proxyAddress != address(0)) {
+      require(_proxies & id != 0, 'use of setAddress is required');
       InitializableImmutableAdminUpgradeabilityProxy(proxyAddress).upgradeToAndCall(
         newAddress,
         params

@@ -4,9 +4,9 @@ import {
   deployTreasuryImpl,
 } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
-import { ConfigNames, getReservesConfigByPool, loadPoolConfig } from '../../helpers/configuration';
+import { ConfigNames, getReservesTestConfig, loadPoolConfig } from '../../helpers/configuration';
 
-import { tEthereumAddress, LendingPools } from '../../helpers/types';
+import { tEthereumAddress } from '../../helpers/types';
 import { filterMapBy } from '../../helpers/misc-utils';
 import { configureReservesByHelper, initReservesByHelper } from '../../helpers/init-helpers';
 import { getAllTokenAddresses } from '../../helpers/mock-helpers';
@@ -33,18 +33,25 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
     const dataHelper = await deployProtocolDataProvider(addressesProvider.address, verify);
     await addressesProvider.setAddress(AccessFlags.DATA_HELPER, dataHelper.address);
 
-    const reservesParams = getReservesConfigByPool(LendingPools.augmented);
+    const reservesParams = getReservesTestConfig();
 
-    const treasuryImpl = await deployTreasuryImpl();
-    addressesProvider.setTreasuryImpl(treasuryImpl.address);
-    const treasuryAddress = treasuryImpl.address;
+    const treasuryImpl = await deployTreasuryImpl(false, false);
+    await addressesProvider.setAddressAsProxy(AccessFlags.TREASURY, treasuryImpl.address);
+    const treasuryAddress = await addressesProvider.getTreasury();
 
     await initReservesByHelper(
+      addressesProvider,
       reservesParams,
       protoPoolReservesAddresses,
       Names,
+      false,
       treasuryAddress,
       verify
     );
-    await configureReservesByHelper(reservesParams, protoPoolReservesAddresses, dataHelper);
+    await configureReservesByHelper(
+      addressesProvider,
+      reservesParams,
+      protoPoolReservesAddresses,
+      dataHelper
+    );
   });

@@ -1,28 +1,20 @@
-import {
-  eContractid,
-  eEthereumNetwork,
-  eNetwork,
-  iMultiPoolsAssets,
-  IReserveParams,
-  ITokenNames,
-  tEthereumAddress,
-} from './types';
+import { eContractid, IReserveParams, ITokenNames, tEthereumAddress } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
-import { chunk, waitForTx } from './misc-utils';
-import { getMarketAddressController, getLendingPoolConfiguratorProxy } from './contracts-getters';
-import { registerContractInJsonDb } from './contracts-helpers';
-import { BigNumber, BigNumberish, Signer } from 'ethers';
+import { chunk, falsyOrZeroAddress, waitForTx } from './misc-utils';
+import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contracts-getters';
+import { BigNumber, BigNumberish } from 'ethers';
 import {
-  deployDefaultReserveInterestRateStrategy,
   deployDelegationAwareDepositToken,
   deployDelegationAwareDepositTokenImpl,
   deployDepositToken,
   deployDepositTokenImpl,
-  deployStableDebtToken,
+  deployReserveInterestRateStrategy,
   deployStableDebtTokenImpl,
   deployVariableDebtTokenImpl,
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
+import { MarketAccessController } from '../types';
+import { has } from 'underscore';
 
 export const chooseDepositTokenDeployment = (id: eContractid) => {
   switch (id) {
@@ -31,21 +23,19 @@ export const chooseDepositTokenDeployment = (id: eContractid) => {
     case eContractid.DelegationAwareDepositTokenImpl:
       return deployDelegationAwareDepositToken;
     default:
-      throw Error(`Missing aToken deployment script for: ${id}`);
+      throw Error(`Missing depositToken deployment script for: ${id}`);
   }
 };
 
 export const initReservesByHelper = async (
-  reservesParams: iMultiPoolsAssets<IReserveParams>,
+  addressProvider: MarketAccessController,
+  reservesParams: { [symbol: string]: IReserveParams },
   tokenAddresses: { [symbol: string]: tEthereumAddress },
   names: ITokenNames,
+  skipExistingAssets: boolean,
   treasuryAddress: tEthereumAddress,
   verify: boolean
-): Promise<BigNumber> => {
-  let gasUsage = BigNumber.from('0');
-
-  const addressProvider = await getMarketAddressController();
-
+) => {
   // CHUNK CONFIGURATION
   const initChunks = 1;
 
@@ -55,21 +45,22 @@ export const initReservesByHelper = async (
   let reserveSymbols: string[] = [];
 
   let initInputParams: {
-    aTokenImpl: string;
+    depositTokenImpl: string;
     stableDebtTokenImpl: string;
     variableDebtTokenImpl: string;
     underlyingAssetDecimals: BigNumberish;
-    interestRateStrategyAddress: string;
+    strategy: string;
     underlyingAsset: string;
     treasury: string;
     incentivesController: string;
     underlyingAssetName: string;
-    aTokenName: string;
-    aTokenSymbol: string;
+    depositTokenName: string;
+    depositTokenSymbol: string;
     variableDebtTokenName: string;
     variableDebtTokenSymbol: string;
     stableDebtTokenName: string;
     stableDebtTokenSymbol: string;
+    reserveFlags: BigNumberish;
     params: string;
   }[] = [];
 
@@ -85,36 +76,31 @@ export const initReservesByHelper = async (
   let rateStrategies: Record<string, typeof strategyRates> = {};
   let strategyAddresses: Record<string, tEthereumAddress> = {};
   let strategyAddressPerAsset: Record<string, string> = {};
-  let depositTokenType: Record<string, boolean> = {};
-  let delegationAwareATokenImplementationAddress = '';
+  let depositTokenType: Record<string, string> = {};
 
-  console.log('deployStableDebtTokenImpl');
-  const stableDebtTokenImpl = await deployStableDebtTokenImpl(verify);
-  const variableDebtTokenImpl = await deployVariableDebtTokenImpl(verify);
+  const existingAssets = new Set<string>();
 
-  console.log('deployDepositTokenImpl');
-  const depositTokenImplementationAddress = (await deployDepositTokenImpl(verify)).address;
-
-  const delegatedAwareReserves = Object.entries(reservesParams).filter(
-    ([_, { aTokenImpl }]) => aTokenImpl === eContractid.DelegationAwareDepositTokenImpl
-  ) as [string, IReserveParams][];
-
-  if (delegatedAwareReserves.length > 0) {
-    console.log('\tdeployDelegationAwareDepositTokenImpl')
-    const delegationAwareATokenImplementation = await deployDelegationAwareDepositTokenImpl(verify);
-    delegationAwareATokenImplementationAddress = delegationAwareATokenImplementation.address;
+  if (skipExistingAssets) {
+    const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
+    const reserves = await lendingPool.getReservesList();
+    reserves.forEach((addr) => existingAssets.add(addr.toUpperCase()));
+    console.log('Existing assets:', existingAssets);
   }
 
-  const reserves = Object.entries(reservesParams).filter(
-    ([_, { aTokenImpl }]) =>
-      aTokenImpl === eContractid.DelegationAwareDepositTokenImpl ||
-      aTokenImpl === eContractid.DepositTokenImpl
-  ) as [string, IReserveParams][];
+  let hasDelegationAware = false;
+  for (let [symbol, params] of Object.entries(reservesParams)) {
+    const tokenAddress = tokenAddresses[symbol];
+    if (falsyOrZeroAddress(tokenAddress)) {
+      console.log(`Asset ${symbol} is missing in ${tokenAddresses}`);
+      throw 'asset is missing: ' + symbol;
+    }
 
-  for (let [symbol, params] of reserves) {
-    // if (symbol !== 'DAI') continue;
+    if (existingAssets.has(tokenAddress.toUpperCase())) {
+      console.log(`Asset ${symbol} already exists`);
+      continue;
+    }
 
-    const { strategy, aTokenImpl, reserveDecimals } = params;
+    const { strategy, depositTokenImpl, reserveDecimals } = params;
     const {
       optimalUtilizationRate,
       baseVariableBorrowRate,
@@ -134,59 +120,67 @@ export const initReservesByHelper = async (
         stableRateSlope1,
         stableRateSlope2,
       ];
-      const strategyContract = await deployDefaultReserveInterestRateStrategy(
+      const strategyContract = await deployReserveInterestRateStrategy(
+        strategy.name,
         rateStrategies[strategy.name],
         verify
       );
       strategyAddresses[strategy.name] = strategyContract.address;
-      registerContractInJsonDb(strategy.name, strategyContract);
     }
     strategyAddressPerAsset[symbol] = strategyAddresses[strategy.name];
     console.log('Strategy address for asset %s: %s', symbol, strategyAddressPerAsset[symbol]);
 
-    if (aTokenImpl === eContractid.DepositTokenImpl) {
-      depositTokenType[symbol] = false;
-      console.log('---- generic:', symbol);
-    } else if (aTokenImpl === eContractid.DelegationAwareDepositTokenImpl) {
-      depositTokenType[symbol] = true;
-      console.log('---- delegation aware:', symbol);
+    if (depositTokenImpl === eContractid.DepositTokenImpl) {
+      console.log('---- generic depost:', symbol);
+    } else if (depositTokenImpl === eContractid.DelegationAwareDepositTokenImpl) {
+      hasDelegationAware = true;
+      console.log('---- delegation-aware:', symbol);
+    } else {
+      console.log('---- unknown:', symbol, depositTokenImpl);
+      continue;
     }
+    depositTokenType[symbol] = depositTokenImpl;
 
     reserveInitDecimals.push(reserveDecimals);
-
-    if (tokenAddresses[symbol] == undefined) {
-      console.log('Asset ', symbol, ' is missing in ', tokenAddresses);
-      throw 'asset is missing: ' + symbol;
-    }
-
-    reserveTokens.push(tokenAddresses[symbol]);
+    reserveTokens.push(tokenAddress);
     reserveSymbols.push(symbol);
   }
 
+  if (reserveSymbols.length == 0) {
+    return;
+  }
+
+  const stableDebtTokenImpl = await deployStableDebtTokenImpl(verify, skipExistingAssets);
+  const variableDebtTokenImpl = await deployVariableDebtTokenImpl(verify, skipExistingAssets);
+  const depositTokenImpl = await deployDepositTokenImpl(verify, skipExistingAssets);
+
+  const delegationAwareTokenImpl = hasDelegationAware
+    ? await deployDelegationAwareDepositTokenImpl(verify, skipExistingAssets)
+    : undefined;
+
   for (let i = 0; i < reserveSymbols.length; i++) {
     let tokenToUse: string;
-    if (!depositTokenType[reserveSymbols[i]]) {
-      tokenToUse = depositTokenImplementationAddress;
-      console.log('=-= generic:', reserveSymbols[i], tokenToUse);
+    if (depositTokenType[reserveSymbols[i]] == eContractid.DepositTokenImpl) {
+      tokenToUse = depositTokenImpl.address;
     } else {
-      tokenToUse = delegationAwareATokenImplementationAddress;
+      tokenToUse = delegationAwareTokenImpl!.address;
     }
 
     const reserveSymbol = reserveSymbols[i];
 
     initInputParams.push({
-      aTokenImpl: tokenToUse,
+      depositTokenImpl: tokenToUse,
       stableDebtTokenImpl: stableDebtTokenImpl.address,
       variableDebtTokenImpl: variableDebtTokenImpl.address,
       underlyingAssetDecimals: reserveInitDecimals[i],
-      interestRateStrategyAddress: strategyAddressPerAsset[reserveSymbol],
+      strategy: strategyAddressPerAsset[reserveSymbol],
       underlyingAsset: reserveTokens[i],
       treasury: treasuryAddress,
       incentivesController: ZERO_ADDRESS,
       underlyingAssetName: reserveSymbol,
 
-      aTokenName: `${names.DepositTokenNamePrefix} ${reserveSymbol}`,
-      aTokenSymbol: `${names.DepositSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
+      depositTokenName: `${names.DepositTokenNamePrefix} ${reserveSymbol}`,
+      depositTokenSymbol: `${names.DepositSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
 
       variableDebtTokenName: `${names.VariableDebtTokenNamePrefix} ${reserveSymbol}`,
       variableDebtTokenSymbol: `${names.VariableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
@@ -194,6 +188,7 @@ export const initReservesByHelper = async (
       stableDebtTokenName: `${names.StableDebtTokenNamePrefix} ${reserveSymbol}`,
       stableDebtTokenSymbol: `${names.StableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
 
+      reserveFlags: BigNumber.from(0),
       params: '0x10',
     });
   }
@@ -218,10 +213,7 @@ export const initReservesByHelper = async (
 
     console.log(`  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
     console.log('    * gasUsed', tx3.gasUsed.toString());
-    //gasUsage = gasUsage.add(tx3.gasUsed);
   }
-
-  return gasUsage; // Deprecated
 };
 
 export const getTokenAggregatorPairs = (
@@ -237,10 +229,9 @@ export const getTokenAggregatorPairs = (
       const aggregatorAddressIndex = Object.keys(aggregatorsAddresses).findIndex(
         (value) => value === tokenSymbol
       );
-      const [, aggregatorAddress] = (Object.entries(aggregatorsAddresses) as [
-        string,
-        tEthereumAddress
-      ][])[aggregatorAddressIndex];
+      const [, aggregatorAddress] = (
+        Object.entries(aggregatorsAddresses) as [string, tEthereumAddress][]
+      )[aggregatorAddressIndex];
       return [tokenAddress, aggregatorAddress];
     }
   }) as [string, string][];
@@ -252,11 +243,11 @@ export const getTokenAggregatorPairs = (
 };
 
 export const configureReservesByHelper = async (
-  reservesParams: iMultiPoolsAssets<IReserveParams>,
+  addressProvider: MarketAccessController,
+  reservesParams: { [symbol: string]: IReserveParams },
   tokenAddresses: { [symbol: string]: tEthereumAddress },
   helpers: ProtocolDataProvider
 ) => {
-  const addressProvider = await getMarketAddressController();
   const symbols: string[] = [];
 
   const inputParams: {
@@ -288,6 +279,11 @@ export const configureReservesByHelper = async (
     const [, tokenAddress] = (Object.entries(tokenAddresses) as [string, string][])[
       assetAddressIndex
     ];
+    if (falsyOrZeroAddress(tokenAddress)) {
+      console.log(`- Token ${assetSymbol} has an invalid address, skipping`);
+      continue;
+    }
+
     const { usageAsCollateralEnabled: alreadyEnabled } = await helpers.getReserveConfigurationData(
       tokenAddress
     );
@@ -319,17 +315,18 @@ export const configureReservesByHelper = async (
   );
 
   // Deploy init per chunks
-  const enableChunks = 1;
+  const enableChunks = 20;
   const chunkedSymbols = chunk(symbols, enableChunks);
   const chunkedInputParams = chunk(inputParams, enableChunks);
 
   console.log(`- Configure reserves with ${chunkedInputParams.length} txs`);
   for (let chunkIndex = 0; chunkIndex < chunkedInputParams.length; chunkIndex++) {
-    await waitForTx(
+    const tx3 = await waitForTx(
       await configurator.configureReserves(chunkedInputParams[chunkIndex], {
         gasLimit: 5000000,
       })
     );
     console.log(`  - Configured for: ${chunkedSymbols[chunkIndex].join(', ')}`);
+    console.log('    * gasUsed', tx3.gasUsed.toString());
   }
 };

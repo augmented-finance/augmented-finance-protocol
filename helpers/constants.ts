@@ -19,6 +19,7 @@ export const RAY_PER_WEEK = new BigNumber(10).exponentiatedBy(27).dividedBy(WEEK
 export const HALF_RAY = new BigNumber(RAY).multipliedBy(0.5).toFixed();
 export const WAD_RAY_RATIO_NUM = Math.pow(10, 9);
 export const WAD_RAY_RATIO = WAD_RAY_RATIO_NUM.toString();
+export const oneWad = new BigNumber(Math.pow(10, 18));
 export const oneEther = new BigNumber(Math.pow(10, 18));
 export const oneRay = new BigNumber(Math.pow(10, 27));
 export const RAY_100 = oneRay.multipliedBy(100).toFixed();

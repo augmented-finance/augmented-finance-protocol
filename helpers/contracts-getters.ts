@@ -6,7 +6,7 @@ import {
   InitializableAdminUpgradeabilityProxyFactory,
   MarketAccessControllerFactory,
   AddressesProviderRegistryFactory,
-  LendingPoolCollateralManagerFactory,
+  LendingPoolExtensionFactory,
   LendingPoolConfiguratorFactory,
   LendingPoolFactory,
   LendingRateOracleFactory,
@@ -29,7 +29,6 @@ import {
   MockStakedAgfTokenFactory,
   TeamRewardPoolFactory,
   PermitFreezerRewardPoolFactory,
-  AccessControllerFactory,
   DepositToken,
   TokenWeightedRewardPoolFactory,
   RewardBoosterFactory,
@@ -41,13 +40,19 @@ import {
   MockPriceOracleFactory,
   XAGFTokenV1Factory,
   AGFTokenV1Factory,
+  TreasuryFactory,
+  ReferralRewardPoolFactory,
+  MockLendingPoolFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
-
+import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
 import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
+
 import { MockTokenMap } from './contracts-helpers';
-import { getFirstSigner, getFromJsonDb } from './misc-utils';
+import { falsyOrZeroAddress, getFirstSigner, getFromJsonDb, hasInJsonDb } from './misc-utils';
 import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } from './types';
+import { ILendingPoolAaveCompatibleFactory } from '../types/ILendingPoolAaveCompatibleFactory';
+import { IManagedLendingPoolFactory } from '../types/IManagedLendingPoolFactory';
 
 const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
 
@@ -56,6 +61,18 @@ export const getMarketAddressController = async (address?: tEthereumAddress) =>
     address || (await getAddr(eContractid.MarketAccessController)),
     await getFirstSigner()
   );
+
+export const hasMarketAddressController = async () =>
+  await hasInJsonDb(eContractid.MarketAccessController);
+
+export const getPreDeployedAddressController = async () =>
+  MarketAccessControllerFactory.connect(
+    await getAddr(eContractid.PreDeployedMarketAccessController),
+    await getFirstSigner()
+  );
+
+export const hasPreDeployedAddressController = async () =>
+  await hasInJsonDb(eContractid.PreDeployedMarketAccessController);
 
 export const getLendingPoolConfiguratorProxy = async (address: tEthereumAddress) => {
   return LendingPoolConfiguratorFactory.connect(address, await getFirstSigner());
@@ -81,6 +98,9 @@ export const getMintableERC20 = async (address: tEthereumAddress) =>
 
 export const getIErc20Detailed = async (address: tEthereumAddress) =>
   IERC20DetailedFactory.connect(address, await getFirstSigner());
+
+export const getIRewardedToken = async (address: tEthereumAddress) =>
+  IRewardedTokenFactory.connect(address, await getFirstSigner());
 
 export const getRewardConfiguratorProxy = async (address: tEthereumAddress) =>
   RewardConfiguratorFactory.connect(address, await getFirstSigner());
@@ -148,8 +168,11 @@ export const getTokenAggregatorPairs = (
   const aggregators: string[] = [];
 
   for (const [tokenSymbol, tokenAddress] of Object.entries(assetsAddressesWithoutEth)) {
+    if (falsyOrZeroAddress(tokenAddress)) {
+      continue;
+    }
     const aggregatorAddress = aggregatorAddresses[tokenSymbol];
-    if (aggregatorAddress == undefined) {
+    if (falsyOrZeroAddress(aggregatorAddress)) {
       continue;
     }
     assets.push(tokenAddress);
@@ -222,8 +245,11 @@ export const getMockStakedAgToken = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getProxy = async (address: tEthereumAddress) =>
-  InitializableAdminUpgradeabilityProxyFactory.connect(address, await getFirstSigner());
+export const getMockLendingPoolImpl = async (address?: tEthereumAddress) =>
+  MockLendingPoolFactory.connect(
+    address || (await getAddr(eContractid.LendingPoolImpl)),
+    await getFirstSigner()
+  );
 
 export const getLendingPoolImpl = async (address?: tEthereumAddress) =>
   LendingPoolFactory.connect(
@@ -237,9 +263,9 @@ export const getLendingPoolConfiguratorImpl = async (address?: tEthereumAddress)
     await getFirstSigner()
   );
 
-export const getLendingPoolCollateralManagerImpl = async (address?: tEthereumAddress) =>
-  LendingPoolCollateralManagerFactory.connect(
-    address || (await getAddr(eContractid.LendingPoolCollateralManagerImpl)),
+export const getLendingPoolExtensionImpl = async (address?: tEthereumAddress) =>
+  LendingPoolExtensionFactory.connect(
+    address || (await getAddr(eContractid.LendingPoolExtensionImpl)),
     await getFirstSigner()
   );
 
@@ -294,27 +320,27 @@ export const getTeamRewardPool = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getRewardController = async (address?: tEthereumAddress) =>
+export const getTreasuryProxy = async (address: tEthereumAddress) =>
+  TreasuryFactory.connect(address, await getFirstSigner());
+
+export const getMockRewardFreezer = async (address?: tEthereumAddress) =>
   RewardFreezerFactory.connect(
-    address || (await getAddr(eContractid.RewardController)),
+    address || (await getAddr(eContractid.MockRewardFreezer)),
     await getFirstSigner()
   );
 
-export const getRewardBooster = async (address?: tEthereumAddress) =>
+export const getMockRewardBooster = async (address?: tEthereumAddress) =>
   RewardBoosterFactory.connect(
-    address || (await getAddr(eContractid.RewardBooster)),
+    address || (await getAddr(eContractid.MockRewardBooster)),
     await getFirstSigner()
   );
+
+export const getRewardBooster = async (address: tEthereumAddress) =>
+  RewardBoosterFactory.connect(address, await getFirstSigner());
 
 export const getPermitFreezerRewardPool = async (address?: tEthereumAddress) =>
   PermitFreezerRewardPoolFactory.connect(
     address || (await getAddr(eContractid.PermitFreezerRewardPool)),
-    await getFirstSigner()
-  );
-
-export const getTokenWeightedRewardPoolAGF = async (address?: tEthereumAddress) =>
-  TokenWeightedRewardPoolFactory.connect(
-    address || (await getAddr(eContractid.TokenWeightedRewardPoolAGF)),
     await getFirstSigner()
   );
 
@@ -348,8 +374,14 @@ export const getTokenWeightedRewardPoolAGUSDCBoosted = async (address?: tEthereu
     await getFirstSigner()
   );
 
+export const getMockReferralRewardPool = async (address?: tEthereumAddress) =>
+  ReferralRewardPoolFactory.connect(
+    address || (await getAddr(eContractid.MockReferralRewardPool)),
+    await getFirstSigner()
+  );
+
 export const getMarketAccessController = async (address?: tEthereumAddress) =>
-  AccessControllerFactory.connect(
+  MarketAccessControllerFactory.connect(
     address || (await getAddr(eContractid.MarketAccessController)),
     await getFirstSigner()
   );
@@ -363,29 +395,23 @@ export const getAGTokenByName = async (name: string): Promise<DepositToken> => {
   return await getDepositToken(addrByName);
 };
 
-export const getStakeConfiguratorImpl = async (address?: tEthereumAddress) =>
-  StakeConfiguratorFactory.connect(
-    address || (await getAddr(eContractid.StakeConfiguratorImpl)),
-    await getFirstSigner()
-  );
+export const getStakeConfiguratorImpl = async (address: tEthereumAddress) =>
+  StakeConfiguratorFactory.connect(address, await getFirstSigner());
 
-export const getStakeTokenImpl = async (address?: tEthereumAddress) =>
-  StakeTokenFactory.connect(
-    address || (await getAddr(eContractid.StakeTokenImpl)),
-    await getFirstSigner()
-  );
+export const getStakeTokenImpl = async (address: tEthereumAddress) =>
+  StakeTokenFactory.connect(address, await getFirstSigner());
 
-export const getXAGFTokenV1Impl = async (address?: tEthereumAddress) =>
-  XAGFTokenV1Factory.connect(
-    address || (await getAddr(eContractid.XAGFTokenV1Impl)),
-    await getFirstSigner()
-  );
+export const getXAGFTokenV1Impl = async (address: tEthereumAddress) =>
+  XAGFTokenV1Factory.connect(address, await getFirstSigner());
 
-export const getAGFTokenV1Impl = async (address?: tEthereumAddress) =>
-  AGFTokenV1Factory.connect(
-    address || (await getAddr(eContractid.AGFTokenV1Impl)),
-    await getFirstSigner()
-  );
+export const getAGFTokenV1Impl = async (address: tEthereumAddress) =>
+  AGFTokenV1Factory.connect(address, await getFirstSigner());
 
 export const getIManagedRewardPool = async (address: tEthereumAddress) =>
   IManagedRewardPoolFactory.connect(address, await getFirstSigner());
+
+export const getILendingPoolAaveCompatible = async (address: tEthereumAddress) =>
+  ILendingPoolAaveCompatibleFactory.connect(address, await getFirstSigner());
+
+export const getIManagedLendingPool = async (address: tEthereumAddress) =>
+  IManagedLendingPoolFactory.connect(address, await getFirstSigner());
