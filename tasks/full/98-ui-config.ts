@@ -45,26 +45,7 @@ task('full:write-ui-config', 'Prepare UI config')
       return;
     }
 
-    const referralRegistryAddress = await addressProvider.getAddress(AccessFlags.REFERRAL_REGISTRY);
-    if (falsyOrZeroAddress(referralRegistryAddress)) {
-      console.log('Referral registry is unavailable, configuration is incomplete');
-      // return;
-    }
-
-    const oracleAddress = await addressProvider.getAddress(AccessFlags.PRICE_ORACLE);
-    if (falsyOrZeroAddress(referralRegistryAddress)) {
-      console.log('Price oracle is unavailable, configuration is incomplete');
-      // return;
-    }
-
-    await writeUiConfig(
-      network,
-      registry.address,
-      addressProvider.address,
-      dataHelperAddress,
-      referralRegistryAddress,
-      oracleAddress
-    );
+    writeUiConfig(network, registry.address, addressProvider.address, dataHelperAddress);
 
     const dataHelper = await getProtocolDataProvider(dataHelperAddress);
     const allTokens = await dataHelper.getAllTokenDescriptions(true);
