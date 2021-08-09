@@ -450,7 +450,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
   }
 
   /// @dev Returns the fee of flash loans
-  function FLASHLOAN_PREMIUM_TOTAL() public view returns (uint256) {
+  function FLASHLOAN_PREMIUM_TOTAL() public view override returns (uint256) {
     return _flashLoanPremiumPct;
   }
 
