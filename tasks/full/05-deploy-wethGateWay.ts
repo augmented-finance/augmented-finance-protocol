@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
 import { deployWETHGateway } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
-import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
@@ -35,7 +35,7 @@ task(`full-deploy-weth-gateway`, `Deploys the ${CONTRACT_NAME} contract for prod
 
       console.log(`Deployed ${CONTRACT_NAME}.address`, impl.address);
       wgAddress = impl.address;
-      await waitForTx(await addressProvider.setAddress(AccessFlags.WETH_GATEWAY, wgAddress));
+      await mustWaitTx(addressProvider.setAddress(AccessFlags.WETH_GATEWAY, wgAddress));
     }
 
     console.log(`${CONTRACT_NAME}:`, wgAddress);

@@ -1,16 +1,19 @@
 import { task } from 'hardhat/config';
-import {
-  getParamPerNetwork,
-  registerAndVerify,
-  withSaveAndVerify,
-} from '../../helpers/contracts-helpers';
+import { getParamPerNetwork, registerAndVerify } from '../../helpers/contracts-helpers';
 import {
   deployAddressesProviderRegistry,
   deployMarketAccessControllerNoSave,
 } from '../../helpers/contracts-deployments';
 import { eContractid, eNetwork } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
-import { falsyOrZeroAddress, getFirstSigner, getSigner, waitForTx } from '../../helpers/misc-utils';
+import {
+  falsyOrZeroAddress,
+  getFirstSigner,
+  getSigner,
+  mustWaitTx,
+  waitForTx,
+  waitTx,
+} from '../../helpers/misc-utils';
 import { getAddressesProviderRegistry } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
@@ -83,8 +86,8 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
       console.log('Deployed registry:', registry.address);
 
       if (!falsyOrZeroAddress(registryOwner)) {
-        await registry.setOneTimeRegistrar(deployer.address, ProviderId);
-        await registry.transferOwnership(registryOwner!);
+        await waitTx(registry.setOneTimeRegistrar(deployer.address, ProviderId));
+        await waitTx(registry.transferOwnership(registryOwner!));
         console.log('Registry ownership transferred to:', registryOwner);
       }
     }
@@ -99,17 +102,17 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
       addressProvider = await deployMarketAccessControllerNoSave(MarketId);
       await waitForTx(addressProvider.deployTransaction);
 
-      await addressProvider.setAnyRoleMode(false);
+      await waitTx(addressProvider.setAnyRoleMode(false));
       console.log('Deployed provider:', addressProvider.address);
 
-      await addressProvider.setTemporaryAdmin(deployer.address, 1000);
+      await waitTx(addressProvider.setTemporaryAdmin(deployer.address, 1000));
 
       const providerOwner = getParamPerNetwork(poolConfig.AddressProviderOwner, network);
       if (!falsyOrZeroAddress(providerOwner)) {
-        await addressProvider.transferOwnership(providerOwner!);
+        await waitTx(addressProvider.transferOwnership(providerOwner!));
         console.log('Provider ownership transferred to:', providerOwner);
       } else if (!falsyOrZeroAddress(registryOwner)) {
-        await addressProvider.transferOwnership(registryOwner!);
+        await waitTx(addressProvider.transferOwnership(registryOwner!));
         console.log('Provider ownership transferred to:', registryOwner);
       }
 
@@ -136,18 +139,16 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
 
     if (!id.eq(ProviderId)) {
       console.log('Register provider with id: ', ProviderId.toString());
-      await waitForTx(
-        await registry.registerAddressesProvider(addressProvider.address, ProviderId)
-      );
+      await mustWaitTx(registry.registerAddressesProvider(addressProvider.address, ProviderId));
     }
 
     const poolAdmin = getParamPerNetwork(poolConfig.PoolAdmin, network);
     if (!falsyOrZeroAddress(poolAdmin)) {
-      await addressProvider.grantRoles(poolAdmin!, AccessFlags.POOL_ADMIN);
+      await waitTx(addressProvider.grantRoles(poolAdmin!, AccessFlags.POOL_ADMIN));
     }
 
     const emergencyAdmin = getParamPerNetwork(poolConfig.EmergencyAdmin, network);
     if (!falsyOrZeroAddress(emergencyAdmin)) {
-      await addressProvider.grantRoles(emergencyAdmin!, AccessFlags.EMERGENCY_ADMIN);
+      await waitTx(addressProvider.grantRoles(emergencyAdmin!, AccessFlags.EMERGENCY_ADMIN));
     }
   });
