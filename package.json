@@ -41,7 +41,7 @@
     "test-uniswap": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented-uniswap/*.spec.ts",
     "test-upgradeability": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/upgradeability.spec.ts",
     "test-access": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/access.spec.ts",
-    
+
     "test:main:check-list": "MAINNET_FORK=true TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/mainnet/check-list.spec.ts",
     "test:augmented:stake": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-stake/stake.spec.ts",
     "test:augmented:boost": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-stake/stake_boost.spec.ts",
@@ -51,11 +51,11 @@
     "test:augmented:burners": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/burner_rewards.spec.ts",
     "test:augmented:locker": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/locker_rewards.spec.ts",
     "test:augmented:decay": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/locker_decay.spec.ts",
-    "test:augmented:treasury": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/treasury.spec.ts",    
+    "test:augmented:treasury": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/treasury.spec.ts",
     "test:augmented:team-rewards": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/team_rewards.spec.ts",
     "test:augmented:pausable": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/pausable-augmented.spec.ts",
     "test:augmented:reward-rates": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/reward_rates.spec.ts",
-    "test:augmented:compatibility": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/compatibility.spec.ts",    
+    "test:augmented:compatibility": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/compatibility.spec.ts",
 
     "coverage": "TS_NODE_TRANSPILE_ONLY=1 hardhat compile --force && TS_NODE_TRANSPILE_ONLY=1 hardhat coverage --network coverage --testfiles \"test-suites/test-augmented/*.spec.ts\"",
 
@@ -94,10 +94,10 @@
     "kovan:verify:tokens": "npm run hardhat:kovan verify:tokens -- --pool Augmented",
     "ropsten:verify:tokens": "npm run hardhat:ropsten verify:tokens -- --pool Augmented",
     "mainnet:verify:tokens": "npm run hardhat:main verify:tokens -- --pool Augmented",
-    
+
     "print-config:fork:mainnet": "MAINNET_FORK=true hardhat print-config:fork",
     "print-config:kovan": "hardhat --network kovan print-config --pool Augmented --data-provider 0xA1901785c29cBd48bfA74e46b67C736b26054fa4",
-    
+
     "external:deploy-asset-kovan": "npm run compile && hardhat --network kovan external:deploy-new-asset --symbol ${SYMBOL} --verify",
     "external:deploy-asset-main": "npm run compile && hardhat --network main external:deploy-new-asset --symbol ${SYMBOL} --verify"
   },
@@ -121,7 +121,7 @@
     "ethereumjs-util": "7.0.2",
     "ethers": "^5.1.0",
     "globby": "^11.0.1",
-    "hardhat": "^2.2.0",
+    "hardhat": "^2.6.0",
     "hardhat-abi-exporter": "^2.2.1",
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-tracer": "^1.0.0-alpha.6",
