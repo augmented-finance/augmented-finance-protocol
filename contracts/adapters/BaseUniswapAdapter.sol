@@ -16,11 +16,7 @@ import '../interfaces/IERC20WithPermit.sol';
 import '../flashloan/base/FlashLoanReceiverBase.sol';
 import './interfaces/IBaseUniswapAdapter.sol';
 
-/**
- * @title BaseUniswapAdapter
- * @notice Implements the logic for performing assets swaps in Uniswap V2
- * @author Aave
- **/
+/// @dev Implements the logic for performing assets swaps in Uniswap V2
 abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapter, Ownable {
   using SafeMath for uint256;
   using PercentageMath for uint256;
@@ -556,11 +552,17 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
   }
 
   /**
-   * @dev Emergency rescue for token stucked on this contract, as failsafe mechanism
-   * - Funds should never remain in this contract more time than during transactions
-   * - Only callable by the owner
-   **/
-  function rescueTokens(IERC20 token) external onlyOwner {
-    token.transfer(owner(), token.balanceOf(address(this)));
+   * @dev transfer ERC20 from the utility contract, for ERC20 recovery in case of stuck tokens due
+   * direct transfers to the contract address.
+   * @param token token to transfer
+   * @param to recipient of the transfer
+   * @param amount amount to send
+   */
+  function sweepToken(
+    address token,
+    address to,
+    uint256 amount
+  ) external onlyOwner {
+    IERC20(token).safeTransfer(to, amount);
   }
 }
