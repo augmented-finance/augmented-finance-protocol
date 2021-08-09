@@ -364,13 +364,6 @@ contract LendingPoolExtension is
     _flashLoan(receiver, assets, amounts, modes, onBehalfOf, params, referral, 0);
   }
 
-  modifier countCalls {
-    require(_nestedCalls < type(uint8).max, Errors.LP_TOO_MANY_NESTED_CALLS);
-    _nestedCalls++;
-    _;
-    _nestedCalls--;
-  }
-
   struct FlashLoanLocalVars {
     IFlashLoanReceiver receiver;
     address currentAsset;
@@ -503,7 +496,7 @@ contract LendingPoolExtension is
     uint256 interestRateMode,
     uint256 referral,
     address onBehalfOf
-  ) external override whenNotPaused notNested {
+  ) external override whenNotPaused onlyFirstCall {
     _executeBorrow(
       ExecuteBorrowParams(
         asset,
@@ -524,7 +517,7 @@ contract LendingPoolExtension is
     uint256 interestRateMode,
     uint16 referral,
     address onBehalfOf
-  ) external override whenNotPaused notNested {
+  ) external override whenNotPaused onlyFirstCall {
     _executeBorrow(
       ExecuteBorrowParams(
         asset,
