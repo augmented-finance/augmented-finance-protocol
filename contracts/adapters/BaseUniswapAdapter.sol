@@ -39,7 +39,8 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     IUniswapV2Router02 uniswapRouter,
     address wethAddress
   ) public FlashLoanReceiverBase(provider) {
-    uint256 flashloanPremium = ILendingPool(provider.getLendingPool()).FLASHLOAN_PREMIUM_TOTAL();
+    ILendingPool pool = ILendingPool(provider.getLendingPool());
+    uint16 flashloanPremium = pool.getFlashloanPremiumPct();
     flashloanPremiumRev = uint16(
       uint256(PercentageMath.ONE).sub(flashloanPremium, 'INVALID_FLASHLOAN_PREMIUM')
     );
