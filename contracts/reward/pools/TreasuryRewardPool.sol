@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
@@ -16,7 +16,7 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRateAccum {
     uint256 initialRate,
     uint16 baselinePercentage,
     address treasury
-  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {
     require(treasury != address(0));
     _treasury = treasury;
   }
@@ -67,13 +67,13 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRateAccum {
     return (0, 0);
   }
 
-  function addRewardProvider(address, address) external override onlyConfigAdmin {
+  function addRewardProvider(address, address) external view override onlyConfigAdmin {
     revert('UNSUPPORTED');
   }
 
   function removeRewardProvider(address) external override onlyConfigAdmin {}
 
-  function getPoolName() public view override returns (string memory) {
+  function getPoolName() public pure override returns (string memory) {
     return 'TreasuryPool';
   }
 }

@@ -23,8 +23,8 @@ import {
 task('dev:deploy-samples', 'Deploy samples for verification').setAction(async (DRE) => {
   console.log('Deploy samples for verification');
 
-  await deployTokenWeightedRewardPoolImpl(true, false);
-  await deployReferralRewardPoolV1Impl(true, false);
+  // await deployTokenWeightedRewardPoolImpl(true, false);
+  // await deployReferralRewardPoolV1Impl(true, false);
   // await deployAGFTokenV1Impl(true, false); // OK
 
   // await deployLendingPoolImpl(true, false); // OK
@@ -36,9 +36,9 @@ task('dev:deploy-samples', 'Deploy samples for verification').setAction(async (D
   // await deployVariableDebtTokenImpl(true, false); // OK
   // await deployStableDebtTokenImpl(true, false); // OK
 
-  // await deployXAGFTokenV1Impl(true, false); // max 500k
-  // await deployRewardConfiguratorImpl(true, false);
-  // await deployStakeConfiguratorImpl(true, false);
-  // await deployRewardBoosterV1Impl(true, false);
-  // await deployStakeTokenImpl(true, false);      // max 500k
+  await deployXAGFTokenV1Impl(true, false); // max 500k
+  await deployRewardConfiguratorImpl(true, false);
+  await deployStakeConfiguratorImpl(true, false);
+  await deployRewardBoosterV1Impl(true, false);
+  await deployStakeTokenImpl(true, false); // max 500k
 });

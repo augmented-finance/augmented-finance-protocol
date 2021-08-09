@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../../../tools/Errors.sol';
@@ -32,7 +32,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public {
+  ) {
     _name = name;
     _symbol = symbol;
     _decimals = decimals;
@@ -121,7 +121,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     uint256 providerSupply
   ) internal virtual {
     IBalanceHook hook = _incentivesController;
-    if (hook == IBalanceHook(0)) {
+    if (hook == IBalanceHook(address(0))) {
       return;
     }
     hook.handleBalanceUpdate(getIncentivesToken(), holder, oldBalance, newBalance, providerSupply);
@@ -135,7 +135,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     uint256 scale
   ) internal {
     IBalanceHook hook = _incentivesController;
-    if (hook == IBalanceHook(0)) {
+    if (hook == IBalanceHook(address(0))) {
       return;
     }
     hook.handleScaledBalanceUpdate(

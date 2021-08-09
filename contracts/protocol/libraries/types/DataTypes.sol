@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 library DataTypes {
   uint64 public constant MASK_ASSET_TYPE = 0x0F;

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import '../tools/Errors.sol';
 import './interfaces/IMarketAccessController.sol';
 import './AccessHelper.sol';
 import './AccessFlags.sol';
 
-contract MarketAccessBitmask {
+abstract contract MarketAccessBitmask {
   using AccessHelper for IMarketAccessController;
   IMarketAccessController internal _remoteAcl;
 
-  constructor(IMarketAccessController remoteAcl) internal {
+  constructor(IMarketAccessController remoteAcl) {
     _remoteAcl = remoteAcl;
   }
 
@@ -19,7 +19,7 @@ contract MarketAccessBitmask {
   }
 
   function hasRemoteAcl() internal view returns (bool) {
-    return _remoteAcl != IMarketAccessController(0);
+    return _remoteAcl != IMarketAccessController(address(0));
   }
 
   function acl_hasAnyOf(address subject, uint256 flags) internal view returns (bool) {

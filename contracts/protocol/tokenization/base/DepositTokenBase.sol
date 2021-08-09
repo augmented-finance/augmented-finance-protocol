@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../interfaces/IDepositToken.sol';
 import '../../../tools/math/WadRayMath.sol';
 import '../../../misc/PermitForERC20.sol';
@@ -19,6 +20,7 @@ abstract contract DepositTokenBase is
 {
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
+  using SafeMath for uint256;
 
   mapping(address => mapping(address => uint256)) private _allowances;
   address internal _treasury;

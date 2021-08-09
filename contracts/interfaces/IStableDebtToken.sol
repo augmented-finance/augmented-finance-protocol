@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import './IBalanceHook.sol';
 import '../dependencies/openzeppelin/contracts/IERC20.sol';

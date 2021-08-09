@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import '../misc/ERC20WithPermit.sol';
 
@@ -8,5 +8,5 @@ abstract contract RewardToken is ERC20WithPermit {
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public ERC20WithPermit(name, symbol, decimals) {}
+  ) ERC20WithPermit(name, symbol, decimals) {}
 }

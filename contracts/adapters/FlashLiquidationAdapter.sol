@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import './BaseUniswapAdapter.sol';
 import '../interfaces/IFlashLoanAddressProvider.sol';
 import '../interfaces/IUniswapV2Router02.sol';
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../protocol/libraries/types/DataTypes.sol';
 import '../protocol/libraries/helpers/Helpers.sol';
 import '../interfaces/IPriceOracleGetter.sol';
@@ -18,6 +19,7 @@ import '../protocol/libraries/configuration/ReserveConfiguration.sol';
  * @author Aave
  **/
 contract FlashLiquidationAdapter is BaseUniswapAdapter {
+  using SafeMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   uint256 internal constant LIQUIDATION_CLOSE_FACTOR_PERCENT = 5000;
 

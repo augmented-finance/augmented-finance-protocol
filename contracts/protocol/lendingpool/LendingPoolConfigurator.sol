@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../../tools/upgradeability/VersionedInitializable.sol';
@@ -22,7 +22,7 @@ import '../tokenization/interfaces/PoolTokenConfig.sol';
 contract LendingPoolConfigurator is
   ProxyAdminBase,
   VersionedInitializable,
-  MarketAccessBitmask(IMarketAccessController(0)),
+  MarketAccessBitmask(IMarketAccessController(address(0))),
   ILendingPoolConfigurator
 {
   using PercentageMath for uint256;

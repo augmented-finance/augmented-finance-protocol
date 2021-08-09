@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../tools/math/PercentageMath.sol';
@@ -41,7 +41,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     IFlashLoanAddressProvider addressesProvider,
     IUniswapV2Router02 uniswapRouter,
     address wethAddress
-  ) public FlashLoanReceiverBase(addressesProvider) {
+  ) FlashLoanReceiverBase(addressesProvider) {
     ORACLE = IPriceOracleGetter(addressesProvider.getPriceOracle());
     UNISWAP_ROUTER = uniswapRouter;
     WETH_ADDRESS = wethAddress;

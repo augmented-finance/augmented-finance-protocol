@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../interfaces/IReserveStrategy.sol';
@@ -59,7 +59,7 @@ contract DefaultReserveInterestRateStrategy is IReserveStrategy {
     uint256 variableRateSlope2,
     uint256 stableRateSlope1,
     uint256 stableRateSlope2
-  ) public {
+  ) {
     OPTIMAL_UTILIZATION_RATE = optimalUtilizationRate;
     EXCESS_UTILIZATION_RATE = WadRayMath.ray().sub(optimalUtilizationRate);
     addressesProvider = provider;

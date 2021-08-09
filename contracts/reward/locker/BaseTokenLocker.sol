@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
@@ -85,7 +85,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
   event Redeemed(address indexed from, address indexed to, uint256 underlyingAmount);
 
   /// @param underlying ERC20 token to be locked
-  constructor(address underlying) public {
+  constructor(address underlying) {
     _initialize(underlying);
   }
 
@@ -538,7 +538,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     notSupported();
   }
 
-  function allowance(address, address) external view override returns (uint256) {
+  function allowance(address, address) external pure override returns (uint256) {
     notSupported();
   }
 

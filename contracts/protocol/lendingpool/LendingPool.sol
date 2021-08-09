@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
@@ -45,6 +45,8 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
   using SafeERC20 for IERC20;
   using AccessHelper for IMarketAccessController;
   using ReserveLogic for DataTypes.ReserveData;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+  using UserConfiguration for DataTypes.UserConfigurationMap;
 
   uint256 private constant POOL_REVISION = 0x1;
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import './SlashableStakeTokenBase.sol';
@@ -9,7 +9,7 @@ import '../../tools/upgradeability/VersionedInitializable.sol';
 contract StakeToken is SlashableStakeTokenBase, VersionedInitializable {
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor() public SlashableStakeTokenBase(zeroConfig(), 'STAKE_STUB', 'STAKE_STUB', 0) {}
+  constructor() SlashableStakeTokenBase(zeroConfig(), 'STAKE_STUB', 'STAKE_STUB', 0) {}
 
   function zeroConfig() private pure returns (StakeTokenConfig memory) {}
 

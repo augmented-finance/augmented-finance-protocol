@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../tools/math/BitUtils.sol';
@@ -33,7 +33,6 @@ abstract contract BaseRewardController is
   bool private _paused;
 
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
-    public
     MarketAccessBitmask(accessController)
   {
     _rewardMinter = rewardMinter;
@@ -72,7 +71,7 @@ abstract contract BaseRewardController is
     uint256 idx = BitUtils.bitLength(poolMask);
     require(_poolList[idx] == pool, 'unexpected pool');
 
-    _poolList[idx] = IManagedRewardPool(0);
+    _poolList[idx] = IManagedRewardPool(address(0));
     delete (_poolMask[address(pool)]);
     _ignoreMask |= poolMask;
 

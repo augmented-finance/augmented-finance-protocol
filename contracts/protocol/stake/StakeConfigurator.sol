@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
@@ -23,7 +23,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
 
   ProxyAdmin internal immutable _proxies;
 
-  constructor() public MarketAccessBitmask(IMarketAccessController(0)) {
+  constructor() MarketAccessBitmask(IMarketAccessController(address(0))) {
     _proxies = new ProxyAdmin();
   }
 

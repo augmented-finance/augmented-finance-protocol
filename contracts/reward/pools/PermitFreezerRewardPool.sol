@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
@@ -9,6 +9,7 @@ import './BasePermitRewardPool.sol';
 import '../calcs/CalcLinearFreezer.sol';
 
 contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
+  using SafeMath for uint256;
   uint256 private _rewardLimit;
 
   constructor(
@@ -16,7 +17,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     uint256 rewardLimit,
     uint32 meltDownAt,
     string memory rewardPoolName
-  ) public BasePermitRewardPool(controller, 0, NO_BASELINE, rewardPoolName) {
+  ) BasePermitRewardPool(controller, 0, NO_BASELINE, rewardPoolName) {
     _rewardLimit = rewardLimit;
     internalSetMeltDownAt(meltDownAt);
   }

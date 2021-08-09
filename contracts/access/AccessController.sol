@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import '../dependencies/openzeppelin/contracts/Address.sol';
 import '../dependencies/openzeppelin/contracts/Ownable.sol';
@@ -31,7 +31,7 @@ contract AccessController is Ownable, IManagedAccessController {
     uint256 singletons,
     uint256 nonSingletons,
     uint256 proxies
-  ) public {
+  ) {
     require(singletons & nonSingletons == 0, 'mixed types');
     require(singletons & proxies == proxies, 'all proxies must be singletons');
     _singletons = singletons;
@@ -100,7 +100,7 @@ contract AccessController is Ownable, IManagedAccessController {
 
   function grantRoles(address addr, uint256 flags) public onlyAdmin returns (uint256) {
     require(_singletons & flags == 0, 'singleton should use setAddress');
-    _grantRoles(addr, flags);
+    return _grantRoles(addr, flags);
   }
 
   function setAnyRoleMode(bool blockOrEnable) public onlyAdmin {
@@ -114,7 +114,7 @@ contract AccessController is Ownable, IManagedAccessController {
 
   function grantAnyRoles(address addr, uint256 flags) public onlyAdmin returns (uint256) {
     require(_anyRoleMode == anyRoleEnabled);
-    _grantRoles(addr, flags);
+    return _grantRoles(addr, flags);
   }
 
   function _grantRoles(address addr, uint256 flags) private returns (uint256) {

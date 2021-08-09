@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../interfaces/IReserveDelegatedStrategy.sol';
@@ -16,7 +16,7 @@ abstract contract DefaultReserveDelegatedStrategy is IReserveDelegatedStrategy {
 
   address public immutable externalProvider;
 
-  constructor(address externalProvider_) public {
+  constructor(address externalProvider_) {
     externalProvider = externalProvider_;
   }
 

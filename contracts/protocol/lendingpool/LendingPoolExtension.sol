@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts//SafeMath.sol';
@@ -38,6 +38,9 @@ contract LendingPoolExtension is
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using ReserveLogic for DataTypes.ReserveData;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+  using UserConfiguration for DataTypes.UserConfigurationMap;
+  using AccessHelper for IMarketAccessController;
 
   uint256 internal constant LIQUIDATION_CLOSE_FACTOR_PERCENT = 5000;
 

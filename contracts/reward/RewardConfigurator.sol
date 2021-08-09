@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../tools/upgradeability/VersionedInitializable.sol';
@@ -19,7 +19,7 @@ import './pools/TeamRewardPool.sol';
 import '../tools/upgradeability/IProxy.sol';
 
 contract RewardConfigurator is
-  MarketAccessBitmask(IMarketAccessController(0)),
+  MarketAccessBitmask(IMarketAccessController(address(0))),
   VersionedInitializable,
   IRewardConfigurator
 {
@@ -109,7 +109,7 @@ contract RewardConfigurator is
 
     for (uint256 i = 0; i < names.length; i++) {
       IManagedRewardPool pool = pools[i];
-      if (pool != IManagedRewardPool(0)) {
+      if (pool != IManagedRewardPool(address(0))) {
         ctl.addRewardPool(pool);
       }
       if (i < names.length && bytes(names[i]).length > 0) {
@@ -253,7 +253,7 @@ contract RewardConfigurator is
     }
 
     for (uint256 i = 0; i < pools.length; i++) {
-      if (ignoreMask & 1 == 0 && pools[i] != IManagedRewardPool(0)) {
+      if (ignoreMask & 1 == 0 && pools[i] != IManagedRewardPool(address(0))) {
         activePoolCount++;
         (bool ok, uint16 pct) = pools[i].getBaselinePercentage();
         if (ok) {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
@@ -29,7 +29,7 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
     uint256 initialRate,
     uint16 baselinePercentage,
     string memory rewardPoolName
-  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _rewardPoolName = rewardPoolName;
 
     _initializeDomainSeparator();

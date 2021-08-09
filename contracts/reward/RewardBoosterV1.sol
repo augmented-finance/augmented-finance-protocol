@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../access/interfaces/IMarketAccessController.sol';
@@ -10,7 +10,7 @@ import '../interfaces/IRewardMinter.sol';
 contract RewardBoosterV1 is RewardBooster, VersionedInitializable {
   uint256 private constant CONTRACT_REVISION = 1;
 
-  constructor() public RewardBooster(IMarketAccessController(0), IRewardMinter(0)) {}
+  constructor() RewardBooster(IMarketAccessController(address(0)), IRewardMinter(address(0))) {}
 
   function getRevision() internal pure virtual override returns (uint256) {
     return CONTRACT_REVISION;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../dependencies/openzeppelin/contracts/SafeMath.sol';
@@ -51,7 +51,7 @@ contract RewardBooster is
   function internalOnPoolRemoved(IManagedRewardPool pool) internal override {
     super.internalOnPoolRemoved(pool);
     if (_boostPool == pool) {
-      _boostPool = IManagedRewardPool(0);
+      _boostPool = IManagedRewardPool(address(0));
       _boostPoolMask = 0;
     } else {
       delete (_boostFactor[address(pool)]);
@@ -163,7 +163,7 @@ contract RewardBooster is
     }
 
     uint32 boostSince;
-    if (_boostPool != IManagedRewardPool(0)) {
+    if (_boostPool != IManagedRewardPool(address(0))) {
       uint256 boost_;
 
       if (_mintExcess || _boostExcessDelegate != address(_boostPool)) {
@@ -217,7 +217,7 @@ contract RewardBooster is
 
     uint256 boostAmount = _boostRewards[holder];
 
-    if (_boostPool != IManagedRewardPool(0)) {
+    if (_boostPool != IManagedRewardPool(address(0))) {
       (uint256 boost_, ) = _boostPool.calcRewardFor(holder, at);
       boostAmount = boostAmount.add(boost_);
     }

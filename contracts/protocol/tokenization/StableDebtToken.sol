@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../../tools/Errors.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/InterestMath.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
@@ -19,6 +20,7 @@ import './base/DebtTokenBase.sol';
  * at stable rate mode
  **/
 contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtToken {
+  using SafeMath for uint256;
   using WadRayMath for uint256;
 
   uint256 private constant DEBT_TOKEN_REVISION = 0x1;

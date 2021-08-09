@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 import '../interfaces/IRewardMinter.sol';
 import './BaseRewardController.sol';
 
 abstract contract BasicRewardController is BaseRewardController {
+  using SafeMath for uint256;
+
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
-    public
     BaseRewardController(accessController, rewardMinter)
   {}
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 pragma experimental ABIEncoderV2;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
@@ -22,7 +22,7 @@ abstract contract SlashableStakeTokenBase is
   IStakeToken,
   IManagedStakeToken,
   ERC20WithPermit,
-  MarketAccessBitmask(IMarketAccessController(0)),
+  MarketAccessBitmask(IMarketAccessController(address(0))),
   IInitializableStakeToken
 {
   using SafeMath for uint256;
@@ -45,7 +45,7 @@ abstract contract SlashableStakeTokenBase is
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public ERC20WithPermit(name, symbol, decimals) {
+  ) ERC20WithPermit(name, symbol, decimals) {
     _initializeToken(params);
   }
 

@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../tools/upgradeability/VersionedInitializable.sol';
-import '../libraries/configuration/UserConfiguration.sol';
-import '../libraries/configuration/ReserveConfiguration.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
 import '../libraries/types/DataTypes.sol';
 
 abstract contract LendingPoolStorage is VersionedInitializable {
-  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
-  using UserConfiguration for DataTypes.UserConfigurationMap;
-
   IMarketAccessController internal _addressesProvider;
   address internal _extension;
 
