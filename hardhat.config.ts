@@ -28,6 +28,7 @@ const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || '';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
 const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+const MAINNET_FORK_BLOCK_NUMBER = Number(process.env.MAINNET_FORK_BLOCK_NUMBER) || 12924500;
 const COINMARKETCAP_KEY = process.env.COINMARKETCAP_KEY || '';
 
 // Prevent to load scripts before compilation and typechain
@@ -63,7 +64,7 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
 
 const mainnetFork = MAINNET_FORK
   ? {
-      blockNumber: 12924500,
+      blockNumber: MAINNET_FORK_BLOCK_NUMBER,
       mining: {
         auto: false,
         interval: [3000, 6000]
@@ -126,7 +127,7 @@ const buidlerConfig: HardhatUserConfig = {
     // matic: getCommonNetworkConfig(ePolygonNetwork.matic, 137),
     // mumbai: getCommonNetworkConfig(ePolygonNetwork.mumbai, 80001),
     hardhat: {
-      hardfork: 'istanbul',
+      hardfork: HARDFORK,
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
       gas: DEFAULT_BLOCK_GAS_LIMIT,
       gasPrice: 8000000000,
@@ -144,7 +145,7 @@ const buidlerConfig: HardhatUserConfig = {
       chainId: BUIDLEREVM_CHAINID,
     },
     buidlerevm_docker: {
-      hardfork: 'istanbul',
+      hardfork: HARDFORK,
       blockGasLimit: 9500000,
       gas: 9500000,
       gasPrice: 8000000000,
