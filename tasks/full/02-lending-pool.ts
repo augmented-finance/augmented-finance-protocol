@@ -5,7 +5,7 @@ import {
   deployLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
-import { falsyOrZeroAddress, getFirstSigner } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, getFirstSigner, waitTx } from '../../helpers/misc-utils';
 import { getLendingPoolProxy } from '../../helpers/contracts-getters';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
@@ -43,10 +43,10 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
 
     let lpExt = newLendingPool ? '' : await lendingPoolProxy.getLendingPoolExtension();
     if (falsyOrZeroAddress(lpExt)) {
-      console.log('\tDeploying collateral manager...');
+      console.log('\tDeploying lending pool extension...');
       const poolExtension = await deployLendingPoolExtensionImpl(verify, continuation);
-      await addressProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN);
-      await lendingPoolProxy.setLendingPoolExtension(poolExtension.address);
+      await waitTx(addressProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN));
+      await waitTx(lendingPoolProxy.setLendingPoolExtension(poolExtension.address));
       lpExt = poolExtension.address;
     }
     console.log('Collateral manager:', lpExt);

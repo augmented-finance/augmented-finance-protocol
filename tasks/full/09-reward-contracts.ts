@@ -12,7 +12,7 @@ import {
   getRewardBooster,
   getRewardConfiguratorProxy,
 } from '../../helpers/contracts-getters';
-import { getFirstSigner, falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { getFirstSigner, falsyOrZeroAddress, waitTx, mustWaitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import {
   getDeployAccessController,
@@ -125,14 +125,16 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     }
 
     if (freshStart && (!continuation || falsyOrZeroAddress((await booster.getBoostPool()).pool))) {
-      await addressProvider.grantRoles(
-        (await getFirstSigner()).address,
-        AccessFlags.REWARD_CONFIG_ADMIN
+      await waitTx(
+        addressProvider.grantRoles(
+          (await getFirstSigner()).address,
+          AccessFlags.REWARD_CONFIG_ADMIN
+        )
       );
       console.log('Granted REWARD_CONFIG_ADMIN');
 
-      await waitForTx(
-        await configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false, {
+      await mustWaitTx(
+        configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false, {
           gasLimit: 2000000,
         })
       );

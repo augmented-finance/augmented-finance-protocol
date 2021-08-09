@@ -7,6 +7,7 @@ import {
   getFirstSigner,
   getTenderlyDashboardLink,
   printContracts,
+  setSkipWaitTx,
 } from '../../helpers/misc-utils';
 import { usingTenderly } from '../../helpers/tenderly-utils';
 import { exit } from 'process';
@@ -19,6 +20,8 @@ task('augmented:mainnet', 'Deploy enviroment')
     const POOL_NAME = ConfigNames.Augmented;
     const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
     await DRE.run('set-DRE');
+
+    //    setSkipWaitTx(MAINNET_FORK);
 
     const deployer = await getFirstSigner();
     const startBalance: BigNumber = await deployer.getBalance();

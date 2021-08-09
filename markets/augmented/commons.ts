@@ -233,7 +233,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.docker]: {},
     [eEthereumNetwork.coverage]: {},
     [eEthereumNetwork.kovan]: {
-      AAVE: '0xB597cd8D3217ea6477232F9217fa70837ff667Af',
+      AAVE: ZERO_ADDRESS, // '0xB597cd8D3217ea6477232F9217fa70837ff667Af',
       // BUSD: '0x4c6E1EFC12FDfD568186b7BAEc0A43fFfb4bCcCf',
       DAI: '0xFf795577d9AC8bD7D90Ee22b6C1703490b6512FD',
       LINK: '0xAD5ce863aE3E4E9394Ab43d4ba0D80f419F61789',

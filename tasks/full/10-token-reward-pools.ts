@@ -24,7 +24,13 @@ import {
   getIManagedRewardPool,
   getIRewardedToken,
 } from '../../helpers/contracts-getters';
-import { chunk, falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
+import {
+  chunk,
+  falsyOrZeroAddress,
+  getFirstSigner,
+  mustWaitTx,
+  waitTx,
+} from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumber } from 'ethers';
 import { oneWad } from '../../helpers/constants';
@@ -61,8 +67,8 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
     );
 
-    await waitForTx(
-      await addressProvider.grantRoles(
+    await waitTx(
+      addressProvider.grantRoles(
         (await getFirstSigner()).address,
         AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_RATE_ADMIN
       )
@@ -199,8 +205,8 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     for (let chunkIndex = 0; chunkIndex < chunkedParams.length; chunkIndex++) {
       const param = chunkedParams[chunkIndex];
       // console.log(param);
-      const tx3 = await waitForTx(
-        await configurator.batchInitRewardPools(param, {
+      const tx3 = await mustWaitTx(
+        configurator.batchInitRewardPools(param, {
           gasLimit: 5000000,
         })
       );
@@ -213,7 +219,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     newNames.push(...initNames);
 
     const initialRate = BigNumber.from(oneWad.multipliedBy(rewardParams.InitialRateWad).toFixed());
-    await waitForTx(await rewardController.updateBaseline(initialRate));
+    await mustWaitTx(rewardController.updateBaseline(initialRate));
 
     console.log(`Reward pools initialized with total rate: ${rewardParams.InitialRateWad} wad/s`);
     const activePools = await configurator.list();
@@ -290,8 +296,8 @@ const deployExtraPools = async (
       [memberAddresses, memberShares] = transpose(members);
     }
 
-    waitForTx(
-      await configurator.configureTeamRewardPool(
+    await mustWaitTx(
+      configurator.configureTeamRewardPool(
         trp.address,
         poolName,
         unlockTimestamp,
@@ -381,7 +387,7 @@ const deployExtraPools = async (
   }
 
   if (poolAddrs.length > 0) {
-    await waitForTx(await configurator.addNamedRewardPools(poolAddrs, poolNames, poolFactors));
+    await mustWaitTx(configurator.addNamedRewardPools(poolAddrs, poolNames, poolFactors));
 
     console.log(`Deployed ${poolNames.join(', ')}: ${poolAddrs}`);
     extraNames.push(...poolNames);
