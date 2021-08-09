@@ -70,7 +70,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 amount,
     address onBehalfOf,
     uint256 referral
-  ) public override whenNotPaused notNested {
+  ) public override whenNotPaused notNestedCall {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateDeposit(reserve, amount);
@@ -96,7 +96,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     address asset,
     uint256 amount,
     address to
-  ) external override whenNotPaused returns (uint256) {
+  ) external override whenNotPaused onlyFirstCall returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     address depositToken = reserve.depositTokenAddress;
@@ -151,7 +151,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 amount,
     uint256 rateMode,
     address onBehalfOf
-  ) external override whenNotPaused returns (uint256) {
+  ) external override whenNotPaused notNestedCall returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(onBehalfOf, reserve);
@@ -202,7 +202,12 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     return paybackAmount;
   }
 
-  function swapBorrowRateMode(address asset, uint256 rateMode) external override whenNotPaused {
+  function swapBorrowRateMode(address asset, uint256 rateMode)
+    external
+    override
+    whenNotPaused
+    onlyFirstCall
+  {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(msg.sender, reserve);
@@ -246,7 +251,12 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     emit Swap(asset, msg.sender, rateMode);
   }
 
-  function rebalanceStableBorrowRate(address asset, address user) external override whenNotPaused {
+  function rebalanceStableBorrowRate(address asset, address user)
+    external
+    override
+    whenNotPaused
+    onlyFirstCall
+  {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     IERC20 stableDebtToken = IERC20(reserve.stableDebtTokenAddress);
@@ -441,8 +451,12 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     return _maxStableRateBorrowSizePct;
   }
 
-  /// @dev Returns the fee of flash loans
+  /// @dev Returns the fee of flash loans - backward compatible
   function FLASHLOAN_PREMIUM_TOTAL() public view returns (uint256) {
+    return _flashLoanPremiumPct;
+  }
+
+  function getFlashloanPremiumPct() public view override returns (uint16) {
     return _flashLoanPremiumPct;
   }
 

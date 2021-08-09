@@ -36,6 +36,20 @@ task('full:smoke-test', 'Smoke test of deployed configuration')
     //   console.log('\tCheck reserve data', addr);
     //   await dataHelper.getReserveData(addr);
     // }
+    {
+      console.log('Check getAddresses');
+      const addresses = await dataHelper.getAddresses();
+      let hasZeros = false;
+      for (const [name, addr] of Object.entries(addresses)) {
+        if (falsyOrZeroAddress(addr)) {
+          console.log('Unexpected zero address: ', name);
+          hasZeros = true;
+        }
+      }
+      if (hasZeros) {
+        throw 'Unexpected zero address(es)';
+      }
+    }
 
     console.log('Check getReservesData');
     const rd = await dataHelper.getReservesData((await getFirstSigner()).address);

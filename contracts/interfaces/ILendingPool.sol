@@ -231,4 +231,6 @@ interface ILendingPool is ILendingPoolEvents {
   function getReservesList() external view returns (address[] memory);
 
   function getAddressesProvider() external view returns (address);
+
+  function getFlashloanPremiumPct() external view returns (uint16);
 }

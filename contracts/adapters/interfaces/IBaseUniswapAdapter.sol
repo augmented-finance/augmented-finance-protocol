@@ -24,17 +24,17 @@ interface IBaseUniswapAdapter {
     address[] path;
   }
 
-  function WETH_ADDRESS() external returns (address);
+  function WETH_ADDRESS() external view returns (address);
 
-  function MAX_SLIPPAGE_PERCENT() external returns (uint256);
+  function MAX_SLIPPAGE_PERCENT() external view returns (uint256);
 
-  function FLASHLOAN_PREMIUM_TOTAL() external returns (uint256);
+  function FLASHLOAN_PREMIUM_TOTAL() external view returns (uint256);
 
-  function USD_ADDRESS() external returns (address);
+  function USD_ADDRESS() external view returns (address);
 
-  function ORACLE() external returns (IPriceOracleGetter);
+  function ORACLE() external view returns (IPriceOracleGetter);
 
-  function UNISWAP_ROUTER() external returns (IUniswapV2Router02);
+  function UNISWAP_ROUTER() external view returns (IUniswapV2Router02);
 
   /**
    * @dev Given an input asset amount, returns the maximum output amount of the other asset and the prices
