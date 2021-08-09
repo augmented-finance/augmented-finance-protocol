@@ -18,7 +18,7 @@ services:
   augmented:
     build: ./
     environment:
-      MAINNET_FORK_BLOCK_NUMBER: "12990000"
+      MAINNET_FORK_BLOCK_NUMBER: "12991000"
       MAINNET_FORK: "true"
     command: bash -c "yarn hardhat augmented:mainnet --network docker && cp ui-config.json /opt/www/ui-config.json"
     volumes:
