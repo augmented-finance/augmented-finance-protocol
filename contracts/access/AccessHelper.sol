@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {BitUtils} from '../tools/math/BitUtils.sol';
-import {IRemoteAccessBitmask} from './interfaces/IRemoteAccessBitmask.sol';
+import './interfaces/IRemoteAccessBitmask.sol';
 
-/**
- * @title AccessHelper
- * @dev Wrapper around IRemoteAccessBitmask
- */
+/// @dev Helper/wrapper around IRemoteAccessBitmask
 library AccessHelper {
-  using BitUtils for uint256;
-
   function getAcl(IRemoteAccessBitmask remote, address subject) internal view returns (uint256) {
     return remote.queryAccessControlMask(subject, ~uint256(0));
   }
@@ -28,23 +22,8 @@ library AccessHelper {
     address subject,
     uint256 flags
   ) internal view returns (bool) {
-    return queryAcl(remote, subject, flags).hasAnyOf(flags);
-  }
-
-  function hasAllOf(
-    IRemoteAccessBitmask remote,
-    address subject,
-    uint256 flags
-  ) internal view returns (bool) {
-    return queryAcl(remote, subject, flags).hasAllOf(flags);
-  }
-
-  function hasNoneOf(
-    IRemoteAccessBitmask remote,
-    address subject,
-    uint256 flags
-  ) internal view returns (bool) {
-    return queryAcl(remote, subject, flags).hasNoneOf(flags);
+    uint256 found = queryAcl(remote, subject, flags);
+    return found & flags != 0;
   }
 
   function hasAny(IRemoteAccessBitmask remote, address subject) internal view returns (bool) {

@@ -2,28 +2,26 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {Address} from '../dependencies/openzeppelin/contracts/Address.sol';
-import {IERC20Detailed} from '../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
-import {AccessFlags} from '../access/AccessFlags.sol';
-import {ILendingPool} from '../interfaces/ILendingPool.sol';
-import {IStableDebtToken} from '../interfaces/IStableDebtToken.sol';
-import {IVariableDebtToken} from '../interfaces/IVariableDebtToken.sol';
-import {ReserveConfiguration} from '../protocol/libraries/configuration/ReserveConfiguration.sol';
-import {UserConfiguration} from '../protocol/libraries/configuration/UserConfiguration.sol';
-import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
-import {IReserveStrategy} from '../interfaces/IReserveStrategy.sol';
-import {IPoolAddressProvider} from '../interfaces/IPoolAddressProvider.sol';
-import {IUiPoolDataProvider} from './interfaces/IUiPoolDataProvider.sol';
-import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
-import {IDepositToken} from '../interfaces/IDepositToken.sol';
-import {IDerivedToken} from '../interfaces/IDerivedToken.sol';
-import {IRewardedToken} from '../interfaces/IRewardedToken.sol';
-import {IManagedRewardPool} from '../reward/interfaces/IManagedRewardPool.sol';
+import '../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
+import '../access/interfaces/IMarketAccessController.sol';
+import '../access/AccessFlags.sol';
+import '../interfaces/ILendingPool.sol';
+import '../interfaces/IStableDebtToken.sol';
+import '../interfaces/IVariableDebtToken.sol';
+import '../protocol/libraries/configuration/ReserveConfiguration.sol';
+import '../protocol/libraries/configuration/UserConfiguration.sol';
+import '../protocol/libraries/types/DataTypes.sol';
+import '../interfaces/IReserveStrategy.sol';
+import '../interfaces/IPoolAddressProvider.sol';
+import './interfaces/IUiPoolDataProvider.sol';
+import '../interfaces/IPriceOracleGetter.sol';
+import '../interfaces/IDepositToken.sol';
+import '../interfaces/IDerivedToken.sol';
+import '../interfaces/IRewardedToken.sol';
+import '../reward/interfaces/IManagedRewardPool.sol';
 import '../reward/interfaces/IRewardExplainer.sol';
-
-import {IStakeConfigurator} from '../protocol/stake/interfaces/IStakeConfigurator.sol';
-import {IStakeToken} from '../protocol/stake/interfaces/IStakeToken.sol';
+import '../protocol/stake/interfaces/IStakeConfigurator.sol';
+import '../protocol/stake/interfaces/IStakeToken.sol';
 
 contract ProtocolDataProvider is IUiPoolDataProvider {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -68,7 +66,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     view
     returns (TokenDescription[] memory tokens, uint256 tokenCount)
   {
-    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getStakeConfigurator());
+    IStakeConfigurator stakeCfg =
+      IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
     address[] memory stakeList = stakeCfg.list();
 
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
@@ -82,7 +81,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     tokens = new TokenDescription[](tokenCount);
 
     tokenCount = 0;
-    address token = ADDRESS_PROVIDER.getRewardToken();
+    address token = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_TOKEN);
     if (token != address(0)) {
       tokens[tokenCount] = TokenDescription(
         token,
@@ -97,7 +96,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       tokenCount++;
     }
 
-    token = ADDRESS_PROVIDER.getRewardStakeToken();
+    token = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_STAKE_TOKEN);
     if (token != address(0)) {
       tokens[tokenCount] = TokenDescription(
         token,
@@ -204,7 +203,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     view
     returns (address[] memory tokens, uint256 tokenCount)
   {
-    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getStakeConfigurator());
+    IStakeConfigurator stakeCfg =
+      IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
     address[] memory stakeList = stakeCfg.list();
 
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
@@ -216,8 +216,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     }
     tokens = new address[](tokenCount);
 
-    tokens[0] = ADDRESS_PROVIDER.getRewardToken();
-    tokens[1] = ADDRESS_PROVIDER.getRewardStakeToken();
+    tokens[0] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_TOKEN);
+    tokens[1] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_STAKE_TOKEN);
 
     tokenCount = 2;
 
@@ -616,10 +616,9 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   function balanceOf(address user, address token) public view returns (uint256) {
     if (token == ETH) {
       return user.balance; // ETH balance
-    } else if (Address.isContract(token)) {
+    } else {
       return IERC20Detailed(token).balanceOf(user);
     }
-    return 0;
   }
 
   /**

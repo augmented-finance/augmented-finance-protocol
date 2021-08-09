@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IFlashLoanAddressProvider} from '../../interfaces/IFlashLoanAddressProvider.sol';
-import {ILendingPool} from '../../interfaces/ILendingPool.sol';
+import '../../interfaces/IFlashLoanAddressProvider.sol';
+import '../../interfaces/ILendingPool.sol';
 
 /**
  * @title IFlashLoanReceiver interface

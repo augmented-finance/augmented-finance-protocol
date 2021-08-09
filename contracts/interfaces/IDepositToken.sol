@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IScaledBalanceToken} from './IScaledBalanceToken.sol';
-import {IPoolToken} from './IPoolToken.sol';
+import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import './IScaledBalanceToken.sol';
+import './IPoolToken.sol';
 
 interface IDepositToken is IERC20, IScaledBalanceToken, IPoolToken {
   /**
@@ -93,6 +93,4 @@ interface IDepositToken is IERC20, IScaledBalanceToken, IPoolToken {
    * @param amount The amount getting repaid
    **/
   function handleRepayment(address user, uint256 amount) external;
-
-  function setTreasury(address) external;
 }

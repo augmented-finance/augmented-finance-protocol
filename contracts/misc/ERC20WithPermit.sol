@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
 
-import {ERC20} from '../dependencies/openzeppelin/contracts/ERC20.sol';
-import {PermitForERC20} from './PermitForERC20.sol';
+import '../dependencies/openzeppelin/contracts/ERC20.sol';
+import './PermitForERC20.sol';
 
 abstract contract ERC20WithPermit is ERC20, PermitForERC20 {
   constructor(

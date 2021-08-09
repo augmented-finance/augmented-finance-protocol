@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {StableDebtToken} from '../../protocol/tokenization/StableDebtToken.sol';
+import '../../protocol/tokenization/StableDebtToken.sol';
 
 contract MockStableDebtToken is StableDebtToken {
   constructor() public {

@@ -2,23 +2,10 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-import {IEmergencyAccess} from '../../interfaces/IEmergencyAccess.sol';
-import {IDerivedToken} from '../../interfaces/IDerivedToken.sol';
-
-import {CalcLinearRateReward} from '../calcs/CalcLinearRateReward.sol';
-
-import {Errors} from '../../tools/Errors.sol';
-
-import 'hardhat/console.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../interfaces/IDerivedToken.sol';
 
 /**
   @dev Curve-like locker, that locks an underlying token for some period and mints non-transferrable tokens for that period. 
@@ -30,7 +17,6 @@ import 'hardhat/console.sol';
 
 abstract contract BaseTokenLocker is IERC20, IDerivedToken {
   using SafeMath for uint256;
-  using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
   IERC20 private _underlyingToken;
@@ -162,7 +148,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
   /** @dev A function to add funds to a lock of another user. Must be explicitly allowed with allowAdd().
       @param to an address to whose lock the given underlyingAmount shoud be added
       @param underlyingAmount amount of underlying (>0) to be added to the lock. Must be approved for transferFrom.
-      @return total amount of lock tokens of the "to" address.
+      @return total amount of lock tokens of the `to` address.
    */
   function lockAdd(address to, uint256 underlyingAmount) external returns (uint256) {
     require(underlyingAmount > 0, 'ZERO_UNDERLYING');
@@ -175,13 +161,13 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     return stakeAmount;
   }
 
-  // These constants are "soft" errors - such errors can be detected by the autolock function so it can stop automatically
+  // These constants are soft errors - such errors can be detected by the autolock function so it can stop automatically
   uint256 private constant LOCK_ERR_NOTHING_IS_LOCKED = 1;
   uint256 private constant LOCK_ERR_DURATION_IS_TOO_LARGE = 2;
   uint256 private constant LOCK_ERR_UNDERLYING_OVERFLOW = 3;
   uint256 private constant LOCK_ERR_LOCK_OVERFLOW = 4;
 
-  /// @dev Converts "soft" errors into "hard" reverts
+  /// @dev Converts soft errors into hard reverts
   function revertOnError(uint256 recoverableError) private pure {
     require(recoverableError != LOCK_ERR_LOCK_OVERFLOW, 'LOCK_ERR_LOCK_OVERFLOW');
     require(recoverableError != LOCK_ERR_UNDERLYING_OVERFLOW, 'LOCK_ERR_UNDERLYING_OVERFLOW');
@@ -198,7 +184,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
       Zero value indicates addition to an existing lock without changing expiry.
       @param transfer indicates when transferFrom should be called. E.g. autolock uses false, as tokens will be minted externally to this contract.
       @param referral code to use for marketing campaings. Use 0 when not involved.
-      @return stakeAmount is total amount of lock tokens of the "to" address; recoverableError is the "soft" error code.
+      @return stakeAmount is total amount of lock tokens of the `to` address; recoverableError is the soft error code.
    */
   function internalLock(
     address from,
@@ -279,7 +265,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
         return (0, LOCK_ERR_LOCK_OVERFLOW);
       }
 
-      // ======== ATTN! "DO NOT APPLY STATE CHANGES" ENDS HERE ========
+      // ======== ATTN! DO NOT APPLY STATE CHANGES ENDS HERE ========
 
       if (prevStake > 0) {
         if (userBalance.endPoint == newEndPoint) {
@@ -453,8 +439,6 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
     totalSupply_ = _stakedTotal;
 
-    //    console.log('totalSupply', fromPoint, tillPoint, totalSupply_);
-
     if (tillPoint == 0) {
       return totalSupply_;
     }
@@ -595,35 +579,16 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     uint32 expiryPt = 1 + uint32(expiry + at + _pointPeriod - 1) / _pointPeriod;
     expiry = expiryPt * _pointPeriod;
 
-    // console.log('internalAddExcess', amount, since, _excessAccum);
-    // console.log('internalAddExcess_1', expiry, expiryPt, expiry - at);
-
     expiry -= at;
     amount += _excessAccum;
     uint256 excessRateIncrement = amount / expiry;
-    // if (excessRateIncrement < _extraRate>>10) {
-    //   excessRateIncrement = 0;
-    // }
     _excessAccum = amount - excessRateIncrement * expiry;
-
-    // console.log(
-    //   'internalAddExcess_2',
-    //   excessRateIncrement,
-    //   block.timestamp,
-    //   _excessAccum
-    // );
 
     if (excessRateIncrement == 0) {
       return;
     }
 
     internalSyncRate(at);
-
-    // console.log(
-    //   'internalAddExcess_3',
-    //   _extraRate,
-    //   _extraRate.add(excessRateIncrement)
-    // );
 
     _extraRate = _extraRate.add(excessRateIncrement);
 

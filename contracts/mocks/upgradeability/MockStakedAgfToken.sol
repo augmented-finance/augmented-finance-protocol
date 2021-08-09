@@ -2,10 +2,10 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {SlashableStakeTokenBase} from '../../protocol/stake/SlashableStakeTokenBase.sol';
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {StakeTokenConfig} from '../../protocol/stake/interfaces/StakeTokenConfig.sol';
-import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
+import '../../protocol/stake/SlashableStakeTokenBase.sol';
+import '../../access/AccessFlags.sol';
+import '../../protocol/stake/interfaces/StakeTokenConfig.sol';
+import '../../tools/upgradeability/VersionedInitializable.sol';
 
 contract MockStakedAgfToken is SlashableStakeTokenBase, VersionedInitializable {
   string internal constant NAME = 'Staked AGF mock';

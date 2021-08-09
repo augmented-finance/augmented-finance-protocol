@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-/**
- * @title IReserveStrategy interface
- * @dev Strategy to control a lending pool reserve
- * @author Aave
- */
+/// @dev Strategy to control a lending pool reserve
 interface IReserveStrategy {
   function baseVariableBorrowRate() external view returns (uint256);
 

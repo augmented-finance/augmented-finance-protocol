@@ -51,7 +51,9 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
     }
     console.log('Collateral manager:', lpExt);
 
-    let lpConfigurator = newLendingPool ? '' : await addressProvider.getLendingPoolConfigurator();
+    let lpConfigurator = newLendingPool
+      ? ''
+      : await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR);
 
     if (falsyOrZeroAddress(lpConfigurator)) {
       console.log('\tDeploying configurator...');

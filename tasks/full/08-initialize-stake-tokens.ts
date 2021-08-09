@@ -1,5 +1,4 @@
 import { task } from 'hardhat/config';
-import { exit } from 'process';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { deployStakeTokenImpl } from '../../helpers/contracts-deployments';
@@ -7,7 +6,6 @@ import { eNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../
 import {
   getIErc20Detailed,
   getLendingPoolProxy,
-  getMarketAddressController,
   getStakeConfiguratorImpl,
 } from '../../helpers/contracts-getters';
 import { chunk, falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
@@ -28,7 +26,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
     const { ReserveAssets, Names } = poolConfig as ICommonConfiguration;
 
     const stakeConfigurator = await getStakeConfiguratorImpl(
-      await addressProvider.getStakeConfigurator()
+      await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
     );
 
     const reserveAssets = getParamPerNetwork(ReserveAssets, network);

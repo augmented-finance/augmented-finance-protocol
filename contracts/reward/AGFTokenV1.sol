@@ -2,16 +2,14 @@
 pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {AccessFlags} from '../access/AccessFlags.sol';
-import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
+import '../access/AccessFlags.sol';
+import '../access/MarketAccessBitmask.sol';
+import '../access/interfaces/IMarketAccessController.sol';
 
-import {IRewardMinter} from '../interfaces/IRewardMinter.sol';
-import {RewardToken} from './RewardToken.sol';
-import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
-import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
-
-import 'hardhat/console.sol';
+import '../interfaces/IRewardMinter.sol';
+import './RewardToken.sol';
+import '../tools/upgradeability/VersionedInitializable.sol';
+import './interfaces/IInitializableRewardToken.sol';
 
 contract AGFTokenV1 is
   RewardToken,

@@ -232,13 +232,13 @@ export const addNamedToJsonDb = async (contractId: string, contractAddress: stri
 };
 
 export const getInstancesFromJsonDb = () =>
-  Object.entries<DbInstanceEntry>(getDb().get(`${DRE.network.name}.instance`).value());
+  Object.entries<DbInstanceEntry>(getDb().get(`${DRE.network.name}.instance`).value() || []);
 
 export const getExternalsFromJsonDb = () =>
-  Object.entries<DbInstanceEntry>(getDb().get(`${DRE.network.name}.external`).value());
+  Object.entries<DbInstanceEntry>(getDb().get(`${DRE.network.name}.external`).value() || []);
 
 export const getNamedFromJsonDb = () =>
-  Object.entries<DbNamedEntry>(getDb().get(`${DRE.network.name}.named`).value());
+  Object.entries<DbNamedEntry>(getDb().get(`${DRE.network.name}.named`).value() || []);
 
 export const getFromJsonDb = (id: string) => getDb().get(`${DRE.network.name}.named.${id}`).value();
 
@@ -248,9 +248,7 @@ export const getFromJsonDbByAddr = (id: string) =>
 export const hasInJsonDb = async (id: string) => !falsyOrZeroAddress(getFromJsonDb(id)?.address);
 
 export const getInstanceCountFromJsonDb = () => {
-  const currentNetwork = DRE.network.name;
-  const db = getDb();
-  return Object.entries(db.get(`${currentNetwork}.instance`).value()).length;
+  return getInstancesFromJsonDb().length;
 };
 
 export const printContracts = (

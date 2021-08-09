@@ -2,19 +2,17 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IERC20Details} from '../../dependencies/openzeppelin/contracts/IERC20Details.sol';
-import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-import {IDerivedToken} from '../../interfaces/IDerivedToken.sol';
-import {MarketAccessBitmask} from '../../access/MarketAccessBitmask.sol';
-import {Errors} from '../../tools/Errors.sol';
-import {IStakeConfigurator} from './interfaces/IStakeConfigurator.sol';
-import {IInitializableStakeToken} from './interfaces/IInitializableStakeToken.sol';
-import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
-import {IProxy} from '../../tools/upgradeability/IProxy.sol';
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {ProxyAdmin} from '../../tools/upgradeability/ProxyAdmin.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../tools/upgradeability/VersionedInitializable.sol';
+import '../../access/interfaces/IMarketAccessController.sol';
+import '../../interfaces/IDerivedToken.sol';
+import '../../access/MarketAccessBitmask.sol';
+import './interfaces/IStakeConfigurator.sol';
+import './interfaces/IInitializableStakeToken.sol';
+import './interfaces/StakeTokenConfig.sol';
+import '../../tools/upgradeability/IProxy.sol';
+import '../../access/AccessFlags.sol';
+import '../../tools/upgradeability/ProxyAdmin.sol';
 
 contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStakeConfigurator {
   uint256 private constant CONFIGURATOR_REVISION = 1;

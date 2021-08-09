@@ -2,9 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {
-  DelegationAwareDepositToken
-} from '../../protocol/tokenization/DelegationAwareDepositToken.sol';
+import '../../protocol/tokenization/DelegationAwareDepositToken.sol';
 
 contract MockDelegationAwareDepositToken is DelegationAwareDepositToken {
   constructor() public {

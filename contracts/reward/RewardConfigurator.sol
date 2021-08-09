@@ -2,24 +2,21 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {VersionedInitializable} from '../tools/upgradeability/VersionedInitializable.sol';
+import '../tools/upgradeability/VersionedInitializable.sol';
 
-import {IMarketAccessController} from '../access/interfaces/IMarketAccessController.sol';
-import {MarketAccessBitmask} from '../access/MarketAccessBitmask.sol';
-import {Errors} from '../tools/Errors.sol';
-import {IRewardConfigurator} from './interfaces/IRewardConfigurator.sol';
-import {
-  IManagedRewardController,
-  IUntypedRewardControllerPools,
-  IManagedRewardBooster
-} from './interfaces/IRewardController.sol';
-import {IManagedRewardPool} from './interfaces/IManagedRewardPool.sol';
-import {IInitializableRewardToken} from './interfaces/IInitializableRewardToken.sol';
-import {IInitializableRewardPool} from './interfaces/IInitializableRewardPool.sol';
-import {ProxyAdmin} from '../tools/upgradeability/ProxyAdmin.sol';
-import {IRewardedToken} from '../interfaces/IRewardedToken.sol';
-import {TeamRewardPool} from './pools/TeamRewardPool.sol';
-import {IProxy} from '../tools/upgradeability/IProxy.sol';
+import '../access/interfaces/IMarketAccessController.sol';
+import '../access/MarketAccessBitmask.sol';
+import '../tools/Errors.sol';
+import './interfaces/IRewardConfigurator.sol';
+import './interfaces/IRewardController.sol';
+import './interfaces/IManagedRewardController.sol';
+import './interfaces/IManagedRewardPool.sol';
+import './interfaces/IInitializableRewardToken.sol';
+import './interfaces/IInitializableRewardPool.sol';
+import '../tools/upgradeability/ProxyAdmin.sol';
+import '../interfaces/IRewardedToken.sol';
+import './pools/TeamRewardPool.sol';
+import '../tools/upgradeability/IProxy.sol';
 
 contract RewardConfigurator is
   MarketAccessBitmask(IMarketAccessController(0)),
@@ -45,7 +42,7 @@ contract RewardConfigurator is
   }
 
   function getDefaultController() public view returns (IManagedRewardController) {
-    address ctl = _remoteAcl.getRewardController();
+    address ctl = _remoteAcl.getAddress(AccessFlags.REWARD_CONTROLLER);
     require(ctl != address(0), 'incomplete configuration');
     return IManagedRewardController(ctl);
   }

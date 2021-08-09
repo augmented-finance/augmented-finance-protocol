@@ -2,20 +2,13 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-
-import {BaseTokenLocker} from './BaseTokenLocker.sol';
-import {IBoostRate} from '../interfaces/IBoostRate.sol';
-import {ControlledRewardPool} from '../pools/ControlledRewardPool.sol';
-import {CalcCheckpointWeightedReward} from '../calcs/CalcCheckpointWeightedReward.sol';
-import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
-import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
+import '../interfaces/IBoostRate.sol';
+import '../interfaces/IBoostExcessReceiver.sol';
+import '../interfaces/IRewardController.sol';
 import '../interfaces/IAutolocker.sol';
-
-import {Errors} from '../../tools/Errors.sol';
-
-import 'hardhat/console.sol';
+import '../pools/ControlledRewardPool.sol';
+import '../calcs/CalcCheckpointWeightedReward.sol';
+import './BaseTokenLocker.sol';
 
 contract RewardedTokenLocker is
   BaseTokenLocker,
@@ -25,9 +18,6 @@ contract RewardedTokenLocker is
   IBoostRate,
   IAutolocker
 {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
-
   constructor(
     IRewardController controller,
     uint256 initialRate,
@@ -55,12 +45,10 @@ contract RewardedTokenLocker is
   function removeRewardProvider(address) external override onlyConfigAdmin {}
 
   function internalSyncRate(uint32 at) internal override {
-    // console.log('internalSyncRate', at, getExtraRate(), getStakedTotal());
     doSyncRateAt(at);
   }
 
   function internalCheckpoint(uint32 at) internal override {
-    // console.log('internalCheckpoint', at, getExtraRate(), getStakedTotal());
     doCheckpoint(at);
   }
 

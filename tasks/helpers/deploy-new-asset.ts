@@ -11,6 +11,7 @@ import {
 } from './../../helpers/contracts-deployments';
 import { setDRE } from '../../helpers/misc-utils';
 import { ZERO_ADDRESS } from './../../helpers/constants';
+import { AccessFlags } from '../../helpers/access-flags';
 
 const LENDING_POOL_ADDRESS_PROVIDER = {
   main: '0xb53c1a33016b2dc2ff3653530bff1848a515c8c5',
@@ -48,7 +49,7 @@ WRONG RESERVE ASSET SETUP:
       LENDING_POOL_ADDRESS_PROVIDER[network]
     );
     const poolAddress = await addressProvider.getLendingPool();
-    const treasuryAddress = await addressProvider.getTreasury();
+    const treasuryAddress = await addressProvider.getAddress(AccessFlags.TREASURY);
     const depositToken = await deployDepositToken(
       [
         poolAddress,

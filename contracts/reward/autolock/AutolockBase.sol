@@ -1,22 +1,20 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../tools/math/PercentageMath.sol';
 
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
-import {BaseRewardController} from '../BaseRewardController.sol';
-import {IRewardMinter} from '../../interfaces/IRewardMinter.sol';
-import {IRewardPool} from '../interfaces/IRewardPool.sol';
-import {IManagedRewardPool} from '../interfaces/IManagedRewardPool.sol';
-import {IManagedRewardBooster} from '../interfaces/IRewardController.sol';
-import {IBoostExcessReceiver} from '../interfaces/IBoostExcessReceiver.sol';
-import {IBoostRate} from '../interfaces/IBoostRate.sol';
-import {IRewardExplainer} from '../interfaces/IRewardExplainer.sol';
+import '../../access/interfaces/IMarketAccessController.sol';
+import '../BaseRewardController.sol';
+import '../../interfaces/IRewardMinter.sol';
+import '../interfaces/IRewardPool.sol';
+import '../interfaces/IManagedRewardPool.sol';
+import '../interfaces/IRewardController.sol';
+import '../interfaces/IBoostExcessReceiver.sol';
+import '../interfaces/IBoostRate.sol';
+import '../interfaces/IRewardExplainer.sol';
 
 import '../interfaces/IAutolocker.sol';
-
-import 'hardhat/console.sol';
 
 abstract contract AutolockBase {
   using SafeMath for uint256;

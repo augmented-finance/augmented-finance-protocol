@@ -42,11 +42,13 @@ library Address {
     // and 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470 is returned
     // for accounts without code, i.e. `keccak256('')`
     bytes32 codehash;
+    uint256 size;
     // solhint-disable-next-line no-inline-assembly
     assembly {
       codehash := extcodehash(account)
+      size := extcodesize(account)
     }
-    return codehash == accountHash;
+    return codehash == accountHash && size == 0;
   }
 
   /**

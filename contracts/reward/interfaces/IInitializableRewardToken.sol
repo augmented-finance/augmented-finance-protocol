@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {IMarketAccessController} from '../../access/interfaces/IMarketAccessController.sol';
+import '../../access/interfaces/IMarketAccessController.sol';
 
 interface IInitializableRewardToken {
   struct InitData {

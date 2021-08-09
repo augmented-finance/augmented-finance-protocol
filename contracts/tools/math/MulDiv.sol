@@ -1,16 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity 0.6.12;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {AllocationMode} from '../interfaces/IRewardController.sol';
-import {BitUtils} from '../../tools/math/BitUtils.sol';
+import '../Errors.sol';
 
-import 'hardhat/console.sol';
-
-abstract contract CalcBase {
-  using SafeMath for uint256;
-
+library MulDiv {
   /// @notice Calculates floor(a×b÷denominator) with full precision. Throws if result overflows a uint256 or denominator == 0
   /// @param a The multiplicand
   /// @param b The multiplier
@@ -37,7 +30,7 @@ abstract contract CalcBase {
 
     // Handle non-overflow cases, 256 by 256 division
     if (prod1 == 0) {
-      require(denominator > 0);
+      require(denominator > 0, Errors.MATH_DIVISION_BY_ZERO);
       assembly {
         result := div(prod0, denominator)
       }
@@ -46,7 +39,10 @@ abstract contract CalcBase {
 
     // Make sure the result is less than 2**256.
     // Also prevents denominator == 0
-    require(denominator > prod1);
+    require(
+      denominator > prod1,
+      denominator == 0 ? Errors.MATH_DIVISION_BY_ZERO : Errors.MATH_MULTIPLICATION_OVERFLOW
+    );
 
     ///////////////////////////////////////////////
     // 512 by 256 division.

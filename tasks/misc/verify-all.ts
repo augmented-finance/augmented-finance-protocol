@@ -77,8 +77,6 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
 
       if (params.impl) {
         console.log('\tProxy impl: ', params.impl);
-        console.log('\nUnable to verify proxy, skipping');
-        continue;
       }
 
       const [ok, err] = await verifyContractStringified(addr, params.args!);

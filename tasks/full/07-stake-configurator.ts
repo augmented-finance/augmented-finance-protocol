@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { deployStakeConfiguratorImpl } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
-import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
 
@@ -20,7 +20,9 @@ task(`full:deploy-stake-configurator`, `Deploys the ${CONTRACT_NAME} contract fo
 
     // StakeConfigurator is always updated
     let stakeConfiguratorAddr =
-      freshStart && continuation ? await addressProvider.getStakeConfigurator() : '';
+      freshStart && continuation
+        ? await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
+        : '';
 
     if (falsyOrZeroAddress(stakeConfiguratorAddr)) {
       console.log(`Deploy ${CONTRACT_NAME}`);

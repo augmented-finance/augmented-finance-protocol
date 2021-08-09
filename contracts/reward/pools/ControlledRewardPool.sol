@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.6.12;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {IManagedRewardPool} from '../interfaces/IManagedRewardPool.sol';
-import {AccessFlags} from '../../access/AccessFlags.sol';
-import {AccessHelper} from '../../access/AccessHelper.sol';
-import {Errors} from '../../tools/Errors.sol';
-
-import 'hardhat/console.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../tools/math/WadRayMath.sol';
+import '../../tools/math/PercentageMath.sol';
+import '../interfaces/IRewardController.sol';
+import '../interfaces/IManagedRewardPool.sol';
+import '../../access/AccessFlags.sol';
+import '../../access/AccessHelper.sol';
+import '../../tools/Errors.sol';
 
 abstract contract ControlledRewardPool is IManagedRewardPool {
   using SafeMath for uint256;
@@ -239,7 +237,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   function _onlyRefAdmin() private view {
     require(
-      AccessHelper.hasAllOf(
+      AccessHelper.hasAnyOf(
         _controller.getAccessController(),
         msg.sender,
         AccessFlags.REFERRAL_ADMIN
