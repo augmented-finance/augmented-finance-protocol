@@ -3,6 +3,7 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import './interfaces/IWETH.sol';
 import './interfaces/IWETHGateway.sol';
 import '../interfaces/ISweeper.sol';
@@ -16,6 +17,8 @@ import '../access/MarketAccessBitmask.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 
 contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
+  using SafeERC20 for IERC20;
+
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using UserConfiguration for DataTypes.UserConfigurationMap;
 
@@ -64,7 +67,7 @@ contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
     if (amount == type(uint256).max) {
       amount = aWETH.balanceOf(msg.sender);
     }
-    aWETH.transferFrom(msg.sender, address(this), amount);
+    IERC20(aWETH).safeTransferFrom(msg.sender, address(this), amount);
     ILendingPool(lendingPool).withdraw(address(WETH), amount, address(this));
     WETH.withdraw(amount);
     _safeTransferETH(to, amount);
