@@ -395,6 +395,8 @@ contract LendingPoolExtension is
     uint256 referral,
     uint16 flPremium
   ) private {
+    require(Address.isContract(receiver), Errors.VL_CONTRACT_REQUIRED);
+
     FlashLoanLocalVars memory vars;
     ValidationLogic.validateFlashloan(assets, amounts);
 
