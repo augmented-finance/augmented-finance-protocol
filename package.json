@@ -59,7 +59,8 @@
 
     "coverage": "TS_NODE_TRANSPILE_ONLY=1 hardhat compile --force && TS_NODE_TRANSPILE_ONLY=1 hardhat coverage --network coverage --testfiles \"test-suites/test-augmented/*.spec.ts\"",
 
-    "deploy:ropsten": "npm run compile && npm run hardhat:ropsten -- augmented:mainnet --incremental --verify",
+    "deploy:ropsten": "npm run compile && npm run hardhat:ropsten -- augmented:mainnet --verify",
+    "deploy:kovan": "npm run compile && npm run hardhat:kovan -- augmented:mainnet --verify",
 
     "aave:evm:dev:migration": "npm run compile && hardhat aave:dev",
     "aave:docker:full:migration": "npm run compile && npm run hardhat:docker -- augmented:mainnet",

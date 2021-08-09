@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { eNetwork } from '../../helpers/types';
 import { loadPoolConfig } from '../../helpers/configuration';
-import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import {
   getAddressesProviderRegistry,
   getMarketAccessController,
@@ -27,11 +27,11 @@ task('full:deploy-finalize', 'Finalize deployment')
     } else {
       registry = await getAddressesProviderRegistry(registryAddress);
     }
-    await registry.renounceOneTimeRegistrar();
+    await mustWaitTx(registry.renounceOneTimeRegistrar());
     console.log('Registrar permissions renounced');
 
     const addressProvider = await getMarketAccessController();
-    await waitForTx(await addressProvider.renounceTemporaryAdmin());
+    await mustWaitTx(addressProvider.renounceTemporaryAdmin());
     console.log('Temporary admin permissions renounced');
 
     const activeGrantees = async (flag: AccessFlags) => {

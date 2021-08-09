@@ -7,7 +7,7 @@ import { initReservesByHelper, configureReservesByHelper } from '../../helpers/i
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getProtocolDataProvider } from '../../helpers/contracts-getters';
-import { falsyOrZeroAddress, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 
 task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
   .addFlag('verify', 'Verify contracts at Etherscan')

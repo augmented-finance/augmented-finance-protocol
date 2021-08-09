@@ -8,7 +8,7 @@ import {
   getLendingPoolProxy,
   getStakeConfiguratorImpl,
 } from '../../helpers/contracts-getters';
-import { chunk, falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
+import { chunk, falsyOrZeroAddress, getFirstSigner, mustWaitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumberish } from 'ethers';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
@@ -114,17 +114,17 @@ task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
     const chunkedParams = chunk(initParams, initChunks);
     const chunkedSymbols = chunk(initSymbols, initChunks);
 
-    await waitForTx(
-      await addressProvider.grantRoles((await getFirstSigner()).address, AccessFlags.STAKE_ADMIN)
+    await mustWaitTx(
+      addressProvider.grantRoles((await getFirstSigner()).address, AccessFlags.STAKE_ADMIN)
     );
 
     console.log(`- Stakes initialization with ${chunkedParams.length} txs`);
     for (let chunkIndex = 0; chunkIndex < chunkedParams.length; chunkIndex++) {
       const param = chunkedParams[chunkIndex];
       console.log(param);
-      const tx3 = await waitForTx(
-        await stakeConfigurator.batchInitStakeTokens(param, {
-          gasLimit: 5000000,
+      const tx3 = await mustWaitTx(
+        stakeConfigurator.batchInitStakeTokens(param, {
+          gasLimit: 4000000,
         })
       );
 
