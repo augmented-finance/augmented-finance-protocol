@@ -23,7 +23,7 @@ import 'hardhat-abi-exporter';
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
 const DEFAULT_BLOCK_GAS_LIMIT = 7000000;
 const DEFAULT_GAS_MUL = 2;
-const HARDFORK = 'istanbul';
+const HARDFORK = 'london';
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || '';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
@@ -89,14 +89,14 @@ const buidlerConfig: HardhatUserConfig = {
         version: '0.6.12',
         settings: {
           optimizer: { enabled: true, runs: 200 },
-          evmVersion: 'istanbul',
+          evmVersion: HARDFORK,
         },
       },
       {
         version: '0.8.4',
         settings: {
           optimizer: { enabled: true, runs: 200 },
-          evmVersion: 'istanbul',
+          evmVersion: HARDFORK,
         },
       },
     ],
@@ -129,7 +129,7 @@ const buidlerConfig: HardhatUserConfig = {
     // matic: getCommonNetworkConfig(ePolygonNetwork.matic, 137),
     // mumbai: getCommonNetworkConfig(ePolygonNetwork.mumbai, 80001),
     hardhat: {
-      hardfork: 'istanbul',
+      hardfork: HARDFORK,
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
       gas: DEFAULT_BLOCK_GAS_LIMIT,
       gasPrice: 8000000000,
@@ -147,7 +147,7 @@ const buidlerConfig: HardhatUserConfig = {
       chainId: BUIDLEREVM_CHAINID,
     },
     buidlerevm_docker: {
-      hardfork: 'istanbul',
+      hardfork: HARDFORK,
       blockGasLimit: 9500000,
       gas: 9500000,
       gasPrice: 8000000000,
