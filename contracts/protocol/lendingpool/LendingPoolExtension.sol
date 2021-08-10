@@ -301,6 +301,12 @@ contract LendingPoolExtension is
     return (collateralAmount, debtAmountNeeded);
   }
 
+  function _checkUntrustedFlashloan() private view {
+    require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_RESTRICTED_FEATURE);
+    require(_flashloanCalls == 0, Errors.LP_TOO_MANY_FLASHLOAN_CALLS);
+    require(_nestedCalls == 0, Errors.LP_TOO_MANY_NESTED_CALLS);
+  }
+
   function flashLoan(
     address receiver,
     address[] calldata assets,
@@ -309,9 +315,8 @@ contract LendingPoolExtension is
     address onBehalfOf,
     bytes calldata params,
     uint256 referral
-  ) external override whenNotPaused countCalls {
-    require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_RESTRICTED_FEATURE);
-
+  ) external override whenNotPaused {
+    _checkUntrustedFlashloan();
     _flashLoan(
       receiver,
       assets,
@@ -332,9 +337,8 @@ contract LendingPoolExtension is
     address onBehalfOf,
     bytes calldata params,
     uint16 referral
-  ) external override whenNotPaused countCalls {
-    require(_disabledFeatures & FEATURE_FLASHLOAN == 0, Errors.LP_RESTRICTED_FEATURE);
-
+  ) external override whenNotPaused {
+    _checkUntrustedFlashloan();
     _flashLoan(
       receiver,
       assets,
@@ -347,7 +351,7 @@ contract LendingPoolExtension is
     );
   }
 
-  function sponsoredFlashLoan(
+  function trustedFlashLoan(
     address receiver,
     address[] calldata assets,
     uint256[] calldata amounts,
@@ -355,11 +359,17 @@ contract LendingPoolExtension is
     address onBehalfOf,
     bytes calldata params,
     uint256 referral
-  ) external override countCalls {
+  ) external override {
+    // whenNotPaused is NOT applied as the pool can be paused by the liquidity manager
+    // _checkUntrustedFlashloan() is NOT applied to allow any lending pool operations from the receiver
     require(
-      _addressesProvider.hasAnyOf(msg.sender, AccessFlags.POOL_SPONSORED_LOAN_USER),
-      Errors.LP_IS_NOT_SPONSORED_LOAN
+      _addressesProvider.hasAnyOf(
+        msg.sender,
+        AccessFlags.TRUSTED_FLASHLOAN | AccessFlags.LIQUIDITY_CONTROLLER
+      ),
+      Errors.LP_IS_NOT_TRUSTED_FLASHLOAN
     );
+    require(_flashloanCalls < type(uint8).max, Errors.LP_TOO_MANY_FLASHLOAN_CALLS);
 
     _flashLoan(receiver, assets, amounts, modes, onBehalfOf, params, referral, 0);
   }
@@ -389,25 +399,28 @@ contract LendingPoolExtension is
     uint16 flPremium
   ) private {
     require(Address.isContract(receiver), Errors.VL_CONTRACT_REQUIRED);
+    _flashloanCalls++;
+    {
+      FlashLoanLocalVars memory vars;
+      ValidationLogic.validateFlashloan(assets, amounts);
 
-    FlashLoanLocalVars memory vars;
-    ValidationLogic.validateFlashloan(assets, amounts);
+      (vars.receiver, vars.referral, vars.onBehalfOf, vars.premium) = (
+        IFlashLoanReceiver(receiver),
+        referral,
+        onBehalfOf,
+        flPremium
+      );
 
-    (vars.receiver, vars.referral, vars.onBehalfOf, vars.premium) = (
-      IFlashLoanReceiver(receiver),
-      referral,
-      onBehalfOf,
-      flPremium
-    );
+      vars.premiums = _flashLoanPre(address(vars.receiver), assets, amounts, vars.premium);
 
-    vars.premiums = _flashLoanPre(address(vars.receiver), assets, amounts, vars.premium);
+      require(
+        vars.receiver.executeOperation(assets, amounts, vars.premiums, msg.sender, params),
+        Errors.LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN
+      );
 
-    require(
-      vars.receiver.executeOperation(assets, amounts, vars.premiums, msg.sender, params),
-      Errors.LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN
-    );
-
-    _flashLoanPost(vars, assets, amounts, modes, vars.premiums);
+      _flashLoanPost(vars, assets, amounts, modes, vars.premiums);
+    }
+    _flashloanCalls--;
   }
 
   function _flashLoanPre(
@@ -498,7 +511,7 @@ contract LendingPoolExtension is
     uint256 interestRateMode,
     uint256 referral,
     address onBehalfOf
-  ) external override whenNotPaused onlyFirstCall {
+  ) external override whenNotPaused noReentryOrFlashloan {
     _executeBorrow(
       ExecuteBorrowParams(
         asset,
@@ -519,7 +532,7 @@ contract LendingPoolExtension is
     uint256 interestRateMode,
     uint16 referral,
     address onBehalfOf
-  ) external override whenNotPaused onlyFirstCall {
+  ) external override whenNotPaused noReentryOrFlashloan {
     _executeBorrow(
       ExecuteBorrowParams(
         asset,
