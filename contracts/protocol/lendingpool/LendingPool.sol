@@ -70,7 +70,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 amount,
     address onBehalfOf,
     uint256 referral
-  ) public override whenNotPaused notNestedCall {
+  ) public override whenNotPaused noReentryOrFlashloan {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateDeposit(reserve, amount);
@@ -96,7 +96,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     address asset,
     uint256 amount,
     address to
-  ) external override whenNotPaused onlyFirstCall returns (uint256) {
+  ) external override whenNotPaused noReentry returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     address depositToken = reserve.depositTokenAddress;
@@ -151,7 +151,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 amount,
     uint256 rateMode,
     address onBehalfOf
-  ) external override whenNotPaused notNestedCall returns (uint256) {
+  ) external override whenNotPaused noReentry returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(onBehalfOf, reserve);
@@ -206,7 +206,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     external
     override
     whenNotPaused
-    onlyFirstCall
+    noReentryOrFlashloan
   {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
@@ -255,7 +255,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     external
     override
     whenNotPaused
-    onlyFirstCall
+    noReentryOrFlashloan
   {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
@@ -327,19 +327,6 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
   }
 
   function flashLoan(
-    address,
-    address[] calldata,
-    uint256[] calldata,
-    uint256[] calldata,
-    address,
-    bytes calldata,
-    uint256
-  ) external override {
-    // for compatibility with ILendingPool
-    _delegate(_extension);
-  }
-
-  function sponsoredFlashLoan(
     address,
     address[] calldata,
     uint256[] calldata,

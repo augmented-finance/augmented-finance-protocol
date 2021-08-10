@@ -103,10 +103,11 @@ library Errors {
   string public constant SDT_BURN_EXCEEDS_BALANCE = '80';
   string public constant CT_CALLER_MUST_BE_REWARD_ADMIN = '81'; // The caller of this function must be a reward admin
   string public constant LP_INVALID_PERCENTAGE = '82'; // Percentage can't be more than 100%
-  string public constant LP_IS_NOT_SPONSORED_LOAN = '83';
+  string public constant LP_IS_NOT_TRUSTED_FLASHLOAN = '83';
   string public constant CT_CALLER_MUST_BE_SWEEP_ADMIN = '84';
   string public constant LP_TOO_MANY_NESTED_CALLS = '85';
   string public constant LP_RESTRICTED_FEATURE = '86';
+  string public constant LP_TOO_MANY_FLASHLOAN_CALLS = '87';
 
   string public constant CT_CALLER_MUST_BE_REWARD_RATE_ADMIN = '89';
   string public constant CT_CALLER_MUST_BE_REWARD_CONTROLLER = '90';

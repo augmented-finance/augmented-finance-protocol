@@ -24,16 +24,6 @@ interface ILendingPoolExtension {
     uint256 referral
   ) external;
 
-  function sponsoredFlashLoan(
-    address receiverAddress,
-    address[] calldata assets,
-    uint256[] calldata amounts,
-    uint256[] calldata modes,
-    address onBehalfOf,
-    bytes calldata params,
-    uint256 referral
-  ) external;
-
   function borrow(
     address asset,
     uint256 amount,

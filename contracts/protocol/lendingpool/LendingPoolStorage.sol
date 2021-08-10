@@ -27,6 +27,7 @@ abstract contract LendingPoolStorage is VersionedInitializable {
 
   uint8 internal constant _maxNumberOfReserves = 128;
 
+  uint8 internal _flashloanCalls;
   uint8 internal _nestedCalls;
 
   bool internal _paused;

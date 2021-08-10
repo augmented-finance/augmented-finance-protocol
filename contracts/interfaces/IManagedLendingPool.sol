@@ -16,4 +16,15 @@ interface IManagedLendingPool is IEmergencyAccess {
   function getLendingPoolExtension() external view returns (address);
 
   function setLendingPoolExtension(address) external;
+
+  /// @dev Version of flashLoan with access control and with zero premium. For automated liquidity management.
+  function trustedFlashLoan(
+    address receiver,
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint256 referral
+  ) external;
 }
