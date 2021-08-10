@@ -44,7 +44,6 @@ contract RewardBooster is
   mapping(address => WorkReward) private _workRewards;
 
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
-    public
     BaseRewardController(accessController, rewardMinter)
   {}
 

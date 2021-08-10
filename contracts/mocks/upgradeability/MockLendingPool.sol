@@ -6,7 +6,7 @@ import '../../protocol/lendingpool/LendingPoolCompatible.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
 
 contract MockLendingPool is LendingPoolCompatible {
-  constructor() public {
+  constructor() {
     // enables to use this instance without a proxy
     _unsafeResetVersionedInitializers();
   }

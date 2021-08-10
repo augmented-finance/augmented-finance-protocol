@@ -38,7 +38,7 @@ contract OracleRouter is IPriceOracleGetter, MarketAccessBitmask {
     address[] memory sources,
     address fallbackOracle,
     address weth
-  ) public MarketAccessBitmask(acl) {
+  ) MarketAccessBitmask(acl) {
     _setFallbackOracle(fallbackOracle);
     _setAssetsSources(assets, sources);
     WETH = weth;

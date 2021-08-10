@@ -11,7 +11,7 @@ contract LendingRateOracle is ILendingRateOracle, IManagedLendingRateOracle, Mar
   mapping(address => uint256) borrowRates;
   mapping(address => uint256) liquidityRates;
 
-  constructor(IMarketAccessController remoteAcl) public MarketAccessBitmask(remoteAcl) {}
+  constructor(IMarketAccessController remoteAcl) MarketAccessBitmask(remoteAcl) {}
 
   function getMarketBorrowRate(address _asset) external view override returns (uint256) {
     return borrowRates[_asset];

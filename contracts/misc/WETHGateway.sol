@@ -28,7 +28,7 @@ contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
    * @dev Sets the WETH address
    * @param weth Address of the Wrapped Ether contract
    **/
-  constructor(IMarketAccessController acl, address weth) public MarketAccessBitmask(acl) {
+  constructor(IMarketAccessController acl, address weth) MarketAccessBitmask(acl) {
     WETH = IWETH(weth);
   }
 

@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import '../../protocol/tokenization/VariableDebtToken.sol';
 
 contract MockVariableDebtToken is VariableDebtToken {
-  constructor() public {
+  constructor() {
     // enables use of this instance without a proxy
     _unsafeResetVersionedInitializers();
   }

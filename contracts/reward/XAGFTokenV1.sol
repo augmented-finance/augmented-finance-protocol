@@ -23,18 +23,18 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor() public DecayingTokenLocker(IRewardController(address(this)), 0, 0, address(0)) {
+  constructor() DecayingTokenLocker(IRewardController(address(this)), 0, 0, address(0)) {
     _initializeERC20(NAME, SYMBOL, DECIMALS);
   }
 
   function _initializeERC20(
-    string memory name,
-    string memory symbol,
-    uint8 decimals
+    string memory name_,
+    string memory symbol_,
+    uint8 decimals_
   ) internal {
-    _name = name;
-    _symbol = symbol;
-    _decimals = decimals;
+    _name = name_;
+    _symbol = symbol_;
+    _decimals = decimals_;
   }
 
   function name() public view returns (string memory) {

@@ -50,23 +50,23 @@ contract ERC20 is Context, IERC20WithEvents {
    * All three of these values can only be set once during construction or initialization.
    */
   constructor(
-    string memory name,
-    string memory symbol,
-    uint8 decimals
-  ) public {
-    _name = name;
-    _symbol = symbol;
-    _decimals = decimals;
+    string memory name_,
+    string memory symbol_,
+    uint8 decimals_
+  ) {
+    _name = name_;
+    _symbol = symbol_;
+    _decimals = decimals_;
   }
 
   function _initializeERC20(
-    string memory name,
-    string memory symbol,
-    uint8 decimals
+    string memory name_,
+    string memory symbol_,
+    uint8 decimals_
   ) internal {
-    _name = name;
-    _symbol = symbol;
-    _decimals = decimals;
+    _name = name_;
+    _symbol = symbol_;
+    _decimals = decimals_;
   }
 
   /**

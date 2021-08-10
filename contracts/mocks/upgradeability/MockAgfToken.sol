@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import '../../reward/AGFTokenV1.sol';
 
 contract MockAgfToken is AGFTokenV1 {
-  constructor() public {
+  constructor() {
     // enables use of this instance without a proxy
     _unsafeResetVersionedInitializers();
   }

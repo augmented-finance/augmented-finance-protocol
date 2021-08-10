@@ -76,7 +76,7 @@ abstract contract SlashableStakeTokenBase is
     uint256 underlyingAmount,
     uint256 referral
   ) external override returns (uint256) {
-    internalStake(msg.sender, to, underlyingAmount, referral, true);
+    return internalStake(msg.sender, to, underlyingAmount, referral, true);
   }
 
   function internalStake(

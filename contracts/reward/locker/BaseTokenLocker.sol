@@ -182,7 +182,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
       @param underlyingTransfer amount of underlying (=>0) to be added to the lock.
       @param duration in seconds of the lock. This duration will be rounded up to make sure that lock will end at a week's edge. 
       Zero value indicates addition to an existing lock without changing expiry.
-      @param transfer indicates when transferFrom should be called. E.g. autolock uses false, as tokens will be minted externally to this contract.
+      @param doTransfer indicates when transferFrom should be called. E.g. autolock uses false, as tokens will be minted externally to this contract.
       @param referral code to use for marketing campaings. Use 0 when not involved.
       @return stakeAmount is total amount of lock tokens of the `to` address; recoverableError is the soft error code.
    */
@@ -192,7 +192,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     uint256 underlyingTransfer,
     uint32 duration,
     uint256 referral,
-    bool transfer
+    bool doTransfer
   ) internal returns (uint256 stakeAmount, uint256 recoverableError) {
     require(from != address(0), 'ZERO_FROM');
     require(to != address(0), 'ZERO_TO');
@@ -305,7 +305,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
     _balances[to] = userBalance;
 
-    if (transfer) {
+    if (doTransfer) {
       _underlyingToken.safeTransferFrom(from, address(this), underlyingTransfer);
     }
 
@@ -534,24 +534,28 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     return address(_underlyingToken);
   }
 
-  function transfer(address, uint256) external override returns (bool) {
+  function transfer(address, uint256) external pure override returns (bool) {
     notSupported();
+    return false;
   }
 
   function allowance(address, address) external pure override returns (uint256) {
     notSupported();
+    return 0;
   }
 
-  function approve(address, uint256) external override returns (bool) {
+  function approve(address, uint256) external pure override returns (bool) {
     notSupported();
+    return false;
   }
 
   function transferFrom(
     address,
     address,
     uint256
-  ) external override returns (bool) {
+  ) external pure override returns (bool) {
     notSupported();
+    return false;
   }
 
   function notSupported() private pure {

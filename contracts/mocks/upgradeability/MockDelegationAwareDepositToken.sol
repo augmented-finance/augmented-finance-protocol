@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import '../../protocol/tokenization/DelegationAwareDepositToken.sol';
 
 contract MockDelegationAwareDepositToken is DelegationAwareDepositToken {
-  constructor() public {
+  constructor() {
     // enables use of this instance without a proxy
     _unsafeResetVersionedInitializers();
   }

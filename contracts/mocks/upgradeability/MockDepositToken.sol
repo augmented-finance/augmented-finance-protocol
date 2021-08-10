@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import '../../protocol/tokenization/DepositToken.sol';
 
 contract MockDepositToken is DepositToken {
-  constructor() public {
+  constructor() {
     // enables use of this instance without a proxy
     _unsafeResetVersionedInitializers();
   }

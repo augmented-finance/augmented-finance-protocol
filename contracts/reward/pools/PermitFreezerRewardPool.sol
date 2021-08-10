@@ -71,6 +71,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
 
   function internalCheckNonce(uint256 currentValidNonce, uint256 deadline)
     internal
+    view
     override
     returns (uint256)
   {
@@ -115,17 +116,17 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     _rewardLimit = _rewardLimit.sub(value, 'INSUFFICIENT_FUNDS');
   }
 
-  function internalSetBaselinePercentage(uint16) internal override {
+  function internalSetBaselinePercentage(uint16) internal pure override {
     revert('UNSUPPORTED');
   }
 
-  function internalSetRate(uint256 rate) internal override {
+  function internalSetRate(uint256 rate) internal pure override {
     if (rate != 0) {
       revert('UNSUPPORTED');
     }
   }
 
-  function internalGetRate() internal view override returns (uint256) {
+  function internalGetRate() internal pure override returns (uint256) {
     return 0;
   }
 }

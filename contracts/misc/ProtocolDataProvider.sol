@@ -57,7 +57,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
 
   IMarketAccessController public immutable ADDRESS_PROVIDER;
 
-  constructor(IMarketAccessController addressesProvider) public {
+  constructor(IMarketAccessController addressesProvider) {
     ADDRESS_PROVIDER = addressesProvider;
   }
 

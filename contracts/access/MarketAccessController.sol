@@ -10,7 +10,6 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
   string private _marketId;
 
   constructor(string memory marketId)
-    public
     AccessController(AccessFlags.SINGLETONS, AccessFlags.ROLES, AccessFlags.PROXIES)
   {
     _marketId = marketId;

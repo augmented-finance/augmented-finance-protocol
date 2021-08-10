@@ -17,7 +17,6 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
   mapping(address => uint256) private _claimableRewards;
 
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
-    public
     BasicRewardController(accessController, rewardMinter)
   {}
 

@@ -32,7 +32,7 @@ contract RewardConfigurator is
   ProxyAdmin internal immutable _proxies;
   mapping(string => address) _namedPools;
 
-  constructor() public {
+  constructor() {
     _proxies = new ProxyAdmin();
   }
 

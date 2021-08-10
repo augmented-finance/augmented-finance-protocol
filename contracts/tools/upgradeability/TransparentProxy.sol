@@ -27,8 +27,8 @@ contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
     }
   }
 
-  /// @return The address of the implementation.
-  function implementation() external ifAdmin returns (address) {
+  /// @return impl The address of the implementation.
+  function implementation() external ifAdmin returns (address impl) {
     return _implementation();
   }
 

@@ -19,7 +19,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     uint256 initialRate,
     uint16 baselinePercentage,
     address teamManager
-  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _teamManager = teamManager;
   }
 
@@ -30,7 +30,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     );
   }
 
-  function getPoolName() public view override returns (string memory) {
+  function getPoolName() public pure override returns (string memory) {
     return 'TeamPool';
   }
 
@@ -85,7 +85,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return (rate, allocated, since);
   }
 
-  function addRewardProvider(address, address) external override onlyConfigAdmin {
+  function addRewardProvider(address, address) external view override onlyConfigAdmin {
     revert('UNSUPPORTED');
   }
 

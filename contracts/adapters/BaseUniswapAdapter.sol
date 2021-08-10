@@ -446,8 +446,8 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
       // Add flash loan fee
       uint256 amountIn = amountOut.percentDiv(flashloanPremiumRev);
       uint256 reserveDecimals = _getDecimals(reserveIn);
-      address[] memory path = new address[](1);
-      path[0] = reserveIn;
+      address[] memory path_ = new address[](1);
+      path_[0] = reserveIn;
 
       return
         AmountCalc(
@@ -455,7 +455,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
           amountOut.mul(10**18).div(amountIn),
           _calcUsdValue(reserveIn, amountIn, reserveDecimals),
           _calcUsdValue(reserveIn, amountOut, reserveDecimals),
-          path
+          path_
         );
     }
 

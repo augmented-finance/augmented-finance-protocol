@@ -14,7 +14,7 @@ contract StaticPriceOracle is MarketAccessBitmask, IPriceOracleGetter {
     IMarketAccessController remoteAcl,
     address[] memory assets_,
     uint256[] memory prices_
-  ) public MarketAccessBitmask(remoteAcl) {
+  ) MarketAccessBitmask(remoteAcl) {
     require(assets_.length == prices_.length, 'length mismatch');
     for (uint256 i = 0; i < assets_.length; i++) {
       prices[assets_[i]] = prices_[i];

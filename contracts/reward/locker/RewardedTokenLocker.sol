@@ -37,7 +37,7 @@ contract RewardedTokenLocker is
     return !isPaused();
   }
 
-  function addRewardProvider(address, address) external override onlyConfigAdmin {
+  function addRewardProvider(address, address) external view override onlyConfigAdmin {
     revert('UNSUPPORTED');
   }
 

@@ -29,8 +29,8 @@ contract MockFlashLoanReceiver is FlashLoanReceiverBase {
     _failExecution = fail;
   }
 
-  function setAmountToApprove(uint256 amountToApprove) public {
-    _amountToApprove = amountToApprove;
+  function setAmountToApprove(uint256 amountToApprove_) public {
+    _amountToApprove = amountToApprove_;
   }
 
   function setSimulateEOA(bool flag) public {

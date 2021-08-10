@@ -18,7 +18,7 @@ contract TokenWeightedRewardPoolV1 is
     return POOL_REVISION;
   }
 
-  constructor() public TokenWeightedRewardPool(IRewardController(address(this)), 0, 0) {}
+  constructor() TokenWeightedRewardPool(IRewardController(address(this)), 0, 0) {}
 
   function initialize(InitData memory data) public override initializer(POOL_REVISION) {
     super._initialize(data.controller, data.initialRate, data.baselinePercentage);

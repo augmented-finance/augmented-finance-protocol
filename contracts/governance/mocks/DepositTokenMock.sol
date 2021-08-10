@@ -18,7 +18,7 @@ contract DepositTokenMock is IScaledBalanceToken {
   event AssetIndexUpdated(address indexed asset, uint256 index);
   event UserIndexUpdated(address indexed user, address indexed asset, uint256 index);
 
-  constructor(IBalanceHook aic) public {
+  constructor(IBalanceHook aic) {
     _aic = aic;
   }
 

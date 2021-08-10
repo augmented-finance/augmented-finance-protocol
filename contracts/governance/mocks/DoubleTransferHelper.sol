@@ -6,7 +6,7 @@ import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 contract DoubleTransferHelper {
   IERC20 public immutable AAVE;
 
-  constructor(IERC20 aave) public {
+  constructor(IERC20 aave) {
     AAVE = aave;
   }
 

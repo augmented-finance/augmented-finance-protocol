@@ -20,11 +20,11 @@ abstract contract DefaultReserveDelegatedStrategy is IReserveDelegatedStrategy {
     externalProvider = externalProvider_;
   }
 
-  function baseVariableBorrowRate() external view override returns (uint256) {
+  function baseVariableBorrowRate() external pure override returns (uint256) {
     return 0;
   }
 
-  function getMaxVariableBorrowRate() external view override returns (uint256) {
+  function getMaxVariableBorrowRate() external pure override returns (uint256) {
     return 0;
   }
 }

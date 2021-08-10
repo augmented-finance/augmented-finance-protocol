@@ -17,7 +17,7 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
     uint256 initialRate,
     uint16 baselinePercentage,
     string memory rewardPoolName
-  ) public BasePermitRewardPool(controller, initialRate, baselinePercentage, rewardPoolName) {
+  ) BasePermitRewardPool(controller, initialRate, baselinePercentage, rewardPoolName) {
     _claimLimit = type(uint256).max;
   }
 
@@ -64,7 +64,7 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
     internalUpdateStrict(spender, codes, uint32(issuedAt));
   }
 
-  function internalCheckNonce(uint256, uint256 issuedAt) internal override returns (uint256) {
+  function internalCheckNonce(uint256, uint256 issuedAt) internal pure override returns (uint256) {
     return issuedAt;
   }
 

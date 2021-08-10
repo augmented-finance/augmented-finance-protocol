@@ -11,7 +11,6 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
     uint256 initialRate,
     uint16 baselinePercentage
   )
-    public
     BaseTokenAbsRewardPool(controller, initialRate, baselinePercentage)
     CalcLinearWeightedReward()
   {}

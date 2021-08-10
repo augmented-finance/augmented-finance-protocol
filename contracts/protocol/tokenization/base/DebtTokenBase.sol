@@ -41,35 +41,32 @@ abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICredi
     return _borrowAllowances[fromUser][toUser];
   }
 
-  function transfer(address, uint256) public override returns (bool) {
+  function transfer(address, uint256) public pure override returns (bool) {
     notSupported();
-    _mutable();
+    return false;
   }
 
-  function allowance(address, address) public view override returns (uint256) {
-    this;
+  function allowance(address, address) public pure override returns (uint256) {
     return 0;
   }
 
-  function approve(address, uint256) public override returns (bool) {
+  function approve(address, uint256) public pure override returns (bool) {
     notSupported();
-    _mutable();
+    return false;
   }
 
   function transferFrom(
     address,
     address,
     uint256
-  ) public override returns (bool) {
+  ) public pure override returns (bool) {
     notSupported();
-    _mutable();
+    return false;
   }
 
   function notSupported() private pure {
     revert('NOT_SUPPORTED');
   }
-
-  function _mutable() private {}
 
   function _decreaseBorrowAllowance(
     address delegator,
