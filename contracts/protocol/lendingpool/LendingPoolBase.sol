@@ -52,24 +52,16 @@ abstract contract LendingPoolBase is LendingPoolStorage {
     require(_nestedCalls == 0, Errors.LP_TOO_MANY_NESTED_CALLS);
   }
 
-  function _notOverflowCall() private view {
-    require(_nestedCalls < type(uint8).max, Errors.LP_TOO_MANY_NESTED_CALLS);
-  }
-
-  modifier notNestedCall {
-    _notNestedCall();
-    _;
-  }
-
-  modifier onlyFirstCall {
+  modifier noReentry {
     _notNestedCall();
     _nestedCalls++;
     _;
     _nestedCalls--;
   }
 
-  modifier countCalls {
-    _notOverflowCall();
+  modifier noReentryOrFlashloan {
+    require(_flashloanCalls == 0, Errors.LP_TOO_MANY_FLASHLOAN_CALLS);
+    _notNestedCall();
     _nestedCalls++;
     _;
     _nestedCalls--;

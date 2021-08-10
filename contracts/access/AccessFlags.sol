@@ -45,5 +45,5 @@ library AccessFlags {
   uint256 public constant REWARD_MINT = 1 << 64;
   uint256 public constant REWARD_BURN = 1 << 65;
 
-  uint256 public constant POOL_SPONSORED_LOAN_USER = 1 << 66;
+  uint256 public constant TRUSTED_FLASHLOAN = 1 << 66;
 }
