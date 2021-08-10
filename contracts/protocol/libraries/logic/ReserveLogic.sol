@@ -71,7 +71,7 @@ library ReserveLogic {
       return reserve.liquidityIndex;
     }
 
-    if (reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE != DataTypes.ASSET_TYPE_INTERNAL) {
+    if (reserve.configuration.isExternalStrategy()) {
       return _getExternalDepositIndex(reserve, asset);
     }
 
@@ -96,11 +96,8 @@ library ReserveLogic {
     uint40 timestamp = reserve.lastUpdateTimestamp;
 
     //solium-disable-next-line
-    if (
-      timestamp == uint40(block.timestamp) ||
-      reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE != DataTypes.ASSET_TYPE_INTERNAL
-    ) {
-      //if the index was updated in the same block, no need to perform any calculation
+    if (timestamp == uint40(block.timestamp) || reserve.configuration.isExternalStrategy()) {
+      //if the index was updated in the same block or is external, no need to perform any calculation
       return reserve.variableBorrowIndex;
     }
 
@@ -120,7 +117,7 @@ library ReserveLogic {
     internal
     returns (uint256)
   {
-    if (reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE != DataTypes.ASSET_TYPE_INTERNAL) {
+    if (reserve.configuration.isExternalStrategy()) {
       return _updateExternalIndexes(reserve, asset);
     }
     return _updateState(reserve);
@@ -131,7 +128,7 @@ library ReserveLogic {
    * @param reserve the reserve object
    **/
   function updateState(DataTypes.ReserveData storage reserve, address asset) internal {
-    if (reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE != DataTypes.ASSET_TYPE_INTERNAL) {
+    if (reserve.configuration.isExternalStrategy()) {
       if (reserve.lastUpdateTimestamp < uint40(block.timestamp)) {
         _updateExternalIndexes(reserve, asset);
       }
@@ -208,7 +205,7 @@ library ReserveLogic {
     reserve.stableDebtTokenAddress = data.stableDebtAddress;
     reserve.variableDebtTokenAddress = data.variableDebtAddress;
     reserve.strategy = data.strategy;
-    reserve.reserveFlags = data.reserveFlags;
+    reserve.configuration.setExternalStrategy(data.externalStrategy);
   }
 
   struct UpdateInterestRatesLocalVars {
@@ -234,11 +231,11 @@ library ReserveLogic {
     uint256 liquidityAdded,
     uint256 liquidityTaken
   ) internal {
-    if (reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE == DataTypes.ASSET_TYPE_INTERNAL) {
+    if (!reserve.configuration.isExternalStrategy()) {
       _updateInterestRates(reserve, reserveAddress, depositToken, liquidityAdded, liquidityTaken);
     }
     // // There is no need to be exactly at external's asset rate when we don't send or receive funds
-    // if (reserve.lastUpdateTimestamp < uint40(block.timestamp) || liquidityAdded != 0 || liquidityTaken != 0) {
+    // else if (reserve.lastUpdateTimestamp < uint40(block.timestamp) || liquidityAdded != 0 || liquidityTaken != 0) {
     //   _updateExternalRates(reserve, reserveAddress);
     // }
   }
@@ -427,9 +424,9 @@ library ReserveLogic {
     uint40 lastUpdateTimestamp = uint40(block.timestamp);
     uint128 liquidityIndex;
 
-    if (reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE == DataTypes.ASSET_TYPE_AAVE) {
+    if (reserve.strategy == address(0)) {
       AaveDataTypes.ReserveData memory state =
-        IAaveLendingPool(reserve.strategy).getReserveData(asset);
+        IAaveLendingPool(IPoolToken(asset).POOL()).getReserveData(asset);
 
       reserve.variableBorrowIndex = state.variableBorrowIndex;
       reserve.currentLiquidityRate = state.currentLiquidityRate;
@@ -468,8 +465,8 @@ library ReserveLogic {
     view
     returns (uint256)
   {
-    if (reserve.reserveFlags & DataTypes.MASK_ASSET_TYPE == DataTypes.ASSET_TYPE_AAVE) {
-      return IAaveLendingPool(reserve.strategy).getReserveNormalizedIncome(asset);
+    if (reserve.strategy == address(0)) {
+      return IAaveLendingPool(IPoolToken(asset).POOL()).getReserveNormalizedIncome(asset);
     } else {
       return IReserveDelegatedStrategy(reserve.strategy).getDelegatedDepositIndex(asset);
     }

@@ -105,7 +105,7 @@ contract LendingPoolConfigurator is
         stableDebtTokenProxyAddress,
         variableDebtTokenProxyAddress,
         input.strategy,
-        input.reserveFlags
+        input.externalStrategy
       )
     );
 
@@ -182,6 +182,10 @@ contract LendingPoolConfigurator is
   {
     DataTypes.ReserveData memory reserve = pool.getReserveData(asset);
     require(reserve.variableDebtTokenAddress != address(0), Errors.LPC_INVALID_CONFIGURATION);
+    require(
+      !stableBorrowRateEnabled || (reserve.stableDebtTokenAddress != address(0)),
+      Errors.LPC_INVALID_CONFIGURATION
+    );
 
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
 
@@ -329,9 +333,14 @@ contract LendingPoolConfigurator is
     emit ReserveFactorChanged(asset, reserveFactor);
   }
 
-  function setReserveStrategy(address asset, address strategy) external onlyPoolAdmin {
-    pool.setReserveStrategy(asset, strategy);
-    emit ReserveStrategyChanged(asset, strategy);
+  function setReserveStrategy(
+    address asset,
+    address strategy,
+    bool isExternal
+  ) external onlyPoolAdmin {
+    require(strategy != address(0) || isExternal);
+    pool.setReserveStrategy(asset, strategy, isExternal);
+    emit ReserveStrategyChanged(asset, strategy, isExternal);
   }
 
   function _initTokenWithProxy(address impl, bytes memory initParams) internal returns (address) {

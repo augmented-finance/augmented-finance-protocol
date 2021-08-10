@@ -2,12 +2,6 @@
 pragma solidity 0.6.12;
 
 library DataTypes {
-  uint64 public constant MASK_ASSET_TYPE = 0x0F;
-  uint64 public constant ASSET_TYPE_INTERNAL = 0;
-  uint64 public constant ASSET_TYPE_AAVE = 0x01;
-  uint64 public constant ASSET_TYPE_DELEGATED = 0x0F;
-
-  // refer to the AAVE whitepaper, section 1.1 basic concepts for a formal description of these properties.
   struct ReserveData {
     //stores the reserve configuration
     ReserveConfigurationMap configuration;
@@ -21,16 +15,15 @@ library DataTypes {
     uint128 currentVariableBorrowRate;
     //the current stable borrow rate. Expressed in ray
     uint128 currentStableBorrowRate;
-    uint64 reserveFlags;
     uint40 lastUpdateTimestamp;
-    //the id of the reserve. Represents the position in the list of the active reserves
-    uint8 id;
     //tokens addresses
     address depositTokenAddress;
     address stableDebtTokenAddress;
     address variableDebtTokenAddress;
-    //address of the interest rate strategy
+    //address of the reserve strategy
     address strategy;
+    //the id of the reserve. Represents the position in the list of the active reserves
+    uint8 id;
   }
 
   struct ReserveConfigurationMap {
@@ -44,6 +37,7 @@ library DataTypes {
     //bit 59: stable rate borrowing enabled
     //bit 60-63: reserved
     //bit 64-79: reserve factor
+    //bit 80: strategy is external
     uint256 data;
   }
 
@@ -59,6 +53,6 @@ library DataTypes {
     address stableDebtAddress;
     address variableDebtAddress;
     address strategy;
-    uint64 reserveFlags;
+    bool externalStrategy;
   }
 }
