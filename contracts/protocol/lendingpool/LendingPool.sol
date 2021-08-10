@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../dependencies/openzeppelin/contracts/Address.sol';
@@ -15,8 +14,6 @@ import '../../flashloan/interfaces/IFlashLoanReceiver.sol';
 import '../../interfaces/IStableDebtToken.sol';
 import '../../tools/upgradeability/Delegator.sol';
 import '../../tools/Errors.sol';
-import '../../tools/math/WadRayMath.sol';
-import '../../tools/math/PercentageMath.sol';
 import '../libraries/helpers/Helpers.sol';
 import '../libraries/logic/GenericLogic.sol';
 import '../libraries/logic/ValidationLogic.sol';
@@ -38,9 +35,6 @@ import './LendingPoolBase.sol';
  *   # Execute Flash Loans
  **/
 contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolForTokens {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
-  using PercentageMath for uint256;
   using SafeERC20 for IERC20;
   using AccessHelper for IMarketAccessController;
   using ReserveLogic for DataTypes.ReserveData;
@@ -188,7 +182,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     address depositToken = reserve.depositTokenAddress;
     reserve.updateInterestRates(asset, depositToken, paybackAmount, 0);
 
-    if (stableDebt.add(variableDebt).sub(paybackAmount) == 0) {
+    if (stableDebt + variableDebt <= paybackAmount) {
       _usersConfig[onBehalfOf].setBorrowing(reserve.id, false);
     }
 
@@ -484,7 +478,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 reserveId = _reserves[asset].id;
 
     if (from != to) {
-      if (balanceFromBefore.sub(amount) == 0) {
+      if (balanceFromBefore <= amount) {
         DataTypes.UserConfigurationMap storage fromConfig = _usersConfig[from];
         fromConfig.setUsingAsCollateral(reserveId, false);
         emit ReserveUsedAsCollateralDisabled(asset, from);

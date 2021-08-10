@@ -39,9 +39,8 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     address wethAddress
   ) FlashLoanReceiverBase(provider) {
     ILendingPool pool = ILendingPool(provider.getLendingPool());
-    uint16 flashloanPremium = pool.getFlashloanPremiumPct();
     flashloanPremiumRev = uint16(
-      uint256(PercentageMath.ONE).sub(flashloanPremium, 'INVALID_FLASHLOAN_PREMIUM')
+      SafeMath.sub(PercentageMath.ONE, pool.getFlashloanPremiumPct(), 'INVALID_FLASHLOAN_PREMIUM')
     );
 
     ORACLE = IPriceOracleGetter(provider.getPriceOracle());
