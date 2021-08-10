@@ -1,13 +1,24 @@
 import { TestEnv, makeSuite } from './helpers/make-suite';
 import { convertToCurrencyDecimals } from '../../helpers/contracts-helpers';
-import { getILendingPoolAaveCompatible } from '../../helpers/contracts-getters';
+import {
+  getIAaveLendingPool,
+  getILendingPoolAaveCompatible,
+} from '../../helpers/contracts-getters';
 import { APPROVAL_AMOUNT_LENDING_POOL } from '../../helpers/constants';
 import { ethers } from 'ethers';
 import { RateMode } from '../../helpers/types';
 
 const { expect } = require('chai');
 
-makeSuite('Aave compatibility', (testEnv: TestEnv) => {
+makeSuite('ABI compatibility with Aave', (testEnv: TestEnv) => {
+  it('ReserveData compatibility', async () => {
+    const { users, dai, aDai } = testEnv;
+    const pool = await getIAaveLendingPool(testEnv.pool.address);
+
+    const daiReserve = await pool.getReserveData(dai.address);
+    expect(daiReserve.depositTokenAddress).eq(aDai.address);
+  });
+
   it('Deposit compatibility', async () => {
     const { users, dai } = testEnv;
     const pool = await getILendingPoolAaveCompatible(testEnv.pool.address);

@@ -9,7 +9,11 @@ import '../access/interfaces/IMarketAccessController.sol';
 interface IManagedLendingPool is IEmergencyAccess {
   function initReserve(DataTypes.InitReserveData calldata data) external;
 
-  function setReserveStrategy(address reserve, address rateStrategyAddress) external;
+  function setReserveStrategy(
+    address reserve,
+    address strategy,
+    bool isExternal
+  ) external;
 
   function setConfiguration(address reserve, uint256 configuration) external;
 
