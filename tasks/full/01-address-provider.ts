@@ -20,7 +20,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { setPreDeployAccessController } from '../../helpers/deploy-helpers';
 import { BigNumber } from 'ethers';
 
-task('full:deploy-address-provider', 'Deploy address provider registry for prod enviroment')
+task('full:deploy-address-provider', 'Deploys address provider and registry')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE) => {
@@ -124,16 +124,10 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
     if (ProviderId.eq(0)) {
       if (!id.eq(0)) {
         ProviderId = id;
-      } else {
+      } else if (newRegistry) {
         ProviderId = BigNumber.from(1);
-        if (!newRegistry) {
-          for (const addr of await registry.getAddressesProvidersList()) {
-            const knownId = await registry.getAddressesProviderIdByAddress(addr);
-            if (ProviderId.lte(knownId)) {
-              ProviderId = knownId.add(1);
-            }
-          }
-        }
+      } else {
+        ProviderId = (await findMaxProviderId(registry)).add(1);
       }
     }
 
@@ -152,3 +146,18 @@ task('full:deploy-address-provider', 'Deploy address provider registry for prod 
       await waitTx(addressProvider.grantRoles(emergencyAdmin!, AccessFlags.EMERGENCY_ADMIN));
     }
   });
+
+const findMaxProviderId = async (registry: AddressesProviderRegistry): Promise<BigNumber> => {
+  let ProviderId = BigNumber.from(0);
+
+  for (const addr of await registry.getAddressesProvidersList()) {
+    if (falsyOrZeroAddress(addr)) {
+      continue;
+    }
+    const knownId = await registry.getAddressesProviderIdByAddress(addr);
+    if (ProviderId.lt(knownId)) {
+      ProviderId = knownId;
+    }
+  }
+  return ProviderId;
+};
