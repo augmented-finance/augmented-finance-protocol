@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
-pragma experimental ABIEncoderV2;
 
 import '../access/interfaces/IMarketAccessController.sol';
 import './RewardBooster.sol';

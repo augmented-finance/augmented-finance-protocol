@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
-pragma experimental ABIEncoderV2;
 
 import '../../contracts/protocol/tokenization/StableDebtToken.sol';
 import '../../contracts/protocol/tokenization/IncentivizedERC20.sol';

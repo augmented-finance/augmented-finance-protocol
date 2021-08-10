@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
-pragma experimental ABIEncoderV2;
 
 interface IRewardExplainer {
   function explainReward(address holder, uint32 at) external view returns (RewardExplained memory);

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
-pragma experimental ABIEncoderV2;
 
 import '../tools/math/PercentageMath.sol';
 import '../dependencies/openzeppelin/contracts/SafeMath.sol';
