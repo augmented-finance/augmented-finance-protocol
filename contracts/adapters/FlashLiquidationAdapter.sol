@@ -6,6 +6,7 @@ import './BaseUniswapAdapter.sol';
 import '../interfaces/IFlashLoanAddressProvider.sol';
 import '../interfaces/IUniswapV2Router02.sol';
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../protocol/libraries/types/DataTypes.sol';
 import '../protocol/libraries/helpers/Helpers.sol';
@@ -20,6 +21,7 @@ import '../protocol/libraries/configuration/ReserveConfiguration.sol';
  **/
 contract FlashLiquidationAdapter is BaseUniswapAdapter {
   using SafeMath for uint256;
+  using SafeERC20 for IERC20;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   uint256 internal constant LIQUIDATION_CLOSE_FACTOR_PERCENT = 5000;
 
