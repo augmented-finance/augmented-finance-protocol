@@ -8,7 +8,7 @@ import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
 const CONTRACT_NAME = 'WETHGateway';
 
-task(`full-deploy-weth-gateway`, `Deploys the ${CONTRACT_NAME} contract for prod enviroment`)
+task(`full-deploy-weth-gateway`, `Deploys ${CONTRACT_NAME}`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .addFlag('verify', `Verify ${CONTRACT_NAME} contract via Etherscan API.`)
   .setAction(async ({ verify, pool }, localBRE) => {
