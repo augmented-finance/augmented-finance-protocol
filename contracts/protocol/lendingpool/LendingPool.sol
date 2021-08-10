@@ -68,7 +68,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 amount,
     address onBehalfOf,
     uint256 referral
-  ) public override whenNotPaused noReentry {
+  ) public override whenNotPaused noReentryOrFlashloan {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateDeposit(reserve, amount);
@@ -94,7 +94,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     address asset,
     uint256 amount,
     address to
-  ) external override whenNotPaused noReentryOrFlashloan returns (uint256) {
+  ) external override whenNotPaused noReentry returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     address depositToken = reserve.depositTokenAddress;
