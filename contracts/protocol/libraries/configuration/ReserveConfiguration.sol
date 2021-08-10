@@ -15,6 +15,7 @@ library ReserveConfiguration {
   uint256 constant BORROWING_MASK =             0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBFFFFFFFFFFFFFF; // prettier-ignore
   uint256 constant STABLE_BORROWING_MASK =      0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFFFFFFFFF; // prettier-ignore
   uint256 constant RESERVE_FACTOR_MASK =        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFF; // prettier-ignore
+  uint256 constant STRATEGY_TYPE_MASK =         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFFFFFF; // prettier-ignore
 
   /// @dev For the LTV, the start bit is 0 (up to 15), hence no bitshifting is needed
   uint256 constant LIQUIDATION_THRESHOLD_START_BIT_POSITION = 16;
@@ -25,6 +26,7 @@ library ReserveConfiguration {
   uint256 constant BORROWING_ENABLED_START_BIT_POSITION = 58;
   uint256 constant STABLE_BORROWING_ENABLED_START_BIT_POSITION = 59;
   uint256 constant RESERVE_FACTOR_START_BIT_POSITION = 64;
+  uint256 constant STRATEGY_TYPE_START_BIT_POSITION = 80;
 
   uint256 constant MAX_VALID_LTV = 65535;
   uint256 constant MAX_VALID_LIQUIDATION_THRESHOLD = 65535;
@@ -273,5 +275,24 @@ library ReserveConfiguration {
       (dataLocal & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION,
       (dataLocal & ~RESERVE_FACTOR_MASK) >> RESERVE_FACTOR_START_BIT_POSITION
     );
+  }
+
+  /// @dev Paramters of the reserve: ltv, liquidation threshold, liquidation bonus, the reserve decimals
+  function isExternalStrategy(DataTypes.ReserveConfigurationMap storage self)
+    internal
+    view
+    returns (bool)
+  {
+    return (self.data & ~STRATEGY_TYPE_MASK) != 0;
+  }
+
+  function setExternalStrategy(DataTypes.ReserveConfigurationMap storage self, bool isExternal)
+    internal
+  {
+    if (isExternal) {
+      self.data |= ~RESERVE_FACTOR_MASK;
+    } else {
+      self.data &= RESERVE_FACTOR_MASK;
+    }
   }
 }

@@ -52,6 +52,7 @@ import { falsyOrZeroAddress, getFirstSigner, getFromJsonDb, hasInJsonDb } from '
 import { eContractid, PoolConfiguration, tEthereumAddress, TokenContractId } from './types';
 import { ILendingPoolAaveCompatibleFactory } from '../types/ILendingPoolAaveCompatibleFactory';
 import { IManagedLendingPoolFactory } from '../types/IManagedLendingPoolFactory';
+import { IAaveLendingPoolFactory } from '../types/IAaveLendingPoolFactory';
 
 const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
 
@@ -411,6 +412,9 @@ export const getIManagedRewardPool = async (address: tEthereumAddress) =>
 
 export const getILendingPoolAaveCompatible = async (address: tEthereumAddress) =>
   ILendingPoolAaveCompatibleFactory.connect(address, await getFirstSigner());
+
+export const getIAaveLendingPool = async (address: tEthereumAddress) =>
+  IAaveLendingPoolFactory.connect(address, await getFirstSigner());
 
 export const getIManagedLendingPool = async (address: tEthereumAddress) =>
   IManagedLendingPoolFactory.connect(address, await getFirstSigner());

@@ -642,12 +642,13 @@ contract LendingPoolExtension is
     );
   }
 
-  function setReserveStrategy(address asset, address strategy)
-    external
-    override
-    onlyLendingPoolConfigurator
-  {
+  function setReserveStrategy(
+    address asset,
+    address strategy,
+    bool isExternal
+  ) external override onlyLendingPoolConfigurator {
     _reserves[asset].strategy = strategy;
+    _reserves[asset].configuration.setExternalStrategy(isExternal);
   }
 
   function setConfiguration(address asset, uint256 configuration)

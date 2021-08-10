@@ -7,8 +7,8 @@ interface ILendingPoolConfigurator {
     address depositTokenImpl;
     address stableDebtTokenImpl;
     address variableDebtTokenImpl;
-    uint64 reserveFlags;
     uint8 underlyingAssetDecimals;
+    bool externalStrategy;
     address strategy;
     address underlyingAsset;
     address treasury;
@@ -69,7 +69,7 @@ interface ILendingPoolConfigurator {
   event ReserveUnfrozen(address indexed asset);
 
   event ReserveFactorChanged(address indexed asset, uint256 factor);
-  event ReserveStrategyChanged(address indexed asset, address strategy);
+  event ReserveStrategyChanged(address indexed asset, address strategy, bool isExternal);
 
   event DepositTokenUpgraded(
     address indexed asset,
