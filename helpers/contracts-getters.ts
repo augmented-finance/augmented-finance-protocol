@@ -188,6 +188,9 @@ export const getAddressesProviderRegistry = async (address?: tEthereumAddress) =
     await getFirstSigner()
   );
 
+export const hasAddressProviderRegistry = async (address?: tEthereumAddress) =>
+  await hasInJsonDb(eContractid.AddressesProviderRegistry);
+
 export const getReserveLogic = async (address?: tEthereumAddress) =>
   ReserveLogicFactory.connect(
     address || (await getAddr(eContractid.ReserveLogic)),

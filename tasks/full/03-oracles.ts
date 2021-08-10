@@ -14,12 +14,18 @@ import {
   getWethAddress,
   getLendingRateOracles,
 } from '../../helpers/configuration';
-import { getTokenAggregatorPairs } from '../../helpers/contracts-getters';
+import {
+  getAddressesProviderRegistry,
+  getMarketAddressController,
+  getTokenAggregatorPairs,
+  hasAddressProviderRegistry,
+} from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 import { oneEther, ZERO_ADDRESS } from '../../helpers/constants';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
+import { AddressesProviderRegistry } from '../../types';
 
-task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
+task('full:deploy-oracles', 'Deploys oracles')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE) => {
@@ -29,9 +35,11 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
     const {
       Mocks: { UsdAddress },
       ReserveAssets,
+      OracleRouter,
       FallbackOracle,
       ChainlinkAggregator,
     } = poolConfig as ICommonConfiguration;
+    const oracleRouter = getParamPerNetwork(OracleRouter, network);
     const fallbackOracle = getParamPerNetwork(FallbackOracle, network);
     const reserveAssets = getParamPerNetwork(ReserveAssets, network);
     const chainlinkAggregators = getParamPerNetwork(ChainlinkAggregator, network);
@@ -41,40 +49,72 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
       USD: UsdAddress,
     };
 
-    let fallbackOracleAddress: tEthereumAddress;
-
     // Oracles are NOT updated for existing installations
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
     const newOracles = freshStart && !continuation;
 
-    {
-      let lroAddress = newOracles ? '' : await addressProvider.getLendingRateOracle();
+    let lroAddress = '';
+    let poAddress = oracleRouter;
 
-      if (falsyOrZeroAddress(lroAddress)) {
-        console.log('Deploying LendingRateOracle');
-
-        const lendingRateOracle = await deployLendingRateOracle([addressProvider.address], verify);
-        const deployer = await getFirstSigner();
-        await waitTx(addressProvider.grantRoles(deployer.address, AccessFlags.LENDING_RATE_ADMIN));
-
-        const { USD, ...tokensAddressesWithoutUsd } = tokensToWatch;
-
-        const lendingRateOracles = getLendingRateOracles(poolConfig);
-        await setInitialMarketRatesInRatesOracleByHelper(
-          lendingRateOracles,
-          tokensAddressesWithoutUsd,
-          lendingRateOracle
-        );
-        await mustWaitTx(
-          addressProvider.setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle.address)
-        );
-
-        lroAddress = lendingRateOracle.address;
+    if (!newOracles) {
+      lroAddress = await addressProvider.getLendingRateOracle();
+      if (falsyOrZeroAddress(poAddress)) {
+        poAddress = await addressProvider.getPriceOracle();
       }
-      console.log('LendingRateOracle:', lroAddress);
     }
 
-    let poAddress = newOracles ? '' : await addressProvider.getPriceOracle();
+    if (poAddress != 'new' && (falsyOrZeroAddress(lroAddress) || falsyOrZeroAddress(poAddress))) {
+      let registry: AddressesProviderRegistry;
+      if (await hasAddressProviderRegistry()) {
+        registry = await getAddressesProviderRegistry();
+      } else {
+        const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
+        if (falsyOrZeroAddress(registryAddress)) {
+          throw 'registry address is unknown';
+        }
+        registry = await getAddressesProviderRegistry(registryAddress);
+      }
+      const [addr, ...others] = await registry.getAddressesProvidersList();
+
+      if (others.length > 0) {
+        // this is not the first provider
+        const firstCtl = await getMarketAddressController(addr);
+
+        if (falsyOrZeroAddress(lroAddress)) {
+          lroAddress = await firstCtl.getLendingRateOracle();
+          console.log('Reuse LendingRateOracle:', lroAddress, 'from', addr);
+        }
+        if (falsyOrZeroAddress(poAddress)) {
+          poAddress = await firstCtl.getPriceOracle();
+          console.log('Reuse PriceOracle:', poAddress, 'from', addr);
+        }
+      }
+    }
+
+    if (falsyOrZeroAddress(lroAddress)) {
+      console.log('Deploying LendingRateOracle');
+
+      const lendingRateOracle = await deployLendingRateOracle([addressProvider.address], verify);
+      const deployer = await getFirstSigner();
+      await waitTx(addressProvider.grantRoles(deployer.address, AccessFlags.LENDING_RATE_ADMIN));
+
+      const { USD, ...tokensAddressesWithoutUsd } = tokensToWatch;
+
+      const lendingRateOracles = getLendingRateOracles(poolConfig);
+      await setInitialMarketRatesInRatesOracleByHelper(
+        lendingRateOracles,
+        tokensAddressesWithoutUsd,
+        lendingRateOracle
+      );
+      await mustWaitTx(
+        addressProvider.setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle.address)
+      );
+
+      lroAddress = lendingRateOracle.address;
+    }
+    console.log('LendingRateOracle:', lroAddress);
+
+    let fallbackOracleAddress: tEthereumAddress;
 
     if (falsyOrZeroAddress(poAddress)) {
       if (typeof fallbackOracle == 'string') {
@@ -121,7 +161,7 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
         verify
       );
       await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address));
-
-      console.log('PriceOracle: ', oracleRouter.address);
+      poAddress = oracleRouter.address;
     }
+    console.log('PriceOracle: ', poAddress);
   });
