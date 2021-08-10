@@ -7,7 +7,7 @@ import {
 } from '../../helpers/contracts-deployments';
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
 import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress } from '../../helpers/types';
-import { falsyOrZeroAddress, getFirstSigner, waitForTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, getFirstSigner, mustWaitTx, waitTx } from '../../helpers/misc-utils';
 import {
   ConfigNames,
   loadPoolConfig,
@@ -55,7 +55,7 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
 
         const lendingRateOracle = await deployLendingRateOracle([addressProvider.address], verify);
         const deployer = await getFirstSigner();
-        await addressProvider.grantRoles(deployer.address, AccessFlags.LENDING_RATE_ADMIN);
+        await waitTx(addressProvider.grantRoles(deployer.address, AccessFlags.LENDING_RATE_ADMIN));
 
         const { USD, ...tokensAddressesWithoutUsd } = tokensToWatch;
 
@@ -65,11 +65,8 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
           tokensAddressesWithoutUsd,
           lendingRateOracle
         );
-        await waitForTx(
-          await addressProvider.setAddress(
-            AccessFlags.LENDING_RATE_ORACLE,
-            lendingRateOracle.address
-          )
+        await mustWaitTx(
+          addressProvider.setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle.address)
         );
 
         lroAddress = lendingRateOracle.address;
@@ -123,9 +120,7 @@ task('full:deploy-oracles', 'Deploy oracles for prod enviroment')
         ],
         verify
       );
-      await waitForTx(
-        await addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address)
-      );
+      await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address));
 
       console.log('PriceOracle: ', oracleRouter.address);
     }

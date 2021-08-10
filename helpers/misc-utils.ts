@@ -1,7 +1,6 @@
 import BigNumber from 'bignumber.js';
 import low from 'lowdb';
 import FileSync from 'lowdb/adapters/FileSync';
-import { WAD, ZERO_ADDRESS } from './constants';
 import { Contract, Wallet, ContractTransaction } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from './types';
@@ -66,6 +65,21 @@ export const advanceTimeAndBlock = async function (forwardTime: number) {
 };
 
 export const waitForTx = async (tx: ContractTransaction) => await tx.wait(1);
+
+export const mustWaitTx = async (ptx: Promise<ContractTransaction>) => await (await ptx).wait(1);
+
+let skipWaitTx = false;
+
+export const setSkipWaitTx = (v: boolean) => {
+  skipWaitTx = v;
+};
+
+export const waitTx = async (ptx: Promise<ContractTransaction>): Promise<void> => {
+  const tx = await ptx;
+  if (!skipWaitTx) {
+    await tx.wait(1);
+  }
+};
 
 export const filterMapBy = (raw: { [key: string]: any }, fn: (key: string) => boolean) =>
   Object.keys(raw)

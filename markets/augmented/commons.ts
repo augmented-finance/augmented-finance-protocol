@@ -64,7 +64,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.tenderlyMain]: undefined,
   },
   ProviderRegistry: {
-    [eEthereumNetwork.kovan]: '',
+    [eEthereumNetwork.kovan]: '0xe28BdBF3C2440C97aBA7250ED1bb9F20559E351a',
     [eEthereumNetwork.ropsten]: '', // '0x2931bAf940EE995E563BB27BCc7B60Aa8F9af298',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
@@ -74,7 +74,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.tenderlyMain]: '',
   },
   ProviderRegistryOwner: {
-    [eEthereumNetwork.kovan]: '',
+    [eEthereumNetwork.kovan]: '', // '0x31B29E1d3524f281f513B34F3855Ee8E473c0264',
     [eEthereumNetwork.ropsten]: '', // '0x31B29E1d3524f281f513B34F3855Ee8E473c0264',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
@@ -233,7 +233,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.docker]: {},
     [eEthereumNetwork.coverage]: {},
     [eEthereumNetwork.kovan]: {
-      AAVE: '0xB597cd8D3217ea6477232F9217fa70837ff667Af',
+      AAVE: ZERO_ADDRESS, // '0xB597cd8D3217ea6477232F9217fa70837ff667Af',
       // BUSD: '0x4c6E1EFC12FDfD568186b7BAEc0A43fFfb4bCcCf',
       DAI: '0xFf795577d9AC8bD7D90Ee22b6C1703490b6512FD',
       LINK: '0xAD5ce863aE3E4E9394Ab43d4ba0D80f419F61789',

@@ -37,16 +37,6 @@ interface DoNotUseLendingPoolDelegationChecker is
     uint256
   ) external override(ILendingPoolExtension, ILendingPool);
 
-  function sponsoredFlashLoan(
-    address,
-    address[] calldata,
-    uint256[] calldata,
-    uint256[] calldata,
-    address,
-    bytes calldata,
-    uint256
-  ) external override(ILendingPoolExtension, ILendingPool);
-
   function borrow(
     address,
     uint256,
