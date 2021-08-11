@@ -46,14 +46,14 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
       return;
     }
 
-    // const ethers = (<any>DRE).ethers;
-    // for (const receiver of receivers) {
-    //   await ethers.provider.sendTransaction({
-    //     to: receiver,
-    //     value: BigNumber.from(10),
-    //   })
-    //   console.log('Send 1 ETH to ', receiver);
-    // }
+    const ethers = (<any>DRE).ethers;
+    for (const receiver of receivers) {
+      await ethers.provider.sendTransaction({
+        to: receiver,
+        value: (<any>DRE).ethers.utils.hexlify(1e18),
+      });
+      console.log('Send 1 ETH to ', receiver);
+    }
 
     for (const receiver of receivers) {
       let hasDeposits = false;
