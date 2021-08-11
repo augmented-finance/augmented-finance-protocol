@@ -29,5 +29,4 @@ export enum AccessFlags {
   LENDING_RATE_ORACLE = 1 << 30,
 }
 
-export const ACCESS_REWARD_MINT = ethers.BigNumber.from(2).pow(64);
-export const ACCESS_REWARD_BURN = ethers.BigNumber.from(2).pow(65);
+export const ACCESS_TRUSTED_FLASHLOAN = ethers.BigNumber.from(2).pow(66);
