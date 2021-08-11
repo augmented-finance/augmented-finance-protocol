@@ -1,4 +1,4 @@
-FROM node:14
+FROM node:16
 COPY package.json yarn.lock /src/
 WORKDIR /src
 RUN yarn install

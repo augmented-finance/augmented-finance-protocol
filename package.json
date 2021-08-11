@@ -128,7 +128,6 @@
   "contributors": [],
   "license": "AGPL-3.0",
   "dependencies": {
-    "node": "^16.6.1",
     "tmp-promise": "^3.0.2"
   },
   "keywords": [
