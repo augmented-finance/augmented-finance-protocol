@@ -21,6 +21,16 @@ interface IManagedAccessController is IAccessController {
     bytes calldata initCall
   ) external;
 
+  function callWithRoles(
+    uint256 flags,
+    address addr,
+    bytes calldata data
+  ) external returns (bytes memory result);
+
   event ProxyCreated(uint256 indexed id, address indexed newAddress);
   event AddressSet(uint256 indexed id, address indexed newAddress, bool hasProxy);
+  event RolesUpdated(address indexed addr, uint256 flags);
+  event TemporaryAdminAssigned(address indexed admin, uint256 expiresAt);
+  event AnyRoleModeEnabled();
+  event AnyRoleModeBlocked();
 }
