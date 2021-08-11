@@ -206,8 +206,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     uint256 prevStake;
     {
       // ======== ATTN! DO NOT APPLY STATE CHANGES STARTING FROM HERE ========
-      {
-        // ATTN! Should be no overflow checks here
+      unchecked {
         uint256 underlyingBalance = underlyingTransfer + userBalance.underlyingAmount;
 
         if (underlyingBalance < underlyingTransfer || underlyingBalance > type(uint192).max) {
@@ -257,11 +256,13 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
         }
       }
 
-      // ATTN! Should be no overflow checks here
-      uint256 newStakeDelta = stakeAmount + _pointTotal[newEndPoint].stakeDelta;
+      uint256 newStakeDelta;
+      unchecked {
+        newStakeDelta = stakeAmount + _pointTotal[newEndPoint].stakeDelta;
 
-      if (newStakeDelta < stakeAmount || newStakeDelta > type(uint128).max) {
-        return (0, LOCK_ERR_LOCK_OVERFLOW);
+        if (newStakeDelta < stakeAmount || newStakeDelta > type(uint128).max) {
+          return (0, LOCK_ERR_LOCK_OVERFLOW);
+        }
       }
 
       // ======== ATTN! DO NOT APPLY STATE CHANGES ENDS HERE ========
