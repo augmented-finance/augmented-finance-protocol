@@ -13,7 +13,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumberish } from 'ethers';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
-task(`full:init-stake-tokens`, `Deploys stake tokens for prod enviroment`)
+task(`full:init-stake-tokens`, `Deploys stake tokens`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .addFlag('verify', `Verify contracts via Etherscan API.`)
   .setAction(async ({ verify, pool }, localBRE) => {

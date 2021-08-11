@@ -5,7 +5,7 @@ import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import { ConfigNames } from '../../helpers/configuration';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
-task('full:data-provider', 'Initialize lending pool configuration.')
+task('full:data-provider', 'Deploys UI data provider')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify }, localBRE) => {

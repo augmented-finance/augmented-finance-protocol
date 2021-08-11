@@ -10,7 +10,7 @@ import {
 import { AddressesProviderRegistry } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
 
-task('full:deploy-finalize', 'Finalize deployment')
+task('full:deploy-finalize', 'Finalizes deployment and revokes temporary permissions')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(async ({ verify, pool }, DRE) => {
     await DRE.run('set-DRE');

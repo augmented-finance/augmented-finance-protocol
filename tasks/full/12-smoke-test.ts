@@ -6,7 +6,7 @@ import { getProtocolDataProvider } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
-task('full:smoke-test', 'Smoke test of deployed configuration')
+task('full:smoke-test', 'Does a smoke test of the deployed contracts')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE) => {

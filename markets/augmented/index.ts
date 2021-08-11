@@ -15,7 +15,7 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
   let cfg: IAugmentedConfiguration = CommonsConfig;
   
   cfg.MarketId = 'Augmented genesis market';
-  cfg.ProviderId = 1;
+  cfg.ProviderId = 0; // force autonumbering
 
   cfg.ReservesConfig = {
     DAI: strategyDAI,

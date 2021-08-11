@@ -369,11 +369,11 @@ export interface ICommonConfiguration {
   AddressProvider: iParamsPerNetwork<tEthereumAddress | undefined>;
   AddressProviderOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
 
-  ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
-
-  LendingRateOracleRates: iAssetsWithoutUSD<IMarketRates>;
-
+  OracleRouter: iParamsPerNetwork<tEthereumAddress>;
   FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
+
+  ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
+  LendingRateOracleRates: iAssetsWithoutUSD<IMarketRates>;
 
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
   EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;

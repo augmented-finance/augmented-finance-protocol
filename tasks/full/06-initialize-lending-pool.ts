@@ -9,7 +9,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { getProtocolDataProvider } from '../../helpers/contracts-getters';
 import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 
-task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
+task('full:initialize-lending-pool', 'Initializes lending pool and configures reserves')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, localBRE) => {

@@ -8,7 +8,7 @@ import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helper
 
 const CONTRACT_NAME = 'StakeConfigurator';
 
-task(`full:deploy-stake-configurator`, `Deploys the ${CONTRACT_NAME} contract for prod enviroment`)
+task(`full:deploy-stake-configurator`, `Deploys ${CONTRACT_NAME}`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .addFlag('verify', `Verify ${CONTRACT_NAME} contract via Etherscan API.`)
   .setAction(async ({ verify, pool }, localBRE) => {
