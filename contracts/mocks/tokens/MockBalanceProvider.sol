@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import '../../interfaces/IBalanceHook.sol';
 import '../../interfaces/IScaledBalanceToken.sol';
 
-contract DepositTokenMock is IScaledBalanceToken {
+contract MockBalanceProvider is IScaledBalanceToken {
   IBalanceHook public _aic;
   uint256 internal _userBalance;
   uint256 internal _totalSupply;
