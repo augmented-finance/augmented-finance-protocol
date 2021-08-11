@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../misc/ERC20WithPermit.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
@@ -22,10 +20,9 @@ abstract contract SlashableStakeTokenBase is
   IStakeToken,
   IManagedStakeToken,
   ERC20WithPermit,
-  MarketAccessBitmask(IMarketAccessController(0)),
+  MarketAccessBitmask(IMarketAccessController(address(0))),
   IInitializableStakeToken
 {
-  using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
@@ -45,7 +42,7 @@ abstract contract SlashableStakeTokenBase is
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public ERC20WithPermit(name, symbol, decimals) {
+  ) ERC20WithPermit(name, symbol, decimals) {
     _initializeToken(params);
   }
 
@@ -76,7 +73,7 @@ abstract contract SlashableStakeTokenBase is
     uint256 underlyingAmount,
     uint256 referral
   ) external override returns (uint256) {
-    internalStake(msg.sender, to, underlyingAmount, referral, true);
+    return internalStake(msg.sender, to, underlyingAmount, referral, true);
   }
 
   function internalStake(
@@ -152,11 +149,11 @@ abstract contract SlashableStakeTokenBase is
     uint256 cooldownStartAt = _stakersCooldowns[from];
 
     require(
-      cooldownStartAt != 0 && block.timestamp > cooldownStartAt.add(_cooldownPeriod),
+      cooldownStartAt != 0 && block.timestamp > cooldownStartAt + _cooldownPeriod,
       Errors.STK_INSUFFICIENT_COOLDOWN
     );
     require(
-      block.timestamp.sub(cooldownStartAt.add(_cooldownPeriod)) <= _unstakePeriod,
+      block.timestamp <= (cooldownStartAt + _cooldownPeriod) + _unstakePeriod,
       Errors.STK_UNSTAKE_WINDOW_FINISHED
     );
 
@@ -249,7 +246,7 @@ abstract contract SlashableStakeTokenBase is
       return WadRayMath.RAY; // 100%
     }
 
-    return underlyingBalance.mul(WadRayMath.RAY).div(total);
+    return (underlyingBalance * WadRayMath.RAY) / total;
   }
 
   function slashUnderlying(
@@ -384,7 +381,7 @@ abstract contract SlashableStakeTokenBase is
       return 0;
     }
 
-    uint256 minimalValidCooldown = block.timestamp.sub(_cooldownPeriod).sub(_unstakePeriod);
+    uint256 minimalValidCooldown = (block.timestamp - _cooldownPeriod) - _unstakePeriod;
 
     if (minimalValidCooldown > toCooldownPeriod) {
       toCooldownPeriod = 0;
@@ -392,16 +389,14 @@ abstract contract SlashableStakeTokenBase is
       if (minimalValidCooldown > fromCooldownPeriod) {
         fromCooldownPeriod = uint32(block.timestamp);
       }
-
       if (fromCooldownPeriod < toCooldownPeriod) {
         return toCooldownPeriod;
-      } else {
-        toCooldownPeriod = uint32(
-          (amountToReceive.mul(fromCooldownPeriod).add(toBalance.mul(toCooldownPeriod))).div(
-            amountToReceive.add(toBalance)
-          )
-        );
       }
+
+      toCooldownPeriod = uint32(
+        (amountToReceive * fromCooldownPeriod + toBalance * toCooldownPeriod) /
+          (amountToReceive + toBalance)
+      );
     }
     _stakersCooldowns[toAddress] = toCooldownPeriod;
 

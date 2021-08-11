@@ -4,7 +4,7 @@ orbs:
   slack: circleci/slack@4.4.2
 defaults: &defaults
   docker:
-    - image: cimg/node:14.17
+    - image: cimg/node:16.6
 jobs:
   cancel_draft_build:
     docker:
@@ -21,12 +21,12 @@ jobs:
             - yarn-packages-{{ checksum "yarn.lock" }}
       - run: yarn install --immutable
       - run: yarn run compile
-      - run: yarn run test:augmented:boost
-      - run: yarn run test:augmented:pools
+      - run: yarn run test-boost
+      - run: yarn run test-pools
       - run: yarn run test
-      - run: yarn run test:augmented:stake
-      - run: yarn run augmented:main:fork
-      - run: yarn run augmented:test-incremental
+      - run: yarn run test-stake
+      - run: yarn run test-deploy:fork
+      - run: yarn run test-deploy:fork:test-incremental
       - run: yarn run build:package
       - save_cache:
           name: Save yarn package cache

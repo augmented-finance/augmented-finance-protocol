@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
@@ -13,7 +13,7 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
   using SafeERC20 for IERC20;
   uint256 private constant TREASURY_REVISION = 1;
 
-  constructor() public MarketAccessBitmask(IMarketAccessController(0)) {}
+  constructor() MarketAccessBitmask(IMarketAccessController(address(0))) {}
 
   // This initializer is invoked by AccessController.setAddressAsImpl
   function initialize(address remoteAcl) external virtual initializerRunAlways(TREASURY_REVISION) {

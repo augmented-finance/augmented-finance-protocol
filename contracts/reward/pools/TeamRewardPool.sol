@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../tools/math/PercentageMath.sol';
-import '../interfaces/IRewardController.sol';
-import './ControlledRewardPool.sol';
-import '../calcs/CalcLinearUnweightedReward.sol';
 import '../../tools/Errors.sol';
+import '../interfaces/IRewardController.sol';
+import '../calcs/CalcLinearUnweightedReward.sol';
+import './ControlledRewardPool.sol';
 
 contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   using PercentageMath for uint256;
@@ -19,7 +19,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     uint256 initialRate,
     uint16 baselinePercentage,
     address teamManager
-  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _teamManager = teamManager;
   }
 
@@ -30,7 +30,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     );
   }
 
-  function getPoolName() public view override returns (string memory) {
+  function getPoolName() public pure override returns (string memory) {
     return 'TeamPool';
   }
 
@@ -85,7 +85,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return (rate, allocated, since);
   }
 
-  function addRewardProvider(address, address) external override onlyConfigAdmin {
+  function addRewardProvider(address, address) external view override onlyConfigAdmin {
     revert('UNSUPPORTED');
   }
 

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
@@ -28,7 +27,7 @@ contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
    * @dev Sets the WETH address
    * @param weth Address of the Wrapped Ether contract
    **/
-  constructor(IMarketAccessController acl, address weth) public MarketAccessBitmask(acl) {
+  constructor(IMarketAccessController acl, address weth) MarketAccessBitmask(acl) {
     WETH = IWETH(weth);
   }
 

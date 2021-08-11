@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../Errors.sol';
 
@@ -63,8 +63,7 @@ library MulDiv {
     // Factor powers of two out of denominator
     // Compute largest power of two divisor of denominator.
     // Always >= 1.
-    /* unchecked */
-    {
+    unchecked {
       uint256 twos = (type(uint256).max - denominator + 1) & denominator;
       // Divide denominator by power of two
       assembly {

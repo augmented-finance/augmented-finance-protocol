@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import './interfaces/IManagedMarketAccessController.sol';
 import './AccessController.sol';
@@ -10,7 +10,6 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
   string private _marketId;
 
   constructor(string memory marketId)
-    public
     AccessController(AccessFlags.SINGLETONS, AccessFlags.ROLES, AccessFlags.PROXIES)
   {
     _marketId = marketId;

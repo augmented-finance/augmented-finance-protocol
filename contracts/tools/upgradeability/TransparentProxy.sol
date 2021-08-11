@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/Address.sol';
 import '../../dependencies/openzeppelin/upgradeability/BaseUpgradeabilityProxy.sol';
@@ -13,7 +13,7 @@ contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
     address admin,
     address logic,
     bytes memory data
-  ) public {
+  ) {
     require(admin != address(0));
     ADMIN = admin;
     initialize(logic, data);
@@ -27,8 +27,8 @@ contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
     }
   }
 
-  /// @return The address of the implementation.
-  function implementation() external ifAdmin returns (address) {
+  /// @return impl The address of the implementation.
+  function implementation() external ifAdmin returns (address impl) {
     return _implementation();
   }
 

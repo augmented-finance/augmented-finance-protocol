@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import '../access/interfaces/IMarketAccessController.sol';
@@ -57,7 +56,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
 
   IMarketAccessController public immutable ADDRESS_PROVIDER;
 
-  constructor(IMarketAccessController addressesProvider) public {
+  constructor(IMarketAccessController addressesProvider) {
     ADDRESS_PROVIDER = addressesProvider;
   }
 

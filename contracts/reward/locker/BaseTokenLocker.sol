@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../interfaces/IDerivedToken.sol';
 
 /**
@@ -16,7 +14,6 @@ import '../../interfaces/IDerivedToken.sol';
  */
 
 abstract contract BaseTokenLocker is IERC20, IDerivedToken {
-  using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
   IERC20 private _underlyingToken;
@@ -85,7 +82,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
   event Redeemed(address indexed from, address indexed to, uint256 underlyingAmount);
 
   /// @param underlying ERC20 token to be locked
-  constructor(address underlying) public {
+  constructor(address underlying) {
     _initialize(underlying);
   }
 
@@ -182,7 +179,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
       @param underlyingTransfer amount of underlying (=>0) to be added to the lock.
       @param duration in seconds of the lock. This duration will be rounded up to make sure that lock will end at a week's edge. 
       Zero value indicates addition to an existing lock without changing expiry.
-      @param transfer indicates when transferFrom should be called. E.g. autolock uses false, as tokens will be minted externally to this contract.
+      @param doTransfer indicates when transferFrom should be called. E.g. autolock uses false, as tokens will be minted externally to this contract.
       @param referral code to use for marketing campaings. Use 0 when not involved.
       @return stakeAmount is total amount of lock tokens of the `to` address; recoverableError is the soft error code.
    */
@@ -192,7 +189,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     uint256 underlyingTransfer,
     uint32 duration,
     uint256 referral,
-    bool transfer
+    bool doTransfer
   ) internal returns (uint256 stakeAmount, uint256 recoverableError) {
     require(from != address(0), 'ZERO_FROM');
     require(to != address(0), 'ZERO_TO');
@@ -207,8 +204,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     uint256 prevStake;
     {
       // ======== ATTN! DO NOT APPLY STATE CHANGES STARTING FROM HERE ========
-      {
-        // ATTN! Should be no overflow checks here
+      unchecked {
         uint256 underlyingBalance = underlyingTransfer + userBalance.underlyingAmount;
 
         if (underlyingBalance < underlyingTransfer || underlyingBalance > type(uint192).max) {
@@ -250,32 +246,34 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
       }
 
       {
-        uint256 adjDuration = uint256(newEndPoint * _pointPeriod).sub(userBalance.startTS);
+        uint256 adjDuration = uint256(newEndPoint * _pointPeriod) - userBalance.startTS;
         if (adjDuration < _maxValuePeriod) {
-          stakeAmount = uint256(userBalance.underlyingAmount).mul(adjDuration).div(_maxValuePeriod);
+          stakeAmount = (uint256(userBalance.underlyingAmount) * adjDuration) / _maxValuePeriod;
         } else {
           stakeAmount = userBalance.underlyingAmount;
         }
       }
 
-      // ATTN! Should be no overflow checks here
-      uint256 newStakeDelta = stakeAmount + _pointTotal[newEndPoint].stakeDelta;
+      uint256 newStakeDelta;
+      unchecked {
+        newStakeDelta = stakeAmount + _pointTotal[newEndPoint].stakeDelta;
 
-      if (newStakeDelta < stakeAmount || newStakeDelta > type(uint128).max) {
-        return (0, LOCK_ERR_LOCK_OVERFLOW);
+        if (newStakeDelta < stakeAmount || newStakeDelta > type(uint128).max) {
+          return (0, LOCK_ERR_LOCK_OVERFLOW);
+        }
       }
 
       // ======== ATTN! DO NOT APPLY STATE CHANGES ENDS HERE ========
 
       if (prevStake > 0) {
         if (userBalance.endPoint == newEndPoint) {
-          newStakeDelta = newStakeDelta.sub(prevStake);
+          newStakeDelta -= prevStake;
         } else {
           _pointTotal[userBalance.endPoint].stakeDelta = uint128(
-            uint256(_pointTotal[userBalance.endPoint].stakeDelta).sub(prevStake)
+            _pointTotal[userBalance.endPoint].stakeDelta - prevStake
           );
         }
-        _stakedTotal = _stakedTotal.sub(prevStake);
+        _stakedTotal -= prevStake;
       }
 
       if (userBalance.endPoint <= currentPoint) {
@@ -288,7 +286,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
       // range check is done above
       _pointTotal[newEndPoint].stakeDelta = uint128(newStakeDelta);
-      _stakedTotal = _stakedTotal.add(stakeAmount);
+      _stakedTotal += stakeAmount;
     }
 
     if (_nextKnownPoint > userBalance.endPoint || _nextKnownPoint == 0) {
@@ -305,7 +303,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
     _balances[to] = userBalance;
 
-    if (transfer) {
+    if (doTransfer) {
       _underlyingToken.safeTransferFrom(from, address(this), underlyingTransfer);
     }
 
@@ -444,14 +442,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     }
 
     for (; fromPoint <= tillPoint; fromPoint++) {
-      uint256 stakeDelta = _pointTotal[fromPoint].stakeDelta;
-      if (stakeDelta == 0) {
-        continue;
-      }
-      if (totalSupply_ == stakeDelta) {
-        return 0;
-      }
-      totalSupply_ = totalSupply_.sub(stakeDelta);
+      totalSupply_ -= _pointTotal[fromPoint].stakeDelta;
     }
 
     return totalSupply_;
@@ -501,8 +492,8 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     for (; nextPoint <= tillPoint; ) {
       internalCheckpoint(nextPoint * _pointPeriod);
 
-      _extraRate = _extraRate.sub(delta.rateDelta);
-      _stakedTotal = _stakedTotal.sub(delta.stakeDelta);
+      _extraRate -= delta.rateDelta;
+      _stakedTotal -= delta.stakeDelta;
 
       bool found = false;
       // look for the next non-zero point
@@ -534,24 +525,28 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     return address(_underlyingToken);
   }
 
-  function transfer(address, uint256) external override returns (bool) {
+  function transfer(address, uint256) external pure override returns (bool) {
     notSupported();
+    return false;
   }
 
-  function allowance(address, address) external view override returns (uint256) {
+  function allowance(address, address) external pure override returns (uint256) {
     notSupported();
+    return 0;
   }
 
-  function approve(address, uint256) external override returns (bool) {
+  function approve(address, uint256) external pure override returns (bool) {
     notSupported();
+    return false;
   }
 
   function transferFrom(
     address,
     address,
     uint256
-  ) external override returns (bool) {
+  ) external pure override returns (bool) {
     notSupported();
+    return false;
   }
 
   function notSupported() private pure {
@@ -590,9 +585,9 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
     internalSyncRate(at);
 
-    _extraRate = _extraRate.add(excessRateIncrement);
+    _extraRate += excessRateIncrement;
 
-    excessRateIncrement = excessRateIncrement.add(_pointTotal[expiryPt].rateDelta);
+    excessRateIncrement += _pointTotal[expiryPt].rateDelta;
     require(excessRateIncrement <= type(uint128).max);
     _pointTotal[expiryPt].rateDelta = uint128(excessRateIncrement);
 
@@ -644,7 +639,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     lockDuration *= _pointPeriod;
 
     if (lockDuration < _maxValuePeriod) {
-      return lockedAmount.mul(_maxValuePeriod).div(lockDuration);
+      return (lockedAmount * _maxValuePeriod) / lockDuration;
     }
     return lockedAmount;
   }
@@ -663,7 +658,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     lockDuration *= _pointPeriod;
 
     if (lockDuration < _maxValuePeriod) {
-      return underlyingAmount.mul(lockDuration).div(_maxValuePeriod);
+      return (underlyingAmount * lockDuration) / _maxValuePeriod;
     }
     return underlyingAmount;
   }

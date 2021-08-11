@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../tools/math/WadRayMath.sol';
+import '../../tools/Errors.sol';
 import '../interfaces/IRewardController.sol';
-import '../interfaces/IManagedRewardPool.sol';
-import './BasePermitRewardPool.sol';
 import '../calcs/CalcLinearFreezer.sol';
+import './BasePermitRewardPool.sol';
 
 contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
   uint256 private _rewardLimit;
@@ -16,7 +15,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     uint256 rewardLimit,
     uint32 meltDownAt,
     string memory rewardPoolName
-  ) public BasePermitRewardPool(controller, 0, NO_BASELINE, rewardPoolName) {
+  ) BasePermitRewardPool(controller, 0, NO_BASELINE, rewardPoolName) {
     _rewardLimit = rewardLimit;
     internalSetMeltDownAt(meltDownAt);
   }
@@ -28,7 +27,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
       );
   }
 
-  function setFreezePercentage(uint32 freezePortion) external onlyConfigAdmin {
+  function setFreezePercentage(uint16 freezePortion) external onlyConfigAdmin {
     internalSetFreezePercentage(freezePortion);
   }
 
@@ -70,11 +69,12 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
 
   function internalCheckNonce(uint256 currentValidNonce, uint256 deadline)
     internal
+    view
     override
     returns (uint256)
   {
     require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
-    return currentValidNonce.add(1);
+    return currentValidNonce + 1;
   }
 
   function internalGetReward(address holder, uint256)
@@ -111,20 +111,20 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
   }
 
   function internalUpdateFunds(uint256 value) internal override {
-    _rewardLimit = _rewardLimit.sub(value, 'INSUFFICIENT_FUNDS');
+    _rewardLimit = SafeMath.sub(_rewardLimit, value, Errors.VL_INSUFFICIENT_REWARD_AVAILABLE);
   }
 
-  function internalSetBaselinePercentage(uint16) internal override {
+  function internalSetBaselinePercentage(uint16) internal pure override {
     revert('UNSUPPORTED');
   }
 
-  function internalSetRate(uint256 rate) internal override {
+  function internalSetRate(uint256 rate) internal pure override {
     if (rate != 0) {
       revert('UNSUPPORTED');
     }
   }
 
-  function internalGetRate() internal view override returns (uint256) {
+  function internalGetRate() internal pure override returns (uint256) {
     return 0;
   }
 }

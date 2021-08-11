@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../tools/math/PercentageMath.sol';
 import '../dependencies/openzeppelin/contracts/SafeMath.sol';
@@ -38,11 +37,10 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     IFlashLoanAddressProvider provider,
     IUniswapV2Router02 uniswapRouter,
     address wethAddress
-  ) public FlashLoanReceiverBase(provider) {
+  ) FlashLoanReceiverBase(provider) {
     ILendingPool pool = ILendingPool(provider.getLendingPool());
-    uint16 flashloanPremium = pool.getFlashloanPremiumPct();
     flashloanPremiumRev = uint16(
-      uint256(PercentageMath.ONE).sub(flashloanPremium, 'INVALID_FLASHLOAN_PREMIUM')
+      SafeMath.sub(PercentageMath.ONE, pool.getFlashloanPremiumPct(), 'INVALID_FLASHLOAN_PREMIUM')
     );
 
     ORACLE = IPriceOracleGetter(provider.getPriceOracle());
@@ -446,8 +444,8 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
       // Add flash loan fee
       uint256 amountIn = amountOut.percentDiv(flashloanPremiumRev);
       uint256 reserveDecimals = _getDecimals(reserveIn);
-      address[] memory path = new address[](1);
-      path[0] = reserveIn;
+      address[] memory path_ = new address[](1);
+      path_[0] = reserveIn;
 
       return
         AmountCalc(
@@ -455,7 +453,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
           amountOut.mul(10**18).div(amountIn),
           _calcUsdValue(reserveIn, amountIn, reserveDecimals),
           _calcUsdValue(reserveIn, amountOut, reserveDecimals),
-          path
+          path_
         );
     }
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import '../interfaces/IRewardController.sol';
 import '../calcs/CalcLinearWeightedReward.sol';
@@ -11,7 +11,6 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
     uint256 initialRate,
     uint16 baselinePercentage
   )
-    public
     BaseTokenAbsRewardPool(controller, initialRate, baselinePercentage)
     CalcLinearWeightedReward()
   {}

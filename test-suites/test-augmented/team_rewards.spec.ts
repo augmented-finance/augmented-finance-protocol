@@ -50,7 +50,7 @@ describe('Team rewards suite', () => {
   it('share percentage 0 < share <= 10k', async () => {
     await expect(
       trp.connect(root).updateTeamMember(teamMember1.address, PERC_100 + 1)
-    ).to.be.revertedWith('revert invalid share percentage');
+    ).to.be.revertedWith('invalid share percentage');
     await expect(trp.connect(root).updateTeamMember(teamMember1.address, -1)).to.be.reverted;
   });
 
@@ -79,7 +79,7 @@ describe('Team rewards suite', () => {
     const shares = await trp.getAllocatedShares();
     expect(shares).to.eq(memberShare, 'shares are wrong');
     await expect(trp.connect(root).updateTeamMember(teamMember1.address, 0)).to.be.revertedWith(
-      'revert member share can not be changed during lockup'
+      'member share can not be changed during lockup'
     );
   });
 
@@ -133,9 +133,7 @@ describe('Team rewards suite', () => {
   it('can not change after unlock', async () => {
     await mineToTicks(REWARD_UNLOCKED_AT + 1);
     expect(await trp.isUnlocked(await currentTick())).to.be.true;
-    await expect(trp.setUnlockedAt(await currentTick())).to.be.revertedWith(
-      'revert lockup is finished'
-    );
+    await expect(trp.setUnlockedAt(await currentTick())).to.be.revertedWith('lockup is finished');
   });
 
   it('can pause/unpause pool, sets rate to zero', async () => {

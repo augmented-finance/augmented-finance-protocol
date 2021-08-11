@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../../../tools/Errors.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
@@ -15,8 +14,6 @@ import '../interfaces/IInitializablePoolToken.sol';
 import '../interfaces/PoolTokenConfig.sol';
 
 abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, IERC20Details {
-  using SafeMath for uint256;
-
   string private _name;
   string private _symbol;
   uint8 private _decimals;
@@ -29,23 +26,23 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
   IBalanceHook private _incentivesController;
 
   constructor(
-    string memory name,
-    string memory symbol,
-    uint8 decimals
-  ) public {
-    _name = name;
-    _symbol = symbol;
-    _decimals = decimals;
+    string memory name_,
+    string memory symbol_,
+    uint8 decimals_
+  ) {
+    _name = name_;
+    _symbol = symbol_;
+    _decimals = decimals_;
   }
 
   function _initializeERC20(
-    string memory name,
-    string memory symbol,
-    uint8 decimals
+    string memory name_,
+    string memory symbol_,
+    uint8 decimals_
   ) internal {
-    _name = name;
-    _symbol = symbol;
-    _decimals = decimals;
+    _name = name_;
+    _symbol = symbol_;
+    _decimals = decimals_;
   }
 
   function name() public view override returns (string memory) {
@@ -121,7 +118,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     uint256 providerSupply
   ) internal virtual {
     IBalanceHook hook = _incentivesController;
-    if (hook == IBalanceHook(0)) {
+    if (hook == IBalanceHook(address(0))) {
       return;
     }
     hook.handleBalanceUpdate(getIncentivesToken(), holder, oldBalance, newBalance, providerSupply);
@@ -135,7 +132,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     uint256 scale
   ) internal {
     IBalanceHook hook = _incentivesController;
-    if (hook == IBalanceHook(0)) {
+    if (hook == IBalanceHook(address(0))) {
       return;
     }
     hook.handleScaledBalanceUpdate(
@@ -180,12 +177,11 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     require(account != address(0), 'ERC20: mint to the zero address');
     _beforeTokenTransfer(address(0), account, amount);
 
-    uint256 total = _totalSupply;
-    total = total.add(amount);
+    uint256 total = _totalSupply + amount;
     _totalSupply = total;
 
     uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = oldAccountBalance.add(amount);
+    uint256 newAccountBalance = oldAccountBalance + amount;
     _balances[account] = newAccountBalance;
 
     handleScaledBalanceUpdate(account, oldAccountBalance, newAccountBalance, total, scale);
@@ -200,12 +196,12 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
 
     _beforeTokenTransfer(account, address(0), amount);
 
-    uint256 total = _totalSupply;
-    total = total.sub(amount);
+    uint256 total = _totalSupply - amount;
     _totalSupply = total;
 
     uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = oldAccountBalance.sub(amount, 'ERC20: burn amount exceeds balance');
+    uint256 newAccountBalance =
+      SafeMath.sub(oldAccountBalance, amount, 'ERC20: burn amount exceeds balance');
     _balances[account] = newAccountBalance;
 
     handleScaledBalanceUpdate(account, oldAccountBalance, newAccountBalance, total, scale);
@@ -224,11 +220,11 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
 
     uint256 oldSenderBalance = _balances[sender];
     uint256 newSenderBalance =
-      oldSenderBalance.sub(amount, 'ERC20: transfer amount exceeds balance');
+      SafeMath.sub(oldSenderBalance, amount, 'ERC20: transfer amount exceeds balance');
     _balances[sender] = newSenderBalance;
 
     uint256 oldRecipientBalance = _balances[recipient];
-    uint256 newRecipientBalance = oldRecipientBalance.add(amount);
+    uint256 newRecipientBalance = oldRecipientBalance + amount;
     _balances[recipient] = newRecipientBalance;
 
     IBalanceHook hook = _incentivesController;

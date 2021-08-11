@@ -1,7 +1,7 @@
 import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
-import rawBRE, { ethers } from 'hardhat';
+import rawBRE from 'hardhat';
 
 import {
   getMockAgfToken,
@@ -15,7 +15,6 @@ import { currentTick, revertSnapshot, takeSnapshot } from '../test-augmented/uti
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { applyDepositPlanAndClaimAll, TestInfo } from '../test_utils';
 import { ONE_ADDRESS } from '../../helpers/constants';
-import { deflateSync } from 'zlib';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -36,7 +35,7 @@ describe('Token weighted reward pool tests', () => {
 
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
-    [root, user1, user2] = await ethers.getSigners();
+    [root, user1, user2] = await (<any>rawBRE).ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
     rc = await getMockRewardFreezer();
     wrp = await getTokenWeightedRewardPoolAGFSeparate();
@@ -153,7 +152,7 @@ describe('Token weighted reward pool tests', () => {
     await rc.setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
-    expect(reward).to.be.approximately(520, rewardPrecision, 'reward is wrong');
+    expect(reward).to.be.approximately(526, rewardPrecision);
   });
 
   it('20 blocks, 100% deposited, 100% frozen, meltdown at +80 blocks, partly melted', async () => {
@@ -177,7 +176,7 @@ describe('Token weighted reward pool tests', () => {
     await rc.setMeltDownAt((await currentTick()) + ti.TicksToMeltdown);
     await applyDepositPlanAndClaimAll(ti, rc);
     const reward = (await agf.balanceOf(user1.address)).toNumber();
-    expect(reward).to.be.approximately(250, rewardPrecision, 'reward is wrong');
+    expect(reward).to.be.approximately(256, rewardPrecision);
   });
 
   it('20 blocks, 50% deposited, 2 users', async () => {

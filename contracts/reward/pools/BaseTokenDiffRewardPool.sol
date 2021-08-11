@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
-import '../../tools/math/PercentageMath.sol';
 import '../interfaces/IRewardController.sol';
 import '../interfaces/IRewardPool.sol';
 import './ControlledRewardPool.sol';
 
 abstract contract BaseTokenDiffRewardPool is ControlledRewardPool, IRewardPool {
-  using SafeMath for uint256;
   using WadRayMath for uint256;
-  using PercentageMath for uint256;
 
   // provider => provider_balance
   mapping(address => uint256) private _providers;
@@ -22,7 +18,7 @@ abstract contract BaseTokenDiffRewardPool is ControlledRewardPool, IRewardPool {
     uint256 initialRate,
     uint16 baselinePercentage,
     address token
-  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _token = token;
   }
 
@@ -53,7 +49,7 @@ abstract contract BaseTokenDiffRewardPool is ControlledRewardPool, IRewardPool {
     );
   }
 
-  function isScaledBalanceUpdateNeeded() external view override returns (bool) {
+  function isScaledBalanceUpdateNeeded() external pure override returns (bool) {
     // scaling is important to match different providers
     return true;
   }

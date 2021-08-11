@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../access/AccessFlags.sol';
 import '../access/MarketAccessBitmask.sol';
@@ -25,9 +24,8 @@ contract AGFTokenV1 is
   uint256 private constant TOKEN_REVISION = 1;
 
   constructor()
-    public
     RewardToken(NAME, SYMBOL, DECIMALS)
-    MarketAccessBitmask(IMarketAccessController(0))
+    MarketAccessBitmask(IMarketAccessController(address(0)))
   {}
 
   function getRevision() internal pure virtual override returns (uint256) {

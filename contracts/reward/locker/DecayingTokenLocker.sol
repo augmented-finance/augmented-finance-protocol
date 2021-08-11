@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
+import '../../tools/math/WadRayMath.sol';
 import '../interfaces/IRewardController.sol';
 import './RewardedTokenLocker.sol';
 
 contract DecayingTokenLocker is RewardedTokenLocker {
+  using WadRayMath for uint256;
+
   constructor(
     IRewardController controller,
     uint256 initialRate,
     uint16 baselinePercentage,
     address underlying
-  ) public RewardedTokenLocker(controller, initialRate, baselinePercentage, underlying) {}
+  ) RewardedTokenLocker(controller, initialRate, baselinePercentage, underlying) {}
 
   function balanceOf(address account) public view virtual override returns (uint256) {
     (uint32 startTS, uint32 endTS) = expiryOf(account);
@@ -21,7 +23,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     }
 
     uint256 stakeAmount = getStakeBalance(account);
-    uint256 stakeDecayed = stakeAmount.mul(endTS - current).div(endTS - startTS);
+    uint256 stakeDecayed = (stakeAmount * (endTS - current)) / (endTS - startTS);
 
     if (stakeDecayed >= stakeAmount) {
       return stakeAmount;
@@ -193,6 +195,8 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     if (maxAmount > amount) {
       internalAddExcess(maxAmount - amount, since);
     }
+
+    return amount;
   }
 
   /// @notice Calculates a range integral of the linear decay

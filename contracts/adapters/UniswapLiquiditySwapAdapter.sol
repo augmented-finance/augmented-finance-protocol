@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import './BaseUniswapAdapter.sol';
 import '../interfaces/IFlashLoanAddressProvider.sol';
 import '../interfaces/IUniswapV2Router02.sol';
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
 
 /**
  * @title UniswapLiquiditySwapAdapter
@@ -13,6 +14,9 @@ import '../dependencies/openzeppelin/contracts/IERC20.sol';
  * @author Aave
  **/
 contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
+  using SafeMath for uint256;
+  using SafeERC20 for IERC20;
+
   struct PermitParams {
     uint256[] amount;
     uint256[] deadline;
@@ -33,7 +37,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     IFlashLoanAddressProvider addressesProvider,
     IUniswapV2Router02 uniswapRouter,
     address wethAddress
-  ) public BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
+  ) BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
 
   /**
    * @dev Swaps the received reserve amount from the flash loan into the asset specified in the params.

@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../../reward/AGFTokenV1.sol';
 
 contract MockAgfToken is AGFTokenV1 {
-  constructor() public {
+  constructor() {
     // enables use of this instance without a proxy
     _unsafeResetVersionedInitializers();
   }

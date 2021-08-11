@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import '../interfaces/IRewardController.sol';
@@ -18,7 +17,7 @@ contract ReferralRewardPoolV1 is
     return POOL_REVISION;
   }
 
-  constructor() public ReferralRewardPool(IRewardController(address(this)), 0, 0, 'RefPool') {}
+  constructor() ReferralRewardPool(IRewardController(address(this)), 0, 0, 'RefPool') {}
 
   function initialize(InitData memory data) public override initializer(POOL_REVISION) {
     super._initialize(data.controller, data.initialRate, data.baselinePercentage, data.poolName);

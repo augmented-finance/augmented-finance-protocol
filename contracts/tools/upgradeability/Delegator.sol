@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.0;
+pragma solidity ^0.8.4;
 
 /// @dev Provides delegation of calls with proper forwarding of return values and bubbling of failures. Based on OpenZeppelin Proxy.
 abstract contract Delegator {
