@@ -2,14 +2,12 @@
 pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../tools/math/WadRayMath.sol';
+import '../../tools/Errors.sol';
 import '../interfaces/IRewardController.sol';
-import '../interfaces/IManagedRewardPool.sol';
-import './BasePermitRewardPool.sol';
 import '../calcs/CalcLinearFreezer.sol';
+import './BasePermitRewardPool.sol';
 
 contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
-  using SafeMath for uint256;
   uint256 private _rewardLimit;
 
   constructor(
@@ -76,7 +74,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     returns (uint256)
   {
     require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
-    return currentValidNonce.add(1);
+    return currentValidNonce + 1;
   }
 
   function internalGetReward(address holder, uint256)
@@ -113,7 +111,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
   }
 
   function internalUpdateFunds(uint256 value) internal override {
-    _rewardLimit = _rewardLimit.sub(value, 'INSUFFICIENT_FUNDS');
+    _rewardLimit = SafeMath.sub(_rewardLimit, value, Errors.VL_INSUFFICIENT_REWARD_AVAILABLE);
   }
 
   function internalSetBaselinePercentage(uint16) internal pure override {

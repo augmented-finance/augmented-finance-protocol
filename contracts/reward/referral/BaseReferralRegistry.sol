@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/Errors.sol';
 
 abstract contract BaseReferralRegistry {
-  using SafeMath for uint256;
-
   mapping(uint256 => address) _delegations;
   mapping(uint256 => uint32) _timestamps;
 

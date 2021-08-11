@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../tools/math/WadRayMath.sol';
 import '../interfaces/IRewardController.sol';
-import '../interfaces/IManagedRewardPool.sol';
-import './ControlledRewardPool.sol';
 import '../calcs/CalcLinearRateAccum.sol';
+import './ControlledRewardPool.sol';
 
 contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRateAccum {
   address private _treasury;

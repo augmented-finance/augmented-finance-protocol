@@ -7,8 +7,6 @@ import '../interfaces/IRewardMinter.sol';
 import './BaseRewardController.sol';
 
 abstract contract BasicRewardController is BaseRewardController {
-  using SafeMath for uint256;
-
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
     BaseRewardController(accessController, rewardMinter)
   {}
@@ -33,14 +31,14 @@ abstract contract BasicRewardController is BaseRewardController {
       }
 
       if (since == since_) {
-        amountSince = amountSince.add(amount_);
+        amountSince += amount_;
         continue;
       }
 
       if (amountSince > 0) {
         (uint256 ca, uint256 da) = internalClaimByCall(holder, amountSince, since);
-        claimableAmount = claimableAmount.add(ca);
-        delayedAmount = delayedAmount.add(da);
+        claimableAmount += ca;
+        delayedAmount += da;
         incremental = true;
       }
       amountSince = amount_;
@@ -49,8 +47,8 @@ abstract contract BasicRewardController is BaseRewardController {
 
     if (amountSince > 0 || !incremental) {
       (uint256 ca, uint256 da) = internalClaimByCall(holder, amountSince, since);
-      claimableAmount = claimableAmount.add(ca);
-      delayedAmount = delayedAmount.add(da);
+      claimableAmount += ca;
+      delayedAmount += da;
     }
 
     return (claimableAmount, delayedAmount);
@@ -76,14 +74,14 @@ abstract contract BasicRewardController is BaseRewardController {
       }
 
       if (since == since_) {
-        amountSince = amountSince.add(amount_);
+        amountSince += amount_;
         continue;
       }
 
       if (amountSince > 0) {
         (uint256 ca, uint256 da) = internalCalcByCall(holder, amountSince, since, incremental);
-        claimableAmount = claimableAmount.add(ca);
-        delayedAmount = delayedAmount.add(da);
+        claimableAmount += ca;
+        delayedAmount += da;
         incremental = true;
       }
       amountSince = amount_;
@@ -92,8 +90,8 @@ abstract contract BasicRewardController is BaseRewardController {
 
     if (amountSince > 0 || !incremental) {
       (uint256 ca, uint256 da) = internalCalcByCall(holder, amountSince, since, incremental);
-      claimableAmount = claimableAmount.add(ca);
-      delayedAmount = delayedAmount.add(da);
+      claimableAmount += ca;
+      delayedAmount += da;
     }
 
     return (claimableAmount, delayedAmount);

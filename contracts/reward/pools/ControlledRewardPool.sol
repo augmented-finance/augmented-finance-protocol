@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../interfaces/IRewardController.sol';
 import '../interfaces/IManagedRewardPool.sol';
@@ -11,8 +9,6 @@ import '../../access/AccessHelper.sol';
 import '../../tools/Errors.sol';
 
 abstract contract ControlledRewardPool is IManagedRewardPool {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
   using PercentageMath for uint256;
 
   uint16 internal constant NO_BASELINE = type(uint16).max;

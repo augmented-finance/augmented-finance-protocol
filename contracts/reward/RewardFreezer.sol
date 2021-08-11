@@ -1,19 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../tools/math/PercentageMath.sol';
-
 import '../access/interfaces/IMarketAccessController.sol';
-import './BasicRewardController.sol';
-import './calcs/CalcLinearFreezer.sol';
 import '../interfaces/IRewardMinter.sol';
+import './calcs/CalcLinearFreezer.sol';
+import './BasicRewardController.sol';
 
 // TODO: remove after refactoring of tests
 contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
-  using SafeMath for uint256;
-  using PercentageMath for uint256;
-
   mapping(address => uint256) private _claimableRewards;
 
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
@@ -36,7 +30,7 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
   ) internal override {
     allocated = doAllocatedByPool(holder, allocated, since);
     if (allocated > 0) {
-      _claimableRewards[holder] = _claimableRewards[holder].add(allocated);
+      _claimableRewards[holder] += allocated;
     }
   }
 
@@ -49,7 +43,7 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
 
     uint256 claimableReward = _claimableRewards[holder];
     if (claimableReward > 0) {
-      claimableAmount = claimableAmount.add(claimableReward);
+      claimableAmount += claimableReward;
       delete (_claimableRewards[holder]);
     }
 
@@ -69,7 +63,7 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
       uint32(block.timestamp),
       incremental
     );
-    claimableAmount = claimableAmount.add(_claimableRewards[holder]);
+    claimableAmount += _claimableRewards[holder];
     return (claimableAmount, frozenReward);
   }
 }

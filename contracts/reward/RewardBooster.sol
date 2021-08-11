@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../tools/math/PercentageMath.sol';
-
 import '../access/interfaces/IMarketAccessController.sol';
-import './BaseRewardController.sol';
 import '../interfaces/IRewardMinter.sol';
 import './interfaces/IRewardPool.sol';
 import './interfaces/IManagedRewardPool.sol';
@@ -15,6 +12,7 @@ import './interfaces/IBoostRate.sol';
 import './interfaces/IRewardExplainer.sol';
 import './autolock/AutolockBase.sol';
 import './interfaces/IAutolocker.sol';
+import './BaseRewardController.sol';
 
 contract RewardBooster is
   IManagedRewardBooster,
@@ -22,7 +20,6 @@ contract RewardBooster is
   BaseRewardController,
   AutolockBase
 {
-  using SafeMath for uint256;
   using PercentageMath for uint256;
 
   mapping(address => uint32) private _boostFactor;
@@ -151,8 +148,8 @@ contract RewardBooster is
         continue;
       }
 
-      claimableAmount = claimableAmount.add(amount_);
-      boostLimit = boostLimit.add(amount_.percentMul(_boostFactor[address(pool)]));
+      claimableAmount += amount_;
+      boostLimit += amount_.percentMul(_boostFactor[address(pool)]);
     }
 
     uint256 boostAmount = _boostRewards[holder];
@@ -174,13 +171,13 @@ contract RewardBooster is
         (boost_, boostSince) = _boostPool.claimRewardFor(holder, boostLimit_);
       }
 
-      boostAmount = boostAmount.add(boost_);
+      boostAmount += boost_;
     }
 
     if (boostAmount <= boostLimit) {
-      claimableAmount = claimableAmount.add(boostAmount);
+      claimableAmount += boostAmount;
     } else {
-      claimableAmount = claimableAmount.add(boostLimit);
+      claimableAmount += boostLimit;
       internalStoreBoostExcess(boostAmount - boostLimit, boostSince);
     }
 
@@ -209,21 +206,21 @@ contract RewardBooster is
         continue;
       }
 
-      claimableAmount = claimableAmount.add(amount_);
-      boostLimit = boostLimit.add(amount_.percentMul(_boostFactor[address(pool)]));
+      claimableAmount += amount_;
+      boostLimit += amount_.percentMul(_boostFactor[address(pool)]);
     }
 
     uint256 boostAmount = _boostRewards[holder];
 
     if (_boostPool != IManagedRewardPool(address(0))) {
       (uint256 boost_, ) = _boostPool.calcRewardFor(holder, at);
-      boostAmount = boostAmount.add(boost_);
+      boostAmount += boost_;
     }
 
     if (boostAmount <= boostLimit) {
-      claimableAmount = claimableAmount.add(boostAmount);
+      claimableAmount += boostAmount;
     } else {
-      claimableAmount = claimableAmount.add(boostLimit);
+      claimableAmount += boostLimit;
     }
 
     return (claimableAmount, 0);
@@ -236,19 +233,21 @@ contract RewardBooster is
     uint32
   ) internal override {
     if (address(_boostPool) == pool) {
-      _boostRewards[holder] = _boostRewards[holder].add(allocated);
+      if (allocated > 0) {
+        _boostRewards[holder] += allocated;
+      }
       return;
     }
 
     WorkReward memory workReward = _workRewards[holder];
 
-    uint256 v = uint256(workReward.claimableReward).add(allocated);
+    uint256 v = workReward.claimableReward + allocated;
     require(v <= type(uint128).max);
     workReward.claimableReward = uint128(v);
 
     uint32 factor = _boostFactor[pool];
     if (factor != 0) {
-      v = uint256(workReward.boostLimit).add(allocated.percentMul(factor));
+      v = workReward.boostLimit + allocated.percentMul(factor);
       require(v <= type(uint128).max);
       workReward.boostLimit = uint128(v);
     }
@@ -289,7 +288,7 @@ contract RewardBooster is
     address lockReceiver;
     (lockAmount, lockReceiver) = internalApplyAutolock(address(_boostPool), holder, amount);
     if (lockAmount > 0) {
-      amount = amount.sub(lockAmount);
+      amount -= lockAmount;
       internalMint(lockReceiver, lockAmount, true);
     }
     if (amount > 0) {
@@ -349,8 +348,8 @@ contract RewardBooster is
         r.allocations[n].factor = _boostFactor[address(pool)];
 
         if (amount_ > 0) {
-          r.amountClaimable = r.amountClaimable.add(amount_);
-          r.boostLimit = r.boostLimit.add(amount_.percentMul(r.allocations[n].factor));
+          r.amountClaimable += amount_;
+          r.boostLimit += amount_.percentMul(r.allocations[n].factor);
         }
       }
 
@@ -358,9 +357,9 @@ contract RewardBooster is
     }
 
     if (r.maxBoost <= r.boostLimit) {
-      r.amountClaimable = r.amountClaimable.add(r.maxBoost);
+      r.amountClaimable += r.maxBoost;
     } else {
-      r.amountClaimable = r.amountClaimable.add(r.boostLimit);
+      r.amountClaimable += r.boostLimit;
     }
 
     return r;

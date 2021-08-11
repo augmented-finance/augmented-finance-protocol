@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../tools/math/WadRayMath.sol';
 import '../interfaces/IRewardController.sol';
-import '../interfaces/IManagedRewardPool.sol';
 import './ControlledRewardPool.sol';
 
 abstract contract BasePermitRewardPool is ControlledRewardPool {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
-
   bytes public constant EIP712_REVISION = bytes('1');
   bytes32 public DOMAIN_SEPARATOR;
   bytes32 internal constant EIP712_DOMAIN =

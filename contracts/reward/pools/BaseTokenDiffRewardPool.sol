@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
-import '../../tools/math/PercentageMath.sol';
 import '../interfaces/IRewardController.sol';
 import '../interfaces/IRewardPool.sol';
 import './ControlledRewardPool.sol';
 
 abstract contract BaseTokenDiffRewardPool is ControlledRewardPool, IRewardPool {
-  using SafeMath for uint256;
   using WadRayMath for uint256;
-  using PercentageMath for uint256;
 
   // provider => provider_balance
   mapping(address => uint256) private _providers;

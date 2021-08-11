@@ -2,10 +2,10 @@
 pragma solidity ^0.8.4;
 
 import '../../tools/math/PercentageMath.sol';
-import '../interfaces/IRewardController.sol';
-import './ControlledRewardPool.sol';
-import '../calcs/CalcLinearUnweightedReward.sol';
 import '../../tools/Errors.sol';
+import '../interfaces/IRewardController.sol';
+import '../calcs/CalcLinearUnweightedReward.sol';
+import './ControlledRewardPool.sol';
 
 contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   using PercentageMath for uint256;
