@@ -1,25 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../tools/math/PercentageMath.sol';
-
-import '../../access/interfaces/IMarketAccessController.sol';
-import '../BaseRewardController.sol';
-import '../../interfaces/IRewardMinter.sol';
-import '../interfaces/IRewardPool.sol';
-import '../interfaces/IManagedRewardPool.sol';
-import '../interfaces/IRewardController.sol';
-import '../interfaces/IBoostExcessReceiver.sol';
-import '../interfaces/IBoostRate.sol';
-import '../interfaces/IRewardExplainer.sol';
-
 import '../interfaces/IAutolocker.sol';
 
 abstract contract AutolockBase {
-  using SafeMath for uint256;
-  using PercentageMath for uint256;
-
   struct AutolockEntry {
     uint224 param;
     AutolockMode mode;

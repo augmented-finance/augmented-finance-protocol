@@ -2,10 +2,8 @@
 pragma solidity ^0.8.4;
 
 import './CalcLinearRateReward.sol';
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 
 abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
-  using SafeMath for uint256;
   uint256 private _accumRate;
   mapping(uint32 => uint256) private _accumHistory;
 
@@ -33,15 +31,14 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
     }
 
     uint256 totalSupply = internalTotalSupply();
-
     if (totalSupply == 0) {
       return;
     }
 
-    lastRate = lastRate.add(internalExtraRate());
-    // the rate stays in RAY, but is weighted now vs _maxWeightBase
-    lastRate = lastRate.mul(_maxWeightBase.div(totalSupply));
-    _accumRate = _accumRate.add(lastRate.mul(at - lastAt));
+    lastRate += internalExtraRate();
+    // the rate is now weighted vs _maxWeightBase
+    lastRate *= _maxWeightBase / totalSupply;
+    _accumRate += lastRate * (at - lastAt);
   }
 
   function isHistory(uint32 at) internal view virtual returns (bool);
@@ -72,9 +69,9 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
       if (totalSupply > 0) {
         (uint256 rate, uint32 updatedAt) = getRateAndUpdatedAt();
 
-        rate = rate.add(internalExtraRate());
-        rate = rate.mul(_maxWeightBase.div(totalSupply));
-        adjRate = adjRate.add(rate.mul(at - updatedAt));
+        rate += internalExtraRate();
+        rate *= _maxWeightBase / totalSupply;
+        adjRate += rate * (at - updatedAt);
       }
     }
 
@@ -82,7 +79,7 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
       return (adjRate, 0, entry.claimedAt);
     }
 
-    allocated = uint256(entry.rewardBase).mul(adjRate.sub(lastAccumRate)).div(_maxWeightBase);
+    allocated = (uint256(entry.rewardBase) * (adjRate - lastAccumRate)) / _maxWeightBase;
     return (adjRate, allocated, entry.claimedAt);
   }
 }

@@ -29,7 +29,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
       );
   }
 
-  function setFreezePercentage(uint32 freezePortion) external onlyConfigAdmin {
+  function setFreezePercentage(uint16 freezePortion) external onlyConfigAdmin {
     internalSetFreezePercentage(freezePortion);
   }
 

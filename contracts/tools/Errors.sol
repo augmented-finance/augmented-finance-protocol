@@ -122,6 +122,8 @@ library Errors {
   string public constant STK_EXCESSIVE_COOLDOWN_PERIOD = '98';
   string public constant STK_WRONG_UNSTAKE_PERIOD = '98';
 
+  string public constant VL_INSUFFICIENT_REWARD_AVAILABLE = '99';
+
   string public constant TXT_OWNABLE_CALLER_NOT_OWNER = 'Ownable: caller is not the owner';
   string public constant TXT_CALLER_NOT_PROXY_OWNER = 'ProxyOwner: caller is not the owner';
   string public constant TXT_ACCESS_RESTRICTED = 'RESTRICTED';

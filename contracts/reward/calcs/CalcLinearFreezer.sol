@@ -2,11 +2,9 @@
 pragma solidity ^0.8.4;
 
 import '../../tools/math/PercentageMath.sol';
-import '../interfaces/IRewardController.sol';
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import {AllocationMode} from '../interfaces/IRewardController.sol';
 
 abstract contract CalcLinearFreezer {
-  using SafeMath for uint256;
   using PercentageMath for uint256;
 
   struct FrozenReward {
@@ -16,16 +14,14 @@ abstract contract CalcLinearFreezer {
 
   mapping(address => FrozenReward) private _frozenRewards;
   uint32 private _meltdownAt;
-  uint32 private _unfrozenPortion;
+  uint16 private _unfrozenPortion;
 
-  function internalSetFreezePercentage(uint32 freezePortion) internal {
-    _unfrozenPortion = uint16(
-      uint256(PercentageMath.ONE).sub(freezePortion, 'max is 10000 (100%)')
-    );
+  function internalSetFreezePercentage(uint16 freezePortion) internal {
+    _unfrozenPortion = PercentageMath.ONE - freezePortion;
   }
 
-  function getFreezePercentage() public view returns (uint32) {
-    return uint16(uint256(PercentageMath.ONE).sub(_unfrozenPortion));
+  function getFreezePercentage() public view returns (uint16) {
+    return PercentageMath.ONE - _unfrozenPortion;
   }
 
   function internalSetMeltDownAt(uint32 at) internal {
@@ -107,7 +103,7 @@ abstract contract CalcLinearFreezer {
       if (frozenReward == 0) {
         return (allocated, 0, FrozenRewardState.Read);
       }
-      allocated = allocated.add(frozenReward);
+      allocated = allocated + frozenReward;
       return (allocated, 0, FrozenRewardState.Remove);
     }
 
@@ -124,8 +120,8 @@ abstract contract CalcLinearFreezer {
         // portion of the allocated was already unfreezed
         uint256 unfrozen = calcUnfrozenByEmmission(allocated, since, current);
         if (unfrozen > 0) {
-          amount = amount.add(unfrozen);
-          allocated = allocated.sub(unfrozen);
+          amount += unfrozen;
+          allocated -= unfrozen;
         }
       }
 
@@ -137,8 +133,8 @@ abstract contract CalcLinearFreezer {
           uint256 unfrozen =
             calcUnfrozen(frozenReward, _frozenRewards[holder].lastUpdatedAt, current);
           if (unfrozen > 0) {
-            amount = amount.add(unfrozen);
-            frozenReward = frozenReward.sub(unfrozen);
+            amount += unfrozen;
+            frozenReward -= unfrozen;
             state = FrozenRewardState.Updated;
           }
         }
@@ -149,7 +145,7 @@ abstract contract CalcLinearFreezer {
       if (state == FrozenRewardState.NotRead && !incremental) {
         frozenReward = _frozenRewards[holder].frozenReward;
       }
-      frozenReward = frozenReward.add(allocated);
+      frozenReward += allocated;
       require(frozenReward <= type(uint224).max, 'reward is too high');
       state = FrozenRewardState.Updated;
     }
@@ -190,7 +186,7 @@ abstract contract CalcLinearFreezer {
     uint32 lastUpdatedAt,
     uint32 current
   ) private view returns (uint256) {
-    return frozenReward.div(_meltdownAt - lastUpdatedAt).mul(current - lastUpdatedAt);
+    return (frozenReward * (current - lastUpdatedAt)) / (_meltdownAt - lastUpdatedAt);
   }
 
   function calcUnfrozenByEmmission(
@@ -198,7 +194,7 @@ abstract contract CalcLinearFreezer {
     uint32 lastUpdatedAt,
     uint32 current
   ) private view returns (uint256) {
-    return emittedReward.div(_meltdownAt - lastUpdatedAt).mul((current - lastUpdatedAt + 1) >> 1);
+    return (emittedReward * ((current - lastUpdatedAt + 1) >> 1)) / (_meltdownAt - lastUpdatedAt);
   }
 
   function doCalcByPull(
