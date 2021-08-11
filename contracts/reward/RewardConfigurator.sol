@@ -46,6 +46,10 @@ contract RewardConfigurator is
     return IManagedRewardController(ctl);
   }
 
+  function getProxyAdmin() external view returns (address) {
+    return address(_proxies);
+  }
+
   function list() public view returns (address[] memory pools) {
     uint256 ignoreMask;
     (pools, ignoreMask) = IUntypedRewardControllerPools(address(getDefaultController())).getPools();
