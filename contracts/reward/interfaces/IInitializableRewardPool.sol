@@ -7,7 +7,6 @@ interface IInitializableRewardPool {
   struct InitData {
     IRewardController controller;
     string poolName;
-    uint256 initialRate;
     uint16 baselinePercentage;
   }
 

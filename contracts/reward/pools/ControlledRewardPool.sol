@@ -100,10 +100,6 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     emit BaselineFactorUpdated(factor);
   }
 
-  function setRate(uint256 rate) external override onlyRateAdmin {
-    _setRate(rate);
-  }
-
   function _setRate(uint256 rate) internal {
     if (isPaused()) {
       _pausedRate = rate;

@@ -330,7 +330,7 @@ const deployExtraPools = async (
       const impl = await deployReferralRewardPoolV1Impl(verify, continuation);
       console.log(`Deployed ${poolName} implementation: `, impl.address);
 
-      const initData = await configurator.buildRewardPoolInitData(poolName, 0, baselinePct);
+      const initData = await configurator.buildRewardPoolInitData(poolName, baselinePct);
       poolAddr = await setAndGetAddressAsProxyWithInit(
         addressProvider,
         AccessFlags.REFERRAL_REGISTRY,

@@ -108,12 +108,11 @@ library Errors {
   string public constant LP_TOO_MANY_NESTED_CALLS = '85';
   string public constant LP_RESTRICTED_FEATURE = '86';
   string public constant LP_TOO_MANY_FLASHLOAN_CALLS = '87';
-
+  string public constant RW_BASELINE_EXCEEDED = '88';
   string public constant CT_CALLER_MUST_BE_REWARD_RATE_ADMIN = '89';
   string public constant CT_CALLER_MUST_BE_REWARD_CONTROLLER = '90';
   string public constant RW_REWARD_PAUSED = '91';
   string public constant CT_CALLER_MUST_BE_TEAM_MANAGER = '92';
-
   string public constant STK_REDEEM_PAUSED = '93';
   string public constant STK_INSUFFICIENT_COOLDOWN = '94';
   string public constant STK_UNSTAKE_WINDOW_FINISHED = '95';

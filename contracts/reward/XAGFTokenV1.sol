@@ -63,7 +63,11 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
 
     _initializeERC20(NAME, SYMBOL, DECIMALS);
     super._initialize(underlying);
-    super._initialize(IRewardController(controller), 0, 0);
+    super._initialize(
+      IRewardController(controller),
+      internalGetRate(),
+      internalGetBaselinePercentage()
+    );
   }
 
   function initialize(InitData calldata data)
@@ -78,7 +82,11 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
 
     _initializeERC20(data.name, data.symbol, data.decimals);
     super._initialize(underlying);
-    super._initialize(IRewardController(controller), 0, 0);
+    super._initialize(
+      IRewardController(controller),
+      internalGetRate(),
+      internalGetBaselinePercentage()
+    );
   }
 
   function initializeToken(
@@ -92,17 +100,20 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
 
     _initializeERC20(name_, symbol_, decimals_);
     super._initialize(underlying);
-    super._initialize(IRewardController(controller), 0, 0);
+    super._initialize(
+      IRewardController(controller),
+      internalGetRate(),
+      internalGetBaselinePercentage()
+    );
   }
 
   function initializePool(
     IRewardController controller,
     address underlying,
-    uint256 initialRate,
     uint16 baselinePercentage
   ) public virtual initializer(TOKEN_REVISION) {
     _initializeERC20(NAME, SYMBOL, DECIMALS);
     super._initialize(underlying);
-    super._initialize(controller, initialRate, baselinePercentage);
+    super._initialize(controller, internalGetRate(), baselinePercentage);
   }
 }
