@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../../interfaces/IDepositToken.sol';
@@ -22,7 +21,6 @@ import '../../../dependencies/aave-protocol-v2/contracts/IAaveLendingPool.sol';
  * @notice Implements the logic to update the reserves state
  */
 library ReserveLogic {
-  using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
@@ -182,7 +180,7 @@ library ReserveLogic {
   ) internal {
     uint256 amountToLiquidityRatio = amount.wadToRay().rayDiv(totalLiquidity.wadToRay());
 
-    uint256 result = amountToLiquidityRatio.add(WadRayMath.ray());
+    uint256 result = amountToLiquidityRatio + WadRayMath.RAY;
 
     result = result.rayMul(reserve.liquidityIndex);
     require(result <= type(uint128).max, Errors.RL_LIQUIDITY_INDEX_OVERFLOW);
@@ -353,11 +351,9 @@ library ReserveLogic {
     vars.previousStableDebt = vars.principalStableDebt.rayMul(vars.cumulatedStableInterest);
 
     //debt accrued is the sum of the current debt minus the sum of the debt at the last update
-    vars.totalDebtAccrued = vars
-      .currentVariableDebt
-      .add(vars.currentStableDebt)
-      .sub(vars.previousVariableDebt)
-      .sub(vars.previousStableDebt);
+    vars.totalDebtAccrued =
+      (vars.currentVariableDebt + vars.currentStableDebt) -
+      (vars.previousVariableDebt + vars.previousStableDebt);
 
     vars.amountToMint = vars.totalDebtAccrued.percentMul(vars.reserveFactor);
 
