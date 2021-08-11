@@ -9,6 +9,12 @@ import './BasePermitRewardPool.sol';
 contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcLinearRateAccum {
   uint256 private _claimLimit;
 
+  event RewardClaimedByPermit(
+    address indexed provider,
+    address indexed spender,
+    uint256 value,
+    uint256 since
+  );
   event ClaimLimitUpdated(uint256 limit);
 
   constructor(
@@ -61,6 +67,7 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
     );
 
     internalUpdateStrict(spender, codes, uint32(issuedAt));
+    emit RewardClaimedByPermit(provider, spender, value, currentValidNonce);
   }
 
   function internalCheckNonce(uint256, uint256 issuedAt) internal pure override returns (uint256) {
