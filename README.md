@@ -74,8 +74,9 @@ The Augmented Finance protocol security and safety is at the high level:
 
 Augmented Finance’s team has developed a world-class lending and borrowing protocol to meet the existent needs of users and unlock the intelligent DeFi era. Join us to unlock a new level of innovation in DeFi and power a brand new generation of decentralized intelligent financial services.
 
-## AGPL license v3
-Source projects under AGPL license v3 include: [Aave](https://github.com/aave) & [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts).
+## Copyright (C) 2021 Augmented Finance.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or any later version. Source projects under AGPL license v3 include: [Aave](https://github.com/aave) & [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts).
 
 ## More Questions?
 
