@@ -9,13 +9,15 @@ import './BasePermitRewardPool.sol';
 contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcLinearRateAccum {
   uint256 private _claimLimit;
 
+  event ClaimLimitUpdated(uint256 limit);
+
   constructor(
     IRewardController controller,
     uint256 initialRate,
     uint16 baselinePercentage,
     string memory rewardPoolName
   ) BasePermitRewardPool(controller, initialRate, baselinePercentage, rewardPoolName) {
-    _claimLimit = type(uint256).max;
+    internalSetClaimLimit(type(uint256).max);
   }
 
   function getClaimTypeHash() internal pure override returns (bytes32) {
@@ -77,12 +79,27 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
     return _claimLimit;
   }
 
-  function setClaimLimit(uint256 value) public onlyRateAdmin {
-    _claimLimit = value;
+  function setClaimLimit(uint256 value) external onlyRateAdmin {
+    internalSetClaimLimit(value);
   }
 
-  function registerShortCode(uint32 shortRefCode, address to) public onlyRefAdmin {
+  function internalSetClaimLimit(uint256 value) internal {
+    _claimLimit = value;
+    emit ClaimLimitUpdated(value);
+  }
+
+  function registerShortCode(uint32 shortRefCode, address to) external onlyRefAdmin {
     internalRegisterCode(shortRefCode, to);
+  }
+
+  function registerShortCodes(uint32[] calldata shortRefCode, address[] calldata to)
+    external
+    onlyRefAdmin
+  {
+    require(shortRefCode.length == to.length);
+    for (uint256 i = 0; i < to.length; i++) {
+      internalRegisterCode(shortRefCode[i], to[i]);
+    }
   }
 
   function internalSetRate(uint256 rate) internal override {
