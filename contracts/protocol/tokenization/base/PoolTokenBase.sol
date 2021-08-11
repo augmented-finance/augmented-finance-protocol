@@ -14,8 +14,6 @@ import '../interfaces/IInitializablePoolToken.sol';
 import '../interfaces/PoolTokenConfig.sol';
 
 abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, IERC20Details {
-  using SafeMath for uint256;
-
   string private _name;
   string private _symbol;
   uint8 private _decimals;
@@ -179,12 +177,11 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     require(account != address(0), 'ERC20: mint to the zero address');
     _beforeTokenTransfer(address(0), account, amount);
 
-    uint256 total = _totalSupply;
-    total = total.add(amount);
+    uint256 total = _totalSupply + amount;
     _totalSupply = total;
 
     uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = oldAccountBalance.add(amount);
+    uint256 newAccountBalance = oldAccountBalance + amount;
     _balances[account] = newAccountBalance;
 
     handleScaledBalanceUpdate(account, oldAccountBalance, newAccountBalance, total, scale);
@@ -199,12 +196,12 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
 
     _beforeTokenTransfer(account, address(0), amount);
 
-    uint256 total = _totalSupply;
-    total = total.sub(amount);
+    uint256 total = _totalSupply - amount;
     _totalSupply = total;
 
     uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = oldAccountBalance.sub(amount, 'ERC20: burn amount exceeds balance');
+    uint256 newAccountBalance =
+      SafeMath.sub(oldAccountBalance, amount, 'ERC20: burn amount exceeds balance');
     _balances[account] = newAccountBalance;
 
     handleScaledBalanceUpdate(account, oldAccountBalance, newAccountBalance, total, scale);
@@ -223,11 +220,11 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
 
     uint256 oldSenderBalance = _balances[sender];
     uint256 newSenderBalance =
-      oldSenderBalance.sub(amount, 'ERC20: transfer amount exceeds balance');
+      SafeMath.sub(oldSenderBalance, amount, 'ERC20: transfer amount exceeds balance');
     _balances[sender] = newSenderBalance;
 
     uint256 oldRecipientBalance = _balances[recipient];
-    uint256 newRecipientBalance = oldRecipientBalance.add(amount);
+    uint256 newRecipientBalance = oldRecipientBalance + amount;
     _balances[recipient] = newRecipientBalance;
 
     IBalanceHook hook = _incentivesController;

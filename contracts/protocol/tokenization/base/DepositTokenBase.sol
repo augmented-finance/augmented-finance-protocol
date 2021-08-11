@@ -19,7 +19,6 @@ abstract contract DepositTokenBase is
 {
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
-  using SafeMath for uint256;
 
   mapping(address => mapping(address => uint256)) private _allowances;
   address internal _treasury;
@@ -40,7 +39,7 @@ abstract contract DepositTokenBase is
   }
 
   function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
-    _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
+    _approve(msg.sender, spender, _allowances[msg.sender][spender] + addedValue);
     return true;
   }
 
@@ -48,7 +47,11 @@ abstract contract DepositTokenBase is
     _approve(
       msg.sender,
       spender,
-      _allowances[msg.sender][spender].sub(subtractedValue, 'ERC20: decreased allowance below zero')
+      SafeMath.sub(
+        _allowances[msg.sender][spender],
+        subtractedValue,
+        'ERC20: decreased allowance below zero'
+      )
     );
     return true;
   }
@@ -170,7 +173,11 @@ abstract contract DepositTokenBase is
     _approve(
       sender,
       msg.sender,
-      _allowances[sender][msg.sender].sub(amount, 'ERC20: transfer amount exceeds allowance')
+      SafeMath.sub(
+        _allowances[sender][msg.sender],
+        amount,
+        'ERC20: transfer amount exceeds allowance'
+      )
     );
     emit Transfer(sender, recipient, amount);
     return true;

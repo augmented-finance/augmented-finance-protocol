@@ -9,8 +9,6 @@ import './PoolTokenBase.sol';
 
 /// @dev Base contract for a non-transferrable debt tokens: StableDebtToken and VariableDebtToken
 abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICreditDelegationToken {
-  using SafeMath for uint256;
-
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
 
   /**
@@ -73,7 +71,11 @@ abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICredi
     uint256 amount
   ) internal {
     uint256 newAllowance =
-      _borrowAllowances[delegator][delegatee].sub(amount, Errors.BORROW_ALLOWANCE_NOT_ENOUGH);
+      SafeMath.sub(
+        _borrowAllowances[delegator][delegatee],
+        amount,
+        Errors.BORROW_ALLOWANCE_NOT_ENOUGH
+      );
 
     _borrowAllowances[delegator][delegatee] = newAllowance;
 

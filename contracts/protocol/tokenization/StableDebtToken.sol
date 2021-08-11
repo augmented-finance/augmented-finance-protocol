@@ -19,7 +19,6 @@ import './base/DebtTokenBase.sol';
  * at stable rate mode
  **/
 contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtToken {
-  using SafeMath for uint256;
   using WadRayMath for uint256;
 
   uint256 private constant DEBT_TOKEN_REVISION = 0x1;
@@ -133,14 +132,13 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
 
     vars.previousSupply = totalSupply();
     vars.currentAvgStableRate = _avgStableRate;
-    vars.nextSupply = _totalSupply = vars.previousSupply.add(amount);
+    vars.nextSupply = _totalSupply = vars.previousSupply + amount;
 
     vars.amountInRay = amount.wadToRay();
 
-    vars.newStableRate = _usersStableRate[onBehalfOf]
-      .rayMul(currentBalance.wadToRay())
-      .add(vars.amountInRay.rayMul(rate))
-      .rayDiv(currentBalance.add(amount).wadToRay());
+    vars.newStableRate = (_usersStableRate[onBehalfOf].rayMul(currentBalance.wadToRay()) +
+      vars.amountInRay.rayMul(rate))
+      .rayDiv((currentBalance + amount).wadToRay());
 
     require(vars.newStableRate <= type(uint128).max, Errors.SDT_STABLE_DEBT_OVERFLOW);
     _usersStableRate[onBehalfOf] = vars.newStableRate;
@@ -149,13 +147,12 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     _totalSupplyTimestamp = _timestamps[onBehalfOf] = uint40(block.timestamp);
 
     // Calculates the updated average stable rate
-    vars.currentAvgStableRate = _avgStableRate = vars
-      .currentAvgStableRate
-      .rayMul(vars.previousSupply.wadToRay())
-      .add(rate.rayMul(vars.amountInRay))
+    vars.currentAvgStableRate = _avgStableRate = (vars.currentAvgStableRate.rayMul(
+      vars.previousSupply.wadToRay()
+    ) + rate.rayMul(vars.amountInRay))
       .rayDiv(vars.nextSupply.wadToRay());
 
-    _mintWithTotal(onBehalfOf, amount.add(balanceIncrease), vars.nextSupply);
+    _mintWithTotal(onBehalfOf, amount + balanceIncrease, vars.nextSupply);
 
     emit Transfer(address(0), onBehalfOf, amount);
 
@@ -194,7 +191,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
       _avgStableRate = 0;
       _totalSupply = 0;
     } else {
-      nextSupply = _totalSupply = previousSupply.sub(amount);
+      nextSupply = _totalSupply = previousSupply - amount;
       uint256 firstTerm = _avgStableRate.rayMul(previousSupply.wadToRay());
       uint256 secondTerm = userStableRate.rayMul(amount.wadToRay());
 
@@ -204,7 +201,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
       if (secondTerm >= firstTerm) {
         newAvgStableRate = _avgStableRate = _totalSupply = 0;
       } else {
-        newAvgStableRate = _avgStableRate = firstTerm.sub(secondTerm).rayDiv(nextSupply.wadToRay());
+        newAvgStableRate = _avgStableRate = (firstTerm - secondTerm).rayDiv(nextSupply.wadToRay());
       }
     }
 
@@ -219,7 +216,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     _totalSupplyTimestamp = uint40(block.timestamp);
 
     if (balanceIncrease > amount) {
-      uint256 amountToMint = balanceIncrease.sub(amount);
+      uint256 amountToMint = balanceIncrease - amount;
       _mintWithTotal(user, amountToMint, nextSupply);
       emit Mint(
         user,
@@ -232,7 +229,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
         nextSupply
       );
     } else {
-      uint256 amountToBurn = amount.sub(balanceIncrease);
+      uint256 amountToBurn = amount - balanceIncrease;
       _burnWithTotal(user, amountToBurn, nextSupply);
       emit Burn(user, amountToBurn, currentBalance, balanceIncrease, newAvgStableRate, nextSupply);
     }
@@ -261,13 +258,9 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     }
 
     // Calculation of the accrued interest since the last accumulation
-    uint256 balanceIncrease = balanceOf(user).sub(previousPrincipalBalance);
+    uint256 balanceIncrease = balanceOf(user) - previousPrincipalBalance;
 
-    return (
-      previousPrincipalBalance,
-      previousPrincipalBalance.add(balanceIncrease),
-      balanceIncrease
-    );
+    return (previousPrincipalBalance, previousPrincipalBalance + balanceIncrease, balanceIncrease);
   }
 
   /// @dev Returns the principal and total supply, the average borrow rate and the last supply update timestamp
@@ -339,7 +332,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     uint256 newTotalSupply
   ) internal {
     uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = oldAccountBalance.add(amount);
+    uint256 newAccountBalance = oldAccountBalance + amount;
     _balances[account] = newAccountBalance;
 
     balanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
@@ -357,7 +350,8 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     uint256 newTotalSupply
   ) internal {
     uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = oldAccountBalance.sub(amount, Errors.SDT_BURN_EXCEEDS_BALANCE);
+    uint256 newAccountBalance =
+      SafeMath.sub(oldAccountBalance, amount, Errors.SDT_BURN_EXCEEDS_BALANCE);
     _balances[account] = newAccountBalance;
 
     balanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
