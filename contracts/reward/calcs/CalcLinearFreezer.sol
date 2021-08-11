@@ -118,7 +118,7 @@ abstract contract CalcLinearFreezer {
     if (_meltdownAt > 0) {
       if (allocated > 0 && since != 0 && since < current) {
         // portion of the allocated was already unfreezed
-        uint256 unfrozen = calcUnfrozenByEmmission(allocated, since, current);
+        uint256 unfrozen = calcUnfrozenDuringEmmission(allocated, since, current);
         if (unfrozen > 0) {
           amount += unfrozen;
           allocated -= unfrozen;
@@ -189,7 +189,7 @@ abstract contract CalcLinearFreezer {
     return (frozenReward * (current - lastUpdatedAt)) / (_meltdownAt - lastUpdatedAt);
   }
 
-  function calcUnfrozenByEmmission(
+  function calcUnfrozenDuringEmmission(
     uint256 emittedReward,
     uint32 lastUpdatedAt,
     uint32 current
