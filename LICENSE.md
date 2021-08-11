@@ -10,5 +10,3 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 [GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.en.html)
 for more details.
-
-Source projects include: [Aave](https://github.com/aave) & [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts).
