@@ -153,7 +153,7 @@ abstract contract SlashableStakeTokenBase is
       Errors.STK_INSUFFICIENT_COOLDOWN
     );
     require(
-      block.timestamp > (cooldownStartAt + _cooldownPeriod) + _unstakePeriod,
+      block.timestamp <= (cooldownStartAt + _cooldownPeriod) + _unstakePeriod,
       Errors.STK_UNSTAKE_WINDOW_FINISHED
     );
 
