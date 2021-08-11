@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import './IERC20.sol';
-import './SafeMath.sol';
 import './Address.sol';
 
 /**
@@ -15,7 +14,6 @@ import './Address.sol';
  * which allows you to call the safe operations as `token.safeTransfer(...)`, etc.
  */
 library SafeERC20 {
-  using SafeMath for uint256;
   using Address for address;
 
   function safeTransfer(

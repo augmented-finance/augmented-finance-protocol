@@ -31,7 +31,6 @@ import './Address.sol';
  * allowances. See {IERC20-approve}.
  */
 contract ERC20 is Context, IERC20WithEvents {
-  using SafeMath for uint256;
   using Address for address;
 
   mapping(address => uint256) private _balances;
@@ -173,7 +172,11 @@ contract ERC20 is Context, IERC20WithEvents {
     _approve(
       sender,
       _msgSender(),
-      _allowances[sender][_msgSender()].sub(amount, 'ERC20: transfer amount exceeds allowance')
+      SafeMath.sub(
+        _allowances[sender][_msgSender()],
+        amount,
+        'ERC20: transfer amount exceeds allowance'
+      )
     );
     return true;
   }
@@ -191,7 +194,7 @@ contract ERC20 is Context, IERC20WithEvents {
    * - `spender` cannot be the zero address.
    */
   function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-    _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+    _approve(_msgSender(), spender, _allowances[_msgSender()][spender] + addedValue);
     return true;
   }
 
@@ -217,7 +220,8 @@ contract ERC20 is Context, IERC20WithEvents {
     _approve(
       _msgSender(),
       spender,
-      _allowances[_msgSender()][spender].sub(
+      SafeMath.sub(
+        _allowances[_msgSender()][spender],
         subtractedValue,
         'ERC20: decreased allowance below zero'
       )
@@ -249,8 +253,12 @@ contract ERC20 is Context, IERC20WithEvents {
 
     _beforeTokenTransfer(sender, recipient, amount);
 
-    _balances[sender] = _balances[sender].sub(amount, 'ERC20: transfer amount exceeds balance');
-    _balances[recipient] = _balances[recipient].add(amount);
+    _balances[sender] = SafeMath.sub(
+      _balances[sender],
+      amount,
+      'ERC20: transfer amount exceeds balance'
+    );
+    _balances[recipient] = _balances[recipient] + amount;
     emit Transfer(sender, recipient, amount);
   }
 
@@ -268,8 +276,8 @@ contract ERC20 is Context, IERC20WithEvents {
 
     _beforeTokenTransfer(address(0), account, amount);
 
-    _totalSupply = _totalSupply.add(amount);
-    _balances[account] = _balances[account].add(amount);
+    _totalSupply = _totalSupply + amount;
+    _balances[account] = _balances[account] + amount;
     emit Transfer(address(0), account, amount);
   }
 
@@ -289,8 +297,12 @@ contract ERC20 is Context, IERC20WithEvents {
 
     _beforeTokenTransfer(account, address(0), amount);
 
-    _balances[account] = _balances[account].sub(amount, 'ERC20: burn amount exceeds balance');
-    _totalSupply = _totalSupply.sub(amount);
+    _balances[account] = SafeMath.sub(
+      _balances[account],
+      amount,
+      'ERC20: burn amount exceeds balance'
+    );
+    _totalSupply = _totalSupply - amount;
     emit Transfer(account, address(0), amount);
   }
 
