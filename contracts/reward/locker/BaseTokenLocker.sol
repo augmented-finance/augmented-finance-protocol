@@ -3,7 +3,6 @@ pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../interfaces/IDerivedToken.sol';
 
 /**
@@ -15,7 +14,6 @@ import '../../interfaces/IDerivedToken.sol';
  */
 
 abstract contract BaseTokenLocker is IERC20, IDerivedToken {
-  using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
   IERC20 private _underlyingToken;
@@ -248,9 +246,9 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
       }
 
       {
-        uint256 adjDuration = uint256(newEndPoint * _pointPeriod).sub(userBalance.startTS);
+        uint256 adjDuration = uint256(newEndPoint * _pointPeriod) - userBalance.startTS;
         if (adjDuration < _maxValuePeriod) {
-          stakeAmount = uint256(userBalance.underlyingAmount).mul(adjDuration).div(_maxValuePeriod);
+          stakeAmount = (uint256(userBalance.underlyingAmount) * adjDuration) / _maxValuePeriod;
         } else {
           stakeAmount = userBalance.underlyingAmount;
         }
@@ -269,13 +267,13 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
       if (prevStake > 0) {
         if (userBalance.endPoint == newEndPoint) {
-          newStakeDelta = newStakeDelta.sub(prevStake);
+          newStakeDelta -= prevStake;
         } else {
           _pointTotal[userBalance.endPoint].stakeDelta = uint128(
-            uint256(_pointTotal[userBalance.endPoint].stakeDelta).sub(prevStake)
+            _pointTotal[userBalance.endPoint].stakeDelta - prevStake
           );
         }
-        _stakedTotal = _stakedTotal.sub(prevStake);
+        _stakedTotal -= prevStake;
       }
 
       if (userBalance.endPoint <= currentPoint) {
@@ -288,7 +286,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
       // range check is done above
       _pointTotal[newEndPoint].stakeDelta = uint128(newStakeDelta);
-      _stakedTotal = _stakedTotal.add(stakeAmount);
+      _stakedTotal += stakeAmount;
     }
 
     if (_nextKnownPoint > userBalance.endPoint || _nextKnownPoint == 0) {
@@ -444,14 +442,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     }
 
     for (; fromPoint <= tillPoint; fromPoint++) {
-      uint256 stakeDelta = _pointTotal[fromPoint].stakeDelta;
-      if (stakeDelta == 0) {
-        continue;
-      }
-      if (totalSupply_ == stakeDelta) {
-        return 0;
-      }
-      totalSupply_ = totalSupply_.sub(stakeDelta);
+      totalSupply_ -= _pointTotal[fromPoint].stakeDelta;
     }
 
     return totalSupply_;
@@ -501,8 +492,8 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     for (; nextPoint <= tillPoint; ) {
       internalCheckpoint(nextPoint * _pointPeriod);
 
-      _extraRate = _extraRate.sub(delta.rateDelta);
-      _stakedTotal = _stakedTotal.sub(delta.stakeDelta);
+      _extraRate -= delta.rateDelta;
+      _stakedTotal -= delta.stakeDelta;
 
       bool found = false;
       // look for the next non-zero point
@@ -594,9 +585,9 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
     internalSyncRate(at);
 
-    _extraRate = _extraRate.add(excessRateIncrement);
+    _extraRate += excessRateIncrement;
 
-    excessRateIncrement = excessRateIncrement.add(_pointTotal[expiryPt].rateDelta);
+    excessRateIncrement += _pointTotal[expiryPt].rateDelta;
     require(excessRateIncrement <= type(uint128).max);
     _pointTotal[expiryPt].rateDelta = uint128(excessRateIncrement);
 
@@ -648,7 +639,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     lockDuration *= _pointPeriod;
 
     if (lockDuration < _maxValuePeriod) {
-      return lockedAmount.mul(_maxValuePeriod).div(lockDuration);
+      return (lockedAmount * _maxValuePeriod) / lockDuration;
     }
     return lockedAmount;
   }
@@ -667,7 +658,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     lockDuration *= _pointPeriod;
 
     if (lockDuration < _maxValuePeriod) {
-      return underlyingAmount.mul(lockDuration).div(_maxValuePeriod);
+      return (underlyingAmount * lockDuration) / _maxValuePeriod;
     }
     return underlyingAmount;
   }

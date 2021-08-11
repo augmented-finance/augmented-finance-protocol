@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../interfaces/IRewardController.sol';
 import './RewardedTokenLocker.sol';
 
 contract DecayingTokenLocker is RewardedTokenLocker {
-  using SafeMath for uint256;
   using WadRayMath for uint256;
 
   constructor(
@@ -25,7 +23,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     }
 
     uint256 stakeAmount = getStakeBalance(account);
-    uint256 stakeDecayed = stakeAmount.mul(endTS - current).div(endTS - startTS);
+    uint256 stakeDecayed = (stakeAmount * (endTS - current)) / (endTS - startTS);
 
     if (stakeDecayed >= stakeAmount) {
       return stakeAmount;

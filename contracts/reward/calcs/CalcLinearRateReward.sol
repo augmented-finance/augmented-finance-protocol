@@ -2,11 +2,8 @@
 pragma solidity ^0.8.4;
 
 import '../interfaces/IRewardController.sol';
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 
 abstract contract CalcLinearRateReward {
-  using SafeMath for uint256;
-
   mapping(address => RewardEntry) private _rewards;
   uint256 private _rate;
   uint32 private _rateUpdatedAt;
