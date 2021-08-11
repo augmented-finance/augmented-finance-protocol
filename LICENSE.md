@@ -1,4 +1,4 @@
-Copyright (C) 2021 Augmented Finance
+Copyright (C) 2021 Augmented Finance.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -9,4 +9,6 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 [GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.en.html)
-for more details
+for more details.
+
+Source projects include: [aave.com](https://github.com/aave) & [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts).
