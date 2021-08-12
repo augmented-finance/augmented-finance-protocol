@@ -1,20 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-// import {AccessBitmask} from '../../access/AccessBitmask.sol';
-import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {IRewardPool} from '../interfaces/IRewardPool.sol';
-import {BaseRateRewardPool} from './BaseRateRewardPool.sol';
+import '../../tools/math/WadRayMath.sol';
+import '../interfaces/IRewardController.sol';
+import '../interfaces/IRewardPool.sol';
+import './ControlledRewardPool.sol';
 
-import 'hardhat/console.sol';
-
-abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
-  using SafeMath for uint256;
+abstract contract BaseTokenDiffRewardPool is ControlledRewardPool, IRewardPool {
   using WadRayMath for uint256;
-  using PercentageMath for uint256;
 
   // provider => provider_balance
   mapping(address => uint256) private _providers;
@@ -25,7 +18,7 @@ abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
     uint256 initialRate,
     uint16 baselinePercentage,
     address token
-  ) public BaseRateRewardPool(controller, initialRate, baselinePercentage) {
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _token = token;
   }
 
@@ -56,7 +49,7 @@ abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
     );
   }
 
-  function isScaledBalanceUpdateNeeded() external view override returns (bool) {
+  function isScaledBalanceUpdateNeeded() external pure override returns (bool) {
     // scaling is important to match different providers
     return true;
   }
@@ -77,10 +70,10 @@ abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
       newSupply = 1;
     }
 
-    internalUpdateSupplyDiff(oldSupply, newSupply, uint32(block.number));
+    internalUpdateSupplyDiff(oldSupply, newSupply);
 
     (uint256 allocated, uint32 since, AllocationMode mode) =
-      internalUpdateReward(msg.sender, holder, oldBalance, newBalance, uint32(block.number));
+      internalUpdateReward(msg.sender, holder, oldBalance, newBalance);
 
     internalAllocateReward(holder, allocated, since, mode);
   }
@@ -89,7 +82,7 @@ abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
     external
     virtual
     override
-    onlyController
+    onlyConfigAdmin
   {
     require(provider != address(0), 'provider is required');
     if (_token == address(0)) {
@@ -102,36 +95,33 @@ abstract contract BaseTokenDiffRewardPool is BaseRateRewardPool, IRewardPool {
       return;
     }
     _providers[provider] = 1;
-    internalUpdateSupplyDiff(0, 1, uint32(block.number));
+    internalUpdateSupplyDiff(0, 1);
+    emit ProviderAdded(provider, token);
   }
 
-  function removeRewardProvider(address provider) external virtual override onlyController {
+  function removeRewardProvider(address provider) external virtual override onlyConfigAdmin {
     uint256 oldSupply = _providers[provider];
     if (oldSupply == 0) {
       return;
     }
     delete (_providers[provider]);
-    internalUpdateSupplyDiff(oldSupply, 0, uint32(block.number));
+    internalUpdateSupplyDiff(oldSupply, 0);
+    emit ProviderRemoved(provider);
   }
 
   function internalUpdateReward(
     address provider,
     address holder,
     uint256 oldBalance,
-    uint256 newBalance,
-    uint32 currentBlock
+    uint256 newBalance
   )
     internal
     virtual
     returns (
       uint256 allocated,
-      uint32 since,
+      uint32 sinceBlock,
       AllocationMode mode
     );
 
-  function internalUpdateSupplyDiff(
-    uint256 oldSupply,
-    uint256 newSupply,
-    uint32 currentBlock
-  ) internal virtual;
+  function internalUpdateSupplyDiff(uint256 oldSupply, uint256 newSupply) internal virtual;
 }

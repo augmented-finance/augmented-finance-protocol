@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../dependencies/openzeppelin/contracts/IERC20.sol';
 
 interface IERC20WithPermit is IERC20 {
   function permit(

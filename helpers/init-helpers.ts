@@ -1,66 +1,42 @@
-import {
-  eContractid,
-  eEthereumNetwork,
-  eNetwork,
-  iMultiPoolsAssets,
-  IReserveParams,
-  tEthereumAddress,
-} from './types';
+import { eContractid, IReserveParams, ITokenNames, tEthereumAddress } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
-import { chunk, DRE, getDb, waitForTx } from './misc-utils';
+import { chunk, falsyOrZeroAddress, waitForTx } from './misc-utils';
+import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contracts-getters';
+import { BigNumber, BigNumberish } from 'ethers';
+import { AccessFlags } from './access-flags';
 import {
-  getProtocolDataProvider,
-  getAToken,
-  getATokensAndRatesHelper,
-  getLendingPoolAddressesProvider,
-  getLendingPoolConfiguratorProxy,
-  getStableAndVariableTokensHelper,
-} from './contracts-getters';
-import { rawInsertContractAddressInDb } from './contracts-helpers';
-import { BigNumber, BigNumberish, Signer } from 'ethers';
-import {
-  deployDefaultReserveInterestRateStrategy,
   deployDelegationAwareDepositToken,
   deployDelegationAwareDepositTokenImpl,
-  deployGenericDepositToken,
-  deployGenericDepositTokenImpl,
-  deployGenericStableDebtToken,
-  deployGenericVariableDebtToken,
-  deployStableDebtToken,
-  deployVariableDebtToken,
+  deployDepositToken,
+  deployDepositTokenImpl,
+  deployReserveInterestRateStrategy,
+  deployStableDebtTokenImpl,
+  deployVariableDebtTokenImpl,
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
-import { isZeroAddress } from 'ethereumjs-util';
-import { DefaultReserveInterestRateStrategy, DelegationAwareDepositToken } from '../types';
+import { MarketAccessController } from '../types';
+import { has } from 'underscore';
 
-export const chooseATokenDeployment = (id: eContractid) => {
+export const chooseDepositTokenDeployment = (id: eContractid) => {
   switch (id) {
-    case eContractid.DepositToken:
-      return deployGenericDepositToken;
-    case eContractid.DelegationAwareDepositToken:
+    case eContractid.DepositTokenImpl:
+      return deployDepositToken;
+    case eContractid.DelegationAwareDepositTokenImpl:
       return deployDelegationAwareDepositToken;
     default:
-      throw Error(`Missing aToken deployment script for: ${id}`);
+      throw Error(`Missing depositToken deployment script for: ${id}`);
   }
 };
 
 export const initReservesByHelper = async (
-  reservesParams: iMultiPoolsAssets<IReserveParams>,
+  addressProvider: MarketAccessController,
+  reservesParams: { [symbol: string]: IReserveParams },
   tokenAddresses: { [symbol: string]: tEthereumAddress },
-  aTokenNamePrefix: string,
-  stableDebtTokenNamePrefix: string,
-  variableDebtTokenNamePrefix: string,
-  symbolPrefix: string,
-  admin: tEthereumAddress,
+  names: ITokenNames,
+  skipExistingAssets: boolean,
   treasuryAddress: tEthereumAddress,
-  incentivesController: tEthereumAddress,
   verify: boolean
-): Promise<BigNumber> => {
-  let gasUsage = BigNumber.from('0');
-  const stableAndVariableDeployer = await getStableAndVariableTokensHelper();
-
-  const addressProvider = await getLendingPoolAddressesProvider();
-
+) => {
   // CHUNK CONFIGURATION
   const initChunks = 1;
 
@@ -70,21 +46,22 @@ export const initReservesByHelper = async (
   let reserveSymbols: string[] = [];
 
   let initInputParams: {
-    aTokenImpl: string;
+    depositTokenImpl: string;
     stableDebtTokenImpl: string;
     variableDebtTokenImpl: string;
     underlyingAssetDecimals: BigNumberish;
-    interestRateStrategyAddress: string;
+    strategy: string;
     underlyingAsset: string;
     treasury: string;
     incentivesController: string;
     underlyingAssetName: string;
-    aTokenName: string;
-    aTokenSymbol: string;
+    depositTokenName: string;
+    depositTokenSymbol: string;
     variableDebtTokenName: string;
     variableDebtTokenSymbol: string;
     stableDebtTokenName: string;
     stableDebtTokenSymbol: string;
+    externalStrategy: boolean;
     params: string;
   }[] = [];
 
@@ -100,54 +77,31 @@ export const initReservesByHelper = async (
   let rateStrategies: Record<string, typeof strategyRates> = {};
   let strategyAddresses: Record<string, tEthereumAddress> = {};
   let strategyAddressPerAsset: Record<string, string> = {};
-  let aTokenType: Record<string, string> = {};
-  let delegationAwareATokenImplementationAddress = '';
-  let aTokenImplementationAddress = '';
-  let stableDebtTokenImplementationAddress = '';
-  let variableDebtTokenImplementationAddress = '';
+  let depositTokenType: Record<string, string> = {};
 
-  // NOT WORKING ON MATIC, DEPLOYING INDIVIDUAL IMPLs INSTEAD
-  const tx1 = await waitForTx(
-    await stableAndVariableDeployer.initDeployment([ZERO_ADDRESS], ['1'])
-  );
-  console.log(tx1.events);
-  tx1.events?.forEach((event, index) => {
-    stableDebtTokenImplementationAddress = event?.args?.stableToken;
-    variableDebtTokenImplementationAddress = event?.args?.variableToken;
-    rawInsertContractAddressInDb(`stableDebtTokenImpl`, stableDebtTokenImplementationAddress);
-    rawInsertContractAddressInDb(`variableDebtTokenImpl`, variableDebtTokenImplementationAddress);
-  });
-  //gasUsage = gasUsage.add(tx1.gasUsed);
-  // stableDebtTokenImplementationAddress = await (await deployGenericStableDebtToken()).address;
-  // variableDebtTokenImplementationAddress = await (await deployGenericVariableDebtToken()).address;
+  const existingAssets = new Set<string>();
 
-  const aTokenImplementation = await deployGenericDepositTokenImpl(verify);
-  aTokenImplementationAddress = aTokenImplementation.address;
-  rawInsertContractAddressInDb(`aTokenImpl`, aTokenImplementationAddress);
-
-  const delegatedAwareReserves = Object.entries(reservesParams).filter(
-    ([_, { aTokenImpl }]) => aTokenImpl === eContractid.DelegationAwareDepositToken
-  ) as [string, IReserveParams][];
-
-  if (delegatedAwareReserves.length > 0) {
-    const delegationAwareATokenImplementation = await deployDelegationAwareDepositTokenImpl(verify);
-    delegationAwareATokenImplementationAddress = delegationAwareATokenImplementation.address;
-    rawInsertContractAddressInDb(
-      `delegationAwareATokenImpl`,
-      delegationAwareATokenImplementationAddress
-    );
+  if (skipExistingAssets) {
+    const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
+    const reserves = await lendingPool.getReservesList();
+    reserves.forEach((addr) => existingAssets.add(addr.toUpperCase()));
+    console.log('Existing assets:', existingAssets);
   }
 
-  const reserves = Object.entries(reservesParams).filter(
-    ([_, { aTokenImpl }]) =>
-      aTokenImpl === eContractid.DelegationAwareDepositToken ||
-      aTokenImpl === eContractid.DepositToken
-  ) as [string, IReserveParams][];
+  let hasDelegationAware = false;
+  for (let [symbol, params] of Object.entries(reservesParams)) {
+    const tokenAddress = tokenAddresses[symbol];
+    if (falsyOrZeroAddress(tokenAddress)) {
+      console.log(`Asset ${symbol} is missing in ${tokenAddresses}`);
+      throw 'asset is missing: ' + symbol;
+    }
 
-  for (let [symbol, params] of reserves) {
-    // if (symbol !== 'DAI') continue;
+    if (existingAssets.has(tokenAddress.toUpperCase())) {
+      console.log(`Asset ${symbol} already exists`);
+      continue;
+    }
 
-    const { strategy, aTokenImpl, reserveDecimals } = params;
+    const { strategy, depositTokenImpl, reserveDecimals } = params;
     const {
       optimalUtilizationRate,
       baseVariableBorrowRate,
@@ -167,54 +121,75 @@ export const initReservesByHelper = async (
         stableRateSlope1,
         stableRateSlope2,
       ];
-      strategyAddresses[strategy.name] = (
-        await deployDefaultReserveInterestRateStrategy(rateStrategies[strategy.name], verify)
-      ).address;
-      // This causes the last strategy to be printed twice, once under "DefaultReserveInterestRateStrategy"
-      // and once under the actual `strategyASSET` key.
-      rawInsertContractAddressInDb(strategy.name, strategyAddresses[strategy.name]);
+      const strategyContract = await deployReserveInterestRateStrategy(
+        strategy.name,
+        rateStrategies[strategy.name],
+        verify
+      );
+      strategyAddresses[strategy.name] = strategyContract.address;
     }
     strategyAddressPerAsset[symbol] = strategyAddresses[strategy.name];
     console.log('Strategy address for asset %s: %s', symbol, strategyAddressPerAsset[symbol]);
 
-    if (aTokenImpl === eContractid.DepositToken) {
-      aTokenType[symbol] = 'generic';
-      console.log('---- generic:', symbol);
-    } else if (aTokenImpl === eContractid.DelegationAwareDepositToken) {
-      aTokenType[symbol] = 'delegation aware';
-      console.log('---- delegation aware:', symbol);
+    if (depositTokenImpl === eContractid.DepositTokenImpl) {
+      console.log('---- generic depost:', symbol);
+    } else if (depositTokenImpl === eContractid.DelegationAwareDepositTokenImpl) {
+      hasDelegationAware = true;
+      console.log('---- delegation-aware:', symbol);
+    } else {
+      console.log('---- unknown:', symbol, depositTokenImpl);
+      continue;
     }
+    depositTokenType[symbol] = depositTokenImpl;
 
     reserveInitDecimals.push(reserveDecimals);
-    reserveTokens.push(tokenAddresses[symbol]);
+    reserveTokens.push(tokenAddress);
     reserveSymbols.push(symbol);
   }
 
+  if (reserveSymbols.length == 0) {
+    return;
+  }
+
+  const stableDebtTokenImpl = await deployStableDebtTokenImpl(verify, skipExistingAssets);
+  const variableDebtTokenImpl = await deployVariableDebtTokenImpl(verify, skipExistingAssets);
+  const depositTokenImpl = await deployDepositTokenImpl(verify, skipExistingAssets);
+
+  const delegationAwareTokenImpl = hasDelegationAware
+    ? await deployDelegationAwareDepositTokenImpl(verify, skipExistingAssets)
+    : undefined;
+
   for (let i = 0; i < reserveSymbols.length; i++) {
-    let aTokenToUse: string;
-    if (aTokenType[reserveSymbols[i]] === 'generic') {
-      aTokenToUse = aTokenImplementationAddress;
-      console.log('=-= generic:', reserveSymbols[i], aTokenToUse);
+    let tokenToUse: string;
+    if (depositTokenType[reserveSymbols[i]] == eContractid.DepositTokenImpl) {
+      tokenToUse = depositTokenImpl.address;
     } else {
-      aTokenToUse = delegationAwareATokenImplementationAddress;
+      tokenToUse = delegationAwareTokenImpl!.address;
     }
 
+    const reserveSymbol = reserveSymbols[i];
+
     initInputParams.push({
-      aTokenImpl: aTokenToUse,
-      stableDebtTokenImpl: stableDebtTokenImplementationAddress,
-      variableDebtTokenImpl: variableDebtTokenImplementationAddress,
+      depositTokenImpl: tokenToUse,
+      stableDebtTokenImpl: stableDebtTokenImpl.address,
+      variableDebtTokenImpl: variableDebtTokenImpl.address,
       underlyingAssetDecimals: reserveInitDecimals[i],
-      interestRateStrategyAddress: strategyAddressPerAsset[reserveSymbols[i]],
+      strategy: strategyAddressPerAsset[reserveSymbol],
       underlyingAsset: reserveTokens[i],
       treasury: treasuryAddress,
       incentivesController: ZERO_ADDRESS,
-      underlyingAssetName: reserveSymbols[i],
-      aTokenName: `${aTokenNamePrefix} ${reserveSymbols[i]}`,
-      aTokenSymbol: `ag${symbolPrefix}${reserveSymbols[i]}`,
-      variableDebtTokenName: `${variableDebtTokenNamePrefix} ${symbolPrefix}${reserveSymbols[i]}`,
-      variableDebtTokenSymbol: `variableDebt${symbolPrefix}${reserveSymbols[i]}`,
-      stableDebtTokenName: `${stableDebtTokenNamePrefix} ${reserveSymbols[i]}`,
-      stableDebtTokenSymbol: `stableDebt${symbolPrefix}${reserveSymbols[i]}`,
+      underlyingAssetName: reserveSymbol,
+
+      depositTokenName: `${names.DepositTokenNamePrefix} ${reserveSymbol}`,
+      depositTokenSymbol: `${names.DepositSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
+
+      variableDebtTokenName: `${names.VariableDebtTokenNamePrefix} ${reserveSymbol}`,
+      variableDebtTokenSymbol: `${names.VariableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
+
+      stableDebtTokenName: `${names.StableDebtTokenNamePrefix} ${reserveSymbol}`,
+      stableDebtTokenSymbol: `${names.StableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
+
+      externalStrategy: false,
       params: '0x10',
     });
   }
@@ -223,8 +198,9 @@ export const initReservesByHelper = async (
   const chunkedSymbols = chunk(reserveSymbols, initChunks);
   const chunkedInitInputParams = chunk(initInputParams, initChunks);
 
-  const configurator = await getLendingPoolConfiguratorProxy();
-  //await waitForTx(await addressProvider.setPoolAdmin(admin));
+  const configurator = await getLendingPoolConfiguratorProxy(
+    await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR)
+  );
 
   console.log(`- Reserves initialization in ${chunkedInitInputParams.length} txs`);
   for (let chunkIndex = 0; chunkIndex < chunkedInitInputParams.length; chunkIndex++) {
@@ -238,13 +214,10 @@ export const initReservesByHelper = async (
 
     console.log(`  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
     console.log('    * gasUsed', tx3.gasUsed.toString());
-    //gasUsage = gasUsage.add(tx3.gasUsed);
   }
-
-  return gasUsage; // Deprecated
 };
 
-export const getPairsTokenAggregator = (
+export const getTokenAggregatorPairs = (
   allAssetsAddresses: {
     [tokenSymbol: string]: tEthereumAddress;
   },
@@ -272,20 +245,12 @@ export const getPairsTokenAggregator = (
 };
 
 export const configureReservesByHelper = async (
-  reservesParams: iMultiPoolsAssets<IReserveParams>,
+  addressProvider: MarketAccessController,
+  reservesParams: { [symbol: string]: IReserveParams },
   tokenAddresses: { [symbol: string]: tEthereumAddress },
-  helpers: ProtocolDataProvider,
-  admin: tEthereumAddress
+  helpers: ProtocolDataProvider
 ) => {
-  const addressProvider = await getLendingPoolAddressesProvider();
-  const atokenAndRatesDeployer = await getATokensAndRatesHelper();
-  const tokens: string[] = [];
   const symbols: string[] = [];
-  const baseLTVA: string[] = [];
-  const liquidationThresholds: string[] = [];
-  const liquidationBonuses: string[] = [];
-  const reserveFactors: string[] = [];
-  const stableRatesEnabled: boolean[] = [];
 
   const inputParams: {
     asset: string;
@@ -293,6 +258,7 @@ export const configureReservesByHelper = async (
     liquidationThreshold: BigNumberish;
     liquidationBonus: BigNumberish;
     reserveFactor: BigNumberish;
+    borrowingEnabled: boolean;
     stableBorrowingEnabled: boolean;
   }[] = [];
 
@@ -303,11 +269,11 @@ export const configureReservesByHelper = async (
       liquidationBonus,
       liquidationThreshold,
       reserveFactor,
+      borrowingEnabled,
       stableBorrowRateEnabled,
     },
   ] of Object.entries(reservesParams) as [string, IReserveParams][]) {
     if (baseLTVAsCollateral === '-1') continue;
-    // if (assetSymbol !== 'DAI') continue;
 
     const assetAddressIndex = Object.keys(tokenAddresses).findIndex(
       (value) => value === assetSymbol
@@ -315,6 +281,11 @@ export const configureReservesByHelper = async (
     const [, tokenAddress] = (Object.entries(tokenAddresses) as [string, string][])[
       assetAddressIndex
     ];
+    if (falsyOrZeroAddress(tokenAddress)) {
+      console.log(`- Token ${assetSymbol} has an invalid address, skipping`);
+      continue;
+    }
+
     const { usageAsCollateralEnabled: alreadyEnabled } = await helpers.getReserveConfigurationData(
       tokenAddress
     );
@@ -331,270 +302,33 @@ export const configureReservesByHelper = async (
       liquidationThreshold: liquidationThreshold,
       liquidationBonus: liquidationBonus,
       reserveFactor: reserveFactor,
+      borrowingEnabled: borrowingEnabled,
       stableBorrowingEnabled: stableBorrowRateEnabled,
     });
 
-    tokens.push(tokenAddress);
     symbols.push(assetSymbol);
-    baseLTVA.push(baseLTVAsCollateral);
-    liquidationThresholds.push(liquidationThreshold);
-    liquidationBonuses.push(liquidationBonus);
-    reserveFactors.push(reserveFactor);
-    stableRatesEnabled.push(stableBorrowRateEnabled);
   }
-  if (tokens.length) {
-    // Set aTokenAndRatesDeployer as temporal admin
-    await waitForTx(await addressProvider.setPoolAdmin(atokenAndRatesDeployer.address));
-
-    // Deploy init per chunks
-    const enableChunks = 1;
-    const chunkedSymbols = chunk(symbols, enableChunks);
-    const chunkedInputParams = chunk(inputParams, enableChunks);
-
-    console.log(`- Configure reserves in ${chunkedInputParams.length} txs`);
-    for (let chunkIndex = 0; chunkIndex < chunkedInputParams.length; chunkIndex++) {
-      await waitForTx(
-        await atokenAndRatesDeployer.configureReserves(chunkedInputParams[chunkIndex], {
-          gasLimit: 7000000,
-        })
-      );
-      console.log(`  - Init for: ${chunkedSymbols[chunkIndex].join(', ')}`);
-    }
-    // Set deployer back as admin
-    console.log('Set deployer back as admin: ', admin);
-    await waitForTx(await addressProvider.setPoolAdmin(admin));
+  if (!inputParams.length) {
+    return;
   }
-};
 
-const getAddressById = async (
-  id: string,
-  network: eNetwork
-): Promise<tEthereumAddress | undefined> =>
-  (await getDb().get(`${id}.${network}`).value())?.address || undefined;
-
-// Function deprecated? Updated but untested, script is not updated on package.json.
-// This is not called during regular deployment, only in the "full:initialize-tokens"
-// hardhat task.
-export const initTokenReservesByHelper = async (
-  reservesParams: iMultiPoolsAssets<IReserveParams>,
-  tokenAddresses: { [symbol: string]: tEthereumAddress },
-  admin: tEthereumAddress,
-  addressesProviderAddress: tEthereumAddress,
-  ratesHelperAddress: tEthereumAddress,
-  dataProviderAddress: tEthereumAddress,
-  signer: Signer,
-  treasuryAddress: tEthereumAddress,
-  verify: boolean
-) => {
-  let gasUsage = BigNumber.from('0');
-  const atokenAndRatesDeployer = await (await getATokensAndRatesHelper(ratesHelperAddress)).connect(
-    signer
+  const configurator = await getLendingPoolConfiguratorProxy(
+    await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR)
   );
 
-  const addressProvider = await (
-    await getLendingPoolAddressesProvider(addressesProviderAddress)
-  ).connect(signer);
-  const protocolDataProvider = await (await getProtocolDataProvider(dataProviderAddress)).connect(
-    signer
-  );
-  const poolAddress = await addressProvider.getLendingPool();
+  // Deploy init per chunks
+  const enableChunks = 20;
+  const chunkedSymbols = chunk(symbols, enableChunks);
+  const chunkedInputParams = chunk(inputParams, enableChunks);
 
-  // Set aTokenAndRatesDeployer as temporal admin
-  //await waitForTx(await addressProvider.setPoolAdmin(atokenAndRatesDeployer.address));
-
-  // CHUNK CONFIGURATION
-  const initChunks = 4;
-
-  // Initialize variables for future reserves initialization
-  let deployedStableTokens: string[] = [];
-  let deployedVariableTokens: string[] = [];
-  let deployedATokens: string[] = [];
-  let deployedRates: string[] = [];
-  //let reserveTokens: string[] = [];
-  let reserveInitDecimals: string[] = [];
-  let reserveSymbols: string[] = [];
-
-  let initInputParams: {
-    aTokenImpl: string;
-    stableDebtTokenImpl: string;
-    variableDebtTokenImpl: string;
-    underlyingAssetDecimals: BigNumberish;
-    interestRateStrategyAddress: string;
-    underlyingAsset: string;
-    treasury: string;
-    incentivesController: string;
-    underlyingAssetName: string;
-    aTokenName: string;
-    aTokenSymbol: string;
-    variableDebtTokenName: string;
-    variableDebtTokenSymbol: string;
-    stableDebtTokenName: string;
-    stableDebtTokenSymbol: string;
-    params: string;
-  }[] = [];
-
-  const network =
-    process.env.MAINNET_FORK === 'true' ? eEthereumNetwork.main : (DRE.network.name as eNetwork);
-  // Grab config from DB
-  for (const [symbol, address] of Object.entries(tokenAddresses)) {
-    const { aTokenAddress } = await protocolDataProvider.getReserveTokensAddresses(address);
-    const reserveParamIndex = Object.keys(reservesParams).findIndex((value) => value === symbol);
-    const [, { reserveDecimals: decimals }] = (Object.entries(reservesParams) as [
-      string,
-      IReserveParams
-    ][])[reserveParamIndex];
-
-    if (!isZeroAddress(aTokenAddress)) {
-      console.log(`- Skipping ${symbol} due already initialized`);
-      continue;
-    }
-    let stableTokenImpl = await getAddressById(`stableDebtTokenImpl`, network);
-    let variableTokenImpl = await getAddressById(`variableDebtTokenImpl`, network);
-    let aTokenImplementation: string | undefined = '';
-    const [, { aTokenImpl, strategy }] = (Object.entries(reservesParams) as [
-      string,
-      IReserveParams
-    ][])[reserveParamIndex];
-    if (aTokenImpl === eContractid.DepositToken) {
-      aTokenImplementation = await getAddressById(`aTokenImpl`, network);
-    } else if (aTokenImpl === eContractid.DelegationAwareDepositToken) {
-      aTokenImplementation = await getAddressById(`delegationAwareATokenImpl`, network);
-    }
-
-    let strategyImpl = await getAddressById(strategy.name, network);
-
-    if (!stableTokenImpl) {
-      const stableDebt = await deployStableDebtToken(
-        [
-          poolAddress,
-          tokenAddresses[symbol],
-          `Aave stable debt bearing ${symbol}`,
-          `stableDebt${symbol}`,
-        ],
-        verify
-      );
-      stableTokenImpl = stableDebt.address;
-    }
-    if (!variableTokenImpl) {
-      const variableDebt = await deployVariableDebtToken(
-        [
-          poolAddress,
-          tokenAddresses[symbol],
-          `Aave variable debt bearing ${symbol}`,
-          `variableDebt${symbol}`,
-        ],
-        verify
-      );
-      variableTokenImpl = variableDebt.address;
-    }
-    if (!aTokenImplementation) {
-      const [, { aTokenImpl }] = (Object.entries(reservesParams) as [string, IReserveParams][])[
-        reserveParamIndex
-      ];
-      const deployCustomAToken = chooseATokenDeployment(aTokenImpl);
-      const aToken = await deployCustomAToken(
-        [
-          poolAddress,
-          tokenAddresses[symbol],
-          treasuryAddress,
-          `Aave interest bearing ${symbol}`,
-          `a${symbol}`,
-        ],
-        verify
-      );
-      aTokenImplementation = aToken.address;
-    }
-    if (!strategyImpl) {
-      const [, { strategy }] = (Object.entries(reservesParams) as [string, IReserveParams][])[
-        reserveParamIndex
-      ];
-      const {
-        optimalUtilizationRate,
-        baseVariableBorrowRate,
-        variableRateSlope1,
-        variableRateSlope2,
-        stableRateSlope1,
-        stableRateSlope2,
-      } = strategy;
-      const rates = await deployDefaultReserveInterestRateStrategy(
-        [
-          tokenAddresses[symbol],
-          optimalUtilizationRate,
-          baseVariableBorrowRate,
-          variableRateSlope1,
-          variableRateSlope2,
-          stableRateSlope1,
-          stableRateSlope2,
-        ],
-        verify
-      );
-      strategyImpl = rates.address;
-    }
-    // --- REMOVED BECAUSE WE NOW USE THE SAME IMPLEMENTATIONS ---
-    // const symbols = [`a${symbol}`, `variableDebt${symbol}`, `stableDebt${symbol}`];
-    // const tokens = [aTokenImplementation, variableTokenImpl, stableTokenImpl];
-    // for (let index = 0; index < symbols.length; index++) {
-    //   if (!(await isErc20SymbolCorrect(tokens[index], symbols[index]))) {
-    //     console.error(`${symbol} and implementation does not match: ${tokens[index]}`);
-    //     throw Error('Symbol does not match implementation.');
-    //   }
-    // }
-    console.log(`- Added ${symbol} to the initialize batch`);
-    deployedStableTokens.push(stableTokenImpl);
-    deployedVariableTokens.push(variableTokenImpl);
-    deployedATokens.push(aTokenImplementation);
-    //reserveTokens.push();
-    deployedRates.push(strategyImpl);
-    reserveInitDecimals.push(decimals.toString());
-    reserveSymbols.push(symbol);
-  }
-
-  for (let i = 0; i < deployedATokens.length; i++) {
-    initInputParams.push({
-      aTokenImpl: deployedATokens[i],
-      stableDebtTokenImpl: deployedStableTokens[i],
-      variableDebtTokenImpl: deployedVariableTokens[i],
-      underlyingAssetDecimals: reserveInitDecimals[i],
-      interestRateStrategyAddress: deployedRates[i],
-      underlyingAsset: tokenAddresses[reserveSymbols[i]],
-      treasury: treasuryAddress,
-      incentivesController: ZERO_ADDRESS,
-      underlyingAssetName: reserveSymbols[i],
-      aTokenName: `Aave interest bearing ${reserveSymbols[i]}`,
-      aTokenSymbol: `a${reserveSymbols[i]}`,
-      variableDebtTokenName: `Aave variable debt bearing ${reserveSymbols[i]}`,
-      variableDebtTokenSymbol: `variableDebt${reserveSymbols[i]}`,
-      stableDebtTokenName: `Aave stable debt bearing ${reserveSymbols[i]}`,
-      stableDebtTokenSymbol: `stableDebt${reserveSymbols[i]}`,
-      params: '0x10',
-    });
-  }
-
-  // Deploy init reserves per chunks
-  const chunkedSymbols = chunk(reserveSymbols, initChunks);
-  const chunkedInitInputParams = chunk(initInputParams, initChunks);
-
-  const configurator = await getLendingPoolConfiguratorProxy();
-  //await waitForTx(await addressProvider.setPoolAdmin(admin));
-
-  console.log(`- Reserves initialization in ${chunkedInitInputParams.length} txs`);
-  for (let chunkIndex = 0; chunkIndex < chunkedInitInputParams.length; chunkIndex++) {
+  console.log(`- Configure reserves with ${chunkedInputParams.length} txs`);
+  for (let chunkIndex = 0; chunkIndex < chunkedInputParams.length; chunkIndex++) {
     const tx3 = await waitForTx(
-      await configurator.batchInitReserve(chunkedInitInputParams[chunkIndex])
+      await configurator.configureReserves(chunkedInputParams[chunkIndex], {
+        gasLimit: 5000000,
+      })
     );
-
-    console.log(`  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
+    console.log(`  - Configured for: ${chunkedSymbols[chunkIndex].join(', ')}`);
     console.log('    * gasUsed', tx3.gasUsed.toString());
   }
-
-  // Set deployer back as admin
-  //await waitForTx(await addressProvider.setPoolAdmin(admin));
-  return gasUsage; // No longer relevant
-};
-
-// Function deprecated
-const isErc20SymbolCorrect = async (token: tEthereumAddress, symbol: string) => {
-  const erc20 = await getAToken(token); // using aToken for ERC20 interface
-  const erc20Symbol = await erc20.symbol();
-  return symbol === erc20Symbol;
 };

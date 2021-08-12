@@ -1,29 +1,19 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
-import {IERC20Details} from '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
-import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {Context} from '../../../dependencies/openzeppelin/contracts/Context.sol';
-import {ILendingPool} from '../../../interfaces/ILendingPool.sol';
-import {IInitializablePoolToken} from '../interfaces/IInitializablePoolToken.sol';
-import {IPoolToken} from '../../../interfaces/IPoolToken.sol';
-import {PoolTokenConfig} from '../interfaces/PoolTokenConfig.sol';
-import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
-import {Errors} from '../../libraries/helpers/Errors.sol';
-import {AccessHelper} from '../../../access/AccessHelper.sol';
-import {AccessFlags} from '../../../access/AccessFlags.sol';
+import '../../../tools/Errors.sol';
+import '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
+import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../../interfaces/IPoolToken.sol';
+import '../../../interfaces/IBalanceHook.sol';
+import '../../../interfaces/ILendingPoolForTokens.sol';
+import '../../../access/AccessHelper.sol';
+import '../../../access/AccessFlags.sol';
+import '../interfaces/IInitializablePoolToken.sol';
+import '../interfaces/PoolTokenConfig.sol';
 
-abstract contract PoolTokenBase is
-  IERC20,
-  Context,
-  IInitializablePoolToken,
-  IPoolToken,
-  IERC20Details
-{
-  using SafeMath for uint256;
-
+abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, IERC20Details {
   string private _name;
   string private _symbol;
   uint8 private _decimals;
@@ -31,28 +21,28 @@ abstract contract PoolTokenBase is
   mapping(address => uint256) internal _balances;
   uint256 internal _totalSupply;
 
-  ILendingPool internal _pool;
+  ILendingPoolForTokens internal _pool;
   address internal _underlyingAsset;
   IBalanceHook private _incentivesController;
 
   constructor(
-    string memory name,
-    string memory symbol,
-    uint8 decimals
-  ) public {
-    _name = name;
-    _symbol = symbol;
-    _decimals = decimals;
+    string memory name_,
+    string memory symbol_,
+    uint8 decimals_
+  ) {
+    _name = name_;
+    _symbol = symbol_;
+    _decimals = decimals_;
   }
 
   function _initializeERC20(
-    string memory name,
-    string memory symbol,
-    uint8 decimals
+    string memory name_,
+    string memory symbol_,
+    uint8 decimals_
   ) internal {
-    _name = name;
-    _symbol = symbol;
-    _decimals = decimals;
+    _name = name_;
+    _symbol = symbol_;
+    _decimals = decimals_;
   }
 
   function name() public view override returns (string memory) {
@@ -67,23 +57,28 @@ abstract contract PoolTokenBase is
     return _decimals;
   }
 
-  /**
-   * @dev Only lending pool can call functions marked by this modifier
-   **/
+  function _onlyLendingPool() private view {
+    require(msg.sender == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
+  }
+
   modifier onlyLendingPool {
-    require(_msgSender() == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
+    _onlyLendingPool();
     _;
   }
 
-  modifier onlyRewardAdmin {
+  function _onlyRewardConfiguratorOrAdmin() private view {
     require(
-      AccessHelper.hasAllOf(
+      AccessHelper.hasAnyOf(
         _pool.getAccessController(),
-        _msgSender(),
-        AccessFlags.REWARD_CONFIG_ADMIN
+        msg.sender,
+        AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR
       ),
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
     );
+  }
+
+  modifier onlyRewardConfiguratorOrAdmin {
+    _onlyRewardConfiguratorOrAdmin();
     _;
   }
 
@@ -94,7 +89,7 @@ abstract contract PoolTokenBase is
     uint8 debtTokenDecimals,
     bytes calldata params
   ) internal {
-    _pool = config.pool;
+    _pool = ILendingPoolForTokens(config.pool);
     _underlyingAsset = config.underlyingAsset;
 
     emit Initialized(
@@ -108,18 +103,12 @@ abstract contract PoolTokenBase is
     );
   }
 
-  /**
-   * @dev Returns the address of the underlying asset of this aToken (E.g. WETH for aWETH)
-   **/
   function UNDERLYING_ASSET_ADDRESS() public view override returns (address) {
     return _underlyingAsset;
   }
 
-  /**
-   * @dev Returns the address of the lending pool where this aToken is used
-   **/
-  function POOL() public view override returns (ILendingPool) {
-    return _pool;
+  function POOL() public view override returns (address) {
+    return address(_pool);
   }
 
   function handleBalanceUpdate(
@@ -129,7 +118,7 @@ abstract contract PoolTokenBase is
     uint256 providerSupply
   ) internal virtual {
     IBalanceHook hook = _incentivesController;
-    if (hook == IBalanceHook(0)) {
+    if (hook == IBalanceHook(address(0))) {
       return;
     }
     hook.handleBalanceUpdate(getIncentivesToken(), holder, oldBalance, newBalance, providerSupply);
@@ -143,7 +132,7 @@ abstract contract PoolTokenBase is
     uint256 scale
   ) internal {
     IBalanceHook hook = _incentivesController;
-    if (hook == IBalanceHook(0)) {
+    if (hook == IBalanceHook(address(0))) {
       return;
     }
     hook.handleScaledBalanceUpdate(
@@ -164,23 +153,13 @@ abstract contract PoolTokenBase is
     _incentivesController = IBalanceHook(hook);
   }
 
-  /**
-   * @dev Updates the address of the incentives controller contract
-   **/
-  function setIncentivesController(address hook) external override onlyRewardAdmin {
+  function setIncentivesController(address hook) external override onlyRewardConfiguratorOrAdmin {
     _setIncentivesController(hook);
   }
 
-  /**
-   * @dev Returns the address of the incentives controller contract
-   **/
-  function getIncentivesController() public view returns (IBalanceHook) {
-    return _incentivesController;
+  function getIncentivesController() public view override returns (address) {
+    return address(_incentivesController);
   }
-
-  function increaseAllowance(address, uint256) public virtual returns (bool);
-
-  function decreaseAllowance(address, uint256) public virtual returns (bool);
 
   function totalSupply() public view virtual override returns (uint256) {
     return _totalSupply;
@@ -198,12 +177,11 @@ abstract contract PoolTokenBase is
     require(account != address(0), 'ERC20: mint to the zero address');
     _beforeTokenTransfer(address(0), account, amount);
 
-    uint256 total = _totalSupply;
-    total = total.add(amount);
+    uint256 total = _totalSupply + amount;
     _totalSupply = total;
 
     uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = oldAccountBalance.add(amount);
+    uint256 newAccountBalance = oldAccountBalance + amount;
     _balances[account] = newAccountBalance;
 
     handleScaledBalanceUpdate(account, oldAccountBalance, newAccountBalance, total, scale);
@@ -218,12 +196,12 @@ abstract contract PoolTokenBase is
 
     _beforeTokenTransfer(account, address(0), amount);
 
-    uint256 total = _totalSupply;
-    total = total.sub(amount);
+    uint256 total = _totalSupply - amount;
     _totalSupply = total;
 
     uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = oldAccountBalance.sub(amount, 'ERC20: burn amount exceeds balance');
+    uint256 newAccountBalance =
+      SafeMath.sub(oldAccountBalance, amount, 'ERC20: burn amount exceeds balance');
     _balances[account] = newAccountBalance;
 
     handleScaledBalanceUpdate(account, oldAccountBalance, newAccountBalance, total, scale);
@@ -242,11 +220,11 @@ abstract contract PoolTokenBase is
 
     uint256 oldSenderBalance = _balances[sender];
     uint256 newSenderBalance =
-      oldSenderBalance.sub(amount, 'ERC20: transfer amount exceeds balance');
+      SafeMath.sub(oldSenderBalance, amount, 'ERC20: transfer amount exceeds balance');
     _balances[sender] = newSenderBalance;
 
     uint256 oldRecipientBalance = _balances[recipient];
-    uint256 newRecipientBalance = oldRecipientBalance.add(amount);
+    uint256 newRecipientBalance = oldRecipientBalance + amount;
     _balances[recipient] = newRecipientBalance;
 
     IBalanceHook hook = _incentivesController;

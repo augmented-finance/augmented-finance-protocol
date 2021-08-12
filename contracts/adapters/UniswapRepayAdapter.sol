@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
-import {BaseUniswapAdapter} from './BaseUniswapAdapter.sol';
-import {IFlashLoanAddressProvider} from '../interfaces/IFlashLoanAddressProvider.sol';
-import {IUniswapV2Router02} from '../interfaces/IUniswapV2Router02.sol';
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
+import './BaseUniswapAdapter.sol';
+import '../interfaces/IFlashLoanAddressProvider.sol';
+import '../interfaces/IUniswapV2Router02.sol';
+import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../protocol/libraries/types/DataTypes.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 
 /**
  * @title UniswapRepayAdapter
@@ -14,6 +15,9 @@ import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
  * @author Aave
  **/
 contract UniswapRepayAdapter is BaseUniswapAdapter {
+  using SafeMath for uint256;
+  using SafeERC20 for IERC20;
+
   struct RepayParams {
     address collateralAsset;
     uint256 collateralAmount;
@@ -26,7 +30,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
     IFlashLoanAddressProvider addressesProvider,
     IUniswapV2Router02 uniswapRouter,
     address wethAddress
-  ) public BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
+  ) BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
 
   /**
    * @dev Uses the received funds from the flash loan to repay a debt on the protocol on behalf of the user. Then pulls
@@ -119,10 +123,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
         _getAmountsIn(collateralAsset, debtAsset, amountToRepay, useEthPath);
       require(amounts[0] <= maxCollateralToSwap, 'slippage too high');
 
-      // Pull aTokens from user
+      // Pull depositTokens from user
       _pullAToken(
         collateralAsset,
-        collateralReserveData.aTokenAddress,
+        collateralReserveData.depositTokenAddress,
         msg.sender,
         amounts[0],
         permitSignature
@@ -131,10 +135,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       // Swap collateral for debt asset
       _swapTokensForExactTokens(collateralAsset, debtAsset, amounts[0], amountToRepay, useEthPath);
     } else {
-      // Pull aTokens from user
+      // Pull depositTokens from user
       _pullAToken(
         collateralAsset,
-        collateralReserveData.aTokenAddress,
+        collateralReserveData.depositTokenAddress,
         msg.sender,
         amountToRepay,
         permitSignature
@@ -190,10 +194,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
         _getAmountsIn(collateralAsset, debtAsset, neededForFlashLoanDebt, useEthPath);
       require(amounts[0] <= maxCollateralToSwap, 'slippage too high');
 
-      // Pull aTokens from user
+      // Pull depositTokens from user
       _pullAToken(
         collateralAsset,
-        collateralReserveData.aTokenAddress,
+        collateralReserveData.depositTokenAddress,
         initiator,
         amounts[0],
         permitSignature
@@ -208,10 +212,10 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
         useEthPath
       );
     } else {
-      // Pull aTokens from user
+      // Pull depositTokens from user
       _pullAToken(
         collateralAsset,
-        collateralReserveData.aTokenAddress,
+        collateralReserveData.depositTokenAddress,
         initiator,
         repaidAmount.add(premium),
         permitSignature

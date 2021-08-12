@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.6.12;
 
 import './CarefulMath.sol';
 import './ExponentialNoError.sol';
@@ -156,7 +156,7 @@ abstract contract Exponential is CarefulMath, ExponentialNoError {
     }
 
     // We add half the scale before dividing so that we get rounding instead of truncation.
-    //  See "Listing 6" and text above it at https://accu.org/index.php/journals/1717
+    //  See Listing 6 and text above it at https://accu.org/index.php/journals/1717
     // Without this change, a result like 6.6...e-19 will be truncated to 0 instead of being rounded to 1e-18.
     (MathError err1, uint256 doubleScaledProductWithHalfScale) =
       addUInt(halfExpScale, doubleScaledProduct);

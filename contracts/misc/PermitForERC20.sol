@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 abstract contract PermitForERC20 {
   bytes32 public DOMAIN_SEPARATOR;
@@ -12,7 +12,7 @@ abstract contract PermitForERC20 {
   /// @dev owner => next valid nonce to submit with permit()
   mapping(address => uint256) public _nonces;
 
-  constructor() public {
+  constructor() {
     _initializeDomainSeparator();
   }
 

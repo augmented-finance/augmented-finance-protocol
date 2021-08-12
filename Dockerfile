@@ -1,4 +1,7 @@
-FROM ethereum/solc:0.6.12 as build-deps
-
-FROM node:14
-COPY --from=build-deps /usr/bin/solc /usr/bin/solc
+FROM node:16
+COPY package.json yarn.lock /src/
+WORKDIR /src
+RUN yarn install
+COPY . /src/
+RUN yarn compile
+CMD ["npx", "hardhat", "node"]

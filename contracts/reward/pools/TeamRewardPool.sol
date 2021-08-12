@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {BaseRateRewardPool} from './BaseRateRewardPool.sol';
-import {CalcLinearUnweightedReward} from '../calcs/CalcLinearUnweightedReward.sol';
+import '../../tools/math/PercentageMath.sol';
+import '../../tools/Errors.sol';
+import '../interfaces/IRewardController.sol';
+import '../calcs/CalcLinearUnweightedReward.sol';
+import './ControlledRewardPool.sol';
 
-import 'hardhat/console.sol';
-
-contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
+contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   using PercentageMath for uint256;
 
   address private _teamManager;
-  uint256 private _accumRate;
-  uint32 private _lockupBlock;
+  uint32 private _lockupTill;
   uint16 private _totalShare;
 
   constructor(
@@ -21,50 +19,58 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     uint256 initialRate,
     uint16 baselinePercentage,
     address teamManager
-  ) public BaseRateRewardPool(controller, initialRate, baselinePercentage) {
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _teamManager = teamManager;
   }
 
-  modifier onlyTeamManagerOrController() {
+  function _onlyTeamManagerOrConfigurator() private view {
     require(
-      msg.sender == _teamManager || isController(msg.sender),
-      'only team manager or controller'
+      msg.sender == _teamManager || _controller.isConfigAdmin(msg.sender),
+      Errors.CT_CALLER_MUST_BE_TEAM_MANAGER
     );
+  }
+
+  function getPoolName() public pure override returns (string memory) {
+    return 'TeamPool';
+  }
+
+  modifier onlyTeamManagerOrConfigurator {
+    _onlyTeamManagerOrConfigurator();
     _;
   }
 
-  function getRate() public view override returns (uint256) {
+  function internalGetRate() internal view override returns (uint256) {
     return super.getLinearRate();
   }
 
-  function internalSetRate(uint256 newRate, uint32 currentBlock) internal override {
-    super.setLinearRate(newRate, currentBlock);
+  function internalSetRate(uint256 newRate) internal override {
+    super.setLinearRate(newRate);
   }
 
-  function internalGetReward(address holder, uint32 currentBlock)
-    internal
-    override
-    returns (uint256, uint32)
-  {
-    if (!isUnlocked(currentBlock)) {
+  function internalGetReward(address holder, uint256) internal override returns (uint256, uint32) {
+    if (!isUnlocked(getCurrentTick())) {
       return (0, 0);
     }
-    return doGetReward(holder, currentBlock);
+    return doGetReward(holder);
   }
 
-  function internalCalcReward(address holder, uint32 currentBlock)
+  function internalCalcReward(address holder, uint32 at)
     internal
     view
     override
     returns (uint256, uint32)
   {
-    if (!isUnlocked(currentBlock)) {
+    if (!isUnlocked(at)) {
       return (0, 0);
     }
-    return doCalcReward(holder, currentBlock);
+    return doCalcRewardAt(holder, at);
   }
 
-  function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
+  function internalCalcRateAndReward(
+    RewardEntry memory entry,
+    uint256 lastAccumRate,
+    uint32 currentBlock
+  )
     internal
     view
     override
@@ -74,31 +80,43 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
       uint32 since
     )
   {
-    (rate, allocated, since) = super.internalCalcRateAndReward(entry, currentBlock);
+    (rate, allocated, since) = super.internalCalcRateAndReward(entry, lastAccumRate, currentBlock);
     allocated = (allocated + PercentageMath.HALF_ONE) / PercentageMath.ONE;
     return (rate, allocated, since);
   }
 
-  function addRewardProvider(address, address) external override {
-    revert('unsupported');
+  function addRewardProvider(address, address) external view override onlyConfigAdmin {
+    revert('UNSUPPORTED');
   }
 
-  function removeRewardProvider(address) external override {
-    revert('unsupported');
-  }
+  function removeRewardProvider(address) external override onlyConfigAdmin {}
 
   function getAllocatedShares() external view returns (uint16) {
     return _totalShare;
   }
 
-  function isUnlocked(uint32 blockNumber) public view returns (bool) {
-    return _lockupBlock > 0 && _lockupBlock < blockNumber;
+  function isUnlocked(uint32 at) public view returns (bool) {
+    return _lockupTill > 0 && _lockupTill < at;
+  }
+
+  function updateTeamMembers(address[] calldata members, uint16[] calldata memberSharePct)
+    external
+    onlyTeamManagerOrConfigurator
+  {
+    require(members.length == memberSharePct.length);
+    for (uint256 i = 0; i < members.length; i++) {
+      _updateTeamMember(members[i], memberSharePct[i]);
+    }
   }
 
   function updateTeamMember(address member, uint16 memberSharePct)
     external
-    onlyTeamManagerOrController
+    onlyTeamManagerOrConfigurator
   {
+    _updateTeamMember(member, memberSharePct);
+  }
+
+  function _updateTeamMember(address member, uint16 memberSharePct) private {
     require(member != address(0), 'member is required');
     require(memberSharePct <= PercentageMath.ONE, 'invalid share percentage');
 
@@ -108,17 +126,17 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     _totalShare = uint16(newTotalShare);
 
     (uint256 allocated, uint32 since, AllocationMode mode) =
-      doUpdateReward(_teamManager, member, oldSharePct, memberSharePct, uint32(block.number));
+      doUpdateReward(member, oldSharePct, memberSharePct);
 
     require(
-      allocated == 0 || isUnlocked(uint32(block.number)),
+      allocated == 0 || isUnlocked(getCurrentTick()),
       'member share can not be changed during lockup'
     );
 
     internalAllocateReward(member, allocated, since, mode);
   }
 
-  function removeTeamMember(address member) external onlyTeamManagerOrController {
+  function removeTeamMember(address member) external onlyTeamManagerOrConfigurator {
     require(member != address(0), 'member is required');
 
     uint256 lastShare = internalRemoveReward(member);
@@ -130,7 +148,7 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     internalAllocateReward(member, 0, 0, AllocationMode.UnsetPull);
   }
 
-  function setTeamManager(address member) external onlyTeamManagerOrController {
+  function setTeamManager(address member) external onlyTeamManagerOrConfigurator {
     _teamManager = member;
   }
 
@@ -138,15 +156,17 @@ contract TeamRewardPool is BaseRateRewardPool, CalcLinearUnweightedReward {
     return _teamManager;
   }
 
-  function setUnlockBlock(uint32 blockNumber) external onlyTeamManagerOrController {
-    require(blockNumber > 0, 'blockNumber is required');
-    if (_lockupBlock != 0) {
-      require(_lockupBlock > block.number, 'lockup is finished');
-    }
-    _lockupBlock = blockNumber;
+  function setUnlockedAt(uint32 at) external onlyConfigAdmin {
+    require(at > 0, 'unlockAt is required');
+    require(_lockupTill == 0 || _lockupTill >= getCurrentTick(), 'lockup is finished');
+    _lockupTill = at;
   }
 
-  function getUnlockBlock() external view returns (uint32) {
-    return _lockupBlock;
+  function getUnlockedAt() external view returns (uint32) {
+    return _lockupTill;
+  }
+
+  function getCurrentTick() internal view override returns (uint32) {
+    return uint32(block.timestamp);
   }
 }

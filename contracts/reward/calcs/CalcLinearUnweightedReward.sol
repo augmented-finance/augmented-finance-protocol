@@ -1,46 +1,39 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {IRewardController} from '../interfaces/IRewardController.sol';
-import {CalcLinearRateReward} from './CalcLinearRateReward.sol';
-
-import 'hardhat/console.sol';
+import './CalcLinearRateReward.sol';
 
 abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
-
   uint256 private _accumRate;
 
   function internalRateUpdated(
     uint256 lastRate,
-    uint32 lastBlock,
-    uint32 currentBlock
+    uint32 lastAt,
+    uint32 at
   ) internal override {
-    _accumRate = _accumRate.add(lastRate.mul(currentBlock - lastBlock));
+    _accumRate += lastRate * (at - lastAt);
   }
 
-  function internalCalcRateAndReward(RewardEntry memory entry, uint32 currentBlock)
+  function internalCalcRateAndReward(
+    RewardEntry memory entry,
+    uint256 lastAccumRate,
+    uint32 at
+  )
     internal
     view
     virtual
     override
     returns (
-      uint256 rate,
+      uint256 adjRate,
       uint256 allocated,
       uint32 since
     )
   {
-    // console.log('internalCalcRateAndReward, blocks ', currentBlock, getRateUpdateBlock());
+    (uint256 rate, uint32 updatedAt) = getRateAndUpdatedAt();
 
-    uint256 adjRate = _accumRate.add(getLinearRate().mul(currentBlock - getRateUpdateBlock()));
-    allocated = uint256(entry.rewardBase).rayMul(adjRate.sub(entry.lastAccumRate));
+    adjRate = _accumRate + (rate * (at - updatedAt));
+    allocated = uint256(entry.rewardBase) * (adjRate - lastAccumRate);
 
-    // console.log('internalCalcRateAndReward, entry ', entry.rewardBase, entry.lastAccumRate);
-    // console.log('internalCalcRateAndReward, result ', adjRate, allocated);
-
-    return (adjRate, allocated, entry.lastUpdateBlock);
+    return (adjRate, allocated, entry.claimedAt);
   }
 }

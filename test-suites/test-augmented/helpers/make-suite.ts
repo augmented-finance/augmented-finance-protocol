@@ -1,19 +1,19 @@
 import { evmRevert, evmSnapshot, DRE } from '../../../helpers/misc-utils';
 import { Signer } from 'ethers';
 import {
-  getLendingPool,
-  getLendingPoolAddressesProvider,
+  getMarketAddressController,
   getProtocolDataProvider,
-  getAToken,
+  getDepositToken,
   getMintableERC20,
   getLendingPoolConfiguratorProxy,
-  getPriceOracle,
+  getMockPriceOracle,
   getAddressesProviderRegistry,
   getWETHMocked,
   getWETHGateway,
   getUniswapLiquiditySwapAdapter,
   getUniswapRepayAdapter,
   getFlashLiquidationAdapter,
+  getLendingPoolProxy,
 } from '../../../helpers/contracts-getters';
 import { eEthereumNetwork, tEthereumAddress } from '../../../helpers/types';
 import { LendingPool } from '../../../types/LendingPool';
@@ -26,8 +26,7 @@ import chai from 'chai';
 // @ts-ignore
 import bignumberChai from 'chai-bignumber';
 import { almostEqual } from './almost-equal';
-import { PriceOracle } from '../../../types/PriceOracle';
-import { LendingPoolAddressesProvider } from '../../../types/LendingPoolAddressesProvider';
+import { MockPriceOracle } from '../../../types/MockPriceOracle';
 import { AddressesProviderRegistry } from '../../../types/AddressesProviderRegistry';
 import { getEthersSigners } from '../../../helpers/contracts-helpers';
 import { UniswapLiquiditySwapAdapter } from '../../../types/UniswapLiquiditySwapAdapter';
@@ -37,9 +36,10 @@ import { WETH9Mocked } from '../../../types/WETH9Mocked';
 import { WETHGateway } from '../../../types/WETHGateway';
 import { solidity } from 'ethereum-waffle';
 import { AugmentedConfig } from '../../../markets/augmented';
-import { FlashLiquidationAdapter } from '../../../types';
+import { FlashLiquidationAdapter, MarketAccessController } from '../../../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { usingTenderly } from '../../../helpers/tenderly-utils';
+import { AccessFlags } from '../../../helpers/access-flags';
 
 chai.use(bignumberChai());
 chai.use(almostEqual());
@@ -54,7 +54,7 @@ export interface TestEnv {
   users: SignerWithAddress[];
   pool: LendingPool;
   configurator: LendingPoolConfigurator;
-  oracle: PriceOracle;
+  oracle: MockPriceOracle;
   helpersContract: ProtocolDataProvider;
   weth: WETH9Mocked;
   aWETH: DepositToken;
@@ -62,7 +62,7 @@ export interface TestEnv {
   aDai: DepositToken;
   usdc: MintableERC20;
   aave: MintableERC20;
-  addressesProvider: LendingPoolAddressesProvider;
+  addressesProvider: MarketAccessController;
   uniswapLiquiditySwapAdapter: UniswapLiquiditySwapAdapter;
   uniswapRepayAdapter: UniswapRepayAdapter;
   registry: AddressesProviderRegistry;
@@ -81,14 +81,14 @@ const testEnv: TestEnv = {
   pool: {} as LendingPool,
   configurator: {} as LendingPoolConfigurator,
   helpersContract: {} as ProtocolDataProvider,
-  oracle: {} as PriceOracle,
+  oracle: {} as MockPriceOracle,
   weth: {} as WETH9Mocked,
   aWETH: {} as DepositToken,
   dai: {} as MintableERC20,
   aDai: {} as DepositToken,
   usdc: {} as MintableERC20,
   aave: {} as MintableERC20,
-  addressesProvider: {} as LendingPoolAddressesProvider,
+  addressesProvider: {} as MarketAccessController,
   uniswapLiquiditySwapAdapter: {} as UniswapLiquiditySwapAdapter,
   uniswapRepayAdapter: {} as UniswapRepayAdapter,
   flashLiquidationAdapter: {} as FlashLiquidationAdapter,
@@ -110,11 +110,6 @@ export async function initializeMakeSuite() {
     });
   }
   testEnv.deployer = deployer;
-  testEnv.pool = await getLendingPool();
-
-  testEnv.configurator = await getLendingPoolConfiguratorProxy();
-
-  testEnv.addressesProvider = await getLendingPoolAddressesProvider();
 
   if (process.env.MAINNET_FORK === 'true') {
     testEnv.registry = await getAddressesProviderRegistry(
@@ -122,17 +117,28 @@ export async function initializeMakeSuite() {
     );
   } else {
     testEnv.registry = await getAddressesProviderRegistry();
-    testEnv.oracle = await getPriceOracle();
   }
+
+  testEnv.addressesProvider = await getMarketAddressController();
+  // testEnv.registry.getAddressesProviderByAddress(address);
+
+  testEnv.oracle = await getMockPriceOracle(await testEnv.addressesProvider.getPriceOracle());
+
+  testEnv.pool = await getLendingPoolProxy(await testEnv.addressesProvider.getLendingPool());
+  testEnv.configurator = await getLendingPoolConfiguratorProxy(
+    await testEnv.addressesProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR)
+  );
 
   testEnv.helpersContract = await getProtocolDataProvider();
 
-  const allTokens = await testEnv.helpersContract.getAllATokens();
-  const aDaiAddress = allTokens.find((aToken) => aToken.symbol === 'agDAI')?.tokenAddress;
+  const allTokens = await testEnv.helpersContract.getAllDepositTokens();
+  const aDaiAddress = allTokens.find((depositToken) => depositToken.symbol === 'agDAI')
+    ?.tokenAddress;
 
-  const aWEthAddress = allTokens.find((aToken) => aToken.symbol === 'agWETH')?.tokenAddress;
+  const aWEthAddress = allTokens.find((depositToken) => depositToken.symbol === 'agWETH')
+    ?.tokenAddress;
 
-  const reservesTokens = await testEnv.helpersContract.getAllReservesTokens();
+  const reservesTokens = await testEnv.helpersContract.getAllReserveTokens();
 
   const daiAddress = reservesTokens.find((token) => token.symbol === 'DAI')?.tokenAddress;
   const usdcAddress = reservesTokens.find((token) => token.symbol === 'USDC')?.tokenAddress;
@@ -140,14 +146,16 @@ export async function initializeMakeSuite() {
   const wethAddress = reservesTokens.find((token) => token.symbol === 'WETH')?.tokenAddress;
 
   if (!aDaiAddress || !aWEthAddress) {
+    console.log('Required test tokens are missing');
     process.exit(1);
   }
   if (!daiAddress || !usdcAddress || !aaveAddress || !wethAddress) {
+    console.log('Required test tokens are missing');
     process.exit(1);
   }
 
-  testEnv.aDai = await getAToken(aDaiAddress);
-  testEnv.aWETH = await getAToken(aWEthAddress);
+  testEnv.aDai = await getDepositToken(aDaiAddress);
+  testEnv.aWETH = await getDepositToken(aWEthAddress);
 
   testEnv.dai = await getMintableERC20(daiAddress);
   testEnv.usdc = await getMintableERC20(usdcAddress);

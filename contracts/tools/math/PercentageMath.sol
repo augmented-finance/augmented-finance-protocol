@@ -1,16 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
-import {Errors} from '../Errors.sol';
+import '../Errors.sol';
 
-/**
- * @title PercentageMath library
- * @author Aave
- * @notice Provides functions to perform calculations of portions
- * @dev Percentages are defined in basis points. The precision is indicated by ONE
- * @dev Operations are rounded half up
- **/
-
+/// @dev Percentages are defined in basis points. The precision is indicated by ONE. Operations are rounded half up.
 library PercentageMath {
   uint16 constant BP = 1; // basis point
   uint16 constant PCT = 100 * BP; // basis points per percentage point

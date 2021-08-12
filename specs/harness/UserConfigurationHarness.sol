@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import {
   UserConfiguration
 } from '../../contracts/protocol/libraries/configuration/UserConfiguration.sol';
-import {DataTypes} from '../../contracts/protocol/libraries/types/DataTypes.sol';
+import '../../contracts/protocol/libraries/types/DataTypes.sol';
 
 /*
 A wrapper contract for calling functions from the library UserConfiguration.

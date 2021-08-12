@@ -1,8 +1,9 @@
 import { task } from 'hardhat/config';
+import { AccessFlags } from '../../helpers/access-flags';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import {
   getProtocolDataProvider,
-  getLendingPoolAddressesProvider,
+  getMarketAddressController,
   getAddressesProviderRegistry,
 } from '../../helpers/contracts-getters';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
@@ -26,23 +27,26 @@ task('print-config', 'Inits the DRE, to have access to all the plugins')
 
     const providers = await providerRegistry.getAddressesProvidersList();
 
-    const addressesProvider = await getLendingPoolAddressesProvider(providers[0]); // Checks first provider
+    const addressProvider = await getMarketAddressController(providers[0]); // Checks first provider
 
     console.log('Addresses Providers', providers.join(', '));
-    console.log('Market Id: ', await addressesProvider.getMarketId());
-    console.log('LendingPool Proxy:', await addressesProvider.getLendingPool());
-    console.log(
-      'Lending Pool Collateral Manager',
-      await addressesProvider.getLendingPoolCollateralManager()
-    );
+    console.log('Market Id: ', await addressProvider.getMarketId());
+    console.log('LendingPool Proxy:', await addressProvider.getLendingPool());
+    //    console.log('Lending Pool Extension', await addressProvider.getLendingPoolExtension());
     console.log(
       'Lending Pool Configurator proxy',
-      await addressesProvider.getLendingPoolConfigurator()
+      await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR)
     );
-    console.log('Pool admin', await addressesProvider.getPoolAdmin());
-    console.log('Emergency admin', await addressesProvider.getEmergencyAdmin());
-    console.log('Price Oracle', await addressesProvider.getPriceOracle());
-    console.log('Lending Rate Oracle', await addressesProvider.getLendingRateOracle());
+    const activeGrantees = async (flag: AccessFlags) => {
+      const result = await addressProvider.roleActiveGrantees(flag);
+      return result.addrList.slice(0, result.count.toNumber());
+    };
+
+    console.log('Pool Admin(s):', await activeGrantees(AccessFlags.POOL_ADMIN));
+    console.log('Emergency Admin(s):', await activeGrantees(AccessFlags.EMERGENCY_ADMIN));
+
+    console.log('Price Oracle', await addressProvider.getPriceOracle());
+    console.log('Lending Rate Oracle', await addressProvider.getLendingRateOracle());
     console.log('Lending Pool Data Provider', dataProvider);
     const protocolDataProvider = await getProtocolDataProvider(dataProvider);
 
@@ -58,7 +62,7 @@ task('print-config', 'Inits the DRE, to have access to all the plugins')
       'isActive',
       'isFrozen',
     ];
-    const tokensFields = ['aToken', 'stableDebtToken', 'variableDebtToken'];
+    const tokensFields = ['depositToken', 'stableDebtToken', 'variableDebtToken'];
     for (const [symbol, address] of Object.entries(
       getParamPerNetwork(poolConfig.ReserveAssets, network)
     )) {

@@ -1,28 +1,18 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {PercentageMath} from '../../tools/math/PercentageMath.sol';
-// import {AccessBitmask} from '../../access/AccessBitmask.sol';
-import {IRewardController, AllocationMode} from '../interfaces/IRewardController.sol';
-import {IRewardPool} from '../interfaces/IRewardPool.sol';
-import {BaseRateRewardPool} from './BaseRateRewardPool.sol';
+import '../interfaces/IRewardController.sol';
+import '../interfaces/IRewardPool.sol';
+import './ControlledRewardPool.sol';
 
-import 'hardhat/console.sol';
-
-abstract contract BaseTokenAbsRewardPool is BaseRateRewardPool, IRewardPool {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
-  using PercentageMath for uint256;
-
+abstract contract BaseTokenAbsRewardPool is ControlledRewardPool, IRewardPool {
   address private _provider;
 
   constructor(
     IRewardController controller,
     uint256 initialRate,
     uint16 baselinePercentage
-  ) public BaseRateRewardPool(controller, initialRate, baselinePercentage) {}
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {}
 
   function handleBalanceUpdate(
     address,
@@ -31,8 +21,8 @@ abstract contract BaseTokenAbsRewardPool is BaseRateRewardPool, IRewardPool {
     uint256 newBalance,
     uint256 totalBalance
   ) external override {
-    internalUpdateTotal(totalBalance, uint32(block.number));
-    _handleBalanceUpdate(holder, oldBalance, newBalance, uint32(block.number));
+    internalUpdateTotal(totalBalance);
+    _handleBalanceUpdate(holder, oldBalance, newBalance);
   }
 
   function handleScaledBalanceUpdate(
@@ -44,11 +34,11 @@ abstract contract BaseTokenAbsRewardPool is BaseRateRewardPool, IRewardPool {
     uint256
   ) external virtual override {
     // NB! as we have only one provider - scaling matters not
-    internalUpdateTotal(totalBalance, uint32(block.number));
-    _handleBalanceUpdate(holder, oldBalance, newBalance, uint32(block.number));
+    internalUpdateTotal(totalBalance);
+    _handleBalanceUpdate(holder, oldBalance, newBalance);
   }
 
-  function isScaledBalanceUpdateNeeded() external view override returns (bool) {
+  function isScaledBalanceUpdateNeeded() external pure override returns (bool) {
     // NB! as we have only one provider - scaling matters not
     return false;
   }
@@ -56,43 +46,48 @@ abstract contract BaseTokenAbsRewardPool is BaseRateRewardPool, IRewardPool {
   function _handleBalanceUpdate(
     address holder,
     uint256 oldBalance,
-    uint256 newBalance,
-    uint32 blockNumber
+    uint256 newBalance
   ) private {
     require(_provider == msg.sender, 'unknown reward provider');
 
     (uint256 allocated, uint32 since, AllocationMode mode) =
-      internalUpdateReward(msg.sender, holder, oldBalance, newBalance, blockNumber);
+      internalUpdateReward(msg.sender, holder, oldBalance, newBalance);
     internalAllocateReward(holder, allocated, since, mode);
   }
 
-  function addRewardProvider(address provider, address) external virtual override onlyController {
+  function addRewardProvider(address provider, address token)
+    external
+    virtual
+    override
+    onlyConfigAdmin
+  {
     require(provider != address(0), 'provider is required');
     require(_provider == address(0), 'provider is already set');
     _provider = provider;
+    emit ProviderAdded(provider, token);
   }
 
-  function removeRewardProvider(address provider) external virtual override onlyController {
-    if (_provider != provider) {
+  function removeRewardProvider(address provider) external virtual override onlyConfigAdmin {
+    if (_provider != provider || provider == address(0)) {
       return;
     }
     _provider = address(0);
+    emit ProviderRemoved(provider);
   }
 
-  function internalUpdateTotal(uint256 totalBalance, uint32 currentBlock) internal virtual;
+  function internalUpdateTotal(uint256 totalBalance) internal virtual;
 
   function internalUpdateReward(
     address provider,
     address holder,
     uint256 oldBalance,
-    uint256 newBalance,
-    uint32 currentBlock
+    uint256 newBalance
   )
     internal
     virtual
     returns (
       uint256 allocated,
-      uint32 since,
+      uint32 sinceBlock,
       AllocationMode mode
     );
 }

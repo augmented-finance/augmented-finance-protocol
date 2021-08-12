@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
-import {StableDebtToken} from '../../contracts/protocol/tokenization/StableDebtToken.sol';
-import {IncentivizedERC20} from '../../contracts/protocol/tokenization/IncentivizedERC20.sol';
-import {ILendingPool} from '../../contracts/interfaces/ILendingPool.sol';
-import {IBalanceHook} from '../../contracts/interfaces/IBalanceHook.sol';
-import {PoolTokenConfig} from '../../contracts/protocol/tokenization/interfaces/PoolTokenConfig.sol';
+import '../../contracts/protocol/tokenization/StableDebtToken.sol';
+import '../../contracts/protocol/tokenization/IncentivizedERC20.sol';
+import '../../contracts/interfaces/ILendingPool.sol';
+import '../../contracts/interfaces/IBalanceHook.sol';
+import '../../contracts/protocol/tokenization/interfaces/PoolTokenConfig.sol';
 
 contract StableDebtTokenHarness is StableDebtToken {
   constructor(
@@ -14,7 +13,7 @@ contract StableDebtTokenHarness is StableDebtToken {
     string memory name,
     string memory symbol
   ) public {
-    StableDebtToken.initialize(config, name, symbol, 18, "");
+    StableDebtToken.initialize(config, name, symbol, 18, '');
   }
 
   /**

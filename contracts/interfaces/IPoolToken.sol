@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
-import {IDerivedToken} from './IDerivedToken.sol';
-import {ILendingPool} from './ILendingPool.sol';
+import './IDerivedToken.sol';
+import './IRewardedToken.sol';
 
-interface IPoolToken is IDerivedToken {
-  function setIncentivesController(address) external;
-
-  function POOL() external view returns (ILendingPool);
+interface IPoolToken is IDerivedToken, IRewardedToken {
+  function POOL() external view returns (address);
 }

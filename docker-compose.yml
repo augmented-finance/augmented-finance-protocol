@@ -1,23 +1,38 @@
 version: '3.5'
 
 services:
-  contracts-env:
-    env_file:
-      - .env
-    build:
-      context: ./
-    working_dir: /src
-    command: npm run run-env
-    volumes:
-      - ./:/src
-      - $HOME/.tenderly/config.yaml:/root/.tenderly/config.yaml
+  hardhat-node:
+    build: ./
     environment:
-      MNEMONIC: ${MNEMONIC}
-      ETHERSCAN_KEY: ${ETHERSCAN_KEY}
-      INFURA_KEY: ${INFURA_KEY}
-      ETHERSCAN_NETWORK: ${ETHERSCAN_NETWORK}
-      TENDERLY_PROJECT: ${TENDERLY_PROJECT}
-      TENDERLY_USERNAME: ${TENDERLY_USERNAME}
-      ALCHEMY_KEY: ${ALCHEMY_KEY}
-      TENDERLY_FORK_ID: ${TENDERLY_FORK_ID}
-      TENDERLY_HEAD_ID: ${TENDERLY_HEAD_ID}
+      ALCHEMY_KEY: ${ALCHEMY_KEY:?err}
+      MAINNET_FORK: "true"
+    ports:
+      - 8545:8545
+    healthcheck:
+      test: "bash -c '</dev/tcp/localhost/8545' 2>/dev/null"
+      interval: 20s
+  augmented:
+    build: ./
+    environment:
+      MAINNET_FORK: "true"
+    command: bash -c "yarn hardhat augmented:mainnet --network docker && cp ui-config.json /opt/www/ui-config.json"
+    volumes:
+      - www:/opt/www
+    depends_on:
+      hardhat-node:
+        condition: service_healthy
+  www:
+    image: nginx:stable
+    ports:
+      - 8080:80
+    volumes:
+      - www:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+  explorer:
+        image: alethio/ethereum-lite-explorer
+        ports:
+          - 8085:80
+        environment:
+          APP_NODE_URL: "http://${PUBLIC_IP:-localhost}:8545"
+volumes:
+  www:

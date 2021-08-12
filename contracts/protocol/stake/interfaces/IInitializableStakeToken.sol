@@ -1,13 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
-import {StakeTokenConfig} from './StakeTokenConfig.sol';
+import './StakeTokenConfig.sol';
 
-/**
- * @title IInitializableStakeToken
- * @notice Interface for the initialize function on StakeToken and VotingToken
- **/
+/// @dev Interface for the initialize function on StakeToken
 interface IInitializableStakeToken {
   event Initialized(StakeTokenConfig params, string tokenName, string tokenSymbol, uint8 decimals);
 
@@ -17,4 +13,14 @@ interface IInitializableStakeToken {
     string calldata symbol,
     uint8 decimals
   ) external;
+
+  function initializedWith()
+    external
+    view
+    returns (
+      StakeTokenConfig memory params,
+      string memory name,
+      string memory symbol,
+      uint8 decimals
+    );
 }

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 library DataTypes {
-  // refer to the whitepaper, section 1.1 basic concepts for a formal description of these properties.
   struct ReserveData {
     //stores the reserve configuration
     ReserveConfigurationMap configuration;
@@ -18,11 +17,11 @@ library DataTypes {
     uint128 currentStableBorrowRate;
     uint40 lastUpdateTimestamp;
     //tokens addresses
-    address aTokenAddress;
+    address depositTokenAddress;
     address stableDebtTokenAddress;
     address variableDebtTokenAddress;
-    //address of the interest rate strategy
-    address interestRateStrategyAddress;
+    //address of the reserve strategy
+    address strategy;
     //the id of the reserve. Represents the position in the list of the active reserves
     uint8 id;
   }
@@ -38,6 +37,7 @@ library DataTypes {
     //bit 59: stable rate borrowing enabled
     //bit 60-63: reserved
     //bit 64-79: reserve factor
+    //bit 80: strategy is external
     uint256 data;
   }
 
@@ -46,4 +46,13 @@ library DataTypes {
   }
 
   enum InterestRateMode {NONE, STABLE, VARIABLE}
+
+  struct InitReserveData {
+    address asset;
+    address depositTokenAddress;
+    address stableDebtAddress;
+    address variableDebtAddress;
+    address strategy;
+    bool externalStrategy;
+  }
 }

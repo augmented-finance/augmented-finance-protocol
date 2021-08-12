@@ -4,14 +4,15 @@ import {
   getLendingRateOracle,
   getIErc20Detailed,
   getMintableERC20,
-  getAToken,
+  getDepositToken,
   getStableDebtToken,
   getVariableDebtToken,
 } from '../../../../helpers/contracts-getters';
 import { tEthereumAddress } from '../../../../helpers/types';
 import BigNumber from 'bignumber.js';
-import { getDb, DRE } from '../../../../helpers/misc-utils';
+import { DRE, getFromJsonDb } from '../../../../helpers/misc-utils';
 import { ProtocolDataProvider } from '../../../../types/ProtocolDataProvider';
+import { RAY } from '../../../../helpers/constants';
 
 export const getReserveData = async (
   helper: ProtocolDataProvider,
@@ -45,7 +46,8 @@ export const getReserveData = async (
       ? 0
       : new BigNumber(reserveData.totalStableDebt.toString())
           .plus(reserveData.totalVariableDebt.toString())
-          .rayDiv(totalLiquidity)
+          .multipliedBy(RAY)
+          .div(totalLiquidity)
   );
 
   return {
@@ -65,7 +67,7 @@ export const getReserveData = async (
     principalStableDebt: new BigNumber(principalStableDebt.toString()),
     scaledVariableDebt: new BigNumber(scaledVariableDebt.toString()),
     address: reserve,
-    aTokenAddress: tokenAddresses.aTokenAddress,
+    depositTokenAddress: tokenAddresses.depositTokenAddress,
     symbol,
     decimals,
     marketStableRate: new BigNumber(rate),
@@ -81,7 +83,7 @@ export const getUserData = async (
 ): Promise<UserReserveData> => {
   const [userData, scaledATokenBalance] = await Promise.all([
     helper.getUserReserveData(reserve, user),
-    getATokenUserData(reserve, user, helper),
+    getDepositTokenUserData(reserve, user, helper),
   ]);
 
   const token = await getMintableERC20(reserve);
@@ -89,7 +91,7 @@ export const getUserData = async (
 
   return {
     scaledATokenBalance: new BigNumber(scaledATokenBalance),
-    currentATokenBalance: new BigNumber(userData.currentATokenBalance.toString()),
+    currentATokenBalance: new BigNumber(userData.currentDepositBalance.toString()),
     currentStableDebt: new BigNumber(userData.currentStableDebt.toString()),
     currentVariableDebt: new BigNumber(userData.currentVariableDebt.toString()),
     principalStableDebt: new BigNumber(userData.principalStableDebt.toString()),
@@ -103,26 +105,23 @@ export const getUserData = async (
 };
 
 export const getReserveAddressFromSymbol = async (symbol: string) => {
-  const token = await getMintableERC20(
-    (await getDb().get(`${symbol}.${DRE.network.name}`).value()).address
-  );
-
+  const token = await getMintableERC20((await getFromJsonDb(symbol)).address);
   if (!token) {
     throw `Could not find instance for contract ${symbol}`;
   }
   return token.address;
 };
 
-const getATokenUserData = async (
+const getDepositTokenUserData = async (
   reserve: string,
   user: string,
   helpersContract: ProtocolDataProvider
 ) => {
-  const aTokenAddress: string = (await helpersContract.getReserveTokensAddresses(reserve))
-    .aTokenAddress;
+  const depositTokenAddress: string = (await helpersContract.getReserveTokensAddresses(reserve))
+    .depositTokenAddress;
 
-  const aToken = await getAToken(aTokenAddress);
+  const depositToken = await getDepositToken(depositTokenAddress);
 
-  const scaledBalance = await aToken.scaledBalanceOf(user);
+  const scaledBalance = await depositToken.scaledBalanceOf(user);
   return scaledBalance.toString();
 };

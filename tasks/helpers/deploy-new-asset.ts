@@ -1,10 +1,9 @@
 import { task } from 'hardhat/config';
 import { eEthereumNetwork } from '../../helpers/types';
-import { getTreasuryAddress } from '../../helpers/configuration';
 import * as marketConfigs from '../../markets/augmented';
 import * as reserveConfigs from '../../markets/augmented/reservesConfigs';
-import { chooseATokenDeployment } from '../../helpers/init-helpers';
-import { getLendingPoolAddressesProvider } from './../../helpers/contracts-getters';
+import { chooseDepositTokenDeployment } from '../../helpers/init-helpers';
+import { getMarketAddressController } from './../../helpers/contracts-getters';
 import {
   deployDefaultReserveInterestRateStrategy,
   deployStableDebtToken,
@@ -12,11 +11,14 @@ import {
 } from './../../helpers/contracts-deployments';
 import { setDRE } from '../../helpers/misc-utils';
 import { ZERO_ADDRESS } from './../../helpers/constants';
+import { AccessFlags } from '../../helpers/access-flags';
 
 const LENDING_POOL_ADDRESS_PROVIDER = {
   main: '0xb53c1a33016b2dc2ff3653530bff1848a515c8c5',
   kovan: '0x652B2937Efd0B5beA1c8d54293FC1289672AFC6b',
 };
+
+const names = marketConfigs.AugmentedConfig.Names;
 
 const isSymbolValid = (symbol: string, network: eEthereumNetwork) =>
   Object.keys(reserveConfigs).includes('strategy' + symbol) &&
@@ -42,19 +44,19 @@ WRONG RESERVE ASSET SETUP:
     const strategyParams = reserveConfigs['strategy' + symbol];
     const reserveAssetAddress =
       marketConfigs.AugmentedConfig.ReserveAssets[localBRE.network.name][symbol];
-    const deployCustomAToken = chooseATokenDeployment(strategyParams.aTokenImpl);
-    const addressProvider = await getLendingPoolAddressesProvider(
+    const deployDepositToken = chooseDepositTokenDeployment(strategyParams.depositTokenImpl);
+    const addressProvider = await getMarketAddressController(
       LENDING_POOL_ADDRESS_PROVIDER[network]
     );
     const poolAddress = await addressProvider.getLendingPool();
-    const treasuryAddress = await getTreasuryAddress(marketConfigs.AugmentedConfig);
-    const aToken = await deployCustomAToken(
+    const treasuryAddress = await addressProvider.getAddress(AccessFlags.TREASURY);
+    const depositToken = await deployDepositToken(
       [
         poolAddress,
         reserveAssetAddress,
         treasuryAddress,
-        `Augmented interest bearing ${symbol}`,
-        `ag${symbol}`,
+        `${names.DepositTokenNamePrefix} ${symbol}`,
+        `${names.DepositSymbolPrefix}${symbol}`,
       ],
       verify
     );
@@ -62,8 +64,9 @@ WRONG RESERVE ASSET SETUP:
       [
         poolAddress,
         reserveAssetAddress,
-        `Augmented stable debt bearing ${symbol}`,
-        `stableDebt${symbol}`,
+        treasuryAddress,
+        `${names.StableDebtTokenNamePrefix} ${symbol}`,
+        `${names.StableDebtSymbolPrefix}${symbol}`,
       ],
       verify
     );
@@ -71,8 +74,9 @@ WRONG RESERVE ASSET SETUP:
       [
         poolAddress,
         reserveAssetAddress,
-        `Augmented variable debt bearing ${symbol}`,
-        `variableDebt${symbol}`,
+        treasuryAddress,
+        `${names.VariableDebtTokenNamePrefix} ${symbol}`,
+        `${names.VariableDebtSymbolPrefix}${symbol}`,
       ],
       verify
     );
@@ -89,10 +93,10 @@ WRONG RESERVE ASSET SETUP:
       verify
     );
     console.log(`
-    New interest bearing asset deployed on ${network}:
-    Interest bearing a${symbol} address: ${aToken.address}
-    Variable Debt variableDebt${symbol} address: ${variableDebt.address}
-    Stable Debt stableDebt${symbol} address: ${stableDebt.address}
+    New asset ${symbol} deployed on ${network}:
+    Deposit address: ${depositToken.address}
+    Variable Debt address: ${variableDebt.address}
+    Stable Debt address: ${stableDebt.address}
     Strategy Implementation for ${symbol} address: ${rates.address}
     `);
   });

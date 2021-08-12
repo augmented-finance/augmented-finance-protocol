@@ -1,19 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 // simplified interface to expose functions added events for tests
 interface IGovernance {
-  /**
-   Added for test purposes
-   **/
-  event ReserveInitialized(
-    address indexed asset,
-    address indexed aToken,
-    address stableDebtToken,
-    address variableDebtToken,
-    address interestRateStrategyAddress
-  );
   enum ProposalState {Pending, Canceled, Active, Failed, Succeeded, Queued, Expired, Executed}
 
   /**

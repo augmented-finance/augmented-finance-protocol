@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {PoolTokenBase} from './base/PoolTokenBase.sol';
-import {DebtTokenBase} from './base/DebtTokenBase.sol';
-import {MathUtils} from '../../tools/math/MathUtils.sol';
-import {WadRayMath} from '../../tools/math/WadRayMath.sol';
-import {IStableDebtToken} from '../../interfaces/IStableDebtToken.sol';
-import {Errors} from '../libraries/helpers/Errors.sol';
-import {PoolTokenConfig} from './interfaces/PoolTokenConfig.sol';
-import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
-import {IBalanceHook} from '../../interfaces/IBalanceHook.sol';
+import '../../tools/Errors.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../tools/math/InterestMath.sol';
+import '../../tools/math/WadRayMath.sol';
+import '../../tools/upgradeability/VersionedInitializable.sol';
+import '../../interfaces/IStableDebtToken.sol';
+import '../../interfaces/IBalanceHook.sol';
+import './interfaces/PoolTokenConfig.sol';
+import './base/PoolTokenBase.sol';
+import './base/DebtTokenBase.sol';
 
 /**
  * @title StableDebtToken
@@ -93,7 +93,8 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
   }
 
   function cumulatedInterest(address account) public view virtual returns (uint256) {
-    return MathUtils.calculateCompoundedInterest(_usersStableRate[account], _timestamps[account]);
+    return
+      InterestMath.calculateCompoundedInterest(_usersStableRate[account], _timestamps[account]);
   }
 
   struct MintLocalVars {
@@ -131,14 +132,13 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
 
     vars.previousSupply = totalSupply();
     vars.currentAvgStableRate = _avgStableRate;
-    vars.nextSupply = _totalSupply = vars.previousSupply.add(amount);
+    vars.nextSupply = _totalSupply = vars.previousSupply + amount;
 
     vars.amountInRay = amount.wadToRay();
 
-    vars.newStableRate = _usersStableRate[onBehalfOf]
-      .rayMul(currentBalance.wadToRay())
-      .add(vars.amountInRay.rayMul(rate))
-      .rayDiv(currentBalance.add(amount).wadToRay());
+    vars.newStableRate = (_usersStableRate[onBehalfOf].rayMul(currentBalance.wadToRay()) +
+      vars.amountInRay.rayMul(rate))
+      .rayDiv((currentBalance + amount).wadToRay());
 
     require(vars.newStableRate <= type(uint128).max, Errors.SDT_STABLE_DEBT_OVERFLOW);
     _usersStableRate[onBehalfOf] = vars.newStableRate;
@@ -147,13 +147,12 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     _totalSupplyTimestamp = _timestamps[onBehalfOf] = uint40(block.timestamp);
 
     // Calculates the updated average stable rate
-    vars.currentAvgStableRate = _avgStableRate = vars
-      .currentAvgStableRate
-      .rayMul(vars.previousSupply.wadToRay())
-      .add(rate.rayMul(vars.amountInRay))
+    vars.currentAvgStableRate = _avgStableRate = (vars.currentAvgStableRate.rayMul(
+      vars.previousSupply.wadToRay()
+    ) + rate.rayMul(vars.amountInRay))
       .rayDiv(vars.nextSupply.wadToRay());
 
-    _mintWithTotal(onBehalfOf, amount.add(balanceIncrease), vars.nextSupply);
+    _mintWithTotal(onBehalfOf, amount + balanceIncrease, vars.nextSupply);
 
     emit Transfer(address(0), onBehalfOf, amount);
 
@@ -192,7 +191,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
       _avgStableRate = 0;
       _totalSupply = 0;
     } else {
-      nextSupply = _totalSupply = previousSupply.sub(amount);
+      nextSupply = _totalSupply = previousSupply - amount;
       uint256 firstTerm = _avgStableRate.rayMul(previousSupply.wadToRay());
       uint256 secondTerm = userStableRate.rayMul(amount.wadToRay());
 
@@ -202,7 +201,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
       if (secondTerm >= firstTerm) {
         newAvgStableRate = _avgStableRate = _totalSupply = 0;
       } else {
-        newAvgStableRate = _avgStableRate = firstTerm.sub(secondTerm).rayDiv(nextSupply.wadToRay());
+        newAvgStableRate = _avgStableRate = (firstTerm - secondTerm).rayDiv(nextSupply.wadToRay());
       }
     }
 
@@ -217,7 +216,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     _totalSupplyTimestamp = uint40(block.timestamp);
 
     if (balanceIncrease > amount) {
-      uint256 amountToMint = balanceIncrease.sub(amount);
+      uint256 amountToMint = balanceIncrease - amount;
       _mintWithTotal(user, amountToMint, nextSupply);
       emit Mint(
         user,
@@ -230,7 +229,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
         nextSupply
       );
     } else {
-      uint256 amountToBurn = amount.sub(balanceIncrease);
+      uint256 amountToBurn = amount - balanceIncrease;
       _burnWithTotal(user, amountToBurn, nextSupply);
       emit Burn(user, amountToBurn, currentBalance, balanceIncrease, newAvgStableRate, nextSupply);
     }
@@ -259,18 +258,12 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     }
 
     // Calculation of the accrued interest since the last accumulation
-    uint256 balanceIncrease = balanceOf(user).sub(previousPrincipalBalance);
+    uint256 balanceIncrease = balanceOf(user) - previousPrincipalBalance;
 
-    return (
-      previousPrincipalBalance,
-      previousPrincipalBalance.add(balanceIncrease),
-      balanceIncrease
-    );
+    return (previousPrincipalBalance, previousPrincipalBalance + balanceIncrease, balanceIncrease);
   }
 
-  /**
-   * @dev Returns the principal and total supply, the average borrow rate and the last supply update timestamp
-   **/
+  /// @dev Returns the principal and total supply, the average borrow rate and the last supply update timestamp
   function getSupplyData()
     public
     view
@@ -286,24 +279,18 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     return (super.totalSupply(), _calcTotalSupply(avgRate), avgRate, _totalSupplyTimestamp);
   }
 
-  /**
-   * @dev Returns the the total supply and the average stable rate
-   **/
+  /// @dev Returns the the total supply and the average stable rate
   function getTotalSupplyAndAvgRate() public view override returns (uint256, uint256) {
     uint256 avgRate = _avgStableRate;
     return (_calcTotalSupply(avgRate), avgRate);
   }
 
-  /**
-   * @dev Returns the total supply
-   **/
+  /// @dev Returns the total supply
   function totalSupply() public view override(IERC20, PoolTokenBase) returns (uint256) {
     return _calcTotalSupply(_avgStableRate);
   }
 
-  /**
-   * @dev Returns the timestamp at which the total supply was updated
-   **/
+  /// @dev Returns the timestamp at which the total supply was updated
   function getTotalSupplyLastUpdated() public view override returns (uint40) {
     return _totalSupplyTimestamp;
   }
@@ -329,7 +316,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
       return 0;
     }
 
-    uint256 cumInterest = MathUtils.calculateCompoundedInterest(avgRate, _totalSupplyTimestamp);
+    uint256 cumInterest = InterestMath.calculateCompoundedInterest(avgRate, _totalSupplyTimestamp);
     return principalSupply.rayMul(cumInterest);
   }
 
@@ -345,7 +332,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     uint256 newTotalSupply
   ) internal {
     uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = oldAccountBalance.add(amount);
+    uint256 newAccountBalance = oldAccountBalance + amount;
     _balances[account] = newAccountBalance;
 
     balanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
@@ -363,7 +350,8 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     uint256 newTotalSupply
   ) internal {
     uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = oldAccountBalance.sub(amount, Errors.SDT_BURN_EXCEEDS_BALANCE);
+    uint256 newAccountBalance =
+      SafeMath.sub(oldAccountBalance, amount, Errors.SDT_BURN_EXCEEDS_BALANCE);
     _balances[account] = newAccountBalance;
 
     balanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);

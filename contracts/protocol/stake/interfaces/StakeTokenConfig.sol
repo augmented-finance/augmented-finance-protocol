@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
-import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {IBalanceHook} from '../../../interfaces/IBalanceHook.sol';
-import {IMarketAccessController} from '../../../access/interfaces/IMarketAccessController.sol';
-import {ITransferHook} from './ITransferHook.sol';
+import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../../access/interfaces/IMarketAccessController.sol';
 
 struct StakeTokenConfig {
   IMarketAccessController stakeController;
   IERC20 stakedToken;
-  uint32 cooldownBlocks;
-  uint32 unstakeBlocks;
-  // For voting token only
-  ITransferHook governance;
+  uint32 cooldownPeriod;
+  uint32 unstakePeriod;
+  uint16 maxSlashable;
 }

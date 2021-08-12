@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
-import {ERC20} from '../../dependencies/openzeppelin/contracts/ERC20.sol';
+import '../../dependencies/openzeppelin/contracts/ERC20.sol';
 
 /**
  * @title ERC20Mintable
@@ -12,7 +12,7 @@ contract MintableERC20 is ERC20 {
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public ERC20(name, symbol, decimals) {}
+  ) ERC20(name, symbol, decimals) {}
 
   /**
    * @dev Function to mint tokens
@@ -20,7 +20,7 @@ contract MintableERC20 is ERC20 {
    * @return A boolean that indicates if the operation was successful.
    */
   function mint(uint256 value) public returns (bool) {
-    _mint(_msgSender(), value);
+    _mint(msg.sender, value);
     return true;
   }
 }

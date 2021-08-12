@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
-import {BaseUniswapAdapter} from './BaseUniswapAdapter.sol';
-import {IFlashLoanAddressProvider} from '../interfaces/IFlashLoanAddressProvider.sol';
-import {IUniswapV2Router02} from '../interfaces/IUniswapV2Router02.sol';
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
-import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
-import {Helpers} from '../protocol/libraries/helpers/Helpers.sol';
-import {IPriceOracleGetter} from '../interfaces/IPriceOracleGetter.sol';
-import {IDepositToken} from '../interfaces/IDepositToken.sol';
-import {ReserveConfiguration} from '../protocol/libraries/configuration/ReserveConfiguration.sol';
+import './BaseUniswapAdapter.sol';
+import '../interfaces/IFlashLoanAddressProvider.sol';
+import '../interfaces/IUniswapV2Router02.sol';
+import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../protocol/libraries/types/DataTypes.sol';
+import '../protocol/libraries/helpers/Helpers.sol';
+import '../interfaces/IPriceOracleGetter.sol';
+import '../interfaces/IDepositToken.sol';
+import '../protocol/libraries/configuration/ReserveConfiguration.sol';
 
 /**
  * @title UniswapLiquiditySwapAdapter
@@ -18,6 +19,8 @@ import {ReserveConfiguration} from '../protocol/libraries/configuration/ReserveC
  * @author Aave
  **/
 contract FlashLiquidationAdapter is BaseUniswapAdapter {
+  using SafeMath for uint256;
+  using SafeERC20 for IERC20;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   uint256 internal constant LIQUIDATION_CLOSE_FACTOR_PERCENT = 5000;
 
@@ -44,7 +47,7 @@ contract FlashLiquidationAdapter is BaseUniswapAdapter {
     IFlashLoanAddressProvider addressesProvider,
     IUniswapV2Router02 uniswapRouter,
     address wethAddress
-  ) public BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
+  ) BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
 
   /**
    * @dev Liquidate a non-healthy position collateral-wise, with a Health Factor below 1, using Flash Loan and Uniswap to repay flash loan premium.
@@ -120,7 +123,7 @@ contract FlashLiquidationAdapter is BaseUniswapAdapter {
     vars.flashLoanDebt = flashBorrowedAmount.add(premium);
 
     // Approve LendingPool to use debt token for liquidation
-    IERC20(borrowedAsset).approve(address(LENDING_POOL), debtToCover);
+    IERC20(borrowedAsset).safeApprove(address(LENDING_POOL), debtToCover);
 
     // Liquidate the user position and release the underlying collateral
     LENDING_POOL.liquidationCall(collateralAsset, borrowedAsset, user, debtToCover, false);
@@ -152,11 +155,11 @@ contract FlashLiquidationAdapter is BaseUniswapAdapter {
     }
 
     // Allow repay of flash loan
-    IERC20(borrowedAsset).approve(address(LENDING_POOL), vars.flashLoanDebt);
+    IERC20(borrowedAsset).safeApprove(address(LENDING_POOL), vars.flashLoanDebt);
 
     // Transfer remaining tokens to initiator
     if (vars.remainingTokens > 0) {
-      IERC20(collateralAsset).transfer(initiator, vars.remainingTokens);
+      IERC20(collateralAsset).safeTransfer(initiator, vars.remainingTokens);
     }
   }
 

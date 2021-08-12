@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
-import {IBalanceHook} from './IBalanceHook.sol';
-import {IERC20} from '../dependencies/openzeppelin/contracts/IERC20.sol';
+import './IBalanceHook.sol';
+import '../dependencies/openzeppelin/contracts/IERC20.sol';
 
-/**
- * @title IStableDebtToken
- * @notice Defines the interface for the stable debt token
- * @dev It does not inherit from IERC20 to save in code size
- * @author Aave
- **/
-
+/// @dev Defines the interface for the stable debt token
 interface IStableDebtToken is IERC20 {
   /**
    * @dev Emitted when new stable debt is minted
@@ -78,27 +72,16 @@ interface IStableDebtToken is IERC20 {
    **/
   function burn(address user, uint256 amount) external;
 
-  /**
-   * @dev Returns the average rate of all the stable rate loans.
-   * @return The average stable rate
-   **/
+  /// @dev Returns the average rate of all the stable rate loans
   function getAverageStableRate() external view returns (uint256);
 
-  /**
-   * @dev Returns the stable rate of the user debt
-   * @return The stable rate of the user
-   **/
+  /// @dev Returns the stable rate of the user debt
   function getUserStableRate(address user) external view returns (uint256);
 
-  /**
-   * @dev Returns the timestamp of the last update of the user
-   * @return The timestamp
-   **/
+  /// @dev Returns the timestamp of the last update of the user
   function getUserLastUpdated(address user) external view returns (uint40);
 
-  /**
-   * @dev Returns the principal, the total supply and the average stable rate
-   **/
+  /// @dev Returns the principal, the total supply and the average stable rate
   function getSupplyData()
     external
     view
@@ -109,25 +92,12 @@ interface IStableDebtToken is IERC20 {
       uint40
     );
 
-  /**
-   * @dev Returns the timestamp of the last update of the total supply
-   * @return The timestamp
-   **/
+  /// @dev Returns the timestamp of the last update of the total supply
   function getTotalSupplyLastUpdated() external view returns (uint40);
 
-  /**
-   * @dev Returns the total supply and the average stable rate
-   **/
+  /// @dev Returns the total supply and the average stable rate
   function getTotalSupplyAndAvgRate() external view returns (uint256, uint256);
 
-  /**
-   * @dev Returns the principal debt balance of the user
-   * @return The debt balance of the user since the last burn/mint action
-   **/
+  /// @dev Returns the principal debt balance of the user
   function principalBalanceOf(address user) external view returns (uint256);
-
-  // /**
-  //  * @dev Returns the address of the incentives controller contract
-  //  **/
-  // function getIncentivesController() external view returns (IBalanceHook);
 }

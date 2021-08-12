@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
-import {ILendingPool} from '../../contracts/interfaces/ILendingPool.sol';
-import {LendingPool} from '../../contracts/protocol/lendingpool/LendingPool.sol';
+import '../../contracts/interfaces/ILendingPool.sol';
+import '../../contracts/protocol/lendingpool/LendingPool.sol';
 import {
   IMarketAccessController
 } from '../../contracts/access/interfaces/IMarketAccessController.sol';
-import {DataTypes} from '../../contracts/protocol/libraries/types/DataTypes.sol';
+import '../../contracts/protocol/libraries/types/DataTypes.sol';
 
 /*
 Certora: Harness that delegates calls to the original LendingPool.
@@ -114,25 +113,25 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
 
   function initReserve(
     address asset,
-    address aTokenAddress,
+    address depositTokenAddress,
     address stableDebtAddress,
     address variableDebtAddress,
     address interestRateStrategyAddress
   ) external override {
     originalPool.initReserve(
       asset,
-      aTokenAddress,
+      depositTokenAddress,
       stableDebtAddress,
       variableDebtAddress,
       interestRateStrategyAddress
     );
   }
 
-  function setReserveInterestRateStrategyAddress(address asset, address rateStrategyAddress)
+  function setReserveStrategy(address asset, address strategy)
     external
     override
   {
-    originalPool.setReserveInterestRateStrategyAddress(asset, rateStrategyAddress);
+    originalPool.setReserveStrategy(asset, strategy);
   }
 
   function setConfiguration(address asset, uint256 configuration) external override {
@@ -204,9 +203,5 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
 
   function getAccessController() external view override returns (IMarketAccessController) {
     return originalPool.getAccessController();
-  }
-
-  function isPoolAdmin(address addr) external view override returns (bool) {
-    return originalPool.isPoolAdmin(addr);
   }
 }

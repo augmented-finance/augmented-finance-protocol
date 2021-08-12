@@ -1,30 +1,24 @@
 import {
-  LendingPools,
-  iMultiPoolsAssets,
   IReserveParams,
   PoolConfiguration,
   ICommonConfiguration,
   eNetwork,
+  iAssetCommon,
 } from './types';
-import { getParamPerPool } from './contracts-helpers';
-import { CommonsConfig } from '../markets/augmented/commons';
-import { DRE, filterMapBy } from './misc-utils';
-import { tEthereumAddress } from './types';
+import { DRE, falsyOrZeroAddress, filterMapBy } from './misc-utils';
 import { getParamPerNetwork } from './contracts-helpers';
 import { deployWETHMocked } from './contracts-deployments';
-import AugmentedConfig from '../markets/augmented';
+import { AugmentedConfig, TestConfig } from '../markets/augmented';
 
 export enum ConfigNames {
-  Commons = 'Commons',
-  Aave = 'Aave',
-  Matic = 'Matic',
+  Test = 'Test',
   Augmented = 'Augmented',
 }
 
 export const loadPoolConfig = (configName: ConfigNames): PoolConfiguration => {
   switch (configName) {
-    case ConfigNames.Commons:
-      return CommonsConfig;
+    case ConfigNames.Test:
+      return TestConfig;
     case ConfigNames.Augmented:
       return AugmentedConfig;
     default:
@@ -36,87 +30,33 @@ export const loadPoolConfig = (configName: ConfigNames): PoolConfiguration => {
 // PROTOCOL PARAMS PER POOL
 // ----------------
 
-export const getReservesConfigByPool = (pool: LendingPools): iMultiPoolsAssets<IReserveParams> =>
-  getParamPerPool<iMultiPoolsAssets<IReserveParams>>(
-    {
-      // [LendingPools.proto]: {
-      //   ...AaveConfig.ReservesConfig,
-      // },
-      // [LendingPools.matic]: {
-      //   ...MaticConfig.ReservesConfig,
-      // },
-      [LendingPools.augmented]: {
-        ...AugmentedConfig.ReservesConfig,
-      },
-    },
-    pool
-  );
-
-export const getGenesisPoolAdmin = async (
-  config: ICommonConfiguration
-): Promise<tEthereumAddress> => {
-  const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  const targetAddress = getParamPerNetwork(config.PoolAdmin, <eNetwork>currentNetwork);
-  if (targetAddress) {
-    return targetAddress;
-  }
-  const addressList = await Promise.all(
-    (await DRE.ethers.getSigners()).map((signer) => signer.getAddress())
-  );
-  const addressIndex = config.PoolAdminIndex;
-  return addressList[addressIndex];
-};
-
-export const getEmergencyAdmin = async (
-  config: ICommonConfiguration
-): Promise<tEthereumAddress> => {
-  const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  const targetAddress = getParamPerNetwork(config.EmergencyAdmin, <eNetwork>currentNetwork);
-  if (targetAddress) {
-    return targetAddress;
-  }
-  const addressList = await Promise.all(
-    (await DRE.ethers.getSigners()).map((signer) => signer.getAddress())
-  );
-  const addressIndex = config.EmergencyAdminIndex;
-  return addressList[addressIndex];
-};
-
-export const getTreasuryAddress = async (
-  config: ICommonConfiguration
-): Promise<tEthereumAddress> => {
-  const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  return getParamPerNetwork(config.ReserveFactorTreasuryAddress, <eNetwork>currentNetwork);
-};
-
-export const getATokenDomainSeparatorPerNetwork = (
-  network: eNetwork,
-  config: ICommonConfiguration
-): tEthereumAddress => getParamPerNetwork<tEthereumAddress>(config.ATokenDomainSeparator, network);
+export const getReservesTestConfig = (): iAssetCommon<IReserveParams> => TestConfig.ReservesConfig;
 
 export const getWethAddress = async (config: ICommonConfiguration) => {
   const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  const wethAddress = getParamPerNetwork(config.WETH, <eNetwork>currentNetwork);
-  if (wethAddress) {
-    return wethAddress;
+  const wethAddress = getParamPerNetwork(config.ReserveAssets, <eNetwork>currentNetwork).WETH;
+  if (falsyOrZeroAddress(wethAddress)) {
+    throw 'WETH address is required';
   }
-  if (currentNetwork.includes('main')) {
-    throw new Error('WETH not set at mainnet configuration.');
+  return wethAddress;
+};
+
+export const getOrCreateWethAddress = async (config: ICommonConfiguration) => {
+  const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
+  const wethAddress = getParamPerNetwork(config.ReserveAssets, <eNetwork>currentNetwork).WETH;
+  if (!falsyOrZeroAddress(wethAddress)) {
+    return wethAddress;
   }
   const weth = await deployWETHMocked();
   return weth.address;
 };
 
 export const getLendingRateOracles = (poolConfig: ICommonConfiguration) => {
-  const {
-    ProtocolGlobalParams: { UsdAddress },
-    LendingRateOracleRatesCommon,
-    ReserveAssets,
-  } = poolConfig;
+  const { LendingRateOracleRates, ReserveAssets } = poolConfig;
 
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
   const network = MAINNET_FORK ? 'main' : DRE.network.name;
-  return filterMapBy(LendingRateOracleRatesCommon, (key) =>
+  return filterMapBy(LendingRateOracleRates, (key) =>
     Object.keys(ReserveAssets[network]).includes(key)
   );
 };

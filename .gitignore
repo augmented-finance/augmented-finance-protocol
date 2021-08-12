@@ -17,9 +17,11 @@ coverage
 .coverage_contracts
 
 soljson-v0.6.12+commit.27d51765.js
+soljson-v0.8.4+commit.c7e474f2.js
 contracts/types
 package-lock.json
 abi
 typechain
 .npmrc
 yarn.lock
+ui-config.json

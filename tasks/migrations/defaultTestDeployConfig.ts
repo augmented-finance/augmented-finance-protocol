@@ -10,24 +10,18 @@ export const aDaiWhaleTHREE = '0x449f284c8f884f487907a348921715b7cabf213f';
 export const cDaiWhaleONE = '0x52185a2bbcfd67c1d07963e3575175ee9f95a551';
 export const cDaiWhaleTWO = '0x67e9a5894d2713553cd3cbc7d034be9f1f830d3b';
 export const cDaiWhaleTHREE = '0x7d6149ad9a573a6e2ca6ebf7d4897c1b766841b4';
-export const ZTOKEN_ADDRESS = '0xdac17f958d2ee523a2206206994597c13d831ec7';
-export const zombieWhaleONE = '0x5754284f345afc66a98fbb0a0afe71e0f007b949';
 
 // staking constants
-export const stakingCooldownBlocks = 5;
-export const stakingUnstakeBlocks = 150;
+export const stakingCooldownTicks = 5;
+export const stakingUnstakeTicks = 150;
 export const slashingDefaultPercentage = 3000;
 export const slashingDefaultPercentageHR = 0.3;
 
 export const CFG = {
   aDaiAddress: ADAI_ADDRESS,
   cDaiAddress: CDAI_ADDRESS,
-  zTokenAddress: ZTOKEN_ADDRESS,
-  teamRewardInitialRate: RAY,
+  teamRewardInitialRate: '1',
   teamRewardBaselinePercentage: 0,
-  teamRewardUnlockBlock: 1000,
-  teamRewardsFreezePercentage: 0,
-  zombieRewardLimit: 5000,
-  stakingCooldownBlocks,
-  stakingUnstakeBlocks,
+  stakingCooldownTicks,
+  stakingUnstakeTicks,
 };

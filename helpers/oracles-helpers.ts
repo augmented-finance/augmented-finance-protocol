@@ -1,6 +1,5 @@
 import {
   tEthereumAddress,
-  iMultiPoolsAssets,
   IMarketRates,
   iAssetBase,
   iAssetAggregatorBase,
@@ -8,19 +7,16 @@ import {
 } from './types';
 
 import { LendingRateOracle } from '../types/LendingRateOracle';
-import { PriceOracle } from '../types/PriceOracle';
 import { MockAggregator } from '../types/MockAggregator';
 import { deployMockAggregator } from './contracts-deployments';
 import { chunk, waitForTx } from './misc-utils';
-import { getStableAndVariableTokensHelper } from './contracts-getters';
+import { MockPriceOracle } from '../types';
 
 export const setInitialMarketRatesInRatesOracleByHelper = async (
-  marketRates: iMultiPoolsAssets<IMarketRates>,
+  marketRates: { [key: string]: IMarketRates },
   assetsAddresses: { [x: string]: tEthereumAddress },
-  lendingRateOracleInstance: LendingRateOracle,
-  admin: tEthereumAddress
+  lendingRateOracleInstance: LendingRateOracle
 ) => {
-  const stableAndVariableTokenHelper = await getStableAndVariableTokensHelper();
   const assetAddresses: string[] = [];
   const borrowRates: string[] = [];
   const symbols: string[] = [];
@@ -28,6 +24,10 @@ export const setInitialMarketRatesInRatesOracleByHelper = async (
     string,
     IMarketRates
   ][]) {
+    if (borrowRate == '') {
+      continue;
+    }
+
     const assetAddressIndex = Object.keys(assetsAddresses).findIndex(
       (value) => value === assetSymbol
     );
@@ -44,37 +44,27 @@ export const setInitialMarketRatesInRatesOracleByHelper = async (
   const chunkedRates = chunk(borrowRates, ratesChunks);
   const chunkedSymbols = chunk(symbols, ratesChunks);
 
-  // Set helper as owner
-  await waitForTx(
-    await lendingRateOracleInstance.transferOwnership(stableAndVariableTokenHelper.address)
-  );
-
   console.log(`- Oracle borrow initalization in ${chunkedTokens.length} txs`);
   for (let chunkIndex = 0; chunkIndex < chunkedTokens.length; chunkIndex++) {
-    const tx3 = await waitForTx(
-      await stableAndVariableTokenHelper.setOracleBorrowRates(
+    await waitForTx(
+      await lendingRateOracleInstance.setMarketBorrowRates(
         chunkedTokens[chunkIndex],
         chunkedRates[chunkIndex],
-        lendingRateOracleInstance.address
+        { gasLimit: 5000000 }
       )
     );
     console.log(`  - Setted Oracle Borrow Rates for: ${chunkedSymbols[chunkIndex].join(', ')}`);
   }
-  // Set back ownership
-  await waitForTx(
-    await stableAndVariableTokenHelper.setOracleOwnership(lendingRateOracleInstance.address, admin)
-  );
 };
 
 export const setInitialAssetPricesInOracle = async (
   prices: iAssetBase<tEthereumAddress>,
   assetsAddresses: iAssetBase<tEthereumAddress>,
-  priceOracleInstance: PriceOracle
+  priceOracleInstance: MockPriceOracle
 ) => {
   for (const [assetSymbol, price] of Object.entries(prices) as [string, string][]) {
+    console.log('Trying for ', assetsAddresses, assetSymbol);
 
-    console.log("Trying for ", assetsAddresses, assetSymbol);
-    
     const assetAddressIndex = Object.keys(assetsAddresses).findIndex(
       (value) => value === assetSymbol
     );
@@ -88,7 +78,7 @@ export const setInitialAssetPricesInOracle = async (
 export const setAssetPricesInOracle = async (
   prices: SymbolMap<string>,
   assetsAddresses: SymbolMap<tEthereumAddress>,
-  priceOracleInstance: PriceOracle
+  priceOracleInstance: MockPriceOracle
 ) => {
   for (const [assetSymbol, price] of Object.entries(prices) as [string, string][]) {
     const assetAddressIndex = Object.keys(assetsAddresses).findIndex(

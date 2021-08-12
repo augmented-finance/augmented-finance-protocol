@@ -1,19 +1,14 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
-import {StakeTokenBase} from './StakeTokenBase.sol';
-import {StakeTokenConfig} from './interfaces/StakeTokenConfig.sol';
-import {VersionedInitializable} from '../../tools/upgradeability/VersionedInitializable.sol';
+import './SlashableStakeTokenBase.sol';
+import './interfaces/StakeTokenConfig.sol';
+import '../../tools/upgradeability/VersionedInitializable.sol';
 
-/**
- * @title StakeToken
- * @notice Contract to stake a token for a system reserve.
- **/
-contract StakeToken is StakeTokenBase, VersionedInitializable {
+contract StakeToken is SlashableStakeTokenBase, VersionedInitializable {
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor() public StakeTokenBase(zeroConfig(), 'STAKE_STUB', 'STAKE_STUB', 0) {}
+  constructor() SlashableStakeTokenBase(zeroConfig(), 'STAKE_STUB', 'STAKE_STUB', 0) {}
 
   function zeroConfig() private pure returns (StakeTokenConfig memory) {}
 
@@ -29,10 +24,6 @@ contract StakeToken is StakeTokenBase, VersionedInitializable {
     emit Initialized(params, name, symbol, decimals);
   }
 
-  /**
-   * @dev returns the revision of the implementation contract
-   * @return The revision
-   */
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
   }
