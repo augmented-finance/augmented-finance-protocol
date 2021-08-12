@@ -19,8 +19,12 @@ abstract contract LendingPoolStorage is VersionedInitializable {
 
   uint16 internal _flashLoanPremiumPct;
 
-  uint16 internal constant FEATURE_FLASHLOAN = 1 << 0;
-  uint16 internal constant FEATURE_LIQUIDATION = 1 << 1;
+  uint16 internal constant FEATURE_LIQUIDATION = 1 << 0;
+  uint16 internal constant FEATURE_FLASHLOAN = 1 << 1;
+  uint16 internal constant FEATURE_FLASHLOAN_DEPOSIT = 1 << 2;
+  uint16 internal constant FEATURE_FLASHLOAN_WITHDRAW = 1 << 3;
+  uint16 internal constant FEATURE_FLASHLOAN_BORROW = 1 << 4;
+  uint16 internal constant FEATURE_FLASHLOAN_REPAY = 1 << 5;
   uint16 internal _disabledFeatures;
 
   uint8 internal _reservesCount;
