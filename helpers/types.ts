@@ -143,6 +143,7 @@ export enum ProtocolErrors {
   CT_TRANSFER_AMOUNT_NOT_GT_0 = '31', // 'Transferred amount needs to be greater than zero'
   RL_RESERVE_ALREADY_INITIALIZED = '32', // 'Reserve has already been initialized'
   CALLER_NOT_POOL_ADMIN = '33', // 'The caller must be the pool admin'
+  LPC_RESERVE_LIQUIDITY_NOT_0 = '34', // The liquidity of the reserve needs to be 0
 
   LPAPR_PROVIDER_NOT_REGISTERED = '41', // 'Provider is not registered'
   LPCM_HEALTH_FACTOR_NOT_BELOW_THRESHOLD = '42', // 'Health factor is not below the threshold'
