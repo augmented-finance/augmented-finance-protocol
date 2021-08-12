@@ -46,6 +46,10 @@ contract RewardConfigurator is
     return IManagedRewardController(ctl);
   }
 
+  function getProxyAdmin() external view returns (address) {
+    return address(_proxies);
+  }
+
   function list() public view returns (address[] memory pools) {
     uint256 ignoreMask;
     (pools, ignoreMask) = IUntypedRewardControllerPools(address(getDefaultController())).getPools();
@@ -66,12 +70,7 @@ contract RewardConfigurator is
       PoolInitData calldata entry = entries[i];
 
       IInitializableRewardPool.InitData memory params =
-        IInitializableRewardPool.InitData(
-          ctl,
-          entry.poolName,
-          entry.initialRate,
-          entry.baselinePercentage
-        );
+        IInitializableRewardPool.InitData(ctl, entry.poolName, entry.baselinePercentage);
 
       address pool =
         address(
@@ -147,18 +146,13 @@ contract RewardConfigurator is
     emit RewardPoolUpgraded(input.pool, input.impl);
   }
 
-  function buildRewardPoolInitData(
-    string calldata poolName,
-    uint256 initialRate,
-    uint16 baselinePercentage
-  ) external view returns (bytes memory) {
+  function buildRewardPoolInitData(string calldata poolName, uint16 baselinePercentage)
+    external
+    view
+    returns (bytes memory)
+  {
     IInitializableRewardPool.InitData memory data =
-      IInitializableRewardPool.InitData(
-        getDefaultController(),
-        poolName,
-        initialRate,
-        baselinePercentage
-      );
+      IInitializableRewardPool.InitData(getDefaultController(), poolName, baselinePercentage);
     return abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, data);
   }
 
@@ -202,17 +196,6 @@ contract RewardConfigurator is
     }
     if (members.length > 0) {
       pool.updateTeamMembers(members, memberShares);
-    }
-  }
-
-  function setRates(IManagedRewardPool[] calldata pools, uint256[] calldata rates)
-    external
-    onlyRewardRateAdmin
-  {
-    require(pools.length == rates.length);
-
-    for (uint256 i = 0; i < pools.length; i++) {
-      pools[i].setRate(rates[i]);
     }
   }
 

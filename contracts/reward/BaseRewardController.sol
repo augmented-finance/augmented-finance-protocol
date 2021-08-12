@@ -94,6 +94,7 @@ abstract contract BaseRewardController is
     returns (uint256 totalRate)
   {
     (totalRate, _baselineMask) = internalUpdateBaseline(baseline, _baselineMask);
+    require(totalRate <= baseline, Errors.RW_BASELINE_EXCEEDED);
     emit BaselineUpdated(baseline, totalRate, _baselineMask);
     return totalRate;
   }

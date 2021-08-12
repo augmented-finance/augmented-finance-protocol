@@ -35,6 +35,10 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     _remoteAcl = IMarketAccessController(addressesProvider);
   }
 
+  function getProxyAdmin() external view returns (address) {
+    return address(_proxies);
+  }
+
   function list() public view override returns (address[] memory tokens) {
     if (_entryCount == 0) {
       return tokens;

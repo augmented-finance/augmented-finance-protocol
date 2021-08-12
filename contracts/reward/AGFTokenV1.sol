@@ -67,28 +67,7 @@ contract AGFTokenV1 is
     address account,
     uint256 amount,
     bool
-  ) external override aclAnyOf(AccessFlags.REWARD_MINT | AccessFlags.REWARD_CONTROLLER) {
+  ) external virtual override aclAnyOf(AccessFlags.REWARD_CONTROLLER) {
     _mint(account, amount);
-  }
-
-  function burn(address account, uint256 amount) external aclHas(AccessFlags.REWARD_BURN) {
-    _burn(account, amount);
-  }
-
-  function _checkTransfer(address from, address to) internal view virtual {
-    // require(_getRemoteAcl(from) & AccessFlags.REWARD_SUSPEND_USER == 0, 'sender is suspended');
-    // if (from == to) {
-    //   return;
-    // }
-    // require(_getRemoteAcl(to) & AccessFlags.REWARD_SUSPEND_USER == 0, 'receiver is suspended');
-  }
-
-  function _beforeTokenTransfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal virtual override {
-    super._beforeTokenTransfer(from, to, amount);
-    _checkTransfer(from, to);
   }
 }

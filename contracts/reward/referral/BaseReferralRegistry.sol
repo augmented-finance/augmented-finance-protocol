@@ -2,14 +2,15 @@
 pragma solidity ^0.8.4;
 
 import '../../tools/Errors.sol';
+import '../interfaces/IReferralRegistry.sol';
 
-abstract contract BaseReferralRegistry {
+abstract contract BaseReferralRegistry is IReferralRegistry {
   mapping(uint256 => address) _delegations;
   mapping(uint256 => uint32) _timestamps;
 
   uint32 private constant RESERVED_CODE = type(uint32).max;
 
-  function registerCustomCode(uint32 refCode, address to) public {
+  function registerCustomCode(uint32 refCode, address to) public override {
     require(refCode > RESERVED_CODE, 'REF_CODE_RESERVED');
     internalRegisterCode(refCode, to);
   }
@@ -25,16 +26,17 @@ abstract contract BaseReferralRegistry {
     require(_delegations[refCode] == address(0), 'REF_CODE_REGISTERED');
 
     _delegations[refCode] = to;
+    emit RefCodeDelegated(refCode, address(0), to);
   }
 
-  function defaultCode(address addr) public pure returns (uint256) {
+  function defaultCode(address addr) public pure override returns (uint256) {
     if (addr == address(0)) {
       return 0;
     }
     return (uint256(keccak256(abi.encodePacked(addr))) << 32) | RESERVED_CODE;
   }
 
-  function delegateCodeTo(uint256 refCode, address to) public {
+  function delegateCodeTo(uint256 refCode, address to) public override {
     require(refCode != 0, 'REF_CODE_REQUIRED');
     require(to != address(0), 'OWNER_REQUIRED');
 
@@ -44,9 +46,10 @@ abstract contract BaseReferralRegistry {
       require(_delegations[refCode] == msg.sender, 'REF_CODE_WRONG_OWNER');
     }
     _delegations[refCode] = to;
+    emit RefCodeDelegated(refCode, msg.sender, to);
   }
 
-  function delegateDefaultCodeTo(address to) public returns (uint256 refCode) {
+  function delegateDefaultCodeTo(address to) public override returns (uint256 refCode) {
     require(to != address(0), 'OWNER_REQUIRED');
     refCode = defaultCode(msg.sender);
     require(refCode != 0, 'IMPOSSIBLE');
@@ -56,11 +59,13 @@ abstract contract BaseReferralRegistry {
       'REF_CODE_WRONG_OWNER'
     );
     _delegations[refCode] = to;
+    emit RefCodeDelegated(refCode, msg.sender, to);
   }
 
   function timestampsOf(address owner, uint256[] calldata codes)
     external
     view
+    override
     returns (uint32[] memory timestamps)
   {
     require(owner != address(0), 'OWNER_REQUIRED');

@@ -18,7 +18,7 @@ import {
   stakingUnstakeTicks,
 } from './defaultTestDeployConfig';
 import { getAGTokenByName } from '../../helpers/contracts-getters';
-import { AccessFlags, ACCESS_REWARD_MINT } from '../../helpers/access-flags';
+import { AccessFlags } from '../../helpers/access-flags';
 
 task('augmented:test-local-staking', 'Deploy staking test contracts')
   .addOptionalParam(
@@ -65,7 +65,6 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       console.log(`#3 deploying: RewardFreezer`);
       const rewardCtl = await deployMockRewardFreezer([ac.address, agfToken.address], verify);
       await rewardCtl.connect(root).setFreezePercentage(0);
-      await ac.grantAnyRoles(rewardCtl.address, ACCESS_REWARD_MINT);
 
       console.log(`#4 Staking`);
       const agDaiToken = await getAGTokenByName('agDAI');
@@ -92,7 +91,6 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
 
       console.log('#5 Booster and a basic boost pool');
       const boosterController = await deployMockRewardBooster([ac.address, agfToken.address]);
-      await ac.grantAnyRoles(boosterController.address, ACCESS_REWARD_MINT);
 
       // agDAI pool
       const agDAIPoolBoosted = await deployTokenWeightedRewardPoolAGBoosted(

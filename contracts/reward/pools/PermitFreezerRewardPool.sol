@@ -10,6 +10,13 @@ import './BasePermitRewardPool.sol';
 contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
   uint256 private _rewardLimit;
 
+  event RewardClaimedByPermit(
+    address indexed provider,
+    address indexed spender,
+    uint256 value,
+    uint256 nonce
+  );
+
   constructor(
     IRewardController controller,
     uint256 rewardLimit,
@@ -65,6 +72,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
       r,
       s
     );
+    emit RewardClaimedByPermit(provider, spender, value, currentValidNonce);
   }
 
   function internalCheckNonce(uint256 currentValidNonce, uint256 deadline)
