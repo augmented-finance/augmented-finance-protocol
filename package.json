@@ -92,6 +92,7 @@
     "eslint-plugin-prettier": "^3.4.0",
     "eth-sig-util": "2.5.3",
     "ethereum-waffle": "3.0.2",
+    "ethereumjs-abi": "0.6.8",
     "ethereumjs-util": "7.0.2",
     "ethers": "^5.1.0",
     "globby": "^11.0.1",
@@ -124,7 +125,6 @@
   "contributors": [],
   "license": "AGPL-3.0",
   "dependencies": {
-    "ethereumjs-abi": "^0.6.8",
     "node": "^16.6.1",
     "tmp-promise": "^3.0.2"
   },
