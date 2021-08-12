@@ -10,7 +10,7 @@ abstract contract BaseReferralRegistry is IReferralRegistry {
 
   uint32 private constant RESERVED_CODE = type(uint32).max;
 
-  function registerCustomCode(uint32 refCode, address to) public override {
+  function registerCustomCode(uint256 refCode, address to) public override {
     require(refCode > RESERVED_CODE, 'REF_CODE_RESERVED');
     internalRegisterCode(refCode, to);
   }
@@ -36,7 +36,7 @@ abstract contract BaseReferralRegistry is IReferralRegistry {
     return (uint256(keccak256(abi.encodePacked(addr))) << 32) | RESERVED_CODE;
   }
 
-  function delegateCodeTo(uint256 refCode, address to) public override {
+  function transferCodeTo(uint256 refCode, address to) public override {
     require(refCode != 0, 'REF_CODE_REQUIRED');
     require(to != address(0), 'OWNER_REQUIRED');
 
@@ -49,14 +49,15 @@ abstract contract BaseReferralRegistry is IReferralRegistry {
     emit RefCodeDelegated(refCode, msg.sender, to);
   }
 
-  function delegateDefaultCodeTo(address to) public override returns (uint256 refCode) {
-    require(to != address(0), 'OWNER_REQUIRED');
-    refCode = defaultCode(msg.sender);
-    require(refCode != 0, 'IMPOSSIBLE');
-
-    require(_delegations[refCode] == address(0) || _delegations[refCode] == msg.sender, 'REF_CODE_WRONG_OWNER');
-    _delegations[refCode] = to;
-    emit RefCodeDelegated(refCode, msg.sender, to);
+  function ownerOf(uint256 refCode) internal view returns (bool owned, address owner) {
+    if (refCode == 0) {
+      return (true, address(0));
+    }
+    owner = _delegations[refCode];
+    if (owner != address(0)) {
+      return (true, owner);
+    }
+    return (refCode & RESERVED_CODE == RESERVED_CODE, owner);
   }
 
   function timestampsOf(address owner, uint256[] calldata codes)

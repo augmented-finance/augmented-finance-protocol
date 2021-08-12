@@ -9,6 +9,7 @@ import '../../access/MarketAccessBitmask.sol';
 import './interfaces/IStakeConfigurator.sol';
 import './interfaces/IInitializableStakeToken.sol';
 import './interfaces/StakeTokenConfig.sol';
+import './interfaces/IManagedStakeToken.sol';
 import '../../tools/upgradeability/IProxy.sol';
 import '../../access/AccessFlags.sol';
 import '../../tools/upgradeability/ProxyAdmin.sol';
@@ -185,5 +186,15 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     _proxies.upgradeAndCall(IProxy(input.token), input.stakeTokenImpl, params);
 
     emit StakeTokenUpgraded(input.token, input);
+  }
+
+  function setCooldownForAll(uint32 cooldownPeriod, uint32 unstakePeriod)
+    external
+    override
+    aclHas(AccessFlags.STAKE_ADMIN)
+  {
+    for (uint256 i = 1; i <= _entryCount; i++) {
+      IManagedStakeToken(_entries[i]).setCooldown(cooldownPeriod, unstakePeriod);
+    }
   }
 }
