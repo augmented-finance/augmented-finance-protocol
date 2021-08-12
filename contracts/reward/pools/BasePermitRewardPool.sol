@@ -60,6 +60,11 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
     CLAIM_TYPEHASH = getClaimTypeHash();
   }
 
+  /// @dev returns nonce, to comply with eip-2612
+  function nonces(address addr) external view returns (uint256) {
+    return _nonces[addr];
+  }
+
   function getPoolName() public view override returns (string memory) {
     return _rewardPoolName;
   }

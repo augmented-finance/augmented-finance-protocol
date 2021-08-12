@@ -16,6 +16,11 @@ abstract contract PermitForERC20 {
     _initializeDomainSeparator();
   }
 
+  /// @dev returns nonce, to comply with eip-2612
+  function nonces(address addr) external view returns (uint256) {
+    return _nonces[addr];
+  }
+
   function _initializeDomainSeparator() internal {
     uint256 chainId;
 
