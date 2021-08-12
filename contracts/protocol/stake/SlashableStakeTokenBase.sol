@@ -297,7 +297,7 @@ abstract contract SlashableStakeTokenBase is
   function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod)
     external
     override
-    aclHas(AccessFlags.STAKE_ADMIN)
+    aclHas(AccessFlags.STAKE_ADMIN | AccessFlags.STAKE_CONFIGURATOR)
   {
     require(cooldownPeriod <= 52 weeks, Errors.STK_EXCESSIVE_COOLDOWN_PERIOD);
     require(unstakePeriod >= 1 hours && unstakePeriod <= 52 weeks, Errors.STK_WRONG_UNSTAKE_PERIOD);
