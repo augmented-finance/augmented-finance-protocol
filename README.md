@@ -76,7 +76,7 @@ Augmented Finance’s team has developed a world-class lending and borrowing pro
 
 ## Copyright (C) 2021 Augmented Finance.
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or any later version. Source projects under AGPL license v3 include: [Aave](https://github.com/aave) & [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts).
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or any later version. Source projects that were modified in 2021 under AGPL license v3 include: [Aave](https://github.com/aave) & [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts).
 
 ## More Questions?
 
