@@ -4,8 +4,8 @@ pragma solidity ^0.8.4;
 import '../../interfaces/IPriceOracleGetter.sol';
 
 contract MockPriceOracle is IPriceOracleGetter {
-  mapping(address => uint256) prices;
-  uint256 ethPriceUsd;
+  mapping(address => uint256) private prices;
+  uint256 private ethPriceUsd;
 
   event AssetPriceUpdated(address _asset, uint256 _price, uint256 timestamp);
   event EthPriceUpdated(uint256 _price, uint256 timestamp);

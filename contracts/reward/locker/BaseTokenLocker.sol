@@ -35,7 +35,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     uint128 rateDelta;
   }
   // Future points, indexed by point number (week number).
-  mapping(uint32 => Point) _pointTotal;
+  mapping(uint32 => Point) private _pointTotal;
 
   // Absolute limit of future points - 255 periods (weeks).
   uint32 private constant _maxDurationPoints = 255;
@@ -91,6 +91,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     _underlyingToken = IERC20(underlying);
   }
 
+  // solhint-disable-next-line func-name-mixedcase
   function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
     return address(_underlyingToken);
   }
@@ -113,8 +114,14 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     require(underlyingAmount > 0, 'ZERO_UNDERLYING');
     //    require(duration > 0, 'ZERO_DURATION');
 
-    (uint256 stakeAmount, uint256 recoverableError) =
-      internalLock(msg.sender, msg.sender, underlyingAmount, duration, referral, true);
+    (uint256 stakeAmount, uint256 recoverableError) = internalLock(
+      msg.sender,
+      msg.sender,
+      underlyingAmount,
+      duration,
+      referral,
+      true
+    );
 
     revertOnError(recoverableError);
     return stakeAmount;
@@ -127,8 +134,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
   function lockExtend(uint32 duration) external returns (uint256) {
     require(duration > 0, 'ZERO_DURATION');
 
-    (uint256 stakeAmount, uint256 recoverableError) =
-      internalLock(msg.sender, msg.sender, 0, duration, 0, false);
+    (uint256 stakeAmount, uint256 recoverableError) = internalLock(msg.sender, msg.sender, 0, duration, 0, false);
 
     revertOnError(recoverableError);
     return stakeAmount;
@@ -151,8 +157,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     require(underlyingAmount > 0, 'ZERO_UNDERLYING');
     require(_allowAdd[to][msg.sender], 'ADD_TO_LOCK_RESTRICTED');
 
-    (uint256 stakeAmount, uint256 recoverableError) =
-      internalLock(msg.sender, to, underlyingAmount, 0, 0, true);
+    (uint256 stakeAmount, uint256 recoverableError) = internalLock(msg.sender, to, underlyingAmount, 0, 0, true);
 
     revertOnError(recoverableError);
     return stakeAmount;
@@ -337,11 +342,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     return (underlying, _balances[account].endPoint * _pointPeriod);
   }
 
-  function expiryOf(address account)
-    internal
-    view
-    returns (uint32 lockedSince, uint32 availableSince)
-  {
+  function expiryOf(address account) internal view returns (uint32 lockedSince, uint32 availableSince) {
     return (_balances[account].startTS, _balances[account].endPoint * _pointPeriod);
   }
 
@@ -374,7 +375,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
     return userBalance.underlyingAmount;
   }
 
-  /// @dev Explicit call to applies all future-in-past points. Only useful to handle a situation when there were no state-changing calls for a long time.
+  /// @dev Applies all future-in-past points. Only useful to handle a situation when there were no state-changing calls for a long time.
   /// @param scanLimit defines a maximum number of points / updates to be processed at once.
   function update(uint256 scanLimit) public {
     internalUpdate(false, scanLimit);
@@ -432,8 +433,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
   /// @dev returns a total amount of lock tokens
   function totalSupply() public view override returns (uint256 totalSupply_) {
-    (uint32 fromPoint, uint32 tillPoint, ) =
-      getScanRange(uint32(block.timestamp / _pointPeriod), 0);
+    (uint32 fromPoint, uint32 tillPoint, ) = getScanRange(uint32(block.timestamp / _pointPeriod), 0);
 
     totalSupply_ = _stakedTotal;
 
@@ -449,12 +449,10 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
   }
 
   /// @param preventReentry when true will revert the call on re-entry, otherwise will exit immediately
-  /// @param scanLimit limits number of updates to be applied. Must be zero (=unlimited) for all internal oprations, otherwise the state will be inconsisten.
+  /// @param scanLimit limits number of updates to be applied.
+  /// ATTN! Must be zero (=unlimited) for all internal oprations, otherwise the state will be inconsisten.
   /// @return currentPoint (week number)
-  function internalUpdate(bool preventReentry, uint256 scanLimit)
-    internal
-    returns (uint32 currentPoint)
-  {
+  function internalUpdate(bool preventReentry, uint256 scanLimit) internal returns (uint32 currentPoint) {
     currentPoint = uint32(block.timestamp / _pointPeriod);
 
     if (_updateEntered) {
@@ -625,11 +623,7 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
   function getStakeBalance(address holder) internal view virtual returns (uint224 stakeAmount);
 
-  function convertLockedToUnderlying(uint256 lockedAmount, uint32 lockDuration)
-    public
-    view
-    returns (uint256)
-  {
+  function convertLockedToUnderlying(uint256 lockedAmount, uint32 lockDuration) public view returns (uint256) {
     this;
     if (lockDuration > _maxValuePeriod) {
       lockDuration = _maxValuePeriod;

@@ -15,11 +15,7 @@ library InterestMath {
    * @param lastUpdateTimestamp The timestamp of the last update of the interest
    * @return The interest rate linearly accumulated during the timeDelta, in ray
    **/
-  function calculateLinearInterest(uint256 rate, uint40 lastUpdateTimestamp)
-    internal
-    view
-    returns (uint256)
-  {
+  function calculateLinearInterest(uint256 rate, uint40 lastUpdateTimestamp) internal view returns (uint256) {
     return WadRayMath.RAY + (rate * (block.timestamp - lastUpdateTimestamp)) / SECONDS_PER_YEAR;
   }
 
@@ -40,7 +36,6 @@ library InterestMath {
     uint40 lastUpdateTimestamp,
     uint256 currentTimestamp
   ) internal pure returns (uint256) {
-    //solium-disable-next-line
     uint256 exp = currentTimestamp - lastUpdateTimestamp;
 
     if (exp == 0) {
@@ -66,11 +61,7 @@ library InterestMath {
    * @param rate The interest rate (in ray)
    * @param lastUpdateTimestamp The timestamp from which the interest accumulation needs to be calculated
    **/
-  function calculateCompoundedInterest(uint256 rate, uint40 lastUpdateTimestamp)
-    internal
-    view
-    returns (uint256)
-  {
+  function calculateCompoundedInterest(uint256 rate, uint40 lastUpdateTimestamp) internal view returns (uint256) {
     return calculateCompoundedInterest(rate, lastUpdateTimestamp, block.timestamp);
   }
 }

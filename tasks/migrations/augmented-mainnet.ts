@@ -97,9 +97,7 @@ task('augmented:mainnet', 'Deploy enviroment')
 
       renounce = true;
 
-      const [entryMap, instanceCount, multiCount] = printContracts(
-        (await getFirstSigner()).address
-      );
+      const [entryMap, instanceCount, multiCount] = printContracts((await getFirstSigner()).address);
 
       if (multiCount > 0) {
         throw 'multi-deployed contract(s) detected';
@@ -118,11 +116,7 @@ task('augmented:mainnet', 'Deploy enviroment')
       if (usingTenderly()) {
         console.error('Check tx error:', getTenderlyDashboardLink());
       }
-      console.error(
-        '\n=========================================================\nERROR:',
-        err,
-        '\n'
-      );
+      console.error('\n=========================================================\nERROR:', err, '\n');
     }
 
     if (renounce) {
@@ -154,6 +148,7 @@ task('augmented:mainnet', 'Deploy enviroment')
     }
 
     if (!success) {
+      console.log('\nDeployment has failed');
       exit(1);
     }
 
@@ -168,7 +163,7 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('- Fork', postDeployFork);
     }
 
-    console.log('\nFinished deployment');
+    console.log('\nDeployment has finished');
     //    await cleanupJsonDb(DRE.network.name);
 
     if (verify) {

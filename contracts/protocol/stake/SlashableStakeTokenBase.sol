@@ -64,6 +64,7 @@ abstract contract SlashableStakeTokenBase is
     }
   }
 
+  // solhint-disable-next-line func-name-mixedcase
   function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
     return address(_stakedToken);
   }
@@ -95,13 +96,7 @@ abstract contract SlashableStakeTokenBase is
     _mint(to, stakeAmount);
 
     if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(
-        address(this),
-        to,
-        oldReceiverBalance,
-        balanceOf(to),
-        totalSupply()
-      );
+      _incentivesController.handleBalanceUpdate(address(this), to, oldReceiverBalance, balanceOf(to), totalSupply());
     }
 
     emit Staked(from, to, underlyingAmount, referral);
@@ -113,11 +108,7 @@ abstract contract SlashableStakeTokenBase is
    * @param to Address to redeem to
    * @param stakeAmount Amount of stake to redeem
    **/
-  function redeem(address to, uint256 stakeAmount)
-    external
-    override
-    returns (uint256 stakeAmount_)
-  {
+  function redeem(address to, uint256 stakeAmount) external override returns (uint256 stakeAmount_) {
     require(stakeAmount > 0, Errors.VL_INVALID_AMOUNT);
     (stakeAmount_, ) = internalRedeem(msg.sender, to, stakeAmount, 0);
     return stakeAmount_;
@@ -188,13 +179,7 @@ abstract contract SlashableStakeTokenBase is
     }
 
     if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(
-        address(this),
-        from,
-        oldBalance,
-        balanceOf(from),
-        totalSupply()
-      );
+      _incentivesController.handleBalanceUpdate(address(this), from, oldBalance, balanceOf(from), totalSupply());
     }
 
     IERC20(_stakedToken).safeTransfer(to, underlyingAmount);
@@ -258,10 +243,7 @@ abstract contract SlashableStakeTokenBase is
     uint256 maxSlashable = super.totalSupply();
 
     if (underlyingBalance > maxSlashable) {
-      maxSlashable =
-        underlyingBalance -
-        maxSlashable +
-        maxSlashable.percentMul(_maxSlashablePercentage);
+      maxSlashable = underlyingBalance - maxSlashable + maxSlashable.percentMul(_maxSlashablePercentage);
     } else {
       maxSlashable = underlyingBalance.percentMul(_maxSlashablePercentage);
     }
@@ -284,21 +266,13 @@ abstract contract SlashableStakeTokenBase is
     return _maxSlashablePercentage;
   }
 
-  function setMaxSlashablePercentage(uint16 slashPct)
-    external
-    override
-    aclHas(AccessFlags.STAKE_ADMIN)
-  {
+  function setMaxSlashablePercentage(uint16 slashPct) external override aclHas(AccessFlags.STAKE_ADMIN) {
     require(slashPct <= PercentageMath.HALF_ONE, Errors.STK_EXCESSIVE_SLASH_PCT);
     _maxSlashablePercentage = slashPct;
     emit MaxSlashUpdated(slashPct);
   }
 
-  function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod)
-    external
-    override
-    aclHas(AccessFlags.STAKE_ADMIN)
-  {
+  function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod) external override aclHas(AccessFlags.STAKE_ADMIN) {
     require(cooldownPeriod <= 52 weeks, Errors.STK_EXCESSIVE_COOLDOWN_PERIOD);
     require(unstakePeriod >= 1 hours && unstakePeriod <= 52 weeks, Errors.STK_WRONG_UNSTAKE_PERIOD);
     _cooldownPeriod = cooldownPeriod;
@@ -310,11 +284,7 @@ abstract contract SlashableStakeTokenBase is
     return !_redeemPaused;
   }
 
-  function setRedeemable(bool redeemable)
-    external
-    override
-    aclHas(AccessFlags.LIQUIDITY_CONTROLLER)
-  {
+  function setRedeemable(bool redeemable) external override aclHas(AccessFlags.LIQUIDITY_CONTROLLER) {
     _redeemPaused = !redeemable;
     emit RedeemUpdated(redeemable);
   }
@@ -394,8 +364,7 @@ abstract contract SlashableStakeTokenBase is
       }
 
       toCooldownPeriod = uint32(
-        (amountToReceive * fromCooldownPeriod + toBalance * toCooldownPeriod) /
-          (amountToReceive + toBalance)
+        (amountToReceive * fromCooldownPeriod + toBalance * toCooldownPeriod) / (amountToReceive + toBalance)
       );
     }
     _stakersCooldowns[toAddress] = toCooldownPeriod;
@@ -403,11 +372,13 @@ abstract contract SlashableStakeTokenBase is
     return toCooldownPeriod;
   }
 
+  // solhint-disable-next-line func-name-mixedcase
   function COOLDOWN_PERIOD() external view returns (uint256) {
     return _cooldownPeriod;
   }
 
   /// @notice Seconds available to redeem once the cooldown period is fullfilled
+  // solhint-disable-next-line func-name-mixedcase
   function UNSTAKE_PERIOD() external view returns (uint256) {
     return _unstakePeriod;
   }

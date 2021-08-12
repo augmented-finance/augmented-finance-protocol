@@ -16,9 +16,9 @@ contract MockFlashLoanReceiver is FlashLoanReceiverBase {
   event ExecutedWithFail(address[] _assets, uint256[] _amounts, uint256[] _premiums);
   event ExecutedWithSuccess(address[] _assets, uint256[] _amounts, uint256[] _premiums);
 
-  bool _failExecution;
-  uint256 _amountToApprove;
-  bool _simulateEOA;
+  bool private _failExecution;
+  uint256 private _amountToApprove;
+  bool private _simulateEOA;
 
   constructor(IFlashLoanAddressProvider provider) FlashLoanReceiverBase(provider) {}
 
@@ -62,13 +62,9 @@ contract MockFlashLoanReceiver is FlashLoanReceiverBase {
       MintableERC20 token = MintableERC20(assets[i]);
 
       //check the contract has the specified balance
-      require(
-        amounts[i] <= IERC20(assets[i]).balanceOf(address(this)),
-        'Invalid balance for the contract'
-      );
+      require(amounts[i] <= IERC20(assets[i]).balanceOf(address(this)), 'Invalid balance for the contract');
 
-      uint256 amountToReturn =
-        (_amountToApprove != 0) ? _amountToApprove : amounts[i] + premiums[i];
+      uint256 amountToReturn = (_amountToApprove != 0) ? _amountToApprove : amounts[i] + premiums[i];
       //execution does not fail - mint tokens and return them to the _destination
 
       token.mint(premiums[i]);

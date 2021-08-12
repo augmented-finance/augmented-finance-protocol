@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+// solhint-disable no-inline-assembly, avoid-low-level-calls
+
 /**
  * @dev Collection of functions related to the address type
  */
@@ -34,8 +36,7 @@ library Address {
     return size > 0;
   }
 
-  bytes32 private constant accountHash =
-    0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
+  bytes32 private constant accountHash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
 
   function isExternallyOwned(address account) internal view returns (bool) {
     // According to EIP-1052, 0x0 is the value returned for not-yet created accounts
@@ -43,7 +44,6 @@ library Address {
     // for accounts without code, i.e. `keccak256('')`
     bytes32 codehash;
     uint256 size;
-    // solhint-disable-next-line no-inline-assembly
     assembly {
       codehash := extcodehash(account)
       size := extcodesize(account)
@@ -63,9 +63,7 @@ library Address {
    * https://diligence.consensys.net/posts/2019/09/stop-using-soliditys-transfer-now/[Learn more].
    *
    * IMPORTANT: because control is transferred to `recipient`, care must be
-   * taken to not create reentrancy vulnerabilities. Consider using
-   * {ReentrancyGuard} or the
-   * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
+   * taken to not create reentrancy vulnerabilities. Consider using {ReentrancyGuard}.
    */
   function sendValue(address payable recipient, uint256 amount) internal {
     require(address(this).balance >= amount, 'Address: insufficient balance');
@@ -83,8 +81,7 @@ library Address {
    * If `target` reverts with a revert reason, it is bubbled up by this
    * function (like regular Solidity function calls).
    *
-   * Returns the raw returned data. To convert to the expected return value,
-   * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
+   * Returns the raw returned data.
    *
    * Requirements:
    *
@@ -155,11 +152,7 @@ library Address {
    *
    * _Available since v3.3._
    */
-  function functionStaticCall(address target, bytes memory data)
-    internal
-    view
-    returns (bytes memory)
-  {
+  function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {
     return functionStaticCall(target, data, 'Address: low-level static call failed');
   }
 

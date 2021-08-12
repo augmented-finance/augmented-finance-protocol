@@ -10,6 +10,8 @@ library MulDiv {
   /// @param denominator The divisor
   /// @return result The 256-bit result
   /// @dev Credit to Remco Bloemen under MIT license https://xn--2-umb.com/21/muldiv
+
+  // solhint-disable no-inline-assembly
   function mulDiv(
     uint256 a,
     uint256 b,
@@ -39,10 +41,7 @@ library MulDiv {
 
     // Make sure the result is less than 2**256.
     // Also prevents denominator == 0
-    require(
-      denominator > prod1,
-      denominator == 0 ? Errors.MATH_DIVISION_BY_ZERO : Errors.MATH_MULTIPLICATION_OVERFLOW
-    );
+    require(denominator > prod1, denominator == 0 ? Errors.MATH_DIVISION_BY_ZERO : Errors.MATH_MULTIPLICATION_OVERFLOW);
 
     ///////////////////////////////////////////////
     // 512 by 256 division.
@@ -108,4 +107,5 @@ library MulDiv {
       return result;
     }
   }
+  // solhint-enable no-inline-assembly
 }

@@ -8,7 +8,7 @@ import '../access/interfaces/IMarketAccessController.sol';
 import '../interfaces/IPriceOracleGetter.sol';
 
 contract StaticPriceOracle is MarketAccessBitmask, IPriceOracleGetter {
-  mapping(address => uint256) prices;
+  mapping(address => uint256) private prices;
 
   constructor(
     IMarketAccessController remoteAcl,

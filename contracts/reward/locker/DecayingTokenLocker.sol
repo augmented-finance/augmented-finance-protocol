@@ -137,12 +137,11 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     // NB! Actually, total and balance for decay compensation should be taken before the update.
     // Not doing it will give more to a user who increases balance - so it is better.
 
-    (uint256 amount, uint32 since, AllocationMode mode) =
-      doUpdateReward(
-        holder,
-        0, /* doesn't matter */
-        stakeAmount
-      );
+    (uint256 amount, uint32 since, AllocationMode mode) = doUpdateReward(
+      holder,
+      0, /* doesn't matter */
+      stakeAmount
+    );
 
     amount = rewardForBalance(holder, stakeAmount, amount, since, uint32(block.timestamp));
     internalAllocateReward(holder, amount, since, mode);
@@ -216,11 +215,11 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     require(startTS <= since);
     require(current <= endTS);
     require(since <= current);
-    return
-      ((uint256(since - startTS) + (current - startTS)) * WadRayMath.halfRAY) / (endTS - startTS);
+    return ((uint256(since - startTS) + (current - startTS)) * WadRayMath.halfRAY) / (endTS - startTS);
   }
 
-  /// @notice Calculates an approximate decay compensation to equalize outcomes from multiple intermediate claims vs one final claim due to excess redistribution
+  /// @dev Calculates an approximate decay compensation to equalize outcomes from multiple intermediate claims vs
+  /// one final claim due to excess redistribution.
   /// @dev There is no checks as it is invoked only after calcDecayForReward
   /// @param startTS start of the decay interval (beginning of a lock)
   /// @param endTS start of the decay interval (ending of a lock)

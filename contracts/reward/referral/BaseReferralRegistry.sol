@@ -5,8 +5,8 @@ import '../../tools/Errors.sol';
 import '../interfaces/IReferralRegistry.sol';
 
 abstract contract BaseReferralRegistry is IReferralRegistry {
-  mapping(uint256 => address) _delegations;
-  mapping(uint256 => uint32) _timestamps;
+  mapping(uint256 => address) private _delegations;
+  mapping(uint256 => uint32) private _timestamps;
 
   uint32 private constant RESERVED_CODE = type(uint32).max;
 
@@ -54,10 +54,7 @@ abstract contract BaseReferralRegistry is IReferralRegistry {
     refCode = defaultCode(msg.sender);
     require(refCode != 0, 'IMPOSSIBLE');
 
-    require(
-      _delegations[refCode] == address(0) || _delegations[refCode] == msg.sender,
-      'REF_CODE_WRONG_OWNER'
-    );
+    require(_delegations[refCode] == address(0) || _delegations[refCode] == msg.sender, 'REF_CODE_WRONG_OWNER');
     _delegations[refCode] = to;
     emit RefCodeDelegated(refCode, msg.sender, to);
   }

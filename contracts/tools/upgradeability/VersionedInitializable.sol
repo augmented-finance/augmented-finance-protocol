@@ -99,10 +99,7 @@ abstract contract VersionedInitializable {
     if (lastInitializedRevision < IMPL_REVISION) {
       // normal initialization
       initializing = lastInitializingRevision > 0 && lastInitializedRevision < topRevision;
-      require(
-        initializing || isConstructor() || topRevision > lastInitializedRevision,
-        'already initialized'
-      );
+      require(initializing || isConstructor() || topRevision > lastInitializedRevision, 'already initialized');
     } else {
       // by default, initialization of implementation is only allowed inside a constructor
       require(lastInitializedRevision == IMPL_REVISION && isConstructor(), 'initializer blocked');
@@ -135,6 +132,7 @@ abstract contract VersionedInitializable {
     return lastInitializedRevision >= localRevision;
   }
 
+  // solhint-disable-next-line func-name-mixedcase
   function REVISION() public pure returns (uint256) {
     return getRevision();
   }
@@ -148,7 +146,7 @@ abstract contract VersionedInitializable {
   /// @dev Returns true if and only if the function is running in the constructor
   function isConstructor() private view returns (bool) {
     uint256 cs;
-    //solium-disable-next-line
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       cs := extcodesize(address())
     }
