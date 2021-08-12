@@ -78,7 +78,12 @@ abstract contract CalcLinearFreezer {
     return internalApplyAllocated(holder, allocated, since, uint32(block.timestamp));
   }
 
-  enum FrozenRewardState {NotRead, Read, Updated, Remove}
+  enum FrozenRewardState {
+    NotRead,
+    Read,
+    Updated,
+    Remove
+  }
 
   function internalCalcAllocated(
     address holder,
@@ -130,8 +135,7 @@ abstract contract CalcLinearFreezer {
         state = FrozenRewardState.Read;
 
         if (frozenReward > 0) {
-          uint256 unfrozen =
-            calcUnfrozen(frozenReward, _frozenRewards[holder].lastUpdatedAt, current);
+          uint256 unfrozen = calcUnfrozen(frozenReward, _frozenRewards[holder].lastUpdatedAt, current);
           if (unfrozen > 0) {
             amount += unfrozen;
             frozenReward -= unfrozen;
@@ -161,8 +165,13 @@ abstract contract CalcLinearFreezer {
   ) private returns (uint256, uint256) {
     uint256 frozenBefore = _frozenRewards[holder].frozenReward;
 
-    (uint256 amount, uint256 frozenReward, FrozenRewardState state) =
-      internalCalcAllocated(holder, allocated, since, current, false);
+    (uint256 amount, uint256 frozenReward, FrozenRewardState state) = internalCalcAllocated(
+      holder,
+      allocated,
+      since,
+      current,
+      false
+    );
 
     if (state == FrozenRewardState.Updated) {
       // was updated
@@ -206,13 +215,7 @@ abstract contract CalcLinearFreezer {
   ) internal view returns (uint256 claimableAmount, uint256 frozenReward) {
     uint256 frozenBefore = _frozenRewards[holder].frozenReward;
 
-    (claimableAmount, frozenReward, ) = internalCalcAllocated(
-      holder,
-      allocated,
-      since,
-      at,
-      incremental
-    );
+    (claimableAmount, frozenReward, ) = internalCalcAllocated(holder, allocated, since, at, incremental);
 
     if (frozenBefore < frozenReward) {
       frozenReward = frozenReward - frozenBefore;
@@ -221,5 +224,9 @@ abstract contract CalcLinearFreezer {
     }
 
     return (claimableAmount, frozenReward);
+  }
+
+  function internalGetFrozenReward(address holder) internal view returns (uint256) {
+    return _frozenRewards[holder].frozenReward;
   }
 }

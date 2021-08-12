@@ -142,23 +142,24 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return address(_controller);
   }
 
-  function claimRewardFor(address holder, uint256 limit)
-    external
-    override
-    onlyController
-    returns (uint256, uint32)
-  {
+  function claimRewardFor(address holder, uint256 limit) external override onlyController returns (uint256, uint32) {
     return internalGetReward(holder, limit);
   }
 
   function calcRewardFor(address holder, uint32 at)
     external
     view
+    virtual
     override
-    returns (uint256, uint32)
+    returns (
+      uint256 amount,
+      uint256,
+      uint32 since
+    )
   {
     require(at >= uint32(block.timestamp));
-    return internalCalcReward(holder, at);
+    (amount, since) = internalCalcReward(holder, at);
+    return (amount, 0, since);
   }
 
   function internalAllocateReward(
@@ -170,16 +171,9 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _controller.allocatedByPool(holder, allocated, since, mode);
   }
 
-  function internalGetReward(address holder, uint256 limit)
-    internal
-    virtual
-    returns (uint256, uint32);
+  function internalGetReward(address holder, uint256 limit) internal virtual returns (uint256, uint32);
 
-  function internalCalcReward(address holder, uint32 at)
-    internal
-    view
-    virtual
-    returns (uint256, uint32);
+  function internalCalcReward(address holder, uint32 at) internal view virtual returns (uint256, uint32);
 
   function attachedToRewardController() external override onlyController {
     internalAttachedToRewardController();
@@ -229,11 +223,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   function _onlyRefAdmin() private view {
     require(
-      AccessHelper.hasAnyOf(
-        _controller.getAccessController(),
-        msg.sender,
-        AccessFlags.REFERRAL_ADMIN
-      ),
+      AccessHelper.hasAnyOf(_controller.getAccessController(), msg.sender, AccessFlags.REFERRAL_ADMIN),
       'only referral admin is allowed'
     );
   }

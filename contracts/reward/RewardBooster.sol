@@ -14,12 +14,7 @@ import './autolock/AutolockBase.sol';
 import './interfaces/IAutolocker.sol';
 import './BaseRewardController.sol';
 
-contract RewardBooster is
-  IManagedRewardBooster,
-  IRewardExplainer,
-  BaseRewardController,
-  AutolockBase
-{
+contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardController, AutolockBase {
   using PercentageMath for uint256;
 
   mapping(address => uint32) private _boostFactor;
@@ -76,10 +71,7 @@ contract RewardBooster is
       return super.internalUpdateBaseline(baseline, baselineMask);
     }
 
-    (totalRate, baselineMask) = super.internalUpdateBaseline(
-      baseline,
-      baselineMask & ~_boostPoolMask
-    );
+    (totalRate, baselineMask) = super.internalUpdateBaseline(baseline, baselineMask & ~_boostPoolMask);
     if (totalRate < baseline) {
       IBoostRate(address(_boostPool)).setBoostRate(baseline - totalRate);
       totalRate = baseline;
@@ -128,10 +120,7 @@ contract RewardBooster is
     returns (uint256 claimableAmount, uint256)
   {
     uint256 boostLimit;
-    (claimableAmount, boostLimit) = (
-      _workRewards[holder].claimableReward,
-      _workRewards[holder].boostLimit
-    );
+    (claimableAmount, boostLimit) = (_workRewards[holder].claimableReward, _workRewards[holder].boostLimit);
 
     if (boostLimit > 0 || claimableAmount > 0) {
       delete (_workRewards[holder]);
@@ -188,12 +177,9 @@ contract RewardBooster is
     address holder,
     uint256 mask,
     uint32 at
-  ) internal view override returns (uint256 claimableAmount, uint256) {
+  ) internal view override returns (uint256 claimableAmount, uint256 delayedAmount) {
     uint256 boostLimit;
-    (claimableAmount, boostLimit) = (
-      _workRewards[holder].claimableReward,
-      _workRewards[holder].boostLimit
-    );
+    (claimableAmount, boostLimit) = (_workRewards[holder].claimableReward, _workRewards[holder].boostLimit);
 
     for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
       if (mask & 1 == 0) {
@@ -201,7 +187,8 @@ contract RewardBooster is
       }
 
       IManagedRewardPool pool = getPool(i);
-      (uint256 amount_, ) = pool.calcRewardFor(holder, at);
+      (uint256 amount_, uint256 extra_, ) = pool.calcRewardFor(holder, at);
+      delayedAmount += extra_;
       if (amount_ == 0) {
         continue;
       }
@@ -213,7 +200,8 @@ contract RewardBooster is
     uint256 boostAmount = _boostRewards[holder];
 
     if (_boostPool != IManagedRewardPool(address(0))) {
-      (uint256 boost_, ) = _boostPool.calcRewardFor(holder, at);
+      (uint256 boost_, uint256 extra_, ) = _boostPool.calcRewardFor(holder, at);
+      delayedAmount += extra_;
       boostAmount += boost_;
     }
 
@@ -223,7 +211,7 @@ contract RewardBooster is
       claimableAmount += boostLimit;
     }
 
-    return (claimableAmount, 0);
+    return (claimableAmount, delayedAmount);
   }
 
   function internalAllocatedByPool(
@@ -297,12 +285,7 @@ contract RewardBooster is
     return lockAmount;
   }
 
-  function explainReward(address holder, uint32 at)
-    external
-    view
-    override
-    returns (RewardExplained memory)
-  {
+  function explainReward(address holder, uint32 at) external view override returns (RewardExplained memory) {
     require(at >= uint32(block.timestamp));
     return internalExplainReward(holder, ~uint256(0), at);
   }
@@ -314,10 +297,7 @@ contract RewardBooster is
   ) internal view returns (RewardExplained memory r) {
     mask = getClaimMask(holder, mask) | _boostPoolMask;
 
-    (r.amountClaimable, r.boostLimit) = (
-      _workRewards[holder].claimableReward,
-      _workRewards[holder].boostLimit
-    );
+    (r.amountClaimable, r.boostLimit) = (_workRewards[holder].claimableReward, _workRewards[holder].boostLimit);
 
     uint256 n;
     for (uint256 mask_ = mask; mask_ != 0; mask_ >>= 1) {
@@ -335,7 +315,10 @@ contract RewardBooster is
 
       IManagedRewardPool pool = getPool(i);
       uint256 amount_;
-      (amount_, r.allocations[n].since) = pool.calcRewardFor(holder, at);
+      uint256 extra_;
+      (amount_, extra_, r.allocations[n].since) = pool.calcRewardFor(holder, at);
+      r.allocations[n].extra = extra_;
+      r.amountExtra += extra_;
 
       r.allocations[n].pool = address(pool);
       r.allocations[n].amount = amount_;
