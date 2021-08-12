@@ -86,9 +86,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   await addressProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN);
 
   //setting users[1] as emergency admin, which is in position 2 in the DRE addresses list
-  const addressList = await Promise.all(
-    (await (<any>DRE).ethers.getSigners()).map((signer) => signer.getAddress())
-  );
+  const addressList = await Promise.all((await (<any>DRE).ethers.getSigners()).map((signer) => signer.getAddress()));
 
   await addressProvider.grantRoles(<string>addressList[2], AccessFlags.EMERGENCY_ADMIN);
 
@@ -97,25 +95,17 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const lendingPoolImpl = await deployMockLendingPoolImpl();
 
-  await waitForTx(
-    await addressProvider.setAddressAsProxy(AccessFlags.LENDING_POOL, lendingPoolImpl.address)
-  );
+  await waitForTx(await addressProvider.setAddressAsProxy(AccessFlags.LENDING_POOL, lendingPoolImpl.address));
 
   const lendingPoolAddress = await addressProvider.getLendingPool();
   const lendingPoolProxy = await getLendingPoolProxy(lendingPoolAddress);
 
   const poolExtensionImpl = await deployLendingPoolExtensionImpl(false, false);
-  console.log(
-    '\tSetting lending pool collateral manager implementation with address',
-    poolExtensionImpl.address
-  );
+  console.log('\tSetting lending pool collateral manager implementation with address', poolExtensionImpl.address);
   await lendingPoolProxy.setLendingPoolExtension(poolExtensionImpl.address);
 
   const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(false, false);
-  await addressProvider.setAddressAsProxy(
-    AccessFlags.LENDING_POOL_CONFIGURATOR,
-    lendingPoolConfiguratorImpl.address
-  );
+  await addressProvider.setAddressAsProxy(AccessFlags.LENDING_POOL_CONFIGURATOR, lendingPoolConfiguratorImpl.address);
 
   const fallbackOracle = await deployMockPriceOracle();
 
@@ -173,11 +163,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const allReservesAddresses = {
     ...tokensAddressesWithoutUsd,
   };
-  await setInitialMarketRatesInRatesOracleByHelper(
-    LENDING_RATE_ORACLE_RATES,
-    allReservesAddresses,
-    lendingRateOracle
-  );
+  await setInitialMarketRatesInRatesOracleByHelper(LENDING_RATE_ORACLE_RATES, allReservesAddresses, lendingRateOracle);
 
   await addressProvider.setAddress(AccessFlags.PRICE_ORACLE, fallbackOracle.address);
   await addressProvider.setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle.address);
@@ -194,24 +180,10 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const treasuryImpl = await deployTreasuryImpl(false, false);
   await addressProvider.setAddressAsProxy(AccessFlags.TREASURY, treasuryImpl.address);
-  const treasuryAddress = await addressProvider.getAddress(AccessFlags.TREASURY);
 
-  await initReservesByHelper(
-    addressProvider,
-    reservesParams,
-    allReservesAddresses,
-    Names,
-    false,
-    treasuryAddress,
-    false
-  );
+  await initReservesByHelper(addressProvider, reservesParams, allReservesAddresses, Names, false, false);
 
-  await configureReservesByHelper(
-    addressProvider,
-    reservesParams,
-    allReservesAddresses,
-    testHelpers
-  );
+  await configureReservesByHelper(addressProvider, reservesParams, allReservesAddresses, testHelpers);
 
   await deployMockFlashLoanReceiver(addressProvider.address);
 

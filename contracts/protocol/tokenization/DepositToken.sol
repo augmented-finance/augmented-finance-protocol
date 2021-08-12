@@ -20,6 +20,7 @@ contract DepositToken is DepositTokenBase, VersionedInitializable {
     uint8 decimals,
     bytes calldata params
   ) external override initializerRunAlways(TOKEN_REVISION) {
+    require(config.treasury != address(0), Errors.VL_TREASURY_REQUIRED);
     _initializeERC20(name, symbol, decimals);
     if (!isRevisionInitialized(TOKEN_REVISION)) {
       _initializeDomainSeparator();

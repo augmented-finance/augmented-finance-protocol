@@ -10,7 +10,6 @@ interface ILendingPoolConfigurator {
     bool externalStrategy;
     address strategy;
     address underlyingAsset;
-    address treasury;
     string underlyingAssetName;
     string depositTokenName;
     string depositTokenSymbol;
@@ -23,7 +22,6 @@ interface ILendingPoolConfigurator {
 
   struct UpdatePoolTokenInput {
     address asset;
-    address treasury;
     string name;
     string symbol;
     address implementation;
@@ -70,21 +68,9 @@ interface ILendingPoolConfigurator {
   event ReserveFactorChanged(address indexed asset, uint256 factor);
   event ReserveStrategyChanged(address indexed asset, address strategy, bool isExternal);
 
-  event DepositTokenUpgraded(
-    address indexed asset,
-    address indexed proxy,
-    address indexed implementation
-  );
+  event DepositTokenUpgraded(address indexed asset, address indexed proxy, address indexed implementation);
 
-  event StableDebtTokenUpgraded(
-    address indexed asset,
-    address indexed proxy,
-    address indexed implementation
-  );
+  event StableDebtTokenUpgraded(address indexed asset, address indexed proxy, address indexed implementation);
 
-  event VariableDebtTokenUpgraded(
-    address indexed asset,
-    address indexed proxy,
-    address indexed implementation
-  );
+  event VariableDebtTokenUpgraded(address indexed asset, address indexed proxy, address indexed implementation);
 }

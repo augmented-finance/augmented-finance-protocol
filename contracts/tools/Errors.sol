@@ -81,7 +81,7 @@ library Errors {
   string public constant RC_INVALID_RESERVE_FACTOR = '71';
   string public constant LPAPR_INVALID_ADDRESSES_PROVIDER_ID = '72';
   string public constant VL_INCONSISTENT_FLASHLOAN_PARAMS = '73';
-
+  string public constant VL_TREASURY_REQUIRED = '74';
   string public constant LPC_INVALID_CONFIGURATION = '75'; // Invalid risk parameters for the reserve
   string public constant CALLER_NOT_EMERGENCY_ADMIN = '76'; // The caller must be the emergency admin
   string public constant UL_INVALID_INDEX = '77';
