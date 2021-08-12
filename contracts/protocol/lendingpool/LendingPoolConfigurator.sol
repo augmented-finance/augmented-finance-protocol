@@ -16,13 +16,15 @@ import '../libraries/configuration/ReserveConfiguration.sol';
 import '../libraries/types/DataTypes.sol';
 import '../tokenization/interfaces/IInitializablePoolToken.sol';
 import '../tokenization/interfaces/PoolTokenConfig.sol';
+import '../../interfaces/IEmergencyAccessReserve.sol';
 
 /// @dev Implements configuration methods for the LendingPool
 contract LendingPoolConfigurator is
   ProxyAdminBase,
   VersionedInitializable,
   MarketAccessBitmask(IMarketAccessController(address(0))),
-  ILendingPoolConfigurator
+  ILendingPoolConfigurator,
+  IEmergencyAccessReserve
 {
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -246,9 +248,7 @@ contract LendingPoolConfigurator is
 
   function enableReserveStableRate(address asset) external onlyPoolAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
-
     currentConfig.setStableRateBorrowingEnabled(true);
-
     pool.setConfiguration(asset, currentConfig.data);
 
     emit StableRateEnabledOnReserve(asset);
@@ -256,9 +256,7 @@ contract LendingPoolConfigurator is
 
   function disableReserveStableRate(address asset) external onlyPoolAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
-
     currentConfig.setStableRateBorrowingEnabled(false);
-
     pool.setConfiguration(asset, currentConfig.data);
 
     emit StableRateDisabledOnReserve(asset);
@@ -266,9 +264,7 @@ contract LendingPoolConfigurator is
 
   function activateReserve(address asset) external onlyPoolAdmin {
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
-
     currentConfig.setActive(true);
-
     pool.setConfiguration(asset, currentConfig.data);
 
     emit ReserveActivated(asset);
@@ -278,9 +274,7 @@ contract LendingPoolConfigurator is
     _checkNoLiquidity(asset);
 
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
-
     currentConfig.setActive(false);
-
     pool.setConfiguration(asset, currentConfig.data);
 
     emit ReserveDeactivated(asset);
@@ -289,23 +283,31 @@ contract LendingPoolConfigurator is
   /// @dev Freezes a reserve. A frozen reserve doesn't allow any new deposit, borrow or rate swap
   /// but allows repayments, liquidations, rate rebalances and withdrawals
   function freezeReserve(address asset) external onlyPoolAdmin {
-    DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
-
-    currentConfig.setFrozen(true);
-
-    pool.setConfiguration(asset, currentConfig.data);
-
-    emit ReserveFrozen(asset);
+    _setReserveFrozen(asset, true);
   }
 
   function unfreezeReserve(address asset) external onlyPoolAdmin {
+    _setReserveFrozen(asset, false);
+  }
+
+  function setReservePaused(address asset, bool val) external override onlyEmergencyAdmin {
+    _setReserveFrozen(asset, val);
+  }
+
+  function isReservePaused(address asset) external view override returns (bool) {
+    return pool.getConfiguration(asset).getFrozenMemory();
+  }
+
+  function _setReserveFrozen(address asset, bool val) private {
     DataTypes.ReserveConfigurationMap memory currentConfig = pool.getConfiguration(asset);
-
-    currentConfig.setFrozen(false);
-
+    currentConfig.setFrozen(val);
     pool.setConfiguration(asset, currentConfig.data);
 
-    emit ReserveUnfrozen(asset);
+    if (val) {
+      emit ReserveFrozen(asset);
+    } else {
+      emit ReserveUnfrozen(asset);
+    }
   }
 
   function setReserveFactor(address asset, uint256 reserveFactor) public onlyPoolAdmin {

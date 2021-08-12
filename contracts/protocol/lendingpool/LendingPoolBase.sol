@@ -20,8 +20,7 @@ abstract contract LendingPoolBase is LendingPoolStorage {
   }
 
   function _onlyLendingPoolConfigurator() private view {
-    require(
-      _addressesProvider.hasAnyOf(msg.sender, AccessFlags.LENDING_POOL_CONFIGURATOR),
+    _addressesProvider.requireAnyOf(msg.sender, AccessFlags.LENDING_POOL_CONFIGURATOR,
       Errors.LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR
     );
   }
@@ -33,11 +32,9 @@ abstract contract LendingPoolBase is LendingPoolStorage {
   }
 
   function _onlyConfiguratorOrAdmin() private view {
-    require(
-      _addressesProvider.hasAnyOf(
-        msg.sender,
-        AccessFlags.POOL_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR
-      ),
+    _addressesProvider.requireAnyOf(
+      msg.sender,
+      AccessFlags.POOL_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR,
       Errors.CALLER_NOT_POOL_ADMIN
     );
   }

@@ -23,6 +23,7 @@ library Errors {
   string public constant VL_INVALID_AMOUNT = '1'; // Amount must be greater than 0
   string public constant VL_NO_ACTIVE_RESERVE = '2'; // Action requires an active reserve
   string public constant VL_RESERVE_FROZEN = '3'; // Action cannot be performed because the reserve is frozen
+  string public constant VL_UNKNOWN_RESERVE = '4'; // Action requires an active reserve
 
   string public constant VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE = '5'; // User cannot withdraw more than the available balance
   string public constant VL_TRANSFER_NOT_ALLOWED = '6'; // Transfer cannot be allowed.

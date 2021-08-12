@@ -358,11 +358,9 @@ contract LendingPoolExtension is
   ) external override {
     // whenNotPaused is NOT applied as the pool can be paused by the liquidity manager
     // _checkUntrustedFlashloan() is NOT applied to allow any lending pool operations from the receiver
-    require(
-      _addressesProvider.hasAnyOf(
-        msg.sender,
-        AccessFlags.TRUSTED_FLASHLOAN | AccessFlags.LIQUIDITY_CONTROLLER
-      ),
+    _addressesProvider.requireAnyOf(
+      msg.sender,
+      AccessFlags.TRUSTED_FLASHLOAN | AccessFlags.LIQUIDITY_CONTROLLER,
       Errors.LP_IS_NOT_TRUSTED_FLASHLOAN
     );
     require(_flashloanCalls < type(uint8).max, Errors.LP_TOO_MANY_FLASHLOAN_CALLS);
@@ -640,8 +638,13 @@ contract LendingPoolExtension is
     address strategy,
     bool isExternal
   ) external override onlyLendingPoolConfigurator {
+    _checkReserve(asset);
     _reserves[asset].strategy = strategy;
     _reserves[asset].configuration.setExternalStrategy(isExternal);
+  }
+
+  function _checkReserve(address asset) private view {
+    require(_reserves[asset].depositTokenAddress != address(0), Errors.VL_UNKNOWN_RESERVE);
   }
 
   function setConfiguration(address asset, uint256 configuration)
@@ -649,15 +652,12 @@ contract LendingPoolExtension is
     override
     onlyLendingPoolConfigurator
   {
+    _checkReserve(asset);
     _reserves[asset].configuration.data = configuration;
   }
 
   function setPaused(bool val) external override {
-    require(
-      _addressesProvider.hasAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN),
-      Errors.CALLER_NOT_EMERGENCY_ADMIN
-    );
-
+    _addressesProvider.requireAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN, Errors.CALLER_NOT_EMERGENCY_ADMIN);
     _paused = val;
     emit EmergencyPaused(msg.sender, val);
   }

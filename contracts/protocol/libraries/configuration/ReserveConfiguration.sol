@@ -21,12 +21,7 @@ library ReserveConfiguration {
   uint256 private constant LIQUIDATION_THRESHOLD_START_BIT_POSITION = 16;
   uint256 private constant LIQUIDATION_BONUS_START_BIT_POSITION = 32;
   uint256 private constant RESERVE_DECIMALS_START_BIT_POSITION = 48;
-  uint256 private constant IS_ACTIVE_START_BIT_POSITION = 56;
-  uint256 private constant IS_FROZEN_START_BIT_POSITION = 57;
-  uint256 private constant BORROWING_ENABLED_START_BIT_POSITION = 58;
-  uint256 private constant STABLE_BORROWING_ENABLED_START_BIT_POSITION = 59;
   uint256 private constant RESERVE_FACTOR_START_BIT_POSITION = 64;
-  uint256 private constant STRATEGY_TYPE_START_BIT_POSITION = 80;
 
   uint256 private constant MAX_VALID_LTV = 65535;
   uint256 private constant MAX_VALID_LIQUIDATION_THRESHOLD = 65535;
@@ -80,8 +75,20 @@ library ReserveConfiguration {
     return uint8((self.data & ~DECIMALS_MASK) >> RESERVE_DECIMALS_START_BIT_POSITION);
   }
 
+  function _setFlag(
+    DataTypes.ReserveConfigurationMap memory self,
+    uint256 mask,
+    bool value
+  ) internal pure {
+    if (value) {
+      self.data |= ~mask;
+    } else {
+      self.data &= mask;
+    }
+  }
+
   function setActive(DataTypes.ReserveConfigurationMap memory self, bool active) internal pure {
-    self.data = (self.data & ACTIVE_MASK) | (uint256(active ? 1 : 0) << IS_ACTIVE_START_BIT_POSITION);
+    _setFlag(self, ACTIVE_MASK, active);
   }
 
   function getActive(DataTypes.ReserveConfigurationMap storage self) internal view returns (bool) {
@@ -89,15 +96,19 @@ library ReserveConfiguration {
   }
 
   function setFrozen(DataTypes.ReserveConfigurationMap memory self, bool frozen) internal pure {
-    self.data = (self.data & FROZEN_MASK) | (uint256(frozen ? 1 : 0) << IS_FROZEN_START_BIT_POSITION);
+    _setFlag(self, FROZEN_MASK, frozen);
   }
 
   function getFrozen(DataTypes.ReserveConfigurationMap storage self) internal view returns (bool) {
     return (self.data & ~FROZEN_MASK) != 0;
   }
 
+  function getFrozenMemory(DataTypes.ReserveConfigurationMap memory self) internal pure returns (bool) {
+    return (self.data & ~FROZEN_MASK) != 0;
+  }
+
   function setBorrowingEnabled(DataTypes.ReserveConfigurationMap memory self, bool enabled) internal pure {
-    self.data = (self.data & BORROWING_MASK) | (uint256(enabled ? 1 : 0) << BORROWING_ENABLED_START_BIT_POSITION);
+    _setFlag(self, BORROWING_MASK, enabled);
   }
 
   function getBorrowingEnabled(DataTypes.ReserveConfigurationMap storage self) internal view returns (bool) {
@@ -105,9 +116,7 @@ library ReserveConfiguration {
   }
 
   function setStableRateBorrowingEnabled(DataTypes.ReserveConfigurationMap memory self, bool enabled) internal pure {
-    self.data =
-      (self.data & STABLE_BORROWING_MASK) |
-      (uint256(enabled ? 1 : 0) << STABLE_BORROWING_ENABLED_START_BIT_POSITION);
+    _setFlag(self, STABLE_BORROWING_MASK, enabled);
   }
 
   function getStableRateBorrowingEnabled(DataTypes.ReserveConfigurationMap storage self) internal view returns (bool) {
