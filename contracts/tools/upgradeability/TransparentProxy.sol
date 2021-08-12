@@ -7,7 +7,7 @@ import './IProxy.sol';
 
 /// @dev This contract is a transparent upgradeability proxy with admin. The admin role is immutable.
 contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
-  address internal immutable ADMIN;
+  address internal immutable _admin;
 
   constructor(
     address admin,
@@ -15,12 +15,12 @@ contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
     bytes memory data
   ) {
     require(admin != address(0));
-    ADMIN = admin;
+    _admin = admin;
     initialize(logic, data);
   }
 
   modifier ifAdmin() {
-    if (msg.sender == ADMIN) {
+    if (msg.sender == _admin) {
       _;
     } else {
       _fallback();
@@ -40,7 +40,7 @@ contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
 
   /// @dev Only fall back when the sender is not the admin.
   function _willFallback() internal virtual override {
-    require(msg.sender != ADMIN, 'Cannot call fallback function from the proxy admin');
+    require(msg.sender != _admin, 'Cannot call fallback function from the proxy admin');
     super._willFallback();
   }
 

@@ -25,6 +25,7 @@ contract OracleRouter is IPriceOracleGetter, MarketAccessBitmask {
 
   mapping(address => IChainlinkAggregator) private assetsSources;
   IPriceOracleGetter private _fallbackOracle;
+  // solhint-disable-next-line var-name-mixedcase
   address public immutable WETH;
 
   /// @notice Constructor

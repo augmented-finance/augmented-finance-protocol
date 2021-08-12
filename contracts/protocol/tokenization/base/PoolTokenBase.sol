@@ -61,7 +61,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     require(msg.sender == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
   }
 
-  modifier onlyLendingPool {
+  modifier onlyLendingPool() {
     _onlyLendingPool();
     _;
   }
@@ -77,7 +77,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     );
   }
 
-  modifier onlyRewardConfiguratorOrAdmin {
+  modifier onlyRewardConfiguratorOrAdmin() {
     _onlyRewardConfiguratorOrAdmin();
     _;
   }
@@ -103,10 +103,12 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     );
   }
 
+  // solhint-disable-next-line func-name-mixedcase
   function UNDERLYING_ASSET_ADDRESS() public view override returns (address) {
     return _underlyingAsset;
   }
 
+  // solhint-disable-next-line func-name-mixedcase
   function POOL() public view override returns (address) {
     return address(_pool);
   }
@@ -135,14 +137,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     if (hook == IBalanceHook(address(0))) {
       return;
     }
-    hook.handleScaledBalanceUpdate(
-      getIncentivesToken(),
-      holder,
-      oldBalance,
-      newBalance,
-      providerSupply,
-      scale
-    );
+    hook.handleScaledBalanceUpdate(getIncentivesToken(), holder, oldBalance, newBalance, providerSupply, scale);
   }
 
   function getIncentivesToken() internal view virtual returns (address) {
@@ -200,8 +195,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     _totalSupply = total;
 
     uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance =
-      SafeMath.sub(oldAccountBalance, amount, 'ERC20: burn amount exceeds balance');
+    uint256 newAccountBalance = SafeMath.sub(oldAccountBalance, amount, 'ERC20: burn amount exceeds balance');
     _balances[account] = newAccountBalance;
 
     handleScaledBalanceUpdate(account, oldAccountBalance, newAccountBalance, total, scale);
@@ -219,8 +213,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     _beforeTokenTransfer(sender, recipient, amount);
 
     uint256 oldSenderBalance = _balances[sender];
-    uint256 newSenderBalance =
-      SafeMath.sub(oldSenderBalance, amount, 'ERC20: transfer amount exceeds balance');
+    uint256 newSenderBalance = SafeMath.sub(oldSenderBalance, amount, 'ERC20: transfer amount exceeds balance');
     _balances[sender] = newSenderBalance;
 
     uint256 oldRecipientBalance = _balances[recipient];
@@ -232,14 +225,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
       address token = getIncentivesToken();
       uint256 currentTotalSupply = _totalSupply;
 
-      hook.handleScaledBalanceUpdate(
-        token,
-        sender,
-        oldSenderBalance,
-        newSenderBalance,
-        currentTotalSupply,
-        scale
-      );
+      hook.handleScaledBalanceUpdate(token, sender, oldSenderBalance, newSenderBalance, currentTotalSupply, scale);
 
       if (sender != recipient) {
         hook.handleScaledBalanceUpdate(

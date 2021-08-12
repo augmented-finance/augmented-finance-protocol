@@ -29,7 +29,7 @@ contract RewardConfigurator is
   }
 
   ProxyAdmin internal immutable _proxies;
-  mapping(string => address) _namedPools;
+  mapping(string => address) private _namedPools;
 
   constructor() {
     _proxies = new ProxyAdmin();
@@ -69,17 +69,19 @@ contract RewardConfigurator is
     for (uint256 i = 0; i < entries.length; i++) {
       PoolInitData calldata entry = entries[i];
 
-      IInitializableRewardPool.InitData memory params =
-        IInitializableRewardPool.InitData(ctl, entry.poolName, entry.baselinePercentage);
+      IInitializableRewardPool.InitData memory params = IInitializableRewardPool.InitData(
+        ctl,
+        entry.poolName,
+        entry.baselinePercentage
+      );
 
-      address pool =
-        address(
-          _remoteAcl.createProxy(
-            address(_proxies),
-            entry.impl,
-            abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
-          )
-        );
+      address pool = address(
+        _remoteAcl.createProxy(
+          address(_proxies),
+          entry.impl,
+          abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
+        )
+      );
 
       ctl.addRewardPool(IManagedRewardPool(pool));
 
@@ -119,11 +121,7 @@ contract RewardConfigurator is
     }
   }
 
-  function getNamedRewardPools(string[] calldata names)
-    external
-    view
-    returns (address[] memory pools)
-  {
+  function getNamedRewardPools(string[] calldata names) external view returns (address[] memory pools) {
     pools = new address[](names.length);
     for (uint256 i = 0; i < names.length; i++) {
       pools[i] = _namedPools[names[i]];
@@ -136,8 +134,7 @@ contract RewardConfigurator is
   }
 
   function updateRewardPool(PoolUpdateData calldata input) external onlyRewardAdmin {
-    IInitializableRewardPool.InitData memory params =
-      IInitializableRewardPool(input.pool).initializedWith();
+    IInitializableRewardPool.InitData memory params = IInitializableRewardPool(input.pool).initializedWith();
     _proxies.upgradeAndCall(
       IProxy(input.pool),
       input.impl,
@@ -151,8 +148,11 @@ contract RewardConfigurator is
     view
     returns (bytes memory)
   {
-    IInitializableRewardPool.InitData memory data =
-      IInitializableRewardPool.InitData(getDefaultController(), poolName, baselinePercentage);
+    IInitializableRewardPool.InitData memory data = IInitializableRewardPool.InitData(
+      getDefaultController(),
+      poolName,
+      baselinePercentage
+    );
     return abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, data);
   }
 
@@ -161,8 +161,12 @@ contract RewardConfigurator is
     string calldata symbol,
     uint8 decimals
   ) external view returns (bytes memory) {
-    IInitializableRewardToken.InitData memory data =
-      IInitializableRewardToken.InitData(_remoteAcl, name, symbol, decimals);
+    IInitializableRewardToken.InitData memory data = IInitializableRewardToken.InitData(
+      _remoteAcl,
+      name,
+      symbol,
+      decimals
+    );
     return abi.encodeWithSelector(IInitializableRewardToken.initialize.selector, data);
   }
 

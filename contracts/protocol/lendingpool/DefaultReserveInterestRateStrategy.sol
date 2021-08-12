@@ -22,6 +22,7 @@ contract DefaultReserveInterestRateStrategy is IReserveStrategy {
    * @dev this constant represents the utilization rate at which the pool aims to obtain most competitive borrow rates.
    * Expressed in ray
    **/
+  // solhint-disable-next-line var-name-mixedcase
   uint256 public immutable OPTIMAL_UTILIZATION_RATE;
 
   /**
@@ -29,7 +30,7 @@ contract DefaultReserveInterestRateStrategy is IReserveStrategy {
    * 1-optimal utilization rate. Added as a constant here for gas optimizations.
    * Expressed in ray
    **/
-
+  // solhint-disable-next-line var-name-mixedcase
   uint256 public immutable EXCESS_UTILIZATION_RATE;
 
   IPriceOracleProvider public immutable addressesProvider;
@@ -179,16 +180,16 @@ contract DefaultReserveInterestRateStrategy is IReserveStrategy {
     vars.currentStableBorrowRate = 0;
     vars.currentLiquidityRate = 0;
 
-    vars.utilizationRate = vars.totalDebt == 0
-      ? 0
-      : vars.totalDebt.rayDiv(availableLiquidity + vars.totalDebt);
+    vars.utilizationRate = vars.totalDebt == 0 ? 0 : vars.totalDebt.rayDiv(availableLiquidity + vars.totalDebt);
 
-    vars.currentStableBorrowRate = ILendingRateOracle(addressesProvider.getLendingRateOracle())
-      .getMarketBorrowRate(reserve);
+    vars.currentStableBorrowRate = ILendingRateOracle(addressesProvider.getLendingRateOracle()).getMarketBorrowRate(
+      reserve
+    );
 
     if (vars.utilizationRate > OPTIMAL_UTILIZATION_RATE) {
-      uint256 excessUtilizationRateRatio =
-        (vars.utilizationRate - OPTIMAL_UTILIZATION_RATE).rayDiv(EXCESS_UTILIZATION_RATE);
+      uint256 excessUtilizationRateRatio = (vars.utilizationRate - OPTIMAL_UTILIZATION_RATE).rayDiv(
+        EXCESS_UTILIZATION_RATE
+      );
 
       vars.currentStableBorrowRate =
         vars.currentStableBorrowRate +
@@ -211,18 +212,11 @@ contract DefaultReserveInterestRateStrategy is IReserveStrategy {
     vars.currentLiquidityRate = _getOverallBorrowRate(
       totalStableDebt,
       totalVariableDebt,
-      vars
-        .currentVariableBorrowRate,
+      vars.currentVariableBorrowRate,
       averageStableBorrowRate
-    )
-      .rayMul(vars.utilizationRate)
-      .percentMul(PercentageMath.ONE - reserveFactor);
+    ).rayMul(vars.utilizationRate).percentMul(PercentageMath.ONE - reserveFactor);
 
-    return (
-      vars.currentLiquidityRate,
-      vars.currentStableBorrowRate,
-      vars.currentVariableBorrowRate
-    );
+    return (vars.currentLiquidityRate, vars.currentStableBorrowRate, vars.currentVariableBorrowRate);
   }
 
   /**
@@ -246,8 +240,7 @@ contract DefaultReserveInterestRateStrategy is IReserveStrategy {
     uint256 weightedVariableRate = totalVariableDebt.wadToRay().rayMul(currentVariableBorrowRate);
     uint256 weightedStableRate = totalStableDebt.wadToRay().rayMul(currentAverageStableBorrowRate);
 
-    uint256 overallBorrowRate =
-      (weightedVariableRate + weightedStableRate).rayDiv(totalDebt.wadToRay());
+    uint256 overallBorrowRate = (weightedVariableRate + weightedStableRate).rayDiv(totalDebt.wadToRay());
 
     return overallBorrowRate;
   }

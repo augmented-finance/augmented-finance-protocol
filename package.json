@@ -13,7 +13,8 @@
     "build:package": "rm -rf ./dist && tsc && cp types/*.d.ts dist/types && cp -R abi dist && cp -R contracts dist",
     "ci:test": "npm run compile && npm run test",
     "ci:clean": "rm -rf ./artifacts ./cache ./types ./dist",
-
+    "eslint": "eslint . --ext .ts",
+    "solhint": "solhint 'contracts/**/*.sol'",
     "console:fork": "MAINNET_FORK=true hardhat console",
     "hardhat": "hardhat",
     "hardhat:kovan": "hardhat --network kovan",
@@ -41,7 +42,6 @@
     "test-uniswap": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented-uniswap/*.spec.ts",
     "test-upgradeability": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/upgradeability.spec.ts",
     "test-access": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/access.spec.ts",
-
     "test-stake": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-stake/stake.spec.ts",
     "test-boost": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-stake/stake_boost.spec.ts",
     "test-utils": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-libs/math_libs.spec.ts",
@@ -54,28 +54,20 @@
     "test-pausable-augmented": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/pausable-augmented.spec.ts",
     "test-reward-rates": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/reward_rates.spec.ts",
     "test-compatibility": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/compatibility.spec.ts",
-
     "test:main:check-list": "MAINNET_FORK=true TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/mainnet/check-list.spec.ts",
-
     "coverage": "TS_NODE_TRANSPILE_ONLY=1 hardhat compile --force && TS_NODE_TRANSPILE_ONLY=1 hardhat coverage --network coverage --testfiles \"test-suites/test-augmented/*.spec.ts\"",
-
     "test-deploy:fork": "MAINNET_FORK=true hardhat augmented:mainnet",
     "test-deploy:fork:test-incremental": "MAINNET_FORK=true hardhat augmented:test-incremental",
-
     "deploy:main:fork": "npm run compile && MAINNET_FORK=true hardhat augmented:mainnet",
     "deploy:main:fork:tenderly": "npm run compile && npm run hardhat:tenderly-main -- augmented:mainnet --verify",
     "deploy:ropsten": "npm run compile && npm run hardhat:ropsten -- augmented:mainnet --verify",
     "deploy:kovan": "npm run compile && npm run hardhat:kovan -- augmented:mainnet --verify",
-
     "verify:ropsten": "npm run hardhat:ropsten -- verify:verify-all-contracts",
     "verify:kovan": "npm run hardhat:kovan -- verify:verify-all-contracts",
-
     "prettier:check": "npx prettier -c 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'",
     "prettier:write": "prettier --write 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'",
-
     "todo:main:deployUniswapRepayAdapter": "hardhat --network main deploy-UniswapRepayAdapter --provider 0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5 --router 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D --weth 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     "todo:main:UniswapLiquiditySwapAdapter": "hardhat --network main deploy-UniswapLiquiditySwapAdapter  --provider 0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5 --router 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D --weth 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-
     "todo:deploy:kovan:asset": "npm run compile && hardhat --network kovan external:deploy-new-asset --symbol ${SYMBOL} --verify"
   },
   "devDependencies": {
@@ -89,12 +81,18 @@
     "@types/lowdb": "1.0.9",
     "@types/mocha": "7.0.2",
     "@types/node": "14.0.5",
+    "@typescript-eslint/eslint-plugin": "^4.25.0",
+    "@typescript-eslint/parser": "^4.25.0",
     "bignumber.js": "9.0.0",
     "chai": "4.2.0",
     "chai-bignumber": "3.0.0",
     "dotenv": "^8.2.0",
+    "eslint": "^7.27.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
     "eth-sig-util": "2.5.3",
     "ethereum-waffle": "3.0.2",
+    "ethereumjs-abi": "0.6.8",
     "ethereumjs-util": "7.0.2",
     "ethers": "^5.1.0",
     "globby": "^11.0.1",
@@ -107,14 +105,13 @@
     "lowdb": "1.0.0",
     "moment": "^2.29.1",
     "prettier": "^2.0.5",
-    "prettier-plugin-solidity": "^1.0.0-alpha.53",
-    "pretty-quick": "^2.0.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.11",
+    "pretty-quick": "^3.1.0",
+    "solhint": "^3.3.6",
+    "solhint-plugin-prettier": "^0.0.5",
     "solidity-coverage": "0.7.16",
     "ts-generator": "^0.1.1",
     "ts-node": "^8.10.2",
-    "tslint": "^6.1.2",
-    "tslint-config-prettier": "^1.18.0",
-    "tslint-plugin-prettier": "^2.3.0",
     "typechain": "^4.0.3",
     "typescript": "^4.0.5",
     "underscore": "^1.13.1"
@@ -132,7 +129,7 @@
   },
   "keywords": [
     "agf",
-    "protocol-v1",
+    "DeFi",
     "ethereum",
     "solidity"
   ],

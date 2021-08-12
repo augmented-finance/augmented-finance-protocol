@@ -8,8 +8,8 @@ import '../access/AccessFlags.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 
 contract LendingRateOracle is ILendingRateOracle, IManagedLendingRateOracle, MarketAccessBitmask {
-  mapping(address => uint256) borrowRates;
-  mapping(address => uint256) liquidityRates;
+  mapping(address => uint256) private borrowRates;
+  mapping(address => uint256) private liquidityRates;
 
   constructor(IMarketAccessController remoteAcl) MarketAccessBitmask(remoteAcl) {}
 
@@ -17,11 +17,7 @@ contract LendingRateOracle is ILendingRateOracle, IManagedLendingRateOracle, Mar
     return borrowRates[_asset];
   }
 
-  function setMarketBorrowRate(address _asset, uint256 _rate)
-    external
-    override
-    aclHas(AccessFlags.LENDING_RATE_ADMIN)
-  {
+  function setMarketBorrowRate(address _asset, uint256 _rate) external override aclHas(AccessFlags.LENDING_RATE_ADMIN) {
     borrowRates[_asset] = _rate;
   }
 
@@ -41,10 +37,7 @@ contract LendingRateOracle is ILendingRateOracle, IManagedLendingRateOracle, Mar
     return liquidityRates[_asset];
   }
 
-  function setMarketLiquidityRate(address _asset, uint256 _rate)
-    external
-    aclHas(AccessFlags.LENDING_RATE_ADMIN)
-  {
+  function setMarketLiquidityRate(address _asset, uint256 _rate) external aclHas(AccessFlags.LENDING_RATE_ADMIN) {
     liquidityRates[_asset] = _rate;
   }
 }

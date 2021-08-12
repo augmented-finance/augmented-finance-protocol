@@ -5,6 +5,7 @@ import '../interfaces/IFlashLoanReceiver.sol';
 import '../../interfaces/IFlashLoanAddressProvider.sol';
 import '../../interfaces/ILendingPool.sol';
 
+// solhint-disable var-name-mixedcase
 abstract contract FlashLoanReceiverBase is IFlashLoanReceiver {
   IFlashLoanAddressProvider public immutable override ADDRESSES_PROVIDER;
   ILendingPool public immutable override LENDING_POOL;

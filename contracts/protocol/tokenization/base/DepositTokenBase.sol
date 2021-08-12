@@ -11,25 +11,14 @@ import '../../../misc/PermitForERC20.sol';
 import './PoolTokenBase.sol';
 
 /// @dev Implementation of the interest bearing token for the Augmented Finance protocol
-abstract contract DepositTokenBase is
-  PoolTokenBase('', '', 0),
-  PermitForERC20,
-  ERC20Events,
-  IDepositToken
-{
+abstract contract DepositTokenBase is PoolTokenBase('', '', 0), PermitForERC20, ERC20Events, IDepositToken {
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
   mapping(address => mapping(address => uint256)) private _allowances;
   address internal _treasury;
 
-  function allowance(address owner, address spender)
-    public
-    view
-    virtual
-    override
-    returns (uint256)
-  {
+  function allowance(address owner, address spender) public view virtual override returns (uint256) {
     return _allowances[owner][spender];
   }
 
@@ -47,11 +36,7 @@ abstract contract DepositTokenBase is
     _approve(
       msg.sender,
       spender,
-      SafeMath.sub(
-        _allowances[msg.sender][spender],
-        subtractedValue,
-        'ERC20: decreased allowance below zero'
-      )
+      SafeMath.sub(_allowances[msg.sender][spender], subtractedValue, 'ERC20: decreased allowance below zero')
     );
     return true;
   }
@@ -131,12 +116,7 @@ abstract contract DepositTokenBase is
     return super.balanceOf(user);
   }
 
-  function getScaledUserBalanceAndSupply(address user)
-    external
-    view
-    override
-    returns (uint256, uint256)
-  {
+  function getScaledUserBalanceAndSupply(address user) external view override returns (uint256, uint256) {
     return (super.balanceOf(user), super.totalSupply());
   }
 
@@ -151,11 +131,6 @@ abstract contract DepositTokenBase is
 
   function scaledTotalSupply() public view virtual override returns (uint256) {
     return super.totalSupply();
-  }
-
-  /// @dev Returns the address of the treasury, receiving the fees on this depositToken
-  function RESERVE_TREASURY_ADDRESS() public view returns (address) {
-    return _treasury;
   }
 
   function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
@@ -173,22 +148,13 @@ abstract contract DepositTokenBase is
     _approve(
       sender,
       msg.sender,
-      SafeMath.sub(
-        _allowances[sender][msg.sender],
-        amount,
-        'ERC20: transfer amount exceeds allowance'
-      )
+      SafeMath.sub(_allowances[sender][msg.sender], amount, 'ERC20: transfer amount exceeds allowance')
     );
     emit Transfer(sender, recipient, amount);
     return true;
   }
 
-  function transferUnderlyingTo(address target, uint256 amount)
-    external
-    override
-    onlyLendingPool
-    returns (uint256)
-  {
+  function transferUnderlyingTo(address target, uint256 amount) external override onlyLendingPool returns (uint256) {
     IERC20(_underlyingAsset).safeTransfer(target, amount);
     return amount;
   }

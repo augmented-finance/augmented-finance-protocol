@@ -78,13 +78,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
    * @dev Calculates the current user debt balance
    * @return The accumulated debt of the user
    **/
-  function balanceOf(address account)
-    public
-    view
-    virtual
-    override(IERC20, PoolTokenBase)
-    returns (uint256)
-  {
+  function balanceOf(address account) public view virtual override(IERC20, PoolTokenBase) returns (uint256) {
     uint256 accountBalance = super.balanceOf(account);
     if (accountBalance == 0) {
       return 0;
@@ -93,8 +87,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
   }
 
   function cumulatedInterest(address account) public view virtual returns (uint256) {
-    return
-      InterestMath.calculateCompoundedInterest(_usersStableRate[account], _timestamps[account]);
+    return InterestMath.calculateCompoundedInterest(_usersStableRate[account], _timestamps[account]);
   }
 
   struct MintLocalVars {
@@ -137,20 +130,16 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     vars.amountInRay = amount.wadToRay();
 
     vars.newStableRate = (_usersStableRate[onBehalfOf].rayMul(currentBalance.wadToRay()) +
-      vars.amountInRay.rayMul(rate))
-      .rayDiv((currentBalance + amount).wadToRay());
+      vars.amountInRay.rayMul(rate)).rayDiv((currentBalance + amount).wadToRay());
 
     require(vars.newStableRate <= type(uint128).max, Errors.SDT_STABLE_DEBT_OVERFLOW);
     _usersStableRate[onBehalfOf] = vars.newStableRate;
 
-    //solium-disable-next-line
     _totalSupplyTimestamp = _timestamps[onBehalfOf] = uint40(block.timestamp);
 
     // Calculates the updated average stable rate
-    vars.currentAvgStableRate = _avgStableRate = (vars.currentAvgStableRate.rayMul(
-      vars.previousSupply.wadToRay()
-    ) + rate.rayMul(vars.amountInRay))
-      .rayDiv(vars.nextSupply.wadToRay());
+    vars.currentAvgStableRate = _avgStableRate = (vars.currentAvgStableRate.rayMul(vars.previousSupply.wadToRay()) +
+      rate.rayMul(vars.amountInRay)).rayDiv(vars.nextSupply.wadToRay());
 
     _mintWithTotal(onBehalfOf, amount + balanceIncrease, vars.nextSupply);
 
@@ -209,10 +198,8 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
       _usersStableRate[user] = 0;
       _timestamps[user] = 0;
     } else {
-      //solium-disable-next-line
       _timestamps[user] = uint40(block.timestamp);
     }
-    //solium-disable-next-line
     _totalSupplyTimestamp = uint40(block.timestamp);
 
     if (balanceIncrease > amount) {
@@ -350,8 +337,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     uint256 newTotalSupply
   ) internal {
     uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance =
-      SafeMath.sub(oldAccountBalance, amount, Errors.SDT_BURN_EXCEEDS_BALANCE);
+    uint256 newAccountBalance = SafeMath.sub(oldAccountBalance, amount, Errors.SDT_BURN_EXCEEDS_BALANCE);
     _balances[account] = newAccountBalance;
 
     balanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
@@ -359,9 +345,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
 
   function _setIncentivesController(address hook) internal override {
     super._setIncentivesController(hook);
-    _useScaledBalanceUpdate =
-      (hook != address(0)) &&
-      IBalanceHook(hook).isScaledBalanceUpdateNeeded();
+    _useScaledBalanceUpdate = (hook != address(0)) && IBalanceHook(hook).isScaledBalanceUpdateNeeded();
   }
 
   function balanceUpdate(

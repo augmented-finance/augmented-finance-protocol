@@ -6,6 +6,7 @@ import './interfaces/IMarketAccessController.sol';
 import './AccessHelper.sol';
 import './AccessFlags.sol';
 
+// solhint-disable func-name-mixedcase
 abstract contract MarketAccessBitmask {
   using AccessHelper for IMarketAccessController;
   IMarketAccessController internal _remoteAcl;
@@ -44,31 +45,27 @@ abstract contract MarketAccessBitmask {
     _;
   }
 
-  modifier onlyPoolAdmin {
+  modifier onlyPoolAdmin() {
     acl_requireAnyOf(msg.sender, AccessFlags.POOL_ADMIN, Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
 
-  modifier onlyEmergencyAdmin {
+  modifier onlyEmergencyAdmin() {
     acl_requireAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN, Errors.CALLER_NOT_EMERGENCY_ADMIN);
     _;
   }
 
-  modifier onlySweepAdmin {
+  modifier onlySweepAdmin() {
     acl_requireAnyOf(msg.sender, AccessFlags.SWEEP_ADMIN, Errors.CT_CALLER_MUST_BE_SWEEP_ADMIN);
     _;
   }
 
-  modifier onlyRewardAdmin {
-    acl_requireAnyOf(
-      msg.sender,
-      AccessFlags.REWARD_CONFIG_ADMIN,
-      Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
-    );
+  modifier onlyRewardAdmin() {
+    acl_requireAnyOf(msg.sender, AccessFlags.REWARD_CONFIG_ADMIN, Errors.CT_CALLER_MUST_BE_REWARD_ADMIN);
     _;
   }
 
-  modifier onlyRewardConfiguratorOrAdmin {
+  modifier onlyRewardConfiguratorOrAdmin() {
     acl_requireAnyOf(
       msg.sender,
       AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR,
@@ -77,12 +74,8 @@ abstract contract MarketAccessBitmask {
     _;
   }
 
-  modifier onlyRewardRateAdmin {
-    acl_requireAnyOf(
-      msg.sender,
-      AccessFlags.REWARD_RATE_ADMIN,
-      Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN
-    );
+  modifier onlyRewardRateAdmin() {
+    acl_requireAnyOf(msg.sender, AccessFlags.REWARD_RATE_ADMIN, Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN);
     _;
   }
 }
