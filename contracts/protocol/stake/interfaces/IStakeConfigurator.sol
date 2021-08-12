@@ -48,4 +48,6 @@ interface IStakeConfigurator {
     external
     view
     returns (StakeTokenData[] memory dataList, uint256 count);
+
+  function setCooldownForAll(uint32 cooldownPeriod, uint32 unstakePeriod) external;
 }
