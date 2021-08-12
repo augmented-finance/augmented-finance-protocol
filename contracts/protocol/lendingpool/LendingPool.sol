@@ -406,7 +406,10 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 balanceFromBefore,
     uint256 balanceToBefore
   ) external override whenNotPaused {
-    require(msg.sender == _reserves[asset].depositTokenAddress, Errors.LP_CALLER_MUST_BE_AN_ATOKEN);
+    require(
+      msg.sender == _reserves[asset].depositTokenAddress,
+      Errors.LP_CALLER_MUST_BE_DEPOSIT_TOKEN
+    );
 
     ValidationLogic.validateTransfer(
       from,

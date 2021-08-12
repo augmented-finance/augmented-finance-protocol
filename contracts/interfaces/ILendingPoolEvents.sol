@@ -66,7 +66,7 @@ interface ILendingPoolEvents {
     uint256 debtToCover,
     uint256 liquidatedCollateralAmount,
     address liquidator,
-    bool receiveAToken
+    bool receiveDeposit
   );
 
   /// @dev Emitted when the state of a reserve is updated.

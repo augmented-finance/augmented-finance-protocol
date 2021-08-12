@@ -255,22 +255,22 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
   }
 
   /**
-   * @dev Pull the ATokens from the user
+   * @dev Pull the deposit tokens from the user
    * @param reserve address of the asset
-   * @param reserveAToken address of the depositToken of the reserve
+   * @param depositToken address of the depositToken of the reserve
    * @param user address
    * @param amount of tokens to be transferred to the contract
    * @param permitSignature struct containing the permit signature
    */
-  function _pullAToken(
+  function _pullDepositToken(
     address reserve,
-    address reserveAToken,
+    address depositToken,
     address user,
     uint256 amount,
     PermitSignature memory permitSignature
   ) internal {
     if (_usePermit(permitSignature)) {
-      IERC20WithPermit(reserveAToken).permit(
+      IERC20WithPermit(depositToken).permit(
         user,
         address(this),
         permitSignature.amount,
@@ -282,7 +282,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     }
 
     // transfer from user to adapter
-    IERC20(reserveAToken).safeTransferFrom(user, address(this), amount);
+    IERC20(depositToken).safeTransferFrom(user, address(this), amount);
 
     // withdraw reserve
     LENDING_POOL.withdraw(reserve, amount, address(this));
