@@ -68,7 +68,8 @@ abstract contract BasicRewardController is BaseRewardController {
         continue;
       }
 
-      (uint256 amount_, uint32 since_) = getPool(i).calcRewardFor(holder, at);
+      (uint256 amount_, uint256 extra_, uint32 since_) = getPool(i).calcRewardFor(holder, at);
+      delayedAmount += extra_;
       if (amount_ == 0) {
         continue;
       }

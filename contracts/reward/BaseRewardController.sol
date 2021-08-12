@@ -11,11 +11,7 @@ import '../interfaces/IRewardMinter.sol';
 import './interfaces/IRewardCollector.sol';
 import '../tools/Errors.sol';
 
-abstract contract BaseRewardController is
-  IRewardCollector,
-  MarketAccessBitmask,
-  IManagedRewardController
-{
+abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask, IManagedRewardController {
   IRewardMinter private _rewardMinter;
 
   IManagedRewardPool[] private _poolList;
@@ -87,12 +83,7 @@ abstract contract BaseRewardController is
 
   function internalOnPoolRemoved(IManagedRewardPool) internal virtual {}
 
-  function updateBaseline(uint256 baseline)
-    external
-    override
-    onlyRateAdmin
-    returns (uint256 totalRate)
-  {
+  function updateBaseline(uint256 baseline) external override onlyRateAdmin returns (uint256 totalRate) {
     (totalRate, _baselineMask) = internalUpdateBaseline(baseline, _baselineMask);
     require(totalRate <= baseline, Errors.RW_BASELINE_EXCEEDED);
     emit BaselineUpdated(baseline, totalRate, _baselineMask);
@@ -129,12 +120,7 @@ abstract contract BaseRewardController is
     emit RewardMinterSet(address(minter));
   }
 
-  function getPools()
-    public
-    view
-    override
-    returns (IManagedRewardPool[] memory, uint256 ignoreMask)
-  {
+  function getPools() public view override returns (IManagedRewardPool[] memory, uint256 ignoreMask) {
     return (_poolList, _ignoreMask);
   }
 
@@ -146,42 +132,32 @@ abstract contract BaseRewardController is
     return _claimReward(msg.sender, ~uint256(0), msg.sender);
   }
 
-  function claimRewardTo(address receiver)
-    external
-    override
-    notPaused
-    returns (uint256 claimed, uint256 extra)
-  {
+  function claimRewardTo(address receiver) external override notPaused returns (uint256 claimed, uint256 extra) {
     require(receiver != address(0), 'receiver is required');
     return _claimReward(msg.sender, ~uint256(0), receiver);
   }
 
-  function claimRewardFor(address holder, uint256 mask)
-    external
-    notPaused
-    returns (uint256 claimed, uint256 extra)
-  {
-    require(holder != address(0), 'holder is required');
-    return _claimReward(holder, mask, holder);
-  }
+  // function claimRewardFor(address holder, uint256 mask)
+  //   external
+  //   notPaused
+  //   returns (uint256 claimed, uint256 extra)
+  // {
+  //   require(holder != address(0), 'holder is required');
+  //   return _claimReward(holder, mask, holder);
+  // }
 
-  function claimableReward(address holder)
-    public
-    view
-    override
-    returns (uint256 claimable, uint256 extra)
-  {
+  function claimableReward(address holder) public view override returns (uint256 claimable, uint256 extra) {
     return _calcReward(holder, ~uint256(0), uint32(block.timestamp));
   }
 
-  function claimableRewardFor(
-    address holder,
-    uint256 mask,
-    uint32 at
-  ) public view returns (uint256 claimable, uint256 extra) {
-    require(holder != address(0), 'holder is required');
-    return _calcReward(holder, mask, at);
-  }
+  // function claimableRewardFor(
+  //   address holder,
+  //   uint256 mask,
+  //   uint32 at
+  // ) public view returns (uint256 claimable, uint256 extra) {
+  //   require(holder != address(0), 'holder is required');
+  //   return _calcReward(holder, mask, at);
+  // }
 
   function balanceOf(address holder) external view override returns (uint256) {
     if (holder == address(0)) {
@@ -236,7 +212,7 @@ abstract contract BaseRewardController is
     require(isRateAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN);
   }
 
-  modifier onlyRateAdmin {
+  modifier onlyRateAdmin() {
     _onlyRateAdmin();
     _;
   }
@@ -252,19 +228,16 @@ abstract contract BaseRewardController is
     require(isConfigAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_ADMIN);
   }
 
-  modifier onlyConfigAdmin {
+  modifier onlyConfigAdmin() {
     _onlyConfigAdmin();
     _;
   }
 
   function _onlyConfigOrRateAdmin() private view {
-    require(
-      isConfigAdmin(msg.sender) || isRateAdmin(msg.sender),
-      Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN
-    );
+    require(isConfigAdmin(msg.sender) || isRateAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN);
   }
 
-  modifier onlyConfigOrRateAdmin {
+  modifier onlyConfigOrRateAdmin() {
     _onlyConfigOrRateAdmin();
     _;
   }
