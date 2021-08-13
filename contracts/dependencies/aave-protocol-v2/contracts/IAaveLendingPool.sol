@@ -7,6 +7,12 @@ interface IAaveLendingPool {
   function getReserveNormalizedVariableDebt(address asset) external view returns (uint256);
 
   function getReserveData(address asset) external view returns (AaveDataTypes.ReserveData memory);
+
+  function withdraw(
+    address asset,
+    uint256 amount,
+    address to
+  ) external returns (uint256);
 }
 
 library AaveDataTypes {
