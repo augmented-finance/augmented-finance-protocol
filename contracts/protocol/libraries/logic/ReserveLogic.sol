@@ -6,7 +6,7 @@ import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../../interfaces/IDepositToken.sol';
 import '../../../interfaces/IStableDebtToken.sol';
 import '../../../interfaces/IVariableDebtToken.sol';
-import '../../../interfaces/IReserveStrategy.sol';
+import '../../../interfaces/IReserveRateStrategy.sol';
 import '../../../interfaces/IReserveDelegatedStrategy.sol';
 import '../configuration/ReserveConfiguration.sol';
 import '../../../tools/math/InterestMath.sol';
@@ -235,7 +235,7 @@ library ReserveLogic {
       reserve.variableBorrowIndex
     );
 
-    (vars.newLiquidityRate, vars.newStableRate, vars.newVariableRate) = IReserveStrategy(reserve.strategy)
+    (vars.newLiquidityRate, vars.newStableRate, vars.newVariableRate) = IReserveRateStrategy(reserve.strategy)
       .calculateInterestRates(
         reserveAddress,
         depositToken,

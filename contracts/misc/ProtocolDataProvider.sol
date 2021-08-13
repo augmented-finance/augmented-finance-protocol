@@ -10,7 +10,7 @@ import '../interfaces/IVariableDebtToken.sol';
 import '../protocol/libraries/configuration/ReserveConfiguration.sol';
 import '../protocol/libraries/configuration/UserConfiguration.sol';
 import '../protocol/libraries/types/DataTypes.sol';
-import '../interfaces/IReserveStrategy.sol';
+import '../interfaces/IReserveRateStrategy.sol';
 import '../interfaces/IPoolAddressProvider.sol';
 import './interfaces/IUiPoolDataProvider.sol';
 import '../interfaces/IPriceOracleGetter.sol';
@@ -397,7 +397,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     return (reserve.depositTokenAddress, reserve.stableDebtTokenAddress, reserve.variableDebtTokenAddress);
   }
 
-  function getInterestRateStrategySlopes(IReserveStrategy interestRateStrategy)
+  function getInterestRateStrategySlopes(IReserveRateStrategy interestRateStrategy)
     internal
     view
     returns (
@@ -514,7 +514,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         reserveData.variableRateSlope2,
         reserveData.stableRateSlope1,
         reserveData.stableRateSlope2
-      ) = getInterestRateStrategySlopes(IReserveStrategy(reserveData.strategy));
+      ) = getInterestRateStrategySlopes(IReserveRateStrategy(reserveData.strategy));
 
       if (user != address(0)) {
         // user reserve data
