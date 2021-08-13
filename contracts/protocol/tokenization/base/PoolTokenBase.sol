@@ -108,23 +108,20 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     _;
   }
 
-  function _initializePoolToken(
-    PoolTokenConfig memory config,
-    string memory debtTokenName,
-    string memory debtTokenSymbol,
-    uint8 debtTokenDecimals,
-    bytes calldata params
-  ) internal {
+  function _initializePoolToken(PoolTokenConfig memory config, bytes calldata params) internal {
+    params;
     _pool = ILendingPoolForTokens(config.pool);
     _underlyingAsset = config.underlyingAsset;
+  }
 
+  function _emitInitialized(PoolTokenConfig memory config, bytes calldata params) internal {
     emit Initialized(
       config.underlyingAsset,
       address(config.pool),
       address(config.treasury),
-      debtTokenName,
-      debtTokenSymbol,
-      debtTokenDecimals,
+      _name,
+      _symbol,
+      _decimals,
       params
     );
   }

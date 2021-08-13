@@ -37,7 +37,7 @@ contract LendingPoolConfigurator is
     return CONFIGURATOR_REVISION;
   }
 
-  function initialize(IMarketAccessController provider) public initializerRunAlways(CONFIGURATOR_REVISION) {
+  function initialize(IMarketAccessController provider) public initializer(CONFIGURATOR_REVISION) {
     _remoteAcl = provider;
     pool = ICombinedPool(provider.getLendingPool());
   }
@@ -50,48 +50,58 @@ contract LendingPoolConfigurator is
     }
   }
 
+  function isEmpty(string memory s) private pure returns (bool) {
+    return bytes(s).length == 0;
+  }
+
+  function _initPoolToken(address impl, bytes memory initParams) internal returns (address) {
+    return address(_remoteAcl.createProxy(address(this), impl, initParams));
+  }
+
   function _initReserve(InitReserveInput calldata input, address treasury) internal {
     PoolTokenConfig memory config = PoolTokenConfig({
       pool: address(pool),
       treasury: treasury,
-      underlyingAsset: input.underlyingAsset
+      underlyingAsset: input.underlyingAsset,
+      underlyingDecimals: input.underlyingAssetDecimals
     });
 
-    address depositTokenProxyAddress = _initTokenWithProxy(
+    address depositTokenProxyAddress = _initPoolToken(
       input.depositTokenImpl,
       abi.encodeWithSelector(
         IInitializablePoolToken.initialize.selector,
         config,
         input.depositTokenName,
         input.depositTokenSymbol,
-        input.underlyingAssetDecimals,
         input.params
       )
     );
 
-    address stableDebtTokenProxyAddress = _initTokenWithProxy(
-      input.stableDebtTokenImpl,
-      abi.encodeWithSelector(
-        IInitializablePoolToken.initialize.selector,
-        config,
-        input.stableDebtTokenName,
-        input.stableDebtTokenSymbol,
-        input.underlyingAssetDecimals,
-        input.params
-      )
-    );
+    address variableDebtTokenProxyAddress = isEmpty(input.variableDebtTokenSymbol)
+      ? address(0)
+      : _initPoolToken(
+        input.variableDebtTokenImpl,
+        abi.encodeWithSelector(
+          IInitializablePoolToken.initialize.selector,
+          config,
+          input.variableDebtTokenName,
+          input.variableDebtTokenSymbol,
+          input.params
+        )
+      );
 
-    address variableDebtTokenProxyAddress = _initTokenWithProxy(
-      input.variableDebtTokenImpl,
-      abi.encodeWithSelector(
-        IInitializablePoolToken.initialize.selector,
-        config,
-        input.variableDebtTokenName,
-        input.variableDebtTokenSymbol,
-        input.underlyingAssetDecimals,
-        input.params
-      )
-    );
+    address stableDebtTokenProxyAddress = isEmpty(input.stableDebtTokenSymbol)
+      ? address(0)
+      : _initPoolToken(
+        input.stableDebtTokenImpl,
+        abi.encodeWithSelector(
+          IInitializablePoolToken.initialize.selector,
+          config,
+          input.stableDebtTokenName,
+          input.stableDebtTokenSymbol,
+          input.params
+        )
+      );
 
     pool.initReserve(
       DataTypes.InitReserveData(
@@ -150,7 +160,8 @@ contract LendingPoolConfigurator is
     PoolTokenConfig memory config = PoolTokenConfig({
       pool: address(pool),
       treasury: treasury,
-      underlyingAsset: input.asset
+      underlyingAsset: input.asset,
+      underlyingDecimals: uint8(decimals)
     });
 
     bytes memory encodedCall = abi.encodeWithSelector(
@@ -158,7 +169,6 @@ contract LendingPoolConfigurator is
       config,
       input.name,
       input.symbol,
-      decimals,
       input.params
     );
 
@@ -332,10 +342,6 @@ contract LendingPoolConfigurator is
     require(strategy != address(0) || isExternal);
     pool.setReserveStrategy(asset, strategy, isExternal);
     emit ReserveStrategyChanged(asset, strategy, isExternal);
-  }
-
-  function _initTokenWithProxy(address impl, bytes memory initParams) internal returns (address) {
-    return address(_remoteAcl.createProxy(address(this), impl, initParams));
   }
 
   function _checkNoLiquidity(address asset) internal view {

@@ -17,7 +17,7 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
   constructor() MarketAccessBitmask(IMarketAccessController(address(0))) {}
 
   // This initializer is invoked by AccessController.setAddressAsImpl
-  function initialize(address remoteAcl) external virtual initializerRunAlways(TREASURY_REVISION) {
+  function initialize(address remoteAcl) external virtual initializer(TREASURY_REVISION) {
     _remoteAcl = IMarketAccessController(remoteAcl);
   }
 
