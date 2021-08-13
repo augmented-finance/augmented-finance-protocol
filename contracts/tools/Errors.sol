@@ -23,6 +23,7 @@ library Errors {
   string public constant VL_INVALID_AMOUNT = '1'; // Amount must be greater than 0
   string public constant VL_NO_ACTIVE_RESERVE = '2'; // Action requires an active reserve
   string public constant VL_RESERVE_FROZEN = '3'; // Action cannot be performed because the reserve is frozen
+  string public constant VL_UNKNOWN_RESERVE = '4'; // Action requires an active reserve
 
   string public constant VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE = '5'; // User cannot withdraw more than the available balance
   string public constant VL_TRANSFER_NOT_ALLOWED = '6'; // Transfer cannot be allowed.
@@ -81,7 +82,7 @@ library Errors {
   string public constant RC_INVALID_RESERVE_FACTOR = '71';
   string public constant LPAPR_INVALID_ADDRESSES_PROVIDER_ID = '72';
   string public constant VL_INCONSISTENT_FLASHLOAN_PARAMS = '73';
-
+  string public constant VL_TREASURY_REQUIRED = '74';
   string public constant LPC_INVALID_CONFIGURATION = '75'; // Invalid risk parameters for the reserve
   string public constant CALLER_NOT_EMERGENCY_ADMIN = '76'; // The caller must be the emergency admin
   string public constant UL_INVALID_INDEX = '77';

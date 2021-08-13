@@ -66,13 +66,39 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     _;
   }
 
+  function _onlyLendingPoolAdmin() private view {
+    AccessHelper.requireAnyOf(
+      _pool.getAccessController(),
+      msg.sender,
+      AccessFlags.POOL_ADMIN,
+      Errors.CALLER_NOT_POOL_ADMIN
+    );
+  }
+
+  modifier onlyLendingPoolAdmin() {
+    _onlyLendingPoolAdmin();
+    _;
+  }
+
+  function _onlyLendingPoolConfiguratorOrAdmin() private view {
+    AccessHelper.requireAnyOf(
+      _pool.getAccessController(),
+      msg.sender,
+      AccessFlags.POOL_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR,
+      Errors.CALLER_NOT_POOL_ADMIN
+    );
+  }
+
+  modifier onlyLendingPoolConfiguratorOrAdmin() {
+    _onlyLendingPoolConfiguratorOrAdmin();
+    _;
+  }
+
   function _onlyRewardConfiguratorOrAdmin() private view {
-    require(
-      AccessHelper.hasAnyOf(
-        _pool.getAccessController(),
-        msg.sender,
-        AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR
-      ),
+    AccessHelper.requireAnyOf(
+      _pool.getAccessController(),
+      msg.sender,
+      AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR,
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
     );
   }

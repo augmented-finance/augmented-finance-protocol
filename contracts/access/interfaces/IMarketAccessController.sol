@@ -9,8 +9,6 @@ interface IMarketAccessController is IAccessController {
 
   function getLendingPool() external view returns (address);
 
-  function isPoolAdmin(address) external view returns (bool);
-
   function getPriceOracle() external view returns (address);
 
   function getLendingRateOracle() external view returns (address);

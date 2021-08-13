@@ -6,7 +6,9 @@ import '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../interfaces/IDepositToken.sol';
+import '../../../tools/Errors.sol';
 import '../../../tools/math/WadRayMath.sol';
+import '../../../access/AccessFlags.sol';
 import '../../../misc/PermitForERC20.sol';
 import './PoolTokenBase.sol';
 
@@ -17,6 +19,16 @@ abstract contract DepositTokenBase is PoolTokenBase('', '', 0), PermitForERC20, 
 
   mapping(address => mapping(address => uint256)) private _allowances;
   address internal _treasury;
+
+  function getTreasury() external view returns (address) {
+    return _treasury;
+  }
+
+  function updateTreasury() external onlyLendingPoolConfiguratorOrAdmin {
+    address treasury = _pool.getAccessController().getAddress(AccessFlags.TREASURY);
+    require(treasury != address(0), Errors.VL_TREASURY_REQUIRED);
+    _treasury = treasury;
+  }
 
   function allowance(address owner, address spender) public view virtual override returns (uint256) {
     return _allowances[owner][spender];

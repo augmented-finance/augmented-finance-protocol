@@ -27,46 +27,38 @@ abstract contract MarketAccessBitmask {
     return _remoteAcl.hasAnyOf(subject, flags);
   }
 
-  function acl_requireAnyOf(
-    address subject,
-    uint256 flags,
-    string memory text
-  ) internal view {
-    require(_remoteAcl.hasAnyOf(subject, flags), text);
-  }
-
   modifier aclHas(uint256 flags) virtual {
-    acl_requireAnyOf(msg.sender, flags, Errors.TXT_ACCESS_RESTRICTED);
+    _remoteAcl.requireAnyOf(msg.sender, flags, Errors.TXT_ACCESS_RESTRICTED);
     _;
   }
 
   modifier aclAnyOf(uint256 flags) {
-    acl_requireAnyOf(msg.sender, flags, Errors.TXT_ACCESS_RESTRICTED);
+    _remoteAcl.requireAnyOf(msg.sender, flags, Errors.TXT_ACCESS_RESTRICTED);
     _;
   }
 
   modifier onlyPoolAdmin() {
-    acl_requireAnyOf(msg.sender, AccessFlags.POOL_ADMIN, Errors.CALLER_NOT_POOL_ADMIN);
+    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.POOL_ADMIN, Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
 
   modifier onlyEmergencyAdmin() {
-    acl_requireAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN, Errors.CALLER_NOT_EMERGENCY_ADMIN);
+    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN, Errors.CALLER_NOT_EMERGENCY_ADMIN);
     _;
   }
 
   modifier onlySweepAdmin() {
-    acl_requireAnyOf(msg.sender, AccessFlags.SWEEP_ADMIN, Errors.CT_CALLER_MUST_BE_SWEEP_ADMIN);
+    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.SWEEP_ADMIN, Errors.CT_CALLER_MUST_BE_SWEEP_ADMIN);
     _;
   }
 
   modifier onlyRewardAdmin() {
-    acl_requireAnyOf(msg.sender, AccessFlags.REWARD_CONFIG_ADMIN, Errors.CT_CALLER_MUST_BE_REWARD_ADMIN);
+    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.REWARD_CONFIG_ADMIN, Errors.CT_CALLER_MUST_BE_REWARD_ADMIN);
     _;
   }
 
   modifier onlyRewardConfiguratorOrAdmin() {
-    acl_requireAnyOf(
+    _remoteAcl.requireAnyOf(
       msg.sender,
       AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR,
       Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
@@ -75,7 +67,7 @@ abstract contract MarketAccessBitmask {
   }
 
   modifier onlyRewardRateAdmin() {
-    acl_requireAnyOf(msg.sender, AccessFlags.REWARD_RATE_ADMIN, Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN);
+    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.REWARD_RATE_ADMIN, Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN);
     _;
   }
 }

@@ -64,7 +64,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 amount,
     address onBehalfOf,
     uint256 referral
-  ) public override whenNotPaused noReentryOrFlashloan {
+  ) public override whenNotPaused noReentryOrFlashloanFeature(FEATURE_FLASHLOAN_DEPOSIT) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateDeposit(reserve, amount);
@@ -90,7 +90,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     address asset,
     uint256 amount,
     address to
-  ) external override whenNotPaused noReentry returns (uint256) {
+  ) external override whenNotPaused noReentryOrFlashloanFeature(FEATURE_FLASHLOAN_WITHDRAW) returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     address depositToken = reserve.depositTokenAddress;
@@ -145,7 +145,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 amount,
     uint256 rateMode,
     address onBehalfOf
-  ) external override whenNotPaused noReentry returns (uint256) {
+  ) external override whenNotPaused noReentryOrFlashloanFeature(FEATURE_FLASHLOAN_REPAY) returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(onBehalfOf, reserve);
@@ -353,7 +353,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     return _reserves[asset].getNormalizedDebt();
   }
 
-  function getReservesList() external view override returns (address[] memory) {
+  function getReservesList() external view override(ILendingPool, ILendingPoolForTokens) returns (address[] memory) {
     address[] memory _activeReserves = new address[](_reservesCount);
 
     for (uint256 i = 0; i < _reservesCount; i++) {
@@ -406,10 +406,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 balanceFromBefore,
     uint256 balanceToBefore
   ) external override whenNotPaused {
-    require(
-      msg.sender == _reserves[asset].depositTokenAddress,
-      Errors.LP_CALLER_MUST_BE_DEPOSIT_TOKEN
-    );
+    require(msg.sender == _reserves[asset].depositTokenAddress, Errors.LP_CALLER_MUST_BE_DEPOSIT_TOKEN);
 
     ValidationLogic.validateTransfer(
       from,

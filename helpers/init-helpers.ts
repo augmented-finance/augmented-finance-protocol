@@ -34,7 +34,6 @@ export const initReservesByHelper = async (
   tokenAddresses: { [symbol: string]: tEthereumAddress },
   names: ITokenNames,
   skipExistingAssets: boolean,
-  treasuryAddress: tEthereumAddress,
   verify: boolean
 ) => {
   // CHUNK CONFIGURATION
@@ -52,7 +51,6 @@ export const initReservesByHelper = async (
     underlyingAssetDecimals: BigNumberish;
     strategy: string;
     underlyingAsset: string;
-    treasury: string;
     incentivesController: string;
     underlyingAssetName: string;
     depositTokenName: string;
@@ -176,7 +174,6 @@ export const initReservesByHelper = async (
       underlyingAssetDecimals: reserveInitDecimals[i],
       strategy: strategyAddressPerAsset[reserveSymbol],
       underlyingAsset: reserveTokens[i],
-      treasury: treasuryAddress,
       incentivesController: ZERO_ADDRESS,
       underlyingAssetName: reserveSymbol,
 
@@ -227,13 +224,10 @@ export const getTokenAggregatorPairs = (
 
   const pairs = Object.entries(assetsAddressesWithoutEth).map(([tokenSymbol, tokenAddress]) => {
     if (tokenSymbol !== 'WETH' && tokenSymbol !== 'ETH') {
-      const aggregatorAddressIndex = Object.keys(aggregatorsAddresses).findIndex(
-        (value) => value === tokenSymbol
-      );
-      const [, aggregatorAddress] = (Object.entries(aggregatorsAddresses) as [
-        string,
-        tEthereumAddress
-      ][])[aggregatorAddressIndex];
+      const aggregatorAddressIndex = Object.keys(aggregatorsAddresses).findIndex((value) => value === tokenSymbol);
+      const [, aggregatorAddress] = (Object.entries(aggregatorsAddresses) as [string, tEthereumAddress][])[
+        aggregatorAddressIndex
+      ];
       return [tokenAddress, aggregatorAddress];
     }
   }) as [string, string][];
@@ -275,20 +269,14 @@ export const configureReservesByHelper = async (
   ] of Object.entries(reservesParams) as [string, IReserveParams][]) {
     if (baseLTVAsCollateral === '-1') continue;
 
-    const assetAddressIndex = Object.keys(tokenAddresses).findIndex(
-      (value) => value === assetSymbol
-    );
-    const [, tokenAddress] = (Object.entries(tokenAddresses) as [string, string][])[
-      assetAddressIndex
-    ];
+    const assetAddressIndex = Object.keys(tokenAddresses).findIndex((value) => value === assetSymbol);
+    const [, tokenAddress] = (Object.entries(tokenAddresses) as [string, string][])[assetAddressIndex];
     if (falsyOrZeroAddress(tokenAddress)) {
       console.log(`- Token ${assetSymbol} has an invalid address, skipping`);
       continue;
     }
 
-    const { usageAsCollateralEnabled: alreadyEnabled } = await helpers.getReserveConfigurationData(
-      tokenAddress
-    );
+    const { usageAsCollateralEnabled: alreadyEnabled } = await helpers.getReserveConfigurationData(tokenAddress);
 
     if (alreadyEnabled) {
       console.log(`- Reserve ${assetSymbol} is already enabled as collateral, skipping`);

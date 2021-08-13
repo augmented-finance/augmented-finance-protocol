@@ -33,4 +33,13 @@ library AccessHelper {
   function hasNone(IRemoteAccessBitmask remote, address subject) internal view returns (bool) {
     return remote.queryAccessControlMask(subject, 0) == 0;
   }
+
+  function requireAnyOf(
+    IRemoteAccessBitmask remote,
+    address subject,
+    uint256 flags,
+    string memory text
+  ) internal view {
+    require(hasAnyOf(remote, subject, flags), text);
+  }
 }

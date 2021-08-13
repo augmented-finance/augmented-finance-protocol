@@ -1,8 +1,5 @@
 import { task } from 'hardhat/config';
-import {
-  deployProtocolDataProvider,
-  deployTreasuryImpl,
-} from '../../helpers/contracts-deployments';
+import { deployProtocolDataProvider, deployTreasuryImpl } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
 import { ConfigNames, getReservesTestConfig, loadPoolConfig } from '../../helpers/configuration';
 
@@ -37,21 +34,7 @@ task('dev:initialize-lending-pool', 'Initialize lending pool configuration.')
 
     const treasuryImpl = await deployTreasuryImpl(false, false);
     await addressesProvider.setAddressAsProxy(AccessFlags.TREASURY, treasuryImpl.address);
-    const treasuryAddress = await addressesProvider.getAddress(AccessFlags.TREASURY);
 
-    await initReservesByHelper(
-      addressesProvider,
-      reservesParams,
-      protoPoolReservesAddresses,
-      Names,
-      false,
-      treasuryAddress,
-      verify
-    );
-    await configureReservesByHelper(
-      addressesProvider,
-      reservesParams,
-      protoPoolReservesAddresses,
-      dataHelper
-    );
+    await initReservesByHelper(addressesProvider, reservesParams, protoPoolReservesAddresses, Names, false, verify);
+    await configureReservesByHelper(addressesProvider, reservesParams, protoPoolReservesAddresses, dataHelper);
   });

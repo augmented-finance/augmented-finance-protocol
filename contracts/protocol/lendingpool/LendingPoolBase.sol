@@ -20,8 +20,9 @@ abstract contract LendingPoolBase is LendingPoolStorage {
   }
 
   function _onlyLendingPoolConfigurator() private view {
-    require(
-      _addressesProvider.hasAnyOf(msg.sender, AccessFlags.LENDING_POOL_CONFIGURATOR),
+    _addressesProvider.requireAnyOf(
+      msg.sender,
+      AccessFlags.LENDING_POOL_CONFIGURATOR,
       Errors.LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR
     );
   }
@@ -33,11 +34,9 @@ abstract contract LendingPoolBase is LendingPoolStorage {
   }
 
   function _onlyConfiguratorOrAdmin() private view {
-    require(
-      _addressesProvider.hasAnyOf(
-        msg.sender,
-        AccessFlags.POOL_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR
-      ),
+    _addressesProvider.requireAnyOf(
+      msg.sender,
+      AccessFlags.POOL_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR,
       Errors.CALLER_NOT_POOL_ADMIN
     );
   }
@@ -51,16 +50,32 @@ abstract contract LendingPoolBase is LendingPoolStorage {
     require(_nestedCalls == 0, Errors.LP_TOO_MANY_NESTED_CALLS);
   }
 
-  modifier noReentry {
+  modifier noReentry() {
     _notNestedCall();
     _nestedCalls++;
     _;
     _nestedCalls--;
   }
 
-  modifier noReentryOrFlashloan {
-    require(_flashloanCalls == 0, Errors.LP_TOO_MANY_FLASHLOAN_CALLS);
+  function _noReentryOrFlashloan() private view {
     _notNestedCall();
+    require(_flashloanCalls == 0, Errors.LP_TOO_MANY_FLASHLOAN_CALLS);
+  }
+
+  modifier noReentryOrFlashloan() {
+    _noReentryOrFlashloan();
+    _nestedCalls++;
+    _;
+    _nestedCalls--;
+  }
+
+  function _noReentryOrFlashloanFeature(uint16 featureFlag) private view {
+    _notNestedCall();
+    require(featureFlag & _disabledFeatures == 0 || _flashloanCalls == 0, Errors.LP_TOO_MANY_FLASHLOAN_CALLS);
+  }
+
+  modifier noReentryOrFlashloanFeature(uint16 featureFlag) {
+    _noReentryOrFlashloanFeature(featureFlag);
     _nestedCalls++;
     _;
     _nestedCalls--;
