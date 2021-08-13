@@ -49,7 +49,7 @@ jobs:
       - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
       - run: git config --global user.email "$CIRCLE_USERNAME@augmented.finance"
       - run: git config --global user.name $CIRCLE_USERNAME
-      - run: npm version 1.0.0-$CIRCLE_SHA1
+      - run: npm version --force 1.0.0-$CIRCLE_SHA1
       - run: npm publish
 workflows:
   test:
