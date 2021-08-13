@@ -30,10 +30,9 @@ interface ILendingPoolForTokens {
 
   function getReserveNormalizedVariableDebt(address asset) external view returns (uint256);
 
-  function getConfiguration(address asset)
-    external
-    view
-    returns (DataTypes.ReserveConfigurationMap memory);
+  function getConfiguration(address asset) external view returns (DataTypes.ReserveConfigurationMap memory);
 
   function getReserveData(address asset) external view returns (DataTypes.ReserveData memory);
+
+  function getReservesList() external view returns (address[] memory);
 }

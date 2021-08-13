@@ -16,7 +16,7 @@ import '../libraries/configuration/ReserveConfiguration.sol';
 import '../libraries/types/DataTypes.sol';
 import '../tokenization/interfaces/IInitializablePoolToken.sol';
 import '../tokenization/interfaces/PoolTokenConfig.sol';
-import '../../interfaces/IEmergencyAccessReserve.sol';
+import '../../interfaces/IEmergencyAccessGroup.sol';
 
 /// @dev Implements configuration methods for the LendingPool
 contract LendingPoolConfigurator is
@@ -24,7 +24,7 @@ contract LendingPoolConfigurator is
   VersionedInitializable,
   MarketAccessBitmask(IMarketAccessController(address(0))),
   ILendingPoolConfigurator,
-  IEmergencyAccessReserve
+  IEmergencyAccessGroup
 {
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -290,12 +290,16 @@ contract LendingPoolConfigurator is
     _setReserveFrozen(asset, false);
   }
 
-  function setReservePaused(address asset, bool val) external override onlyEmergencyAdmin {
+  function setPausedFor(address asset, bool val) external override onlyEmergencyAdmin {
     _setReserveFrozen(asset, val);
   }
 
-  function isReservePaused(address asset) external view override returns (bool) {
+  function isPausedFor(address asset) external view override returns (bool) {
     return pool.getConfiguration(asset).getFrozenMemory();
+  }
+
+  function listEmergencyGroup() external view override returns (address[] memory) {
+    return pool.getReservesList();
   }
 
   function _setReserveFrozen(address asset, bool val) private {

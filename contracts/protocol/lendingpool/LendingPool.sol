@@ -353,7 +353,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     return _reserves[asset].getNormalizedDebt();
   }
 
-  function getReservesList() external view override returns (address[] memory) {
+  function getReservesList() external view override(ILendingPool, ILendingPoolForTokens) returns (address[] memory) {
     address[] memory _activeReserves = new address[](_reservesCount);
 
     for (uint256 i = 0; i < _reservesCount; i++) {

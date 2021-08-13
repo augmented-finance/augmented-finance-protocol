@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../interfaces/IEmergencyAccessReserve.sol';
+import '../interfaces/IEmergencyAccessGroup.sol';
 
 interface ILendingPoolConfigurator {
   struct InitReserveInput {
