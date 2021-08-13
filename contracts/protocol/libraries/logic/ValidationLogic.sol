@@ -335,8 +335,10 @@ library ValidationLogic {
 
     require(underlyingBalance > 0, Errors.VL_UNDERLYING_BALANCE_NOT_GREATER_THAN_0);
 
-    require(
-      useAsCollateral ||
+    if (!useAsCollateral) {
+      require(!reserve.configuration.isExternalStrategy(), Errors.VL_RESERVE_MUST_BE_COLLATERAL);
+
+      require(
         GenericLogic.balanceDecreaseAllowed(
           reserveAddress,
           msg.sender,
@@ -347,8 +349,9 @@ library ValidationLogic {
           reservesCount,
           oracle
         ),
-      Errors.VL_DEPOSIT_ALREADY_IN_USE
-    );
+        Errors.VL_DEPOSIT_ALREADY_IN_USE
+      );
+    }
   }
 
   /**

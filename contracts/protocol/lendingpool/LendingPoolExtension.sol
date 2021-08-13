@@ -608,7 +608,6 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
 
   function _addReserveToList(address asset) internal {
     uint256 reservesCount = _reservesCount;
-
     require(reservesCount < _maxNumberOfReserves, Errors.LP_NO_MORE_RESERVES_ALLOWED);
 
     bool reserveAlreadyAdded = _reserves[asset].id != 0 || _reservesList[0] == asset;
@@ -635,6 +634,14 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     require(Address.isContract(data.asset), Errors.VL_CONTRACT_REQUIRED);
     _reserves[data.asset].init(data);
     _addReserveToList(data.asset);
+
+    if (data.externalStrategy) {
+      address underlying = IReserveDelegatedStrategy(data.strategy).getUnderlying(data.asset);
+      require(underlying != address(0));
+      if (underlying != data.asset) {
+        _indirectUnderlying[underlying].push(data.asset);
+      }
+    }
   }
 
   function getLendingPoolExtension() external view override returns (address) {
