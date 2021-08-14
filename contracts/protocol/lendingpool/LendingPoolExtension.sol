@@ -577,8 +577,13 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     bool isExternal
   ) external override onlyLendingPoolConfigurator {
     _checkReserve(asset);
+    require(isExternal = IReserveStrategy(strategy).isDelegatedReserve());
+    if (_reserves[asset].strategy != address(0)) {
+      require(isExternal = _reserves[asset].configuration.isExternalStrategy());
+    } else {
+      _reserves[asset].configuration.setExternalStrategy(isExternal);
+    }
     _reserves[asset].strategy = strategy;
-    _reserves[asset].configuration.setExternalStrategy(isExternal);
   }
 
   function _checkReserve(address asset) private view {
