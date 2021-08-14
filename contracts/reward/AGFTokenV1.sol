@@ -23,30 +23,18 @@ contract AGFTokenV1 is
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor()
-    RewardToken(NAME, SYMBOL, DECIMALS)
-    MarketAccessBitmask(IMarketAccessController(address(0)))
-  {}
+  constructor() RewardToken(NAME, SYMBOL, DECIMALS) MarketAccessBitmask(IMarketAccessController(address(0))) {}
 
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
   }
 
   // This initializer is invoked by AccessController.setAddressAsImpl
-  function initialize(IMarketAccessController remoteAcl)
-    external
-    virtual
-    initializerRunAlways(TOKEN_REVISION)
-  {
+  function initialize(IMarketAccessController remoteAcl) external virtual initializer(TOKEN_REVISION) {
     _initialize(remoteAcl, NAME, SYMBOL, DECIMALS);
   }
 
-  function initialize(InitData calldata data)
-    public
-    virtual
-    override
-    initializerRunAlways(TOKEN_REVISION)
-  {
+  function initialize(InitData calldata data) public virtual override initializer(TOKEN_REVISION) {
     _initialize(data.remoteAcl, data.name, data.symbol, data.decimals);
   }
 

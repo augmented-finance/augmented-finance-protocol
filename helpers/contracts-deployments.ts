@@ -336,10 +336,10 @@ export const deployStableDebtToken = async (
       pool: poolAddress,
       treasury: treasuryAddress,
       underlyingAsset: underlyingAssetAddress,
+      underlyingDecimals: 18,
     },
     name,
     symbol,
-    '18',
     '0x10'
   );
 
@@ -368,10 +368,10 @@ export const deployVariableDebtToken = async (
       pool: poolAddress,
       treasury: treasuryAddress,
       underlyingAsset: underlyingAssetAddress,
+      underlyingDecimals: 18,
     },
     name,
     symbol,
-    '18',
     '0x10'
   );
 
@@ -400,10 +400,10 @@ export const deployDepositToken = async (
       pool: poolAddress,
       treasury: treasuryAddress,
       underlyingAsset: underlyingAssetAddress,
+      underlyingDecimals: 18,
     },
     name,
     symbol,
-    '18',
     '0x10'
   );
 
@@ -432,10 +432,10 @@ export const deployDelegationAwareDepositToken = async (
       pool: poolAddress,
       treasury: treasuryAddress,
       underlyingAsset: underlyingAssetAddress,
+      underlyingDecimals: 18,
     },
     name,
     symbol,
-    '18',
     '0x10'
   );
 
@@ -464,10 +464,10 @@ export const deployMockDelegationAwareDepositToken = async (
       pool: poolAddress,
       treasury: treasuryAddress,
       underlyingAsset: underlyingAssetAddress,
+      underlyingDecimals: 18,
     },
     name,
     symbol,
-    '18',
     '0x10'
   );
 
@@ -558,10 +558,10 @@ export const deployMockStableDebtToken = async (
       pool: args[0],
       treasury: ZERO_ADDRESS,
       underlyingAsset: args[1],
+      underlyingDecimals: 18,
     },
     args[2],
     args[3],
-    '18',
     args[4]
   );
 
@@ -587,10 +587,10 @@ export const deployMockVariableDebtToken = async (
       pool: args[0],
       treasury: ZERO_ADDRESS,
       underlyingAsset: args[1],
+      underlyingDecimals: 18,
     },
     args[2],
     args[3],
-    '18',
     args[4]
   );
 
@@ -609,10 +609,14 @@ export const deployMockDepositToken = async (
   );
 
   await instance.initialize(
-    { pool: args[0], treasury: args[2], underlyingAsset: args[1] },
+    {
+      pool: args[0],
+      treasury: args[2],
+      underlyingAsset: args[1],
+      underlyingDecimals: 18,
+    },
     args[3],
     args[4],
-    '18',
     args[5]
   );
 
