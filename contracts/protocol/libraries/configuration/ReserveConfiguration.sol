@@ -228,7 +228,10 @@ library ReserveConfiguration {
     );
   }
 
-  /// @dev Paramters of the reserve: ltv, liquidation threshold, liquidation bonus, the reserve decimals
+  function isExternalStrategyMemory(DataTypes.ReserveConfigurationMap memory self) internal pure returns (bool) {
+    return (self.data & ~STRATEGY_TYPE_MASK) != 0;
+  }
+
   function isExternalStrategy(DataTypes.ReserveConfigurationMap storage self) internal view returns (bool) {
     return (self.data & ~STRATEGY_TYPE_MASK) != 0;
   }

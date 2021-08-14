@@ -1,25 +1,26 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import './DelegatedStrategyBase.sol';
+import '../../tools/math/WadRayMath.sol';
 import '../../dependencies/aave-protocol-v2/contracts/IAaveLendingPool.sol';
 import '../../interfaces/IPoolToken.sol';
 import '../../interfaces/IDerivedToken.sol';
+import './DelegatedStrategyBase.sol';
 
 contract DelegatedStrategyAave is DelegatedStrategyBase {
   constructor(string memory name) DelegatedStrategyBase(name) {}
 
-  function getDelegatedState(address asset) external view override returns (DelegatedState memory result) {
+  function getDelegatedState(address asset, uint40) external view override returns (DelegatedState memory result) {
     address underlying = IDerivedToken(asset).UNDERLYING_ASSET_ADDRESS();
     AaveDataTypes.ReserveData memory state = IAaveLendingPool(IPoolToken(asset).POOL()).getReserveData(underlying);
 
     return
       DelegatedState({
         liquidityIndex: state.liquidityIndex,
-        variableBorrowIndex: state.variableBorrowIndex,
+        variableBorrowIndex: uint128(WadRayMath.RAY), // state.variableBorrowIndex,
         liquidityRate: state.currentLiquidityRate,
-        variableBorrowRate: state.currentVariableBorrowRate,
-        stableBorrowRate: state.currentStableBorrowRate,
+        variableBorrowRate: 0, // state.currentVariableBorrowRate,
+        stableBorrowRate: 0, // state.currentStableBorrowRate,
         lastUpdateTimestamp: state.lastUpdateTimestamp
       });
   }

@@ -57,6 +57,8 @@ import {
   MockLendingPoolFactory,
   MockDelegationAwareDepositTokenFactory,
   DelegatedStrategyAaveFactory,
+  DelegatedStrategyCompoundEthFactory,
+  DelegatedStrategyCompoundErc20Factory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -965,6 +967,25 @@ export const deployDelegatedStrategyAave = async (args: [name: string], verify?:
   withSaveAndVerify(
     await new DelegatedStrategyAaveFactory(await getFirstSigner()).deploy(...args),
     eContractid.DelegatedStrategyAave,
+    args,
+    verify
+  );
+
+export const deployDelegatedStrategyCompoundErc20 = async (args: [name: string], verify?: boolean) =>
+  withSaveAndVerify(
+    await new DelegatedStrategyCompoundErc20Factory(await getFirstSigner()).deploy(...args),
+    eContractid.DelegatedStrategyCompoundErc20,
+    args,
+    verify
+  );
+
+export const deployDelegatedStrategyCompoundEth = async (
+  args: [name: string, weth: tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new DelegatedStrategyCompoundEthFactory(await getFirstSigner()).deploy(...args),
+    eContractid.DelegatedStrategyCompoundEth,
     args,
     verify
   );

@@ -16,7 +16,9 @@ interface IReserveDelegatedStrategy is IReserveStrategy, IUnderlyingStrategy {
     uint40 lastUpdateTimestamp;
   }
 
-  function getDelegatedState(address underlyingToken) external returns (DelegatedState memory);
+  function getDelegatedState(address underlyingToken, uint40 lastUpdateTimestamp)
+    external
+    returns (DelegatedState memory);
 
   function getDelegatedDepositIndex(address underlyingToken) external view returns (uint256 liquidityIndex);
 

@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 import { eNetwork } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { falsyOrZeroAddress, getFirstSigner } from '../../helpers/misc-utils';
-import { getProtocolDataProvider } from '../../helpers/contracts-getters';
+import { getLendingPoolProxy, getProtocolDataProvider } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
@@ -25,7 +25,13 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
     const dataHelper = await getProtocolDataProvider(dataHelperAddress);
 
     {
-      console.log('Check getAddresses');
+      console.log('\nCheck getReserveList');
+      const lp = await getLendingPoolProxy(await addressProvider.getAddress(AccessFlags.LENDING_POOL));
+      console.log('Reserves: ', await lp.getReservesList());
+    }
+
+    {
+      console.log('\nCheck getAddresses');
       const addresses = await dataHelper.getAddresses();
       let hasZeros = false;
       for (const [name, addr] of Object.entries(addresses)) {
@@ -39,7 +45,7 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
       }
     }
 
-    console.log('Check getReservesData');
+    console.log('\nCheck getReservesData');
     const rd = await dataHelper.getReservesData((await getFirstSigner()).address);
     const [aggregatedData, userData, x] = [rd[0], rd[1], rd[2]];
 

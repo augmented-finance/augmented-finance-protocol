@@ -50,10 +50,6 @@ contract LendingPoolConfigurator is
     }
   }
 
-  function isEmpty(string memory s) private pure returns (bool) {
-    return bytes(s).length == 0;
-  }
-
   function _initPoolToken(address impl, bytes memory initParams) internal returns (address) {
     return address(_remoteAcl.createProxy(address(this), impl, initParams));
   }
@@ -77,7 +73,7 @@ contract LendingPoolConfigurator is
       )
     );
 
-    address variableDebtTokenProxyAddress = isEmpty(input.variableDebtTokenSymbol)
+    address variableDebtTokenProxyAddress = input.externalStrategy || input.variableDebtTokenImpl == address(0)
       ? address(0)
       : _initPoolToken(
         input.variableDebtTokenImpl,
@@ -90,7 +86,7 @@ contract LendingPoolConfigurator is
         )
       );
 
-    address stableDebtTokenProxyAddress = isEmpty(input.stableDebtTokenSymbol)
+    address stableDebtTokenProxyAddress = input.externalStrategy || input.stableDebtTokenImpl == address(0)
       ? address(0)
       : _initPoolToken(
         input.stableDebtTokenImpl,

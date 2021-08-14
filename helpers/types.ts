@@ -68,7 +68,8 @@ export enum eContractid {
   TreasuryRewardPool = 'TreasuryRewardPool',
 
   DelegatedStrategyAave = 'DelegatedStrategyAave',
-  DelegatedStrategyCompound = 'DelegatedStrategyCompound',
+  DelegatedStrategyCompoundErc20 = 'DelegatedStrategyCompoundErc20',
+  DelegatedStrategyCompoundEth = 'DelegatedStrategyCompoundEth',
 
   UniswapLiquiditySwapAdapter = 'UniswapLiquiditySwapAdapter',
   UniswapRepayAdapter = 'UniswapRepayAdapter',
@@ -239,10 +240,11 @@ export interface iAssetBase<T> {
   AAVE: T;
   LINK: T;
 
-  //  ADAI: T;
+  ADAI: T;
 }
 
 export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, 'USD'>;
+export type iAssetsWithoutUSDOpt<T> = OmitOpt<iAssetBase<T>, 'USD'>;
 
 export type RecordOpt<K extends keyof any, T> = {
   [P in K]?: T;
@@ -252,10 +254,12 @@ export type PickOpt<T, K extends keyof T> = {
   [P in K]?: T[P];
 };
 
-type augmentedAssets = 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH';
+export type OmitOpt<T, K extends keyof any> = PickOpt<T, Exclude<keyof T, K>>;
 
-export type iAugmentedPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, augmentedAssets>;
-export type iAugmentedPoolAssetsOpt<T> = PickOpt<iAssetsWithoutUSD<T>, augmentedAssets>;
+type excludedAssets = 'AAVE' | 'LINK';
+
+export type iAugmentedPoolAssets<T> = Omit<iAssetsWithoutUSD<T>, excludedAssets>;
+export type iAugmentedPoolAssetsOpt<T> = OmitOpt<iAssetsWithoutUSD<T>, excludedAssets>;
 
 type iMultiPoolsAssets<T> = iAssetsWithoutUSD<T> | iAugmentedPoolAssets<T>;
 
@@ -270,6 +274,7 @@ const tokenSymbols: iAssetBase<string> = {
   USD: '',
   AAVE: '',
   LINK: '',
+  ADAI: '',
 };
 
 export const DefaultTokenSymbols: string[] = Object.keys(tokenSymbols);
@@ -358,7 +363,7 @@ export interface ICommonConfiguration {
   FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
 
   ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
-  LendingRateOracleRates: iAssetsWithoutUSD<IMarketRates>;
+  LendingRateOracleRates: iAssetsWithoutUSDOpt<IMarketRates>;
 
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
   EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;

@@ -9,7 +9,7 @@ import {
   deployAllMockAggregators,
   setInitialMarketRatesInRatesOracleByHelper,
 } from '../../helpers/oracles-helpers';
-import { ICommonConfiguration, iAssetBase, DefaultTokenSymbols } from '../../helpers/types';
+import { ICommonConfiguration, iAssetBase, DefaultTokenSymbols, tEthereumAddress } from '../../helpers/types';
 import { getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { getAllAggregatorsAddresses, getAllTokenAddresses } from '../../helpers/mock-helpers';
 import { ConfigNames, loadPoolConfig, getOrCreateWethAddress } from '../../helpers/configuration';
@@ -34,9 +34,9 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
     const defaultTokenList = {
       ...Object.fromEntries(DefaultTokenSymbols.map((symbol) => [symbol, ''])),
       USD: UsdAddress,
-    } as iAssetBase<string>;
+    } as { [key: string]: tEthereumAddress };
     const mockTokens = await getAllMockedTokens();
-    const mockTokensAddress = Object.keys(mockTokens).reduce<iAssetBase<string>>((prev, curr) => {
+    const mockTokensAddress = Object.keys(mockTokens).reduce<{ [key: string]: tEthereumAddress }>((prev, curr) => {
       prev[curr as keyof iAssetBase<string>] = mockTokens[curr].address;
       return prev;
     }, defaultTokenList);

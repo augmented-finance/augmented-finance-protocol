@@ -113,7 +113,18 @@ export const externalReserveAAVE: IInterestRateStrategyParams = {
 
 export const externalReserveCOMP: IInterestRateStrategyParams = {
   name: 'externalReserveCOMP',
-  strategyImpl: eContractid.DelegatedStrategyCompound,
+  strategyImpl: eContractid.DelegatedStrategyCompoundErc20,
+  optimalUtilizationRate: '',
+  baseVariableBorrowRate: '',
+  variableRateSlope1: '',
+  variableRateSlope2: '',
+  stableRateSlope1: '',
+  stableRateSlope2: '',
+}
+
+export const externalReserveCETH: IInterestRateStrategyParams = {
+  name: 'externalReserveCETH',
+  strategyImpl: eContractid.DelegatedStrategyCompoundEth,
   optimalUtilizationRate: '',
   baseVariableBorrowRate: '',
   variableRateSlope1: '',

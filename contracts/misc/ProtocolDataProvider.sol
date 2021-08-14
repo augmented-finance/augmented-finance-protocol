@@ -49,6 +49,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     uint8 decimals;
     TokenType tokenType;
     bool active;
+    bool frozen;
   }
 
   struct TokenData {
@@ -98,7 +99,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         address(0),
         IERC20Detailed(token).decimals(),
         TokenType.Reward,
-        true
+        true,
+        false
       );
       tokenCount++;
     }
@@ -113,7 +115,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         tokens[0].token,
         IERC20Detailed(token).decimals(),
         TokenType.RewardStake,
-        true
+        true,
+        false
       );
       tokenCount++;
     }
@@ -121,7 +124,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     for (uint256 i = 0; i < reserveList.length; i++) {
       token = reserveList[i];
       DataTypes.ReserveData memory reserveData = pool.getReserveData(token);
-      (bool isActive, , bool canBorrow, bool canBorrowStable) = reserveData.configuration.getFlagsMemory();
+      (bool isActive, bool isFrozen, bool canBorrow, bool canBorrowStable) = reserveData.configuration.getFlagsMemory();
 
       canBorrow = isActive && canBorrow;
       canBorrowStable = canBorrowStable && canBorrow;
@@ -129,15 +132,21 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       uint8 decimals = reserveData.configuration.getDecimalsMemory();
 
       if (includeAssets) {
+        address underlying;
+        if (reserveData.configuration.isExternalStrategyMemory()) {
+          underlying = IUnderlyingStrategy(reserveData.strategy).getUnderlying(token);
+        }
+
         tokens[tokenCount] = TokenDescription(
           token,
           token,
           address(0),
           IERC20Detailed(token).symbol(),
-          address(0),
+          underlying,
           decimals,
           TokenType.PoolAsset,
-          true
+          true,
+          false
         );
         tokenCount++;
       }
@@ -151,7 +160,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         token,
         decimals,
         TokenType.Deposit,
-        isActive
+        isActive,
+        isFrozen
       );
       tokenCount++;
 
@@ -165,7 +175,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
           token,
           decimals,
           TokenType.VariableDebt,
-          canBorrow
+          canBorrow,
+          isFrozen
         );
         tokenCount++;
       }
@@ -180,7 +191,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
           token,
           decimals,
           TokenType.StableDebt,
-          canBorrowStable
+          canBorrowStable,
+          isFrozen
         );
         tokenCount++;
       }
@@ -196,7 +208,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         IDerivedToken(token).UNDERLYING_ASSET_ADDRESS(),
         IERC20Detailed(token).decimals(),
         TokenType.Stake,
-        true
+        true,
+        false
       );
       tokenCount++;
     }
@@ -217,8 +230,15 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     }
     tokens = new address[](tokenCount);
 
-    tokens[0] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_TOKEN);
-    tokens[1] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_STAKE_TOKEN);
+    tokenCount = 0;
+    tokens[tokenCount] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_TOKEN);
+    if (tokens[tokenCount] != address(0)) {
+      tokenCount++;
+    }
+    tokens[tokenCount] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_STAKE_TOKEN);
+    if (tokens[tokenCount] != address(0)) {
+      tokenCount++;
+    }
 
     tokenCount = 2;
 
@@ -397,24 +417,6 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     return (reserve.depositTokenAddress, reserve.stableDebtTokenAddress, reserve.variableDebtTokenAddress);
   }
 
-  function getInterestRateStrategySlopes(IReserveRateStrategy interestRateStrategy)
-    internal
-    view
-    returns (
-      uint256,
-      uint256,
-      uint256,
-      uint256
-    )
-  {
-    // return (
-    //   interestRateStrategy.variableRateSlope1(),
-    //   interestRateStrategy.variableRateSlope2(),
-    //   interestRateStrategy.stableRateSlope1(),
-    //   interestRateStrategy.stableRateSlope2()
-    // );
-  }
-
   function getReservesData(address user)
     external
     view
@@ -425,33 +427,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       uint256
     )
   {
-    return _getReservesData(IPoolAddressProvider(address(ADDRESS_PROVIDER)), user);
-  }
-
-  function getReservesDataOf(IPoolAddressProvider provider, address user)
-    external
-    view
-    override
-    returns (
-      AggregatedReserveData[] memory,
-      UserReserveData[] memory,
-      uint256
-    )
-  {
-    return _getReservesData(provider, user);
-  }
-
-  function _getReservesData(IPoolAddressProvider provider, address user)
-    private
-    view
-    returns (
-      AggregatedReserveData[] memory,
-      UserReserveData[] memory,
-      uint256
-    )
-  {
-    ILendingPool lendingPool = ILendingPool(provider.getLendingPool());
-    IPriceOracleGetter oracle = IPriceOracleGetter(provider.getPriceOracle());
+    ILendingPool lendingPool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
+    IPriceOracleGetter oracle = IPriceOracleGetter(ADDRESS_PROVIDER.getPriceOracle());
     address[] memory reserves = lendingPool.getReservesList();
     DataTypes.UserConfigurationMap memory userConfig = lendingPool.getUserConfiguration(user);
 
@@ -475,19 +452,26 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       reserveData.stableDebtTokenAddress = baseData.stableDebtTokenAddress;
       reserveData.variableDebtTokenAddress = baseData.variableDebtTokenAddress;
       reserveData.strategy = baseData.strategy;
+      reserveData.isExternalStrategy = baseData.configuration.isExternalStrategyMemory();
       reserveData.priceInEth = oracle.getAssetPrice(reserveData.pricingAsset);
 
       reserveData.availableLiquidity = IERC20Detailed(reserveData.underlyingAsset).balanceOf(
         reserveData.depositTokenAddress
       );
-      (
-        reserveData.totalPrincipalStableDebt,
-        ,
-        reserveData.averageStableRate,
-        reserveData.stableDebtLastUpdateTimestamp
-      ) = IStableDebtToken(reserveData.stableDebtTokenAddress).getSupplyData();
-      reserveData.totalScaledVariableDebt = IVariableDebtToken(reserveData.variableDebtTokenAddress)
-        .scaledTotalSupply();
+
+      if (reserveData.variableDebtTokenAddress != address(0)) {
+        reserveData.totalScaledVariableDebt = IVariableDebtToken(reserveData.variableDebtTokenAddress)
+          .scaledTotalSupply();
+      }
+
+      if (reserveData.stableDebtTokenAddress != address(0)) {
+        (
+          reserveData.totalPrincipalStableDebt,
+          ,
+          reserveData.averageStableRate,
+          reserveData.stableDebtLastUpdateTimestamp
+        ) = IStableDebtToken(reserveData.stableDebtTokenAddress).getSupplyData();
+      }
 
       // reserve configuration
 
@@ -509,12 +493,6 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         reserveData.stableBorrowRateEnabled
       ) = baseData.configuration.getFlagsMemory();
       reserveData.usageAsCollateralEnabled = reserveData.baseLTVasCollateral != 0;
-      (
-        reserveData.variableRateSlope1,
-        reserveData.variableRateSlope2,
-        reserveData.stableRateSlope1,
-        reserveData.stableRateSlope2
-      ) = getInterestRateStrategySlopes(IReserveRateStrategy(reserveData.strategy));
 
       if (user != address(0)) {
         // user reserve data
@@ -525,15 +503,21 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         userReservesData[i].usageAsCollateralEnabledOnUser = userConfig.isUsingAsCollateral(i);
 
         if (userConfig.isBorrowing(i)) {
-          userReservesData[i].scaledVariableDebt = IVariableDebtToken(reserveData.variableDebtTokenAddress)
-            .scaledBalanceOf(user);
-          userReservesData[i].principalStableDebt = IStableDebtToken(reserveData.stableDebtTokenAddress)
-            .principalBalanceOf(user);
-          if (userReservesData[i].principalStableDebt != 0) {
-            userReservesData[i].stableBorrowRate = IStableDebtToken(reserveData.stableDebtTokenAddress)
-              .getUserStableRate(user);
-            userReservesData[i].stableBorrowLastUpdateTimestamp = IStableDebtToken(reserveData.stableDebtTokenAddress)
-              .getUserLastUpdated(user);
+          if (reserveData.variableDebtTokenAddress != address(0)) {
+            userReservesData[i].scaledVariableDebt = IVariableDebtToken(reserveData.variableDebtTokenAddress)
+              .scaledBalanceOf(user);
+          }
+
+          if (reserveData.stableDebtTokenAddress != address(0)) {
+            userReservesData[i].principalStableDebt = IStableDebtToken(reserveData.stableDebtTokenAddress)
+              .principalBalanceOf(user);
+
+            if (userReservesData[i].principalStableDebt != 0) {
+              userReservesData[i].stableBorrowRate = IStableDebtToken(reserveData.stableDebtTokenAddress)
+                .getUserStableRate(user);
+              userReservesData[i].stableBorrowLastUpdateTimestamp = IStableDebtToken(reserveData.stableDebtTokenAddress)
+                .getUserLastUpdated(user);
+            }
           }
         }
       }

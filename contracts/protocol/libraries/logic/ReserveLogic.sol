@@ -383,7 +383,7 @@ library ReserveLogic {
 
   function _updateExternalIndexes(DataTypes.ReserveData storage reserve, address asset) private returns (uint256) {
     IReserveDelegatedStrategy.DelegatedState memory state = IReserveDelegatedStrategy(reserve.strategy)
-      .getDelegatedState(asset);
+      .getDelegatedState(asset, reserve.lastUpdateTimestamp);
     require(state.lastUpdateTimestamp <= block.timestamp);
 
     if (state.lastUpdateTimestamp == reserve.lastUpdateTimestamp) {

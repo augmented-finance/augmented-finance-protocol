@@ -39,6 +39,7 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
     USDT: 0.00050314705,
     WBTC: 16.08,
     USD: 0.00050,
+    ADAI: 0.0005022851,
   };
   cfg.FallbackOracle[eEthereumNetwork.main] = defRates;
   cfg.FallbackOracle[eEthereumNetwork.ropsten] = defRates;

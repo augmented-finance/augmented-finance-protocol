@@ -43,6 +43,8 @@ import {
   ReferralRewardPoolFactory,
   MockLendingPoolFactory,
   DelegatedStrategyAaveFactory,
+  DelegatedStrategyCompoundErc20Factory,
+  DelegatedStrategyCompoundEthFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -374,5 +376,17 @@ export const getIManagedLendingPool = async (address: tEthereumAddress) =>
 export const getDelegatedStrategyAave = async (address?: tEthereumAddress) =>
   DelegatedStrategyAaveFactory.connect(
     address || (await getAddr(eContractid.DelegatedStrategyAave)),
+    await getFirstSigner()
+  );
+
+export const getDelegatedStrategyCompoundErc20 = async (address?: tEthereumAddress) =>
+  DelegatedStrategyCompoundErc20Factory.connect(
+    address || (await getAddr(eContractid.DelegatedStrategyCompoundErc20)),
+    await getFirstSigner()
+  );
+
+export const getDelegatedStrategyCompoundEth = async (address?: tEthereumAddress) =>
+  DelegatedStrategyCompoundEthFactory.connect(
+    address || (await getAddr(eContractid.DelegatedStrategyCompoundEth)),
     await getFirstSigner()
   );

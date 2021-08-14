@@ -1,10 +1,12 @@
 import { eContractid, IReserveParams, ITokenNames, tEthereumAddress } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, falsyOrZeroAddress, waitForTx } from './misc-utils';
-import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contracts-getters';
+import { getLendingPoolConfiguratorProxy, getLendingPoolProxy, getWETHGateway } from './contracts-getters';
 import { AccessFlags } from './access-flags';
 import {
   deployDelegatedStrategyAave,
+  deployDelegatedStrategyCompoundErc20,
+  deployDelegatedStrategyCompoundEth,
   deployDelegationAwareDepositToken,
   deployDelegationAwareDepositTokenImpl,
   deployDepositToken,
@@ -87,7 +89,7 @@ export const initReservesByHelper = async (
   for (let [symbol, params] of Object.entries(reservesParams)) {
     const tokenAddress = tokenAddresses[symbol];
     if (falsyOrZeroAddress(tokenAddress)) {
-      console.log(`Asset ${symbol} is missing in ${tokenAddresses}`);
+      console.log(`Asset ${symbol} is missing`);
       throw 'asset is missing: ' + symbol;
     }
 
@@ -123,9 +125,20 @@ export const initReservesByHelper = async (
         const strategyContract = await deployDelegatedStrategyAave([strategy.name], verify);
         info.address = strategyContract.address;
         info.external = true;
-        // } else if (strategy.strategyImpl == eContractid.DelegatedStrategyCompound) {
-        //   const strategyContract = await deployDelegatedStrategyCompound([strategy.name], verify);
-        //   strategyAddresses[strategy.name] = strategyContract.address;
+      } else if (strategy.strategyImpl == eContractid.DelegatedStrategyCompoundErc20) {
+        const strategyContract = await deployDelegatedStrategyCompoundErc20([strategy.name], verify);
+        info.address = strategyContract.address;
+        info.external = true;
+      } else if (strategy.strategyImpl == eContractid.DelegatedStrategyCompoundEth) {
+        const wethGateway = await getWETHGateway(await addressProvider.getAddress(AccessFlags.WETH_GATEWAY));
+        const wethAddress = await wethGateway.getWETHAddress();
+        if (falsyOrZeroAddress(wethAddress)) {
+          throw 'wethAddress is required';
+        }
+
+        const strategyContract = await deployDelegatedStrategyCompoundEth([strategy.name, wethAddress], verify);
+        info.address = strategyContract.address;
+        info.external = true;
       } else {
         console.log(`Asset ${symbol} has unknown strategy type: ${strategy.strategyImpl}`);
         continue;

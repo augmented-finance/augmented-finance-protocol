@@ -1,6 +1,6 @@
 import { oneRay, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames } from '../../helpers/constants';
 import { ICommonConfiguration, eEthereumNetwork, StakeMode } from '../../helpers/types';
-import { strategyAAVE, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
+import { strategyAAVE, strategyADAI, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
 
 // ----------------
 // PROTOCOL GLOBAL PARAMS
@@ -30,12 +30,6 @@ export const CommonsConfig: ICommonConfiguration = {
     },
     WBTC: {
       borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    },
-    AAVE: {
-      borrowRate: '',
-    },
-    LINK: {
-      borrowRate: '',
     },
   },
   // ----------------
@@ -280,6 +274,7 @@ export const CommonsConfig: ICommonConfiguration = {
       USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
       WBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
       WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+      ADAI: '0x028171bca77440897b824ca71d1c56cac55b68a3',
     },
     [eEthereumNetwork.tenderlyMain]: {
       AAVE: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
@@ -301,7 +296,7 @@ export const CommonsConfig: ICommonConfiguration = {
     WBTC: strategyWBTC,
     WETH: strategyWETH,
 
-//    ADAI: strategyADAI,
+    ADAI: strategyADAI,
   },
 
   StakeParams: {
@@ -434,6 +429,7 @@ export const CommonsConfig: ICommonConfiguration = {
 
     AllAssetsInitialPrices: {
       ...MOCK_CHAINLINK_AGGREGATORS_PRICES,
+      ADAI: MOCK_CHAINLINK_AGGREGATORS_PRICES.DAI
     },
   },
 
