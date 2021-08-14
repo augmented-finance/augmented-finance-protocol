@@ -1,13 +1,9 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
-import { falsyOrZeroAddress, getFirstSigner } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, getFirstSigner, mustWaitTx } from '../../helpers/misc-utils';
 import { eNetwork } from '../../helpers/types';
-import {
-  getIErc20Detailed,
-  getLendingPoolProxy,
-  getMarketAddressController,
-} from '../../helpers/contracts-getters';
+import { getIErc20Detailed, getLendingPoolProxy, getMarketAddressController } from '../../helpers/contracts-getters';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { BigNumber } from 'ethers';
 
@@ -75,26 +71,23 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
 
       const donation = balance.mul(mustDeposit ? 0 : donatePct).div(100);
       if (donation.gt(0)) {
-        await token
-          .connect(holder)
-          .transfer(receiver, donation, { gasLimit: 1000000, gasPrice: 1 });
+        await token.connect(holder).transfer(receiver, donation, { gasLimit: 1000000, gasPrice: 1 });
       }
 
       let canDepositToken = false;
       const deposit = balance.mul(mustDeposit && depositPct == 0 ? 20 : depositPct).div(100);
       if (deposit.gt(0)) {
-        await token
-          .connect(holder)
-          .transfer(deployer.address, deposit, { gasLimit: 1000000, gasPrice: 1 });
+        await token.connect(holder).transfer(deployer.address, deposit, { gasLimit: 1000000, gasPrice: 1 });
 
         const rd = await lendingPool.getReserveData(tokenAddress);
         canDepositToken = !falsyOrZeroAddress(rd.depositTokenAddress);
 
         if (canDepositToken) {
-          await token
-            .connect(deployer)
-            .approve(lendingPool.address, deposit, { gasLimit: 1000000, gasPrice: 1 });
-          await lendingPool.connect(deployer).deposit(token.address, deposit, deployer.address, 0);
+          await token.connect(deployer).approve(lendingPool.address, deposit, { gasLimit: 1000000, gasPrice: 1 });
+          const tx = await mustWaitTx(
+            lendingPool.connect(deployer).deposit(token.address, deposit, deployer.address, 0)
+          );
+          console.log('\t\tDeposit gas: ', tx.gasUsed.toNumber());
           hasDeposits = true;
         }
       }
@@ -111,9 +104,7 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
 
       BigNumber.from(10).pow(decimals - 3);
       if (donation.gt(0)) {
-        console.log(
-          `\t${tokenName}: ${donation.div(factor).toNumber() / divisor} plucked from ${tokenHolder}`
-        );
+        console.log(`\t${tokenName}: ${donation.div(factor).toNumber() / divisor} plucked from ${tokenHolder}`);
       }
       if (deposit.gt(0)) {
         console.log(

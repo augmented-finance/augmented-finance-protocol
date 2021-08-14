@@ -13,4 +13,6 @@ interface IWETH {
     address dst,
     uint256 wad
   ) external returns (bool);
+
+  function transfer(address dst, uint256 wad) external returns (bool);
 }

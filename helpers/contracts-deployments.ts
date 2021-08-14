@@ -1,6 +1,6 @@
 import { BigNumberish, Contract } from 'ethers';
 import { DRE, getContractFactory, getFirstSigner } from './misc-utils';
-import { tEthereumAddress, eContractid, tStringTokenSmallUnits, TokenContractId, PoolConfiguration } from './types';
+import { tEthereumAddress, eContractid, tStringTokenSmallUnits, PoolConfiguration, DefaultTokenSymbols } from './types';
 import { MockContract } from 'ethereum-waffle';
 import { getReservesTestConfig } from './configuration';
 import { ZERO_ADDRESS } from './constants';
@@ -56,6 +56,9 @@ import {
   LendingPoolCompatibleFactory,
   MockLendingPoolFactory,
   MockDelegationAwareDepositTokenFactory,
+  DelegatedStrategyAaveFactory,
+  DelegatedStrategyCompoundEthFactory,
+  DelegatedStrategyCompoundErc20Factory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -505,7 +508,7 @@ export const deployAllMockTokens = async (verify?: boolean) => {
 
   const protoConfigData = getReservesTestConfig();
 
-  for (const tokenSymbol of Object.keys(TokenContractId)) {
+  for (const tokenSymbol of DefaultTokenSymbols) {
     let decimals = '18';
 
     let configData = (<any>protoConfigData)[tokenSymbol];
@@ -654,6 +657,7 @@ export const deployMockStakedAgToken = async (
     {
       stakeController: args[0],
       stakedToken: args[1],
+      strategy: ZERO_ADDRESS,
       cooldownPeriod: args[4],
       unstakePeriod: args[5],
       maxSlashable: 3000, // 30%
@@ -680,6 +684,7 @@ export const deployMockStakedAgfToken = async (
     {
       stakeController: args[0],
       stakedToken: args[1],
+      strategy: ZERO_ADDRESS,
       cooldownPeriod: args[4],
       unstakePeriod: args[5],
       maxSlashable: 3000, // 30%
@@ -956,4 +961,31 @@ export const deployTokenWeightedRewardPoolImpl = async (verify: boolean, once: b
     eContractid.TokenWeightedRewardPoolImpl,
     verify,
     once
+  );
+
+export const deployDelegatedStrategyAave = async (args: [name: string], verify?: boolean) =>
+  withSaveAndVerify(
+    await new DelegatedStrategyAaveFactory(await getFirstSigner()).deploy(...args),
+    eContractid.DelegatedStrategyAave,
+    args,
+    verify
+  );
+
+export const deployDelegatedStrategyCompoundErc20 = async (args: [name: string], verify?: boolean) =>
+  withSaveAndVerify(
+    await new DelegatedStrategyCompoundErc20Factory(await getFirstSigner()).deploy(...args),
+    eContractid.DelegatedStrategyCompoundErc20,
+    args,
+    verify
+  );
+
+export const deployDelegatedStrategyCompoundEth = async (
+  args: [name: string, weth: tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new DelegatedStrategyCompoundEthFactory(await getFirstSigner()).deploy(...args),
+    eContractid.DelegatedStrategyCompoundEth,
+    args,
+    verify
   );

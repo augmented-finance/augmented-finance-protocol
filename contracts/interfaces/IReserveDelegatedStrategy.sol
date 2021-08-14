@@ -2,9 +2,10 @@
 pragma solidity ^0.8.4;
 
 import './IReserveStrategy.sol';
+import './IUnderlyingStrategy.sol';
 
 /// @dev Interface to access the interest rate of an external asset
-interface IReserveDelegatedStrategy is IReserveStrategy {
+interface IReserveDelegatedStrategy is IReserveStrategy, IUnderlyingStrategy {
   /// @dev all indexes and rates are expressed in ray
   struct DelegatedState {
     uint128 liquidityIndex;
@@ -15,15 +16,11 @@ interface IReserveDelegatedStrategy is IReserveStrategy {
     uint40 lastUpdateTimestamp;
   }
 
-  function getDelegatedState(address underlyingToken) external view returns (DelegatedState memory);
-
-  function getDelegatedDepositIndex(address underlyingToken)
+  function getDelegatedState(address underlyingToken, uint40 lastUpdateTimestamp)
     external
-    view
-    returns (uint256 liquidityIndex);
+    returns (DelegatedState memory);
 
-  function getDelegatedVariableBorrowIndex(address underlyingToken)
-    external
-    view
-    returns (uint256 variableBorrowIndex);
+  function getDelegatedDepositIndex(address underlyingToken) external view returns (uint256 liquidityIndex);
+
+  function getStrategyName() external view returns (string memory);
 }

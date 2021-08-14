@@ -50,10 +50,6 @@ contract LendingPoolConfigurator is
     }
   }
 
-  function isEmpty(string memory s) private pure returns (bool) {
-    return bytes(s).length == 0;
-  }
-
   function _initPoolToken(address impl, bytes memory initParams) internal returns (address) {
     return address(_remoteAcl.createProxy(address(this), impl, initParams));
   }
@@ -77,7 +73,7 @@ contract LendingPoolConfigurator is
       )
     );
 
-    address variableDebtTokenProxyAddress = isEmpty(input.variableDebtTokenSymbol)
+    address variableDebtTokenProxyAddress = input.externalStrategy || input.variableDebtTokenImpl == address(0)
       ? address(0)
       : _initPoolToken(
         input.variableDebtTokenImpl,
@@ -90,7 +86,7 @@ contract LendingPoolConfigurator is
         )
       );
 
-    address stableDebtTokenProxyAddress = isEmpty(input.stableDebtTokenSymbol)
+    address stableDebtTokenProxyAddress = input.externalStrategy || input.stableDebtTokenImpl == address(0)
       ? address(0)
       : _initPoolToken(
         input.stableDebtTokenImpl,
@@ -231,12 +227,12 @@ contract LendingPoolConfigurator is
     if (liquidationThreshold != 0) {
       //liquidation bonus must be bigger than 100.00%, otherwise the liquidator would receive less
       //collateral than needed to cover the debt
-      require(liquidationBonus > PercentageMath.PERCENTAGE_FACTOR, Errors.LPC_INVALID_CONFIGURATION);
+      require(liquidationBonus > PercentageMath.ONE, Errors.LPC_INVALID_CONFIGURATION);
 
-      //if threshold * bonus is less than PERCENTAGE_FACTOR, it's guaranteed that at the moment
+      //if threshold * bonus is less than 100%, it guarantees that at the moment
       //a loan is taken there is enough collateral available to cover the liquidation bonus
       require(
-        liquidationThreshold.percentMul(liquidationBonus) <= PercentageMath.PERCENTAGE_FACTOR,
+        liquidationThreshold.percentMul(liquidationBonus) <= PercentageMath.ONE,
         Errors.LPC_INVALID_CONFIGURATION
       );
     } else {

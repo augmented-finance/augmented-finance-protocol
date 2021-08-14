@@ -35,4 +35,6 @@ abstract contract LendingPoolStorage is VersionedInitializable {
   uint8 internal _nestedCalls;
 
   bool internal _paused;
+
+  mapping(address => address[]) internal _indirectUnderlying;
 }

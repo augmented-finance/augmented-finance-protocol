@@ -67,6 +67,10 @@ export enum eContractid {
   RewardBoosterImpl = 'RewardBoosterImpl',
   TreasuryRewardPool = 'TreasuryRewardPool',
 
+  DelegatedStrategyAave = 'DelegatedStrategyAave',
+  DelegatedStrategyCompoundErc20 = 'DelegatedStrategyCompoundErc20',
+  DelegatedStrategyCompoundEth = 'DelegatedStrategyCompoundEth',
+
   UniswapLiquiditySwapAdapter = 'UniswapLiquiditySwapAdapter',
   UniswapRepayAdapter = 'UniswapRepayAdapter',
   FlashLiquidationAdapter = 'FlashLiquidationAdapter',
@@ -235,9 +239,15 @@ export interface iAssetBase<T> {
   USD: T;
   AAVE: T;
   LINK: T;
+
+  ADAI: T;
 }
 
+type testAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC' | 'AAVE' | 'LINK';
+type testOnlyAssets = 'AAVE' | 'LINK';
+
 export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, 'USD'>;
+export type iAssetsWithoutUSDOpt<T> = OmitOpt<iAssetBase<T>, 'USD'>;
 
 export type RecordOpt<K extends keyof any, T> = {
   [P in K]?: T;
@@ -247,36 +257,40 @@ export type PickOpt<T, K extends keyof T> = {
   [P in K]?: T[P];
 };
 
-type augmentedAssets = 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH';
+export type OmitOpt<T, K extends keyof any> = PickOpt<T, Exclude<keyof T, K>>;
 
-export type iAugmentedPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, augmentedAssets>;
-export type iAugmentedPoolAssetsOpt<T> = PickOpt<iAssetsWithoutUSD<T>, augmentedAssets>;
+export type iTestPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, testAssets>;
+export type iAugmentedPoolAssets<T> = Omit<iAssetsWithoutUSD<T>, testOnlyAssets>;
+export type iAugmentedPoolAssetsOpt<T> = OmitOpt<iAssetsWithoutUSD<T>, testOnlyAssets>;
 
-type iMultiPoolsAssets<T> = iAssetsWithoutUSD<T> | iAugmentedPoolAssets<T>;
+type iMultiPoolsAssets<T> = iAssetsWithoutUSD<T> | iAugmentedPoolAssets<T> | iTestPoolAssets<T>;
 
 export type iAssetAggregatorBase<T> = iAssetBase<T>;
 
-export const TokenContractId: iAssetBase<string> = {
-  AAVE: 'AAVE',
-  LINK: 'LINK',
-
-  WETH: 'WETH',
-  DAI: 'DAI',
-  USDC: 'USDC',
-  USDT: 'USDT',
-  WBTC: 'WBTC',
-
-  USD: 'USD',
+const tokenSymbols: iAssetBase<string> = {
+  WETH: '',
+  DAI: '',
+  USDC: '',
+  USDT: '',
+  WBTC: '',
+  USD: '',
+  AAVE: '',
+  LINK: '',
+  ADAI: '',
 };
+
+export const DefaultTokenSymbols: string[] = Object.keys(tokenSymbols);
 
 export interface IReserveParams extends IReserveBorrowParams, IReserveCollateralParams {
   depositTokenImpl: eContractid;
-  reserveFactor: string;
+  reserveFactor: number;
   strategy: IInterestRateStrategyParams;
+  reserveDecimals: number;
 }
 
 export interface IInterestRateStrategyParams {
   name: string;
+  strategyImpl?: eContractid;
   optimalUtilizationRate: string;
   baseVariableBorrowRate: string;
   variableRateSlope1: string;
@@ -286,21 +300,14 @@ export interface IInterestRateStrategyParams {
 }
 
 export interface IReserveBorrowParams {
-  // optimalUtilizationRate: string;
-  // baseVariableBorrowRate: string;
-  // variableRateSlope1: string;
-  // variableRateSlope2: string;
-  // stableRateSlope1: string;
-  // stableRateSlope2: string;
   borrowingEnabled: boolean;
   stableBorrowRateEnabled: boolean;
-  reserveDecimals: string;
 }
 
 export interface IReserveCollateralParams {
-  baseLTVAsCollateral: string;
-  liquidationThreshold: string;
-  liquidationBonus: string;
+  baseLTVAsCollateral: number;
+  liquidationThreshold: number;
+  liquidationBonus: number;
 }
 export interface IMarketRates {
   borrowRate: string;
@@ -308,9 +315,7 @@ export interface IMarketRates {
 
 export type iParamsPerNetwork<T> = iEthereumParamsPerNetwork<T> | iPolygonParamsPerNetwork<T>;
 
-export interface iParamsPerNetworkAll<T>
-  extends iEthereumParamsPerNetwork<T>,
-    iPolygonParamsPerNetwork<T> {}
+export interface iParamsPerNetworkAll<T> extends iEthereumParamsPerNetwork<T>, iPolygonParamsPerNetwork<T> {}
 
 export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.coverage]: T;
@@ -360,19 +365,26 @@ export interface ICommonConfiguration {
   FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
 
   ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
-  LendingRateOracleRates: iAssetsWithoutUSD<IMarketRates>;
+  LendingRateOracleRates: iAssetsWithoutUSDOpt<IMarketRates>;
 
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
   EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
 
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
-  ReservesConfig: iMultiPoolsAssets<IReserveParams>;
+  //  ReservesConfig: iMultiPoolsAssets<IReserveParams>;
+  ReservesConfig: {
+    [key: string]: IReserveParams;
+  };
 
   StakeParams: IStakeParams;
 
   RewardParams: IRewardParams;
 
   ForkTest: IForkTest;
+}
+
+export interface ITestConfiguration extends ICommonConfiguration {
+  ReservesConfig: iTestPoolAssets<IReserveParams>;
 }
 
 export interface IAugmentedConfiguration extends ICommonConfiguration {

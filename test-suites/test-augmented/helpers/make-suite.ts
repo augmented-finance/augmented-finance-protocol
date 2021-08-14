@@ -35,11 +35,11 @@ import { getParamPerNetwork } from '../../../helpers/contracts-helpers';
 import { WETH9Mocked } from '../../../types/WETH9Mocked';
 import { WETHGateway } from '../../../types/WETHGateway';
 import { solidity } from 'ethereum-waffle';
-import { AugmentedConfig } from '../../../markets/augmented';
 import { FlashLiquidationAdapter, MarketAccessController } from '../../../types';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { usingTenderly } from '../../../helpers/tenderly-utils';
 import { AccessFlags } from '../../../helpers/access-flags';
+import { TestConfig } from '../../../markets/augmented';
 
 chai.use(bignumberChai());
 chai.use(almostEqual());
@@ -113,7 +113,7 @@ export async function initializeMakeSuite() {
 
   if (process.env.MAINNET_FORK === 'true') {
     testEnv.registry = await getAddressesProviderRegistry(
-      getParamPerNetwork(AugmentedConfig.ProviderRegistry, eEthereumNetwork.main)
+      getParamPerNetwork(TestConfig.ProviderRegistry, eEthereumNetwork.main)
     );
   } else {
     testEnv.registry = await getAddressesProviderRegistry();
@@ -132,11 +132,9 @@ export async function initializeMakeSuite() {
   testEnv.helpersContract = await getProtocolDataProvider();
 
   const allTokens = await testEnv.helpersContract.getAllDepositTokens();
-  const aDaiAddress = allTokens.find((depositToken) => depositToken.symbol === 'agDAI')
-    ?.tokenAddress;
+  const aDaiAddress = allTokens.find((depositToken) => depositToken.symbol === 'agDAI')?.tokenAddress;
 
-  const aWEthAddress = allTokens.find((depositToken) => depositToken.symbol === 'agWETH')
-    ?.tokenAddress;
+  const aWEthAddress = allTokens.find((depositToken) => depositToken.symbol === 'agWETH')?.tokenAddress;
 
   const reservesTokens = await testEnv.helpersContract.getAllReserveTokens();
 

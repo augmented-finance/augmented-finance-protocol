@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../interfaces/IReserveStrategy.sol';
+import '../../interfaces/IReserveRateStrategy.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../interfaces/IPriceOracleProvider.sol';
@@ -14,7 +14,7 @@ import '../../dependencies/openzeppelin/contracts/IERC20.sol';
  * @dev The model of interest rate is based on 2 slopes, one before the `OPTIMAL_UTILIZATION_RATE`
  * point of utilization and another from that one to 100%
  **/
-contract DefaultReserveInterestRateStrategy is IReserveStrategy {
+contract DefaultReserveInterestRateStrategy is IReserveRateStrategy {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
 
@@ -67,6 +67,10 @@ contract DefaultReserveInterestRateStrategy is IReserveStrategy {
     _variableRateSlope2 = variableRateSlope2_;
     _stableRateSlope1 = stableRateSlope1_;
     _stableRateSlope2 = stableRateSlope2_;
+  }
+
+  function isDelegatedReserve() external pure override returns (bool) {
+    return false;
   }
 
   function variableRateSlope1() external view returns (uint256) {

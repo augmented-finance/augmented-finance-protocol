@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
+import '../../dependencies/openzeppelin/contracts/Address.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../misc/ERC20WithPermit.sol';
@@ -8,6 +9,7 @@ import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../tools/Errors.sol';
 import '../../interfaces/IBalanceHook.sol';
+import '../libraries/helpers/UnderlyingHelper.sol';
 import '../../access/AccessFlags.sol';
 import '../../access/MarketAccessBitmask.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
@@ -29,6 +31,7 @@ abstract contract SlashableStakeTokenBase is
 
   IERC20 private _stakedToken;
   IBalanceHook internal _incentivesController;
+  IUnderlyingStrategy private _strategy;
 
   mapping(address => uint32) private _stakersCooldowns;
 
@@ -50,6 +53,7 @@ abstract contract SlashableStakeTokenBase is
     _remoteAcl = params.stakeController;
     _stakedToken = params.stakedToken;
     _cooldownPeriod = params.cooldownPeriod;
+    _strategy = params.strategy;
 
     if (params.unstakePeriod == 0) {
       _unstakePeriod = 10;
@@ -256,7 +260,11 @@ abstract contract SlashableStakeTokenBase is
     if (amount < minAmount) {
       return 0;
     }
-    _stakedToken.safeTransfer(destination, amount);
+    if (address(_strategy) == address(0)) {
+      _stakedToken.safeTransfer(destination, amount);
+    } else {
+      amount = UnderlyingHelper.delegateWithdrawUnderlying(_strategy, address(_stakedToken), amount, destination);
+    }
 
     emit Slashed(destination, amount, underlyingBalance);
     return amount;

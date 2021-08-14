@@ -22,7 +22,7 @@ import {
   deployMockLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
-import { TokenContractId, tEthereumAddress } from '../../helpers/types';
+import { DefaultTokenSymbols, tEthereumAddress } from '../../helpers/types';
 import { MintableERC20 } from '../../types';
 import { ConfigNames, getReservesTestConfig, loadPoolConfig } from '../../helpers/configuration';
 import { initializeMakeSuite } from './helpers/make-suite';
@@ -38,6 +38,7 @@ import { getLendingPoolProxy, getTokenAggregatorPairs } from '../../helpers/cont
 import { WETH9Mocked } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
 import { TestConfig } from '../../markets/augmented';
+import _ from 'lodash';
 
 const deployConfig = TestConfig;
 const MOCK_USD_PRICE_IN_WEI = deployConfig.Mocks.MockUsdPriceInWei;
@@ -47,14 +48,15 @@ const MOCK_CHAINLINK_AGGREGATORS_PRICES = deployConfig.Mocks.AllAssetsInitialPri
 const LENDING_RATE_ORACLE_RATES = deployConfig.LendingRateOracleRates;
 
 const deployAllMockTokens = async (deployer: Signer) => {
-  const tokens: { [symbol: string]: MockContract | MintableERC20 | WETH9Mocked } = {};
+  const tokens: { [symbol: string]: tEthereumAddress } = {};
 
   const protoConfigData = getReservesTestConfig();
 
-  for (const tokenSymbol of Object.keys(TokenContractId)) {
+  for (const tokenSymbol of DefaultTokenSymbols) {
     if (tokenSymbol === 'WETH') {
-      tokens[tokenSymbol] = await deployWETHMocked();
-      await registerContractInJsonDb(tokenSymbol.toUpperCase(), tokens[tokenSymbol]);
+      const contract = await deployWETHMocked();
+      await registerContractInJsonDb(tokenSymbol.toUpperCase(), contract);
+      tokens[tokenSymbol] = contract.address;
       continue;
     }
     let decimals = 18;
@@ -65,12 +67,13 @@ const deployAllMockTokens = async (deployer: Signer) => {
       decimals = 18;
     }
 
-    tokens[tokenSymbol] = await deployMintableERC20([
+    const contract = await deployMintableERC20([
       tokenSymbol,
       tokenSymbol,
       configData ? configData.reserveDecimals : 18,
     ]);
-    await registerContractInJsonDb(tokenSymbol.toUpperCase(), tokens[tokenSymbol]);
+    await registerContractInJsonDb(tokenSymbol.toUpperCase(), contract);
+    tokens[tokenSymbol] = contract.address;
   }
 
   return tokens;
@@ -113,13 +116,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   await setInitialAssetPricesInOracle(
     ALL_ASSETS_INITIAL_PRICES,
     {
-      WETH: mockTokens.WETH.address,
-      DAI: mockTokens.DAI.address,
-      USDC: mockTokens.USDC.address,
-      USDT: mockTokens.USDT.address,
-      AAVE: mockTokens.AAVE.address,
-      WBTC: mockTokens.WBTC.address,
-      LINK: mockTokens.LINK.address,
+      ...mockTokens,
       USD: USD_ADDRESS,
     },
     fallbackOracle
@@ -127,13 +124,8 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const mockAggregators = await deployAllMockAggregators(MOCK_CHAINLINK_AGGREGATORS_PRICES);
   console.log('Mock aggs deployed');
-  const allTokenAddresses = Object.entries(mockTokens).reduce(
-    (accum: { [tokenSymbol: string]: tEthereumAddress }, [tokenSymbol, tokenContract]) => ({
-      ...accum,
-      [tokenSymbol]: tokenContract.address,
-    }),
-    {}
-  );
+  const allTokenAddresses = mockTokens;
+
   const allAggregatorsAddresses = Object.entries(mockAggregators).reduce(
     (accum: { [tokenSymbol: string]: tEthereumAddress }, [tokenSymbol, aggregator]) => ({
       ...accum,
@@ -144,13 +136,7 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const [tokens, aggregators] = getTokenAggregatorPairs(allTokenAddresses, allAggregatorsAddresses);
 
-  await deployOracleRouter([
-    addressProvider.address,
-    tokens,
-    aggregators,
-    fallbackOracle.address,
-    mockTokens.WETH.address,
-  ]);
+  await deployOracleRouter([addressProvider.address, tokens, aggregators, fallbackOracle.address, mockTokens.WETH]);
 
   const lendingRateOracle = await deployLendingRateOracle([addressProvider.address]);
 
@@ -189,17 +175,13 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const mockUniswapRouter = await deployMockUniswapRouter();
 
-  const adapterParams: [string, string, string] = [
-    addressProvider.address,
-    mockUniswapRouter.address,
-    mockTokens.WETH.address,
-  ];
+  const adapterParams: [string, string, string] = [addressProvider.address, mockUniswapRouter.address, mockTokens.WETH];
 
   await deployUniswapLiquiditySwapAdapter(adapterParams);
   await deployUniswapRepayAdapter(adapterParams);
   await deployFlashLiquidationAdapter(adapterParams);
 
-  await deployWETHGateway([addressProvider.address, mockTokens.WETH.address]);
+  await deployWETHGateway([addressProvider.address, mockTokens.WETH]);
 
   console.timeEnd('setup');
 };

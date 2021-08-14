@@ -6,8 +6,7 @@ import '../types/DataTypes.sol';
 
 /// @dev Implements the bitmap logic to handle the user configuration
 library UserConfiguration {
-  uint256 internal constant BORROWING_MASK =
-    0x5555555555555555555555555555555555555555555555555555555555555555;
+  uint256 internal constant BORROWING_MASK = 0x5555555555555555555555555555555555555555555555555555555555555555;
 
   /// @dev Sets the user's borrowing flag of the reserve identified by reserveIndex
   function setBorrowing(
@@ -16,9 +15,7 @@ library UserConfiguration {
     bool borrowing
   ) internal {
     require(reserveIndex < 128, Errors.UL_INVALID_INDEX);
-    self.data =
-      (self.data & ~(1 << (reserveIndex * 2))) |
-      (uint256(borrowing ? 1 : 0) << (reserveIndex * 2));
+    self.data = (self.data & ~(1 << (reserveIndex * 2))) | (uint256(borrowing ? 1 : 0) << (reserveIndex * 2));
   }
 
   /// @dev Sets the user's `using as collateral` flag on the reserve identified by reserveIndex
@@ -34,20 +31,17 @@ library UserConfiguration {
   }
 
   /// @dev Returns true if the user is using the reserve for borrowing or as collateral
-  function isUsingAsCollateralOrBorrowing(
-    DataTypes.UserConfigurationMap memory self,
-    uint256 reserveIndex
-  ) internal pure returns (bool) {
-    require(reserveIndex < 128, Errors.UL_INVALID_INDEX);
-    return (self.data >> (reserveIndex * 2)) & 3 != 0;
+  function isUsingAsCollateralOrBorrowing(DataTypes.UserConfigurationMap memory self, uint256 reserveIndex)
+    internal
+    pure
+    returns (bool, bool)
+  {
+    uint256 data = self.data >> (reserveIndex << 1);
+    return (data > 0, data & 3 != 0);
   }
 
   /// @dev Returns true if the user is using the reserve for borrowing
-  function isBorrowing(DataTypes.UserConfigurationMap memory self, uint256 reserveIndex)
-    internal
-    pure
-    returns (bool)
-  {
+  function isBorrowing(DataTypes.UserConfigurationMap memory self, uint256 reserveIndex) internal pure returns (bool) {
     require(reserveIndex < 128, Errors.UL_INVALID_INDEX);
     return (self.data >> (reserveIndex * 2)) & 1 != 0;
   }

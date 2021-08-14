@@ -10,7 +10,6 @@ import {
   deployVariableDebtToken,
 } from './../../helpers/contracts-deployments';
 import { setDRE } from '../../helpers/misc-utils';
-import { ZERO_ADDRESS } from './../../helpers/constants';
 import { AccessFlags } from '../../helpers/access-flags';
 
 const LENDING_POOL_ADDRESS_PROVIDER = {
@@ -18,12 +17,12 @@ const LENDING_POOL_ADDRESS_PROVIDER = {
   kovan: '0x652B2937Efd0B5beA1c8d54293FC1289672AFC6b',
 };
 
-const names = marketConfigs.AugmentedConfig.Names;
+const cfg = marketConfigs.AugmentedConfig;
 
 const isSymbolValid = (symbol: string, network: eEthereumNetwork) =>
   Object.keys(reserveConfigs).includes('strategy' + symbol) &&
-  marketConfigs.AugmentedConfig.ReserveAssets[network][symbol] &&
-  marketConfigs.AugmentedConfig.ReservesConfig[symbol] === reserveConfigs['strategy' + symbol];
+  cfg.ReserveAssets[network][symbol] &&
+  cfg.ReservesConfig[symbol] === reserveConfigs['strategy' + symbol];
 
 task('external:deploy-new-asset', 'Deploy A token, Debt Tokens, Risk Parameters')
   .addParam('symbol', `Asset symbol, needs to have configuration ready`)
@@ -42,14 +41,13 @@ WRONG RESERVE ASSET SETUP:
     }
     setDRE(localBRE);
     const strategyParams = reserveConfigs['strategy' + symbol];
-    const reserveAssetAddress =
-      marketConfigs.AugmentedConfig.ReserveAssets[localBRE.network.name][symbol];
+    const reserveAssetAddress = cfg.ReserveAssets[localBRE.network.name][symbol];
     const deployDepositToken = chooseDepositTokenDeployment(strategyParams.depositTokenImpl);
-    const addressProvider = await getMarketAddressController(
-      LENDING_POOL_ADDRESS_PROVIDER[network]
-    );
+    const addressProvider = await getMarketAddressController(LENDING_POOL_ADDRESS_PROVIDER[network]);
     const poolAddress = await addressProvider.getLendingPool();
     const treasuryAddress = await addressProvider.getAddress(AccessFlags.TREASURY);
+
+    const names = cfg.Names;
     const depositToken = await deployDepositToken(
       [
         poolAddress,

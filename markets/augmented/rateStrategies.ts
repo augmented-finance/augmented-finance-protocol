@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { oneRay } from '../../helpers/constants';
-import { IInterestRateStrategyParams } from '../../helpers/types';
+import { eContractid, IInterestRateStrategyParams } from '../../helpers/types';
 
 // BUSD SUSD
 export const rateStrategyStableOne: IInterestRateStrategyParams = {
@@ -98,4 +98,37 @@ export const rateStrategyVolatileFour: IInterestRateStrategyParams = {
   variableRateSlope2: new BigNumber(3).multipliedBy(oneRay).toFixed(),
   stableRateSlope1: '0',
   stableRateSlope2: '0',
+}
+
+export const externalReserveAAVE: IInterestRateStrategyParams = {
+  name: 'externalReserveAAVE',
+  strategyImpl: eContractid.DelegatedStrategyAave,
+  optimalUtilizationRate: '',
+  baseVariableBorrowRate: '',
+  variableRateSlope1: '',
+  variableRateSlope2: '',
+  stableRateSlope1: '',
+  stableRateSlope2: '',
+}
+
+export const externalReserveCOMP: IInterestRateStrategyParams = {
+  name: 'externalReserveCOMP',
+  strategyImpl: eContractid.DelegatedStrategyCompoundErc20,
+  optimalUtilizationRate: '',
+  baseVariableBorrowRate: '',
+  variableRateSlope1: '',
+  variableRateSlope2: '',
+  stableRateSlope1: '',
+  stableRateSlope2: '',
+}
+
+export const externalReserveCETH: IInterestRateStrategyParams = {
+  name: 'externalReserveCETH',
+  strategyImpl: eContractid.DelegatedStrategyCompoundEth,
+  optimalUtilizationRate: '',
+  baseVariableBorrowRate: '',
+  variableRateSlope1: '',
+  variableRateSlope2: '',
+  stableRateSlope1: '',
+  stableRateSlope2: '',
 }

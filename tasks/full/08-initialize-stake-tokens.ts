@@ -3,15 +3,12 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { deployStakeTokenImpl } from '../../helpers/contracts-deployments';
 import { eNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../../helpers/types';
-import {
-  getIErc20Detailed,
-  getLendingPoolProxy,
-  getStakeConfiguratorImpl,
-} from '../../helpers/contracts-getters';
+import { getIErc20Detailed, getLendingPoolProxy, getStakeConfiguratorImpl } from '../../helpers/contracts-getters';
 import { chunk, falsyOrZeroAddress, getFirstSigner, mustWaitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumberish } from 'ethers';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
+import { ZERO_ADDRESS } from '../../helpers/constants';
 
 task(`full:init-stake-tokens`, `Deploys stake tokens`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
@@ -34,6 +31,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
     let initParams: {
       stakeTokenImpl: string;
       stakedToken: string;
+      strategy: string;
       stkTokenName: string;
       stkTokenSymbol: string;
       cooldownPeriod: BigNumberish;
@@ -95,6 +93,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
       initParams.push({
         stakeTokenImpl: tokenImplAddr,
         stakedToken: asset,
+        strategy: ZERO_ADDRESS,
         stkTokenName: `${Names.StakeTokenNamePrefix} ${tokenName}`,
         stkTokenSymbol: `${Names.StakeSymbolPrefix}${Names.SymbolPrefix}${symbol}`,
         stkTokenDecimals: decimals,
@@ -114,9 +113,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
     const chunkedParams = chunk(initParams, initChunks);
     const chunkedSymbols = chunk(initSymbols, initChunks);
 
-    await mustWaitTx(
-      addressProvider.grantRoles((await getFirstSigner()).address, AccessFlags.STAKE_ADMIN)
-    );
+    await mustWaitTx(addressProvider.grantRoles((await getFirstSigner()).address, AccessFlags.STAKE_ADMIN));
 
     console.log(`- Stakes initialization with ${chunkedParams.length} txs`);
     for (let chunkIndex = 0; chunkIndex < chunkedParams.length; chunkIndex++) {

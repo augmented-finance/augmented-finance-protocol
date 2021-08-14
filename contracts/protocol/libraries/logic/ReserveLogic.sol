@@ -6,7 +6,7 @@ import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../../interfaces/IDepositToken.sol';
 import '../../../interfaces/IStableDebtToken.sol';
 import '../../../interfaces/IVariableDebtToken.sol';
-import '../../../interfaces/IReserveStrategy.sol';
+import '../../../interfaces/IReserveRateStrategy.sol';
 import '../../../interfaces/IReserveDelegatedStrategy.sol';
 import '../configuration/ReserveConfiguration.sol';
 import '../../../tools/math/InterestMath.sol';
@@ -14,7 +14,6 @@ import '../../../tools/math/WadRayMath.sol';
 import '../../../tools/math/PercentageMath.sol';
 import '../../../tools/Errors.sol';
 import '../types/DataTypes.sol';
-import '../../../dependencies/aave-protocol-v2/contracts/IAaveLendingPool.sol';
 
 /**
  * @title ReserveLogic library
@@ -64,7 +63,7 @@ library ReserveLogic {
     }
 
     if (reserve.configuration.isExternalStrategy()) {
-      return _getExternalDepositIndex(reserve, asset);
+      return IReserveDelegatedStrategy(reserve.strategy).getDelegatedDepositIndex(asset);
     }
 
     return InterestMath.calculateLinearInterest(reserve.currentLiquidityRate, timestamp).rayMul(reserve.liquidityIndex);
@@ -235,7 +234,7 @@ library ReserveLogic {
       reserve.variableBorrowIndex
     );
 
-    (vars.newLiquidityRate, vars.newStableRate, vars.newVariableRate) = IReserveStrategy(reserve.strategy)
+    (vars.newLiquidityRate, vars.newStableRate, vars.newVariableRate) = IReserveRateStrategy(reserve.strategy)
       .calculateInterestRates(
         reserveAddress,
         depositToken,
@@ -383,53 +382,29 @@ library ReserveLogic {
   }
 
   function _updateExternalIndexes(DataTypes.ReserveData storage reserve, address asset) private returns (uint256) {
-    uint40 lastUpdateTimestamp = uint40(block.timestamp);
-    uint128 liquidityIndex;
+    IReserveDelegatedStrategy.DelegatedState memory state = IReserveDelegatedStrategy(reserve.strategy)
+      .getDelegatedState(asset, reserve.lastUpdateTimestamp);
+    require(state.lastUpdateTimestamp <= block.timestamp);
 
-    if (reserve.strategy == address(0)) {
-      AaveDataTypes.ReserveData memory state = IAaveLendingPool(IPoolToken(asset).POOL()).getReserveData(asset);
-
-      reserve.variableBorrowIndex = state.variableBorrowIndex;
-      reserve.currentLiquidityRate = state.currentLiquidityRate;
-      reserve.currentVariableBorrowRate = state.currentVariableBorrowRate;
-      reserve.currentStableBorrowRate = state.currentStableBorrowRate;
-
-      (lastUpdateTimestamp, liquidityIndex) = (state.lastUpdateTimestamp, state.liquidityIndex);
+    if (state.lastUpdateTimestamp == reserve.lastUpdateTimestamp) {
+      if (state.liquidityIndex == reserve.liquidityIndex) {
+        return state.liquidityIndex;
+      }
     } else {
-      IReserveDelegatedStrategy.DelegatedState memory state = IReserveDelegatedStrategy(reserve.strategy)
-        .getDelegatedState(asset);
-
-      reserve.variableBorrowIndex = state.variableBorrowIndex;
-      reserve.currentLiquidityRate = state.liquidityRate;
-      reserve.currentVariableBorrowRate = state.variableBorrowRate;
-      reserve.currentStableBorrowRate = state.stableBorrowRate;
-
-      (lastUpdateTimestamp, liquidityIndex) = (state.lastUpdateTimestamp, state.liquidityIndex);
+      require(state.lastUpdateTimestamp > reserve.lastUpdateTimestamp);
+      reserve.lastUpdateTimestamp = state.lastUpdateTimestamp;
     }
 
-    if (lastUpdateTimestamp > block.timestamp) {
-      lastUpdateTimestamp = uint40(block.timestamp);
-    } else if (lastUpdateTimestamp < block.timestamp - externalPastLimit) {
-      lastUpdateTimestamp = uint40(block.timestamp - externalPastLimit);
-    }
+    reserve.variableBorrowIndex = state.variableBorrowIndex;
+    reserve.currentLiquidityRate = state.liquidityRate;
+    reserve.currentVariableBorrowRate = state.variableBorrowRate;
+    reserve.currentStableBorrowRate = state.stableBorrowRate;
+    reserve.liquidityIndex = state.liquidityIndex;
 
-    (reserve.lastUpdateTimestamp, reserve.liquidityIndex) = (lastUpdateTimestamp, liquidityIndex);
-    return liquidityIndex;
+    return state.liquidityIndex;
   }
 
   // function _updateExternalRates(DataTypes.ReserveData storage reserve, address asset) private {
   //   // nothing to do - all was updated inside _updateExternalIndexes
   // }
-
-  function _getExternalDepositIndex(DataTypes.ReserveData storage reserve, address asset)
-    private
-    view
-    returns (uint256)
-  {
-    if (reserve.strategy == address(0)) {
-      return IAaveLendingPool(IPoolToken(asset).POOL()).getReserveNormalizedIncome(asset);
-    } else {
-      return IReserveDelegatedStrategy(reserve.strategy).getDelegatedDepositIndex(asset);
-    }
-  }
 }
