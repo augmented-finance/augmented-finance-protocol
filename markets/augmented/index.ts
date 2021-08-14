@@ -1,27 +1,43 @@
-import { IAugmentedConfiguration, eEthereumNetwork, IReserveParams, IReserveBorrowParams } from '../../helpers/types';
+import { IAugmentedConfiguration, eEthereumNetwork, IReserveParams, IReserveBorrowParams, ITestConfiguration } from '../../helpers/types';
 import { CommonsConfig } from './commons';
-import { strategyDAI, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
+import { strategyAAVE, strategyADAI, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
 
 // ----------------
 // POOL--SPECIFIC PARAMS
 // ----------------
 
-export const TestConfig: IAugmentedConfiguration = {
+export const TestConfig: ITestConfiguration = {
   ...CommonsConfig,
   ProviderId: 1,
   MarketId: 'Augmented test market',
+  ReservesConfig: {
+    AAVE: strategyAAVE,
+    LINK: strategyLINK,
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    WBTC: strategyWBTC,
+    WETH: strategyWETH,
+  },
 }
 
 export const AugmentedConfig: IAugmentedConfiguration = (() => {
   const src = CommonsConfig;
-  let cfg: IAugmentedConfiguration = {...src};
-  
-  cfg.MarketId = 'Augmented genesis market';
-  cfg.ProviderId = 0; // force autonumbering
+  let cfg: IAugmentedConfiguration = {...src,
+    MarketId: 'Augmented genesis market',
+    ProviderId: 0, // force autonumbering
+    ReservesConfig: {
+      DAI: strategyDAI,
+      USDC: strategyUSDC,
+      USDT: strategyUSDT,
+      WBTC: strategyWBTC,
+      WETH: strategyWETH,
+      ADAI: strategyADAI,
+    },
+  };
 
-  cfg.ReservesConfig = {... src.ReservesConfig};
   for (let k of Object.keys(cfg.ReservesConfig)) {
-    cfg.ReservesConfig[k] = {...src.ReservesConfig[k],
+    cfg.ReservesConfig[k] = {...cfg.ReservesConfig[k],
       stableBorrowRateEnabled: false
     };
   }

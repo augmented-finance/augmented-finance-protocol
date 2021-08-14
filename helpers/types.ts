@@ -243,6 +243,9 @@ export interface iAssetBase<T> {
   ADAI: T;
 }
 
+type testAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC' | 'AAVE' | 'LINK';
+type testOnlyAssets = 'AAVE' | 'LINK';
+
 export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, 'USD'>;
 export type iAssetsWithoutUSDOpt<T> = OmitOpt<iAssetBase<T>, 'USD'>;
 
@@ -256,12 +259,11 @@ export type PickOpt<T, K extends keyof T> = {
 
 export type OmitOpt<T, K extends keyof any> = PickOpt<T, Exclude<keyof T, K>>;
 
-type excludedAssets = 'AAVE' | 'LINK';
+export type iTestPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, testAssets>;
+export type iAugmentedPoolAssets<T> = Omit<iAssetsWithoutUSD<T>, testOnlyAssets>;
+export type iAugmentedPoolAssetsOpt<T> = OmitOpt<iAssetsWithoutUSD<T>, testOnlyAssets>;
 
-export type iAugmentedPoolAssets<T> = Omit<iAssetsWithoutUSD<T>, excludedAssets>;
-export type iAugmentedPoolAssetsOpt<T> = OmitOpt<iAssetsWithoutUSD<T>, excludedAssets>;
-
-type iMultiPoolsAssets<T> = iAssetsWithoutUSD<T> | iAugmentedPoolAssets<T>;
+type iMultiPoolsAssets<T> = iAssetsWithoutUSD<T> | iAugmentedPoolAssets<T> | iTestPoolAssets<T>;
 
 export type iAssetAggregatorBase<T> = iAssetBase<T>;
 
@@ -369,13 +371,20 @@ export interface ICommonConfiguration {
   EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
 
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
-  ReservesConfig: iMultiPoolsAssets<IReserveParams>;
+  //  ReservesConfig: iMultiPoolsAssets<IReserveParams>;
+  ReservesConfig: {
+    [key: string]: IReserveParams;
+  };
 
   StakeParams: IStakeParams;
 
   RewardParams: IRewardParams;
 
   ForkTest: IForkTest;
+}
+
+export interface ITestConfiguration extends ICommonConfiguration {
+  ReservesConfig: iTestPoolAssets<IReserveParams>;
 }
 
 export interface IAugmentedConfiguration extends ICommonConfiguration {

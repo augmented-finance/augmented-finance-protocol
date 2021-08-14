@@ -287,17 +287,7 @@ export const CommonsConfig: ICommonConfiguration = {
     },
   },
 
-  ReservesConfig: {
-    AAVE: strategyAAVE,
-    LINK: strategyLINK,
-    DAI: strategyDAI,
-    USDC: strategyUSDC,
-    USDT: strategyUSDT,
-    WBTC: strategyWBTC,
-    WETH: strategyWETH,
-
-    ADAI: strategyADAI,
-  },
+  ReservesConfig: {},
 
   StakeParams: {
     MaxSlashBP: 3000, // 30%
