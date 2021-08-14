@@ -34,11 +34,13 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     PoolTokenConfig memory config,
     string memory name,
     string memory symbol,
-    uint8 decimals,
     bytes calldata params
   ) public override initializerRunAlways(DEBT_TOKEN_REVISION) {
-    _initializeERC20(name, symbol, decimals);
-    _initializePoolToken(config, name, symbol, decimals, params);
+    _initializeERC20(name, symbol, config.underlyingDecimals);
+    if (!isRevisionInitialized(DEBT_TOKEN_REVISION)) {
+      _initializePoolToken(config, params);
+    }
+    _emitInitialized(config, params);
   }
 
   /**
