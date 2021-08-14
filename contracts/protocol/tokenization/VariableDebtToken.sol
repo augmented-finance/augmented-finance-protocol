@@ -23,11 +23,13 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     PoolTokenConfig memory config,
     string memory name,
     string memory symbol,
-    uint8 decimals,
     bytes calldata params
   ) public override initializerRunAlways(DEBT_TOKEN_REVISION) {
-    _initializeERC20(name, symbol, decimals);
-    _initializePoolToken(config, name, symbol, decimals, params);
+    _initializeERC20(name, symbol, config.underlyingDecimals);
+    if (!isRevisionInitialized(DEBT_TOKEN_REVISION)) {
+      _initializePoolToken(config, params);
+    }
+    _emitInitialized(config, params);
   }
 
   /**
@@ -42,13 +44,7 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
    * @dev Calculates the accumulated debt balance of the user
    * @return The debt balance of the user
    **/
-  function balanceOf(address user)
-    public
-    view
-    virtual
-    override(IERC20, PoolTokenBase)
-    returns (uint256)
-  {
+  function balanceOf(address user) public view virtual override(IERC20, PoolTokenBase) returns (uint256) {
     uint256 scaledBalance = super.balanceOf(user);
 
     if (scaledBalance == 0) {
@@ -141,12 +137,7 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
    * @return The principal balance of the user
    * @return The principal total supply
    **/
-  function getScaledUserBalanceAndSupply(address user)
-    external
-    view
-    override
-    returns (uint256, uint256)
-  {
+  function getScaledUserBalanceAndSupply(address user) external view override returns (uint256, uint256) {
     return (super.balanceOf(user), super.totalSupply());
   }
 }

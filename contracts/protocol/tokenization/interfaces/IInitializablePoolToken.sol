@@ -20,7 +20,6 @@ interface IInitializablePoolToken {
     PoolTokenConfig calldata config,
     string calldata tokenName,
     string calldata tokenSymbol,
-    uint8 tokenDecimals,
     bytes calldata params
   ) external;
 }
