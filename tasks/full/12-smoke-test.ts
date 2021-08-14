@@ -24,18 +24,6 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
     }
     const dataHelper = await getProtocolDataProvider(dataHelperAddress);
 
-    // const lpAddress = await addressProvider.getAddress(AccessFlags.LENDING_POOL);
-    // if (falsyOrZeroAddress(lpAddress) {
-    //   console.log('Lending Pool is unavailable, configuration is incomplete');
-    //   return;
-    // }
-    // const lp = await getLendingPoolProxy(lpAddress);
-    // const reserveList = await lp.getReservesList();
-    // console.log(`Found ${reserveList.length} reserves in LendingPool (${lp.address})`);
-    // for (const addr of reserveList) {
-    //   console.log('\tCheck reserve data', addr);
-    //   await dataHelper.getReserveData(addr);
-    // }
     {
       console.log('Check getAddresses');
       const addresses = await dataHelper.getAddresses();

@@ -2,9 +2,9 @@ import { eContractid, IReserveParams, ITokenNames, tEthereumAddress } from './ty
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { chunk, falsyOrZeroAddress, waitForTx } from './misc-utils';
 import { getLendingPoolConfiguratorProxy, getLendingPoolProxy } from './contracts-getters';
-import { BigNumber, BigNumberish } from 'ethers';
 import { AccessFlags } from './access-flags';
 import {
+  deployDelegatedStrategyAave,
   deployDelegationAwareDepositToken,
   deployDelegationAwareDepositTokenImpl,
   deployDepositToken,
@@ -15,7 +15,6 @@ import {
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
 import { MarketAccessController } from '../types';
-import { has } from 'underscore';
 
 export const chooseDepositTokenDeployment = (id: eContractid) => {
   switch (id) {
@@ -39,16 +38,20 @@ export const initReservesByHelper = async (
   // CHUNK CONFIGURATION
   const initChunks = 1;
 
-  // Initialize variables for future reserves initialization
-  let reserveTokens: string[] = [];
-  let reserveInitDecimals: number[] = [];
-  let reserveSymbols: string[] = [];
+  let reserveInfo: {
+    tokenAddress: tEthereumAddress;
+    symbol: string;
+    decimals: number;
+    depositTokenType: string;
+    strategyAddress: tEthereumAddress;
+    external: boolean;
+  }[] = [];
 
   let initInputParams: {
     depositTokenImpl: string;
     stableDebtTokenImpl: string;
     variableDebtTokenImpl: string;
-    underlyingAssetDecimals: BigNumberish;
+    underlyingAssetDecimals: number;
     strategy: string;
     underlyingAsset: string;
     incentivesController: string;
@@ -63,19 +66,13 @@ export const initReservesByHelper = async (
     params: string;
   }[] = [];
 
-  let strategyRates: [
-    string, // addresses provider
+  let strategyAddressesByName: Record<
     string,
-    string,
-    string,
-    string,
-    string,
-    string
-  ];
-  let rateStrategies: Record<string, typeof strategyRates> = {};
-  let strategyAddresses: Record<string, tEthereumAddress> = {};
-  let strategyAddressPerAsset: Record<string, string> = {};
-  let depositTokenType: Record<string, string> = {};
+    {
+      address: tEthereumAddress;
+      external: boolean;
+    }
+  > = {};
 
   const existingAssets = new Set<string>();
 
@@ -100,34 +97,43 @@ export const initReservesByHelper = async (
     }
 
     const { strategy, depositTokenImpl, reserveDecimals } = params;
-    const {
-      optimalUtilizationRate,
-      baseVariableBorrowRate,
-      variableRateSlope1,
-      variableRateSlope2,
-      stableRateSlope1,
-      stableRateSlope2,
-    } = strategy;
-    if (!strategyAddresses[strategy.name]) {
+    if (!strategyAddressesByName[strategy.name]) {
+      let info = {
+        address: '',
+        external: false,
+      };
+
       // Strategy does not exist, create a new one
-      rateStrategies[strategy.name] = [
-        addressProvider.address,
-        optimalUtilizationRate,
-        baseVariableBorrowRate,
-        variableRateSlope1,
-        variableRateSlope2,
-        stableRateSlope1,
-        stableRateSlope2,
-      ];
-      const strategyContract = await deployReserveInterestRateStrategy(
-        strategy.name,
-        rateStrategies[strategy.name],
-        verify
-      );
-      strategyAddresses[strategy.name] = strategyContract.address;
+      if (strategy.strategyImpl == undefined) {
+        const strategyContract = await deployReserveInterestRateStrategy(
+          strategy.name,
+          [
+            addressProvider.address,
+            strategy.optimalUtilizationRate,
+            strategy.baseVariableBorrowRate,
+            strategy.variableRateSlope1,
+            strategy.variableRateSlope2,
+            strategy.stableRateSlope1,
+            strategy.stableRateSlope2,
+          ],
+          verify
+        );
+        info.address = strategyContract.address;
+      } else if (strategy.strategyImpl == eContractid.DelegatedStrategyAave) {
+        const strategyContract = await deployDelegatedStrategyAave([strategy.name], verify);
+        info.address = strategyContract.address;
+        info.external = true;
+        // } else if (strategy.strategyImpl == eContractid.DelegatedStrategyCompound) {
+        //   const strategyContract = await deployDelegatedStrategyCompound([strategy.name], verify);
+        //   strategyAddresses[strategy.name] = strategyContract.address;
+      } else {
+        console.log(`Asset ${symbol} has unknown strategy type: ${strategy.strategyImpl}`);
+        continue;
+      }
+      strategyAddressesByName[strategy.name] = info;
     }
-    strategyAddressPerAsset[symbol] = strategyAddresses[strategy.name];
-    console.log('Strategy address for asset %s: %s', symbol, strategyAddressPerAsset[symbol]);
+    const strategyInfo = strategyAddressesByName[strategy.name];
+    console.log('Strategy address for asset %s: %s', symbol, strategyInfo.address);
 
     if (depositTokenImpl === eContractid.DepositTokenImpl) {
       console.log('---- generic depost:', symbol);
@@ -138,14 +144,18 @@ export const initReservesByHelper = async (
       console.log('---- unknown:', symbol, depositTokenImpl);
       continue;
     }
-    depositTokenType[symbol] = depositTokenImpl;
 
-    reserveInitDecimals.push(reserveDecimals);
-    reserveTokens.push(tokenAddress);
-    reserveSymbols.push(symbol);
+    reserveInfo.push({
+      tokenAddress: tokenAddress,
+      symbol: symbol,
+      decimals: reserveDecimals,
+      depositTokenType: depositTokenImpl,
+      strategyAddress: strategyInfo.address,
+      external: strategyInfo.external,
+    });
   }
 
-  if (reserveSymbols.length == 0) {
+  if (reserveInfo.length == 0) {
     return;
   }
 
@@ -157,36 +167,36 @@ export const initReservesByHelper = async (
     ? await deployDelegationAwareDepositTokenImpl(verify, skipExistingAssets)
     : undefined;
 
-  for (let i = 0; i < reserveSymbols.length; i++) {
+  const reserveSymbols: string[] = [];
+  for (const info of reserveInfo) {
     let tokenToUse: string;
-    if (depositTokenType[reserveSymbols[i]] == eContractid.DepositTokenImpl) {
+    if (info.depositTokenType == eContractid.DepositTokenImpl) {
       tokenToUse = depositTokenImpl.address;
     } else {
       tokenToUse = delegationAwareTokenImpl!.address;
     }
 
-    const reserveSymbol = reserveSymbols[i];
-
+    reserveSymbols.push(info.symbol);
     initInputParams.push({
       depositTokenImpl: tokenToUse,
       stableDebtTokenImpl: stableDebtTokenImpl.address,
       variableDebtTokenImpl: variableDebtTokenImpl.address,
-      underlyingAssetDecimals: reserveInitDecimals[i],
-      strategy: strategyAddressPerAsset[reserveSymbol],
-      underlyingAsset: reserveTokens[i],
+      underlyingAssetDecimals: info.decimals,
+      strategy: info.strategyAddress,
+      underlyingAsset: info.tokenAddress,
       incentivesController: ZERO_ADDRESS,
-      underlyingAssetName: reserveSymbol,
+      underlyingAssetName: info.symbol,
 
-      depositTokenName: `${names.DepositTokenNamePrefix} ${reserveSymbol}`,
-      depositTokenSymbol: `${names.DepositSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
+      depositTokenName: `${names.DepositTokenNamePrefix} ${info.symbol}`,
+      depositTokenSymbol: `${names.DepositSymbolPrefix}${names.SymbolPrefix}${info.symbol}`,
 
-      variableDebtTokenName: `${names.VariableDebtTokenNamePrefix} ${reserveSymbol}`,
-      variableDebtTokenSymbol: `${names.VariableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
+      variableDebtTokenName: `${names.VariableDebtTokenNamePrefix} ${info.symbol}`,
+      variableDebtTokenSymbol: `${names.VariableDebtSymbolPrefix}${names.SymbolPrefix}${info.symbol}`,
 
-      stableDebtTokenName: `${names.StableDebtTokenNamePrefix} ${reserveSymbol}`,
-      stableDebtTokenSymbol: `${names.StableDebtSymbolPrefix}${names.SymbolPrefix}${reserveSymbol}`,
+      stableDebtTokenName: `${names.StableDebtTokenNamePrefix} ${info.symbol}`,
+      stableDebtTokenSymbol: `${names.StableDebtSymbolPrefix}${names.SymbolPrefix}${info.symbol}`,
 
-      externalStrategy: false,
+      externalStrategy: info.external,
       params: '0x10',
     });
   }
@@ -248,10 +258,10 @@ export const configureReservesByHelper = async (
 
   const inputParams: {
     asset: string;
-    baseLTV: BigNumberish;
-    liquidationThreshold: BigNumberish;
-    liquidationBonus: BigNumberish;
-    reserveFactor: BigNumberish;
+    baseLTV: number;
+    liquidationThreshold: number;
+    liquidationBonus: number;
+    reserveFactor: number;
     borrowingEnabled: boolean;
     stableBorrowingEnabled: boolean;
   }[] = [];
