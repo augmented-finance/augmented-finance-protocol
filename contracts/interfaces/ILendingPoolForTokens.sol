@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../access/interfaces/IMarketAccessController.sol';
 import '../protocol/libraries/types/DataTypes.sol';
@@ -31,10 +30,9 @@ interface ILendingPoolForTokens {
 
   function getReserveNormalizedVariableDebt(address asset) external view returns (uint256);
 
-  function getConfiguration(address asset)
-    external
-    view
-    returns (DataTypes.ReserveConfigurationMap memory);
+  function getConfiguration(address asset) external view returns (DataTypes.ReserveConfigurationMap memory);
 
   function getReserveData(address asset) external view returns (DataTypes.ReserveData memory);
+
+  function getReservesList() external view returns (address[] memory);
 }

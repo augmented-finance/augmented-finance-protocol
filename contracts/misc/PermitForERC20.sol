@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 abstract contract PermitForERC20 {
+  // solhint-disable-next-line var-name-mixedcase
   bytes32 public DOMAIN_SEPARATOR;
   bytes public constant EIP712_REVISION = bytes('1');
   bytes32 internal constant EIP712_DOMAIN =
@@ -12,26 +13,25 @@ abstract contract PermitForERC20 {
   /// @dev owner => next valid nonce to submit with permit()
   mapping(address => uint256) public _nonces;
 
-  constructor() public {
+  constructor() {
     _initializeDomainSeparator();
+  }
+
+  /// @dev returns nonce, to comply with eip-2612
+  function nonces(address addr) external view returns (uint256) {
+    return _nonces[addr];
   }
 
   function _initializeDomainSeparator() internal {
     uint256 chainId;
 
-    //solium-disable-next-line
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       chainId := chainid()
     }
 
     DOMAIN_SEPARATOR = keccak256(
-      abi.encode(
-        EIP712_DOMAIN,
-        keccak256(_getPermitDomainName()),
-        keccak256(EIP712_REVISION),
-        chainId,
-        address(this)
-      )
+      abi.encode(EIP712_DOMAIN, keccak256(_getPermitDomainName()), keccak256(EIP712_REVISION), chainId, address(this))
     );
   }
 
@@ -56,17 +56,15 @@ abstract contract PermitForERC20 {
     bytes32 s
   ) external {
     require(owner != address(0), 'INVALID_OWNER');
-    //solium-disable-next-line
     require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
     uint256 currentValidNonce = _nonces[owner];
-    bytes32 digest =
-      keccak256(
-        abi.encodePacked(
-          '\x19\x01',
-          DOMAIN_SEPARATOR,
-          keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, currentValidNonce, deadline))
-        )
-      );
+    bytes32 digest = keccak256(
+      abi.encodePacked(
+        '\x19\x01',
+        DOMAIN_SEPARATOR,
+        keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, currentValidNonce, deadline))
+      )
+    );
 
     require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
     _nonces[owner] = currentValidNonce + 1;

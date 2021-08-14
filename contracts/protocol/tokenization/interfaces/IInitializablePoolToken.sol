@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import './PoolTokenConfig.sol';
 
@@ -21,7 +20,6 @@ interface IInitializablePoolToken {
     PoolTokenConfig calldata config,
     string calldata tokenName,
     string calldata tokenSymbol,
-    uint8 tokenDecimals,
     bytes calldata params
   ) external;
 }

@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 struct PoolTokenConfig {
-  // The address of the associated lending pool
+  // Address of the associated lending pool
   address pool;
-  // The address of the treasury
+  // Address of the treasury
   address treasury;
-  // The address of the underlying asset
+  // Address of the underlying asset
   address underlyingAsset;
+  // Decimals of the underlying asset
+  uint8 underlyingDecimals;
 }

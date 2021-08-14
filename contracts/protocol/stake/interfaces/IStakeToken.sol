@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../../interfaces/IDerivedToken.sol';
 import '../../../interfaces/IRewardedToken.sol';
@@ -13,12 +13,6 @@ interface IStakeToken is IDerivedToken, IRewardedToken {
     uint256 underlyingAmount
   );
   event CooldownStarted(address indexed account, uint32 at);
-  event Slashed(address to, uint256 amount, uint256 totalBeforeSlash);
-
-  event MaxSlashUpdated(uint16 maxSlash);
-  event CooldownUpdated(uint32 cooldownPeriod, uint32 unstakePeriod);
-
-  event RedeemUpdated(bool redeemable);
 
   function stake(
     address to,
@@ -39,6 +33,8 @@ interface IStakeToken is IDerivedToken, IRewardedToken {
   function exchangeRate() external view returns (uint256);
 
   function isRedeemable() external view returns (bool);
+
+  function getMaxSlashablePercentage() external view returns (uint16);
 
   function balanceAndCooldownOf(address holder)
     external

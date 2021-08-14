@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../interfaces/IUniswapV2Router02.sol';
 import '../tokens/MintableERC20.sol';

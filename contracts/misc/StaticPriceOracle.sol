@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../interfaces/ILendingRateOracle.sol';
 import '../access/MarketAccessBitmask.sol';
@@ -8,13 +8,13 @@ import '../access/interfaces/IMarketAccessController.sol';
 import '../interfaces/IPriceOracleGetter.sol';
 
 contract StaticPriceOracle is MarketAccessBitmask, IPriceOracleGetter {
-  mapping(address => uint256) prices;
+  mapping(address => uint256) private prices;
 
   constructor(
     IMarketAccessController remoteAcl,
     address[] memory assets_,
     uint256[] memory prices_
-  ) public MarketAccessBitmask(remoteAcl) {
+  ) MarketAccessBitmask(remoteAcl) {
     require(assets_.length == prices_.length, 'length mismatch');
     for (uint256 i = 0; i < assets_.length; i++) {
       prices[assets_[i]] = prices_[i];

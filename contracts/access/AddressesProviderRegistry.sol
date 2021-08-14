@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../dependencies/openzeppelin/contracts/Ownable.sol';
 import '../interfaces/IAddressesProviderRegistry.sol';
@@ -45,12 +45,7 @@ contract AddressesProviderRegistry is Ownable, IAddressesProviderRegistry {
    * @dev Returns the list of registered addresses provider
    * @return activeProviders - list of addresses provider, potentially containing address(0) elements
    **/
-  function getAddressesProvidersList()
-    external
-    view
-    override
-    returns (address[] memory activeProviders)
-  {
+  function getAddressesProvidersList() external view override returns (address[] memory activeProviders) {
     return _providers;
   }
 
@@ -95,11 +90,9 @@ contract AddressesProviderRegistry is Ownable, IAddressesProviderRegistry {
     } else {
       _providers[idx - 1] = address(0);
     }
-    for (
-      ;
-      _providers.length > 0 && _providers[_providers.length - 1] == address(0);
-      _providers.pop()
-    ) {}
+    for (; _providers.length > 0 && _providers[_providers.length - 1] == address(0); ) {
+      _providers.pop();
+    }
 
     emit AddressesProviderUnregistered(provider);
   }
@@ -108,12 +101,7 @@ contract AddressesProviderRegistry is Ownable, IAddressesProviderRegistry {
    * @dev Returns the id on a registered AddressesProvider
    * @return The id or 0 if the AddressesProvider is not registered
    */
-  function getAddressesProviderIdByAddress(address provider)
-    external
-    view
-    override
-    returns (uint256)
-  {
+  function getAddressesProviderIdByAddress(address provider) external view override returns (uint256) {
     return _index[provider].id;
   }
 }

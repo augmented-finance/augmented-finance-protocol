@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 import '../interfaces/IRewardMinter.sol';
 import './BaseRewardController.sol';
 
 abstract contract BasicRewardController is BaseRewardController {
   constructor(IMarketAccessController accessController, IRewardMinter rewardMinter)
-    public
     BaseRewardController(accessController, rewardMinter)
   {}
 
@@ -31,14 +31,14 @@ abstract contract BasicRewardController is BaseRewardController {
       }
 
       if (since == since_) {
-        amountSince = amountSince.add(amount_);
+        amountSince += amount_;
         continue;
       }
 
       if (amountSince > 0) {
         (uint256 ca, uint256 da) = internalClaimByCall(holder, amountSince, since);
-        claimableAmount = claimableAmount.add(ca);
-        delayedAmount = delayedAmount.add(da);
+        claimableAmount += ca;
+        delayedAmount += da;
         incremental = true;
       }
       amountSince = amount_;
@@ -47,8 +47,8 @@ abstract contract BasicRewardController is BaseRewardController {
 
     if (amountSince > 0 || !incremental) {
       (uint256 ca, uint256 da) = internalClaimByCall(holder, amountSince, since);
-      claimableAmount = claimableAmount.add(ca);
-      delayedAmount = delayedAmount.add(da);
+      claimableAmount += ca;
+      delayedAmount += da;
     }
 
     return (claimableAmount, delayedAmount);
@@ -68,20 +68,21 @@ abstract contract BasicRewardController is BaseRewardController {
         continue;
       }
 
-      (uint256 amount_, uint32 since_) = getPool(i).calcRewardFor(holder, at);
+      (uint256 amount_, uint256 extra_, uint32 since_) = getPool(i).calcRewardFor(holder, at);
+      delayedAmount += extra_;
       if (amount_ == 0) {
         continue;
       }
 
       if (since == since_) {
-        amountSince = amountSince.add(amount_);
+        amountSince += amount_;
         continue;
       }
 
       if (amountSince > 0) {
         (uint256 ca, uint256 da) = internalCalcByCall(holder, amountSince, since, incremental);
-        claimableAmount = claimableAmount.add(ca);
-        delayedAmount = delayedAmount.add(da);
+        claimableAmount += ca;
+        delayedAmount += da;
         incremental = true;
       }
       amountSince = amount_;
@@ -90,8 +91,8 @@ abstract contract BasicRewardController is BaseRewardController {
 
     if (amountSince > 0 || !incremental) {
       (uint256 ca, uint256 da) = internalCalcByCall(holder, amountSince, since, incremental);
-      claimableAmount = claimableAmount.add(ca);
-      delayedAmount = delayedAmount.add(da);
+      claimableAmount += ca;
+      delayedAmount += da;
     }
 
     return (claimableAmount, delayedAmount);

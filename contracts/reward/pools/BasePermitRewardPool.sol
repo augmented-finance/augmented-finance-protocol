@@ -1,21 +1,18 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../tools/math/WadRayMath.sol';
 import '../interfaces/IRewardController.sol';
-import '../interfaces/IManagedRewardPool.sol';
 import './ControlledRewardPool.sol';
 
 abstract contract BasePermitRewardPool is ControlledRewardPool {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
-
   bytes public constant EIP712_REVISION = bytes('1');
+  // solhint-disable-next-line var-name-mixedcase
   bytes32 public DOMAIN_SEPARATOR;
+  // solhint-disable-next-line var-name-mixedcase
+  bytes32 public CLAIM_TYPEHASH;
+
   bytes32 internal constant EIP712_DOMAIN =
     keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
-  bytes32 public CLAIM_TYPEHASH;
 
   /// @dev spender => next valid nonce to submit with permit()
   mapping(address => uint256) public _nonces;
@@ -29,7 +26,7 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
     uint256 initialRate,
     uint16 baselinePercentage,
     string memory rewardPoolName
-  ) public ControlledRewardPool(controller, initialRate, baselinePercentage) {
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {
     _rewardPoolName = rewardPoolName;
 
     _initializeDomainSeparator();
@@ -49,21 +46,20 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
   function _initializeDomainSeparator() internal {
     uint256 chainId;
 
-    //solium-disable-next-line
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       chainId := chainid()
     }
 
     DOMAIN_SEPARATOR = keccak256(
-      abi.encode(
-        EIP712_DOMAIN,
-        keccak256(bytes(_rewardPoolName)),
-        keccak256(EIP712_REVISION),
-        chainId,
-        address(this)
-      )
+      abi.encode(EIP712_DOMAIN, keccak256(bytes(_rewardPoolName)), keccak256(EIP712_REVISION), chainId, address(this))
     );
     CLAIM_TYPEHASH = getClaimTypeHash();
+  }
+
+  /// @dev returns nonce, to comply with eip-2612
+  function nonces(address addr) external view returns (uint256) {
+    return _nonces[addr];
   }
 
   function getPoolName() public view override returns (string memory) {

@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import './BaseUniswapAdapter.sol';
 import '../interfaces/IFlashLoanAddressProvider.sol';
 import '../interfaces/IUniswapV2Router02.sol';
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../protocol/libraries/types/DataTypes.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 
 /**
  * @title UniswapRepayAdapter
@@ -14,6 +15,9 @@ import '../protocol/libraries/types/DataTypes.sol';
  * @author Aave
  **/
 contract UniswapRepayAdapter is BaseUniswapAdapter {
+  using SafeMath for uint256;
+  using SafeERC20 for IERC20;
+
   struct RepayParams {
     address collateralAsset;
     uint256 collateralAmount;
@@ -26,12 +30,12 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
     IFlashLoanAddressProvider addressesProvider,
     IUniswapV2Router02 uniswapRouter,
     address wethAddress
-  ) public BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
+  ) BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
 
   /**
    * @dev Uses the received funds from the flash loan to repay a debt on the protocol on behalf of the user. Then pulls
    * the collateral from the user and swaps it to the debt asset to repay the flash loan.
-   * The user should give this contract allowance to pull the ATokens in order to withdraw the underlying asset, swap it
+   * The user should give this contract allowance to pull deposit tokens in order to withdraw the underlying asset, swap it
    * and repay the flash loan.
    * Supports only one asset on the flash loan.
    * @param assets Address of debt asset
@@ -78,7 +82,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
    * @dev Swaps the user collateral for the debt asset and then repay the debt on the protocol on behalf of the user
    * without using flash loans. This method can be used when the temporary transfer of the collateral asset to this
    * contract does not affect the user position.
-   * The user should give this contract allowance to pull the ATokens in order to withdraw the underlying asset
+   * The user should give this contract allowance to pull deposit tokens in order to withdraw the underlying asset
    * @param collateralAsset Address of asset to be swapped
    * @param debtAsset Address of debt asset
    * @param collateralAmount Amount of the collateral to be swapped
@@ -120,7 +124,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       require(amounts[0] <= maxCollateralToSwap, 'slippage too high');
 
       // Pull depositTokens from user
-      _pullAToken(
+      _pullDepositToken(
         collateralAsset,
         collateralReserveData.depositTokenAddress,
         msg.sender,
@@ -132,7 +136,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       _swapTokensForExactTokens(collateralAsset, debtAsset, amounts[0], amountToRepay, useEthPath);
     } else {
       // Pull depositTokens from user
-      _pullAToken(
+      _pullDepositToken(
         collateralAsset,
         collateralReserveData.depositTokenAddress,
         msg.sender,
@@ -191,7 +195,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       require(amounts[0] <= maxCollateralToSwap, 'slippage too high');
 
       // Pull depositTokens from user
-      _pullAToken(
+      _pullDepositToken(
         collateralAsset,
         collateralReserveData.depositTokenAddress,
         initiator,
@@ -209,7 +213,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       );
     } else {
       // Pull depositTokens from user
-      _pullAToken(
+      _pullDepositToken(
         collateralAsset,
         collateralReserveData.depositTokenAddress,
         initiator,

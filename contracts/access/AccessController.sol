@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import '../dependencies/openzeppelin/contracts/Address.sol';
 import '../dependencies/openzeppelin/contracts/Ownable.sol';
@@ -31,7 +31,7 @@ contract AccessController is Ownable, IManagedAccessController {
     uint256 singletons,
     uint256 nonSingletons,
     uint256 proxies
-  ) public {
+  ) {
     require(singletons & nonSingletons == 0, 'mixed types');
     require(singletons & proxies == proxies, 'all proxies must be singletons');
     _singletons = singletons;
@@ -72,6 +72,7 @@ contract AccessController is Ownable, IManagedAccessController {
       _expiresAt = block.number + expiryBlocks;
     }
     _tempAdmin = admin;
+    emit TemporaryAdminAssigned(_tempAdmin, _expiresAt);
   }
 
   function getTemporaryAdmin()
@@ -96,25 +97,28 @@ contract AccessController is Ownable, IManagedAccessController {
     }
     _revokeAllRoles(_tempAdmin);
     _tempAdmin = address(0);
+    emit TemporaryAdminAssigned(address(0), 0);
   }
 
-  function grantRoles(address addr, uint256 flags) public onlyAdmin returns (uint256) {
-    require(_singletons & flags == 0, 'singleton should use setAddress');
-    _grantRoles(addr, flags);
-  }
-
-  function setAnyRoleMode(bool blockOrEnable) public onlyAdmin {
+  function setAnyRoleMode(bool blockOrEnable) external onlyAdmin {
     require(_anyRoleMode != anyRoleBlocked);
     if (blockOrEnable) {
       _anyRoleMode = anyRoleEnabled;
+      emit AnyRoleModeEnabled();
     } else {
       _anyRoleMode = anyRoleBlocked;
+      emit AnyRoleModeBlocked();
     }
   }
 
-  function grantAnyRoles(address addr, uint256 flags) public onlyAdmin returns (uint256) {
+  function grantRoles(address addr, uint256 flags) external onlyAdmin returns (uint256) {
+    require(_singletons & flags == 0, 'singleton should use setAddress');
+    return _grantRoles(addr, flags);
+  }
+
+  function grantAnyRoles(address addr, uint256 flags) external onlyAdmin returns (uint256) {
     require(_anyRoleMode == anyRoleEnabled);
-    _grantRoles(addr, flags);
+    return _grantRoles(addr, flags);
   }
 
   function _grantRoles(address addr, uint256 flags) private returns (uint256) {
@@ -124,7 +128,8 @@ contract AccessController is Ownable, IManagedAccessController {
       return m;
     }
 
-    _nonSingletons |= flags;
+    _nonSingletons |= flags & ~_singletons;
+
     m |= flags;
     _masks[addr] = m;
 
@@ -136,8 +141,13 @@ contract AccessController is Ownable, IManagedAccessController {
         }
         continue;
       }
-      _grantees[mask].push(addr);
+      address[] storage grantees = _grantees[mask];
+      if (grantees.length == 0 || grantees[grantees.length - 1] != addr) {
+        grantees.push(addr);
+      }
     }
+
+    emit RolesUpdated(addr, m);
     return m;
   }
 
@@ -157,6 +167,7 @@ contract AccessController is Ownable, IManagedAccessController {
       return 0;
     }
     delete (_masks[addr]);
+    emit RolesUpdated(addr, 0);
 
     uint256 flags = m & _singletons;
     if (flags == 0) {
@@ -175,7 +186,6 @@ contract AccessController is Ownable, IManagedAccessController {
         delete (_addresses[mask]);
       }
     }
-
     return m;
   }
 
@@ -184,11 +194,12 @@ contract AccessController is Ownable, IManagedAccessController {
     if (m & flags != 0) {
       m &= ~flags;
       _masks[addr] = m;
+      emit RolesUpdated(addr, m);
     }
     return m;
   }
 
-  function revokeRolesFromAll(uint256 flags, uint256 limit) public onlyAdmin returns (bool all) {
+  function revokeRolesFromAll(uint256 flags, uint256 limit) external onlyAdmin returns (bool all) {
     all = true;
 
     for (uint8 i = 0; i <= 255; i++) {
@@ -199,8 +210,9 @@ contract AccessController is Ownable, IManagedAccessController {
         }
         continue;
       }
-      if (mask & _singletons != 0) {
+      if (mask & _singletons != 0 && _addresses[mask] != address(0)) {
         delete (_addresses[mask]);
+        emit AddressSet(mask, address(0), _proxies & mask != 0);
       }
 
       if (!all) {
@@ -399,5 +411,36 @@ contract AccessController is Ownable, IManagedAccessController {
     bytes calldata params
   ) public override returns (IProxy) {
     return _createProxy(adminAddress, implAddress, params);
+  }
+
+  function callWithRoles(
+    uint256 flags,
+    address addr,
+    bytes calldata data
+  ) external override onlyAdmin returns (bytes memory result) {
+    require(Address.isContract(addr) && addr != address(this), 'must be contract');
+
+    if (_singletons & flags != 0) {
+      require(_anyRoleMode == anyRoleEnabled, 'singleton should use setAddress');
+      _nonSingletons |= flags & ~_singletons;
+    } else {
+      _nonSingletons |= flags;
+    }
+
+    uint256 oldMask = _masks[addr];
+    flags &= ~oldMask;
+    if (flags != 0) {
+      _masks[addr] = oldMask | flags;
+      emit RolesUpdated(addr, oldMask | flags);
+    }
+
+    result = Address.functionCall(addr, data);
+
+    if (flags != 0) {
+      _masks[addr] = oldMask;
+      emit RolesUpdated(addr, oldMask);
+    }
+
+    return result;
   }
 }

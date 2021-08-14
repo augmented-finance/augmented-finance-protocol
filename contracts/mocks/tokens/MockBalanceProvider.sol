@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../../interfaces/IBalanceHook.sol';
 import '../../interfaces/IScaledBalanceToken.sol';
 
-contract DepositTokenMock is IScaledBalanceToken {
+contract MockBalanceProvider is IScaledBalanceToken {
   IBalanceHook public _aic;
   uint256 internal _userBalance;
   uint256 internal _totalSupply;
@@ -18,7 +17,7 @@ contract DepositTokenMock is IScaledBalanceToken {
   event AssetIndexUpdated(address indexed asset, uint256 index);
   event UserIndexUpdated(address indexed user, address indexed asset, uint256 index);
 
-  constructor(IBalanceHook aic) public {
+  constructor(IBalanceHook aic) {
     _aic = aic;
   }
 

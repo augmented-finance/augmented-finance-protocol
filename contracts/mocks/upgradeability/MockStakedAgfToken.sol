@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../../protocol/stake/SlashableStakeTokenBase.sol';
 import '../../access/AccessFlags.sol';
@@ -15,7 +14,7 @@ contract MockStakedAgfToken is SlashableStakeTokenBase, VersionedInitializable {
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor() public SlashableStakeTokenBase(zeroConfig(), NAME, SYMBOL, 0) {
+  constructor() SlashableStakeTokenBase(zeroConfig(), NAME, SYMBOL, 0) {
     // enables use of this instance without a proxy
     _unsafeResetVersionedInitializers();
   }

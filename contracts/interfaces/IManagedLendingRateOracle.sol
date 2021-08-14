@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 interface IManagedLendingRateOracle {
   /// @dev sets the market borrow rate. Rate value must be in ray

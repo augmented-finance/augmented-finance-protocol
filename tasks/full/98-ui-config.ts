@@ -12,7 +12,7 @@ import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
-task('full:write-ui-config', 'Prepare UI config')
+task('full:write-ui-config', 'Prepares UI config')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE) => {

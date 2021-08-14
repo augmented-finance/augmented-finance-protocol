@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 interface IAaveLendingPool {
   function getReserveNormalizedIncome(address asset) external view returns (uint256);
@@ -8,6 +7,12 @@ interface IAaveLendingPool {
   function getReserveNormalizedVariableDebt(address asset) external view returns (uint256);
 
   function getReserveData(address asset) external view returns (AaveDataTypes.ReserveData memory);
+
+  function withdraw(
+    address asset,
+    uint256 amount,
+    address to
+  ) external returns (uint256);
 }
 
 library AaveDataTypes {

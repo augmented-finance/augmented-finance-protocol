@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../../contracts/interfaces/ILendingPool.sol';
 import '../../contracts/protocol/lendingpool/LendingPool.sol';
@@ -69,9 +68,9 @@ contract LendingPoolHarnessForVariableDebtToken is ILendingPool {
     address asset,
     address user,
     uint256 debtToCover,
-    bool receiveAToken
+    bool receiveDeposit
   ) external override {
-    originalPool.liquidationCall(collateral, asset, user, debtToCover, receiveAToken);
+    originalPool.liquidationCall(collateral, asset, user, debtToCover, receiveDeposit);
   }
 
   function getReservesList() external view override returns (address[] memory) {

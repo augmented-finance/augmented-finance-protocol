@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import './IAccessController.sol';
 
@@ -8,8 +8,6 @@ interface IMarketAccessController is IAccessController {
   function getMarketId() external view returns (string memory);
 
   function getLendingPool() external view returns (address);
-
-  function isPoolAdmin(address) external view returns (bool);
 
   function getPriceOracle() external view returns (address);
 

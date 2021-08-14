@@ -12,7 +12,7 @@ import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
 
-task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
+task('full:deploy-lending-pool', 'Deploys lending pool')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE: HardhatRuntimeEnvironment) => {
@@ -49,7 +49,7 @@ task('full:deploy-lending-pool', 'Deploy lending pool for prod enviroment')
       await waitTx(lendingPoolProxy.setLendingPoolExtension(poolExtension.address));
       lpExt = poolExtension.address;
     }
-    console.log('Collateral manager:', lpExt);
+    console.log('Lending pool extension:', lpExt);
 
     let lpConfigurator = newLendingPool
       ? ''

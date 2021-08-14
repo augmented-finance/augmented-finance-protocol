@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import './BaseUniswapAdapter.sol';
 import '../interfaces/IFlashLoanAddressProvider.sol';
 import '../interfaces/IUniswapV2Router02.sol';
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../dependencies/openzeppelin/contracts/SafeMath.sol';
 
 /**
  * @title UniswapLiquiditySwapAdapter
@@ -13,6 +14,9 @@ import '../dependencies/openzeppelin/contracts/IERC20.sol';
  * @author Aave
  **/
 contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
+  using SafeMath for uint256;
+  using SafeERC20 for IERC20;
+
   struct PermitParams {
     uint256[] amount;
     uint256[] deadline;
@@ -33,12 +37,12 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     IFlashLoanAddressProvider addressesProvider,
     IUniswapV2Router02 uniswapRouter,
     address wethAddress
-  ) public BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
+  ) BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
 
   /**
    * @dev Swaps the received reserve amount from the flash loan into the asset specified in the params.
    * The received funds from the swap are then deposited into the protocol on behalf of the user.
-   * The user should give this contract allowance to pull the ATokens in order to withdraw the underlying asset and
+   * The user should give this contract allowance to pull deposit tokens in order to withdraw the underlying asset and
    * repay the flash loan.
    * @param assets Address of asset to be swapped
    * @param amounts Amount of the asset to be swapped
@@ -113,7 +117,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
    * @dev Swaps an amount of an asset to another and deposits the new asset amount on behalf of the user without using
    * a flash loan. This method can be used when the temporary transfer of the collateral asset to this contract
    * does not affect the user position.
-   * The user should give this contract allowance to pull the ATokens in order to withdraw the underlying asset and
+   * The user should give this contract allowance to pull deposit tokens in order to withdraw the underlying asset and
    * perform the swap.
    * @param assetToSwapFromList List of addresses of the underlying asset to be swap from
    * @param assetToSwapToList List of addresses of the underlying asset to be swap to and deposited
@@ -153,7 +157,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
         ? vars.depositInitiatorBalance
         : amountToSwapList[vars.i];
 
-      _pullAToken(
+      _pullDepositToken(
         assetToSwapFromList[vars.i],
         vars.depositToken,
         msg.sender,
@@ -233,7 +237,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     vars.flashLoanDebt = amount.add(premium);
     vars.amountToPull = vars.amountToSwap.add(premium);
 
-    _pullAToken(assetFrom, vars.depositToken, initiator, vars.amountToPull, permitSignature);
+    _pullDepositToken(assetFrom, vars.depositToken, initiator, vars.amountToPull, permitSignature);
 
     // Repay flash loan
     IERC20(assetFrom).safeApprove(address(LENDING_POOL), 0);

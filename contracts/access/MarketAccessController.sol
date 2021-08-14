@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import './interfaces/IManagedMarketAccessController.sol';
 import './AccessController.sol';
@@ -9,10 +9,7 @@ import './AccessFlags.sol';
 contract MarketAccessController is AccessController, IManagedMarketAccessController {
   string private _marketId;
 
-  constructor(string memory marketId)
-    public
-    AccessController(AccessFlags.SINGLETONS, AccessFlags.ROLES, AccessFlags.PROXIES)
-  {
+  constructor(string memory marketId) AccessController(AccessFlags.SINGLETONS, AccessFlags.ROLES, AccessFlags.PROXIES) {
     _marketId = marketId;
   }
 
@@ -27,10 +24,6 @@ contract MarketAccessController is AccessController, IManagedMarketAccessControl
 
   function getLendingPool() external view override returns (address) {
     return getAddress(AccessFlags.LENDING_POOL);
-  }
-
-  function isPoolAdmin(address addr) external view override returns (bool) {
-    return isAddress(AccessFlags.POOL_ADMIN, addr);
   }
 
   function getPriceOracle() external view override returns (address) {

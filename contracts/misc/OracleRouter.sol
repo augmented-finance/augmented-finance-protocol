@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
 
@@ -25,6 +25,7 @@ contract OracleRouter is IPriceOracleGetter, MarketAccessBitmask {
 
   mapping(address => IChainlinkAggregator) private assetsSources;
   IPriceOracleGetter private _fallbackOracle;
+  // solhint-disable-next-line var-name-mixedcase
   address public immutable WETH;
 
   /// @notice Constructor
@@ -38,7 +39,7 @@ contract OracleRouter is IPriceOracleGetter, MarketAccessBitmask {
     address[] memory sources,
     address fallbackOracle,
     address weth
-  ) public MarketAccessBitmask(acl) {
+  ) MarketAccessBitmask(acl) {
     _setFallbackOracle(fallbackOracle);
     _setAssetsSources(assets, sources);
     WETH = weth;

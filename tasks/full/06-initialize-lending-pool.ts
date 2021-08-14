@@ -9,7 +9,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { getProtocolDataProvider } from '../../helpers/contracts-getters';
 import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 
-task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
+task('full:initialize-lending-pool', 'Initializes lending pool and configures reserves')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, localBRE) => {
@@ -25,23 +25,16 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-    const testHelpers = await getProtocolDataProvider(
-      await addressProvider.getAddress(AccessFlags.DATA_HELPER)
-    );
+    const testHelpers = await getProtocolDataProvider(await addressProvider.getAddress(AccessFlags.DATA_HELPER));
 
     // Treasury implementation is updated for existing installations
-    let treasuryAddress =
-      freshStart && continuation ? await addressProvider.getAddress(AccessFlags.TREASURY) : '';
+    let treasuryAddress = freshStart && continuation ? await addressProvider.getAddress(AccessFlags.TREASURY) : '';
 
     if (falsyOrZeroAddress(treasuryAddress)) {
       const treasuryImpl = await deployTreasuryImpl(verify, continuation);
       console.log('\tTreasury implementation:', treasuryImpl.address);
 
-      treasuryAddress = await setAndGetAddressAsProxy(
-        addressProvider,
-        AccessFlags.TREASURY,
-        treasuryImpl.address
-      );
+      treasuryAddress = await setAndGetAddressAsProxy(addressProvider, AccessFlags.TREASURY, treasuryImpl.address);
     }
     console.log('\tTreasury:', treasuryAddress);
 
@@ -54,7 +47,6 @@ task('full:initialize-lending-pool', 'Initialize lending pool configuration.')
       Names,
       // existing reserves will be skipped for existing installations
       continuation || !freshStart,
-      treasuryAddress,
       verify
     );
     // but configuration will be always applied

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 /// @dev ILendingPoolAaveCompatible uses uint16 referral for full backward compatibility with AAVE
 interface ILendingPoolAaveCompatible {

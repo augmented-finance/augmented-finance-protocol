@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../access/interfaces/IMarketAccessController.sol';
 import '../protocol/libraries/types/DataTypes.sol';
@@ -67,7 +66,7 @@ interface ILendingPoolEvents {
     uint256 debtToCover,
     uint256 liquidatedCollateralAmount,
     address liquidator,
-    bool receiveAToken
+    bool receiveDeposit
   );
 
   /// @dev Emitted when the state of a reserve is updated.

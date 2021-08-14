@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import './interfaces/IRemoteAccessBitmask.sol';
 
@@ -32,5 +32,14 @@ library AccessHelper {
 
   function hasNone(IRemoteAccessBitmask remote, address subject) internal view returns (bool) {
     return remote.queryAccessControlMask(subject, 0) == 0;
+  }
+
+  function requireAnyOf(
+    IRemoteAccessBitmask remote,
+    address subject,
+    uint256 flags,
+    string memory text
+  ) internal view {
+    require(hasAnyOf(remote, subject, flags), text);
   }
 }

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../interfaces/IFlashLoanAddressProvider.sol';
 import '../../interfaces/ILendingPool.sol';
 
+// solhint-disable func-name-mixedcase
 /**
  * @title IFlashLoanReceiver interface
  * @notice Interface for the Aave fee IFlashLoanReceiver.

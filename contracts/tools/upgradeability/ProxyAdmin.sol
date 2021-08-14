@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import './IProxy.sol';
 import './ProxyAdminBase.sol';
@@ -9,7 +9,7 @@ import '../Errors.sol';
 contract ProxyAdmin is ProxyAdminBase {
   address private immutable _owner;
 
-  constructor() public {
+  constructor() {
     _owner = msg.sender;
   }
 

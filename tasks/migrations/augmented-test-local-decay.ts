@@ -5,9 +5,8 @@ import {
   deployMockDecayingTokenLocker,
   deployMarketAccessController,
 } from '../../helpers/contracts-deployments';
-import { MAX_LOCKER_PERIOD, RAY_100, WEEK } from '../../helpers/constants';
 import { waitForTx } from '../../helpers/misc-utils';
-import { AccessFlags, ACCESS_REWARD_MINT } from '../../helpers/access-flags';
+import { AccessFlags } from '../../helpers/access-flags';
 
 task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
   async ({ verify }, localBRE) => {
@@ -22,7 +21,6 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
       root.address,
       AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN | AccessFlags.EMERGENCY_ADMIN
     );
-    await ac.grantRoles(root.address, ACCESS_REWARD_MINT);
     await ac.grantAnyRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
     console.log(`#2 deploying: mock AGF`);

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../../../tools/Errors.sol';
 import '../../../interfaces/ICreditDelegationToken.sol';
@@ -10,8 +9,6 @@ import './PoolTokenBase.sol';
 
 /// @dev Base contract for a non-transferrable debt tokens: StableDebtToken and VariableDebtToken
 abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICreditDelegationToken {
-  using SafeMath for uint256;
-
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
 
   /**
@@ -41,35 +38,32 @@ abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICredi
     return _borrowAllowances[fromUser][toUser];
   }
 
-  function transfer(address, uint256) public override returns (bool) {
+  function transfer(address, uint256) public pure override returns (bool) {
     notSupported();
-    _mutable();
+    return false;
   }
 
-  function allowance(address, address) public view override returns (uint256) {
-    this;
+  function allowance(address, address) public pure override returns (uint256) {
     return 0;
   }
 
-  function approve(address, uint256) public override returns (bool) {
+  function approve(address, uint256) public pure override returns (bool) {
     notSupported();
-    _mutable();
+    return false;
   }
 
   function transferFrom(
     address,
     address,
     uint256
-  ) public override returns (bool) {
+  ) public pure override returns (bool) {
     notSupported();
-    _mutable();
+    return false;
   }
 
   function notSupported() private pure {
     revert('NOT_SUPPORTED');
   }
-
-  function _mutable() private {}
 
   function _decreaseBorrowAllowance(
     address delegator,
@@ -77,7 +71,11 @@ abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICredi
     uint256 amount
   ) internal {
     uint256 newAllowance =
-      _borrowAllowances[delegator][delegatee].sub(amount, Errors.BORROW_ALLOWANCE_NOT_ENOUGH);
+      SafeMath.sub(
+        _borrowAllowances[delegator][delegatee],
+        amount,
+        Errors.BORROW_ALLOWANCE_NOT_ENOUGH
+      );
 
     _borrowAllowances[delegator][delegatee] = newAllowance;
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/Address.sol';
 import '../../dependencies/openzeppelin/upgradeability/BaseUpgradeabilityProxy.sol';
@@ -7,28 +7,28 @@ import './IProxy.sol';
 
 /// @dev This contract is a transparent upgradeability proxy with admin. The admin role is immutable.
 contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
-  address internal immutable ADMIN;
+  address internal immutable _admin;
 
   constructor(
     address admin,
     address logic,
     bytes memory data
-  ) public {
+  ) {
     require(admin != address(0));
-    ADMIN = admin;
+    _admin = admin;
     initialize(logic, data);
   }
 
   modifier ifAdmin() {
-    if (msg.sender == ADMIN) {
+    if (msg.sender == _admin) {
       _;
     } else {
       _fallback();
     }
   }
 
-  /// @return The address of the implementation.
-  function implementation() external ifAdmin returns (address) {
+  /// @return impl The address of the implementation.
+  function implementation() external ifAdmin returns (address impl) {
     return _implementation();
   }
 
@@ -40,7 +40,7 @@ contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
 
   /// @dev Only fall back when the sender is not the admin.
   function _willFallback() internal virtual override {
-    require(msg.sender != ADMIN, 'Cannot call fallback function from the proxy admin');
+    require(msg.sender != _admin, 'Cannot call fallback function from the proxy admin');
     super._willFallback();
   }
 

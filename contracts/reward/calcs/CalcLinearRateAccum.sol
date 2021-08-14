@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../tools/Errors.sol';
 
 abstract contract CalcLinearRateAccum {
-  using SafeMath for uint256;
-
   uint256 private _rate;
   uint256 private _accumRate;
   uint256 private _consumed;
@@ -44,7 +43,7 @@ abstract contract CalcLinearRateAccum {
     uint32 lastAt,
     uint32 at
   ) internal {
-    _accumRate = _accumRate.add(lastRate.mul(at - lastAt));
+    _accumRate += lastRate * (at - lastAt);
   }
 
   function internalMarkRateUpdate(uint32 currentTick) internal {
@@ -65,8 +64,8 @@ abstract contract CalcLinearRateAccum {
   }
 
   function doGetReward(uint256 amount) internal returns (uint256 available) {
-    available = doCalcReward().sub(amount, 'INSUFFICIENT_FUNDS');
-    _consumed = _consumed.add(amount);
+    available = SafeMath.sub(doCalcReward(), amount, Errors.VL_INSUFFICIENT_REWARD_AVAILABLE);
+    _consumed += amount;
   }
 
   function doGetAllReward(uint256 limit) internal returns (uint256 available) {
@@ -74,7 +73,7 @@ abstract contract CalcLinearRateAccum {
     if (limit < available) {
       available = limit;
     }
-    _consumed = _consumed.add(available);
+    _consumed += available;
     return available;
   }
 
@@ -83,6 +82,6 @@ abstract contract CalcLinearRateAccum {
   }
 
   function doCalcRewardAt(uint32 at) internal view virtual returns (uint256) {
-    return _accumRate.add(_rate.mul(at - _rateUpdatedAt)).sub(_consumed);
+    return (_accumRate + (_rate * (at - _rateUpdatedAt))) - _consumed;
   }
 }

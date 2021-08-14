@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
@@ -10,6 +9,7 @@ import '../../access/MarketAccessBitmask.sol';
 import './interfaces/IStakeConfigurator.sol';
 import './interfaces/IInitializableStakeToken.sol';
 import './interfaces/StakeTokenConfig.sol';
+import './interfaces/IManagedStakeToken.sol';
 import '../../tools/upgradeability/IProxy.sol';
 import '../../access/AccessFlags.sol';
 import '../../tools/upgradeability/ProxyAdmin.sol';
@@ -23,7 +23,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
 
   ProxyAdmin internal immutable _proxies;
 
-  constructor() public MarketAccessBitmask(IMarketAccessController(0)) {
+  constructor() MarketAccessBitmask(IMarketAccessController(address(0))) {
     _proxies = new ProxyAdmin();
   }
 
@@ -34,6 +34,10 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
   // This initializer is invoked by AccessController.setAddressAsImpl
   function initialize(address addressesProvider) external initializer(CONFIGURATOR_REVISION) {
     _remoteAcl = IMarketAccessController(addressesProvider);
+  }
+
+  function getProxyAdmin() external view returns (address) {
+    return address(_proxies);
   }
 
   function list() public view override returns (address[] memory tokens) {
@@ -56,23 +60,14 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
   }
 
   function dataOf(address stakeToken) public view override returns (StakeTokenData memory data) {
-    (
-      data.config,
-      data.stkTokenName,
-      data.stkTokenSymbol,
-      data.stkTokenDecimals
-    ) = IInitializableStakeToken(stakeToken).initializedWith();
+    (data.config, data.stkTokenName, data.stkTokenSymbol, data.stkTokenDecimals) = IInitializableStakeToken(stakeToken)
+      .initializedWith();
     data.token = stakeToken;
 
     return data;
   }
 
-  function getStakeTokensData()
-    public
-    view
-    override
-    returns (StakeTokenData[] memory dataList, uint256 count)
-  {
+  function getStakeTokensData() public view override returns (StakeTokenData[] memory dataList, uint256 count) {
     if (_entryCount == 0) {
       return (dataList, 0);
     }
@@ -93,11 +88,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     _addStakeToken(token, IDerivedToken(token).UNDERLYING_ASSET_ADDRESS());
   }
 
-  function removeStakeTokenByUnderlying(address underlying)
-    public
-    aclHas(AccessFlags.STAKE_ADMIN)
-    returns (bool)
-  {
+  function removeStakeTokenByUnderlying(address underlying) public aclHas(AccessFlags.STAKE_ADMIN) returns (bool) {
     require(underlying != address(0), 'unknown underlying');
     uint256 i = _underlyings[underlying];
     if (i == 0) {
@@ -123,33 +114,29 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     emit StakeTokenAdded(token, underlying);
   }
 
-  function batchInitStakeTokens(InitStakeTokenData[] memory input)
-    public
-    aclHas(AccessFlags.STAKE_ADMIN)
-  {
+  function batchInitStakeTokens(InitStakeTokenData[] memory input) public aclHas(AccessFlags.STAKE_ADMIN) {
     for (uint256 i = 0; i < input.length; i++) {
       initStakeToken(input[i]);
     }
   }
 
   function initStakeToken(InitStakeTokenData memory input) private returns (address token) {
-    StakeTokenConfig memory config =
-      StakeTokenConfig(
-        _remoteAcl,
-        IERC20(input.stakedToken),
-        input.cooldownPeriod,
-        input.unstakePeriod,
-        input.maxSlashable
-      );
+    StakeTokenConfig memory config = StakeTokenConfig(
+      _remoteAcl,
+      IERC20(input.stakedToken),
+      IUnderlyingStrategy(input.strategy),
+      input.cooldownPeriod,
+      input.unstakePeriod,
+      input.maxSlashable
+    );
 
-    bytes memory params =
-      abi.encodeWithSelector(
-        IInitializableStakeToken.initialize.selector,
-        config,
-        input.stkTokenName,
-        input.stkTokenSymbol,
-        input.stkTokenDecimals
-      );
+    bytes memory params = abi.encodeWithSelector(
+      IInitializableStakeToken.initialize.selector,
+      config,
+      input.stkTokenName,
+      input.stkTokenSymbol,
+      input.stkTokenDecimals
+    );
 
     token = address(_remoteAcl.createProxy(address(_proxies), input.stakeTokenImpl, params));
 
@@ -164,23 +151,29 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     return _proxies.getProxyImplementation(IProxy(token));
   }
 
-  function updateStakeToken(UpdateStakeTokenData calldata input)
-    external
-    aclHas(AccessFlags.STAKE_ADMIN)
-  {
+  function updateStakeToken(UpdateStakeTokenData calldata input) external aclHas(AccessFlags.STAKE_ADMIN) {
     StakeTokenData memory data = dataOf(input.token);
 
-    bytes memory params =
-      abi.encodeWithSelector(
-        IInitializableStakeToken.initialize.selector,
-        data.config,
-        input.stkTokenName,
-        input.stkTokenSymbol,
-        data.stkTokenDecimals
-      );
+    bytes memory params = abi.encodeWithSelector(
+      IInitializableStakeToken.initialize.selector,
+      data.config,
+      input.stkTokenName,
+      input.stkTokenSymbol,
+      data.stkTokenDecimals
+    );
 
     _proxies.upgradeAndCall(IProxy(input.token), input.stakeTokenImpl, params);
 
     emit StakeTokenUpgraded(input.token, input);
+  }
+
+  function setCooldownForAll(uint32 cooldownPeriod, uint32 unstakePeriod)
+    external
+    override
+    aclHas(AccessFlags.STAKE_ADMIN)
+  {
+    for (uint256 i = 1; i <= _entryCount; i++) {
+      IManagedStakeToken(_entries[i]).setCooldown(cooldownPeriod, unstakePeriod);
+    }
   }
 }

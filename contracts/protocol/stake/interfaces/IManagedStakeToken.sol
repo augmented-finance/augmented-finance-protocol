@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../../interfaces/IEmergencyAccess.sol';
 
 interface IManagedStakeToken is IEmergencyAccess {
-  function setRedeemable(bool redeemable) external;
+  event Slashed(address to, uint256 amount, uint256 totalBeforeSlash);
 
-  function getMaxSlashablePercentage() external view returns (uint16);
+  event MaxSlashUpdated(uint16 maxSlash);
+  event CooldownUpdated(uint32 cooldownPeriod, uint32 unstakePeriod);
+
+  event RedeemUpdated(bool redeemable);
+
+  function setRedeemable(bool redeemable) external;
 
   function setMaxSlashablePercentage(uint16 percentage) external;
 

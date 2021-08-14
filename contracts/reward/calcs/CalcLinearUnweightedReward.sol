@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import './CalcLinearRateReward.sol';
 
@@ -11,7 +11,7 @@ abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
     uint32 lastAt,
     uint32 at
   ) internal override {
-    _accumRate = _accumRate.add(lastRate.mul(at - lastAt));
+    _accumRate += lastRate * (at - lastAt);
   }
 
   function internalCalcRateAndReward(
@@ -31,8 +31,8 @@ abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
   {
     (uint256 rate, uint32 updatedAt) = getRateAndUpdatedAt();
 
-    adjRate = _accumRate.add(rate.mul(at - updatedAt));
-    allocated = uint256(entry.rewardBase).mul(adjRate.sub(lastAccumRate));
+    adjRate = _accumRate + (rate * (at - updatedAt));
+    allocated = uint256(entry.rewardBase) * (adjRate - lastAccumRate);
 
     return (adjRate, allocated, entry.claimedAt);
   }

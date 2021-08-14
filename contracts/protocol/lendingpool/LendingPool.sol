@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../dependencies/openzeppelin/contracts/Address.sol';
@@ -16,8 +14,6 @@ import '../../flashloan/interfaces/IFlashLoanReceiver.sol';
 import '../../interfaces/IStableDebtToken.sol';
 import '../../tools/upgradeability/Delegator.sol';
 import '../../tools/Errors.sol';
-import '../../tools/math/WadRayMath.sol';
-import '../../tools/math/PercentageMath.sol';
 import '../libraries/helpers/Helpers.sol';
 import '../libraries/logic/GenericLogic.sol';
 import '../libraries/logic/ValidationLogic.sol';
@@ -39,12 +35,11 @@ import './LendingPoolBase.sol';
  *   # Execute Flash Loans
  **/
 contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolForTokens {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
-  using PercentageMath for uint256;
   using SafeERC20 for IERC20;
   using AccessHelper for IMarketAccessController;
   using ReserveLogic for DataTypes.ReserveData;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+  using UserConfiguration for DataTypes.UserConfigurationMap;
 
   uint256 private constant POOL_REVISION = 0x1;
 
@@ -58,6 +53,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     _flashLoanPremiumPct = 9 * PercentageMath.BP;
   }
 
+  // solhint-disable-next-line payable-fallback
   fallback() external {
     // all IManagedLendingPool etc functions should be delegated to the extension
     _delegate(_extension);
@@ -68,7 +64,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 amount,
     address onBehalfOf,
     uint256 referral
-  ) public override whenNotPaused noReentryOrFlashloan {
+  ) public override whenNotPaused noReentryOrFlashloanFeature(FEATURE_FLASHLOAN_DEPOSIT) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateDeposit(reserve, amount);
@@ -94,7 +90,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     address asset,
     uint256 amount,
     address to
-  ) external override whenNotPaused noReentry returns (uint256) {
+  ) external override whenNotPaused noReentryOrFlashloanFeature(FEATURE_FLASHLOAN_WITHDRAW) returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     address depositToken = reserve.depositTokenAddress;
@@ -149,24 +145,16 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 amount,
     uint256 rateMode,
     address onBehalfOf
-  ) external override whenNotPaused noReentry returns (uint256) {
+  ) external override whenNotPaused noReentryOrFlashloanFeature(FEATURE_FLASHLOAN_REPAY) returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(onBehalfOf, reserve);
 
     DataTypes.InterestRateMode interestRateMode = DataTypes.InterestRateMode(rateMode);
 
-    ValidationLogic.validateRepay(
-      reserve,
-      amount,
-      interestRateMode,
-      onBehalfOf,
-      stableDebt,
-      variableDebt
-    );
+    ValidationLogic.validateRepay(reserve, amount, interestRateMode, onBehalfOf, stableDebt, variableDebt);
 
-    uint256 paybackAmount =
-      interestRateMode == DataTypes.InterestRateMode.STABLE ? stableDebt : variableDebt;
+    uint256 paybackAmount = interestRateMode == DataTypes.InterestRateMode.STABLE ? stableDebt : variableDebt;
 
     if (amount < paybackAmount) {
       paybackAmount = amount;
@@ -177,17 +165,13 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     if (interestRateMode == DataTypes.InterestRateMode.STABLE) {
       IStableDebtToken(reserve.stableDebtTokenAddress).burn(onBehalfOf, paybackAmount);
     } else {
-      IVariableDebtToken(reserve.variableDebtTokenAddress).burn(
-        onBehalfOf,
-        paybackAmount,
-        reserve.variableBorrowIndex
-      );
+      IVariableDebtToken(reserve.variableDebtTokenAddress).burn(onBehalfOf, paybackAmount, reserve.variableBorrowIndex);
     }
 
     address depositToken = reserve.depositTokenAddress;
     reserve.updateInterestRates(asset, depositToken, paybackAmount, 0);
 
-    if (stableDebt.add(variableDebt).sub(paybackAmount) == 0) {
+    if (stableDebt + variableDebt <= paybackAmount) {
       _usersConfig[onBehalfOf].setBorrowing(reserve.id, false);
     }
 
@@ -200,25 +184,14 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     return paybackAmount;
   }
 
-  function swapBorrowRateMode(address asset, uint256 rateMode)
-    external
-    override
-    whenNotPaused
-    noReentryOrFlashloan
-  {
+  function swapBorrowRateMode(address asset, uint256 rateMode) external override whenNotPaused noReentryOrFlashloan {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     (uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebt(msg.sender, reserve);
 
     DataTypes.InterestRateMode interestRateMode = DataTypes.InterestRateMode(rateMode);
 
-    ValidationLogic.validateSwapRateMode(
-      reserve,
-      _usersConfig[msg.sender],
-      stableDebt,
-      variableDebt,
-      interestRateMode
-    );
+    ValidationLogic.validateSwapRateMode(reserve, _usersConfig[msg.sender], stableDebt, variableDebt, interestRateMode);
 
     reserve.updateState(asset);
 
@@ -231,11 +204,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
         reserve.variableBorrowIndex
       );
     } else {
-      IVariableDebtToken(reserve.variableDebtTokenAddress).burn(
-        msg.sender,
-        variableDebt,
-        reserve.variableBorrowIndex
-      );
+      IVariableDebtToken(reserve.variableDebtTokenAddress).burn(msg.sender, variableDebt, reserve.variableBorrowIndex);
       IStableDebtToken(reserve.stableDebtTokenAddress).mint(
         msg.sender,
         msg.sender,
@@ -249,12 +218,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     emit Swap(asset, msg.sender, rateMode);
   }
 
-  function rebalanceStableBorrowRate(address asset, address user)
-    external
-    override
-    whenNotPaused
-    noReentryOrFlashloan
-  {
+  function rebalanceStableBorrowRate(address asset, address user) external override whenNotPaused noReentryOrFlashloan {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     IERC20 stableDebtToken = IERC20(reserve.stableDebtTokenAddress);
@@ -263,34 +227,19 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
 
     uint256 stableDebt = IERC20(stableDebtToken).balanceOf(user);
 
-    ValidationLogic.validateRebalanceStableBorrowRate(
-      reserve,
-      asset,
-      stableDebtToken,
-      variableDebtToken,
-      depositToken
-    );
+    ValidationLogic.validateRebalanceStableBorrowRate(reserve, asset, stableDebtToken, variableDebtToken, depositToken);
 
     reserve.updateState(asset);
 
     IStableDebtToken(address(stableDebtToken)).burn(user, stableDebt);
-    IStableDebtToken(address(stableDebtToken)).mint(
-      user,
-      user,
-      stableDebt,
-      reserve.currentStableBorrowRate
-    );
+    IStableDebtToken(address(stableDebtToken)).mint(user, user, stableDebt, reserve.currentStableBorrowRate);
 
     reserve.updateInterestRates(asset, depositToken, 0, 0);
 
     emit RebalanceStableBorrowRate(asset, user);
   }
 
-  function setUserUseReserveAsCollateral(address asset, bool useAsCollateral)
-    external
-    override
-    whenNotPaused
-  {
+  function setUserUseReserveAsCollateral(address asset, bool useAsCollateral) external override whenNotPaused {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     ValidationLogic.validateSetUseReserveAsCollateral(
@@ -359,26 +308,17 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
       uint256 healthFactor
     )
   {
-    (
-      totalCollateralETH,
-      totalDebtETH,
-      ltv,
-      currentLiquidationThreshold,
-      healthFactor
-    ) = GenericLogic.calculateUserAccountData(
-      user,
-      _reserves,
-      _usersConfig[user],
-      _reservesList,
-      _reservesCount,
-      _addressesProvider.getPriceOracle()
-    );
+    (totalCollateralETH, totalDebtETH, ltv, currentLiquidationThreshold, healthFactor) = GenericLogic
+      .calculateUserAccountData(
+        user,
+        _reserves,
+        _usersConfig[user],
+        _reservesList,
+        _reservesCount,
+        _addressesProvider.getPriceOracle()
+      );
 
-    availableBorrowsETH = GenericLogic.calculateAvailableBorrowsETH(
-      totalCollateralETH,
-      totalDebtETH,
-      ltv
-    );
+    availableBorrowsETH = GenericLogic.calculateAvailableBorrowsETH(totalCollateralETH, totalDebtETH, ltv);
   }
 
   function getConfiguration(address asset)
@@ -390,12 +330,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     return _reserves[asset].configuration;
   }
 
-  function getUserConfiguration(address user)
-    external
-    view
-    override
-    returns (DataTypes.UserConfigurationMap memory)
-  {
+  function getUserConfiguration(address user) external view override returns (DataTypes.UserConfigurationMap memory) {
     return _usersConfig[user];
   }
 
@@ -418,7 +353,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     return _reserves[asset].getNormalizedDebt();
   }
 
-  function getReservesList() external view override returns (address[] memory) {
+  function getReservesList() external view override(ILendingPool, ILendingPoolForTokens) returns (address[] memory) {
     address[] memory _activeReserves = new address[](_reservesCount);
 
     for (uint256 i = 0; i < _reservesCount; i++) {
@@ -432,11 +367,13 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
   }
 
   /// @dev Returns the percentage of available liquidity that can be borrowed at once at stable rate
+  // solhint-disable-next-line func-name-mixedcase
   function MAX_STABLE_RATE_BORROW_SIZE_PERCENT() public view returns (uint256) {
     return _maxStableRateBorrowSizePct;
   }
 
   /// @dev Returns the fee of flash loans - backward compatible
+  // solhint-disable-next-line func-name-mixedcase
   function FLASHLOAN_PREMIUM_TOTAL() public view returns (uint256) {
     return _flashLoanPremiumPct;
   }
@@ -469,7 +406,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 balanceFromBefore,
     uint256 balanceToBefore
   ) external override whenNotPaused {
-    require(msg.sender == _reserves[asset].depositTokenAddress, Errors.LP_CALLER_MUST_BE_AN_ATOKEN);
+    require(msg.sender == _reserves[asset].depositTokenAddress, Errors.LP_CALLER_MUST_BE_DEPOSIT_TOKEN);
 
     ValidationLogic.validateTransfer(
       from,
@@ -483,7 +420,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     uint256 reserveId = _reserves[asset].id;
 
     if (from != to) {
-      if (balanceFromBefore.sub(amount) == 0) {
+      if (balanceFromBefore <= amount) {
         DataTypes.UserConfigurationMap storage fromConfig = _usersConfig[from];
         fromConfig.setUsingAsCollateral(reserveId, false);
         emit ReserveUsedAsCollateralDisabled(asset, from);

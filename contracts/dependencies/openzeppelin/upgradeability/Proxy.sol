@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 /**
  * @title Proxy
@@ -33,7 +33,7 @@ abstract contract Proxy {
    * @param implementation Address to delegate.
    */
   function _delegate(address implementation) internal {
-    //solium-disable-next-line
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       // Copy msg.data. We take full control of memory in this inline assembly
       // block because it will not return to Solidity code. We overwrite the
@@ -48,13 +48,13 @@ abstract contract Proxy {
       returndatacopy(0, 0, returndatasize())
 
       switch result
-        // delegatecall returns 0 on error.
-        case 0 {
-          revert(0, returndatasize())
-        }
-        default {
-          return(0, returndatasize())
-        }
+      // delegatecall returns 0 on error.
+      case 0 {
+        revert(0, returndatasize())
+      }
+      default {
+        return(0, returndatasize())
+      }
     }
   }
 

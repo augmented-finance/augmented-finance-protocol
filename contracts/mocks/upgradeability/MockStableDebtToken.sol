@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../../protocol/tokenization/StableDebtToken.sol';
 
 contract MockStableDebtToken is StableDebtToken {
-  constructor() public {
+  constructor() {
     // enables use of this instance without a proxy
     _unsafeResetVersionedInitializers();
   }

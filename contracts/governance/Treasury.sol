@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
+import '../dependencies/openzeppelin/contracts/Address.sol';
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../tools/upgradeability/VersionedInitializable.sol';
@@ -13,10 +14,10 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
   using SafeERC20 for IERC20;
   uint256 private constant TREASURY_REVISION = 1;
 
-  constructor() public MarketAccessBitmask(IMarketAccessController(0)) {}
+  constructor() MarketAccessBitmask(IMarketAccessController(address(0))) {}
 
   // This initializer is invoked by AccessController.setAddressAsImpl
-  function initialize(address remoteAcl) external virtual initializerRunAlways(TREASURY_REVISION) {
+  function initialize(address remoteAcl) external virtual initializer(TREASURY_REVISION) {
     _remoteAcl = IMarketAccessController(remoteAcl);
   }
 
@@ -37,10 +38,7 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
     address recipient,
     uint256 amount
   ) external aclHas(AccessFlags.TREASURY_ADMIN) {
-    if (
-      token == _remoteAcl.getAddress(AccessFlags.REWARD_TOKEN) &&
-      IERC20(token).balanceOf(address(this)) < amount
-    ) {
+    if (token == _remoteAcl.getAddress(AccessFlags.REWARD_TOKEN) && IERC20(token).balanceOf(address(this)) < amount) {
       _claimRewards();
     }
     IERC20(token).safeTransfer(recipient, amount);
@@ -57,15 +55,7 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
     _claimRewards();
   }
 
-  function _safeTransferETH(address to, uint256 value) internal {
-    (bool success, ) = to.call{value: value}(new bytes(0));
-    require(success, 'ETH_TRANSFER_FAILED');
-  }
-
-  function transferEth(address recipient, uint256 amount)
-    external
-    aclHas(AccessFlags.TREASURY_ADMIN)
-  {
-    _safeTransferETH(recipient, amount);
+  function transferEth(address recipient, uint256 amount) external aclHas(AccessFlags.TREASURY_ADMIN) {
+    Address.sendValue(payable(recipient), amount);
   }
 }

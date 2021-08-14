@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
+import '../../tools/Errors.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import './interfaces/PoolTokenConfig.sol';
 import './base/DepositTokenBase.sol';
@@ -18,14 +18,15 @@ contract DepositToken is DepositTokenBase, VersionedInitializable {
     PoolTokenConfig calldata config,
     string calldata name,
     string calldata symbol,
-    uint8 decimals,
     bytes calldata params
   ) external override initializerRunAlways(TOKEN_REVISION) {
-    _initializeERC20(name, symbol, decimals);
+    require(config.treasury != address(0), Errors.VL_TREASURY_REQUIRED);
+    _initializeERC20(name, symbol, config.underlyingDecimals);
     if (!isRevisionInitialized(TOKEN_REVISION)) {
       _initializeDomainSeparator();
+      _treasury = config.treasury;
+      _initializePoolToken(config, params);
     }
-    _treasury = config.treasury;
-    _initializePoolToken(config, name, symbol, decimals, params);
+    _emitInitialized(config, params);
   }
 }

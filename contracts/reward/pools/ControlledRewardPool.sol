@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../interfaces/IRewardController.sol';
 import '../interfaces/IManagedRewardPool.sol';
@@ -11,8 +9,6 @@ import '../../access/AccessHelper.sol';
 import '../../tools/Errors.sol';
 
 abstract contract ControlledRewardPool is IManagedRewardPool {
-  using SafeMath for uint256;
-  using WadRayMath for uint256;
   using PercentageMath for uint256;
 
   uint16 internal constant NO_BASELINE = type(uint16).max;
@@ -27,7 +23,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     IRewardController controller,
     uint256 initialRate,
     uint16 baselinePercentage
-  ) public {
+  ) {
     _initialize(controller, initialRate, baselinePercentage);
   }
 
@@ -104,10 +100,6 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     emit BaselineFactorUpdated(factor);
   }
 
-  function setRate(uint256 rate) external override onlyRateAdmin {
-    _setRate(rate);
-  }
-
   function _setRate(uint256 rate) internal {
     if (isPaused()) {
       _pausedRate = rate;
@@ -150,23 +142,24 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return address(_controller);
   }
 
-  function claimRewardFor(address holder, uint256 limit)
-    external
-    override
-    onlyController
-    returns (uint256, uint32)
-  {
+  function claimRewardFor(address holder, uint256 limit) external override onlyController returns (uint256, uint32) {
     return internalGetReward(holder, limit);
   }
 
   function calcRewardFor(address holder, uint32 at)
     external
     view
+    virtual
     override
-    returns (uint256, uint32)
+    returns (
+      uint256 amount,
+      uint256,
+      uint32 since
+    )
   {
     require(at >= uint32(block.timestamp));
-    return internalCalcReward(holder, at);
+    (amount, since) = internalCalcReward(holder, at);
+    return (amount, 0, since);
   }
 
   function internalAllocateReward(
@@ -178,16 +171,9 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _controller.allocatedByPool(holder, allocated, since, mode);
   }
 
-  function internalGetReward(address holder, uint256 limit)
-    internal
-    virtual
-    returns (uint256, uint32);
+  function internalGetReward(address holder, uint256 limit) internal virtual returns (uint256, uint32);
 
-  function internalCalcReward(address holder, uint32 at)
-    internal
-    view
-    virtual
-    returns (uint256, uint32);
+  function internalCalcReward(address holder, uint32 at) internal view virtual returns (uint256, uint32);
 
   function attachedToRewardController() external override onlyController {
     internalAttachedToRewardController();
@@ -236,12 +222,10 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   }
 
   function _onlyRefAdmin() private view {
-    require(
-      AccessHelper.hasAnyOf(
-        _controller.getAccessController(),
-        msg.sender,
-        AccessFlags.REFERRAL_ADMIN
-      ),
+    AccessHelper.requireAnyOf(
+      _controller.getAccessController(),
+      msg.sender,
+      AccessFlags.REFERRAL_ADMIN,
       'only referral admin is allowed'
     );
   }

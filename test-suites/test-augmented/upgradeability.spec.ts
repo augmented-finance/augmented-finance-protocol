@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ProtocolErrors } from '../../helpers/types';
-import { ZERO_ADDRESS } from '../../helpers/constants';
+import { ONE_ADDRESS, ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getDepositToken,
   getMockLendingPoolImpl,
@@ -31,7 +31,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     const depositTokenInstance = await deployMockDepositToken([
       pool.address,
       dai.address,
-      ZERO_ADDRESS,
+      ONE_ADDRESS,
       'Deposit DAI updated',
       'aDAI',
       '0x10',
@@ -53,11 +53,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       '0x10',
     ]);
 
-    const agfTokenInstance = await deployMockAgfToken([
-      ZERO_ADDRESS,
-      'Reward token updated',
-      'AGF',
-    ]);
+    const agfTokenInstance = await deployMockAgfToken([ZERO_ADDRESS, 'Reward token updated', 'AGF']);
 
     newATokenAddress = depositTokenInstance.address;
     newVariableTokenAddress = variableDebtTokenInstance.address;
@@ -68,24 +64,18 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
   it('Tries to initialize lendingPool implemention', async () => {
     const { addressesProvider } = testEnv;
     const pool = await deployLendingPoolImpl(false, false);
-    await expect(pool.initialize(addressesProvider.address)).to.be.revertedWith(
-      'initializer blocked'
-    );
+    await expect(pool.initialize(addressesProvider.address)).to.be.revertedWith('initializer blocked');
   });
 
   it('Tries to re-initialize lendingPool from outside', async () => {
     const { pool, addressesProvider } = testEnv;
-    await expect(pool.initialize(addressesProvider.address)).to.be.revertedWith(
-      'already initialized'
-    );
+    await expect(pool.initialize(addressesProvider.address)).to.be.revertedWith('already initialized');
   });
 
   it('Tries to re-initialize lendingPool from inside', async () => {
     const { addressesProvider } = testEnv;
     const pool = await getMockLendingPoolImpl(testEnv.pool.address);
-    await expect(pool.reInitialize(addressesProvider.address)).to.be.revertedWith(
-      'already initialized'
-    );
+    await expect(pool.reInitialize(addressesProvider.address)).to.be.revertedWith('already initialized');
   });
 
   it('Tries to update the DAI agToken implementation with a different address than the lendingPoolManager', async () => {
@@ -181,9 +171,9 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       params: '0x10',
     };
 
-    await expect(
-      configurator.connect(users[1].signer).updateStableDebtToken(updateDebtTokenInput)
-    ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
+    await expect(configurator.connect(users[1].signer).updateStableDebtToken(updateDebtTokenInput)).to.be.revertedWith(
+      CALLER_NOT_POOL_ADMIN
+    );
   });
 
   it('Upgrades the DAI stable debt token implementation ', async () => {
@@ -253,9 +243,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
 
     await configurator.updateVariableDebtToken(updateDebtTokenInput);
 
-    const { variableDebtTokenAddress } = await helpersContract.getReserveTokensAddresses(
-      dai.address
-    );
+    const { variableDebtTokenAddress } = await helpersContract.getReserveTokensAddresses(dai.address);
 
     const debtToken = await getMockVariableDebtToken(variableDebtTokenAddress);
     expect(await debtToken.name()).to.be.eq(name, 'Invalid token name');

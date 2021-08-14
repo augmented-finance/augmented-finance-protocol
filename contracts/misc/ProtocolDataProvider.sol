@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import '../access/interfaces/IMarketAccessController.sol';
@@ -11,7 +10,7 @@ import '../interfaces/IVariableDebtToken.sol';
 import '../protocol/libraries/configuration/ReserveConfiguration.sol';
 import '../protocol/libraries/configuration/UserConfiguration.sol';
 import '../protocol/libraries/types/DataTypes.sol';
-import '../interfaces/IReserveStrategy.sol';
+import '../interfaces/IReserveRateStrategy.sol';
 import '../interfaces/IPoolAddressProvider.sol';
 import './interfaces/IUiPoolDataProvider.sol';
 import '../interfaces/IPriceOracleGetter.sol';
@@ -30,7 +29,15 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
   address public constant USD = 0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96;
 
-  enum TokenType {PoolAsset, Deposit, VariableDebt, StableDebt, Stake, Reward, RewardStake}
+  enum TokenType {
+    PoolAsset,
+    Deposit,
+    VariableDebt,
+    StableDebt,
+    Stake,
+    Reward,
+    RewardStake
+  }
 
   struct TokenDescription {
     address token;
@@ -42,6 +49,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     uint8 decimals;
     TokenType tokenType;
     bool active;
+    bool frozen;
   }
 
   struct TokenData {
@@ -55,9 +63,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     uint32 unstakeWindowEnd;
   }
 
+  // solhint-disable-next-line var-name-mixedcase
   IMarketAccessController public immutable ADDRESS_PROVIDER;
 
-  constructor(IMarketAccessController addressesProvider) public {
+  constructor(IMarketAccessController addressesProvider) {
     ADDRESS_PROVIDER = addressesProvider;
   }
 
@@ -66,8 +75,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     view
     returns (TokenDescription[] memory tokens, uint256 tokenCount)
   {
-    IStakeConfigurator stakeCfg =
-      IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
+    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
     address[] memory stakeList = stakeCfg.list();
 
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
@@ -91,7 +99,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         address(0),
         IERC20Detailed(token).decimals(),
         TokenType.Reward,
-        true
+        true,
+        false
       );
       tokenCount++;
     }
@@ -106,7 +115,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         tokens[0].token,
         IERC20Detailed(token).decimals(),
         TokenType.RewardStake,
-        true
+        true,
+        false
       );
       tokenCount++;
     }
@@ -114,8 +124,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     for (uint256 i = 0; i < reserveList.length; i++) {
       token = reserveList[i];
       DataTypes.ReserveData memory reserveData = pool.getReserveData(token);
-      (bool isActive, , bool canBorrow, bool canBorrowStable) =
-        reserveData.configuration.getFlagsMemory();
+      (bool isActive, bool isFrozen, bool canBorrow, bool canBorrowStable) = reserveData.configuration.getFlagsMemory();
 
       canBorrow = isActive && canBorrow;
       canBorrowStable = canBorrowStable && canBorrow;
@@ -123,15 +132,21 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       uint8 decimals = reserveData.configuration.getDecimalsMemory();
 
       if (includeAssets) {
+        address underlying;
+        if (reserveData.configuration.isExternalStrategyMemory()) {
+          underlying = IUnderlyingStrategy(reserveData.strategy).getUnderlying(token);
+        }
+
         tokens[tokenCount] = TokenDescription(
           token,
           token,
           address(0),
           IERC20Detailed(token).symbol(),
-          address(0),
+          underlying,
           decimals,
           TokenType.PoolAsset,
-          true
+          true,
+          false
         );
         tokenCount++;
       }
@@ -145,7 +160,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         token,
         decimals,
         TokenType.Deposit,
-        isActive
+        isActive,
+        isFrozen
       );
       tokenCount++;
 
@@ -159,7 +175,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
           token,
           decimals,
           TokenType.VariableDebt,
-          canBorrow
+          canBorrow,
+          isFrozen
         );
         tokenCount++;
       }
@@ -174,7 +191,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
           token,
           decimals,
           TokenType.StableDebt,
-          canBorrowStable
+          canBorrowStable,
+          isFrozen
         );
         tokenCount++;
       }
@@ -190,7 +208,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         IDerivedToken(token).UNDERLYING_ASSET_ADDRESS(),
         IERC20Detailed(token).decimals(),
         TokenType.Stake,
-        true
+        true,
+        false
       );
       tokenCount++;
     }
@@ -198,13 +217,8 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     return (tokens, tokenCount);
   }
 
-  function getAllTokens(bool includeAssets)
-    public
-    view
-    returns (address[] memory tokens, uint256 tokenCount)
-  {
-    IStakeConfigurator stakeCfg =
-      IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
+  function getAllTokens(bool includeAssets) public view returns (address[] memory tokens, uint256 tokenCount) {
+    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
     address[] memory stakeList = stakeCfg.list();
 
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
@@ -216,16 +230,22 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     }
     tokens = new address[](tokenCount);
 
-    tokens[0] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_TOKEN);
-    tokens[1] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_STAKE_TOKEN);
+    tokenCount = 0;
+    tokens[tokenCount] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_TOKEN);
+    if (tokens[tokenCount] != address(0)) {
+      tokenCount++;
+    }
+    tokens[tokenCount] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_STAKE_TOKEN);
+    if (tokens[tokenCount] != address(0)) {
+      tokenCount++;
+    }
 
     tokenCount = 2;
 
     for (uint256 i = 0; i < reserveList.length; i++) {
       address token = reserveList[i];
       DataTypes.ReserveData memory reserveData = pool.getReserveData(token);
-      (bool isActive, , bool canBorrow, bool canBorrowStable) =
-        reserveData.configuration.getFlagsMemory();
+      (bool isActive, , bool canBorrow, bool canBorrowStable) = reserveData.configuration.getFlagsMemory();
       canBorrow = isActive && canBorrow;
       canBorrowStable = canBorrowStable && canBorrow;
 
@@ -310,14 +330,12 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       bool isFrozen
     )
   {
-    DataTypes.ReserveConfigurationMap memory configuration =
-      ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getConfiguration(asset);
+    DataTypes.ReserveConfigurationMap memory configuration = ILendingPool(ADDRESS_PROVIDER.getLendingPool())
+      .getConfiguration(asset);
 
-    (ltv, liquidationThreshold, liquidationBonus, decimals, reserveFactor) = configuration
-      .getParamsMemory();
+    (ltv, liquidationThreshold, liquidationBonus, decimals, reserveFactor) = configuration.getParamsMemory();
 
-    (isActive, isFrozen, borrowingEnabled, stableBorrowRateEnabled) = configuration
-      .getFlagsMemory();
+    (isActive, isFrozen, borrowingEnabled, stableBorrowRateEnabled) = configuration.getFlagsMemory();
 
     usageAsCollateralEnabled = liquidationThreshold > 0;
   }
@@ -338,8 +356,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       uint40 lastUpdateTimestamp
     )
   {
-    DataTypes.ReserveData memory reserve =
-      ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
+    DataTypes.ReserveData memory reserve = ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
 
     return (
       IERC20Detailed(asset).balanceOf(reserve.depositTokenAddress),
@@ -370,11 +387,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       bool usageAsCollateralEnabled
     )
   {
-    DataTypes.ReserveData memory reserve =
-      ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
+    DataTypes.ReserveData memory reserve = ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
 
-    DataTypes.UserConfigurationMap memory userConfig =
-      ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getUserConfiguration(user);
+    DataTypes.UserConfigurationMap memory userConfig = ILendingPool(ADDRESS_PROVIDER.getLendingPool())
+      .getUserConfiguration(user);
 
     currentDepositBalance = IERC20Detailed(reserve.depositTokenAddress).balanceOf(user);
     currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);
@@ -383,9 +399,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     scaledVariableDebt = IVariableDebtToken(reserve.variableDebtTokenAddress).scaledBalanceOf(user);
     liquidityRate = reserve.currentLiquidityRate;
     stableBorrowRate = IStableDebtToken(reserve.stableDebtTokenAddress).getUserStableRate(user);
-    stableRateLastUpdated = IStableDebtToken(reserve.stableDebtTokenAddress).getUserLastUpdated(
-      user
-    );
+    stableRateLastUpdated = IStableDebtToken(reserve.stableDebtTokenAddress).getUserLastUpdated(user);
     usageAsCollateralEnabled = userConfig.isUsingAsCollateral(reserve.id);
   }
 
@@ -398,32 +412,9 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       address variableDebtTokenAddress
     )
   {
-    DataTypes.ReserveData memory reserve =
-      ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
+    DataTypes.ReserveData memory reserve = ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
 
-    return (
-      reserve.depositTokenAddress,
-      reserve.stableDebtTokenAddress,
-      reserve.variableDebtTokenAddress
-    );
-  }
-
-  function getInterestRateStrategySlopes(IReserveStrategy interestRateStrategy)
-    internal
-    view
-    returns (
-      uint256,
-      uint256,
-      uint256,
-      uint256
-    )
-  {
-    // return (
-    //   interestRateStrategy.variableRateSlope1(),
-    //   interestRateStrategy.variableRateSlope2(),
-    //   interestRateStrategy.stableRateSlope1(),
-    //   interestRateStrategy.stableRateSlope2()
-    // );
+    return (reserve.depositTokenAddress, reserve.stableDebtTokenAddress, reserve.variableDebtTokenAddress);
   }
 
   function getReservesData(address user)
@@ -436,39 +427,13 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       uint256
     )
   {
-    return _getReservesData(IPoolAddressProvider(address(ADDRESS_PROVIDER)), user);
-  }
-
-  function getReservesDataOf(IPoolAddressProvider provider, address user)
-    external
-    view
-    override
-    returns (
-      AggregatedReserveData[] memory,
-      UserReserveData[] memory,
-      uint256
-    )
-  {
-    return _getReservesData(provider, user);
-  }
-
-  function _getReservesData(IPoolAddressProvider provider, address user)
-    private
-    view
-    returns (
-      AggregatedReserveData[] memory,
-      UserReserveData[] memory,
-      uint256
-    )
-  {
-    ILendingPool lendingPool = ILendingPool(provider.getLendingPool());
-    IPriceOracleGetter oracle = IPriceOracleGetter(provider.getPriceOracle());
+    ILendingPool lendingPool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
+    IPriceOracleGetter oracle = IPriceOracleGetter(ADDRESS_PROVIDER.getPriceOracle());
     address[] memory reserves = lendingPool.getReservesList();
     DataTypes.UserConfigurationMap memory userConfig = lendingPool.getUserConfiguration(user);
 
     AggregatedReserveData[] memory reservesData = new AggregatedReserveData[](reserves.length);
-    UserReserveData[] memory userReservesData =
-      new UserReserveData[](user != address(0) ? reserves.length : 0);
+    UserReserveData[] memory userReservesData = new UserReserveData[](user != address(0) ? reserves.length : 0);
 
     for (uint256 i = 0; i < reserves.length; i++) {
       AggregatedReserveData memory reserveData = reservesData[i];
@@ -476,8 +441,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       reserveData.pricingAsset = reserveData.underlyingAsset;
 
       // reserve current state
-      DataTypes.ReserveData memory baseData =
-        lendingPool.getReserveData(reserveData.underlyingAsset);
+      DataTypes.ReserveData memory baseData = lendingPool.getReserveData(reserveData.underlyingAsset);
       reserveData.liquidityIndex = baseData.liquidityIndex;
       reserveData.variableBorrowIndex = baseData.variableBorrowIndex;
       reserveData.liquidityRate = baseData.currentLiquidityRate;
@@ -488,19 +452,26 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       reserveData.stableDebtTokenAddress = baseData.stableDebtTokenAddress;
       reserveData.variableDebtTokenAddress = baseData.variableDebtTokenAddress;
       reserveData.strategy = baseData.strategy;
+      reserveData.isExternalStrategy = baseData.configuration.isExternalStrategyMemory();
       reserveData.priceInEth = oracle.getAssetPrice(reserveData.pricingAsset);
 
       reserveData.availableLiquidity = IERC20Detailed(reserveData.underlyingAsset).balanceOf(
         reserveData.depositTokenAddress
       );
-      (
-        reserveData.totalPrincipalStableDebt,
-        ,
-        reserveData.averageStableRate,
-        reserveData.stableDebtLastUpdateTimestamp
-      ) = IStableDebtToken(reserveData.stableDebtTokenAddress).getSupplyData();
-      reserveData.totalScaledVariableDebt = IVariableDebtToken(reserveData.variableDebtTokenAddress)
-        .scaledTotalSupply();
+
+      if (reserveData.variableDebtTokenAddress != address(0)) {
+        reserveData.totalScaledVariableDebt = IVariableDebtToken(reserveData.variableDebtTokenAddress)
+          .scaledTotalSupply();
+      }
+
+      if (reserveData.stableDebtTokenAddress != address(0)) {
+        (
+          reserveData.totalPrincipalStableDebt,
+          ,
+          reserveData.averageStableRate,
+          reserveData.stableDebtLastUpdateTimestamp
+        ) = IStableDebtToken(reserveData.stableDebtTokenAddress).getSupplyData();
+      }
 
       // reserve configuration
 
@@ -522,45 +493,31 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         reserveData.stableBorrowRateEnabled
       ) = baseData.configuration.getFlagsMemory();
       reserveData.usageAsCollateralEnabled = reserveData.baseLTVasCollateral != 0;
-      (
-        reserveData.variableRateSlope1,
-        reserveData.variableRateSlope2,
-        reserveData.stableRateSlope1,
-        reserveData.stableRateSlope2
-      ) = getInterestRateStrategySlopes(IReserveStrategy(reserveData.strategy));
 
       if (user != address(0)) {
         // user reserve data
         userReservesData[i].underlyingAsset = reserveData.underlyingAsset;
-        userReservesData[i].scaledDepositTokenBalance = IDepositToken(
-          reserveData
-            .depositTokenAddress
-        )
-          .scaledBalanceOf(user);
+        userReservesData[i].scaledDepositTokenBalance = IDepositToken(reserveData.depositTokenAddress).scaledBalanceOf(
+          user
+        );
         userReservesData[i].usageAsCollateralEnabledOnUser = userConfig.isUsingAsCollateral(i);
 
         if (userConfig.isBorrowing(i)) {
-          userReservesData[i].scaledVariableDebt = IVariableDebtToken(
-            reserveData
-              .variableDebtTokenAddress
-          )
-            .scaledBalanceOf(user);
-          userReservesData[i].principalStableDebt = IStableDebtToken(
-            reserveData
-              .stableDebtTokenAddress
-          )
-            .principalBalanceOf(user);
-          if (userReservesData[i].principalStableDebt != 0) {
-            userReservesData[i].stableBorrowRate = IStableDebtToken(
-              reserveData
-                .stableDebtTokenAddress
-            )
-              .getUserStableRate(user);
-            userReservesData[i].stableBorrowLastUpdateTimestamp = IStableDebtToken(
-              reserveData
-                .stableDebtTokenAddress
-            )
-              .getUserLastUpdated(user);
+          if (reserveData.variableDebtTokenAddress != address(0)) {
+            userReservesData[i].scaledVariableDebt = IVariableDebtToken(reserveData.variableDebtTokenAddress)
+              .scaledBalanceOf(user);
+          }
+
+          if (reserveData.stableDebtTokenAddress != address(0)) {
+            userReservesData[i].principalStableDebt = IStableDebtToken(reserveData.stableDebtTokenAddress)
+              .principalBalanceOf(user);
+
+            if (userReservesData[i].principalStableDebt != 0) {
+              userReservesData[i].stableBorrowRate = IStableDebtToken(reserveData.stableDebtTokenAddress)
+                .getUserStableRate(user);
+              userReservesData[i].stableBorrowLastUpdateTimestamp = IStableDebtToken(reserveData.stableDebtTokenAddress)
+                .getUserLastUpdated(user);
+            }
           }
         }
       }
@@ -598,8 +555,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     for (uint256 i = 0; i < users.length; i++) {
       for (uint256 j = 0; j < tokens.length; j++) {
         StakeTokenBalance memory b;
-        (b.balance, b.unstakeWindowStart, b.unstakeWindowEnd) = IStakeToken(tokens[j])
-          .balanceAndCooldownOf(users[i]);
+        (b.balance, b.unstakeWindowStart, b.unstakeWindowEnd) = IStakeToken(tokens[j]).balanceAndCooldownOf(users[i]);
         balances[i * tokens.length + j] = b;
       }
     }
@@ -665,22 +621,13 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     return (tokens, balances, tokenCount);
   }
 
-  function explainReward(address holder, uint32 minDuration)
-    external
-    view
-    returns (RewardExplained memory, uint32 at)
-  {
-    IRewardExplainer re =
-      IRewardExplainer(ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_CONTROLLER));
+  function explainReward(address holder, uint32 minDuration) external view returns (RewardExplained memory, uint32 at) {
+    IRewardExplainer re = IRewardExplainer(ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_CONTROLLER));
     at = uint32(block.timestamp) + minDuration;
     return (re.explainReward(holder, at), at);
   }
 
-  function rewardPoolNames(address[] calldata pools, uint256 ignoreMask)
-    external
-    view
-    returns (string[] memory names)
-  {
+  function rewardPoolNames(address[] calldata pools, uint256 ignoreMask) external view returns (string[] memory names) {
     names = new string[](pools.length);
     for (uint256 i = 0; i < pools.length; (i, ignoreMask) = (i + 1, ignoreMask >> 1)) {
       if (ignoreMask & 1 != 0 || pools[i] == address(0)) {

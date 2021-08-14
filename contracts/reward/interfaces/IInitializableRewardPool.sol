@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import './IRewardController.sol';
 
@@ -8,7 +7,6 @@ interface IInitializableRewardPool {
   struct InitData {
     IRewardController controller;
     string poolName;
-    uint256 initialRate;
     uint16 baselinePercentage;
   }
 

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import './StakeTokenConfig.sol';
 
@@ -8,6 +7,7 @@ interface IStakeConfigurator {
   struct InitStakeTokenData {
     address stakeTokenImpl;
     address stakedToken;
+    address strategy;
     string stkTokenName;
     string stkTokenSymbol;
     uint32 cooldownPeriod;
@@ -45,8 +45,7 @@ interface IStakeConfigurator {
 
   function stakeTokenOf(address underlying) external view returns (address);
 
-  function getStakeTokensData()
-    external
-    view
-    returns (StakeTokenData[] memory dataList, uint256 count);
+  function getStakeTokensData() external view returns (StakeTokenData[] memory dataList, uint256 count);
+
+  function setCooldownForAll(uint32 cooldownPeriod, uint32 unstakePeriod) external;
 }

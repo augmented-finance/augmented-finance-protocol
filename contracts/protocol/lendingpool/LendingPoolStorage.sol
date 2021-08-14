@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.8.4;
 
 import '../../tools/upgradeability/VersionedInitializable.sol';
-import '../libraries/configuration/UserConfiguration.sol';
-import '../libraries/configuration/ReserveConfiguration.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
 import '../libraries/types/DataTypes.sol';
 
 abstract contract LendingPoolStorage is VersionedInitializable {
-  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
-  using UserConfiguration for DataTypes.UserConfigurationMap;
-
   IMarketAccessController internal _addressesProvider;
   address internal _extension;
 
@@ -24,8 +19,12 @@ abstract contract LendingPoolStorage is VersionedInitializable {
 
   uint16 internal _flashLoanPremiumPct;
 
-  uint16 internal constant FEATURE_FLASHLOAN = 1 << 0;
-  uint16 internal constant FEATURE_LIQUIDATION = 1 << 1;
+  uint16 internal constant FEATURE_LIQUIDATION = 1 << 0;
+  uint16 internal constant FEATURE_FLASHLOAN = 1 << 1;
+  uint16 internal constant FEATURE_FLASHLOAN_DEPOSIT = 1 << 2;
+  uint16 internal constant FEATURE_FLASHLOAN_WITHDRAW = 1 << 3;
+  uint16 internal constant FEATURE_FLASHLOAN_BORROW = 1 << 4;
+  uint16 internal constant FEATURE_FLASHLOAN_REPAY = 1 << 5;
   uint16 internal _disabledFeatures;
 
   uint8 internal _reservesCount;
@@ -36,4 +35,6 @@ abstract contract LendingPoolStorage is VersionedInitializable {
   uint8 internal _nestedCalls;
 
   bool internal _paused;
+
+  mapping(address => address[]) internal _indirectUnderlying;
 }

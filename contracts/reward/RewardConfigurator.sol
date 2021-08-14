@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../tools/upgradeability/VersionedInitializable.sol';
 
@@ -19,7 +18,7 @@ import './pools/TeamRewardPool.sol';
 import '../tools/upgradeability/IProxy.sol';
 
 contract RewardConfigurator is
-  MarketAccessBitmask(IMarketAccessController(0)),
+  MarketAccessBitmask(IMarketAccessController(address(0))),
   VersionedInitializable,
   IRewardConfigurator
 {
@@ -30,9 +29,9 @@ contract RewardConfigurator is
   }
 
   ProxyAdmin internal immutable _proxies;
-  mapping(string => address) _namedPools;
+  mapping(string => address) private _namedPools;
 
-  constructor() public {
+  constructor() {
     _proxies = new ProxyAdmin();
   }
 
@@ -45,6 +44,10 @@ contract RewardConfigurator is
     address ctl = _remoteAcl.getAddress(AccessFlags.REWARD_CONTROLLER);
     require(ctl != address(0), 'incomplete configuration');
     return IManagedRewardController(ctl);
+  }
+
+  function getProxyAdmin() external view returns (address) {
+    return address(_proxies);
   }
 
   function list() public view returns (address[] memory pools) {
@@ -66,22 +69,19 @@ contract RewardConfigurator is
     for (uint256 i = 0; i < entries.length; i++) {
       PoolInitData calldata entry = entries[i];
 
-      IInitializableRewardPool.InitData memory params =
-        IInitializableRewardPool.InitData(
-          ctl,
-          entry.poolName,
-          entry.initialRate,
-          entry.baselinePercentage
-        );
+      IInitializableRewardPool.InitData memory params = IInitializableRewardPool.InitData(
+        ctl,
+        entry.poolName,
+        entry.baselinePercentage
+      );
 
-      address pool =
-        address(
-          _remoteAcl.createProxy(
-            address(_proxies),
-            entry.impl,
-            abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
-          )
-        );
+      address pool = address(
+        _remoteAcl.createProxy(
+          address(_proxies),
+          entry.impl,
+          abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
+        )
+      );
 
       ctl.addRewardPool(IManagedRewardPool(pool));
 
@@ -109,7 +109,7 @@ contract RewardConfigurator is
 
     for (uint256 i = 0; i < names.length; i++) {
       IManagedRewardPool pool = pools[i];
-      if (pool != IManagedRewardPool(0)) {
+      if (pool != IManagedRewardPool(address(0))) {
         ctl.addRewardPool(pool);
       }
       if (i < names.length && bytes(names[i]).length > 0) {
@@ -121,11 +121,7 @@ contract RewardConfigurator is
     }
   }
 
-  function getNamedRewardPools(string[] calldata names)
-    external
-    view
-    returns (address[] memory pools)
-  {
+  function getNamedRewardPools(string[] calldata names) external view returns (address[] memory pools) {
     pools = new address[](names.length);
     for (uint256 i = 0; i < names.length; i++) {
       pools[i] = _namedPools[names[i]];
@@ -138,8 +134,7 @@ contract RewardConfigurator is
   }
 
   function updateRewardPool(PoolUpdateData calldata input) external onlyRewardAdmin {
-    IInitializableRewardPool.InitData memory params =
-      IInitializableRewardPool(input.pool).initializedWith();
+    IInitializableRewardPool.InitData memory params = IInitializableRewardPool(input.pool).initializedWith();
     _proxies.upgradeAndCall(
       IProxy(input.pool),
       input.impl,
@@ -148,18 +143,16 @@ contract RewardConfigurator is
     emit RewardPoolUpgraded(input.pool, input.impl);
   }
 
-  function buildRewardPoolInitData(
-    string calldata poolName,
-    uint256 initialRate,
-    uint16 baselinePercentage
-  ) external view returns (bytes memory) {
-    IInitializableRewardPool.InitData memory data =
-      IInitializableRewardPool.InitData(
-        getDefaultController(),
-        poolName,
-        initialRate,
-        baselinePercentage
-      );
+  function buildRewardPoolInitData(string calldata poolName, uint16 baselinePercentage)
+    external
+    view
+    returns (bytes memory)
+  {
+    IInitializableRewardPool.InitData memory data = IInitializableRewardPool.InitData(
+      getDefaultController(),
+      poolName,
+      baselinePercentage
+    );
     return abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, data);
   }
 
@@ -168,8 +161,12 @@ contract RewardConfigurator is
     string calldata symbol,
     uint8 decimals
   ) external view returns (bytes memory) {
-    IInitializableRewardToken.InitData memory data =
-      IInitializableRewardToken.InitData(_remoteAcl, name, symbol, decimals);
+    IInitializableRewardToken.InitData memory data = IInitializableRewardToken.InitData(
+      _remoteAcl,
+      name,
+      symbol,
+      decimals
+    );
     return abi.encodeWithSelector(IInitializableRewardToken.initialize.selector, data);
   }
 
@@ -203,17 +200,6 @@ contract RewardConfigurator is
     }
     if (members.length > 0) {
       pool.updateTeamMembers(members, memberShares);
-    }
-  }
-
-  function setRates(IManagedRewardPool[] calldata pools, uint256[] calldata rates)
-    external
-    onlyRewardRateAdmin
-  {
-    require(pools.length == rates.length);
-
-    for (uint256 i = 0; i < pools.length; i++) {
-      pools[i].setRate(rates[i]);
     }
   }
 
@@ -253,7 +239,7 @@ contract RewardConfigurator is
     }
 
     for (uint256 i = 0; i < pools.length; i++) {
-      if (ignoreMask & 1 == 0 && pools[i] != IManagedRewardPool(0)) {
+      if (ignoreMask & 1 == 0 && pools[i] != IManagedRewardPool(address(0))) {
         activePoolCount++;
         (bool ok, uint16 pct) = pools[i].getBaselinePercentage();
         if (ok) {

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../access/AccessFlags.sol';
 import '../access/MarketAccessBitmask.sol';
@@ -24,31 +23,18 @@ contract AGFTokenV1 is
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor()
-    public
-    RewardToken(NAME, SYMBOL, DECIMALS)
-    MarketAccessBitmask(IMarketAccessController(0))
-  {}
+  constructor() RewardToken(NAME, SYMBOL, DECIMALS) MarketAccessBitmask(IMarketAccessController(address(0))) {}
 
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
   }
 
   // This initializer is invoked by AccessController.setAddressAsImpl
-  function initialize(IMarketAccessController remoteAcl)
-    external
-    virtual
-    initializerRunAlways(TOKEN_REVISION)
-  {
+  function initialize(IMarketAccessController remoteAcl) external virtual initializer(TOKEN_REVISION) {
     _initialize(remoteAcl, NAME, SYMBOL, DECIMALS);
   }
 
-  function initialize(InitData calldata data)
-    public
-    virtual
-    override
-    initializerRunAlways(TOKEN_REVISION)
-  {
+  function initialize(InitData calldata data) public virtual override initializer(TOKEN_REVISION) {
     _initialize(data.remoteAcl, data.name, data.symbol, data.decimals);
   }
 
@@ -69,28 +55,7 @@ contract AGFTokenV1 is
     address account,
     uint256 amount,
     bool
-  ) external override aclAnyOf(AccessFlags.REWARD_MINT | AccessFlags.REWARD_CONTROLLER) {
+  ) external virtual override aclAnyOf(AccessFlags.REWARD_CONTROLLER) {
     _mint(account, amount);
-  }
-
-  function burn(address account, uint256 amount) external aclHas(AccessFlags.REWARD_BURN) {
-    _burn(account, amount);
-  }
-
-  function _checkTransfer(address from, address to) internal view virtual {
-    // require(_getRemoteAcl(from) & AccessFlags.REWARD_SUSPEND_USER == 0, 'sender is suspended');
-    // if (from == to) {
-    //   return;
-    // }
-    // require(_getRemoteAcl(to) & AccessFlags.REWARD_SUSPEND_USER == 0, 'receiver is suspended');
-  }
-
-  function _beforeTokenTransfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal virtual override {
-    super._beforeTokenTransfer(from, to, amount);
-    _checkTransfer(from, to);
   }
 }

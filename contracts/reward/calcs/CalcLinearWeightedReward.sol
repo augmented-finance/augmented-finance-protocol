@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.4;
 
 import './CalcLinearRateReward.sol';
-import '../../tools/math/WadRayMath.sol';
 
 abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
-  using WadRayMath for uint256;
-
   uint256 private _accumRate;
   uint256 private _totalSupply;
 
@@ -14,10 +11,10 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
 
   function doUpdateTotalSupplyDiff(uint256 oldSupply, uint256 newSupply) internal returns (bool) {
     if (newSupply > oldSupply) {
-      return internalSetTotalSupply(_totalSupply.add(newSupply - oldSupply), getCurrentTick());
+      return internalSetTotalSupply(_totalSupply + (newSupply - oldSupply), getCurrentTick());
     }
     if (oldSupply > newSupply) {
-      return internalSetTotalSupply(_totalSupply.sub(oldSupply - newSupply), getCurrentTick());
+      return internalSetTotalSupply(_totalSupply - (oldSupply - newSupply), getCurrentTick());
     }
     return false;
   }
@@ -45,10 +42,10 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
       return;
     }
 
-    // the rate stays in RAY, but is weighted now vs _maxWeightBase
+    // the rate is weighted now vs _maxWeightBase
     if (at != lastAt) {
-      lastRate = lastRate.mul(_maxWeightBase.div(_totalSupply));
-      _accumRate = _accumRate.add(lastRate.mul(at - lastAt));
+      lastRate *= _maxWeightBase / _totalSupply;
+      _accumRate += lastRate * (at - lastAt);
     }
   }
 
@@ -93,15 +90,15 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     if (_totalSupply > 0) {
       (uint256 rate, uint32 updatedAt) = getRateAndUpdatedAt();
 
-      rate = rate.mul(_maxWeightBase.div(_totalSupply));
-      adjRate = adjRate.add(rate.mul(at - updatedAt));
+      rate *= _maxWeightBase / _totalSupply;
+      adjRate += rate * (at - updatedAt);
     }
 
     if (adjRate == lastAccumRate || entry.rewardBase == 0) {
       return (adjRate, 0, entry.claimedAt);
     }
 
-    allocated = uint256(entry.rewardBase).mul(adjRate.sub(lastAccumRate)).div(_maxWeightBase);
+    allocated = (uint256(entry.rewardBase) * (adjRate - lastAccumRate)) / _maxWeightBase;
     return (adjRate, allocated, entry.claimedAt);
   }
 }

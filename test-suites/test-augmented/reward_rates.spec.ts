@@ -31,6 +31,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { IManagedRewardPool } from '../../types/IManagedRewardPool';
 import { IManagedRewardPoolFactory } from '../../types/IManagedRewardPoolFactory';
 import { BigNumber, Contract } from 'ethers';
+import { ProtocolErrors } from '../../helpers/types';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -45,6 +46,7 @@ describe('Reward rates suite', () => {
   let blkBeforeDeploy;
   let refPool: ReferralRewardPool;
   const defaultRate = 1;
+  const poolCount = 5;
 
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
@@ -62,18 +64,16 @@ describe('Reward rates suite', () => {
     const ac = await getMarketAccessController();
     await ac.grantRoles(root.address, AccessFlags.REWARD_RATE_ADMIN);
 
-    refPool = await deployReferralRewardPool('RefPool', [
-      rewardController.address,
-      defaultRate,
-      PERC_100,
-    ]);
+    const poolShare = PERC_100 / poolCount;
+
+    refPool = await deployReferralRewardPool('RefPool', [rewardController.address, 0, poolShare]);
     await rewardController.addRewardPool(refPool.address);
 
     {
       const pool = await deployTreasuryRewardPool([
         rewardController.address,
-        defaultRate,
-        PERC_100,
+        0,
+        poolShare,
         root.address,
       ]);
       await rewardController.addRewardPool(pool.address);
@@ -81,16 +81,14 @@ describe('Reward rates suite', () => {
     }
     {
       const pool = await getTokenWeightedRewardPoolAGFSeparate();
-      await pool.setRate(defaultRate);
-      await pool.setBaselinePercentage(PERC_100);
+      await pool.setBaselinePercentage(poolShare);
       await pool.handleBalanceUpdate(ONE_ADDRESS, root.address, 0, 1, 1); // 100%
       pushPool(pool);
     }
 
     {
       const pool = await getTeamRewardPool();
-      await pool.setRate(defaultRate);
-      await pool.setBaselinePercentage(PERC_100);
+      await pool.setBaselinePercentage(poolShare);
       await pool.setUnlockedAt(1);
       await pool.updateTeamMember(root.address, 10000); // 100%
       pushPool(pool);
@@ -100,12 +98,13 @@ describe('Reward rates suite', () => {
       agf.mintReward(root.address, 1, false);
 
       const pool = await getMockTokenLocker();
-      await pool.setRate(defaultRate);
-      await pool.setBaselinePercentage(PERC_100);
+      await pool.setBaselinePercentage(poolShare);
       await agf.approve(pool.address, MAX_UINT_AMOUNT);
       await pool.lock(1, MAX_LOCKER_PERIOD + WEEK, 0);
       pushPool(pool);
     }
+
+    await rewardController.updateBaseline(defaultRate * poolCount);
   });
 
   afterEach(async () => {
@@ -149,8 +148,7 @@ describe('Reward rates suite', () => {
     await mineTicks(10);
 
     const defaultRate2 = 3;
-    // as all pools have baseline = 100% this call will set rate of each pool = defaultRate2
-    await rewardController.updateBaseline(defaultRate2);
+    await rewardController.updateBaseline(defaultRate2 * poolCount);
     const tickCount = (await currentTick()) - startedAt;
 
     expect(await refPool.getRate()).eq(defaultRate2);
@@ -176,6 +174,13 @@ describe('Reward rates suite', () => {
     expect(await refPool.availableReward()).eq(preRewardRef.add(perPoolReward3).toNumber());
     expect(await agf.balanceOf(root.address)).eq(
       preReward.add(perPoolReward3 * pools.length).toNumber()
+    );
+  });
+
+  it('all pool total must be less than 100%', async () => {
+    await refPool.setBaselinePercentage(PERC_100);
+    await expect(rewardController.updateBaseline(defaultRate * poolCount)).to.be.revertedWith(
+      ProtocolErrors.RW_BASELINE_EXCEEDED
     );
   });
 });

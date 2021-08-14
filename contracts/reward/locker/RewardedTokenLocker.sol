@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../interfaces/IBoostRate.sol';
 import '../interfaces/IBoostExcessReceiver.sol';
@@ -24,7 +23,6 @@ contract RewardedTokenLocker is
     uint16 baselinePercentage,
     address underlying
   )
-    public
     CalcCheckpointWeightedReward()
     BaseTokenLocker(underlying)
     ControlledRewardPool(controller, initialRate, baselinePercentage)
@@ -38,7 +36,7 @@ contract RewardedTokenLocker is
     return !isPaused();
   }
 
-  function addRewardProvider(address, address) external override onlyConfigAdmin {
+  function addRewardProvider(address, address) external view override onlyConfigAdmin {
     revert('UNSUPPORTED');
   }
 

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
-import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import './ReserveLogic.sol';
 import '../configuration/ReserveConfiguration.sol';
@@ -12,14 +10,9 @@ import '../../../tools/math/PercentageMath.sol';
 import '../../../interfaces/IPriceOracleGetter.sol';
 import '../types/DataTypes.sol';
 
-/**
- * @title GenericLogic library
- * @author Aave
- * @title Implements protocol-level logic to calculate and validate the state of a user
- */
+/// @title Implements protocol-level logic to calculate and validate the state of a user
 library GenericLogic {
   using ReserveLogic for DataTypes.ReserveData;
-  using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -27,7 +20,7 @@ library GenericLogic {
 
   uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1 ether;
 
-  struct balanceDecreaseAllowedLocalVars {
+  struct BalanceDecreaseAllowedLocalVars {
     uint256 decimals;
     uint256 liquidationThreshold;
     uint256 totalCollateralInETH;
@@ -66,51 +59,45 @@ library GenericLogic {
       return true;
     }
 
-    balanceDecreaseAllowedLocalVars memory vars;
+    BalanceDecreaseAllowedLocalVars memory vars;
 
-    (, vars.liquidationThreshold, , vars.decimals, ) = reservesData[asset]
-      .configuration
-      .getParams();
+    (, vars.liquidationThreshold, , vars.decimals, ) = reservesData[asset].configuration.getParams();
 
     if (vars.liquidationThreshold == 0) {
       return true;
     }
 
-    (
-      vars.totalCollateralInETH,
-      vars.totalDebtInETH,
-      ,
-      vars.avgLiquidationThreshold,
-
-    ) = calculateUserAccountData(user, reservesData, userConfig, reserves, reservesCount, oracle);
+    (vars.totalCollateralInETH, vars.totalDebtInETH, , vars.avgLiquidationThreshold, ) = calculateUserAccountData(
+      user,
+      reservesData,
+      userConfig,
+      reserves,
+      reservesCount,
+      oracle
+    );
 
     if (vars.totalDebtInETH == 0) {
       return true;
     }
 
-    vars.amountToDecreaseInETH = IPriceOracleGetter(oracle).getAssetPrice(asset).mul(amount).div(
-      10**vars.decimals
-    );
-
-    vars.collateralBalanceAfterDecrease = vars.totalCollateralInETH.sub(vars.amountToDecreaseInETH);
+    vars.amountToDecreaseInETH = (IPriceOracleGetter(oracle).getAssetPrice(asset) * amount) / (10**vars.decimals);
+    vars.collateralBalanceAfterDecrease = vars.totalCollateralInETH - vars.amountToDecreaseInETH;
 
     //if there is a borrow, there can't be 0 collateral
     if (vars.collateralBalanceAfterDecrease == 0) {
       return false;
     }
 
-    vars.liquidationThresholdAfterDecrease = vars
-      .totalCollateralInETH
-      .mul(vars.avgLiquidationThreshold)
-      .sub(vars.amountToDecreaseInETH.mul(vars.liquidationThreshold))
-      .div(vars.collateralBalanceAfterDecrease);
+    vars.liquidationThresholdAfterDecrease =
+      ((vars.totalCollateralInETH * vars.avgLiquidationThreshold) -
+        (vars.amountToDecreaseInETH * vars.liquidationThreshold)) /
+      vars.collateralBalanceAfterDecrease;
 
-    uint256 healthFactorAfterDecrease =
-      calculateHealthFactorFromBalances(
-        vars.collateralBalanceAfterDecrease,
-        vars.totalDebtInETH,
-        vars.liquidationThresholdAfterDecrease
-      );
+    uint256 healthFactorAfterDecrease = calculateHealthFactorFromBalances(
+      vars.collateralBalanceAfterDecrease,
+      vars.totalDebtInETH,
+      vars.liquidationThresholdAfterDecrease
+    );
 
     return healthFactorAfterDecrease >= GenericLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD;
   }
@@ -165,60 +152,54 @@ library GenericLogic {
       uint256
     )
   {
-    CalculateUserAccountDataVars memory vars;
-
     if (userConfig.isEmpty()) {
-      return (0, 0, 0, 0, uint256(-1));
+      return (0, 0, 0, 0, ~uint256(0));
     }
+
+    CalculateUserAccountDataVars memory vars;
     for (vars.i = 0; vars.i < reservesCount; vars.i++) {
-      if (!userConfig.isUsingAsCollateralOrBorrowing(vars.i)) {
-        continue;
+      {
+        (bool hasMore, bool isUsing) = userConfig.isUsingAsCollateralOrBorrowing(vars.i);
+        if (!hasMore) {
+          break;
+        } else if (!isUsing) {
+          continue;
+        }
       }
 
       vars.currentReserveAddress = reserves[vars.i];
       DataTypes.ReserveData storage currentReserve = reservesData[vars.currentReserveAddress];
 
-      (vars.ltv, vars.liquidationThreshold, , vars.decimals, ) = currentReserve
-        .configuration
-        .getParams();
+      (vars.ltv, vars.liquidationThreshold, , vars.decimals, ) = currentReserve.configuration.getParams();
 
       vars.tokenUnit = 10**vars.decimals;
       vars.reserveUnitPrice = IPriceOracleGetter(oracle).getAssetPrice(vars.currentReserveAddress);
 
       if (vars.liquidationThreshold != 0 && userConfig.isUsingAsCollateral(vars.i)) {
-        vars.compoundedLiquidityBalance = IERC20(currentReserve.depositTokenAddress).balanceOf(
-          user
-        );
+        vars.compoundedLiquidityBalance = IERC20(currentReserve.depositTokenAddress).balanceOf(user);
 
-        uint256 liquidityBalanceETH =
-          vars.reserveUnitPrice.mul(vars.compoundedLiquidityBalance).div(vars.tokenUnit);
+        uint256 liquidityBalanceETH = (vars.reserveUnitPrice * vars.compoundedLiquidityBalance) / vars.tokenUnit;
 
-        vars.totalCollateralInETH = vars.totalCollateralInETH.add(liquidityBalanceETH);
-
-        vars.avgLtv = vars.avgLtv.add(liquidityBalanceETH.mul(vars.ltv));
-        vars.avgLiquidationThreshold = vars.avgLiquidationThreshold.add(
-          liquidityBalanceETH.mul(vars.liquidationThreshold)
-        );
+        vars.totalCollateralInETH += liquidityBalanceETH;
+        vars.avgLtv += liquidityBalanceETH * vars.ltv;
+        vars.avgLiquidationThreshold += liquidityBalanceETH * vars.liquidationThreshold;
       }
 
       if (userConfig.isBorrowing(vars.i)) {
-        vars.compoundedBorrowBalance = IERC20(currentReserve.stableDebtTokenAddress).balanceOf(
-          user
-        );
-        vars.compoundedBorrowBalance = vars.compoundedBorrowBalance.add(
-          IERC20(currentReserve.variableDebtTokenAddress).balanceOf(user)
-        );
+        vars.compoundedBorrowBalance =
+          IERC20(currentReserve.stableDebtTokenAddress).balanceOf(user) +
+          IERC20(currentReserve.variableDebtTokenAddress).balanceOf(user);
 
-        vars.totalDebtInETH = vars.totalDebtInETH.add(
-          vars.reserveUnitPrice.mul(vars.compoundedBorrowBalance).div(vars.tokenUnit)
-        );
+        vars.totalDebtInETH += (vars.reserveUnitPrice * vars.compoundedBorrowBalance) / vars.tokenUnit;
       }
     }
 
-    vars.avgLtv = vars.totalCollateralInETH > 0 ? vars.avgLtv.div(vars.totalCollateralInETH) : 0;
-    vars.avgLiquidationThreshold = vars.totalCollateralInETH > 0
-      ? vars.avgLiquidationThreshold.div(vars.totalCollateralInETH)
-      : 0;
+    if (vars.totalCollateralInETH > 0) {
+      vars.avgLtv /= vars.totalCollateralInETH;
+      vars.avgLiquidationThreshold /= vars.totalCollateralInETH;
+    } else {
+      (vars.avgLtv, vars.avgLiquidationThreshold) = (0, 0);
+    }
 
     vars.healthFactor = calculateHealthFactorFromBalances(
       vars.totalCollateralInETH,
@@ -246,7 +227,7 @@ library GenericLogic {
     uint256 totalDebtInETH,
     uint256 liquidationThreshold
   ) internal pure returns (uint256) {
-    if (totalDebtInETH == 0) return uint256(-1);
+    if (totalDebtInETH == 0) return ~uint256(0);
 
     return (totalCollateralInETH.percentMul(liquidationThreshold)).wadDiv(totalDebtInETH);
   }
@@ -271,7 +252,7 @@ library GenericLogic {
       return 0;
     }
 
-    availableBorrowsETH = availableBorrowsETH.sub(totalDebtInETH);
+    availableBorrowsETH = availableBorrowsETH - totalDebtInETH;
     return availableBorrowsETH;
   }
 }

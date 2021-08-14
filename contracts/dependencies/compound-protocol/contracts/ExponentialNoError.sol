@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity ^0.6.12;
 
+// solhint-disable func-name-mixedcase
 /**
  * @title Exponential module for storing fixed-precision decimals
  * @author Compound
@@ -9,10 +10,10 @@ pragma solidity 0.6.12;
  *         `Exp({mantissa: 5100000000000000000})`.
  */
 abstract contract ExponentialNoError {
-  uint256 constant expScale = 1e18;
-  uint256 constant doubleScale = 1e36;
-  uint256 constant halfExpScale = expScale / 2;
-  uint256 constant mantissaOne = expScale;
+  uint256 internal constant expScale = 1e18;
+  uint256 internal constant doubleScale = 1e36;
+  uint256 internal constant halfExpScale = expScale / 2;
+  uint256 internal constant mantissaOne = expScale;
 
   struct Exp {
     uint256 mantissa;

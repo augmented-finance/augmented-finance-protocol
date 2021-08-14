@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import '../access/AccessFlags.sol';
 import '../access/interfaces/IMarketAccessController.sol';
@@ -23,18 +22,18 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor() public DecayingTokenLocker(IRewardController(address(this)), 0, 0, address(0)) {
+  constructor() DecayingTokenLocker(IRewardController(address(this)), 0, 0, address(0)) {
     _initializeERC20(NAME, SYMBOL, DECIMALS);
   }
 
   function _initializeERC20(
-    string memory name,
-    string memory symbol,
-    uint8 decimals
+    string memory name_,
+    string memory symbol_,
+    uint8 decimals_
   ) internal {
-    _name = name;
-    _symbol = symbol;
-    _decimals = decimals;
+    _name = name_;
+    _symbol = symbol_;
+    _decimals = decimals_;
   }
 
   function name() public view returns (string memory) {
@@ -64,7 +63,11 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
 
     _initializeERC20(NAME, SYMBOL, DECIMALS);
     super._initialize(underlying);
-    super._initialize(IRewardController(controller), 0, 0);
+    super._initialize(
+      IRewardController(controller),
+      internalGetRate(),
+      internalGetBaselinePercentage()
+    );
   }
 
   function initialize(InitData calldata data)
@@ -79,7 +82,11 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
 
     _initializeERC20(data.name, data.symbol, data.decimals);
     super._initialize(underlying);
-    super._initialize(IRewardController(controller), 0, 0);
+    super._initialize(
+      IRewardController(controller),
+      internalGetRate(),
+      internalGetBaselinePercentage()
+    );
   }
 
   function initializeToken(
@@ -93,17 +100,20 @@ contract XAGFTokenV1 is IInitializableRewardToken, DecayingTokenLocker, Versione
 
     _initializeERC20(name_, symbol_, decimals_);
     super._initialize(underlying);
-    super._initialize(IRewardController(controller), 0, 0);
+    super._initialize(
+      IRewardController(controller),
+      internalGetRate(),
+      internalGetBaselinePercentage()
+    );
   }
 
   function initializePool(
     IRewardController controller,
     address underlying,
-    uint256 initialRate,
     uint16 baselinePercentage
   ) public virtual initializer(TOKEN_REVISION) {
     _initializeERC20(NAME, SYMBOL, DECIMALS);
     super._initialize(underlying);
-    super._initialize(controller, initialRate, baselinePercentage);
+    super._initialize(controller, internalGetRate(), baselinePercentage);
   }
 }

@@ -67,6 +67,10 @@ export enum eContractid {
   RewardBoosterImpl = 'RewardBoosterImpl',
   TreasuryRewardPool = 'TreasuryRewardPool',
 
+  DelegatedStrategyAave = 'DelegatedStrategyAave',
+  DelegatedStrategyCompoundErc20 = 'DelegatedStrategyCompoundErc20',
+  DelegatedStrategyCompoundEth = 'DelegatedStrategyCompoundEth',
+
   UniswapLiquiditySwapAdapter = 'UniswapLiquiditySwapAdapter',
   UniswapRepayAdapter = 'UniswapRepayAdapter',
   FlashLiquidationAdapter = 'FlashLiquidationAdapter',
@@ -116,7 +120,7 @@ export enum ProtocolErrors {
   VL_INVALID_AMOUNT = '1', // 'Amount must be greater than 0'
   VL_NO_ACTIVE_RESERVE = '2', // 'Action requires an active reserve'
   VL_RESERVE_FROZEN = '3', // 'Action requires an unfrozen reserve'
-  VL_CURRENT_AVAILABLE_LIQUIDITY_NOT_ENOUGH = '4', // 'The current liquidity is not enough'
+
   VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE = '5', // 'User cannot withdraw more than the available balance'
   VL_TRANSFER_NOT_ALLOWED = '6', // 'Transfer cannot be allowed.'
   VL_BORROWING_NOT_ENABLED = '7', // 'Borrowing is not enabled'
@@ -133,34 +137,24 @@ export enum ProtocolErrors {
   VL_NO_VARIABLE_RATE_LOAN_IN_RESERVE = '18', // 'User does not have a variable rate loan in progress on this reserve'
   VL_UNDERLYING_BALANCE_NOT_GREATER_THAN_0 = '19', // 'The underlying balance needs to be greater than 0'
   VL_DEPOSIT_ALREADY_IN_USE = '20', // 'User deposit is already being used as collateral'
-  LP_NOT_ENOUGH_STABLE_BORROW_BALANCE = '21', // 'User does not have any stable rate loan for this reserve'
+
   LP_INTEREST_RATE_REBALANCE_CONDITIONS_NOT_MET = '22', // 'Interest rate rebalance conditions were not met'
-  LP_LIQUIDATION_CALL_FAILED = '23', // 'Liquidation call failed'
-  LP_NOT_ENOUGH_LIQUIDITY_TO_BORROW = '24', // 'There is not enough liquidity available to borrow'
-  LP_REQUESTED_AMOUNT_TOO_SMALL = '25', // 'The requested amount is too small for a FlashLoan.'
-  LP_INCONSISTENT_PROTOCOL_ACTUAL_BALANCE = '26', // 'The actual balance of the protocol is inconsistent'
+
   LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR = '27', // 'The caller is not the lending pool configurator'
-  LP_INCONSISTENT_FLASHLOAN_PARAMS = '28',
+
   CT_CALLER_MUST_BE_LENDING_POOL = '29', // 'The caller of this function must be a lending pool'
   CT_CANNOT_GIVE_ALLOWANCE_TO_HIMSELF = '30', // 'User cannot give allowance to himself'
   CT_TRANSFER_AMOUNT_NOT_GT_0 = '31', // 'Transferred amount needs to be greater than zero'
   RL_RESERVE_ALREADY_INITIALIZED = '32', // 'Reserve has already been initialized'
   CALLER_NOT_POOL_ADMIN = '33', // 'The caller must be the pool admin'
-  LPC_RESERVE_LIQUIDITY_NOT_0 = '34', // 'The liquidity of the reserve needs to be 0'
-  LPC_INVALID_ATOKEN_POOL_ADDRESS = '35', // 'The liquidity of the reserve needs to be 0'
-  LPC_INVALID_STABLE_DEBT_TOKEN_POOL_ADDRESS = '36', // 'The liquidity of the reserve needs to be 0'
-  LPC_INVALID_VARIABLE_DEBT_TOKEN_POOL_ADDRESS = '37', // 'The liquidity of the reserve needs to be 0'
-  LPC_INVALID_STABLE_DEBT_TOKEN_UNDERLYING_ADDRESS = '38', // 'The liquidity of the reserve needs to be 0'
-  LPC_INVALID_VARIABLE_DEBT_TOKEN_UNDERLYING_ADDRESS = '39', // 'The liquidity of the reserve needs to be 0'
-  LPC_INVALID_ADDRESSES_PROVIDER_ID = '40', // 'The liquidity of the reserve needs to be 0'
-  LPC_CALLER_NOT_EMERGENCY_ADMIN = '76', // 'The caller must be the emergencya admin'
+  LPC_RESERVE_LIQUIDITY_NOT_0 = '34', // The liquidity of the reserve needs to be 0
+
   LPAPR_PROVIDER_NOT_REGISTERED = '41', // 'Provider is not registered'
   LPCM_HEALTH_FACTOR_NOT_BELOW_THRESHOLD = '42', // 'Health factor is not below the threshold'
   LPCM_COLLATERAL_CANNOT_BE_LIQUIDATED = '43', // 'The collateral chosen cannot be liquidated'
   LPCM_SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER = '44', // 'User did not borrow the specified currency'
   LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE = '45', // "There isn't enough liquidity available to liquidate"
 
-  LP_INVALID_FLASHLOAN_MODE = '47', //Invalid flashloan mode selected
   MATH_MULTIPLICATION_OVERFLOW = '48',
   MATH_ADDITION_OVERFLOW = '49',
   MATH_DIVISION_BY_ZERO = '50',
@@ -170,13 +164,11 @@ export enum ProtocolErrors {
   RL_VARIABLE_BORROW_RATE_OVERFLOW = '54', //  Variable borrow rate overflows uint128
   RL_STABLE_BORROW_RATE_OVERFLOW = '55', //  Stable borrow rate overflows uint128
   CT_INVALID_MINT_AMOUNT = '56', //invalid amount to mint
-  LP_FAILED_REPAY_WITH_COLLATERAL = '57',
+
   CT_INVALID_BURN_AMOUNT = '58', //invalid amount to burn
   LP_BORROW_ALLOWANCE_NOT_ENOUGH = '59', // User borrows on behalf, but allowance are too small
-  LP_FAILED_COLLATERAL_SWAP = '60',
-  LP_INVALID_EQUAL_ASSETS_TO_SWAP = '61',
-  LP_REENTRANCY_NOT_ALLOWED = '62',
-  LP_CALLER_MUST_BE_AN_ATOKEN = '63',
+
+  LP_CALLER_MUST_BE_DEPOSIT_TOKEN = '63',
   LP_IS_PAUSED = '64', // 'Pool is paused'
   LP_NO_MORE_RESERVES_ALLOWED = '65',
   LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN = '66',
@@ -186,11 +178,10 @@ export enum ProtocolErrors {
   RC_INVALID_DECIMALS = '70',
   RC_INVALID_RESERVE_FACTOR = '71',
   LPAPR_INVALID_ADDRESSES_PROVIDER_ID = '72',
-
   VL_INCONSISTENT_FLASHLOAN_PARAMS = '73',
-  LP_INCONSISTENT_PARAMS_LENGTH = '74',
+
   LPC_INVALID_CONFIGURATION = '75',
-  CALLER_NOT_EMERGENCY_ADMIN = '76',
+  CALLER_NOT_EMERGENCY_ADMIN = '76', // The caller must be the emergencya admin
   UL_INVALID_INDEX = '77',
   LP_NOT_CONTRACT = '78',
   SDT_STABLE_DEBT_OVERFLOW = '79',
@@ -202,12 +193,11 @@ export enum ProtocolErrors {
   LP_FLASH_LOAN_RESTRICTED = '85',
   CT_PUMP_DUMP_PROTECTION = '86',
   LP_TOO_MANY_FLASHLOAN_CALLS = '87',
-  RW_NOT_REWARD_CONFIG_ADMIN = '88',
+  RW_BASELINE_EXCEEDED = '88',
   RW_NOT_REWARD_RATE_ADMIN = '89',
   RW_NOT_REWARD_CONTROLLER = '90',
   RW_REWARD_PAUSED = '91',
   RW_NOT_TEAM_MANAGER = '92',
-
   STK_REDEEM_PAUSED = '93',
   STK_INSUFFICIENT_COOLDOWN = '94',
   STK_UNSTAKE_WINDOW_FINISHED = '95',
@@ -215,6 +205,7 @@ export enum ProtocolErrors {
   STK_EXCESSIVE_SLASH_PCT = '97',
   STK_EXCESSIVE_COOLDOWN_PERIOD = '98',
   STK_WRONG_UNSTAKE_PERIOD = '98',
+  VL_INSUFFICIENT_REWARD_AVAILABLE = '99',
 
   TXT_OWNABLE_CALLER_NOT_OWNER = 'Ownable: caller is not the owner',
   TXT_CALLER_NOT_PROXY_OWNER = 'ProxyOwner: caller is not the owner',
@@ -248,9 +239,15 @@ export interface iAssetBase<T> {
   USD: T;
   AAVE: T;
   LINK: T;
+
+  ADAI: T;
 }
 
+type testAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC' | 'AAVE' | 'LINK';
+type testOnlyAssets = 'AAVE' | 'LINK';
+
 export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, 'USD'>;
+export type iAssetsWithoutUSDOpt<T> = OmitOpt<iAssetBase<T>, 'USD'>;
 
 export type RecordOpt<K extends keyof any, T> = {
   [P in K]?: T;
@@ -260,36 +257,40 @@ export type PickOpt<T, K extends keyof T> = {
   [P in K]?: T[P];
 };
 
-type augmentedAssets = 'DAI' | 'USDC' | 'USDT' | 'WBTC' | 'WETH';
+export type OmitOpt<T, K extends keyof any> = PickOpt<T, Exclude<keyof T, K>>;
 
-export type iAugmentedPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, augmentedAssets>;
-export type iAugmentedPoolAssetsOpt<T> = PickOpt<iAssetsWithoutUSD<T>, augmentedAssets>;
+export type iTestPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, testAssets>;
+export type iAugmentedPoolAssets<T> = Omit<iAssetsWithoutUSD<T>, testOnlyAssets>;
+export type iAugmentedPoolAssetsOpt<T> = OmitOpt<iAssetsWithoutUSD<T>, testOnlyAssets>;
 
-type iMultiPoolsAssets<T> = iAssetsWithoutUSD<T> | iAugmentedPoolAssets<T>;
+type iMultiPoolsAssets<T> = iAssetsWithoutUSD<T> | iAugmentedPoolAssets<T> | iTestPoolAssets<T>;
 
 export type iAssetAggregatorBase<T> = iAssetBase<T>;
 
-export const TokenContractId: iAssetBase<string> = {
-  AAVE: 'AAVE',
-  LINK: 'LINK',
-
-  WETH: 'WETH',
-  DAI: 'DAI',
-  USDC: 'USDC',
-  USDT: 'USDT',
-  WBTC: 'WBTC',
-
-  USD: 'USD',
+const tokenSymbols: iAssetBase<string> = {
+  WETH: '',
+  DAI: '',
+  USDC: '',
+  USDT: '',
+  WBTC: '',
+  USD: '',
+  AAVE: '',
+  LINK: '',
+  ADAI: '',
 };
+
+export const DefaultTokenSymbols: string[] = Object.keys(tokenSymbols);
 
 export interface IReserveParams extends IReserveBorrowParams, IReserveCollateralParams {
   depositTokenImpl: eContractid;
-  reserveFactor: string;
+  reserveFactor: number;
   strategy: IInterestRateStrategyParams;
+  reserveDecimals: number;
 }
 
 export interface IInterestRateStrategyParams {
   name: string;
+  strategyImpl?: eContractid;
   optimalUtilizationRate: string;
   baseVariableBorrowRate: string;
   variableRateSlope1: string;
@@ -299,21 +300,14 @@ export interface IInterestRateStrategyParams {
 }
 
 export interface IReserveBorrowParams {
-  // optimalUtilizationRate: string;
-  // baseVariableBorrowRate: string;
-  // variableRateSlope1: string;
-  // variableRateSlope2: string;
-  // stableRateSlope1: string;
-  // stableRateSlope2: string;
   borrowingEnabled: boolean;
   stableBorrowRateEnabled: boolean;
-  reserveDecimals: string;
 }
 
 export interface IReserveCollateralParams {
-  baseLTVAsCollateral: string;
-  liquidationThreshold: string;
-  liquidationBonus: string;
+  baseLTVAsCollateral: number;
+  liquidationThreshold: number;
+  liquidationBonus: number;
 }
 export interface IMarketRates {
   borrowRate: string;
@@ -321,9 +315,7 @@ export interface IMarketRates {
 
 export type iParamsPerNetwork<T> = iEthereumParamsPerNetwork<T> | iPolygonParamsPerNetwork<T>;
 
-export interface iParamsPerNetworkAll<T>
-  extends iEthereumParamsPerNetwork<T>,
-    iPolygonParamsPerNetwork<T> {}
+export interface iParamsPerNetworkAll<T> extends iEthereumParamsPerNetwork<T>, iPolygonParamsPerNetwork<T> {}
 
 export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.coverage]: T;
@@ -369,23 +361,30 @@ export interface ICommonConfiguration {
   AddressProvider: iParamsPerNetwork<tEthereumAddress | undefined>;
   AddressProviderOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
 
-  ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
-
-  LendingRateOracleRates: iAssetsWithoutUSD<IMarketRates>;
-
+  OracleRouter: iParamsPerNetwork<tEthereumAddress>;
   FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
+
+  ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
+  LendingRateOracleRates: iAssetsWithoutUSDOpt<IMarketRates>;
 
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
   EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
 
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
-  ReservesConfig: iMultiPoolsAssets<IReserveParams>;
+  //  ReservesConfig: iMultiPoolsAssets<IReserveParams>;
+  ReservesConfig: {
+    [key: string]: IReserveParams;
+  };
 
   StakeParams: IStakeParams;
 
   RewardParams: IRewardParams;
 
   ForkTest: IForkTest;
+}
+
+export interface ITestConfiguration extends ICommonConfiguration {
+  ReservesConfig: iTestPoolAssets<IReserveParams>;
 }
 
 export interface IAugmentedConfiguration extends ICommonConfiguration {

@@ -7,7 +7,6 @@ import {
   getFirstSigner,
   getTenderlyDashboardLink,
   printContracts,
-  setSkipWaitTx,
 } from '../../helpers/misc-utils';
 import { usingTenderly } from '../../helpers/tenderly-utils';
 import { exit } from 'process';
@@ -15,13 +14,12 @@ import { BigNumber } from 'ethers';
 
 task('augmented:mainnet', 'Deploy enviroment')
   .addFlag('incremental', 'Incremental installation')
+  .addFlag('secure', 'Renounce credentials on errors')
   .addFlag('verify', 'Verify contracts at Etherscan')
-  .setAction(async ({ incremental, verify }, DRE) => {
+  .setAction(async ({ incremental, secure, verify }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
     const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
     await DRE.run('set-DRE');
-
-    //    setSkipWaitTx(MAINNET_FORK);
 
     const deployer = await getFirstSigner();
     const startBalance: BigNumber = await deployer.getBalance();
@@ -49,7 +47,7 @@ task('augmented:mainnet', 'Deploy enviroment')
         console.log('======================================================================');
       } else {
         await cleanupJsonDb(DRE.network.name);
-        renounce = true;
+        renounce = secure;
       }
 
       console.log('Deployment started\n');
@@ -97,9 +95,7 @@ task('augmented:mainnet', 'Deploy enviroment')
 
       renounce = true;
 
-      const [entryMap, instanceCount, multiCount] = printContracts(
-        (await getFirstSigner()).address
-      );
+      const [entryMap, instanceCount, multiCount] = printContracts((await getFirstSigner()).address);
 
       if (multiCount > 0) {
         throw 'multi-deployed contract(s) detected';
@@ -118,11 +114,7 @@ task('augmented:mainnet', 'Deploy enviroment')
       if (usingTenderly()) {
         console.error('Check tx error:', getTenderlyDashboardLink());
       }
-      console.error(
-        '\n=========================================================\nERROR:',
-        err,
-        '\n'
-      );
+      console.error('\n=========================================================\nERROR:', err, '\n');
     }
 
     if (renounce) {
@@ -154,6 +146,7 @@ task('augmented:mainnet', 'Deploy enviroment')
     }
 
     if (!success) {
+      console.log('\nDeployment has failed');
       exit(1);
     }
 
@@ -168,7 +161,7 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('- Fork', postDeployFork);
     }
 
-    console.log('\nFinished deployment');
+    console.log('\nDeployment has finished');
     //    await cleanupJsonDb(DRE.network.name);
 
     if (verify) {

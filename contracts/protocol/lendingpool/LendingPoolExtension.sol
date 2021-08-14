@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts//SafeMath.sol';
-import '../../dependencies/openzeppelin/contracts//IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/Address.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../interfaces/IDepositToken.sol';
@@ -27,17 +25,14 @@ import './LendingPoolBase.sol';
 
 /// @dev Delegatee of LendingPool for borrow, flashloan, collateral etc. Runs via delegateCall, retain storage layout
 /// WARNING! This contract runs via delegateCall and must have a compatible storage layout with LendingPool.
-contract LendingPoolExtension is
-  LendingPoolBase,
-  ILendingPoolExtension,
-  ILendingPoolEvents,
-  IManagedLendingPool
-{
+contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendingPoolEvents, IManagedLendingPool {
   using SafeERC20 for IERC20;
-  using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using ReserveLogic for DataTypes.ReserveData;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+  using UserConfiguration for DataTypes.UserConfigurationMap;
+  using AccessHelper for IMarketAccessController;
 
   uint256 internal constant LIQUIDATION_CLOSE_FACTOR_PERCENT = 5000;
 
@@ -103,18 +98,13 @@ contract LendingPoolExtension is
 
     vars.userCollateralBalance = vars.collateralDepositToken.balanceOf(user);
 
-    vars.maxLiquidatableDebt = vars.userStableDebt.add(vars.userVariableDebt).percentMul(
+    vars.maxLiquidatableDebt = (vars.userStableDebt + vars.userVariableDebt).percentMul(
       LIQUIDATION_CLOSE_FACTOR_PERCENT
     );
 
-    vars.actualDebtToLiquidate = debtToCover > vars.maxLiquidatableDebt
-      ? vars.maxLiquidatableDebt
-      : debtToCover;
+    vars.actualDebtToLiquidate = debtToCover > vars.maxLiquidatableDebt ? vars.maxLiquidatableDebt : debtToCover;
 
-    (
-      vars.maxCollateralToLiquidate,
-      vars.debtAmountNeeded
-    ) = _calculateAvailableCollateralToLiquidate(
+    (vars.maxCollateralToLiquidate, vars.debtAmountNeeded) = _calculateAvailableCollateralToLiquidate(
       collateralReserve,
       debtReserve,
       collateralAsset,
@@ -134,8 +124,7 @@ contract LendingPoolExtension is
     // If the liquidator reclaims the underlying asset, we make sure there is enough available liquidity in the
     // collateral reserve
     if (!receiveDeposit) {
-      uint256 currentAvailableCollateral =
-        IERC20(collateralAsset).balanceOf(address(vars.collateralDepositToken));
+      uint256 currentAvailableCollateral = IERC20(collateralAsset).balanceOf(address(vars.collateralDepositToken));
       require(
         currentAvailableCollateral >= vars.maxCollateralToLiquidate,
         Errors.LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE
@@ -161,26 +150,15 @@ contract LendingPoolExtension is
       }
       IStableDebtToken(debtReserve.stableDebtTokenAddress).burn(
         user,
-        vars.actualDebtToLiquidate.sub(vars.userVariableDebt)
+        vars.actualDebtToLiquidate - vars.userVariableDebt
       );
     }
 
-    debtReserve.updateInterestRates(
-      debtAsset,
-      debtReserve.depositTokenAddress,
-      vars.actualDebtToLiquidate,
-      0
-    );
+    debtReserve.updateInterestRates(debtAsset, debtReserve.depositTokenAddress, vars.actualDebtToLiquidate, 0);
 
     if (receiveDeposit) {
-      vars.liquidatorPreviousDepositTokenBalance = IERC20(vars.collateralDepositToken).balanceOf(
-        msg.sender
-      );
-      vars.collateralDepositToken.transferOnLiquidation(
-        user,
-        msg.sender,
-        vars.maxCollateralToLiquidate
-      );
+      vars.liquidatorPreviousDepositTokenBalance = IERC20(vars.collateralDepositToken).balanceOf(msg.sender);
+      vars.collateralDepositToken.transferOnLiquidation(user, msg.sender, vars.maxCollateralToLiquidate);
 
       if (vars.liquidatorPreviousDepositTokenBalance == 0) {
         DataTypes.UserConfigurationMap storage liquidatorConfig = _usersConfig[msg.sender];
@@ -197,12 +175,7 @@ contract LendingPoolExtension is
       );
 
       // Burn the equivalent amount of depositToken, sending the underlying to the liquidator
-      vars.collateralDepositToken.burn(
-        user,
-        msg.sender,
-        vars.maxCollateralToLiquidate,
-        liquidityIndex
-      );
+      vars.collateralDepositToken.burn(user, msg.sender, vars.maxCollateralToLiquidate, liquidityIndex);
     }
 
     // If the collateral being liquidated is equal to the user balance,
@@ -213,11 +186,7 @@ contract LendingPoolExtension is
     }
 
     // Transfers the debt asset being repaid to the depostToken, where the liquidity is kept
-    IERC20(debtAsset).safeTransferFrom(
-      msg.sender,
-      debtReserve.depositTokenAddress,
-      vars.actualDebtToLiquidate
-    );
+    IERC20(debtAsset).safeTransferFrom(msg.sender, debtReserve.depositTokenAddress, vars.actualDebtToLiquidate);
 
     emit LiquidationCall(
       collateralAsset,
@@ -272,28 +241,19 @@ contract LendingPoolExtension is
     vars.collateralPrice = oracle.getAssetPrice(collateralAsset);
     vars.debtAssetPrice = oracle.getAssetPrice(debtAsset);
 
-    (, , vars.liquidationBonus, vars.collateralDecimals, ) = collateralReserve
-      .configuration
-      .getParams();
+    (, , vars.liquidationBonus, vars.collateralDecimals, ) = collateralReserve.configuration.getParams();
     vars.debtAssetDecimals = debtReserve.configuration.getDecimals();
 
     // This is the maximum possible amount of the selected collateral that can be liquidated, given the
     // max amount of liquidatable debt
-    vars.maxAmountCollateralToLiquidate = vars
-      .debtAssetPrice
-      .mul(debtToCover)
-      .mul(10**vars.collateralDecimals)
-      .percentMul(vars.liquidationBonus)
-      .div(vars.collateralPrice.mul(10**vars.debtAssetDecimals));
+    vars.maxAmountCollateralToLiquidate =
+      (vars.debtAssetPrice * debtToCover * (10**vars.collateralDecimals)).percentMul(vars.liquidationBonus) /
+      (vars.collateralPrice * (10**vars.debtAssetDecimals));
 
     if (vars.maxAmountCollateralToLiquidate > userCollateralBalance) {
       collateralAmount = userCollateralBalance;
-      debtAmountNeeded = vars
-        .collateralPrice
-        .mul(collateralAmount)
-        .mul(10**vars.debtAssetDecimals)
-        .div(vars.debtAssetPrice.mul(10**vars.collateralDecimals))
-        .percentDiv(vars.liquidationBonus);
+      debtAmountNeeded = ((vars.collateralPrice * collateralAmount * (10**vars.debtAssetDecimals)) /
+        (vars.debtAssetPrice * (10**vars.collateralDecimals))).percentDiv(vars.liquidationBonus);
     } else {
       collateralAmount = vars.maxAmountCollateralToLiquidate;
       debtAmountNeeded = debtToCover;
@@ -317,16 +277,7 @@ contract LendingPoolExtension is
     uint256 referral
   ) external override whenNotPaused {
     _checkUntrustedFlashloan();
-    _flashLoan(
-      receiver,
-      assets,
-      amounts,
-      modes,
-      onBehalfOf,
-      params,
-      referral,
-      _flashLoanPremiumPct
-    );
+    _flashLoan(receiver, assets, amounts, modes, onBehalfOf, params, referral, _flashLoanPremiumPct);
   }
 
   function flashLoan(
@@ -339,16 +290,7 @@ contract LendingPoolExtension is
     uint16 referral
   ) external override whenNotPaused {
     _checkUntrustedFlashloan();
-    _flashLoan(
-      receiver,
-      assets,
-      amounts,
-      modes,
-      onBehalfOf,
-      params,
-      referral,
-      _flashLoanPremiumPct
-    );
+    _flashLoan(receiver, assets, amounts, modes, onBehalfOf, params, referral, _flashLoanPremiumPct);
   }
 
   function trustedFlashLoan(
@@ -362,11 +304,9 @@ contract LendingPoolExtension is
   ) external override {
     // whenNotPaused is NOT applied as the pool can be paused by the liquidity manager
     // _checkUntrustedFlashloan() is NOT applied to allow any lending pool operations from the receiver
-    require(
-      _addressesProvider.hasAnyOf(
-        msg.sender,
-        AccessFlags.TRUSTED_FLASHLOAN | AccessFlags.LIQUIDITY_CONTROLLER
-      ),
+    _addressesProvider.requireAnyOf(
+      msg.sender,
+      AccessFlags.TRUSTED_FLASHLOAN | AccessFlags.LIQUIDITY_CONTROLLER,
       Errors.LP_IS_NOT_TRUSTED_FLASHLOAN
     );
     require(_flashloanCalls < type(uint8).max, Errors.LP_TOO_MANY_FLASHLOAN_CALLS);
@@ -433,10 +373,7 @@ contract LendingPoolExtension is
 
     for (uint256 i = 0; i < assets.length; i++) {
       premiums[i] = amounts[i].percentMul(flashLoanPremium);
-      IDepositToken(_reserves[assets[i]].depositTokenAddress).transferUnderlyingTo(
-        receiverAddress,
-        amounts[i]
-      );
+      IDepositToken(_reserves[assets[i]].depositTokenAddress).transferUnderlyingTo(receiverAddress, amounts[i]);
     }
 
     return premiums;
@@ -454,7 +391,7 @@ contract LendingPoolExtension is
       vars.currentAmount = amounts[vars.i];
       vars.currentPremium = premiums[vars.i];
       vars.currentDepositToken = _reserves[vars.currentAsset].depositTokenAddress;
-      vars.currentAmountPlusPremium = vars.currentAmount.add(vars.currentPremium);
+      vars.currentAmountPlusPremium = vars.currentAmount + vars.currentPremium;
 
       if (DataTypes.InterestRateMode(modes[vars.i]) == DataTypes.InterestRateMode.NONE) {
         _flashLoanRetrieve(vars);
@@ -511,7 +448,7 @@ contract LendingPoolExtension is
     uint256 interestRateMode,
     uint256 referral,
     address onBehalfOf
-  ) external override whenNotPaused noReentryOrFlashloan {
+  ) external override whenNotPaused noReentryOrFlashloanFeature(FEATURE_FLASHLOAN_BORROW) {
     _executeBorrow(
       ExecuteBorrowParams(
         asset,
@@ -532,7 +469,7 @@ contract LendingPoolExtension is
     uint256 interestRateMode,
     uint16 referral,
     address onBehalfOf
-  ) external override whenNotPaused noReentryOrFlashloan {
+  ) external override whenNotPaused noReentryOrFlashloanFeature(FEATURE_FLASHLOAN_BORROW) {
     _executeBorrow(
       ExecuteBorrowParams(
         asset,
@@ -570,9 +507,9 @@ contract LendingPoolExtension is
     ExecuteBorrowVars memory v;
 
     v.oracle = _addressesProvider.getPriceOracle();
-    v.amountInETH = IPriceOracleGetter(v.oracle).getAssetPrice(vars.asset).mul(vars.amount).div(
-      10**reserve.configuration.getDecimals()
-    );
+    v.amountInETH =
+      (IPriceOracleGetter(v.oracle).getAssetPrice(vars.asset) * vars.amount) /
+      (10**reserve.configuration.getDecimals());
 
     ValidationLogic.validateBorrow(
       vars.asset,
@@ -616,12 +553,7 @@ contract LendingPoolExtension is
       userConfig.setBorrowing(reserve.id, true);
     }
 
-    reserve.updateInterestRates(
-      vars.asset,
-      vars.depositToken,
-      0,
-      vars.releaseUnderlying ? vars.amount : 0
-    );
+    reserve.updateInterestRates(vars.asset, vars.depositToken, 0, vars.releaseUnderlying ? vars.amount : 0);
     if (vars.releaseUnderlying) {
       IDepositToken(vars.depositToken).transferUnderlyingTo(vars.user, vars.amount);
     }
@@ -639,28 +571,32 @@ contract LendingPoolExtension is
     );
   }
 
-  function setReserveStrategy(address asset, address strategy)
-    external
-    override
-    onlyLendingPoolConfigurator
-  {
+  function setReserveStrategy(
+    address asset,
+    address strategy,
+    bool isExternal
+  ) external override onlyLendingPoolConfigurator {
+    _checkReserve(asset);
+    require(isExternal = IReserveStrategy(strategy).isDelegatedReserve());
+    if (_reserves[asset].strategy != address(0)) {
+      require(isExternal = _reserves[asset].configuration.isExternalStrategy());
+    } else {
+      _reserves[asset].configuration.setExternalStrategy(isExternal);
+    }
     _reserves[asset].strategy = strategy;
   }
 
-  function setConfiguration(address asset, uint256 configuration)
-    external
-    override
-    onlyLendingPoolConfigurator
-  {
+  function _checkReserve(address asset) private view {
+    require(_reserves[asset].depositTokenAddress != address(0), Errors.VL_UNKNOWN_RESERVE);
+  }
+
+  function setConfiguration(address asset, uint256 configuration) external override onlyLendingPoolConfigurator {
+    _checkReserve(asset);
     _reserves[asset].configuration.data = configuration;
   }
 
   function setPaused(bool val) external override {
-    require(
-      _addressesProvider.hasAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN),
-      Errors.CALLER_NOT_EMERGENCY_ADMIN
-    );
-
+    _addressesProvider.requireAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN, Errors.CALLER_NOT_EMERGENCY_ADMIN);
     _paused = val;
     emit EmergencyPaused(msg.sender, val);
   }
@@ -677,7 +613,6 @@ contract LendingPoolExtension is
 
   function _addReserveToList(address asset) internal {
     uint256 reservesCount = _reservesCount;
-
     require(reservesCount < _maxNumberOfReserves, Errors.LP_NO_MORE_RESERVES_ALLOWED);
 
     bool reserveAlreadyAdded = _reserves[asset].id != 0 || _reservesList[0] == asset;
@@ -700,14 +635,18 @@ contract LendingPoolExtension is
   }
 
   /// @dev Initializes a reserve, activates it, assigns an deposit and debt tokens and an interest rate strategy
-  function initReserve(DataTypes.InitReserveData calldata data)
-    external
-    override
-    onlyLendingPoolConfigurator
-  {
+  function initReserve(DataTypes.InitReserveData calldata data) external override onlyLendingPoolConfigurator {
     require(Address.isContract(data.asset), Errors.VL_CONTRACT_REQUIRED);
     _reserves[data.asset].init(data);
     _addReserveToList(data.asset);
+
+    if (data.externalStrategy) {
+      address underlying = IReserveDelegatedStrategy(data.strategy).getUnderlying(data.asset);
+      require(underlying != address(0));
+      if (underlying != data.asset) {
+        _indirectUnderlying[underlying].push(data.asset);
+      }
+    }
   }
 
   function getLendingPoolExtension() external view override returns (address) {

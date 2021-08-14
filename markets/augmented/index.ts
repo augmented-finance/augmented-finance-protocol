@@ -1,29 +1,47 @@
-import { IAugmentedConfiguration, eEthereumNetwork } from '../../helpers/types';
+import { IAugmentedConfiguration, eEthereumNetwork, IReserveParams, IReserveBorrowParams, ITestConfiguration } from '../../helpers/types';
 import { CommonsConfig } from './commons';
-import { strategyDAI, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
+import { strategyAAVE, strategyADAI, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
 
 // ----------------
 // POOL--SPECIFIC PARAMS
 // ----------------
 
-export const TestConfig: IAugmentedConfiguration = {
+export const TestConfig: ITestConfiguration = {
   ...CommonsConfig,
   ProviderId: 1,
-}
-
-export const AugmentedConfig: IAugmentedConfiguration = (() => {
-  let cfg: IAugmentedConfiguration = CommonsConfig;
-  
-  cfg.MarketId = 'Augmented genesis market';
-  cfg.ProviderId = 1;
-
-  cfg.ReservesConfig = {
+  MarketId: 'Augmented test market',
+  ReservesConfig: {
+    AAVE: strategyAAVE,
+    LINK: strategyLINK,
     DAI: strategyDAI,
     USDC: strategyUSDC,
     USDT: strategyUSDT,
     WBTC: strategyWBTC,
     WETH: strategyWETH,
+  },
+}
+
+export const AugmentedConfig: IAugmentedConfiguration = (() => {
+  const src = CommonsConfig;
+  let cfg: IAugmentedConfiguration = {...src,
+    MarketId: 'Augmented genesis market',
+    ProviderId: 0, // force autonumbering
+    ReservesConfig: {
+      DAI: strategyDAI,
+      USDC: strategyUSDC,
+      USDT: strategyUSDT,
+      WBTC: strategyWBTC,
+      WETH: strategyWETH,
+      ADAI: strategyADAI,
+    },
   };
+
+  for (let k of Object.keys(cfg.ReservesConfig)) {
+    cfg.ReservesConfig[k] = {...cfg.ReservesConfig[k],
+      stableBorrowRateEnabled: false
+    };
+  }
+
   // disable oracles for testing and use fallback constants
   cfg.ChainlinkAggregator[eEthereumNetwork.main] = {}; 
   cfg.ChainlinkAggregator[eEthereumNetwork.ropsten] = {}; 
@@ -37,6 +55,7 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
     USDT: 0.00050314705,
     WBTC: 16.08,
     USD: 0.00050,
+    ADAI: 0.0005022851,
   };
   cfg.FallbackOracle[eEthereumNetwork.main] = defRates;
   cfg.FallbackOracle[eEthereumNetwork.ropsten] = defRates;
@@ -45,4 +64,4 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
   return cfg;
 })();
 
-export default AugmentedConfig;
+// export default AugmentedConfig;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.6.0;
+pragma solidity ^0.8.4;
 
 /// @dev Provides delegation of calls with proper forwarding of return values and bubbling of failures. Based on OpenZeppelin Proxy.
 abstract contract Delegator {
@@ -11,7 +11,7 @@ abstract contract Delegator {
    */
   function _delegate(address implementation) internal {
     require(implementation != address(0));
-    //solium-disable-next-line
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       // Copy msg.data. We take full control of memory in this inline assembly
       // block because it will not return to Solidity code. We overwrite the
@@ -26,13 +26,13 @@ abstract contract Delegator {
       returndatacopy(0, 0, returndatasize())
 
       switch result
-        // delegatecall returns 0 on error.
-        case 0 {
-          revert(0, returndatasize())
-        }
-        default {
-          return(0, returndatasize())
-        }
+      // delegatecall returns 0 on error.
+      case 0 {
+        revert(0, returndatasize())
+      }
+      default {
+        return(0, returndatasize())
+      }
     }
   }
 }

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
+import '../../dependencies/openzeppelin/contracts/Address.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../misc/ERC20WithPermit.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../tools/Errors.sol';
 import '../../interfaces/IBalanceHook.sol';
+import '../libraries/helpers/UnderlyingHelper.sol';
 import '../../access/AccessFlags.sol';
 import '../../access/MarketAccessBitmask.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
@@ -22,16 +22,16 @@ abstract contract SlashableStakeTokenBase is
   IStakeToken,
   IManagedStakeToken,
   ERC20WithPermit,
-  MarketAccessBitmask(IMarketAccessController(0)),
+  MarketAccessBitmask(IMarketAccessController(address(0))),
   IInitializableStakeToken
 {
-  using SafeMath for uint256;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
   IERC20 private _stakedToken;
   IBalanceHook internal _incentivesController;
+  IUnderlyingStrategy private _strategy;
 
   mapping(address => uint32) private _stakersCooldowns;
 
@@ -45,7 +45,7 @@ abstract contract SlashableStakeTokenBase is
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) public ERC20WithPermit(name, symbol, decimals) {
+  ) ERC20WithPermit(name, symbol, decimals) {
     _initializeToken(params);
   }
 
@@ -53,6 +53,7 @@ abstract contract SlashableStakeTokenBase is
     _remoteAcl = params.stakeController;
     _stakedToken = params.stakedToken;
     _cooldownPeriod = params.cooldownPeriod;
+    _strategy = params.strategy;
 
     if (params.unstakePeriod == 0) {
       _unstakePeriod = 10;
@@ -67,6 +68,7 @@ abstract contract SlashableStakeTokenBase is
     }
   }
 
+  // solhint-disable-next-line func-name-mixedcase
   function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
     return address(_stakedToken);
   }
@@ -76,7 +78,7 @@ abstract contract SlashableStakeTokenBase is
     uint256 underlyingAmount,
     uint256 referral
   ) external override returns (uint256) {
-    internalStake(msg.sender, to, underlyingAmount, referral, true);
+    return internalStake(msg.sender, to, underlyingAmount, referral, true);
   }
 
   function internalStake(
@@ -98,13 +100,7 @@ abstract contract SlashableStakeTokenBase is
     _mint(to, stakeAmount);
 
     if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(
-        address(this),
-        to,
-        oldReceiverBalance,
-        balanceOf(to),
-        totalSupply()
-      );
+      _incentivesController.handleBalanceUpdate(address(this), to, oldReceiverBalance, balanceOf(to), totalSupply());
     }
 
     emit Staked(from, to, underlyingAmount, referral);
@@ -116,11 +112,7 @@ abstract contract SlashableStakeTokenBase is
    * @param to Address to redeem to
    * @param stakeAmount Amount of stake to redeem
    **/
-  function redeem(address to, uint256 stakeAmount)
-    external
-    override
-    returns (uint256 stakeAmount_)
-  {
+  function redeem(address to, uint256 stakeAmount) external override returns (uint256 stakeAmount_) {
     require(stakeAmount > 0, Errors.VL_INVALID_AMOUNT);
     (stakeAmount_, ) = internalRedeem(msg.sender, to, stakeAmount, 0);
     return stakeAmount_;
@@ -152,11 +144,11 @@ abstract contract SlashableStakeTokenBase is
     uint256 cooldownStartAt = _stakersCooldowns[from];
 
     require(
-      cooldownStartAt != 0 && block.timestamp > cooldownStartAt.add(_cooldownPeriod),
+      cooldownStartAt != 0 && block.timestamp > cooldownStartAt + _cooldownPeriod,
       Errors.STK_INSUFFICIENT_COOLDOWN
     );
     require(
-      block.timestamp.sub(cooldownStartAt.add(_cooldownPeriod)) <= _unstakePeriod,
+      block.timestamp <= (cooldownStartAt + _cooldownPeriod) + _unstakePeriod,
       Errors.STK_UNSTAKE_WINDOW_FINISHED
     );
 
@@ -191,13 +183,7 @@ abstract contract SlashableStakeTokenBase is
     }
 
     if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(
-        address(this),
-        from,
-        oldBalance,
-        balanceOf(from),
-        totalSupply()
-      );
+      _incentivesController.handleBalanceUpdate(address(this), from, oldBalance, balanceOf(from), totalSupply());
     }
 
     IERC20(_stakedToken).safeTransfer(to, underlyingAmount);
@@ -249,7 +235,7 @@ abstract contract SlashableStakeTokenBase is
       return WadRayMath.RAY; // 100%
     }
 
-    return underlyingBalance.mul(WadRayMath.RAY).div(total);
+    return (underlyingBalance * WadRayMath.RAY) / total;
   }
 
   function slashUnderlying(
@@ -261,10 +247,7 @@ abstract contract SlashableStakeTokenBase is
     uint256 maxSlashable = super.totalSupply();
 
     if (underlyingBalance > maxSlashable) {
-      maxSlashable =
-        underlyingBalance -
-        maxSlashable +
-        maxSlashable.percentMul(_maxSlashablePercentage);
+      maxSlashable = underlyingBalance - maxSlashable + maxSlashable.percentMul(_maxSlashablePercentage);
     } else {
       maxSlashable = underlyingBalance.percentMul(_maxSlashablePercentage);
     }
@@ -277,7 +260,11 @@ abstract contract SlashableStakeTokenBase is
     if (amount < minAmount) {
       return 0;
     }
-    _stakedToken.safeTransfer(destination, amount);
+    if (address(_strategy) == address(0)) {
+      _stakedToken.safeTransfer(destination, amount);
+    } else {
+      amount = UnderlyingHelper.delegateWithdrawUnderlying(_strategy, address(_stakedToken), amount, destination);
+    }
 
     emit Slashed(destination, amount, underlyingBalance);
     return amount;
@@ -287,11 +274,7 @@ abstract contract SlashableStakeTokenBase is
     return _maxSlashablePercentage;
   }
 
-  function setMaxSlashablePercentage(uint16 slashPct)
-    external
-    override
-    aclHas(AccessFlags.STAKE_ADMIN)
-  {
+  function setMaxSlashablePercentage(uint16 slashPct) external override aclHas(AccessFlags.STAKE_ADMIN) {
     require(slashPct <= PercentageMath.HALF_ONE, Errors.STK_EXCESSIVE_SLASH_PCT);
     _maxSlashablePercentage = slashPct;
     emit MaxSlashUpdated(slashPct);
@@ -300,7 +283,7 @@ abstract contract SlashableStakeTokenBase is
   function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod)
     external
     override
-    aclHas(AccessFlags.STAKE_ADMIN)
+    aclHas(AccessFlags.STAKE_ADMIN | AccessFlags.STAKE_CONFIGURATOR)
   {
     require(cooldownPeriod <= 52 weeks, Errors.STK_EXCESSIVE_COOLDOWN_PERIOD);
     require(unstakePeriod >= 1 hours && unstakePeriod <= 52 weeks, Errors.STK_WRONG_UNSTAKE_PERIOD);
@@ -313,11 +296,7 @@ abstract contract SlashableStakeTokenBase is
     return !_redeemPaused;
   }
 
-  function setRedeemable(bool redeemable)
-    external
-    override
-    aclHas(AccessFlags.LIQUIDITY_CONTROLLER)
-  {
+  function setRedeemable(bool redeemable) external override aclHas(AccessFlags.LIQUIDITY_CONTROLLER) {
     _redeemPaused = !redeemable;
     emit RedeemUpdated(redeemable);
   }
@@ -384,7 +363,7 @@ abstract contract SlashableStakeTokenBase is
       return 0;
     }
 
-    uint256 minimalValidCooldown = block.timestamp.sub(_cooldownPeriod).sub(_unstakePeriod);
+    uint256 minimalValidCooldown = (block.timestamp - _cooldownPeriod) - _unstakePeriod;
 
     if (minimalValidCooldown > toCooldownPeriod) {
       toCooldownPeriod = 0;
@@ -392,27 +371,26 @@ abstract contract SlashableStakeTokenBase is
       if (minimalValidCooldown > fromCooldownPeriod) {
         fromCooldownPeriod = uint32(block.timestamp);
       }
-
       if (fromCooldownPeriod < toCooldownPeriod) {
         return toCooldownPeriod;
-      } else {
-        toCooldownPeriod = uint32(
-          (amountToReceive.mul(fromCooldownPeriod).add(toBalance.mul(toCooldownPeriod))).div(
-            amountToReceive.add(toBalance)
-          )
-        );
       }
+
+      toCooldownPeriod = uint32(
+        (amountToReceive * fromCooldownPeriod + toBalance * toCooldownPeriod) / (amountToReceive + toBalance)
+      );
     }
     _stakersCooldowns[toAddress] = toCooldownPeriod;
 
     return toCooldownPeriod;
   }
 
+  // solhint-disable-next-line func-name-mixedcase
   function COOLDOWN_PERIOD() external view returns (uint256) {
     return _cooldownPeriod;
   }
 
   /// @notice Seconds available to redeem once the cooldown period is fullfilled
+  // solhint-disable-next-line func-name-mixedcase
   function UNSTAKE_PERIOD() external view returns (uint256) {
     return _unstakePeriod;
   }

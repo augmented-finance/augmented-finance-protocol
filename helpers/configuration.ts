@@ -1,10 +1,4 @@
-import {
-  IReserveParams,
-  PoolConfiguration,
-  ICommonConfiguration,
-  eNetwork,
-  iAssetCommon,
-} from './types';
+import { IReserveParams, PoolConfiguration, ICommonConfiguration, eNetwork, iAssetCommon } from './types';
 import { DRE, falsyOrZeroAddress, filterMapBy } from './misc-utils';
 import { getParamPerNetwork } from './contracts-helpers';
 import { deployWETHMocked } from './contracts-deployments';
@@ -56,7 +50,6 @@ export const getLendingRateOracles = (poolConfig: ICommonConfiguration) => {
 
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
   const network = MAINNET_FORK ? 'main' : DRE.network.name;
-  return filterMapBy(LendingRateOracleRates, (key) =>
-    Object.keys(ReserveAssets[network]).includes(key)
-  );
+  const assets = Object.keys(ReserveAssets[network]);
+  return filterMapBy(LendingRateOracleRates, (key) => assets.includes(key) && LendingRateOracleRates[key]);
 };
