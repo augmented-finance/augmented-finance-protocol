@@ -1,6 +1,6 @@
 import { BigNumberish, Contract } from 'ethers';
 import { DRE, getContractFactory, getFirstSigner } from './misc-utils';
-import { tEthereumAddress, eContractid, tStringTokenSmallUnits, TokenContractId, PoolConfiguration } from './types';
+import { tEthereumAddress, eContractid, tStringTokenSmallUnits, PoolConfiguration, DefaultTokenSymbols } from './types';
 import { MockContract } from 'ethereum-waffle';
 import { getReservesTestConfig } from './configuration';
 import { ZERO_ADDRESS } from './constants';
@@ -56,6 +56,7 @@ import {
   LendingPoolCompatibleFactory,
   MockLendingPoolFactory,
   MockDelegationAwareDepositTokenFactory,
+  DelegatedStrategyAaveFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -505,7 +506,7 @@ export const deployAllMockTokens = async (verify?: boolean) => {
 
   const protoConfigData = getReservesTestConfig();
 
-  for (const tokenSymbol of Object.keys(TokenContractId)) {
+  for (const tokenSymbol of DefaultTokenSymbols) {
     let decimals = '18';
 
     let configData = (<any>protoConfigData)[tokenSymbol];
@@ -954,4 +955,12 @@ export const deployTokenWeightedRewardPoolImpl = async (verify: boolean, once: b
     eContractid.TokenWeightedRewardPoolImpl,
     verify,
     once
+  );
+
+export const deployDelegatedStrategyAave = async (args: [name: string], verify?: boolean) =>
+  withSaveAndVerify(
+    await new DelegatedStrategyAaveFactory(await getFirstSigner()).deploy(...args),
+    eContractid.DelegatedStrategyAave,
+    args,
+    verify
   );

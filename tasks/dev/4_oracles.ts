@@ -9,7 +9,7 @@ import {
   deployAllMockAggregators,
   setInitialMarketRatesInRatesOracleByHelper,
 } from '../../helpers/oracles-helpers';
-import { ICommonConfiguration, iAssetBase, TokenContractId } from '../../helpers/types';
+import { ICommonConfiguration, iAssetBase, DefaultTokenSymbols } from '../../helpers/types';
 import { getFirstSigner, waitForTx } from '../../helpers/misc-utils';
 import { getAllAggregatorsAddresses, getAllTokenAddresses } from '../../helpers/mock-helpers';
 import { ConfigNames, loadPoolConfig, getOrCreateWethAddress } from '../../helpers/configuration';
@@ -32,7 +32,7 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
     } = poolConfig as ICommonConfiguration;
 
     const defaultTokenList = {
-      ...Object.fromEntries(Object.keys(TokenContractId).map((symbol) => [symbol, ''])),
+      ...Object.fromEntries(DefaultTokenSymbols.map((symbol) => [symbol, ''])),
       USD: UsdAddress,
     } as iAssetBase<string>;
     const mockTokens = await getAllMockedTokens();
@@ -51,19 +51,10 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
     const allTokenAddresses = getAllTokenAddresses(mockTokens);
     const allAggregatorsAddresses = getAllAggregatorsAddresses(mockAggregators);
 
-    const [tokens, aggregators] = getTokenAggregatorPairs(
-      allTokenAddresses,
-      allAggregatorsAddresses
-    );
+    const [tokens, aggregators] = getTokenAggregatorPairs(allTokenAddresses, allAggregatorsAddresses);
 
     const oracle = await deployOracleRouter(
-      [
-        addressProvider.address,
-        tokens,
-        aggregators,
-        fallbackOracle.address,
-        await getOrCreateWethAddress(poolConfig),
-      ],
+      [addressProvider.address, tokens, aggregators, fallbackOracle.address, await getOrCreateWethAddress(poolConfig)],
       verify
     );
     await addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracle.address);
@@ -77,11 +68,7 @@ task('dev:deploy-oracles', 'Deploy oracles for dev enviroment')
     const allReservesAddresses = {
       ...tokensAddressesWithoutUsd,
     };
-    await setInitialMarketRatesInRatesOracleByHelper(
-      LendingRateOracleRates,
-      allReservesAddresses,
-      lendingRateOracle
-    );
+    await setInitialMarketRatesInRatesOracleByHelper(LendingRateOracleRates, allReservesAddresses, lendingRateOracle);
 
     await addressProvider.setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle.address);
   });

@@ -7,6 +7,8 @@ import '../../interfaces/IPoolToken.sol';
 import '../../interfaces/IDerivedToken.sol';
 
 contract DelegatedStrategyAave is DelegatedStrategyBase {
+  constructor(string memory name) DelegatedStrategyBase(name) {}
+
   function getDelegatedState(address asset) external view override returns (DelegatedState memory result) {
     address underlying = IDerivedToken(asset).UNDERLYING_ASSET_ADDRESS();
     AaveDataTypes.ReserveData memory state = IAaveLendingPool(IPoolToken(asset).POOL()).getReserveData(underlying);

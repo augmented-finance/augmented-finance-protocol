@@ -22,7 +22,7 @@ import {
   deployMockLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
-import { TokenContractId, tEthereumAddress } from '../../helpers/types';
+import { DefaultTokenSymbols, tEthereumAddress } from '../../helpers/types';
 import { MintableERC20 } from '../../types';
 import { ConfigNames, getReservesTestConfig, loadPoolConfig } from '../../helpers/configuration';
 import { initializeMakeSuite } from './helpers/make-suite';
@@ -51,7 +51,7 @@ const deployAllMockTokens = async (deployer: Signer) => {
 
   const protoConfigData = getReservesTestConfig();
 
-  for (const tokenSymbol of Object.keys(TokenContractId)) {
+  for (const tokenSymbol of DefaultTokenSymbols) {
     if (tokenSymbol === 'WETH') {
       tokens[tokenSymbol] = await deployWETHMocked();
       await registerContractInJsonDb(tokenSymbol.toUpperCase(), tokens[tokenSymbol]);

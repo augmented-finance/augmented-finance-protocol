@@ -41,7 +41,7 @@ export const initReservesByHelper = async (
 
   // Initialize variables for future reserves initialization
   let reserveTokens: string[] = [];
-  let reserveInitDecimals: string[] = [];
+  let reserveInitDecimals: number[] = [];
   let reserveSymbols: string[] = [];
 
   let initInputParams: {
@@ -267,7 +267,7 @@ export const configureReservesByHelper = async (
       stableBorrowRateEnabled,
     },
   ] of Object.entries(reservesParams) as [string, IReserveParams][]) {
-    if (baseLTVAsCollateral === '-1') continue;
+    if (baseLTVAsCollateral < 0) continue;
 
     const assetAddressIndex = Object.keys(tokenAddresses).findIndex((value) => value === assetSymbol);
     const [, tokenAddress] = (Object.entries(tokenAddresses) as [string, string][])[assetAddressIndex];

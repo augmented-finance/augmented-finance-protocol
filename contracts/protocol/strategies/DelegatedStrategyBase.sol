@@ -5,9 +5,18 @@ import '../../interfaces/IReserveDelegatedStrategy.sol';
 
 abstract contract DelegatedStrategyBase is IReserveDelegatedStrategy {
   address private immutable self = address(this);
+  string private _name;
+
+  constructor(string memory name) {
+    _name = name;
+  }
 
   function isDelegatedReserve() external pure override returns (bool) {
     return true;
+  }
+
+  function getStrategyName() external view override returns (string memory) {
+    return _name;
   }
 
   function delegatedWithdrawUnderlying(

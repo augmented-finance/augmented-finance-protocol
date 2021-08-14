@@ -67,6 +67,9 @@ export enum eContractid {
   RewardBoosterImpl = 'RewardBoosterImpl',
   TreasuryRewardPool = 'TreasuryRewardPool',
 
+  DelegatedStrategyAave = 'DelegatedStrategyAave',
+  DelegatedStrategyCompound = 'DelegatedStrategyCompound',
+
   UniswapLiquiditySwapAdapter = 'UniswapLiquiditySwapAdapter',
   UniswapRepayAdapter = 'UniswapRepayAdapter',
   FlashLiquidationAdapter = 'FlashLiquidationAdapter',
@@ -235,6 +238,8 @@ export interface iAssetBase<T> {
   USD: T;
   AAVE: T;
   LINK: T;
+
+  //  ADAI: T;
 }
 
 export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, 'USD'>;
@@ -256,27 +261,29 @@ type iMultiPoolsAssets<T> = iAssetsWithoutUSD<T> | iAugmentedPoolAssets<T>;
 
 export type iAssetAggregatorBase<T> = iAssetBase<T>;
 
-export const TokenContractId: iAssetBase<string> = {
-  AAVE: 'AAVE',
-  LINK: 'LINK',
-
-  WETH: 'WETH',
-  DAI: 'DAI',
-  USDC: 'USDC',
-  USDT: 'USDT',
-  WBTC: 'WBTC',
-
-  USD: 'USD',
+const tokenSymbols: iAssetBase<string> = {
+  WETH: '',
+  DAI: '',
+  USDC: '',
+  USDT: '',
+  WBTC: '',
+  USD: '',
+  AAVE: '',
+  LINK: '',
 };
+
+export const DefaultTokenSymbols: string[] = Object.keys(tokenSymbols);
 
 export interface IReserveParams extends IReserveBorrowParams, IReserveCollateralParams {
   depositTokenImpl: eContractid;
-  reserveFactor: string;
+  reserveFactor: number;
   strategy: IInterestRateStrategyParams;
+  reserveDecimals: number;
 }
 
 export interface IInterestRateStrategyParams {
   name: string;
+  strategyImpl?: eContractid;
   optimalUtilizationRate: string;
   baseVariableBorrowRate: string;
   variableRateSlope1: string;
@@ -286,21 +293,14 @@ export interface IInterestRateStrategyParams {
 }
 
 export interface IReserveBorrowParams {
-  // optimalUtilizationRate: string;
-  // baseVariableBorrowRate: string;
-  // variableRateSlope1: string;
-  // variableRateSlope2: string;
-  // stableRateSlope1: string;
-  // stableRateSlope2: string;
   borrowingEnabled: boolean;
   stableBorrowRateEnabled: boolean;
-  reserveDecimals: string;
 }
 
 export interface IReserveCollateralParams {
-  baseLTVAsCollateral: string;
-  liquidationThreshold: string;
-  liquidationBonus: string;
+  baseLTVAsCollateral: number;
+  liquidationThreshold: number;
+  liquidationBonus: number;
 }
 export interface IMarketRates {
   borrowRate: string;
@@ -308,9 +308,7 @@ export interface IMarketRates {
 
 export type iParamsPerNetwork<T> = iEthereumParamsPerNetwork<T> | iPolygonParamsPerNetwork<T>;
 
-export interface iParamsPerNetworkAll<T>
-  extends iEthereumParamsPerNetwork<T>,
-    iPolygonParamsPerNetwork<T> {}
+export interface iParamsPerNetworkAll<T> extends iEthereumParamsPerNetwork<T>, iPolygonParamsPerNetwork<T> {}
 
 export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.coverage]: T;

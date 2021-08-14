@@ -300,6 +300,8 @@ export const CommonsConfig: ICommonConfiguration = {
     USDT: strategyUSDT,
     WBTC: strategyWBTC,
     WETH: strategyWETH,
+
+//    ADAI: strategyADAI,
   },
 
   StakeParams: {

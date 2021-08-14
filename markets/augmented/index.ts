@@ -1,4 +1,4 @@
-import { IAugmentedConfiguration, eEthereumNetwork } from '../../helpers/types';
+import { IAugmentedConfiguration, eEthereumNetwork, IReserveParams, IReserveBorrowParams } from '../../helpers/types';
 import { CommonsConfig } from './commons';
 import { strategyDAI, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
 
@@ -9,21 +9,23 @@ import { strategyDAI, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } f
 export const TestConfig: IAugmentedConfiguration = {
   ...CommonsConfig,
   ProviderId: 1,
+  MarketId: 'Augmented test market',
 }
 
 export const AugmentedConfig: IAugmentedConfiguration = (() => {
-  let cfg: IAugmentedConfiguration = CommonsConfig;
+  const src = CommonsConfig;
+  let cfg: IAugmentedConfiguration = {...src};
   
   cfg.MarketId = 'Augmented genesis market';
   cfg.ProviderId = 0; // force autonumbering
 
-  cfg.ReservesConfig = {
-    DAI: strategyDAI,
-    USDC: strategyUSDC,
-    USDT: strategyUSDT,
-    WBTC: strategyWBTC,
-    WETH: strategyWETH,
-  };
+  cfg.ReservesConfig = {... src.ReservesConfig};
+  for (let k of Object.keys(cfg.ReservesConfig)) {
+    cfg.ReservesConfig[k] = {...src.ReservesConfig[k],
+      stableBorrowRateEnabled: false
+    };
+  }
+
   // disable oracles for testing and use fallback constants
   cfg.ChainlinkAggregator[eEthereumNetwork.main] = {}; 
   cfg.ChainlinkAggregator[eEthereumNetwork.ropsten] = {}; 
@@ -45,4 +47,4 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
   return cfg;
 })();
 
-export default AugmentedConfig;
+// export default AugmentedConfig;
