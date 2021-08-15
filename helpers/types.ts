@@ -241,7 +241,23 @@ export interface iAssetBase<T> {
   LINK: T;
 
   ADAI: T;
+  CDAI: T;
+  CETH: T;
 }
+
+const tokenSymbols: iAssetBase<string> = {
+  WETH: '',
+  DAI: '',
+  USDC: '',
+  USDT: '',
+  WBTC: '',
+  USD: '',
+  AAVE: '',
+  LINK: '',
+  ADAI: '',
+  CDAI: '',
+  CETH: '',
+};
 
 type testAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC' | 'AAVE' | 'LINK';
 type testOnlyAssets = 'AAVE' | 'LINK';
@@ -266,18 +282,6 @@ export type iAugmentedPoolAssetsOpt<T> = OmitOpt<iAssetsWithoutUSD<T>, testOnlyA
 type iMultiPoolsAssets<T> = iAssetsWithoutUSD<T> | iAugmentedPoolAssets<T> | iTestPoolAssets<T>;
 
 export type iAssetAggregatorBase<T> = iAssetBase<T>;
-
-const tokenSymbols: iAssetBase<string> = {
-  WETH: '',
-  DAI: '',
-  USDC: '',
-  USDT: '',
-  WBTC: '',
-  USD: '',
-  AAVE: '',
-  LINK: '',
-  ADAI: '',
-};
 
 export const DefaultTokenSymbols: string[] = Object.keys(tokenSymbols);
 

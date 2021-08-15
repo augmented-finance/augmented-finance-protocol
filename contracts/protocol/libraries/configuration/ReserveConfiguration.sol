@@ -236,11 +236,7 @@ library ReserveConfiguration {
     return (self.data & ~STRATEGY_TYPE_MASK) != 0;
   }
 
-  function setExternalStrategy(DataTypes.ReserveConfigurationMap storage self, bool isExternal) internal {
-    if (isExternal) {
-      self.data |= ~RESERVE_FACTOR_MASK;
-    } else {
-      self.data &= RESERVE_FACTOR_MASK;
-    }
+  function setExternalStrategy(DataTypes.ReserveConfigurationMap memory self, bool isExternal) internal pure {
+    _setFlag(self, STRATEGY_TYPE_MASK, isExternal);
   }
 }

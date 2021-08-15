@@ -180,7 +180,11 @@ library ReserveLogic {
     reserve.stableDebtTokenAddress = data.stableDebtAddress;
     reserve.variableDebtTokenAddress = data.variableDebtAddress;
     reserve.strategy = data.strategy;
-    reserve.configuration.setExternalStrategy(data.externalStrategy);
+    {
+      DataTypes.ReserveConfigurationMap memory cfg = reserve.configuration;
+      cfg.setExternalStrategy(data.externalStrategy);
+      reserve.configuration = cfg;
+    }
   }
 
   struct UpdateInterestRatesLocalVars {
