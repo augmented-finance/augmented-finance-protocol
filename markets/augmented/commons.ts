@@ -275,6 +275,8 @@ export const CommonsConfig: ICommonConfiguration = {
       WBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
       WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
       ADAI: '0x028171bca77440897b824ca71d1c56cac55b68a3',
+      CDAI: '0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643',
+      CETH: '0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5',
     },
     [eEthereumNetwork.tenderlyMain]: {
       AAVE: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
@@ -419,7 +421,9 @@ export const CommonsConfig: ICommonConfiguration = {
 
     AllAssetsInitialPrices: {
       ...MOCK_CHAINLINK_AGGREGATORS_PRICES,
-      ADAI: MOCK_CHAINLINK_AGGREGATORS_PRICES.DAI
+      ADAI: MOCK_CHAINLINK_AGGREGATORS_PRICES.DAI,
+      CDAI: MOCK_CHAINLINK_AGGREGATORS_PRICES.DAI,
+      CETH: MOCK_CHAINLINK_AGGREGATORS_PRICES.WETH,
     },
   },
 
@@ -434,7 +438,10 @@ export const CommonsConfig: ICommonConfiguration = {
       [eEthereumNetwork.main]: {
         AAVE: '0xf977814e90da44bfa03b6295a0616a897441acec', // Binance pool
         DAI: '0x503828976D22510aad0201ac7EC88293211D23Da', // Coinbase
-        USDC: '0x503828976D22510aad0201ac7EC88293211D23Da' // Coinbase
+        USDC: '0x503828976D22510aad0201ac7EC88293211D23Da', // Coinbase
+        ADAI: '0x3ddfa8ec3052539b6c9549f12cea2c295cff5296',
+        CDAI: '0x3ddfa8ec3052539b6c9549f12cea2c295cff5296',
+        CETH: '0x8aceab8167c80cb8b3de7fa6228b889bb1130ee8',
       },
       [eEthereumNetwork.tenderlyMain]: {},
     },

@@ -581,7 +581,9 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     if (_reserves[asset].strategy != address(0)) {
       require(isExternal = _reserves[asset].configuration.isExternalStrategy());
     } else {
-      _reserves[asset].configuration.setExternalStrategy(isExternal);
+      DataTypes.ReserveConfigurationMap memory cfg = _reserves[asset].configuration;
+      cfg.setExternalStrategy(isExternal);
+      _reserves[asset].configuration = cfg;
     }
     _reserves[asset].strategy = strategy;
   }

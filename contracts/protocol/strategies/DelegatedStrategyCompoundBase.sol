@@ -31,9 +31,10 @@ abstract contract DelegatedStrategyCompoundBase is DelegatedStrategyBase {
         v /= 4;
         require(v < type(uint32).max);
       }
+      msecPerBlock = uint32(v);
       _lastTS = uint32(block.timestamp);
       _lastBlock = uint32(block.number);
-      _msecPerBlock = uint32(v);
+      _msecPerBlock = msecPerBlock;
     }
 
     rate = (rate * 1000) / msecPerBlock;

@@ -1,6 +1,6 @@
 import { IAugmentedConfiguration, eEthereumNetwork, IReserveParams, IReserveBorrowParams, ITestConfiguration } from '../../helpers/types';
 import { CommonsConfig } from './commons';
-import { strategyAAVE, strategyADAI, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
+import { strategyAAVE, strategyADAI, strategyCDAI, strategyCETH, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
 
 // ----------------
 // POOL--SPECIFIC PARAMS
@@ -33,6 +33,8 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
       WBTC: strategyWBTC,
       WETH: strategyWETH,
       ADAI: strategyADAI,
+      CDAI: strategyCDAI,
+      CETH: strategyCETH,
     },
   };
 
@@ -56,6 +58,8 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
     WBTC: 16.08,
     USD: 0.00050,
     ADAI: 0.0005022851,
+    CDAI: 0.0005022851,
+    CETH: 1.0
   };
   cfg.FallbackOracle[eEthereumNetwork.main] = defRates;
   cfg.FallbackOracle[eEthereumNetwork.ropsten] = defRates;
