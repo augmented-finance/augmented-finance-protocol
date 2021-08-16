@@ -135,14 +135,9 @@ contract DecayingTokenLocker is RewardedTokenLocker {
 
   function setStakeBalance(address holder, uint224 stakeAmount) internal override {
     // NB! Actually, total and balance for decay compensation should be taken before the update.
-    // Not doing it will give more to a user who increases balance - so it is better.
+    // Not doing it will give more to a user who increases balance - so it is even better in this case.
 
-    (uint256 amount, uint32 since, AllocationMode mode) = doUpdateReward(
-      holder,
-      0, /* doesn't matter */
-      stakeAmount
-    );
-
+    (uint256 amount, uint32 since, AllocationMode mode) = doUpdateReward(holder, stakeAmount);
     amount = rewardForBalance(holder, stakeAmount, amount, since, uint32(block.timestamp));
     internalAllocateReward(holder, amount, since, mode);
   }

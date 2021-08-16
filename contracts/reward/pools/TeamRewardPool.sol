@@ -24,17 +24,14 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   }
 
   function _onlyTeamManagerOrConfigurator() private view {
-    require(
-      msg.sender == _teamManager || _controller.isConfigAdmin(msg.sender),
-      Errors.CT_CALLER_MUST_BE_TEAM_MANAGER
-    );
+    require(msg.sender == _teamManager || _controller.isConfigAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_TEAM_MANAGER);
   }
 
   function getPoolName() public pure override returns (string memory) {
     return 'TeamPool';
   }
 
-  modifier onlyTeamManagerOrConfigurator {
+  modifier onlyTeamManagerOrConfigurator() {
     _onlyTeamManagerOrConfigurator();
     _;
   }
@@ -54,12 +51,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return doGetReward(holder);
   }
 
-  function internalCalcReward(address holder, uint32 at)
-    internal
-    view
-    override
-    returns (uint256, uint32)
-  {
+  function internalCalcReward(address holder, uint32 at) internal view override returns (uint256, uint32) {
     if (!isUnlocked(at)) {
       return (0, 0);
     }
@@ -109,10 +101,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     }
   }
 
-  function updateTeamMember(address member, uint16 memberSharePct)
-    external
-    onlyTeamManagerOrConfigurator
-  {
+  function updateTeamMember(address member, uint16 memberSharePct) external onlyTeamManagerOrConfigurator {
     _updateTeamMember(member, memberSharePct);
   }
 
@@ -120,18 +109,13 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     require(member != address(0), 'member is required');
     require(memberSharePct <= PercentageMath.ONE, 'invalid share percentage');
 
-    uint256 oldSharePct = getRewardEntry(member).rewardBase;
-    uint256 newTotalShare = uint256(_totalShare) + memberSharePct - oldSharePct;
+    uint256 newTotalShare = (uint256(_totalShare) + memberSharePct) - getRewardEntry(member).rewardBase;
     require(newTotalShare <= PercentageMath.ONE, 'team total share exceeds 100%');
     _totalShare = uint16(newTotalShare);
 
-    (uint256 allocated, uint32 since, AllocationMode mode) =
-      doUpdateReward(member, oldSharePct, memberSharePct);
+    (uint256 allocated, uint32 since, AllocationMode mode) = doUpdateReward(member, memberSharePct);
 
-    require(
-      allocated == 0 || isUnlocked(getCurrentTick()),
-      'member share can not be changed during lockup'
-    );
+    require(allocated == 0 || isUnlocked(getCurrentTick()), 'member share can not be changed during lockup');
 
     internalAllocateReward(member, allocated, since, mode);
   }

@@ -66,17 +66,9 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return (true, appliedRate);
   }
 
-  function disableBaseline() external override onlyRateAdmin {
+  function disableBaseline() external onlyRateAdmin {
     _baselinePercentage = NO_BASELINE;
     emit BaselineDisabled();
-  }
-
-  function disableRewardPool() external override onlyRateAdmin {
-    _baselinePercentage = NO_BASELINE;
-    _pausedRate = 0;
-    internalSetRate(0);
-    emit BaselineDisabled();
-    emit RateUpdated(0);
   }
 
   function setBaselinePercentage(uint16 factor) external override onlyRateAdmin {

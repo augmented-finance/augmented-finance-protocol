@@ -51,12 +51,7 @@ contract RewardedTokenLocker is
   }
 
   function setStakeBalance(address holder, uint224 stakeAmount) internal virtual override {
-    (uint256 amount, uint32 since, AllocationMode mode) =
-      doUpdateReward(
-        holder,
-        0, /* doesn't matter */
-        stakeAmount
-      );
+    (uint256 amount, uint32 since, AllocationMode mode) = doUpdateReward(holder, stakeAmount);
     internalAllocateReward(holder, amount, since, mode);
   }
 

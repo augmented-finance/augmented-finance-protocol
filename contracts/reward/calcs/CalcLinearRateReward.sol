@@ -84,11 +84,7 @@ abstract contract CalcLinearRateReward {
     return _rewards[holder];
   }
 
-  function doUpdateReward(
-    address holder,
-    uint256 oldBalance,
-    uint256 newBalance
-  )
+  function doUpdateReward(address holder, uint256 newBalance)
     internal
     virtual
     returns (
@@ -109,17 +105,13 @@ abstract contract CalcLinearRateReward {
       mode = AllocationMode.Push;
     }
 
-    newBalance = internalCalcBalance(entry, oldBalance, newBalance);
+    newBalance = internalCalcBalance(entry, entry.rewardBase, newBalance);
     require(newBalance <= type(uint224).max, 'balance is too high');
 
     uint32 currentTick = getCurrentTick();
 
     uint256 adjRate;
-    (adjRate, allocated, since) = internalCalcRateAndReward(
-      entry,
-      _accumRates[holder],
-      currentTick
-    );
+    (adjRate, allocated, since) = internalCalcRateAndReward(entry, _accumRates[holder], currentTick);
 
     _accumRates[holder] = adjRate;
     _rewards[holder] = RewardEntry(uint224(newBalance), currentTick);
@@ -149,17 +141,16 @@ abstract contract CalcLinearRateReward {
     return doGetRewardAt(holder, getCurrentTick());
   }
 
-  function doGetRewardAt(address holder, uint32 currentTick)
-    internal
-    virtual
-    returns (uint256, uint32)
-  {
+  function doGetRewardAt(address holder, uint32 currentTick) internal virtual returns (uint256, uint32) {
     if (_rewards[holder].rewardBase == 0) {
       return (0, 0);
     }
 
-    (uint256 adjRate, uint256 allocated, uint32 since) =
-      internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentTick);
+    (uint256 adjRate, uint256 allocated, uint32 since) = internalCalcRateAndReward(
+      _rewards[holder],
+      _accumRates[holder],
+      currentTick
+    );
 
     _accumRates[holder] = adjRate;
     _rewards[holder].claimedAt = currentTick;
@@ -170,18 +161,12 @@ abstract contract CalcLinearRateReward {
     return doCalcRewardAt(holder, getCurrentTick());
   }
 
-  function doCalcRewardAt(address holder, uint32 currentTick)
-    internal
-    view
-    virtual
-    returns (uint256, uint32)
-  {
+  function doCalcRewardAt(address holder, uint32 currentTick) internal view virtual returns (uint256, uint32) {
     if (_rewards[holder].rewardBase == 0) {
       return (0, 0);
     }
 
-    (, uint256 allocated, uint32 since) =
-      internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentTick);
+    (, uint256 allocated, uint32 since) = internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentTick);
     return (allocated, since);
   }
 }
