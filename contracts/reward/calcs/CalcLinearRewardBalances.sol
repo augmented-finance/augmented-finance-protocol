@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import '../interfaces/IRewardController.sol';
 
-abstract contract CalcLinearRateReward {
+abstract contract CalcLinearRewardBalances {
   struct RewardBalance {
     uint224 rewardBase;
     uint32 claimedAt;

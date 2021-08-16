@@ -3,18 +3,13 @@ pragma solidity ^0.8.4;
 
 import '../interfaces/IRewardController.sol';
 import '../referral/BaseReferralRegistry.sol';
-import '../calcs/CalcLinearRateAccum.sol';
+import '../calcs/CalcLinearRewardAccum.sol';
 import './BasePermitRewardPool.sol';
 
-contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcLinearRateAccum {
+contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcLinearRewardAccum {
   uint256 private _claimLimit;
 
-  event RewardClaimedByPermit(
-    address indexed provider,
-    address indexed spender,
-    uint256 value,
-    uint256 since
-  );
+  event RewardClaimedByPermit(address indexed provider, address indexed spender, uint256 value, uint256 since);
   event ClaimLimitUpdated(uint256 limit);
 
   constructor(
@@ -48,23 +43,11 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
     require(value <= _claimLimit, 'EXCESSIVE_VALUE');
     require(uint32(issuedAt) == issuedAt);
 
-    bytes32 encodedHash =
-      keccak256(
-        abi.encode(CLAIM_TYPEHASH, provider, spender, value, currentValidNonce, issuedAt, codes)
-      );
-
-    doClaimRewardByPermit(
-      provider,
-      spender,
-      spender,
-      value,
-      issuedAt,
-      encodedHash,
-      currentValidNonce,
-      v,
-      r,
-      s
+    bytes32 encodedHash = keccak256(
+      abi.encode(CLAIM_TYPEHASH, provider, spender, value, currentValidNonce, issuedAt, codes)
     );
+
+    doClaimRewardByPermit(provider, spender, spender, value, issuedAt, encodedHash, currentValidNonce, v, r, s);
 
     internalUpdateStrict(spender, codes, uint32(issuedAt));
     emit RewardClaimedByPermit(provider, spender, value, currentValidNonce);
@@ -99,10 +82,7 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
     internalRegisterCode(shortRefCode, to);
   }
 
-  function registerShortCodes(uint32[] calldata shortRefCode, address[] calldata to)
-    external
-    onlyRefAdmin
-  {
+  function registerShortCodes(uint32[] calldata shortRefCode, address[] calldata to) external onlyRefAdmin {
     require(shortRefCode.length == to.length);
     for (uint256 i = 0; i < to.length; i++) {
       internalRegisterCode(shortRefCode[i], to[i]);
@@ -125,13 +105,7 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
     return (0, 0);
   }
 
-  function internalCalcReward(address, uint32)
-    internal
-    view
-    virtual
-    override
-    returns (uint256, uint32)
-  {
+  function internalCalcReward(address, uint32) internal view virtual override returns (uint256, uint32) {
     return (0, 0);
   }
 }

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import './CalcLinearRateReward.sol';
+import './CalcLinearRewardBalances.sol';
 
-abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
+abstract contract CalcLinearWeightedReward is CalcLinearRewardBalances {
   uint256 private _accumRate;
   uint256 private _totalSupply;
 

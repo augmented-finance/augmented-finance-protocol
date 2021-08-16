@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../tools/Errors.sol';
 
-abstract contract CalcLinearRateAccum {
+abstract contract CalcLinearRewardAccum {
   uint256 private _rate;
   uint256 private _accumRate;
   uint256 private _consumed;
