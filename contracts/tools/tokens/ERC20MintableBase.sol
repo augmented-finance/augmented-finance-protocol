@@ -51,4 +51,17 @@ abstract contract ERC20MintableBase is ERC20TransferBase {
 
     emit Transfer(account, address(0), amount);
   }
+
+  function transferBalance(
+    address sender,
+    address recipient,
+    uint256 amount
+  ) internal virtual override {
+    decrementBalance(sender, amount);
+    incrementBalance(recipient, amount);
+  }
+
+  function incrementBalance(address account, uint256 amount) internal virtual;
+
+  function decrementBalance(address account, uint256 amount) internal virtual;
 }

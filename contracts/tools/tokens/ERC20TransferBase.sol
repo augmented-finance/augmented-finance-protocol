@@ -47,8 +47,7 @@ abstract contract ERC20TransferBase is IERC20 {
 
     _beforeTokenTransfer(sender, recipient, amount);
     if (sender != recipient) {
-      decrementBalance(sender, amount);
-      incrementBalance(recipient, amount);
+      transferBalance(sender, recipient, amount);
     }
 
     emit Transfer(sender, recipient, amount);
@@ -58,14 +57,7 @@ abstract contract ERC20TransferBase is IERC20 {
     address sender,
     address recipient,
     uint256 amount
-  ) internal virtual {
-    decrementBalance(sender, amount);
-    incrementBalance(recipient, amount);
-  }
-
-  function incrementBalance(address account, uint256 amount) internal virtual;
-
-  function decrementBalance(address account, uint256 amount) internal virtual;
+  ) internal virtual;
 
   /**
    * @dev Hook that is called before any transfer of tokens. This includes
