@@ -45,10 +45,7 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
       }
     }
 
-    console.log('\nCheck getReservesData');
-    const rd = await dataHelper.getReservesData((await getFirstSigner()).address);
-    const [aggregatedData, userData, x] = [rd[0], rd[1], rd[2]];
-
+    console.log('\nCheck getAllTokenDescriptions');
     const allTokens = await dataHelper.getAllTokenDescriptions(true);
     console.log('All tokens:');
     allTokens.tokens.slice(0, allTokens.tokenCount.toNumber()).map((x) => {
@@ -56,4 +53,10 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
         ` ${x.tokenSymbol} (${x.tokenType} ${x.active} ${x.decimals}):\t${x.token} ${x.underlying} ${x.priceToken}`
       );
     });
+
+    console.log('\nCheck getReservesData');
+    const rd = await dataHelper.getReservesData((await getFirstSigner()).address);
+    const [aggregatedData, userData, x] = [rd[0], rd[1], rd[2]];
+
+    console.log('');
   });
