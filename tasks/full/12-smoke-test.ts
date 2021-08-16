@@ -57,4 +57,6 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
     console.log('\nCheck getReservesData');
     const rd = await dataHelper.getReservesData((await getFirstSigner()).address);
     const [aggregatedData, userData, x] = [rd[0], rd[1], rd[2]];
+
+    console.log('');
   });
