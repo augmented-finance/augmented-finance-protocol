@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../tools/tokens/ERC20NoTransferBase.sol';
 import '../../interfaces/IDerivedToken.sol';
 
 /**
@@ -13,7 +14,7 @@ import '../../interfaces/IDerivedToken.sol';
   Additionally, this contract recycles token excess of capped rewards by spreading the excess over some period. 
  */
 
-abstract contract BaseTokenLocker is IERC20, IDerivedToken {
+abstract contract BaseTokenLocker is ERC20NoTransferBase, IDerivedToken {
   using SafeERC20 for IERC20;
 
   IERC20 private _underlyingToken;
@@ -521,34 +522,6 @@ abstract contract BaseTokenLocker is IERC20, IDerivedToken {
 
   function getUnderlying() internal view returns (address) {
     return address(_underlyingToken);
-  }
-
-  function transfer(address, uint256) external pure override returns (bool) {
-    notSupported();
-    return false;
-  }
-
-  function allowance(address, address) external pure override returns (uint256) {
-    notSupported();
-    return 0;
-  }
-
-  function approve(address, uint256) external pure override returns (bool) {
-    notSupported();
-    return false;
-  }
-
-  function transferFrom(
-    address,
-    address,
-    uint256
-  ) external pure override returns (bool) {
-    notSupported();
-    return false;
-  }
-
-  function notSupported() private pure {
-    revert('NOT_SUPPORTED');
   }
 
   /// @dev internalAddExcess recycles reward excess by spreading the given amount.

@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.4;
+
+import '../../dependencies/openzeppelin/contracts/IERC20WithEvents.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../dependencies/openzeppelin/contracts/Address.sol';
+import './ERC20DetailsBase.sol';
+import './ERC20AllowanceBase.sol';
+import './ERC20BalanceBase.sol';
+import './ERC20MintableBase.sol';
+
+abstract contract ERC20Base is ERC20DetailsBase, ERC20AllowanceBase, ERC20BalanceBase, ERC20MintableBase {
+  constructor(
+    string memory name_,
+    string memory symbol_,
+    uint8 decimals_
+  ) ERC20DetailsBase(name_, symbol_, decimals_) {}
+
+  function _approveRecipient(
+    address owner,
+    address recipient,
+    uint256 amount
+  ) internal override(ERC20AllowanceBase, ERC20TransferBase) {
+    ERC20AllowanceBase._approveRecipient(owner, recipient, amount);
+  }
+
+  function incrementBalance(address account, uint256 amount) internal override(ERC20BalanceBase, ERC20TransferBase) {
+    ERC20BalanceBase.incrementBalance(account, amount);
+  }
+
+  function decrementBalance(address account, uint256 amount) internal override(ERC20BalanceBase, ERC20TransferBase) {
+    ERC20BalanceBase.decrementBalance(account, amount);
+  }
+}

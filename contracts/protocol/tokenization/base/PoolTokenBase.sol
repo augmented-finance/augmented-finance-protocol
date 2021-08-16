@@ -2,9 +2,9 @@
 pragma solidity ^0.8.4;
 
 import '../../../tools/Errors.sol';
-import '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
-import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../../tools/tokens/ERC20DetailsBase.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../../interfaces/IPoolToken.sol';
 import '../../../interfaces/IBalanceHook.sol';
 import '../../../interfaces/ILendingPoolForTokens.sol';
@@ -13,11 +13,7 @@ import '../../../access/AccessFlags.sol';
 import '../interfaces/IInitializablePoolToken.sol';
 import '../interfaces/PoolTokenConfig.sol';
 
-abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, IERC20Details {
-  string private _name;
-  string private _symbol;
-  uint8 private _decimals;
-
+abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, ERC20DetailsBase {
   mapping(address => uint256) internal _balances;
   uint256 internal _totalSupply;
 
@@ -29,33 +25,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
     string memory name_,
     string memory symbol_,
     uint8 decimals_
-  ) {
-    _name = name_;
-    _symbol = symbol_;
-    _decimals = decimals_;
-  }
-
-  function _initializeERC20(
-    string memory name_,
-    string memory symbol_,
-    uint8 decimals_
-  ) internal {
-    _name = name_;
-    _symbol = symbol_;
-    _decimals = decimals_;
-  }
-
-  function name() public view override returns (string memory) {
-    return _name;
-  }
-
-  function symbol() public view override returns (string memory) {
-    return _symbol;
-  }
-
-  function decimals() public view override returns (uint8) {
-    return _decimals;
-  }
+  ) ERC20DetailsBase(name_, symbol_, decimals_) {}
 
   function _onlyLendingPool() private view {
     require(msg.sender == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
@@ -119,9 +89,9 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
       config.underlyingAsset,
       address(config.pool),
       address(config.treasury),
-      _name,
-      _symbol,
-      _decimals,
+      name(),
+      symbol(),
+      decimals(),
       params
     );
   }

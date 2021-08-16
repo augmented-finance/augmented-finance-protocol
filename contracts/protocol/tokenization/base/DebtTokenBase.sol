@@ -5,10 +5,11 @@ import '../../../tools/Errors.sol';
 import '../../../interfaces/ICreditDelegationToken.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
+import '../../../tools/tokens/ERC20NoTransferBase.sol';
 import './PoolTokenBase.sol';
 
 /// @dev Base contract for a non-transferrable debt tokens: StableDebtToken and VariableDebtToken
-abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICreditDelegationToken {
+abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ERC20NoTransferBase, ICreditDelegationToken {
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
 
   /**
@@ -29,40 +30,8 @@ abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICredi
    * @param toUser The user to give allowance to
    * @return the current allowance of toUser
    **/
-  function borrowAllowance(address fromUser, address toUser)
-    external
-    view
-    override
-    returns (uint256)
-  {
+  function borrowAllowance(address fromUser, address toUser) external view override returns (uint256) {
     return _borrowAllowances[fromUser][toUser];
-  }
-
-  function transfer(address, uint256) public pure override returns (bool) {
-    notSupported();
-    return false;
-  }
-
-  function allowance(address, address) public pure override returns (uint256) {
-    return 0;
-  }
-
-  function approve(address, uint256) public pure override returns (bool) {
-    notSupported();
-    return false;
-  }
-
-  function transferFrom(
-    address,
-    address,
-    uint256
-  ) public pure override returns (bool) {
-    notSupported();
-    return false;
-  }
-
-  function notSupported() private pure {
-    revert('NOT_SUPPORTED');
   }
 
   function _decreaseBorrowAllowance(
@@ -70,12 +39,11 @@ abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ICredi
     address delegatee,
     uint256 amount
   ) internal {
-    uint256 newAllowance =
-      SafeMath.sub(
-        _borrowAllowances[delegator][delegatee],
-        amount,
-        Errors.BORROW_ALLOWANCE_NOT_ENOUGH
-      );
+    uint256 newAllowance = SafeMath.sub(
+      _borrowAllowances[delegator][delegatee],
+      amount,
+      Errors.BORROW_ALLOWANCE_NOT_ENOUGH
+    );
 
     _borrowAllowances[delegator][delegatee] = newAllowance;
 

@@ -9,11 +9,11 @@ import '../../../interfaces/IDepositToken.sol';
 import '../../../tools/Errors.sol';
 import '../../../tools/math/WadRayMath.sol';
 import '../../../access/AccessFlags.sol';
-import '../../../misc/PermitForERC20.sol';
+import '../../../tools/tokens/ERC20PermitBase.sol';
 import './PoolTokenBase.sol';
 
 /// @dev Implementation of the interest bearing token for the Augmented Finance protocol
-abstract contract DepositTokenBase is PoolTokenBase('', '', 0), PermitForERC20, ERC20Events, IDepositToken {
+abstract contract DepositTokenBase is PoolTokenBase('', '', 0), ERC20PermitBase, ERC20Events, IDepositToken {
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
