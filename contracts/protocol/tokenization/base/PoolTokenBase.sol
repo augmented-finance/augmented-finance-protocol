@@ -14,6 +14,8 @@ import '../interfaces/IInitializablePoolToken.sol';
 import '../interfaces/PoolTokenConfig.sol';
 
 abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, ERC20DetailsBase {
+  event Transfer(address indexed from, address indexed to, uint256 value);
+
   mapping(address => uint256) internal _balances;
   uint256 internal _totalSupply;
 
@@ -116,7 +118,7 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
     if (hook == IBalanceHook(address(0))) {
       return;
     }
-    hook.handleBalanceUpdate(getIncentivesToken(), holder, oldBalance, newBalance, providerSupply);
+    hook.handleBalanceUpdate(address(this), holder, oldBalance, newBalance, providerSupply);
   }
 
   function handleScaledBalanceUpdate(
@@ -130,11 +132,7 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
     if (hook == IBalanceHook(address(0))) {
       return;
     }
-    hook.handleScaledBalanceUpdate(getIncentivesToken(), holder, oldBalance, newBalance, providerSupply, scale);
-  }
-
-  function getIncentivesToken() internal view virtual returns (address) {
-    return address(this);
+    hook.handleScaledBalanceUpdate(address(this), holder, oldBalance, newBalance, providerSupply, scale);
   }
 
   function _setIncentivesController(address hook) internal virtual {
@@ -215,14 +213,20 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
 
     IBalanceHook hook = _incentivesController;
     if (address(hook) != address(0)) {
-      address token = getIncentivesToken();
       uint256 currentTotalSupply = _totalSupply;
 
-      hook.handleScaledBalanceUpdate(token, sender, oldSenderBalance, newSenderBalance, currentTotalSupply, scale);
+      hook.handleScaledBalanceUpdate(
+        address(this),
+        sender,
+        oldSenderBalance,
+        newSenderBalance,
+        currentTotalSupply,
+        scale
+      );
 
       if (sender != recipient) {
         hook.handleScaledBalanceUpdate(
-          token,
+          address(this),
           recipient,
           oldRecipientBalance,
           newRecipientBalance,

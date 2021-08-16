@@ -65,11 +65,7 @@ abstract contract ERC20AllowanceBase is IERC20 {
 
   event Approval(address indexed owner, address indexed spender, uint256 value);
 
-  function _approveTransferFrom(
-    address owner,
-    address recipient,
-    uint256 amount
-  ) internal virtual {
-    _decAllowance(owner, recipient, amount, 'ERC20: transfer amount exceeds allowance');
+  function _approveTransferFrom(address owner, uint256 amount) internal virtual {
+    _decAllowance(owner, msg.sender, amount, 'ERC20: transfer amount exceeds allowance');
   }
 }

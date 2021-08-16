@@ -4,7 +4,9 @@ pragma solidity ^0.8.4;
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 
 abstract contract ERC20TransferBase is IERC20 {
-  function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+  event Transfer(address indexed from, address indexed to, uint256 value);
+
+  function transfer(address recipient, uint256 amount) public override returns (bool) {
     _transfer(msg.sender, recipient, amount);
     return true;
   }
@@ -13,17 +15,13 @@ abstract contract ERC20TransferBase is IERC20 {
     address sender,
     address recipient,
     uint256 amount
-  ) public virtual override returns (bool) {
+  ) public override returns (bool) {
     _transfer(sender, recipient, amount);
-    _approveTransferFrom(sender, msg.sender, amount);
+    _approveTransferFrom(sender, amount);
     return true;
   }
 
-  function _approveTransferFrom(
-    address owner,
-    address recipient,
-    uint256 amount
-  ) internal virtual;
+  function _approveTransferFrom(address owner, uint256 amount) internal virtual;
 
   /**
    * @dev Moves tokens `amount` from `sender` to `recipient`.
@@ -56,7 +54,14 @@ abstract contract ERC20TransferBase is IERC20 {
     emit Transfer(sender, recipient, amount);
   }
 
-  event Transfer(address indexed from, address indexed to, uint256 value);
+  function transferBalance(
+    address sender,
+    address recipient,
+    uint256 amount
+  ) internal virtual {
+    decrementBalance(sender, amount);
+    incrementBalance(recipient, amount);
+  }
 
   function incrementBalance(address account, uint256 amount) internal virtual;
 

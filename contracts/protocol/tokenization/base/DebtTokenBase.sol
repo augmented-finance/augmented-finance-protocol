@@ -3,13 +3,11 @@ pragma solidity ^0.8.4;
 
 import '../../../tools/Errors.sol';
 import '../../../interfaces/ICreditDelegationToken.sol';
-import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
 import '../../../tools/tokens/ERC20NoTransferBase.sol';
 import './PoolTokenBase.sol';
 
 /// @dev Base contract for a non-transferrable debt tokens: StableDebtToken and VariableDebtToken
-abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ERC20NoTransferBase, ICreditDelegationToken {
+abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20NoTransferBase, ICreditDelegationToken {
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
 
   /**
@@ -39,14 +37,12 @@ abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20Events, ERC20N
     address delegatee,
     uint256 amount
   ) internal {
-    uint256 newAllowance = SafeMath.sub(
-      _borrowAllowances[delegator][delegatee],
-      amount,
-      Errors.BORROW_ALLOWANCE_NOT_ENOUGH
-    );
-
-    _borrowAllowances[delegator][delegatee] = newAllowance;
-
-    emit BorrowAllowanceDelegated(delegator, delegatee, _underlyingAsset, newAllowance);
+    uint256 limit = _borrowAllowances[delegator][delegatee];
+    require(limit >= amount, Errors.BORROW_ALLOWANCE_NOT_ENOUGH);
+    unchecked {
+      limit -= amount;
+    }
+    _borrowAllowances[delegator][delegatee] = limit;
+    emit BorrowAllowanceDelegated(delegator, delegatee, _underlyingAsset, limit);
   }
 }

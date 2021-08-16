@@ -13,12 +13,11 @@ abstract contract ERC20Base is ERC20DetailsBase, ERC20AllowanceBase, ERC20Balanc
     uint8 decimals_
   ) ERC20DetailsBase(name_, symbol_, decimals_) {}
 
-  function _approveTransferFrom(
-    address owner,
-    address recipient,
-    uint256 amount
-  ) internal override(ERC20AllowanceBase, ERC20TransferBase) {
-    ERC20AllowanceBase._approveTransferFrom(owner, recipient, amount);
+  function _approveTransferFrom(address owner, uint256 amount)
+    internal
+    override(ERC20AllowanceBase, ERC20TransferBase)
+  {
+    ERC20AllowanceBase._approveTransferFrom(owner, amount);
   }
 
   function incrementBalance(address account, uint256 amount) internal override(ERC20BalanceBase, ERC20TransferBase) {
