@@ -15,11 +15,11 @@ abstract contract ERC20TransferBase is IERC20 {
     uint256 amount
   ) public virtual override returns (bool) {
     _transfer(sender, recipient, amount);
-    _approveRecipient(sender, recipient, amount);
+    _approveTransferFrom(sender, msg.sender, amount);
     return true;
   }
 
-  function _approveRecipient(
+  function _approveTransferFrom(
     address owner,
     address recipient,
     uint256 amount

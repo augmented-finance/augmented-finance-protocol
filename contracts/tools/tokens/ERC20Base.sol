@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/IERC20WithEvents.sol';
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../../dependencies/openzeppelin/contracts/Address.sol';
 import './ERC20DetailsBase.sol';
 import './ERC20AllowanceBase.sol';
 import './ERC20BalanceBase.sol';
@@ -16,12 +13,12 @@ abstract contract ERC20Base is ERC20DetailsBase, ERC20AllowanceBase, ERC20Balanc
     uint8 decimals_
   ) ERC20DetailsBase(name_, symbol_, decimals_) {}
 
-  function _approveRecipient(
+  function _approveTransferFrom(
     address owner,
     address recipient,
     uint256 amount
   ) internal override(ERC20AllowanceBase, ERC20TransferBase) {
-    ERC20AllowanceBase._approveRecipient(owner, recipient, amount);
+    ERC20AllowanceBase._approveTransferFrom(owner, recipient, amount);
   }
 
   function incrementBalance(address account, uint256 amount) internal override(ERC20BalanceBase, ERC20TransferBase) {

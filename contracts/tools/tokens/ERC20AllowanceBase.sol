@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 
 abstract contract ERC20AllowanceBase is IERC20 {
   mapping(address => mapping(address => uint256)) private _allowances;
@@ -22,12 +21,21 @@ abstract contract ERC20AllowanceBase is IERC20 {
   }
 
   function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-    _approve(
-      msg.sender,
-      spender,
-      SafeMath.sub(_allowances[msg.sender][spender], subtractedValue, 'ERC20: decreased allowance below zero')
-    );
+    _decAllowance(msg.sender, spender, subtractedValue, 'ERC20: decreased allowance below zero');
     return true;
+  }
+
+  function _decAllowance(
+    address owner,
+    address spender,
+    uint256 subtractedValue,
+    string memory errMsg
+  ) private {
+    uint256 limit = _allowances[owner][spender];
+    require(limit >= subtractedValue, errMsg);
+    unchecked {
+      _approve(owner, spender, limit - subtractedValue);
+    }
   }
 
   /**
@@ -47,7 +55,7 @@ abstract contract ERC20AllowanceBase is IERC20 {
     address owner,
     address spender,
     uint256 amount
-  ) internal virtual {
+  ) internal {
     require(owner != address(0), 'ERC20: approve from the zero address');
     require(spender != address(0), 'ERC20: approve to the zero address');
 
@@ -57,15 +65,11 @@ abstract contract ERC20AllowanceBase is IERC20 {
 
   event Approval(address indexed owner, address indexed spender, uint256 value);
 
-  function _approveRecipient(
+  function _approveTransferFrom(
     address owner,
     address recipient,
     uint256 amount
   ) internal virtual {
-    _approve(
-      owner,
-      recipient,
-      SafeMath.sub(_allowances[owner][recipient], amount, 'ERC20: transfer amount exceeds allowance')
-    );
+    _decAllowance(owner, recipient, amount, 'ERC20: transfer amount exceeds allowance');
   }
 }
