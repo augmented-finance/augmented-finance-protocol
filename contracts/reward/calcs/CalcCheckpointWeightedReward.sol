@@ -44,7 +44,7 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
   function isHistory(uint32 at) internal view virtual returns (bool);
 
   function internalCalcRateAndReward(
-    RewardEntry memory entry,
+    RewardBalance memory entry,
     uint256 lastAccumRate,
     uint32 at
   )

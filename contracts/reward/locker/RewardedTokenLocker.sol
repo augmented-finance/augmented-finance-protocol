@@ -51,7 +51,7 @@ contract RewardedTokenLocker is
   }
 
   function setStakeBalance(address holder, uint224 stakeAmount) internal virtual override {
-    (uint256 amount, uint32 since, AllocationMode mode) = doUpdateReward(holder, stakeAmount);
+    (uint256 amount, uint32 since, AllocationMode mode) = doUpdateRewardBalance(holder, stakeAmount);
     internalAllocateReward(holder, amount, since, mode);
   }
 
@@ -61,7 +61,7 @@ contract RewardedTokenLocker is
     bool interim
   ) internal virtual override {
     (uint256 amount, uint32 since) = doGetRewardAt(holder, at);
-    internalRemoveReward(holder);
+    doRemoveRewardBalance(holder);
     AllocationMode mode = AllocationMode.Push;
 
     if (!interim) {
@@ -130,7 +130,7 @@ contract RewardedTokenLocker is
       (amount, since) = doGetRewardAt(holder, current);
     } else {
       (amount, since) = doGetRewardAt(holder, expiry);
-      internalRemoveReward(holder);
+      doRemoveRewardBalance(holder);
     }
 
     if (amount > limit) {

@@ -59,7 +59,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   }
 
   function internalCalcRateAndReward(
-    RewardEntry memory entry,
+    RewardBalance memory entry,
     uint256 lastAccumRate,
     uint32 currentBlock
   )
@@ -113,7 +113,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     require(newTotalShare <= PercentageMath.ONE, 'team total share exceeds 100%');
     _totalShare = uint16(newTotalShare);
 
-    (uint256 allocated, uint32 since, AllocationMode mode) = doUpdateReward(member, memberSharePct);
+    (uint256 allocated, uint32 since, AllocationMode mode) = doUpdateRewardBalance(member, memberSharePct);
 
     require(allocated == 0 || isUnlocked(getCurrentTick()), 'member share can not be changed during lockup');
 
@@ -123,7 +123,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   function removeTeamMember(address member) external onlyTeamManagerOrConfigurator {
     require(member != address(0), 'member is required');
 
-    uint256 lastShare = internalRemoveReward(member);
+    uint256 lastShare = doRemoveRewardBalance(member);
     if (lastShare < _totalShare) {
       _totalShare -= uint16(lastShare);
     } else {

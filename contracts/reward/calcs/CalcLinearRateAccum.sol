@@ -51,16 +51,12 @@ abstract contract CalcLinearRateAccum {
     _rateUpdatedAt = currentTick;
   }
 
-  function getLinearRate() internal view virtual returns (uint256) {
+  function getLinearRate() internal view returns (uint256) {
     return _rate;
   }
 
-  function getRateAndUpdatedAt() internal view virtual returns (uint256, uint32) {
+  function getRateAndUpdatedAt() internal view returns (uint256, uint32) {
     return (_rate, _rateUpdatedAt);
-  }
-
-  function getRateUpdatedAt() internal view returns (uint32) {
-    return _rateUpdatedAt;
   }
 
   function doGetReward(uint256 amount) internal returns (uint256 available) {
@@ -77,11 +73,11 @@ abstract contract CalcLinearRateAccum {
     return available;
   }
 
-  function doCalcReward() internal view virtual returns (uint256) {
+  function doCalcReward() internal view returns (uint256) {
     return doCalcRewardAt(getCurrentTick());
   }
 
-  function doCalcRewardAt(uint32 at) internal view virtual returns (uint256) {
+  function doCalcRewardAt(uint32 at) internal view returns (uint256) {
     return (_accumRate + (_rate * (at - _rateUpdatedAt))) - _consumed;
   }
 }

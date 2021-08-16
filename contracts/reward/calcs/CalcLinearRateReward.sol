@@ -4,16 +4,16 @@ pragma solidity ^0.8.4;
 import '../interfaces/IRewardController.sol';
 
 abstract contract CalcLinearRateReward {
-  mapping(address => RewardEntry) private _rewards;
-  uint256 private _rate;
-  uint32 private _rateUpdatedAt;
-
-  mapping(address => uint256) private _accumRates;
-
-  struct RewardEntry {
+  struct RewardBalance {
     uint224 rewardBase;
     uint32 claimedAt;
   }
+  mapping(address => RewardBalance) private _balances;
+
+  mapping(address => uint256) private _accumRates;
+
+  uint224 private _rate;
+  uint32 private _rateUpdatedAt;
 
   function setLinearRate(uint256 rate) internal {
     setLinearRateAt(rate, getCurrentTick());
@@ -23,12 +23,13 @@ abstract contract CalcLinearRateReward {
     if (_rate == rate) {
       return;
     }
+    require(rate <= type(uint224).max);
 
     uint32 prevTick = _rateUpdatedAt;
     if (at != prevTick) {
-      uint256 prevRate = _rate;
+      uint224 prevRate = _rate;
       internalMarkRateUpdate(at);
-      _rate = rate;
+      _rate = uint224(rate);
       internalRateUpdated(prevRate, prevTick, at);
     }
   }
@@ -54,20 +55,16 @@ abstract contract CalcLinearRateReward {
     _rateUpdatedAt = currentTick;
   }
 
-  function getLinearRate() internal view virtual returns (uint256) {
+  function getLinearRate() internal view returns (uint256) {
     return _rate;
   }
 
-  function getRateAndUpdatedAt() internal view virtual returns (uint256, uint32) {
+  function getRateAndUpdatedAt() internal view returns (uint256, uint32) {
     return (_rate, _rateUpdatedAt);
   }
 
-  function getRateUpdatedAt() internal view returns (uint32) {
-    return _rateUpdatedAt;
-  }
-
   function internalCalcRateAndReward(
-    RewardEntry memory entry,
+    RewardBalance memory entry,
     uint256 lastAccumRate,
     uint32 currentTick
   )
@@ -80,11 +77,11 @@ abstract contract CalcLinearRateReward {
       uint32 since
     );
 
-  function getRewardEntry(address holder) internal view returns (RewardEntry memory) {
-    return _rewards[holder];
+  function getRewardEntry(address holder) internal view returns (RewardBalance memory) {
+    return _balances[holder];
   }
 
-  function doUpdateReward(address holder, uint256 newBalance)
+  function doUpdateRewardBalance(address holder, uint256 newBalance)
     internal
     virtual
     returns (
@@ -95,7 +92,7 @@ abstract contract CalcLinearRateReward {
   {
     require(newBalance <= type(uint224).max, 'balance is too high');
 
-    RewardEntry memory entry = _rewards[holder];
+    RewardBalance memory entry = _balances[holder];
 
     if (newBalance == 0) {
       mode = AllocationMode.UnsetPull;
@@ -114,12 +111,12 @@ abstract contract CalcLinearRateReward {
     (adjRate, allocated, since) = internalCalcRateAndReward(entry, _accumRates[holder], currentTick);
 
     _accumRates[holder] = adjRate;
-    _rewards[holder] = RewardEntry(uint224(newBalance), currentTick);
+    _balances[holder] = RewardBalance(uint224(newBalance), currentTick);
     return (allocated, since, mode);
   }
 
   function internalCalcBalance(
-    RewardEntry memory entry,
+    RewardBalance memory entry,
     uint256 oldBalance,
     uint256 newBalance
   ) internal pure virtual returns (uint256) {
@@ -128,45 +125,49 @@ abstract contract CalcLinearRateReward {
     return newBalance;
   }
 
-  function internalRemoveReward(address holder) internal virtual returns (uint256 rewardBase) {
-    rewardBase = _rewards[holder].rewardBase;
-    if (rewardBase == 0 && _rewards[holder].claimedAt == 0) {
+  function doRemoveRewardBalance(address holder) internal returns (uint256 rewardBase) {
+    rewardBase = _balances[holder].rewardBase;
+    if (rewardBase == 0 && _balances[holder].claimedAt == 0) {
       return 0;
     }
-    delete (_rewards[holder]);
+    delete (_balances[holder]);
     return rewardBase;
   }
 
-  function doGetReward(address holder) internal virtual returns (uint256, uint32) {
+  function doGetReward(address holder) internal returns (uint256, uint32) {
     return doGetRewardAt(holder, getCurrentTick());
   }
 
-  function doGetRewardAt(address holder, uint32 currentTick) internal virtual returns (uint256, uint32) {
-    if (_rewards[holder].rewardBase == 0) {
+  function doGetRewardAt(address holder, uint32 currentTick) internal returns (uint256, uint32) {
+    if (_balances[holder].rewardBase == 0) {
       return (0, 0);
     }
 
     (uint256 adjRate, uint256 allocated, uint32 since) = internalCalcRateAndReward(
-      _rewards[holder],
+      _balances[holder],
       _accumRates[holder],
       currentTick
     );
 
     _accumRates[holder] = adjRate;
-    _rewards[holder].claimedAt = currentTick;
+    _balances[holder].claimedAt = currentTick;
     return (allocated, since);
   }
 
-  function doCalcReward(address holder) internal view virtual returns (uint256, uint32) {
+  function doCalcReward(address holder) internal view returns (uint256, uint32) {
     return doCalcRewardAt(holder, getCurrentTick());
   }
 
-  function doCalcRewardAt(address holder, uint32 currentTick) internal view virtual returns (uint256, uint32) {
-    if (_rewards[holder].rewardBase == 0) {
+  function doCalcRewardAt(address holder, uint32 currentTick) internal view returns (uint256, uint32) {
+    if (_balances[holder].rewardBase == 0) {
       return (0, 0);
     }
 
-    (, uint256 allocated, uint32 since) = internalCalcRateAndReward(_rewards[holder], _accumRates[holder], currentTick);
+    (, uint256 allocated, uint32 since) = internalCalcRateAndReward(
+      _balances[holder],
+      _accumRates[holder],
+      currentTick
+    );
     return (allocated, since);
   }
 }

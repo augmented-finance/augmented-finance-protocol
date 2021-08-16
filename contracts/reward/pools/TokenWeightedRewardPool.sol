@@ -50,7 +50,7 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
       AllocationMode mode
     )
   {
-    return doUpdateReward(holder, newBalance);
+    return doUpdateRewardBalance(holder, newBalance);
   }
 
   function internalUpdateTotal(uint256 totalBalance) internal override {

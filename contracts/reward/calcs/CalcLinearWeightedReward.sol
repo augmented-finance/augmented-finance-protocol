@@ -49,12 +49,8 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     }
   }
 
-  function internalSetTotalSupply(uint256 totalSupply, uint32 at)
-    internal
-    returns (bool rateUpdated)
-  {
-    uint256 lastRate = getLinearRate();
-    uint32 lastAt = getRateUpdatedAt();
+  function internalSetTotalSupply(uint256 totalSupply, uint32 at) internal returns (bool rateUpdated) {
+    (uint256 lastRate, uint32 lastAt) = getRateAndUpdatedAt();
     internalMarkRateUpdate(at);
 
     if (lastRate > 0) {
@@ -71,7 +67,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
   }
 
   function internalCalcRateAndReward(
-    RewardEntry memory entry,
+    RewardBalance memory entry,
     uint256 lastAccumRate,
     uint32 at
   )

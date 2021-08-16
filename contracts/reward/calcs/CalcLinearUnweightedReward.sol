@@ -15,7 +15,7 @@ abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
   }
 
   function internalCalcRateAndReward(
-    RewardEntry memory entry,
+    RewardBalance memory entry,
     uint256 lastAccumRate,
     uint32 at
   )

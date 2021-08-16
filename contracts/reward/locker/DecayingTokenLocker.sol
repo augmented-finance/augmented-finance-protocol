@@ -93,7 +93,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     if (current >= endTS) {
       current = endTS;
       (maxAmount, since) = super.doGetRewardAt(holder, current);
-      stakeAmount = super.internalRemoveReward(holder);
+      stakeAmount = super.doRemoveRewardBalance(holder);
     } else {
       (maxAmount, since) = super.doGetRewardAt(holder, current);
     }
@@ -137,7 +137,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     // NB! Actually, total and balance for decay compensation should be taken before the update.
     // Not doing it will give more to a user who increases balance - so it is even better in this case.
 
-    (uint256 amount, uint32 since, AllocationMode mode) = doUpdateReward(holder, stakeAmount);
+    (uint256 amount, uint32 since, AllocationMode mode) = doUpdateRewardBalance(holder, stakeAmount);
     amount = rewardForBalance(holder, stakeAmount, amount, since, uint32(block.timestamp));
     internalAllocateReward(holder, amount, since, mode);
   }
@@ -148,7 +148,7 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     bool interim
   ) internal override {
     (uint256 amount, uint32 since) = doGetRewardAt(holder, at);
-    uint256 stakeAmount = internalRemoveReward(holder);
+    uint256 stakeAmount = doRemoveRewardBalance(holder);
     AllocationMode mode = AllocationMode.Push;
 
     if (!interim) {
