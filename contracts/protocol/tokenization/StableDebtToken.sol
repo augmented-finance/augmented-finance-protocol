@@ -21,6 +21,8 @@ import './base/DebtTokenBase.sol';
 contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtToken {
   using WadRayMath for uint256;
 
+  constructor() PoolTokenBase(address(0), address(0)) ERC20DetailsBase('', '', 0) {}
+
   uint256 private constant DEBT_TOKEN_REVISION = 0x1;
 
   uint256 internal _avgStableRate;
@@ -28,19 +30,26 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
   mapping(address => uint256) internal _usersStableRate;
   uint40 internal _totalSupplyTimestamp;
 
-  bool private _useScaledBalanceUpdate;
-
   function initialize(
-    PoolTokenConfig memory config,
-    string memory name,
-    string memory symbol,
+    PoolTokenConfig calldata config,
+    string calldata name,
+    string calldata symbol,
     bytes calldata params
-  ) public override initializerRunAlways(DEBT_TOKEN_REVISION) {
+  ) external override initializerRunAlways(DEBT_TOKEN_REVISION) {
     _initializeERC20(name, symbol, config.underlyingDecimals);
     if (!isRevisionInitialized(DEBT_TOKEN_REVISION)) {
       _initializePoolToken(config, params);
     }
-    _emitInitialized(config, params);
+
+    emit Initialized(
+      config.underlyingAsset,
+      address(config.pool),
+      address(0),
+      super.name(),
+      super.symbol(),
+      super.decimals(),
+      params
+    );
   }
 
   /**
@@ -80,7 +89,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
    * @dev Calculates the current user debt balance
    * @return The accumulated debt of the user
    **/
-  function balanceOf(address account) public view virtual override(IERC20, PoolTokenBase) returns (uint256) {
+  function balanceOf(address account) public view virtual override(IERC20, IncentivisedTokenBase) returns (uint256) {
     uint256 accountBalance = super.balanceOf(account);
     if (accountBalance == 0) {
       return 0;
@@ -127,7 +136,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
 
     vars.previousSupply = totalSupply();
     vars.currentAvgStableRate = _avgStableRate;
-    vars.nextSupply = _totalSupply = vars.previousSupply + amount;
+    vars.nextSupply = vars.previousSupply + amount;
 
     vars.amountInRay = amount.wadToRay();
 
@@ -145,8 +154,6 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
 
     _mintWithTotal(onBehalfOf, amount + balanceIncrease, vars.nextSupply);
 
-    emit Transfer(address(0), onBehalfOf, amount);
-
     emit Mint(
       user,
       onBehalfOf,
@@ -157,6 +164,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
       vars.currentAvgStableRate,
       vars.nextSupply
     );
+    emit Transfer(address(0), onBehalfOf, amount);
 
     return currentBalance == 0;
   }
@@ -180,9 +188,8 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     // In this case we simply set the total supply and the avg stable rate to 0
     if (previousSupply <= amount) {
       _avgStableRate = 0;
-      _totalSupply = 0;
     } else {
-      nextSupply = _totalSupply = previousSupply - amount;
+      nextSupply = previousSupply - amount;
       uint256 firstTerm = _avgStableRate.rayMul(previousSupply.wadToRay());
       uint256 secondTerm = userStableRate.rayMul(amount.wadToRay());
 
@@ -190,7 +197,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
       // happen that user rate * user balance > avg rate * total supply. In that case,
       // we simply set the avg rate to 0
       if (secondTerm >= firstTerm) {
-        newAvgStableRate = _avgStableRate = _totalSupply = 0;
+        newAvgStableRate = _avgStableRate = nextSupply = 0;
       } else {
         newAvgStableRate = _avgStableRate = (firstTerm - secondTerm).rayDiv(nextSupply.wadToRay());
       }
@@ -275,7 +282,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
   }
 
   /// @dev Returns the total supply
-  function totalSupply() public view override(IERC20, PoolTokenBase) returns (uint256) {
+  function totalSupply() public view override(IERC20, IncentivisedTokenBase) returns (uint256) {
     return _calcTotalSupply(_avgStableRate);
   }
 
@@ -320,11 +327,8 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     uint256 amount,
     uint256 newTotalSupply
   ) internal {
-    uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = oldAccountBalance + amount;
-    _balances[account] = newAccountBalance;
-
-    balanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
+    uint256 scale = cumulatedInterest(account);
+    _incrementBalanceWithTotal(account, amount, scale, newTotalSupply);
   }
 
   /**
@@ -338,32 +342,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     uint256 amount,
     uint256 newTotalSupply
   ) internal {
-    uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = SafeMath.sub(oldAccountBalance, amount, Errors.SDT_BURN_EXCEEDS_BALANCE);
-    _balances[account] = newAccountBalance;
-
-    balanceUpdate(account, oldAccountBalance, newAccountBalance, newTotalSupply);
-  }
-
-  function _setIncentivesController(address hook) internal override {
-    super._setIncentivesController(hook);
-    _useScaledBalanceUpdate = (hook != address(0)) && IBalanceHook(hook).isScaledBalanceUpdateNeeded();
-  }
-
-  function balanceUpdate(
-    address holder,
-    uint256 oldBalance,
-    uint256 newBalance,
-    uint256 providerSupply
-  ) internal {
-    if (!_useScaledBalanceUpdate) {
-      super.handleBalanceUpdate(holder, oldBalance, newBalance, providerSupply);
-    }
-
-    if (address(getIncentivesController()) == address(0)) {
-      return;
-    }
-    uint256 scale = cumulatedInterest(holder);
-    super.handleScaledBalanceUpdate(holder, oldBalance, newBalance, providerSupply, scale);
+    uint256 scale = cumulatedInterest(account);
+    _decrementBalanceWithTotal(account, amount, scale, newTotalSupply);
   }
 }

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import '../../../tools/Errors.sol';
-import '../../../tools/tokens/ERC20DetailsBase.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../../interfaces/IPoolToken.sol';
@@ -12,22 +11,25 @@ import '../../../access/AccessHelper.sol';
 import '../../../access/AccessFlags.sol';
 import '../interfaces/IInitializablePoolToken.sol';
 import '../interfaces/PoolTokenConfig.sol';
+import './IncentivisedTokenBase.sol';
+import '../../../tools/tokens/ERC20DetailsBase.sol';
 
-abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, ERC20DetailsBase {
+abstract contract PoolTokenBase is IPoolToken, IInitializablePoolToken, IncentivisedTokenBase, ERC20DetailsBase {
   event Transfer(address indexed from, address indexed to, uint256 value);
-
-  mapping(address => uint256) internal _balances;
-  uint256 internal _totalSupply;
 
   ILendingPoolForTokens internal _pool;
   address internal _underlyingAsset;
-  IBalanceHook private _incentivesController;
 
-  constructor(
-    string memory name_,
-    string memory symbol_,
-    uint8 decimals_
-  ) ERC20DetailsBase(name_, symbol_, decimals_) {}
+  constructor(address pool_, address underlyingAsset_) {
+    _pool = ILendingPoolForTokens(pool_);
+    _underlyingAsset = underlyingAsset_;
+  }
+
+  function _initializePoolToken(PoolTokenConfig memory config, bytes calldata params) internal virtual {
+    params;
+    _pool = ILendingPoolForTokens(config.pool);
+    _underlyingAsset = config.underlyingAsset;
+  }
 
   function _onlyLendingPool() private view {
     require(msg.sender == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
@@ -80,24 +82,6 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
     _;
   }
 
-  function _initializePoolToken(PoolTokenConfig memory config, bytes calldata params) internal {
-    params;
-    _pool = ILendingPoolForTokens(config.pool);
-    _underlyingAsset = config.underlyingAsset;
-  }
-
-  function _emitInitialized(PoolTokenConfig memory config, bytes calldata params) internal {
-    emit Initialized(
-      config.underlyingAsset,
-      address(config.pool),
-      address(config.treasury),
-      name(),
-      symbol(),
-      decimals(),
-      params
-    );
-  }
-
   // solhint-disable-next-line func-name-mixedcase
   function UNDERLYING_ASSET_ADDRESS() public view override returns (address) {
     return _underlyingAsset;
@@ -108,51 +92,8 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
     return address(_pool);
   }
 
-  function handleBalanceUpdate(
-    address holder,
-    uint256 oldBalance,
-    uint256 newBalance,
-    uint256 providerSupply
-  ) internal virtual {
-    IBalanceHook hook = _incentivesController;
-    if (hook == IBalanceHook(address(0))) {
-      return;
-    }
-    hook.handleBalanceUpdate(address(this), holder, oldBalance, newBalance, providerSupply);
-  }
-
-  function handleScaledBalanceUpdate(
-    address holder,
-    uint256 oldBalance,
-    uint256 newBalance,
-    uint256 providerSupply,
-    uint256 scale
-  ) internal {
-    IBalanceHook hook = _incentivesController;
-    if (hook == IBalanceHook(address(0))) {
-      return;
-    }
-    hook.handleScaledBalanceUpdate(address(this), holder, oldBalance, newBalance, providerSupply, scale);
-  }
-
-  function _setIncentivesController(address hook) internal virtual {
-    _incentivesController = IBalanceHook(hook);
-  }
-
   function setIncentivesController(address hook) external override onlyRewardConfiguratorOrAdmin {
     _setIncentivesController(hook);
-  }
-
-  function getIncentivesController() public view override returns (address) {
-    return address(_incentivesController);
-  }
-
-  function totalSupply() public view virtual override returns (uint256) {
-    return _totalSupply;
-  }
-
-  function balanceOf(address account) public view virtual override returns (uint256) {
-    return _balances[account];
   }
 
   function _mintBalance(
@@ -162,15 +103,7 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
   ) internal {
     require(account != address(0), 'ERC20: mint to the zero address');
     _beforeTokenTransfer(address(0), account, amount);
-
-    uint256 total = _totalSupply + amount;
-    _totalSupply = total;
-
-    uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = oldAccountBalance + amount;
-    _balances[account] = newAccountBalance;
-
-    handleScaledBalanceUpdate(account, oldAccountBalance, newAccountBalance, total, scale);
+    _incrementBalance(account, amount, scale);
   }
 
   function _burnBalance(
@@ -179,67 +112,7 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
     uint256 scale
   ) internal {
     require(account != address(0), 'ERC20: burn from the zero address');
-
     _beforeTokenTransfer(account, address(0), amount);
-
-    uint256 total = _totalSupply - amount;
-    _totalSupply = total;
-
-    uint256 oldAccountBalance = _balances[account];
-    uint256 newAccountBalance = SafeMath.sub(oldAccountBalance, amount, 'ERC20: burn amount exceeds balance');
-    _balances[account] = newAccountBalance;
-
-    handleScaledBalanceUpdate(account, oldAccountBalance, newAccountBalance, total, scale);
+    _decrementBalance(account, amount, scale);
   }
-
-  function _transferBalance(
-    address sender,
-    address recipient,
-    uint256 amount,
-    uint256 scale
-  ) internal {
-    require(sender != address(0), 'ERC20: transfer from the zero address');
-    require(recipient != address(0), 'ERC20: transfer to the zero address');
-
-    _beforeTokenTransfer(sender, recipient, amount);
-
-    uint256 oldSenderBalance = _balances[sender];
-    uint256 newSenderBalance = SafeMath.sub(oldSenderBalance, amount, 'ERC20: transfer amount exceeds balance');
-    _balances[sender] = newSenderBalance;
-
-    uint256 oldRecipientBalance = _balances[recipient];
-    uint256 newRecipientBalance = oldRecipientBalance + amount;
-    _balances[recipient] = newRecipientBalance;
-
-    IBalanceHook hook = _incentivesController;
-    if (address(hook) != address(0)) {
-      uint256 currentTotalSupply = _totalSupply;
-
-      hook.handleScaledBalanceUpdate(
-        address(this),
-        sender,
-        oldSenderBalance,
-        newSenderBalance,
-        currentTotalSupply,
-        scale
-      );
-
-      if (sender != recipient) {
-        hook.handleScaledBalanceUpdate(
-          address(this),
-          recipient,
-          oldRecipientBalance,
-          newRecipientBalance,
-          currentTotalSupply,
-          scale
-        );
-      }
-    }
-  }
-
-  function _beforeTokenTransfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal virtual {}
 }

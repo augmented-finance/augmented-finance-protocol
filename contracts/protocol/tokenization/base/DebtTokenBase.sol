@@ -7,7 +7,7 @@ import '../../../tools/tokens/ERC20NoTransferBase.sol';
 import './PoolTokenBase.sol';
 
 /// @dev Base contract for a non-transferrable debt tokens: StableDebtToken and VariableDebtToken
-abstract contract DebtTokenBase is PoolTokenBase('', '', 0), ERC20NoTransferBase, ICreditDelegationToken {
+abstract contract DebtTokenBase is PoolTokenBase, ERC20NoTransferBase, ICreditDelegationToken {
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
 
   /**
