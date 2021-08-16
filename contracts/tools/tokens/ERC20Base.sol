@@ -20,11 +20,11 @@ abstract contract ERC20Base is ERC20DetailsBase, ERC20AllowanceBase, ERC20Balanc
     ERC20AllowanceBase._approveTransferFrom(owner, amount);
   }
 
-  function incrementBalance(address account, uint256 amount) internal override(ERC20BalanceBase, ERC20TransferBase) {
+  function incrementBalance(address account, uint256 amount) internal override(ERC20BalanceBase, ERC20MintableBase) {
     ERC20BalanceBase.incrementBalance(account, amount);
   }
 
-  function decrementBalance(address account, uint256 amount) internal override(ERC20BalanceBase, ERC20TransferBase) {
+  function decrementBalance(address account, uint256 amount) internal override(ERC20BalanceBase, ERC20MintableBase) {
     ERC20BalanceBase.decrementBalance(account, amount);
   }
 }
