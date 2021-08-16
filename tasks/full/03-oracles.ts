@@ -8,12 +8,7 @@ import {
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
 import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress } from '../../helpers/types';
 import { falsyOrZeroAddress, getFirstSigner, mustWaitTx, waitTx } from '../../helpers/misc-utils';
-import {
-  ConfigNames,
-  loadPoolConfig,
-  getWethAddress,
-  getLendingRateOracles,
-} from '../../helpers/configuration';
+import { ConfigNames, loadPoolConfig, getWethAddress, getLendingRateOracles } from '../../helpers/configuration';
 import {
   getAddressesProviderRegistry,
   getMarketAddressController,
@@ -63,7 +58,7 @@ task('full:deploy-oracles', 'Deploys oracles')
       }
     }
 
-    if (poAddress != 'new' && (falsyOrZeroAddress(lroAddress) || falsyOrZeroAddress(poAddress))) {
+    if (poAddress != 'new' && falsyOrZeroAddress(poAddress)) {
       let registry: AddressesProviderRegistry;
       if (await hasAddressProviderRegistry()) {
         registry = await getAddressesProviderRegistry();
@@ -80,13 +75,12 @@ task('full:deploy-oracles', 'Deploys oracles')
         // this is not the first provider
         const firstCtl = await getMarketAddressController(addr);
 
-        if (falsyOrZeroAddress(lroAddress)) {
-          lroAddress = await firstCtl.getLendingRateOracle();
-          console.log('Reuse LendingRateOracle:', lroAddress, 'from', addr);
-        }
         if (falsyOrZeroAddress(poAddress)) {
           poAddress = await firstCtl.getPriceOracle();
           console.log('Reuse PriceOracle:', poAddress, 'from', addr);
+          if (!falsyOrZeroAddress(poAddress)) {
+            await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, poAddress));
+          }
         }
       }
     }
@@ -106,9 +100,7 @@ task('full:deploy-oracles', 'Deploys oracles')
         tokensAddressesWithoutUsd,
         lendingRateOracle
       );
-      await mustWaitTx(
-        addressProvider.setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle.address)
-      );
+      await mustWaitTx(addressProvider.setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle.address));
 
       lroAddress = lendingRateOracle.address;
     }
@@ -151,13 +143,7 @@ task('full:deploy-oracles', 'Deploys oracles')
       console.log('Deploying PriceOracle');
       console.log('\tPrice aggregators for tokens: ', tokens);
       const oracleRouter = await deployOracleRouter(
-        [
-          addressProvider.address,
-          tokens,
-          aggregators,
-          fallbackOracleAddress,
-          await getWethAddress(poolConfig),
-        ],
+        [addressProvider.address, tokens, aggregators, fallbackOracleAddress, await getWethAddress(poolConfig)],
         verify
       );
       await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address));
