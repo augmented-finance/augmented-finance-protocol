@@ -9,7 +9,6 @@ abstract contract CalcLinearRateReward {
     uint32 claimedAt;
   }
   mapping(address => RewardBalance) private _balances;
-
   mapping(address => uint256) private _accumRates;
 
   uint224 private _rate;
@@ -81,9 +80,44 @@ abstract contract CalcLinearRateReward {
     return _balances[holder];
   }
 
+  function doIncrementRewardBalance(address holder, uint256 amount)
+    internal
+    returns (
+      uint256,
+      uint32,
+      AllocationMode
+    )
+  {
+    RewardBalance memory entry = _balances[holder];
+    amount += entry.rewardBase;
+    require(amount <= type(uint224).max, 'balance is too high');
+    return _doUpdateRewardBalance(holder, entry, uint224(amount));
+  }
+
+  function doDecrementRewardBalance(address holder, uint256 amount)
+    internal
+    returns (
+      uint256,
+      uint32,
+      AllocationMode
+    )
+  {
+    RewardBalance memory entry = _balances[holder];
+    unchecked {
+      if (entry.rewardBase < amount) {
+        internalBalanceUndeflowError();
+      }
+      amount = entry.rewardBase - amount;
+    }
+    return _doUpdateRewardBalance(holder, entry, uint224(amount));
+  }
+
+  function internalBalanceUndeflowError() internal view virtual {
+    revert('balance underflow');
+  }
+
   function doUpdateRewardBalance(address holder, uint256 newBalance)
     internal
-    virtual
     returns (
       uint256 allocated,
       uint32 since,
@@ -91,9 +125,21 @@ abstract contract CalcLinearRateReward {
     )
   {
     require(newBalance <= type(uint224).max, 'balance is too high');
+    return _doUpdateRewardBalance(holder, _balances[holder], uint224(newBalance));
+  }
 
-    RewardBalance memory entry = _balances[holder];
-
+  function _doUpdateRewardBalance(
+    address holder,
+    RewardBalance memory entry,
+    uint224 newBalance
+  )
+    private
+    returns (
+      uint256,
+      uint32,
+      AllocationMode mode
+    )
+  {
     if (newBalance == 0) {
       mode = AllocationMode.UnsetPull;
     } else if (entry.claimedAt == 0) {
@@ -102,27 +148,16 @@ abstract contract CalcLinearRateReward {
       mode = AllocationMode.Push;
     }
 
-    newBalance = internalCalcBalance(entry, entry.rewardBase, newBalance);
-    require(newBalance <= type(uint224).max, 'balance is too high');
-
     uint32 currentTick = getCurrentTick();
-
-    uint256 adjRate;
-    (adjRate, allocated, since) = internalCalcRateAndReward(entry, _accumRates[holder], currentTick);
+    (uint256 adjRate, uint256 allocated, uint32 since) = internalCalcRateAndReward(
+      entry,
+      _accumRates[holder],
+      currentTick
+    );
 
     _accumRates[holder] = adjRate;
-    _balances[holder] = RewardBalance(uint224(newBalance), currentTick);
+    _balances[holder] = RewardBalance(newBalance, currentTick);
     return (allocated, since, mode);
-  }
-
-  function internalCalcBalance(
-    RewardBalance memory entry,
-    uint256 oldBalance,
-    uint256 newBalance
-  ) internal pure virtual returns (uint256) {
-    entry;
-    oldBalance;
-    return newBalance;
   }
 
   function doRemoveRewardBalance(address holder) internal returns (uint256 rewardBase) {

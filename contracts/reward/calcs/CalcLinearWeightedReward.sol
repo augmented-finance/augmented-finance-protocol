@@ -9,30 +9,6 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
 
   uint256 private constant _maxWeightBase = 1e36;
 
-  function doUpdateTotalSupplyDiff(uint256 oldSupply, uint256 newSupply) internal returns (bool) {
-    if (newSupply > oldSupply) {
-      return internalSetTotalSupply(_totalSupply + (newSupply - oldSupply), getCurrentTick());
-    }
-    if (oldSupply > newSupply) {
-      return internalSetTotalSupply(_totalSupply - (oldSupply - newSupply), getCurrentTick());
-    }
-    return false;
-  }
-
-  function doUpdateTotalSupply(uint256 newSupply) internal returns (bool) {
-    if (newSupply == _totalSupply) {
-      return false;
-    }
-    return internalSetTotalSupply(newSupply, getCurrentTick());
-  }
-
-  function doUpdateTotalSupplyAt(uint256 newSupply, uint32 at) internal returns (bool) {
-    if (newSupply == _totalSupply) {
-      return false;
-    }
-    return internalSetTotalSupply(newSupply, at);
-  }
-
   function internalRateUpdated(
     uint256 lastRate,
     uint32 lastAt,
@@ -47,6 +23,13 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
       lastRate *= _maxWeightBase / _totalSupply;
       _accumRate += lastRate * (at - lastAt);
     }
+  }
+
+  function doUpdateTotalSupply(uint256 newSupply) internal returns (bool) {
+    if (newSupply == _totalSupply) {
+      return false;
+    }
+    return internalSetTotalSupply(newSupply, getCurrentTick());
   }
 
   function internalSetTotalSupply(uint256 totalSupply, uint32 at) internal returns (bool rateUpdated) {
