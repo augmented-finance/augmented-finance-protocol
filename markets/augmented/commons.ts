@@ -1,5 +1,5 @@
 import { oneRay, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames, ONE_ADDRESS } from '../../helpers/constants';
-import { ICommonConfiguration, eEthereumNetwork, StakeMode } from '../../helpers/types';
+import { ICommonConfiguration, eEthereumNetwork, StakeMode, LPFeature } from '../../helpers/types';
 import { strategyAAVE, strategyADAI, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
 
 // ----------------
@@ -276,6 +276,17 @@ export const CommonsConfig: ICommonConfiguration = {
 
   ReservesConfig: {},
 
+  LendingDisableFeatures: {
+    [eEthereumNetwork.ropsten]: [],
+    [eEthereumNetwork.rinkeby]: [],
+    [eEthereumNetwork.coverage]: [],
+    [eEthereumNetwork.hardhat]: [],
+    [eEthereumNetwork.docker]: [],
+    [eEthereumNetwork.kovan]: [],
+    [eEthereumNetwork.main]: [LPFeature.LIQUIDATION, LPFeature.FLASHLOAN, LPFeature.FLASHLOAN_DEPOSIT, LPFeature.FLASHLOAN_BORROW],
+    [eEthereumNetwork.tenderlyMain]: [],
+  },
+
   StakeParams: {
     MaxSlashBP: 3000, // 30%
     CooldownPeriod: 2 * DAY,
@@ -290,6 +301,7 @@ export const CommonsConfig: ICommonConfiguration = {
   },
 
   RewardParams : {
+    Autolock: 12, // 12 weeks auto-prolongate
     InitialRateWad: 2.12,
     TokenPools: {
       DAI:   {

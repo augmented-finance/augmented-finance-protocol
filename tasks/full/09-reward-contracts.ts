@@ -7,7 +7,12 @@ import {
   deployXAGFTokenV1Impl,
 } from '../../helpers/contracts-deployments';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
-import { getAGFTokenV1Impl, getRewardBooster, getRewardConfiguratorProxy } from '../../helpers/contracts-getters';
+import {
+  getAGFTokenV1Impl,
+  getRewardBooster,
+  getRewardConfiguratorProxy,
+  getXAGFTokenV1Impl,
+} from '../../helpers/contracts-getters';
 import { getFirstSigner, falsyOrZeroAddress, waitTx, mustWaitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import {
@@ -15,6 +20,8 @@ import {
   setAndGetAddressAsProxy,
   setAndGetAddressAsProxyWithInit,
 } from '../../helpers/deploy-helpers';
+import { WEEK } from '../../helpers/constants';
+import { MarketAccessController } from '../../types';
 
 task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tokens`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
@@ -23,7 +30,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const { Names } = poolConfig as ICommonConfiguration;
+    const { Names, RewardParams } = poolConfig as ICommonConfiguration;
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
@@ -71,6 +78,21 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     console.log('RewardBooster', boosterAddr);
     const booster = await getRewardBooster(boosterAddr);
 
+    if (RewardParams.Autolock == 'disable') {
+      console.log('\tAutolock disabled');
+    } else if (!(await booster.isAutolockEnabled())) {
+      await grantRewardConfigAdmin(addressProvider);
+      if (RewardParams.Autolock == 'stop') {
+        console.log('\tAutolock default mode: stop');
+        // AutolockMode.Stop
+        booster.enableAutolockAndSetDefault(1, 0, 0);
+      } else {
+        console.log('\tAutolock default mode: prolongate for ', RewardParams.Autolock, 'week(s)');
+        // AutolockMode.Prolongate
+        booster.enableAutolockAndSetDefault(2, RewardParams.Autolock * WEEK, 0);
+      }
+    }
+
     // xAGF token is always updated
     let xagfAddr = freshStart && continuation ? await addressProvider.getAddress(AccessFlags.REWARD_STAKE_TOKEN) : '';
 
@@ -92,7 +114,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       );
       console.log('xAGF token:', xagfAddr);
 
-      const xagf = await getAGFTokenV1Impl(xagfAddr);
+      const xagf = await getXAGFTokenV1Impl(xagfAddr);
       console.log('\t', await xagf.name(), await xagf.symbol(), await xagf.decimals());
 
       xagfAddr = xagf.address;
@@ -101,9 +123,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     }
 
     if (freshStart && (!continuation || falsyOrZeroAddress((await booster.getBoostPool()).pool))) {
-      await waitTx(addressProvider.grantRoles((await getFirstSigner()).address, AccessFlags.REWARD_CONFIG_ADMIN));
-      console.log('Granted REWARD_CONFIG_ADMIN');
-
+      await grantRewardConfigAdmin(addressProvider);
       await mustWaitTx(
         configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false, {
           gasLimit: 2000000,
@@ -112,3 +132,12 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       console.log('Boost pool: ', xagfAddr);
     }
   });
+
+const grantRewardConfigAdmin = async (addressProvider: MarketAccessController) => {
+  const deployer = (await getFirstSigner()).address;
+  if (await addressProvider.isAddress(AccessFlags.REWARD_CONFIG_ADMIN, deployer)) {
+    return;
+  }
+  await waitTx(addressProvider.grantRoles(deployer, AccessFlags.REWARD_CONFIG_ADMIN));
+  console.log('Granted REWARD_CONFIG_ADMIN');
+};

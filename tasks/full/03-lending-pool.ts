@@ -4,13 +4,14 @@ import {
   deployLendingPoolConfiguratorImpl,
   deployLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
-import { eNetwork } from '../../helpers/types';
+import { eNetwork, ICommonConfiguration, LPFeature } from '../../helpers/types';
 import { falsyOrZeroAddress, getFirstSigner, waitTx } from '../../helpers/misc-utils';
-import { getLendingPoolProxy } from '../../helpers/contracts-getters';
+import { getIManagedLendingPool, getLendingPoolProxy } from '../../helpers/contracts-getters';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
+import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 
 task('full:deploy-lending-pool', 'Deploys lending pool')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -19,6 +20,8 @@ task('full:deploy-lending-pool', 'Deploys lending pool')
     await DRE.run('set-DRE');
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
+    const { LendingDisableFeatures } = poolConfig as ICommonConfiguration;
+    const disableFeatures = getParamPerNetwork(LendingDisableFeatures, network);
 
     const deployer = await getFirstSigner();
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
@@ -46,6 +49,22 @@ task('full:deploy-lending-pool', 'Deploys lending pool')
       lpExt = poolExtension.address;
     }
     console.log('Lending pool extension:', lpExt);
+
+    {
+      let featureMask = 0;
+      const features: string[] = [];
+      disableFeatures.forEach((value) => {
+        if (value != 0) {
+          featureMask |= value;
+          features.push(LPFeature[value]);
+        }
+      });
+      if (featureMask > 0) {
+        console.log(`Disable lending pool features: 0x${featureMask.toString(16)} [${features.join(', ')}]`);
+        const lp = await getIManagedLendingPool(lpAddress);
+        await waitTx(lp.setDisabledFeatures(featureMask));
+      }
+    }
 
     let lpConfigurator = newLendingPool ? '' : await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR);
 
