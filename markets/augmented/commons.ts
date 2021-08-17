@@ -1,4 +1,4 @@
-import { oneRay, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames } from '../../helpers/constants';
+import { oneRay, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames, ONE_ADDRESS } from '../../helpers/constants';
 import { ICommonConfiguration, eEthereumNetwork, StakeMode } from '../../helpers/types';
 import { strategyAAVE, strategyADAI, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
 
@@ -384,12 +384,12 @@ export const CommonsConfig: ICommonConfiguration = {
     BurnersPool: {
       TotalWad: 1e6,
       BoostFactor: 0,
-      MeltDownAt: new Date('2021-02-01'),
-      Providers: [],
+      MeltDownAt: new Date('2021-03-01'),
+      Providers: [ ONE_ADDRESS ],
     },
     TeamPool: {
       BasePoints: 1000,
-      UnlockAt: new Date('2021-11-01'),
+      UnlockAt: new Date('2021-12-01'),
       Manager: ZERO_ADDRESS,
       Members: {
         '0x0000000000000000000000000000000000000001': 5000

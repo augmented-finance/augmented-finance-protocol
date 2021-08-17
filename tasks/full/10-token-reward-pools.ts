@@ -24,21 +24,12 @@ import {
   getIManagedRewardPool,
   getIRewardedToken,
 } from '../../helpers/contracts-getters';
-import {
-  chunk,
-  falsyOrZeroAddress,
-  getFirstSigner,
-  mustWaitTx,
-  waitTx,
-} from '../../helpers/misc-utils';
+import { chunk, falsyOrZeroAddress, getFirstSigner, mustWaitTx, waitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumber } from 'ethers';
-import { oneWad } from '../../helpers/constants';
+import { oneWad, ZERO_ADDRESS } from '../../helpers/constants';
 import { transpose } from 'underscore';
-import {
-  getDeployAccessController,
-  setAndGetAddressAsProxyWithInit,
-} from '../../helpers/deploy-helpers';
+import { getDeployAccessController, setAndGetAddressAsProxyWithInit } from '../../helpers/deploy-helpers';
 import { MarketAccessController, RewardConfigurator } from '../../types';
 
 interface poolInitParams {
@@ -69,7 +60,9 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
 
     await waitTx(
       addressProvider.grantRoles(
-        (await getFirstSigner()).address,
+        (
+          await getFirstSigner()
+        ).address,
         AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_RATE_ADMIN
       )
     );
@@ -100,11 +93,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
 
     let symbol: string;
 
-    const buildToken = async (
-      share: IRewardPoolParams | undefined,
-      token: tEthereumAddress,
-      prefix: string
-    ) => {
+    const buildToken = async (share: IRewardPoolParams | undefined, token: tEthereumAddress, prefix: string) => {
       if (share == undefined || falsyOrZeroAddress(token)) {
         return;
       }
@@ -122,9 +111,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
 
     const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
 
-    const rewardController = await getRewardBooster(
-      await addressProvider.getAddress(AccessFlags.REWARD_CONTROLLER)
-    );
+    const rewardController = await getRewardBooster(await addressProvider.getAddress(AccessFlags.REWARD_CONTROLLER));
     const configurator = await getRewardConfiguratorProxy(
       await addressProvider.getAddress(AccessFlags.REWARD_CONFIGURATOR)
     );
@@ -282,10 +269,7 @@ const deployExtraPools = async (
 
     extraNames.push(poolName);
     totalShare += params.BasePoints;
-    const trp = await deployTeamRewardPool(
-      [rewardCtlAddress, 0, params.BasePoints, params.Manager],
-      verify
-    );
+    const trp = await deployTeamRewardPool([rewardCtlAddress, 0, params.BasePoints, params.Manager], verify);
 
     const unlockTimestamp = (params.UnlockAt.getTime() / 1000) | 0;
     let memberAddresses: tEthereumAddress[] = [];
@@ -297,13 +281,7 @@ const deployExtraPools = async (
     }
 
     await mustWaitTx(
-      configurator.configureTeamRewardPool(
-        trp.address,
-        poolName,
-        unlockTimestamp,
-        memberAddresses,
-        memberShares
-      )
+      configurator.configureTeamRewardPool(trp.address, poolName, unlockTimestamp, memberAddresses, memberShares)
     );
 
     const allocation = await trp.getAllocatedShares();
@@ -354,10 +332,7 @@ const deployExtraPools = async (
 
     const treasury = await addressProvider.getAddress(AccessFlags.TREASURY);
 
-    const impl = await deployTreasuryRewardPool(
-      [rewardCtlAddress, 0, baselinePct, treasury],
-      verify
-    );
+    const impl = await deployTreasuryRewardPool([rewardCtlAddress, 0, baselinePct, treasury], verify);
     console.log(`Deployed ${poolName}: `, impl.address);
 
     poolAddrs.push(impl.address);
@@ -376,6 +351,13 @@ const deployExtraPools = async (
       [rewardCtlAddress, oneWad.multipliedBy(params.TotalWad).toFixed(), unlockTimestamp],
       verify
     );
+
+    if (params.Providers.length > 0) {
+      console.log(`Add providers to ${poolName}: ${params.Providers.length}`);
+      (await Promise.all(params.Providers.map((value) => brp.addRewardProvider(value, ZERO_ADDRESS)))).forEach(
+        async (value) => await value.wait(1)
+      );
+    }
 
     poolAddrs.push(brp.address);
     poolNames.push(poolName);
