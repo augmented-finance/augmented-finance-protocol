@@ -375,7 +375,8 @@ export interface ICommonConfiguration {
   EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
 
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
-  //  ReservesConfig: iMultiPoolsAssets<IReserveParams>;
+  ReserveAssetsOpt: iParamsPerNetwork<boolean>;
+
   ReservesConfig: {
     [key: string]: IReserveParams;
   };
@@ -457,6 +458,7 @@ export interface IBurnersPool {
   TotalWad: number;
   BoostFactor: number;
   MeltDownAt: Date;
+  Providers: tEthereumAddress[];
 }
 
 export interface ITokenRewardPoolParams {

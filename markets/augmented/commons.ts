@@ -59,7 +59,7 @@ export const CommonsConfig: ICommonConfiguration = {
   },
   ProviderRegistry: {
     [eEthereumNetwork.kovan]: '0xe28BdBF3C2440C97aBA7250ED1bb9F20559E351a',
-    [eEthereumNetwork.ropsten]: '', // '0x2931bAf940EE995E563BB27BCc7B60Aa8F9af298',
+    [eEthereumNetwork.ropsten]: '0x2931bAf940EE995E563BB27BCc7B60Aa8F9af298',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',
@@ -101,8 +101,8 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: '',
     [eEthereumNetwork.docker]: '',
-    [eEthereumNetwork.kovan]: 'new',
-    [eEthereumNetwork.ropsten]: 'new',
+    [eEthereumNetwork.kovan]: '',
+    [eEthereumNetwork.ropsten]: '',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.tenderlyMain]: '',
@@ -210,6 +210,18 @@ export const CommonsConfig: ICommonConfiguration = {
       ZRX: '0x2Da4983a622a8498bb1a21FaE9D8F6C664939962',
       USD: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
     },
+  },
+
+  ReserveAssetsOpt: {
+    [eEthereumNetwork.ropsten]: true,
+    [eEthereumNetwork.rinkeby]: true,
+
+    [eEthereumNetwork.coverage]: false,
+    [eEthereumNetwork.hardhat]: false,
+    [eEthereumNetwork.docker]: false,
+    [eEthereumNetwork.kovan]: false,
+    [eEthereumNetwork.main]: false,
+    [eEthereumNetwork.tenderlyMain]: false,
   },
   ReserveAssets: {
     [eEthereumNetwork.hardhat]: {},
@@ -373,6 +385,7 @@ export const CommonsConfig: ICommonConfiguration = {
       TotalWad: 1e6,
       BoostFactor: 0,
       MeltDownAt: new Date('2021-02-01'),
+      Providers: [],
     },
     TeamPool: {
       BasePoints: 1000,

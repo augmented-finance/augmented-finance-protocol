@@ -22,6 +22,8 @@ export const TestConfig: ITestConfiguration = {
 }
 
 export const AugmentedConfig: IAugmentedConfiguration = (() => {
+  const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+
   const src = CommonsConfig;
   let cfg: IAugmentedConfiguration = {...src,
     MarketId: 'Augmented genesis market',
@@ -44,11 +46,6 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
     };
   }
 
-  // disable oracles for testing and use fallback constants
-  cfg.ChainlinkAggregator[eEthereumNetwork.main] = {}; 
-  cfg.ChainlinkAggregator[eEthereumNetwork.ropsten] = {}; 
-  cfg.ChainlinkAggregator[eEthereumNetwork.kovan] = {}; 
-
   const defRates = {
     AAVE: 0.13308194,
     LINK: 0.0077041609,
@@ -61,9 +58,15 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
     CDAI: 0.0005022851,
     CETH: 1.0
   };
-  cfg.FallbackOracle[eEthereumNetwork.main] = defRates;
-  cfg.FallbackOracle[eEthereumNetwork.ropsten] = defRates;
-  cfg.FallbackOracle[eEthereumNetwork.kovan] = defRates;
+
+  for (const [key, value] of Object.entries(cfg.ReserveAssetsOpt)) {
+    if (value) {
+      cfg.FallbackOracle[key] = defRates;
+    }
+  }
+  if (MAINNET_FORK) {
+    cfg.FallbackOracle[eEthereumNetwork.main] = defRates;
+  }
 
   return cfg;
 })();

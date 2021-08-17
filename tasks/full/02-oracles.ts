@@ -6,24 +6,27 @@ import {
   deployStaticPriceOracle,
 } from '../../helpers/contracts-deployments';
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
-import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress } from '../../helpers/types';
+import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress, PoolConfiguration } from '../../helpers/types';
 import { falsyOrZeroAddress, getFirstSigner, mustWaitTx, waitTx } from '../../helpers/misc-utils';
 import { ConfigNames, loadPoolConfig, getWethAddress, getLendingRateOracles } from '../../helpers/configuration';
 import {
   getAddressesProviderRegistry,
+  getIChainlinkAggregator,
   getMarketAddressController,
+  getOracleRouter,
   getTokenAggregatorPairs,
   hasAddressProviderRegistry,
 } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 import { oneEther, ZERO_ADDRESS } from '../../helpers/constants';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
-import { AddressesProviderRegistry } from '../../types';
+import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 
 task('full:deploy-oracles', 'Deploys oracles')
+  .addFlag('reuse', 'Look for a price oracle to reuse')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .setAction(async ({ verify, pool }, DRE) => {
+  .setAction(async ({ reuse, verify, pool }, DRE) => {
     await DRE.run('set-DRE');
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
@@ -50,6 +53,9 @@ task('full:deploy-oracles', 'Deploys oracles')
 
     let lroAddress = '';
     let poAddress = oracleRouter;
+    const requiredPriceTokens = getRequiredPriceTokens(tokensToWatch);
+
+    const [aggregatorTokens, aggregators] = getTokenAggregatorPairs(tokensToWatch, chainlinkAggregators);
 
     if (!newOracles) {
       lroAddress = await addressProvider.getLendingRateOracle();
@@ -58,30 +64,13 @@ task('full:deploy-oracles', 'Deploys oracles')
       }
     }
 
-    if (poAddress != 'new' && falsyOrZeroAddress(poAddress)) {
-      let registry: AddressesProviderRegistry;
-      if (await hasAddressProviderRegistry()) {
-        registry = await getAddressesProviderRegistry();
-      } else {
-        const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
-        if (falsyOrZeroAddress(registryAddress)) {
-          throw 'registry address is unknown';
-        }
-        registry = await getAddressesProviderRegistry(registryAddress);
-      }
-      const [addr, ...others] = await registry.getAddressesProvidersList();
-
-      if (others.length > 0) {
-        // this is not the first provider
-        const firstCtl = await getMarketAddressController(addr);
-
-        if (falsyOrZeroAddress(poAddress)) {
-          poAddress = await firstCtl.getPriceOracle();
-          console.log('Reuse PriceOracle:', poAddress, 'from', addr);
-          if (!falsyOrZeroAddress(poAddress)) {
-            await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, poAddress));
-          }
-        }
+    if (reuse && poAddress != 'new' && falsyOrZeroAddress(poAddress) && aggregators.length > 0) {
+      console.log('Looking for a reusable PriceOracle...');
+      const registry = await getCurrentProviderRegistry(poolConfig, network);
+      poAddress = await findOracleForReuse(addressProvider, registry, requiredPriceTokens);
+      if (!falsyOrZeroAddress(poAddress)) {
+        console.log('Reuse PriceOracle:', poAddress);
+        await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, poAddress));
       }
     }
 
@@ -138,16 +127,115 @@ task('full:deploy-oracles', 'Deploys oracles')
       }
       console.log('Fallback oracle: ', fallbackOracleAddress);
 
-      const [tokens, aggregators] = getTokenAggregatorPairs(tokensToWatch, chainlinkAggregators);
+      if (aggregators.length > 0) {
+        let hasErrors = false;
+        console.log('Checking price sources...');
+        for (let i = 0; i < aggregators.length; i++) {
+          const getter = await getIChainlinkAggregator(aggregators[i]);
+          try {
+            await getter.latestAnswer();
+            console.error('\tGot price from ', getter.address, 'for', aggregatorTokens[i]);
+          } catch {
+            console.error('\tFailed to get price from ', getter.address, 'for', aggregatorTokens[i]);
+            hasErrors = true;
+          }
+        }
+        if (hasErrors) {
+          throw 'some price sources are broken';
+        }
+      }
 
       console.log('Deploying PriceOracle');
-      console.log('\tPrice aggregators for tokens: ', tokens);
+      console.log('\tPrice aggregators for tokens: ', aggregatorTokens);
       const oracleRouter = await deployOracleRouter(
-        [addressProvider.address, tokens, aggregators, fallbackOracleAddress, await getWethAddress(poolConfig)],
+        [
+          addressProvider.address,
+          aggregatorTokens,
+          aggregators,
+          fallbackOracleAddress,
+          await getWethAddress(poolConfig),
+        ],
         verify
       );
+
+      const [assetSymbols, requiredAssets] = unzipTokens(requiredPriceTokens);
+      console.log('Prices are required for:', assetSymbols);
+      if (requiredAssets.length > 0) {
+        try {
+          await oracleRouter.getAssetsPrices(requiredAssets);
+          console.log('All prices are available');
+        } catch (err) {
+          console.error(err);
+          throw 'some prices are missing';
+        }
+      }
+
       await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address));
       poAddress = oracleRouter.address;
     }
     console.log('PriceOracle: ', poAddress);
   });
+
+const getCurrentProviderRegistry = async (poolConfig: PoolConfiguration, network: eNetwork) => {
+  if (hasAddressProviderRegistry()) {
+    return await getAddressesProviderRegistry();
+  }
+  const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
+  if (falsyOrZeroAddress(registryAddress)) {
+    throw 'registry address is unknown';
+  }
+  return await getAddressesProviderRegistry(registryAddress);
+};
+
+const unzipTokens = (tokens: { [tokenSymbol: string]: tEthereumAddress }) => {
+  const assetSymbols: string[] = [];
+  const assets: string[] = [];
+  for (const [tokenSymbol, tokenAddress] of Object.entries(tokens)) {
+    if (!falsyOrZeroAddress(tokenAddress)) {
+      assets.push(tokenAddress);
+      assetSymbols.push(tokenSymbol);
+    }
+  }
+  return [assetSymbols, assets];
+};
+
+const findOracleForReuse = async (
+  addressProvider: MarketAccessController,
+  registry: AddressesProviderRegistry,
+  requiredTokens: {
+    [tokenSymbol: string]: tEthereumAddress;
+  }
+) => {
+  const [assetSymbols, assets] = unzipTokens(requiredTokens);
+  console.log('Prices are required for:', assetSymbols);
+
+  const ctlAddrs = await registry.getAddressesProvidersList();
+  for (let i = ctlAddrs.length - 1; i >= 0; i--) {
+    const addr = ctlAddrs[ctlAddrs.length - 1];
+    if (addr == addressProvider.address) {
+      continue;
+    }
+    const ctl = await getMarketAddressController(addr);
+    const poAddress = await ctl.getPriceOracle();
+    if (falsyOrZeroAddress(poAddress)) {
+      continue;
+    }
+    if (assets.length > 0) {
+      const oracle = await getOracleRouter(poAddress);
+      try {
+        const prices = await oracle.getAssetsPrices(assets);
+      } catch (err) {
+        console.log('\tUnable to reuse due to missing prices:', poAddress, 'from', addr);
+        continue;
+      }
+    }
+    return poAddress;
+  }
+
+  return '';
+};
+
+const getRequiredPriceTokens = (allAssetsAddresses: { [tokenSymbol: string]: tEthereumAddress }) => {
+  const { ETH, USD, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
+  return assetsAddressesWithoutEth;
+};
