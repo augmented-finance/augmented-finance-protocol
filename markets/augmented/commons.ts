@@ -211,6 +211,18 @@ export const CommonsConfig: ICommonConfiguration = {
       USD: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
     },
   },
+
+  ReserveAssetsOpt: {
+    [eEthereumNetwork.ropsten]: true,
+    [eEthereumNetwork.rinkeby]: true,
+
+    [eEthereumNetwork.coverage]: false,
+    [eEthereumNetwork.hardhat]: false,
+    [eEthereumNetwork.docker]: false,
+    [eEthereumNetwork.kovan]: false,
+    [eEthereumNetwork.main]: false,
+    [eEthereumNetwork.tenderlyMain]: false,
+  },
   ReserveAssets: {
     [eEthereumNetwork.hardhat]: {},
     [eEthereumNetwork.docker]: {},
