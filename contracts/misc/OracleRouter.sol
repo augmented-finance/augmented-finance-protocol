@@ -83,20 +83,25 @@ contract OracleRouter is IPriceOracleGetter, MarketAccessBitmask {
   /// @notice Gets an asset price by address
   /// @param asset The asset address
   function getAssetPrice(address asset) public view override returns (uint256) {
-    IChainlinkAggregator source = assetsSources[asset];
-
     if (asset == WETH) {
       return 1 ether;
-    } else if (address(source) == address(0)) {
-      return _fallbackOracle.getAssetPrice(asset);
-    } else {
+    }
+
+    IChainlinkAggregator source = assetsSources[asset];
+    if (address(source) != address(0)) {
       int256 price = IChainlinkAggregator(source).latestAnswer();
       if (price > 0) {
         return uint256(price);
-      } else {
-        return _fallbackOracle.getAssetPrice(asset);
       }
     }
+
+    if (address(_fallbackOracle) != address(0)) {
+      uint256 price = _fallbackOracle.getAssetPrice(asset);
+      if (price > 0) {
+        return price;
+      }
+    }
+    revert('UNKNOWN_ASSET');
   }
 
   /// @notice Gets a list of prices from a list of assets addresses

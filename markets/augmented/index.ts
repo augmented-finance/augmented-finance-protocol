@@ -22,6 +22,8 @@ export const TestConfig: ITestConfiguration = {
 }
 
 export const AugmentedConfig: IAugmentedConfiguration = (() => {
+  const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+
   const src = CommonsConfig;
   let cfg: IAugmentedConfiguration = {...src,
     MarketId: 'Augmented genesis market',
@@ -56,7 +58,15 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
     CDAI: 0.0005022851,
     CETH: 1.0
   };
-  cfg.FallbackOracle[eEthereumNetwork.ropsten] = defRates;
+
+  for (const [key, value] of Object.entries(cfg.ReserveAssetsOpt)) {
+    if (value) {
+      cfg.FallbackOracle[key] = defRates;
+    }
+  }
+  if (MAINNET_FORK) {
+    cfg.FallbackOracle[eEthereumNetwork.main] = defRates;
+  }
 
   return cfg;
 })();
