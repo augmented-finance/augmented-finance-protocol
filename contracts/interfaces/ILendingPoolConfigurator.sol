@@ -45,7 +45,8 @@ interface ILendingPoolConfigurator {
     address indexed depositToken,
     address stableDebtToken,
     address variableDebtToken,
-    address strategy
+    address strategy,
+    bool externalStrategy
   );
 
   event BorrowingEnabledOnReserve(address indexed asset, bool stableRateEnabled);
