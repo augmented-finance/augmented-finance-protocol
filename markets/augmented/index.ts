@@ -44,11 +44,6 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
     };
   }
 
-  // disable oracles for testing and use fallback constants
-  cfg.ChainlinkAggregator[eEthereumNetwork.main] = {}; 
-  cfg.ChainlinkAggregator[eEthereumNetwork.ropsten] = {}; 
-  cfg.ChainlinkAggregator[eEthereumNetwork.kovan] = {}; 
-
   const defRates = {
     AAVE: 0.13308194,
     LINK: 0.0077041609,
@@ -61,9 +56,7 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
     CDAI: 0.0005022851,
     CETH: 1.0
   };
-  cfg.FallbackOracle[eEthereumNetwork.main] = defRates;
   cfg.FallbackOracle[eEthereumNetwork.ropsten] = defRates;
-  cfg.FallbackOracle[eEthereumNetwork.kovan] = defRates;
 
   return cfg;
 })();

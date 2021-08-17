@@ -56,6 +56,8 @@ import { DefaultTokenSymbols, eContractid, PoolConfiguration, tEthereumAddress }
 import { ILendingPoolAaveCompatibleFactory } from '../types/ILendingPoolAaveCompatibleFactory';
 import { IManagedLendingPoolFactory } from '../types/IManagedLendingPoolFactory';
 import { IAaveLendingPoolFactory } from '../types/IAaveLendingPoolFactory';
+import { IPriceOracleGetterFactory } from '../types/IPriceOracleGetterFactory';
+import { IChainlinkAggregatorFactory } from '../types/IChainlinkAggregatorFactory';
 
 const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
 
@@ -369,6 +371,12 @@ export const getILendingPoolAaveCompatible = async (address: tEthereumAddress) =
 
 export const getIAaveLendingPool = async (address: tEthereumAddress) =>
   IAaveLendingPoolFactory.connect(address, await getFirstSigner());
+
+export const getIPriceOracleGetter = async (address: tEthereumAddress) =>
+  IPriceOracleGetterFactory.connect(address, await getFirstSigner());
+
+export const getIChainlinkAggregator = async (address: tEthereumAddress) =>
+  IChainlinkAggregatorFactory.connect(address, await getFirstSigner());
 
 export const getIManagedLendingPool = async (address: tEthereumAddress) =>
   IManagedLendingPoolFactory.connect(address, await getFirstSigner());

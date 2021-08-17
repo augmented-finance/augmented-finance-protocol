@@ -56,11 +56,11 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('01. Deploy address provider registry');
       await DRE.run('full:deploy-address-provider', { pool: POOL_NAME, verify: trackVerify });
 
-      console.log('02. Deploy lending pool');
-      await DRE.run('full:deploy-lending-pool', { pool: POOL_NAME, verify: trackVerify });
-
-      console.log('03. Deploy oracles');
+      console.log('02. Deploy oracles');
       await DRE.run('full:deploy-oracles', { pool: POOL_NAME, verify: trackVerify });
+
+      console.log('03. Deploy lending pool');
+      await DRE.run('full:deploy-lending-pool', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('04. Deploy Data Provider');
       await DRE.run('full:data-provider', { pool: POOL_NAME, verify: trackVerify });
@@ -120,7 +120,7 @@ task('augmented:mainnet', 'Deploy enviroment')
     if (renounce) {
       try {
         console.log('99. Finalize');
-        await DRE.run('full:deploy-finalize', { pool: POOL_NAME });
+        await DRE.run('full:deploy-finalize', { pool: POOL_NAME, register: success });
       } catch (err) {
         console.log('Error during finalization & renouncement');
         console.error(err);
@@ -153,6 +153,8 @@ task('augmented:mainnet', 'Deploy enviroment')
     console.log('Write UI config');
     await DRE.run('full:write-ui-config', { pool: POOL_NAME });
 
+    console.log('\nDeployment has finished');
+
     if (usingTenderly()) {
       const postDeployHead = (<any>DRE).tenderlyNetwork.getHead();
       const postDeployFork = (<any>DRE).tenderlyNetwork.getFork();
@@ -160,9 +162,6 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('- Head', postDeployHead);
       console.log('- Fork', postDeployFork);
     }
-
-    console.log('\nDeployment has finished');
-    //    await cleanupJsonDb(DRE.network.name);
 
     if (verify) {
       console.log('N. Verify all contracts');
