@@ -67,7 +67,7 @@ export const getMarketAddressController = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const hasMarketAddressController = async () => await hasInJsonDb(eContractid.MarketAccessController);
+export const hasMarketAddressController = () => hasInJsonDb(eContractid.MarketAccessController);
 
 export const getPreDeployedAddressController = async () =>
   MarketAccessControllerFactory.connect(
@@ -75,8 +75,7 @@ export const getPreDeployedAddressController = async () =>
     await getFirstSigner()
   );
 
-export const hasPreDeployedAddressController = async () =>
-  await hasInJsonDb(eContractid.PreDeployedMarketAccessController);
+export const hasPreDeployedAddressController = () => hasInJsonDb(eContractid.PreDeployedMarketAccessController);
 
 export const getLendingPoolConfiguratorProxy = async (address: tEthereumAddress) => {
   return LendingPoolConfiguratorFactory.connect(address, await getFirstSigner());
@@ -183,8 +182,7 @@ export const getAddressesProviderRegistry = async (address?: tEthereumAddress) =
     await getFirstSigner()
   );
 
-export const hasAddressProviderRegistry = async (address?: tEthereumAddress) =>
-  await hasInJsonDb(eContractid.AddressesProviderRegistry);
+export const hasAddressProviderRegistry = () => hasInJsonDb(eContractid.AddressesProviderRegistry);
 
 export const getReserveLogic = async (address?: tEthereumAddress) =>
   ReserveLogicFactory.connect(address || (await getAddr(eContractid.ReserveLogic)), await getFirstSigner());

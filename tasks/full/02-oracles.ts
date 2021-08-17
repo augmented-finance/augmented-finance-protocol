@@ -23,9 +23,10 @@ import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 
 task('full:deploy-oracles', 'Deploys oracles')
+  .addFlag('reuse', 'Look for a price oracle to reuse')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .setAction(async ({ verify, pool }, DRE) => {
+  .setAction(async ({ reuse, verify, pool }, DRE) => {
     await DRE.run('set-DRE');
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
@@ -63,7 +64,7 @@ task('full:deploy-oracles', 'Deploys oracles')
       }
     }
 
-    if (poAddress != 'new' && falsyOrZeroAddress(poAddress) && aggregators.length > 0) {
+    if (reuse && poAddress != 'new' && falsyOrZeroAddress(poAddress) && aggregators.length > 0) {
       console.log('Looking for a reusable PriceOracle...');
       const registry = await getCurrentProviderRegistry(poolConfig, network);
       poAddress = await findOracleForReuse(addressProvider, registry, requiredPriceTokens);
@@ -176,7 +177,7 @@ task('full:deploy-oracles', 'Deploys oracles')
   });
 
 const getCurrentProviderRegistry = async (poolConfig: PoolConfiguration, network: eNetwork) => {
-  if (await hasAddressProviderRegistry()) {
+  if (hasAddressProviderRegistry()) {
     return await getAddressesProviderRegistry();
   }
   const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);

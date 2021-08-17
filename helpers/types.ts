@@ -458,6 +458,7 @@ export interface IBurnersPool {
   TotalWad: number;
   BoostFactor: number;
   MeltDownAt: Date;
+  Providers: tEthereumAddress[];
 }
 
 export interface ITokenRewardPoolParams {

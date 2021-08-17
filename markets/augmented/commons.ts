@@ -101,7 +101,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: '',
     [eEthereumNetwork.docker]: '',
-    [eEthereumNetwork.kovan]: 'new',
+    [eEthereumNetwork.kovan]: '',
     [eEthereumNetwork.ropsten]: '',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
@@ -385,6 +385,7 @@ export const CommonsConfig: ICommonConfiguration = {
       TotalWad: 1e6,
       BoostFactor: 0,
       MeltDownAt: new Date('2021-02-01'),
+      Providers: [],
     },
     TeamPool: {
       BasePoints: 1000,

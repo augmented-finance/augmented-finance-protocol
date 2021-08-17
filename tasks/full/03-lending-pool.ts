@@ -31,11 +31,7 @@ task('full:deploy-lending-pool', 'Deploys lending pool')
       console.log('\tDeploying lending pool...');
       const lendingPoolImpl = await deployLendingPoolImpl(verify, continuation);
       console.log('\tLending pool implementation:', lendingPoolImpl.address);
-      lpAddress = await setAndGetAddressAsProxy(
-        addressProvider,
-        AccessFlags.LENDING_POOL,
-        lendingPoolImpl.address
-      );
+      lpAddress = await setAndGetAddressAsProxy(addressProvider, AccessFlags.LENDING_POOL, lendingPoolImpl.address);
     }
 
     const lendingPoolProxy = await getLendingPoolProxy(lpAddress);
@@ -51,20 +47,12 @@ task('full:deploy-lending-pool', 'Deploys lending pool')
     }
     console.log('Lending pool extension:', lpExt);
 
-    let lpConfigurator = newLendingPool
-      ? ''
-      : await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR);
+    let lpConfigurator = newLendingPool ? '' : await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR);
 
     if (falsyOrZeroAddress(lpConfigurator)) {
       console.log('\tDeploying configurator...');
-      const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(
-        verify,
-        continuation
-      );
-      console.log(
-        '\tLending pool configurator implementation:',
-        lendingPoolConfiguratorImpl.address
-      );
+      const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(verify, continuation);
+      console.log('\tLending pool configurator implementation:', lendingPoolConfiguratorImpl.address);
 
       lpConfigurator = await setAndGetAddressAsProxy(
         addressProvider,

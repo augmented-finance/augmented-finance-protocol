@@ -13,10 +13,12 @@ import { exit } from 'process';
 import { BigNumber } from 'ethers';
 
 task('augmented:mainnet', 'Deploy enviroment')
-  .addFlag('incremental', 'Incremental installation')
+  .addFlag('incremental', 'Incremental deployment')
   .addFlag('secure', 'Renounce credentials on errors')
+  .addFlag('strict', 'Fail on warnings')
+  .addFlag('reuse', 'Allow reuse of a price oracle')
   .addFlag('verify', 'Verify contracts at Etherscan')
-  .setAction(async ({ incremental, secure, verify }, DRE) => {
+  .setAction(async ({ incremental, secure, reuse, strict, verify }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
     const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
     await DRE.run('set-DRE');
@@ -57,7 +59,7 @@ task('augmented:mainnet', 'Deploy enviroment')
       await DRE.run('full:deploy-address-provider', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('02. Deploy oracles');
-      await DRE.run('full:deploy-oracles', { pool: POOL_NAME, verify: trackVerify });
+      await DRE.run('full:deploy-oracles', { pool: POOL_NAME, verify: trackVerify, reuse: reuse });
 
       console.log('03. Deploy lending pool');
       await DRE.run('full:deploy-lending-pool', { pool: POOL_NAME, verify: trackVerify });
@@ -93,22 +95,31 @@ task('augmented:mainnet', 'Deploy enviroment')
       }
       spentOnPluck = balanceBeforePluck.sub(await deployer.getBalance());
 
-      renounce = true;
+      {
+        const [entryMap, instanceCount, multiCount] = printContracts((await getFirstSigner()).address);
 
-      const [entryMap, instanceCount, multiCount] = printContracts((await getFirstSigner()).address);
-
-      if (multiCount > 0) {
-        throw 'multi-deployed contract(s) detected';
-      }
-      if (entryMap.size != instanceCount) {
-        throw 'unknown contract(s) detected';
-      }
-      entryMap.forEach((value, key, m) => {
-        if (key.startsWith('Mock')) {
-          throw 'mock contract(s) detected';
+        let hasWarn = false;
+        if (multiCount > 0) {
+          console.error('WARNING: multi-deployed contract(s) detected');
+          hasWarn = true;
+        } else if (entryMap.size != instanceCount) {
+          console.error('WARNING: unknown contract(s) detected');
+          hasWarn = true;
         }
-      });
 
+        entryMap.forEach((value, key, m) => {
+          if (key.startsWith('Mock')) {
+            console.error('WARNING: mock contract detected:', key);
+            hasWarn = true;
+          }
+        });
+
+        if (hasWarn && strict) {
+          throw 'warnings are present';
+        }
+      }
+
+      renounce = true;
       success = true;
     } catch (err) {
       if (usingTenderly()) {
@@ -117,7 +128,7 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.error('\n=========================================================\nERROR:', err, '\n');
     }
 
-    if (renounce) {
+    if (renounce || success) {
       try {
         console.log('99. Finalize');
         await DRE.run('full:deploy-finalize', { pool: POOL_NAME, register: success });
