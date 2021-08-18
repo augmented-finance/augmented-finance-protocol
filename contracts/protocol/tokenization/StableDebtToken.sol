@@ -327,7 +327,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, VersionedInitializa
     uint256 amount,
     uint256 newTotalSupply
   ) internal {
-    _incrementBalanceWithTotal(account, amount, WadRayMath.RAY, newTotalSupply);
+    incrementBalanceWithTotal(account, amount, WadRayMath.RAY, newTotalSupply);
   }
 
   /**
@@ -341,6 +341,6 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, VersionedInitializa
     uint256 amount,
     uint256 newTotalSupply
   ) internal {
-    _decrementBalanceWithTotal(account, amount, WadRayMath.RAY, newTotalSupply);
+    decrementBalanceWithTotal(account, amount, WadRayMath.RAY, newTotalSupply);
   }
 }

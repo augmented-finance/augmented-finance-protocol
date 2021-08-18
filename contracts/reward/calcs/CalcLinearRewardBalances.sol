@@ -103,17 +103,8 @@ abstract contract CalcLinearRewardBalances {
     )
   {
     RewardBalance memory entry = _balances[holder];
-    unchecked {
-      if (entry.rewardBase < amount) {
-        internalBalanceUndeflowError();
-      }
-      amount = entry.rewardBase - amount;
-    }
+    amount = entry.rewardBase - amount;
     return _doUpdateRewardBalance(holder, entry, uint224(amount));
-  }
-
-  function internalBalanceUndeflowError() internal view virtual {
-    revert('balance underflow');
   }
 
   function doUpdateRewardBalance(address holder, uint256 newBalance)

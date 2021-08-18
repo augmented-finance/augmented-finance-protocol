@@ -30,7 +30,7 @@ abstract contract IncentivisedTokenBase is IERC20, IRewardedToken {
     return address(_incentivesController);
   }
 
-  function _incrementBalance(
+  function incrementBalance(
     address account,
     uint256 amount,
     uint256 scale
@@ -46,7 +46,7 @@ abstract contract IncentivisedTokenBase is IERC20, IRewardedToken {
     handleScaledBalanceUpdate(account, oldAccountBalance, amount, total, scale);
   }
 
-  function _decrementBalance(
+  function decrementBalance(
     address account,
     uint256 amount,
     uint256 scale
@@ -65,7 +65,7 @@ abstract contract IncentivisedTokenBase is IERC20, IRewardedToken {
     handleScaledBalanceUpdate(account, oldAccountBalance, amount, total, scale);
   }
 
-  function _incrementBalanceWithTotal(
+  function incrementBalanceWithTotal(
     address account,
     uint256 amount,
     uint256 scale,
@@ -80,7 +80,7 @@ abstract contract IncentivisedTokenBase is IERC20, IRewardedToken {
     handleScaledBalanceUpdate(account, oldAccountBalance, amount, total, scale);
   }
 
-  function _decrementBalanceWithTotal(
+  function decrementBalanceWithTotal(
     address account,
     uint256 amount,
     uint256 scale,
@@ -98,7 +98,7 @@ abstract contract IncentivisedTokenBase is IERC20, IRewardedToken {
     handleScaledBalanceUpdate(account, oldAccountBalance, amount, total, scale);
   }
 
-  function _transferBalance(
+  function transferBalance(
     address sender,
     address recipient,
     uint256 amount,

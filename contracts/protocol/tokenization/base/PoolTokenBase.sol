@@ -104,7 +104,7 @@ abstract contract PoolTokenBase is IPoolToken, IInitializablePoolToken, Rewarded
   ) internal {
     require(account != address(0), 'ERC20: mint to the zero address');
     _beforeTokenTransfer(address(0), account, amount);
-    _incrementBalance(account, amount, scale);
+    incrementBalance(account, amount, scale);
   }
 
   function _burnBalance(
@@ -114,6 +114,6 @@ abstract contract PoolTokenBase is IPoolToken, IInitializablePoolToken, Rewarded
   ) internal {
     require(account != address(0), 'ERC20: burn from the zero address');
     _beforeTokenTransfer(account, address(0), amount);
-    _decrementBalance(account, amount, scale);
+    decrementBalance(account, amount, scale);
   }
 }

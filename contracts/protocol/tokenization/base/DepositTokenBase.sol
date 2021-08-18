@@ -179,7 +179,7 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenBase, ERC20PermitB
     uint256 fromBalanceBefore = super.balanceOf(from).rayMul(index);
     uint256 toBalanceBefore = super.balanceOf(to).rayMul(index);
 
-    super._transferBalance(from, to, amount.rayDiv(index), index);
+    super.transferBalance(from, to, amount.rayDiv(index), index);
 
     if (validate) {
       _pool.finalizeTransfer(underlyingAsset, from, to, amount, fromBalanceBefore, toBalanceBefore);
