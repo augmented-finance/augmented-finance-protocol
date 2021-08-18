@@ -395,7 +395,7 @@ abstract contract SlashableStakeTokenBase is
     return _unstakePeriod;
   }
 
-  function initializedWith()
+  function initializedStakeTokenWith()
     external
     view
     override

@@ -13,7 +13,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   uint16 internal constant NO_BASELINE = type(uint16).max;
 
-  IRewardController internal _controller;
+  IRewardController private _controller;
 
   uint256 private _pausedRate;
   uint16 private _baselinePercentage;
@@ -191,6 +191,10 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   modifier onlyController() {
     _onlyController();
     _;
+  }
+
+  function _isConfigAdmin(address addr) internal view returns (bool) {
+    return _controller.isConfigAdmin(addr);
   }
 
   function _onlyConfigAdmin() private view {

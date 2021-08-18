@@ -20,7 +20,7 @@ contract ReferralRewardPoolV1 is IInitializableRewardPool, ReferralRewardPool, V
     internalSetClaimLimit(type(uint256).max);
   }
 
-  function initializedWith() external view override returns (InitData memory) {
-    return InitData(_controller, getPoolName(), internalGetBaselinePercentage());
+  function initializedRewardPoolWith() external view override returns (InitData memory) {
+    return InitData(IRewardController(getRewardController()), getPoolName(), internalGetBaselinePercentage());
   }
 }

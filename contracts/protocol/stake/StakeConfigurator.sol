@@ -61,7 +61,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
 
   function dataOf(address stakeToken) public view override returns (StakeTokenData memory data) {
     (data.config, data.stkTokenName, data.stkTokenSymbol, data.stkTokenDecimals) = IInitializableStakeToken(stakeToken)
-      .initializedWith();
+      .initializedStakeTokenWith();
     data.token = stakeToken;
 
     return data;

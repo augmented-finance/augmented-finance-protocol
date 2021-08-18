@@ -8,10 +8,10 @@ import '../../../tools/math/WadRayMath.sol';
 import '../../../access/AccessFlags.sol';
 import '../../../tools/tokens/ERC20PermitBase.sol';
 import '../../../tools/tokens/ERC20AllowanceBase.sol';
-import './PoolTokenBase.sol';
+import './PoolTokenWithRewardsBase.sol';
 
 /// @dev Implementation of the interest bearing token for the Augmented Finance protocol
-abstract contract DepositTokenBase is IDepositToken, PoolTokenBase, ERC20PermitBase, ERC20AllowanceBase {
+abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, ERC20PermitBase, ERC20AllowanceBase {
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
@@ -179,7 +179,7 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenBase, ERC20PermitB
     uint256 fromBalanceBefore = super.balanceOf(from).rayMul(index);
     uint256 toBalanceBefore = super.balanceOf(to).rayMul(index);
 
-    super.transferBalance(from, to, amount.rayDiv(index), index);
+    super._transferBalance(from, to, amount.rayDiv(index), index);
 
     if (validate) {
       _pool.finalizeTransfer(underlyingAsset, from, to, amount, fromBalanceBefore, toBalanceBefore);

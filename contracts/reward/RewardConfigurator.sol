@@ -134,7 +134,7 @@ contract RewardConfigurator is
   }
 
   function updateRewardPool(PoolUpdateData calldata input) external onlyRewardAdmin {
-    IInitializableRewardPool.InitData memory params = IInitializableRewardPool(input.pool).initializedWith();
+    IInitializableRewardPool.InitData memory params = IInitializableRewardPool(input.pool).initializedRewardPoolWith();
     _proxies.upgradeAndCall(
       IProxy(input.pool),
       input.impl,

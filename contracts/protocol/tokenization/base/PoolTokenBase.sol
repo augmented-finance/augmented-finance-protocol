@@ -2,20 +2,16 @@
 pragma solidity ^0.8.4;
 
 import '../../../tools/Errors.sol';
-import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../../interfaces/IPoolToken.sol';
-import '../../../interfaces/IBalanceHook.sol';
 import '../../../interfaces/ILendingPoolForTokens.sol';
+import '../../../interfaces/IRewardedToken.sol';
 import '../../../access/AccessHelper.sol';
 import '../../../access/AccessFlags.sol';
-import '../../../tools/tokens/ERC20DetailsBase.sol';
 import '../interfaces/IInitializablePoolToken.sol';
 import '../interfaces/PoolTokenConfig.sol';
-import './IncentivisedTokenBase.sol';
-import './RewardedTokenBase.sol';
 
-abstract contract PoolTokenBase is IPoolToken, IInitializablePoolToken, RewardedTokenBase, ERC20DetailsBase {
+abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, IRewardedToken {
   event Transfer(address indexed from, address indexed to, uint256 value);
 
   ILendingPoolForTokens internal _pool;
@@ -94,8 +90,12 @@ abstract contract PoolTokenBase is IPoolToken, IInitializablePoolToken, Rewarded
   }
 
   function setIncentivesController(address hook) external override onlyRewardConfiguratorOrAdmin {
-    _setIncentivesController(hook);
+    internalSetIncentivesController(hook);
   }
+
+  function internalSetIncentivesController(address hook) internal virtual;
+
+  function totalSupply() public view virtual override returns (uint256);
 
   function _mintBalance(
     address account,
@@ -104,7 +104,8 @@ abstract contract PoolTokenBase is IPoolToken, IInitializablePoolToken, Rewarded
   ) internal {
     require(account != address(0), 'ERC20: mint to the zero address');
     _beforeTokenTransfer(address(0), account, amount);
-    incrementBalance(account, amount, scale);
+    internalUpdateTotalSupply(totalSupply() + amount);
+    internalIncrementBalance(account, amount, scale);
   }
 
   function _burnBalance(
@@ -114,6 +115,64 @@ abstract contract PoolTokenBase is IPoolToken, IInitializablePoolToken, Rewarded
   ) internal {
     require(account != address(0), 'ERC20: burn from the zero address');
     _beforeTokenTransfer(account, address(0), amount);
-    decrementBalance(account, amount, scale);
+    internalUpdateTotalSupply(totalSupply() - amount);
+    internalDecrementBalance(account, amount, scale);
   }
+
+  function _transferBalance(
+    address sender,
+    address recipient,
+    uint256 amount,
+    uint256 scale
+  ) internal {
+    require(sender != address(0), 'ERC20: transfer from the zero address');
+    require(recipient != address(0), 'ERC20: transfer to the zero address');
+
+    _beforeTokenTransfer(sender, recipient, amount);
+    if (sender != recipient) {
+      // require(oldSenderBalance >= amount, 'ERC20: transfer amount exceeds balance');
+      internalDecrementBalance(sender, amount, scale);
+      internalIncrementBalance(recipient, amount, scale);
+    }
+  }
+
+  function _incrementBalanceWithTotal(
+    address account,
+    uint256 amount,
+    uint256 scale,
+    uint256 total
+  ) internal {
+    internalUpdateTotalSupply(total);
+    internalIncrementBalance(account, amount, scale);
+  }
+
+  function _decrementBalanceWithTotal(
+    address account,
+    uint256 amount,
+    uint256 scale,
+    uint256 total
+  ) internal {
+    internalUpdateTotalSupply(total);
+    internalDecrementBalance(account, amount, scale);
+  }
+
+  function _beforeTokenTransfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal virtual {}
+
+  function internalIncrementBalance(
+    address account,
+    uint256 amount,
+    uint256 scale
+  ) internal virtual;
+
+  function internalDecrementBalance(
+    address account,
+    uint256 amount,
+    uint256 scale
+  ) internal virtual;
+
+  function internalUpdateTotalSupply(uint256 newTotal) internal virtual;
 }

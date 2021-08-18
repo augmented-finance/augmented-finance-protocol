@@ -12,5 +12,5 @@ interface IInitializableRewardPool {
 
   function initialize(InitData calldata) external;
 
-  function initializedWith() external view returns (InitData memory);
+  function initializedRewardPoolWith() external view returns (InitData memory);
 }
