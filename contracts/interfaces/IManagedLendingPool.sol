@@ -30,4 +30,8 @@ interface IManagedLendingPool is IEmergencyAccess {
     bytes calldata params,
     uint256 referral
   ) external;
+
+  function setDisabledFeatures(uint16) external;
+
+  function getDisabledFeatures() external view returns (uint16);
 }
