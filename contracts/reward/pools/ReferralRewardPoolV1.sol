@@ -6,18 +6,14 @@ import '../interfaces/IRewardController.sol';
 import '../interfaces/IInitializableRewardPool.sol';
 import './ReferralRewardPool.sol';
 
-contract ReferralRewardPoolV1 is
-  IInitializableRewardPool,
-  ReferralRewardPool,
-  VersionedInitializable
-{
+contract ReferralRewardPoolV1 is IInitializableRewardPool, ReferralRewardPool, VersionedInitializable {
   uint256 private constant POOL_REVISION = 1;
 
   function getRevision() internal pure virtual override returns (uint256) {
     return POOL_REVISION;
   }
 
-  constructor() ReferralRewardPool(IRewardController(address(this)), 0, 0, 'RefPool') {}
+  constructor() ReferralRewardPool(IRewardController(address(0)), 0, 0, 'RefPool') {}
 
   function initialize(InitData memory data) public override initializer(POOL_REVISION) {
     super._initialize(data.controller, internalGetRate(), data.baselinePercentage, data.poolName);

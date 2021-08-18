@@ -32,14 +32,13 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     uint256 initialRate,
     uint16 baselinePercentage
   ) internal virtual {
-    require(address(controller) != address(0), 'controller is required');
     _controller = controller;
 
     if (baselinePercentage == NO_BASELINE || (initialRate != 0 && baselinePercentage == 0)) {
       _baselinePercentage = NO_BASELINE;
       emit BaselineDisabled();
     } else if (baselinePercentage > 0) {
-      internalSetBaselinePercentage(baselinePercentage);
+      _setBaselinePercentage(baselinePercentage);
     }
 
     if (initialRate > 0) {
@@ -72,7 +71,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   }
 
   function setBaselinePercentage(uint16 factor) external override onlyRateAdmin {
-    internalSetBaselinePercentage(factor);
+    _setBaselinePercentage(factor);
   }
 
   function getBaselinePercentage() external view override returns (bool, uint16) {
@@ -86,13 +85,17 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return _baselinePercentage;
   }
 
-  function internalSetBaselinePercentage(uint16 factor) internal virtual {
+  function _setBaselinePercentage(uint16 factor) internal virtual {
+    require(address(_controller) != address(0), 'controller is required');
+
     require(factor <= PercentageMath.ONE, 'illegal value');
     _baselinePercentage = factor;
     emit BaselineFactorUpdated(factor);
   }
 
   function _setRate(uint256 rate) internal {
+    require(address(_controller) != address(0), 'controller is required');
+
     if (isPaused()) {
       _pausedRate = rate;
       return;
@@ -177,6 +180,10 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return address(_controller) == addr;
   }
 
+  function getAccessController() internal view virtual returns (IMarketAccessController) {
+    return _controller.getAccessController();
+  }
+
   function _onlyController() private view {
     require(isController(msg.sender), Errors.CALLER_NOT_REWARD_CONTROLLER);
   }
@@ -205,25 +212,16 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   }
 
   function _onlyEmergencyAdmin() private view {
-    require(_controller.isEmergencyAdmin(msg.sender), Errors.CALLER_NOT_EMERGENCY_ADMIN);
+    AccessHelper.requireAnyOf(
+      getAccessController(),
+      msg.sender,
+      AccessFlags.EMERGENCY_ADMIN,
+      Errors.CALLER_NOT_EMERGENCY_ADMIN
+    );
   }
 
   modifier onlyEmergencyAdmin() {
     _onlyEmergencyAdmin();
-    _;
-  }
-
-  function _onlyRefAdmin() private view {
-    AccessHelper.requireAnyOf(
-      _controller.getAccessController(),
-      msg.sender,
-      AccessFlags.REFERRAL_ADMIN,
-      Errors.CALLER_NOT_REF_ADMIN
-    );
-  }
-
-  modifier onlyRefAdmin() {
-    _onlyRefAdmin();
     _;
   }
 

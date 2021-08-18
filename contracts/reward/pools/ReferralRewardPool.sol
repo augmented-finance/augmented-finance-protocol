@@ -17,7 +17,7 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
     uint256 initialRate,
     uint16 baselinePercentage,
     string memory rewardPoolName
-  ) BasePermitRewardPool(controller, initialRate, baselinePercentage, rewardPoolName) {
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) BasePermitRewardPool(rewardPoolName) {
     internalSetClaimLimit(type(uint256).max);
   }
 
@@ -107,5 +107,19 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
 
   function internalCalcReward(address, uint32) internal view virtual override returns (uint256, uint32) {
     return (0, 0);
+  }
+
+  function _onlyRefAdmin() private view {
+    AccessHelper.requireAnyOf(
+      getAccessController(),
+      msg.sender,
+      AccessFlags.REFERRAL_ADMIN,
+      Errors.CALLER_NOT_REF_ADMIN
+    );
+  }
+
+  modifier onlyRefAdmin() {
+    _onlyRefAdmin();
+    _;
   }
 }

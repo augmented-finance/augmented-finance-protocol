@@ -242,13 +242,6 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     _;
   }
 
-  function isEmergencyAdmin(address addr) public view override returns (bool) {
-    if (!hasRemoteAcl()) {
-      return addr == address(this);
-    }
-    return acl_hasAnyOf(addr, AccessFlags.EMERGENCY_ADMIN);
-  }
-
   function getClaimMask(address holder, uint256 mask) internal view virtual returns (uint256) {
     mask &= ~_ignoreMask;
     mask &= _memberOf[holder];
