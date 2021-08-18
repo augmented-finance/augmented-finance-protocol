@@ -1,4 +1,4 @@
-import { evmRevert, evmSnapshot, DRE } from '../../../helpers/misc-utils';
+import { evmRevert, evmSnapshot, DRE, falsyOrZeroAddress } from '../../../helpers/misc-utils';
 import { Signer } from 'ethers';
 import {
   getMarketAddressController,
@@ -131,17 +131,24 @@ export async function initializeMakeSuite() {
 
   testEnv.helpersContract = await getProtocolDataProvider();
 
-  const allTokens = await testEnv.helpersContract.getAllDepositTokens();
-  const aDaiAddress = allTokens.find((depositToken) => depositToken.symbol === 'agDAI')?.tokenAddress;
+  const allTokens = (await testEnv.helpersContract.getAllTokenDescriptions(true)).tokens;
 
-  const aWEthAddress = allTokens.find((depositToken) => depositToken.symbol === 'agWETH')?.tokenAddress;
+  const findToken = (sym: string) => {
+    const desc = allTokens.find((depositToken) => depositToken.tokenSymbol === sym);
+    if (falsyOrZeroAddress(desc?.token)) {
+      console.log(allTokens);
+      throw 'missing token ' + sym;
+    }
+    return desc!.token;
+  };
 
-  const reservesTokens = await testEnv.helpersContract.getAllReserveTokens();
+  const aDaiAddress = findToken('agDAI');
+  const aWEthAddress = findToken('agWETH');
 
-  const daiAddress = reservesTokens.find((token) => token.symbol === 'DAI')?.tokenAddress;
-  const usdcAddress = reservesTokens.find((token) => token.symbol === 'USDC')?.tokenAddress;
-  const aaveAddress = reservesTokens.find((token) => token.symbol === 'AAVE')?.tokenAddress;
-  const wethAddress = reservesTokens.find((token) => token.symbol === 'WETH')?.tokenAddress;
+  const daiAddress = findToken('DAI');
+  const usdcAddress = findToken('USDC');
+  const aaveAddress = findToken('AAVE');
+  const wethAddress = findToken('WETH');
 
   if (!aDaiAddress || !aWEthAddress) {
     console.log('Required test tokens are missing');

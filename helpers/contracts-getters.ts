@@ -59,7 +59,13 @@ import { IAaveLendingPoolFactory } from '../types/IAaveLendingPoolFactory';
 import { IPriceOracleGetterFactory } from '../types/IPriceOracleGetterFactory';
 import { IChainlinkAggregatorFactory } from '../types/IChainlinkAggregatorFactory';
 
-const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
+const getAddr = async (id: eContractid) => {
+  const entry = await getFromJsonDb(id);
+  if (falsyOrZeroAddress(entry?.address)) {
+    throw 'unknown named address: ' + id;
+  }
+  return entry!.address;
+};
 
 export const getMarketAddressController = async (address?: tEthereumAddress) =>
   MarketAccessControllerFactory.connect(
@@ -342,9 +348,9 @@ export const getMarketAccessController = async (address?: tEthereumAddress) =>
 
 export const getAGTokenByName = async (name: string): Promise<DepositToken> => {
   const dp = await getProtocolDataProvider();
-  const tokens = await dp.getAllDepositTokens();
+  const tokens = (await dp.getAllTokenDescriptions(false)).tokens;
   // console.log(`all deposit tokens: ${tokens}`);
-  const addrByName = tokens.filter((v) => v.symbol === name)[0].tokenAddress;
+  const addrByName = tokens.filter((v) => v.tokenSymbol === name)[0].token;
   // console.log(`deposit token addr by name ${name}: ${addrByName}`);
   return await getDepositToken(addrByName);
 };
