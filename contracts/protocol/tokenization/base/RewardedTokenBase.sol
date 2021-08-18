@@ -7,17 +7,15 @@ import '../../../reward/pools/ControlledRewardPool.sol';
 import '../../../reward/interfaces/IRewardController.sol';
 import './PoolTokenBase.sol';
 
-import 'hardhat/console.sol';
-
 abstract contract RewardedTokenBase is PoolTokenBase, CalcLinearWeightedReward, ControlledRewardPool {
   constructor() ControlledRewardPool(IRewardController(address(0)), 0, 0) {}
 
-  function totalSupply() public view virtual override returns (uint256) {
-    return internalGetTotalSupply();
+  function internalUpdateTotalSupply() internal view override returns (uint256) {
+    return super.internalGetTotalSupply();
   }
 
   function balanceOf(address account) public view virtual override returns (uint256) {
-    return getRewardEntry(account).rewardBase;
+    return super.getRewardEntry(account).rewardBase;
   }
 
   function internalSetIncentivesController(address) internal override {

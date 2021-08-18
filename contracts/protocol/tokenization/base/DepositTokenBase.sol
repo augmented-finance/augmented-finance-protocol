@@ -117,7 +117,7 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, E
     return (super.balanceOf(user), super.totalSupply());
   }
 
-  function totalSupply() public view override(IERC20, RewardedTokenBase) returns (uint256) {
+  function totalSupply() public view override(IERC20, PoolTokenBase) returns (uint256) {
     uint256 currentSupplyScaled = super.totalSupply();
     if (currentSupplyScaled == 0) {
       return 0;
