@@ -276,44 +276,6 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     return (tokens, tokenCount);
   }
 
-  function getPoolTokensByType(TokenType tt) public view returns (TokenData[] memory tokens) {
-    ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
-    address[] memory reserves = pool.getReservesList();
-    tokens = new TokenData[](reserves.length);
-
-    address token;
-    for (uint256 i = 0; i < reserves.length; i++) {
-      if (tt == TokenType.PoolAsset) {
-        token = reserves[i];
-      } else {
-        DataTypes.ReserveData memory reserveData = pool.getReserveData(reserves[i]);
-        if (tt == TokenType.Deposit) {
-          token = reserveData.depositTokenAddress;
-        } else if (tt == TokenType.VariableDebt) {
-          token = reserveData.variableDebtTokenAddress;
-        } else if (tt == TokenType.StableDebt) {
-          token = reserveData.stableDebtTokenAddress;
-        } else {
-          revert('UNSUPPORTED');
-        }
-      }
-
-      if (token != address(0)) {
-        tokens[i] = TokenData({symbol: IERC20Detailed(token).symbol(), tokenAddress: token});
-      }
-    }
-
-    return tokens;
-  }
-
-  function getAllDepositTokens() external view returns (TokenData[] memory) {
-    return getPoolTokensByType(TokenType.Deposit);
-  }
-
-  function getAllReserveTokens() external view returns (TokenData[] memory) {
-    return getPoolTokensByType(TokenType.PoolAsset);
-  }
-
   function getReserveConfigurationData(address asset)
     external
     view
@@ -334,7 +296,6 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       .getConfiguration(asset);
 
     (ltv, liquidationThreshold, liquidationBonus, decimals, reserveFactor) = configuration.getParamsMemory();
-
     (isActive, isFrozen, borrowingEnabled, stableBorrowRateEnabled) = configuration.getFlagsMemory();
 
     usageAsCollateralEnabled = liquidationThreshold > 0;
@@ -358,14 +319,25 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   {
     DataTypes.ReserveData memory reserve = ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
 
+    availableLiquidity = IERC20Detailed(asset).balanceOf(reserve.depositTokenAddress);
+
+    if (reserve.variableDebtTokenAddress != address(0)) {
+      totalVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply();
+    }
+
+    if (reserve.stableDebtTokenAddress != address(0)) {
+      totalStableDebt = IERC20Detailed(reserve.stableDebtTokenAddress).totalSupply();
+      averageStableBorrowRate = IStableDebtToken(reserve.stableDebtTokenAddress).getAverageStableRate();
+    }
+
     return (
-      IERC20Detailed(asset).balanceOf(reserve.depositTokenAddress),
-      IERC20Detailed(reserve.stableDebtTokenAddress).totalSupply(),
-      IERC20Detailed(reserve.variableDebtTokenAddress).totalSupply(),
+      availableLiquidity,
+      totalStableDebt,
+      totalVariableDebt,
       reserve.currentLiquidityRate,
       reserve.currentVariableBorrowRate,
       reserve.currentStableBorrowRate,
-      IStableDebtToken(reserve.stableDebtTokenAddress).getAverageStableRate(),
+      averageStableBorrowRate,
       reserve.liquidityIndex,
       reserve.variableBorrowIndex,
       reserve.lastUpdateTimestamp
@@ -392,29 +364,22 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     DataTypes.UserConfigurationMap memory userConfig = ILendingPool(ADDRESS_PROVIDER.getLendingPool())
       .getUserConfiguration(user);
 
-    currentDepositBalance = IERC20Detailed(reserve.depositTokenAddress).balanceOf(user);
-    currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);
-    currentStableDebt = IERC20Detailed(reserve.stableDebtTokenAddress).balanceOf(user);
-    principalStableDebt = IStableDebtToken(reserve.stableDebtTokenAddress).principalBalanceOf(user);
-    scaledVariableDebt = IVariableDebtToken(reserve.variableDebtTokenAddress).scaledBalanceOf(user);
     liquidityRate = reserve.currentLiquidityRate;
-    stableBorrowRate = IStableDebtToken(reserve.stableDebtTokenAddress).getUserStableRate(user);
-    stableRateLastUpdated = IStableDebtToken(reserve.stableDebtTokenAddress).getUserLastUpdated(user);
     usageAsCollateralEnabled = userConfig.isUsingAsCollateral(reserve.id);
-  }
 
-  function getReserveTokensAddresses(address asset)
-    external
-    view
-    returns (
-      address depositTokenAddress,
-      address stableDebtTokenAddress,
-      address variableDebtTokenAddress
-    )
-  {
-    DataTypes.ReserveData memory reserve = ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
+    currentDepositBalance = IERC20Detailed(reserve.depositTokenAddress).balanceOf(user);
 
-    return (reserve.depositTokenAddress, reserve.stableDebtTokenAddress, reserve.variableDebtTokenAddress);
+    if (reserve.variableDebtTokenAddress != address(0)) {
+      currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);
+      scaledVariableDebt = IVariableDebtToken(reserve.variableDebtTokenAddress).scaledBalanceOf(user);
+    }
+
+    if (reserve.stableDebtTokenAddress != address(0)) {
+      currentStableDebt = IERC20Detailed(reserve.stableDebtTokenAddress).balanceOf(user);
+      principalStableDebt = IStableDebtToken(reserve.stableDebtTokenAddress).principalBalanceOf(user);
+      stableBorrowRate = IStableDebtToken(reserve.stableDebtTokenAddress).getUserStableRate(user);
+      stableRateLastUpdated = IStableDebtToken(reserve.stableDebtTokenAddress).getUserLastUpdated(user);
+    }
   }
 
   function getReservesData(address user)
