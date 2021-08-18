@@ -94,7 +94,7 @@ contract RewardConfigurator is
       _remoteAcl.createProxy(
         address(_proxies),
         entry.impl,
-        abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
+        abi.encodeWithSelector(IInitializableRewardPool.initializeRewardPool.selector, params)
       )
     );
 
@@ -108,7 +108,7 @@ contract RewardConfigurator is
   }
 
   function _initRewardPool(IManagedRewardController ctl, PoolInitData calldata entry) private returns (address) {
-    IInitializableRewardPool(entry.provider).initialize(
+    IInitializableRewardPool(entry.provider).initializeRewardPool(
       IInitializableRewardPool.InitData(ctl, entry.poolName, entry.baselinePercentage)
     );
 
@@ -158,7 +158,7 @@ contract RewardConfigurator is
     _proxies.upgradeAndCall(
       IProxy(input.pool),
       input.impl,
-      abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
+      abi.encodeWithSelector(IInitializableRewardPool.initializeRewardPool.selector, params)
     );
     emit RewardPoolUpgraded(input.pool, input.impl);
   }
@@ -173,7 +173,7 @@ contract RewardConfigurator is
       poolName,
       baselinePercentage
     );
-    return abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, data);
+    return abi.encodeWithSelector(IInitializableRewardPool.initializeRewardPool.selector, data);
   }
 
   function buildRewardTokenInitData(
