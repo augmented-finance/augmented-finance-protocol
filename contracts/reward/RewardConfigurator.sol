@@ -68,33 +68,53 @@ contract RewardConfigurator is
 
     for (uint256 i = 0; i < entries.length; i++) {
       PoolInitData calldata entry = entries[i];
-
-      IInitializableRewardPool.InitData memory params = IInitializableRewardPool.InitData(
-        ctl,
-        entry.poolName,
-        entry.baselinePercentage
-      );
-
-      address pool = address(
-        _remoteAcl.createProxy(
-          address(_proxies),
-          entry.impl,
-          abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
-        )
-      );
-
-      ctl.addRewardPool(IManagedRewardPool(pool));
+      address pool;
+      if (entry.impl == address(0)) {
+        pool = _initRewardPool(ctl, entry);
+      } else {
+        pool = _createRewardPool(ctl, entry);
+      }
 
       if (entry.boostFactor > 0) {
         IManagedRewardBooster(address(ctl)).setBoostFactor(pool, entry.boostFactor);
       }
-      if (entry.provider != address(0)) {
-        IManagedRewardPool(pool).addRewardProvider(entry.provider, entry.provider);
-        IRewardedToken(entry.provider).setIncentivesController(pool);
-      }
 
       emit RewardPoolInitialized(pool, entry.provider, entry);
     }
+  }
+
+  function _createRewardPool(IManagedRewardController ctl, PoolInitData calldata entry) private returns (address) {
+    IInitializableRewardPool.InitData memory params = IInitializableRewardPool.InitData(
+      ctl,
+      entry.poolName,
+      entry.baselinePercentage
+    );
+
+    address pool = address(
+      _remoteAcl.createProxy(
+        address(_proxies),
+        entry.impl,
+        abi.encodeWithSelector(IInitializableRewardPool.initialize.selector, params)
+      )
+    );
+
+    ctl.addRewardPool(IManagedRewardPool(pool));
+
+    if (entry.provider != address(0)) {
+      IManagedRewardPool(pool).addRewardProvider(entry.provider, entry.provider);
+      IRewardedToken(entry.provider).setIncentivesController(pool);
+    }
+    return pool;
+  }
+
+  function _initRewardPool(IManagedRewardController ctl, PoolInitData calldata entry) private returns (address) {
+    IInitializableRewardPool(entry.provider).initialize(
+      IInitializableRewardPool.InitData(ctl, entry.poolName, entry.baselinePercentage)
+    );
+
+    ctl.addRewardPool(IManagedRewardPool(entry.provider));
+
+    return entry.provider;
   }
 
   function addNamedRewardPools(
@@ -250,5 +270,50 @@ contract RewardConfigurator is
       ignoreMask >>= 1;
     }
     poolCount += activePoolCount;
+  }
+
+  function getRewardedTokenParams(address[] calldata tokens)
+    external
+    view
+    returns (
+      address[] memory pools,
+      address[] memory controllers,
+      uint256[] memory rates,
+      uint16[] memory baselinePcts
+    )
+  {
+    pools = new address[](tokens.length);
+    for (uint256 i = 0; i < tokens.length; i++) {
+      if (tokens[i] == address(0)) {
+        continue;
+      }
+      pools[i] = IRewardedToken(tokens[i]).getIncentivesController();
+    }
+
+    (controllers, rates, baselinePcts) = getPoolParams(pools);
+  }
+
+  function getPoolParams(address[] memory pools)
+    public
+    view
+    returns (
+      address[] memory controllers,
+      uint256[] memory rates,
+      uint16[] memory baselinePcts
+    )
+  {
+    controllers = new address[](pools.length);
+    rates = new uint256[](pools.length);
+    baselinePcts = new uint16[](pools.length);
+
+    for (uint256 i = 0; i < pools.length; i++) {
+      if (pools[i] == address(0)) {
+        continue;
+      }
+      IManagedRewardPool pool = IManagedRewardPool(pools[i]);
+      controllers[i] = pool.getRewardController();
+      rates[i] = pool.getRate();
+      (, baselinePcts[i]) = pool.getBaselinePercentage();
+    }
   }
 }
