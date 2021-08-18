@@ -52,11 +52,6 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     bool frozen;
   }
 
-  struct TokenData {
-    string symbol;
-    address tokenAddress;
-  }
-
   struct StakeTokenBalance {
     uint256 balance;
     uint32 unstakeWindowStart;
@@ -75,11 +70,14 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     view
     returns (TokenDescription[] memory tokens, uint256 tokenCount)
   {
-    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
-    address[] memory stakeList = stakeCfg.list();
-
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
     address[] memory reserveList = pool.getReservesList();
+
+    address[] memory stakeList;
+    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
+    if (address(stakeCfg) != address(0)) {
+      stakeList = stakeCfg.list();
+    }
 
     tokenCount = 2 + stakeList.length + reserveList.length * 3;
     if (includeAssets) {
@@ -218,11 +216,14 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   }
 
   function getAllTokens(bool includeAssets) public view returns (address[] memory tokens, uint256 tokenCount) {
-    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
-    address[] memory stakeList = stakeCfg.list();
-
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
     address[] memory reserveList = pool.getReservesList();
+
+    address[] memory stakeList;
+    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
+    if (address(stakeCfg) != address(0)) {
+      stakeList = stakeCfg.list();
+    }
 
     tokenCount = 2 + stakeList.length + reserveList.length * 3;
     if (includeAssets) {

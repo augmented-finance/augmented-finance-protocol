@@ -342,9 +342,9 @@ export const getMarketAccessController = async (address?: tEthereumAddress) =>
 
 export const getAGTokenByName = async (name: string): Promise<DepositToken> => {
   const dp = await getProtocolDataProvider();
-  const tokens = await dp.getAllDepositTokens();
+  const tokens = (await dp.getAllTokenDescriptions(false)).tokens;
   // console.log(`all deposit tokens: ${tokens}`);
-  const addrByName = tokens.filter((v) => v.symbol === name)[0].tokenAddress;
+  const addrByName = tokens.filter((v) => v.tokenSymbol === name)[0].token;
   // console.log(`deposit token addr by name ${name}: ${addrByName}`);
   return await getDepositToken(addrByName);
 };
