@@ -124,7 +124,8 @@ contract LendingPoolConfigurator is
       depositTokenProxyAddress,
       stableDebtTokenProxyAddress,
       variableDebtTokenProxyAddress,
-      input.strategy
+      input.strategy,
+      input.externalStrategy
     );
   }
 

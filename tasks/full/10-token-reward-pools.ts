@@ -380,6 +380,13 @@ const deployExtraPools = async (
       verify
     );
 
+    if (params.Providers.length > 0) {
+      console.log(`Add providers to ${poolName}: ${params.Providers.length}`);
+      (await Promise.all(params.Providers.map((value) => brp.addRewardProvider(value, ZERO_ADDRESS)))).forEach(
+        async (value) => await value.wait(1)
+      );
+    }
+
     poolAddrs.push(brp.address);
     poolNames.push(poolName);
     poolFactors.push(params.BoostFactor);

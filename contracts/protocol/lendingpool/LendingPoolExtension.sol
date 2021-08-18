@@ -627,12 +627,12 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     }
   }
 
-  function setDisabledFeatures(uint16 disabledFeatures) external onlyConfiguratorOrAdmin {
+  function setDisabledFeatures(uint16 disabledFeatures) external override onlyConfiguratorOrAdmin {
     _disabledFeatures = disabledFeatures;
     emit DisabledFeaturesUpdated(disabledFeatures);
   }
 
-  function getDisabledFeatures() external view returns (uint16 disabledFeatures) {
+  function getDisabledFeatures() external view override returns (uint16 disabledFeatures) {
     return _disabledFeatures;
   }
 

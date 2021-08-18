@@ -6,14 +6,7 @@ import {
 } from '../../helpers/contracts-deployments';
 import { eContractid, eNetwork } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
-import {
-  falsyOrZeroAddress,
-  getFirstSigner,
-  getSigner,
-  mustWaitTx,
-  waitForTx,
-  waitTx,
-} from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, getFirstSigner, getSigner, waitForTx, waitTx } from '../../helpers/misc-utils';
 import { getAddressesProviderRegistry } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
@@ -121,19 +114,8 @@ task('full:deploy-address-provider', 'Deploys address provider and registry')
     }
 
     const id = await registry.getAddressesProviderIdByAddress(addressProvider.address);
-    if (ProviderId.eq(0)) {
-      if (!id.eq(0)) {
-        ProviderId = id;
-      } else if (newRegistry) {
-        ProviderId = BigNumber.from(1);
-      } else {
-        ProviderId = (await findMaxProviderId(registry)).add(1);
-      }
-    }
-
-    if (!id.eq(ProviderId)) {
-      console.log('Register provider with id: ', ProviderId.toString());
-      await mustWaitTx(registry.registerAddressesProvider(addressProvider.address, ProviderId));
+    if (!id.eq(0)) {
+      throw 'deployment was already finished';
     }
 
     const poolAdmin = getParamPerNetwork(poolConfig.PoolAdmin, network);
@@ -146,18 +128,3 @@ task('full:deploy-address-provider', 'Deploys address provider and registry')
       await waitTx(addressProvider.grantRoles(emergencyAdmin!, AccessFlags.EMERGENCY_ADMIN));
     }
   });
-
-const findMaxProviderId = async (registry: AddressesProviderRegistry): Promise<BigNumber> => {
-  let ProviderId = BigNumber.from(0);
-
-  for (const addr of await registry.getAddressesProvidersList()) {
-    if (falsyOrZeroAddress(addr)) {
-      continue;
-    }
-    const knownId = await registry.getAddressesProviderIdByAddress(addr);
-    if (ProviderId.lt(knownId)) {
-      ProviderId = knownId;
-    }
-  }
-  return ProviderId;
-};

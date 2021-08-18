@@ -56,8 +56,16 @@ import { DefaultTokenSymbols, eContractid, PoolConfiguration, tEthereumAddress }
 import { ILendingPoolAaveCompatibleFactory } from '../types/ILendingPoolAaveCompatibleFactory';
 import { IManagedLendingPoolFactory } from '../types/IManagedLendingPoolFactory';
 import { IAaveLendingPoolFactory } from '../types/IAaveLendingPoolFactory';
+import { IPriceOracleGetterFactory } from '../types/IPriceOracleGetterFactory';
+import { IChainlinkAggregatorFactory } from '../types/IChainlinkAggregatorFactory';
 
-const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
+const getAddr = async (id: eContractid) => {
+  const entry = await getFromJsonDb(id);
+  if (falsyOrZeroAddress(entry?.address)) {
+    throw 'unknown named address: ' + id;
+  }
+  return entry!.address;
+};
 
 export const getMarketAddressController = async (address?: tEthereumAddress) =>
   MarketAccessControllerFactory.connect(
@@ -65,7 +73,7 @@ export const getMarketAddressController = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const hasMarketAddressController = async () => await hasInJsonDb(eContractid.MarketAccessController);
+export const hasMarketAddressController = () => hasInJsonDb(eContractid.MarketAccessController);
 
 export const getPreDeployedAddressController = async () =>
   MarketAccessControllerFactory.connect(
@@ -73,8 +81,7 @@ export const getPreDeployedAddressController = async () =>
     await getFirstSigner()
   );
 
-export const hasPreDeployedAddressController = async () =>
-  await hasInJsonDb(eContractid.PreDeployedMarketAccessController);
+export const hasPreDeployedAddressController = () => hasInJsonDb(eContractid.PreDeployedMarketAccessController);
 
 export const getLendingPoolConfiguratorProxy = async (address: tEthereumAddress) => {
   return LendingPoolConfiguratorFactory.connect(address, await getFirstSigner());
@@ -181,8 +188,7 @@ export const getAddressesProviderRegistry = async (address?: tEthereumAddress) =
     await getFirstSigner()
   );
 
-export const hasAddressProviderRegistry = async (address?: tEthereumAddress) =>
-  await hasInJsonDb(eContractid.AddressesProviderRegistry);
+export const hasAddressProviderRegistry = () => hasInJsonDb(eContractid.AddressesProviderRegistry);
 
 export const getReserveLogic = async (address?: tEthereumAddress) =>
   ReserveLogicFactory.connect(address || (await getAddr(eContractid.ReserveLogic)), await getFirstSigner());
@@ -342,9 +348,9 @@ export const getMarketAccessController = async (address?: tEthereumAddress) =>
 
 export const getAGTokenByName = async (name: string): Promise<DepositToken> => {
   const dp = await getProtocolDataProvider();
-  const tokens = await dp.getAllDepositTokens();
+  const tokens = (await dp.getAllTokenDescriptions(false)).tokens;
   // console.log(`all deposit tokens: ${tokens}`);
-  const addrByName = tokens.filter((v) => v.symbol === name)[0].tokenAddress;
+  const addrByName = tokens.filter((v) => v.tokenSymbol === name)[0].token;
   // console.log(`deposit token addr by name ${name}: ${addrByName}`);
   return await getDepositToken(addrByName);
 };
@@ -369,6 +375,12 @@ export const getILendingPoolAaveCompatible = async (address: tEthereumAddress) =
 
 export const getIAaveLendingPool = async (address: tEthereumAddress) =>
   IAaveLendingPoolFactory.connect(address, await getFirstSigner());
+
+export const getIPriceOracleGetter = async (address: tEthereumAddress) =>
+  IPriceOracleGetterFactory.connect(address, await getFirstSigner());
+
+export const getIChainlinkAggregator = async (address: tEthereumAddress) =>
+  IChainlinkAggregatorFactory.connect(address, await getFirstSigner());
 
 export const getIManagedLendingPool = async (address: tEthereumAddress) =>
   IManagedLendingPoolFactory.connect(address, await getFirstSigner());

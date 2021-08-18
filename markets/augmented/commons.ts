@@ -1,5 +1,5 @@
-import { oneRay, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames } from '../../helpers/constants';
-import { ICommonConfiguration, eEthereumNetwork, StakeMode } from '../../helpers/types';
+import { oneRay, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames, ONE_ADDRESS } from '../../helpers/constants';
+import { ICommonConfiguration, eEthereumNetwork, StakeMode, LPFeature } from '../../helpers/types';
 import { strategyAAVE, strategyADAI, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
 
 // ----------------
@@ -59,7 +59,7 @@ export const CommonsConfig: ICommonConfiguration = {
   },
   ProviderRegistry: {
     [eEthereumNetwork.kovan]: '0xe28BdBF3C2440C97aBA7250ED1bb9F20559E351a',
-    [eEthereumNetwork.ropsten]: '', // '0x2931bAf940EE995E563BB27BCc7B60Aa8F9af298',
+    [eEthereumNetwork.ropsten]: '0x2931bAf940EE995E563BB27BCc7B60Aa8F9af298',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',
@@ -101,8 +101,8 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: '',
     [eEthereumNetwork.docker]: '',
-    [eEthereumNetwork.kovan]: 'new',
-    [eEthereumNetwork.ropsten]: 'new',
+    [eEthereumNetwork.kovan]: '',
+    [eEthereumNetwork.ropsten]: '',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.tenderlyMain]: '',
@@ -211,6 +211,18 @@ export const CommonsConfig: ICommonConfiguration = {
       USD: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
     },
   },
+
+  ReserveAssetsOpt: {
+    [eEthereumNetwork.ropsten]: true,
+    [eEthereumNetwork.rinkeby]: true,
+
+    [eEthereumNetwork.coverage]: false,
+    [eEthereumNetwork.hardhat]: false,
+    [eEthereumNetwork.docker]: false,
+    [eEthereumNetwork.kovan]: false,
+    [eEthereumNetwork.main]: false,
+    [eEthereumNetwork.tenderlyMain]: false,
+  },
   ReserveAssets: {
     [eEthereumNetwork.hardhat]: {},
     [eEthereumNetwork.docker]: {},
@@ -264,6 +276,17 @@ export const CommonsConfig: ICommonConfiguration = {
 
   ReservesConfig: {},
 
+  LendingDisableFeatures: {
+    [eEthereumNetwork.ropsten]: [],
+    [eEthereumNetwork.rinkeby]: [],
+    [eEthereumNetwork.coverage]: [],
+    [eEthereumNetwork.hardhat]: [],
+    [eEthereumNetwork.docker]: [],
+    [eEthereumNetwork.kovan]: [],
+    [eEthereumNetwork.main]: [LPFeature.LIQUIDATION, LPFeature.FLASHLOAN, LPFeature.FLASHLOAN_DEPOSIT, LPFeature.FLASHLOAN_BORROW],
+    [eEthereumNetwork.tenderlyMain]: [],
+  },
+
   StakeParams: {
     MaxSlashBP: 3000, // 30%
     CooldownPeriod: 2 * DAY,
@@ -278,6 +301,7 @@ export const CommonsConfig: ICommonConfiguration = {
   },
 
   RewardParams : {
+    Autolock: 12, // 12 weeks auto-prolongate
     InitialRateWad: 2.12,
     TokenPools: {
       DAI:   {
@@ -372,11 +396,12 @@ export const CommonsConfig: ICommonConfiguration = {
     BurnersPool: {
       TotalWad: 1e6,
       BoostFactor: 0,
-      MeltDownAt: new Date('2021-02-01'),
+      MeltDownAt: new Date('2021-03-01'),
+      Providers: [ ONE_ADDRESS ],
     },
     TeamPool: {
       BasePoints: 1000,
-      UnlockAt: new Date('2021-11-01'),
+      UnlockAt: new Date('2021-12-01'),
       Manager: ZERO_ADDRESS,
       Members: {
         '0x0000000000000000000000000000000000000001': 5000

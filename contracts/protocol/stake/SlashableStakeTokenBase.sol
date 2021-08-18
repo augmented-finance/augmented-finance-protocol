@@ -217,7 +217,10 @@ abstract contract SlashableStakeTokenBase is
   {
     windowStart = _stakersCooldowns[holder];
     if (windowStart != 0) {
-      windowEnd = windowStart + _unstakePeriod;
+      windowStart += _cooldownPeriod;
+      unchecked {
+        windowEnd = windowStart + _unstakePeriod;
+      }
       if (windowEnd < windowStart) {
         windowEnd = type(uint32).max;
       }

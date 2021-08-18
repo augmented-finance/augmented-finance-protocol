@@ -32,6 +32,7 @@ export const chooseDepositTokenDeployment = (id: eContractid) => {
 export const initReservesByHelper = async (
   addressProvider: MarketAccessController,
   reservesParams: { [symbol: string]: IReserveParams },
+  reservesParamsOpt: boolean,
   tokenAddresses: { [symbol: string]: tEthereumAddress },
   names: ITokenNames,
   skipExistingAssets: boolean,
@@ -90,7 +91,10 @@ export const initReservesByHelper = async (
     const tokenAddress = tokenAddresses[symbol];
     if (falsyOrZeroAddress(tokenAddress)) {
       console.log(`Asset ${symbol} is missing`);
-      throw 'asset is missing: ' + symbol;
+      if (!reservesParamsOpt) {
+        throw 'asset is missing: ' + symbol;
+      }
+      continue;
     }
 
     if (existingAssets.has(tokenAddress.toUpperCase())) {
@@ -292,8 +296,7 @@ export const configureReservesByHelper = async (
   ] of Object.entries(reservesParams) as [string, IReserveParams][]) {
     if (baseLTVAsCollateral < 0) continue;
 
-    const assetAddressIndex = Object.keys(tokenAddresses).findIndex((value) => value === assetSymbol);
-    const [, tokenAddress] = (Object.entries(tokenAddresses) as [string, string][])[assetAddressIndex];
+    const tokenAddress = tokenAddresses[assetSymbol];
     if (falsyOrZeroAddress(tokenAddress)) {
       console.log(`- Token ${assetSymbol} has an invalid address, skipping`);
       continue;
