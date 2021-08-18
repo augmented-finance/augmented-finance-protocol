@@ -69,71 +69,78 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     );
 
     const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
-
-    let prepParams: poolInitParams[] = [];
-    let prepNames: string[] = [];
-    let prepProviders: tEthereumAddress[] = [];
-
-    const addPool = async (
-      share: IRewardPoolParams,
-      provider: tEthereumAddress,
-      impl: tEthereumAddress,
-      name: string,
-      poolName: string
-    ) => {
-      prepParams.push({
-        provider: provider,
-        baselinePercentage: BigNumber.from(share.BasePoints),
-        poolName: poolName,
-        initialRate: BigNumber.from(0),
-        boostFactor: BigNumber.from(share!.BoostFactor),
-        impl: impl,
-      });
-      prepNames.push(name);
-      prepProviders.push(provider);
-    };
-
-    let symbol: string;
-
-    const addTokenPool = async (share: IRewardPoolParams | undefined, token: tEthereumAddress, prefix: string) => {
-      if (share == undefined || falsyOrZeroAddress(token)) {
-        return;
-      }
-      const tokenSymbol = prefix + Names.SymbolPrefix + symbol;
-      addPool(share!, token, '', tokenSymbol, '');
-    };
-
     const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
+
+    //    const prefixes: string[] = ;
+    const knownReserves: {
+      baseSymbol: string;
+      tokens: tEthereumAddress[];
+      shares: (IRewardPoolParams | undefined)[];
+    }[] = [];
 
     for (const [sym, opt] of Object.entries(rewardParams.TokenPools)) {
       if (opt == undefined) {
         continue;
       }
       const tp: ITokenRewardPoolParams = opt;
-      symbol = sym;
 
-      const asset = reserveAssets[symbol];
+      const asset = reserveAssets[sym];
       if (falsyOrZeroAddress(asset)) {
-        console.log('Reward asset (underlying) is missing:', symbol);
+        console.log('Reward asset (underlying) is missing:', sym);
         continue;
       }
 
       const rd = await lendingPool.getReserveData(asset);
       if (falsyOrZeroAddress(rd.depositTokenAddress)) {
-        console.log('Reserve is missing for asset (underlying):', symbol);
+        console.log('Reserve is missing for asset (underlying):', sym);
         continue;
       }
 
-      await addTokenPool(tp.Share.deposit, rd.depositTokenAddress, Names.DepositSymbolPrefix);
-      await addTokenPool(tp.Share.vDebt, rd.variableDebtTokenAddress, Names.VariableDebtSymbolPrefix);
-      await addTokenPool(tp.Share.sDebt, rd.stableDebtTokenAddress, Names.StableDebtSymbolPrefix);
-
+      const info = {
+        baseSymbol: sym,
+        tokens: [rd.depositTokenAddress, rd.variableDebtTokenAddress, rd.stableDebtTokenAddress],
+        shares: [tp.Share.deposit, tp.Share.vDebt, tp.Share.sDebt],
+      };
       if (tp.Share.stake != undefined) {
-        await addTokenPool(
-          tp.Share.stake,
-          await stakeConfigurator.stakeTokenOf(rd.depositTokenAddress),
-          Names.StakeSymbolPrefix
-        );
+        info.tokens.push(await stakeConfigurator.stakeTokenOf(rd.depositTokenAddress));
+        info.shares.push(tp.Share.stake);
+      }
+      knownReserves.push(info);
+    }
+
+    let prepParams: poolInitParams[] = [];
+    let prepNames: string[] = [];
+    let prepProviders: tEthereumAddress[] = [];
+
+    {
+      const subTypePrefixes: string[] = [
+        Names.DepositSymbolPrefix,
+        Names.VariableDebtSymbolPrefix,
+        Names.StableDebtSymbolPrefix,
+        Names.StakeSymbolPrefix,
+      ];
+
+      // Put the most frequently used token types at the beginning
+      for (let subType of [0, 1, 3, 2]) {
+        // Deposit, Variable, Stake, Stable
+        for (const knownReserve of knownReserves) {
+          const token = knownReserve.tokens[subType];
+          const share = knownReserve.shares[subType];
+          if (share == undefined || falsyOrZeroAddress(token)) {
+            continue;
+          }
+          const tokenSymbol = subTypePrefixes[subType] + Names.SymbolPrefix + knownReserve.baseSymbol;
+          prepNames.push(tokenSymbol);
+          prepProviders.push(token);
+          prepParams.push({
+            provider: token,
+            baselinePercentage: BigNumber.from(share.BasePoints),
+            poolName: '',
+            initialRate: BigNumber.from(0),
+            boostFactor: BigNumber.from(share!.BoostFactor),
+            impl: '',
+          });
+        }
       }
     }
 
