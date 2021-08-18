@@ -5,9 +5,15 @@ import '../../../tools/Errors.sol';
 import '../../../reward/calcs/CalcLinearWeightedReward.sol';
 import '../../../reward/pools/ControlledRewardPool.sol';
 import '../../../reward/interfaces/IRewardController.sol';
+import '../../../reward/interfaces/IInitializableRewardPool.sol';
 import './PoolTokenBase.sol';
 
-abstract contract RewardedTokenBase is PoolTokenBase, CalcLinearWeightedReward, ControlledRewardPool {
+abstract contract RewardedTokenBase is
+  PoolTokenBase,
+  CalcLinearWeightedReward,
+  ControlledRewardPool,
+  IInitializableRewardPool
+{
   constructor() ControlledRewardPool(IRewardController(address(0)), 0, 0) {}
 
   function internalUpdateTotalSupply() internal view override returns (uint256) {
@@ -100,12 +106,17 @@ abstract contract RewardedTokenBase is PoolTokenBase, CalcLinearWeightedReward, 
     doUpdateTotalSupply(newSupply);
   }
 
-  // function initialize(InitData calldata config) external override {
-  //   require
-  //   _initialize(config);
-  // }
+  function getPoolName() public view virtual override returns (string memory) {
+    return super.symbol();
+  }
 
-  // function initializedRewardPoolWith() external view override returns (InitData memory) {
+  function initialize(InitData calldata config) external override onlyRewardConfiguratorOrAdmin {
+    require(address(config.controller) != address(0));
+    require(address(getRewardController()) == address(0));
+    _initialize(IRewardController(config.controller), 0, config.baselinePercentage);
+  }
 
-  // }
+  function initializedRewardPoolWith() external view override returns (InitData memory) {
+    return InitData(IRewardController(getRewardController()), getPoolName(), internalGetBaselinePercentage());
+  }
 }

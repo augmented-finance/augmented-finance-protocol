@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import '../../../tools/Errors.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../../tools/tokens/ERC20DetailsBase.sol';
 import '../../../interfaces/IPoolToken.sol';
 import '../../../interfaces/ILendingPoolForTokens.sol';
 import '../../../interfaces/IRewardedToken.sol';
@@ -11,7 +12,7 @@ import '../../../access/AccessFlags.sol';
 import '../interfaces/IInitializablePoolToken.sol';
 import '../interfaces/PoolTokenConfig.sol';
 
-abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, IRewardedToken {
+abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, IRewardedToken, ERC20DetailsBase {
   event Transfer(address indexed from, address indexed to, uint256 value);
 
   ILendingPoolForTokens internal _pool;
