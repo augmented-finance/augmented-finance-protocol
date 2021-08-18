@@ -49,8 +49,6 @@ export const setInitialAssetPricesInOracle = async (
   priceOracleInstance: MockPriceOracle
 ) => {
   for (const [assetSymbol, price] of Object.entries(prices) as [string, string][]) {
-    console.log('Trying for ', assetsAddresses, assetSymbol);
-
     const assetAddressIndex = Object.keys(assetsAddresses).findIndex((value) => value === assetSymbol);
     const [, assetAddress] = (Object.entries(assetsAddresses) as [string, string][])[assetAddressIndex];
     await waitForTx(await priceOracleInstance.setAssetPrice(assetAddress, price));

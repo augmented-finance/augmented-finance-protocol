@@ -603,4 +603,17 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     }
     return names;
   }
+
+  function getReserveTokensAddresses(address asset)
+    external
+    view
+    returns (
+      address depositTokenAddress, // ATTN! DO NOT rename - scripts rely on names
+      address stableDebtTokenAddress,
+      address variableDebtTokenAddress
+    )
+  {
+    DataTypes.ReserveData memory reserve = ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
+    return (reserve.depositTokenAddress, reserve.stableDebtTokenAddress, reserve.variableDebtTokenAddress);
+  }
 }

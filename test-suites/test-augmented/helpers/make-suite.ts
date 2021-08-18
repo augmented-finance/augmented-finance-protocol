@@ -1,4 +1,4 @@
-import { evmRevert, evmSnapshot, DRE } from '../../../helpers/misc-utils';
+import { evmRevert, evmSnapshot, DRE, falsyOrZeroAddress } from '../../../helpers/misc-utils';
 import { Signer } from 'ethers';
 import {
   getMarketAddressController,
@@ -133,13 +133,22 @@ export async function initializeMakeSuite() {
 
   const allTokens = (await testEnv.helpersContract.getAllTokenDescriptions(true)).tokens;
 
-  const aDaiAddress = allTokens.find((depositToken) => depositToken.tokenSymbol === 'agDAI')?.token;
-  const aWEthAddress = allTokens.find((depositToken) => depositToken.tokenSymbol === 'agWETH')?.token;
+  const findToken = (sym: string) => {
+    const desc = allTokens.find((depositToken) => depositToken.tokenSymbol === sym);
+    if (falsyOrZeroAddress(desc?.token)) {
+      console.log(allTokens);
+      throw 'missing token ' + sym;
+    }
+    return desc!.token;
+  };
 
-  const daiAddress = allTokens.find((token) => token.tokenSymbol === 'DAI')?.token;
-  const usdcAddress = allTokens.find((token) => token.tokenSymbol === 'USDC')?.token;
-  const aaveAddress = allTokens.find((token) => token.tokenSymbol === 'AAVE')?.token;
-  const wethAddress = allTokens.find((token) => token.tokenSymbol === 'WETH')?.token;
+  const aDaiAddress = findToken('agDAI');
+  const aWEthAddress = findToken('agWETH');
+
+  const daiAddress = findToken('DAI');
+  const usdcAddress = findToken('USDC');
+  const aaveAddress = findToken('AAVE');
+  const wethAddress = findToken('WETH');
 
   if (!aDaiAddress || !aWEthAddress) {
     console.log('Required test tokens are missing');

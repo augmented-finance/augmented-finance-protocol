@@ -59,7 +59,13 @@ import { IAaveLendingPoolFactory } from '../types/IAaveLendingPoolFactory';
 import { IPriceOracleGetterFactory } from '../types/IPriceOracleGetterFactory';
 import { IChainlinkAggregatorFactory } from '../types/IChainlinkAggregatorFactory';
 
-const getAddr = async (id: eContractid) => (await getFromJsonDb(id)).address;
+const getAddr = async (id: eContractid) => {
+  const entry = await getFromJsonDb(id);
+  if (falsyOrZeroAddress(entry?.address)) {
+    throw 'unknown named address: ' + id;
+  }
+  return entry!.address;
+};
 
 export const getMarketAddressController = async (address?: tEthereumAddress) =>
   MarketAccessControllerFactory.connect(
