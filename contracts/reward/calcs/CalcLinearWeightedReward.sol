@@ -9,6 +9,10 @@ abstract contract CalcLinearWeightedReward is CalcLinearRewardBalances {
 
   uint256 private constant _maxWeightBase = 1e36;
 
+  function internalGetTotalSupply() internal view returns (uint256) {
+    return _totalSupply;
+  }
+
   function internalRateUpdated(
     uint256 lastRate,
     uint32 lastAt,
@@ -30,6 +34,14 @@ abstract contract CalcLinearWeightedReward is CalcLinearRewardBalances {
       return false;
     }
     return internalSetTotalSupply(newSupply, getCurrentTick());
+  }
+
+  function doIncrementTotalSupply(uint256 amount) internal {
+    doUpdateTotalSupply(_totalSupply + amount);
+  }
+
+  function doDecrementTotalSupply(uint256 amount) internal {
+    doUpdateTotalSupply(_totalSupply - amount);
   }
 
   function internalSetTotalSupply(uint256 totalSupply, uint32 at) internal returns (bool rateUpdated) {

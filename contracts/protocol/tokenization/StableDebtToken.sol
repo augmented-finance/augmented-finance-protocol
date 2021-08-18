@@ -18,7 +18,7 @@ import './base/DebtTokenBase.sol';
  * @notice Implements a stable debt token to track the borrowing positions of users
  * at stable rate mode
  **/
-contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtToken {
+contract StableDebtToken is IStableDebtToken, DebtTokenBase, VersionedInitializable {
   using WadRayMath for uint256;
 
   constructor() PoolTokenBase(address(0), address(0)) ERC20DetailsBase('', '', 0) {}
@@ -89,7 +89,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
    * @dev Calculates the current user debt balance
    * @return The accumulated debt of the user
    **/
-  function balanceOf(address account) public view virtual override(IERC20, IncentivisedTokenBase) returns (uint256) {
+  function balanceOf(address account) public view virtual override returns (uint256) {
     uint256 accountBalance = super.balanceOf(account);
     if (accountBalance == 0) {
       return 0;
@@ -282,7 +282,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
   }
 
   /// @dev Returns the total supply
-  function totalSupply() public view override(IERC20, IncentivisedTokenBase) returns (uint256) {
+  function totalSupply() public view override returns (uint256) {
     return _calcTotalSupply(_avgStableRate);
   }
 
@@ -327,8 +327,7 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     uint256 amount,
     uint256 newTotalSupply
   ) internal {
-    uint256 scale = cumulatedInterest(account);
-    _incrementBalanceWithTotal(account, amount, scale, newTotalSupply);
+    _incrementBalanceWithTotal(account, amount, WadRayMath.RAY, newTotalSupply);
   }
 
   /**
@@ -342,7 +341,6 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     uint256 amount,
     uint256 newTotalSupply
   ) internal {
-    uint256 scale = cumulatedInterest(account);
-    _decrementBalanceWithTotal(account, amount, scale, newTotalSupply);
+    _decrementBalanceWithTotal(account, amount, WadRayMath.RAY, newTotalSupply);
   }
 }

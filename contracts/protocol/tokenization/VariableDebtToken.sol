@@ -56,7 +56,7 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
    * @dev Calculates the accumulated debt balance of the user
    * @return The debt balance of the user
    **/
-  function balanceOf(address user) public view virtual override(IERC20, IncentivisedTokenBase) returns (uint256) {
+  function balanceOf(address user) public view virtual override returns (uint256) {
     uint256 scaledBalance = super.balanceOf(user);
 
     if (scaledBalance == 0) {
@@ -131,7 +131,7 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
    * @dev Returns the total supply of the variable debt token. Represents the total debt accrued by the users
    * @return The total supply
    **/
-  function totalSupply() public view virtual override(IERC20, IncentivisedTokenBase) returns (uint256) {
+  function totalSupply() public view virtual override returns (uint256) {
     return super.totalSupply().rayMul(_pool.getReserveNormalizedVariableDebt(_underlyingAsset));
   }
 

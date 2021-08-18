@@ -9,12 +9,13 @@ import '../../../interfaces/IBalanceHook.sol';
 import '../../../interfaces/ILendingPoolForTokens.sol';
 import '../../../access/AccessHelper.sol';
 import '../../../access/AccessFlags.sol';
+import '../../../tools/tokens/ERC20DetailsBase.sol';
 import '../interfaces/IInitializablePoolToken.sol';
 import '../interfaces/PoolTokenConfig.sol';
 import './IncentivisedTokenBase.sol';
-import '../../../tools/tokens/ERC20DetailsBase.sol';
+import './RewardedTokenBase.sol';
 
-abstract contract PoolTokenBase is IPoolToken, IInitializablePoolToken, IncentivisedTokenBase, ERC20DetailsBase {
+abstract contract PoolTokenBase is IPoolToken, IInitializablePoolToken, RewardedTokenBase, ERC20DetailsBase {
   event Transfer(address indexed from, address indexed to, uint256 value);
 
   ILendingPoolForTokens internal _pool;

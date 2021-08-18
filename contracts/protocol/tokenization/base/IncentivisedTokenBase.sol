@@ -21,7 +21,7 @@ abstract contract IncentivisedTokenBase is IERC20, IRewardedToken {
     return _totalSupply;
   }
 
-  function _setIncentivesController(address hook) internal virtual {
+  function _setIncentivesController(address hook) internal {
     _incentivesController = IBalanceHook(hook);
     _useScaledBalanceUpdate = (hook != address(0)) && IBalanceHook(hook).isScaledBalanceUpdateNeeded();
   }
