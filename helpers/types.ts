@@ -367,8 +367,8 @@ export interface ICommonConfiguration {
 
   OracleRouter: iParamsPerNetwork<tEthereumAddress>;
   FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
-
   ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
+
   LendingRateOracleRates: iAssetsWithoutUSDOpt<IMarketRates>;
 
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
@@ -376,6 +376,7 @@ export interface ICommonConfiguration {
 
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
   ReserveAssetsOpt: iParamsPerNetwork<boolean>;
+  LendingDisableFeatures: iParamsPerNetwork<LPFeature[]>;
 
   ReservesConfig: {
     [key: string]: IReserveParams;
@@ -433,6 +434,7 @@ export interface ITokenNames {
 }
 
 export interface IRewardParams {
+  Autolock: 'disable' | 'stop' | number;
   InitialRateWad: number;
   TokenPools: iAugmentedPoolAssetsOpt<ITokenRewardPoolParams>;
   TeamPool: ITeamPool;
@@ -486,4 +488,13 @@ export interface IForkTest {
 
 export interface IPrices {
   [token: string]: number;
+}
+
+export enum LPFeature {
+  LIQUIDATION = 1 << 0,
+  FLASHLOAN = 1 << 1,
+  FLASHLOAN_DEPOSIT = 1 << 2,
+  FLASHLOAN_WITHDRAW = 1 << 3,
+  FLASHLOAN_BORROW = 1 << 4,
+  FLASHLOAN_REPAY = 1 << 5,
 }
