@@ -241,8 +241,6 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       tokenCount++;
     }
 
-    tokenCount = 2;
-
     for (uint256 i = 0; i < reserveList.length; i++) {
       address token = reserveList[i];
       DataTypes.ReserveData memory reserveData = pool.getReserveData(token);
