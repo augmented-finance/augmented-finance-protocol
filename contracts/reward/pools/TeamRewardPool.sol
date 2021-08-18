@@ -24,7 +24,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   }
 
   function _onlyTeamManagerOrConfigurator() private view {
-    require(msg.sender == _teamManager || _controller.isConfigAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_TEAM_MANAGER);
+    require(msg.sender == _teamManager || _controller.isConfigAdmin(msg.sender), Errors.CALLER_NOT_TEAM_MANAGER);
   }
 
   function getPoolName() public pure override returns (string memory) {

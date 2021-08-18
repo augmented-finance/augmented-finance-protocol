@@ -178,7 +178,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   }
 
   function _onlyController() private view {
-    require(isController(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_CONTROLLER);
+    require(isController(msg.sender), Errors.CALLER_NOT_REWARD_CONTROLLER);
   }
 
   modifier onlyController() {
@@ -187,7 +187,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   }
 
   function _onlyConfigAdmin() private view {
-    require(_controller.isConfigAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_ADMIN);
+    require(_controller.isConfigAdmin(msg.sender), Errors.CALLER_NOT_REWARD_CONFIG_ADMIN);
   }
 
   modifier onlyConfigAdmin() {
@@ -196,7 +196,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   }
 
   function _onlyRateAdmin() private view {
-    require(_controller.isRateAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN);
+    require(_controller.isRateAdmin(msg.sender), Errors.CALLER_NOT_REWARD_RATE_ADMIN);
   }
 
   modifier onlyRateAdmin() {
@@ -218,7 +218,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
       _controller.getAccessController(),
       msg.sender,
       AccessFlags.REFERRAL_ADMIN,
-      'only referral admin is allowed'
+      Errors.CALLER_NOT_REF_ADMIN
     );
   }
 

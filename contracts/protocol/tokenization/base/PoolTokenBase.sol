@@ -33,7 +33,7 @@ abstract contract PoolTokenBase is IPoolToken, IInitializablePoolToken, Rewarded
   }
 
   function _onlyLendingPool() private view {
-    require(msg.sender == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
+    require(msg.sender == address(_pool), Errors.CALLER_NOT_LENDING_POOL);
   }
 
   modifier onlyLendingPool() {
@@ -74,7 +74,7 @@ abstract contract PoolTokenBase is IPoolToken, IInitializablePoolToken, Rewarded
       _pool.getAccessController(),
       msg.sender,
       AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR,
-      Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
+      Errors.CALLER_NOT_REWARD_CONFIG_ADMIN
     );
   }
 
