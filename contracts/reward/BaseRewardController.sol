@@ -42,7 +42,7 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
   }
 
   uint256 private constant POOL_ID_BITS = 16;
-  uint256 private constant POOL_ID_MASK = (1 << (POOL_ID_BITS + 1)) - 1;
+  uint256 private constant POOL_ID_MASK = (uint256(1) << POOL_ID_BITS) - 1;
   uint256 private constant MAX_POOL_INFO = type(uint256).max >> POOL_ID_BITS;
 
   function addRewardPool(IManagedRewardPool pool) external override onlyConfigAdmin {
@@ -94,14 +94,14 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
 
   function internalSetPoolInfo(address pool, uint256 info) internal {
     require(info <= MAX_POOL_INFO, 'excessive pool info');
-    uint256 poolDesc = _poolDesc[address(pool)];
-    require(poolDesc != 0, 'unknown pool');
-    _poolDesc[address(pool)] = (poolDesc & POOL_ID_MASK) | (poolDesc << POOL_ID_BITS);
+    uint256 poolId = _poolDesc[address(pool)] & POOL_ID_MASK;
+    require(poolId != 0, 'unknown pool');
+    _poolDesc[address(pool)] = poolId | (info << POOL_ID_BITS);
   }
 
   function internalGetPoolInfo(address pool) internal view returns (bool, uint256) {
     uint256 poolDesc = _poolDesc[address(pool)];
-    if (poolDesc == 0) {
+    if (poolDesc & POOL_ID_MASK == 0) {
       return (false, 0);
     }
     return (true, poolDesc >> POOL_ID_BITS);
