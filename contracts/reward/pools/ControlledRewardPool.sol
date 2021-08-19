@@ -24,14 +24,16 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     uint256 initialRate,
     uint16 baselinePercentage
   ) {
-    _initialize(controller, initialRate, baselinePercentage);
+    _initialize(controller, initialRate, baselinePercentage, '');
   }
 
   function _initialize(
     IRewardController controller,
     uint256 initialRate,
-    uint16 baselinePercentage
+    uint16 baselinePercentage,
+    string memory poolName
   ) internal virtual {
+    poolName;
     _controller = controller;
 
     if (baselinePercentage == NO_BASELINE || (initialRate != 0 && baselinePercentage == 0)) {
