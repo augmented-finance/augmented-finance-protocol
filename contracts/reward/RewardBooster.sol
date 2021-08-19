@@ -111,12 +111,6 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     return (_boostExcessDelegate, _mintExcess);
   }
 
-  function getClaimMask(address holder, uint256 mask) internal view override returns (uint256) {
-    mask = super.getClaimMask(holder, mask);
-    mask &= ~_boostPoolMask;
-    return mask;
-  }
-
   function internalClaimAndMintReward(address holder, uint256 allMask)
     internal
     override
@@ -295,18 +289,20 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     return lockAmount;
   }
 
+  function claimableMask(address holder, uint256 includeMask) internal view override returns (uint256) {
+    return super.claimableMask(holder, includeMask) & ~_boostPoolMask;
+  }
+
   function explainReward(address holder, uint32 at) external view override returns (RewardExplained memory) {
     require(at >= uint32(block.timestamp));
-    return internalExplainReward(holder, ~uint256(0), at);
+    return internalExplainReward(holder, claimableMask(holder, 0), at);
   }
 
   function internalExplainReward(
     address holder,
     uint256 mask,
     uint32 at
-  ) internal view returns (RewardExplained memory r) {
-    mask = getClaimMask(holder, mask) | _boostPoolMask;
-
+  ) private view returns (RewardExplained memory r) {
     (r.amountClaimable, r.boostLimit) = (_workRewards[holder].claimableReward, _workRewards[holder].boostLimit);
 
     uint256 n;

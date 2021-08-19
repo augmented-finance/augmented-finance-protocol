@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../tools/math/BitUtils.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 import '../access/MarketAccessBitmask.sol';
 import '../access/AccessFlags.sol';
@@ -80,12 +79,33 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     emit RewardPoolRemoved(address(pool), poolMask);
   }
 
-  function getPoolMask(address pool) public view returns (uint256) {
+  function getPoolMask(address pool) public view override returns (uint256) {
     uint256 poolDesc = _poolDesc[address(pool)];
     if (poolDesc == 0) {
       return 0;
     }
     return 1 << ((poolDesc & POOL_ID_MASK) - 1);
+  }
+
+  function getPoolsByMask(uint256 allMask) external view override returns (address[] memory pools) {
+    allMask = _limitMask(allMask) & ~_ignoreMask;
+    uint256 n;
+    for (uint256 mask = allMask; mask > 0; mask >>= 1) {
+      if (mask & 1 != 0) {
+        n++;
+      }
+    }
+
+    pools = new address[](n);
+    n = 0;
+    for ((uint256 i, uint256 mask) = (0, allMask); n < pools.length; (i, mask) = (i + 1, mask >> 1)) {
+      if (mask & 1 != 0) {
+        pools[n] = address(_poolList[i]);
+        n++;
+      }
+    }
+
+    return pools;
   }
 
   function internalSetPoolInfo(address pool, uint256 info) internal {
@@ -146,46 +166,61 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
   }
 
   function claimReward() external override notPaused returns (uint256 claimed, uint256 extra) {
-    return _claimReward(msg.sender, ~uint256(0), msg.sender);
+    return _claimReward(msg.sender, claimableMask(msg.sender, 0), msg.sender);
   }
 
-  function claimRewardTo(address receiver) external override notPaused returns (uint256 claimed, uint256 extra) {
+  function claimRewardTo(address receiver, uint256 includeMask)
+    external
+    override
+    notPaused
+    returns (uint256 claimed, uint256 extra)
+  {
     require(receiver != address(0), 'receiver is required');
-    return _claimReward(msg.sender, ~uint256(0), receiver);
+    return _claimReward(msg.sender, claimableMask(msg.sender, includeMask), receiver);
   }
-
-  // function claimRewardFor(address holder, uint256 mask)
-  //   external
-  //   notPaused
-  //   returns (uint256 claimed, uint256 extra)
-  // {
-  //   require(holder != address(0), 'holder is required');
-  //   return _claimReward(holder, mask, holder);
-  // }
 
   function claimableReward(address holder) public view override returns (uint256 claimable, uint256 extra) {
-    return _calcReward(holder, ~uint256(0), uint32(block.timestamp));
+    return _calcReward(holder, claimableMask(holder, 0), uint32(block.timestamp));
   }
 
-  // function claimableRewardFor(
-  //   address holder,
-  //   uint256 mask,
-  //   uint32 at
-  // ) public view returns (uint256 claimable, uint256 extra) {
-  //   require(holder != address(0), 'holder is required');
-  //   return _calcReward(holder, mask, at);
-  // }
+  function claimableRewardFor(address holder, uint256 includeMask)
+    external
+    view
+    override
+    returns (uint256 claimable, uint256 extra)
+  {
+    return _calcReward(holder, claimableMask(holder, includeMask), uint32(block.timestamp));
+  }
 
   function balanceOf(address holder) external view override returns (uint256) {
     if (holder == address(0)) {
       return 0;
     }
-    (uint256 claimable, uint256 extra) = _calcReward(holder, ~uint256(0), uint32(block.timestamp));
+    (uint256 claimable, uint256 extra) = _calcReward(holder, claimableMask(holder, 0), uint32(block.timestamp));
     return claimable + extra;
   }
 
-  function claimablePools(address holder) external view returns (uint256) {
-    return _memberOf[holder] & ~_ignoreMask;
+  function _limitMask(uint256 includeMask) private view returns (uint256) {
+    uint256 limitMask = uint256(1) << _poolList.length;
+    unchecked {
+      limitMask--;
+    }
+    return includeMask & limitMask;
+  }
+
+  function claimableMask(address holder, uint256 includeMask) internal view virtual returns (uint256) {
+    if (includeMask == 0) {
+      return _memberOf[holder] & ~_ignoreMask;
+    }
+    return (_limitMask(includeMask) | _memberOf[holder]) & ~_ignoreMask;
+  }
+
+  function claimablePools(address holder) external view override returns (uint256) {
+    return claimableMask(holder, 0);
+  }
+
+  function setClaimablePools(uint256 includeMask) external override {
+    _memberOf[msg.sender] = claimableMask(msg.sender, includeMask);
   }
 
   function allocatedByPool(
@@ -263,12 +298,6 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     _;
   }
 
-  function getClaimMask(address holder, uint256 mask) internal view virtual returns (uint256) {
-    mask &= ~_ignoreMask;
-    mask &= _memberOf[holder];
-    return mask;
-  }
-
   function getPool(uint256 index) internal view returns (IManagedRewardPool) {
     return _poolList[index];
   }
@@ -278,7 +307,6 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     uint256 mask,
     address receiver
   ) private returns (uint256 claimed, uint256 extra) {
-    mask = getClaimMask(holder, mask);
     (claimed, extra) = internalClaimAndMintReward(holder, mask);
 
     if (claimed > 0) {
@@ -316,7 +344,7 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     uint256 mask,
     uint32 at
   ) private view returns (uint256 claimableAmount, uint256 extraAmount) {
-    mask = getClaimMask(holder, mask);
+    require(holder != address(0), 'holder is required');
     return internalCalcClaimableReward(holder, mask, at);
   }
 
