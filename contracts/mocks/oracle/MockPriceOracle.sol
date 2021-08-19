@@ -7,9 +7,6 @@ contract MockPriceOracle is IPriceOracleGetter {
   mapping(address => uint256) private prices;
   uint256 private ethPriceUsd;
 
-  event AssetPriceUpdated(address _asset, uint256 _price, uint256 timestamp);
-  event EthPriceUpdated(uint256 _price, uint256 timestamp);
-
   function getAssetPrice(address _asset) external view override returns (uint256) {
     return prices[_asset];
   }

@@ -243,8 +243,7 @@ contract DefaultReserveInterestRateStrategy is IReserveRateStrategy {
 
     uint256 weightedVariableRate = totalVariableDebt.wadToRay().rayMul(currentVariableBorrowRate);
     uint256 weightedStableRate = totalStableDebt.wadToRay().rayMul(currentAverageStableBorrowRate);
-
-    uint256 overallBorrowRate = (weightedVariableRate + weightedStableRate).rayDiv(totalDebt.wadToRay());
+    uint256 overallBorrowRate = (weightedVariableRate + weightedStableRate).wadDiv(totalDebt);
 
     return overallBorrowRate;
   }

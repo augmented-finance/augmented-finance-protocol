@@ -52,7 +52,6 @@ library GenericLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     DataTypes.UserConfigurationMap memory userConfig,
     mapping(uint256 => address) storage reserves,
-    uint256 reservesCount,
     address oracle
   ) internal view returns (bool) {
     if (!userConfig.isBorrowingAny() || !userConfig.isUsingAsCollateral(reservesData[asset].id)) {
@@ -72,7 +71,6 @@ library GenericLogic {
       reservesData,
       userConfig,
       reserves,
-      reservesCount,
       oracle
     );
 
@@ -103,6 +101,7 @@ library GenericLogic {
   }
 
   struct CalculateUserAccountDataVars {
+    uint256 i;
     uint256 reserveUnitPrice;
     uint256 tokenUnit;
     uint256 compoundedLiquidityBalance;
@@ -110,7 +109,6 @@ library GenericLogic {
     uint256 decimals;
     uint256 ltv;
     uint256 liquidationThreshold;
-    uint256 i;
     uint256 healthFactor;
     uint256 totalCollateralInETH;
     uint256 totalDebtInETH;
@@ -139,7 +137,6 @@ library GenericLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     DataTypes.UserConfigurationMap memory userConfig,
     mapping(uint256 => address) storage reserves,
-    uint256 reservesCount,
     address oracle
   )
     internal
@@ -157,14 +154,13 @@ library GenericLogic {
     }
 
     CalculateUserAccountDataVars memory vars;
-    for (vars.i = 0; vars.i < reservesCount; vars.i++) {
-      {
-        (bool hasMore, bool isUsing) = userConfig.isUsingAsCollateralOrBorrowing(vars.i);
-        if (!hasMore) {
-          break;
-        } else if (!isUsing) {
-          continue;
-        }
+    for (
+      uint256 scanData = userConfig.data;
+      scanData > 0;
+      (vars.i, scanData) = (vars.i + 1, scanData >> UserConfiguration.SHIFT_STEP)
+    ) {
+      if (scanData & UserConfiguration.ANY_MASK == 0) {
+        continue;
       }
 
       vars.currentReserveAddress = reserves[vars.i];

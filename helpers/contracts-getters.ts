@@ -45,6 +45,7 @@ import {
   DelegatedStrategyAaveFactory,
   DelegatedStrategyCompoundErc20Factory,
   DelegatedStrategyCompoundEthFactory,
+  StaticPriceOracleFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -402,3 +403,6 @@ export const getDelegatedStrategyCompoundEth = async (address?: tEthereumAddress
     address || (await getAddr(eContractid.DelegatedStrategyCompoundEth)),
     await getFirstSigner()
   );
+
+export const getStaticPriceOracle = async (address?: tEthereumAddress) =>
+  StaticPriceOracleFactory.connect(address || (await getAddr(eContractid.StaticPriceOracle)), await getFirstSigner());

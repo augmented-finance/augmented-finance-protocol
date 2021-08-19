@@ -9,8 +9,10 @@ import {
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import {
   getAGFTokenV1Impl,
+  getOracleRouter,
   getRewardBooster,
   getRewardConfiguratorProxy,
+  getStaticPriceOracle,
   getXAGFTokenV1Impl,
 } from '../../helpers/contracts-getters';
 import { getFirstSigner, falsyOrZeroAddress, waitTx, mustWaitTx } from '../../helpers/misc-utils';
@@ -20,8 +22,9 @@ import {
   setAndGetAddressAsProxy,
   setAndGetAddressAsProxyWithInit,
 } from '../../helpers/deploy-helpers';
-import { WEEK } from '../../helpers/constants';
+import { oneEther, WEEK } from '../../helpers/constants';
 import { MarketAccessController } from '../../types';
+import { BigNumber } from '@ethersproject/bignumber';
 
 task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tokens`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
@@ -30,7 +33,11 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const { Names, RewardParams } = poolConfig as ICommonConfiguration;
+    const {
+      Names,
+      RewardParams,
+      AGF: { DefaultPriceEth: AgfDefaultPriceEth },
+    } = poolConfig as ICommonConfiguration;
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
@@ -39,6 +46,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       freshStart && continuation ? await addressProvider.getAddress(AccessFlags.REWARD_CONFIGURATOR) : '';
 
     if (falsyOrZeroAddress(configuratorAddr)) {
+      console.log('Deploying RewardConfigurator');
       const impl = await deployRewardConfiguratorImpl(verify, continuation);
       console.log('Deployed RewardConfigurator implementation:', impl.address);
       configuratorAddr = await setAndGetAddressAsProxy(addressProvider, AccessFlags.REWARD_CONFIGURATOR, impl.address);
@@ -47,8 +55,10 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
 
     // AGF token is always updated
     let agfAddr = freshStart && continuation ? await addressProvider.getAddress(AccessFlags.REWARD_TOKEN) : '';
+    let newAgfToken = false;
 
     if (falsyOrZeroAddress(agfAddr)) {
+      console.log('Deploying AGF token');
       const initData = await configurator.buildRewardTokenInitData(Names.RewardTokenName, Names.RewardTokenSymbol, 18);
       const impl = await deployAGFTokenV1Impl(verify, continuation);
       console.log('Deployed AGF token implementation:', impl.address);
@@ -62,8 +72,13 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
 
       const agf = await getAGFTokenV1Impl(agfAddr);
       console.log('\t', await agf.name(), await agf.symbol(), await agf.decimals());
+      newAgfToken = true;
     } else {
       console.log('AGF token:', agfAddr);
+    }
+
+    if (AgfDefaultPriceEth) {
+      await configureAgfPrice(addressProvider, agfAddr, AgfDefaultPriceEth, newAgfToken);
     }
 
     // Reward controller is not updated
@@ -71,6 +86,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       freshStart && !continuation ? '' : await addressProvider.getAddress(AccessFlags.REWARD_CONTROLLER);
 
     if (falsyOrZeroAddress(boosterAddr)) {
+      console.log('Deploying RewardBooster');
       const impl = await deployRewardBoosterV1Impl(verify, continuation);
       console.log('Deployed RewardBooster implementation:', impl.address);
       boosterAddr = await setAndGetAddressAsProxy(addressProvider, AccessFlags.REWARD_CONTROLLER, impl.address);
@@ -97,6 +113,8 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     let xagfAddr = freshStart && continuation ? await addressProvider.getAddress(AccessFlags.REWARD_STAKE_TOKEN) : '';
 
     if (falsyOrZeroAddress(xagfAddr)) {
+      console.log('Deploying xAGF');
+
       const xagfInitData = await configurator.buildRewardTokenInitData(
         Names.RewardStakeTokenName,
         Names.RewardStakeTokenSymbol,
@@ -140,4 +158,36 @@ const grantRewardConfigAdmin = async (addressProvider: MarketAccessController) =
   }
   await waitTx(addressProvider.grantRoles(deployer, AccessFlags.REWARD_CONFIG_ADMIN));
   console.log('Granted REWARD_CONFIG_ADMIN');
+};
+
+const configureAgfPrice = async (
+  addressProvider: MarketAccessController,
+  agfAddr: string,
+  defaulAgfPrice: number,
+  newAgfToken: boolean
+) => {
+  console.log('Configuring default price feed for AGF');
+  // newAgfToken
+  const oracle = await getOracleRouter(await addressProvider.getAddress(AccessFlags.PRICE_ORACLE));
+  let hasPrice = false;
+  let price: BigNumber = BigNumber.from(0);
+  if (!newAgfToken) {
+    try {
+      price = await oracle.getAssetPrice(agfAddr);
+      hasPrice = true;
+    } catch {}
+  }
+  if (hasPrice) {
+    console.log('AGF price found:', price.div(1e9).toNumber() / 1e9, 'ethers, (', price.toString(), ' wei)');
+  } else {
+    const agfPrice = oneEther.multipliedBy(defaulAgfPrice).toFixed(0);
+    const fallback = await getStaticPriceOracle(await oracle.getFallbackOracle());
+
+    const deployer = (await getFirstSigner()).address;
+    await waitTx(addressProvider.grantRoles(deployer, AccessFlags.ORACLE_ADMIN));
+    console.log('Granted ORACLE_ADMIN');
+
+    await waitTx(fallback.setAssetPrice(agfAddr, agfPrice));
+    console.log('AGF price configured:', defaulAgfPrice, 'ethers (', agfPrice, ')');
+  }
 };

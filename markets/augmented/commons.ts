@@ -300,7 +300,11 @@ export const CommonsConfig: ICommonConfiguration = {
     }
   },
 
-  RewardParams : {
+  AGF: {
+    DefaultPriceEth: 10.0/3000.0,
+  },
+
+  RewardParams: {
     Autolock: 12, // 12 weeks auto-prolongate
     InitialRateWad: 2.12,
     TokenPools: {
