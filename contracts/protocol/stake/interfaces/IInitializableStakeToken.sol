@@ -14,7 +14,7 @@ interface IInitializableStakeToken {
     uint8 decimals
   ) external;
 
-  function initializedWith()
+  function initializedStakeTokenWith()
     external
     view
     returns (

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import './CalcLinearRateReward.sol';
+import './CalcLinearRewardBalances.sol';
 
-abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
+abstract contract CalcLinearUnweightedReward is CalcLinearRewardBalances {
   uint256 private _accumRate;
 
   function internalRateUpdated(
@@ -15,7 +15,7 @@ abstract contract CalcLinearUnweightedReward is CalcLinearRateReward {
   }
 
   function internalCalcRateAndReward(
-    RewardEntry memory entry,
+    RewardBalance memory entry,
     uint256 lastAccumRate,
     uint32 at
   )

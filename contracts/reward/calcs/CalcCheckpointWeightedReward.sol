@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import './CalcLinearRateReward.sol';
+import './CalcLinearRewardBalances.sol';
 
-abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
+abstract contract CalcCheckpointWeightedReward is CalcLinearRewardBalances {
   uint256 private _accumRate;
   mapping(uint32 => uint256) private _accumHistory;
 
@@ -44,7 +44,7 @@ abstract contract CalcCheckpointWeightedReward is CalcLinearRateReward {
   function isHistory(uint32 at) internal view virtual returns (bool);
 
   function internalCalcRateAndReward(
-    RewardEntry memory entry,
+    RewardBalance memory entry,
     uint256 lastAccumRate,
     uint32 at
   )

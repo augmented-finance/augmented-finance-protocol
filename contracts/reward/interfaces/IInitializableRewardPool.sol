@@ -10,7 +10,7 @@ interface IInitializableRewardPool {
     uint16 baselinePercentage;
   }
 
-  function initialize(InitData calldata) external;
+  function initializeRewardPool(InitData calldata) external;
 
-  function initializedWith() external view returns (InitData memory);
+  function initializedRewardPoolWith() external view returns (InitData memory);
 }

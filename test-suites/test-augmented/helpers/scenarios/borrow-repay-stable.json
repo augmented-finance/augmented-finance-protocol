@@ -170,7 +170,7 @@
       ]
     },
     {
-      "description": "User 1 deposits 1000 DAI, user 2 tries to borrow 1000 DAI at a stable rate without any collateral (revert expected) User 1 withdrawws",
+      "description": "User 1 deposits 1000 DAI, user 2 tries to borrow 1000 DAI at a stable rate without any collateral (revert expected) User 1 withdraws",
       "actions": [
         {
           "name": "mint",
