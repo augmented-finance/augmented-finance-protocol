@@ -48,12 +48,12 @@ abstract contract MarketAccessBitmask {
   }
 
   modifier onlySweepAdmin() {
-    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.SWEEP_ADMIN, Errors.CT_CALLER_MUST_BE_SWEEP_ADMIN);
+    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.SWEEP_ADMIN, Errors.CALLER_NOT_SWEEP_ADMIN);
     _;
   }
 
   modifier onlyRewardAdmin() {
-    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.REWARD_CONFIG_ADMIN, Errors.CT_CALLER_MUST_BE_REWARD_ADMIN);
+    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.REWARD_CONFIG_ADMIN, Errors.CALLER_NOT_REWARD_CONFIG_ADMIN);
     _;
   }
 
@@ -61,13 +61,13 @@ abstract contract MarketAccessBitmask {
     _remoteAcl.requireAnyOf(
       msg.sender,
       AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR,
-      Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
+      Errors.CALLER_NOT_REWARD_CONFIG_ADMIN
     );
     _;
   }
 
   modifier onlyRewardRateAdmin() {
-    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.REWARD_RATE_ADMIN, Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN);
+    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.REWARD_RATE_ADMIN, Errors.CALLER_NOT_REWARD_RATE_ADMIN);
     _;
   }
 }

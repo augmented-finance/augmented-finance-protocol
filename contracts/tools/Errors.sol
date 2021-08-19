@@ -46,7 +46,7 @@ library Errors {
 
   string public constant LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR = '27'; // The caller of the function is not the lending pool configurator
 
-  string public constant CT_CALLER_MUST_BE_LENDING_POOL = '29'; // The caller of this function must be a lending pool
+  string public constant CALLER_NOT_LENDING_POOL = '29'; // The caller of this function must be a lending pool
 
   string public constant RL_RESERVE_ALREADY_INITIALIZED = '32'; // Reserve has already been initialized
   string public constant CALLER_NOT_POOL_ADMIN = '33'; // The caller must be the pool admin
@@ -71,6 +71,8 @@ library Errors {
   string public constant CT_INVALID_BURN_AMOUNT = '58'; //invalid amount to burn
   string public constant BORROW_ALLOWANCE_NOT_ENOUGH = '59'; // User borrows on behalf, but allowance are too small
 
+  string public constant CALLER_NOT_REF_ADMIN = '61';
+  string public constant VL_INSUFFICIENT_REWARD_AVAILABLE = '62';
   string public constant LP_CALLER_MUST_BE_DEPOSIT_TOKEN = '63';
   string public constant LP_IS_PAUSED = '64'; // Pool is paused
   string public constant LP_NO_MORE_RESERVES_ALLOWED = '65';
@@ -89,27 +91,25 @@ library Errors {
   string public constant VL_CONTRACT_REQUIRED = '78';
   string public constant SDT_STABLE_DEBT_OVERFLOW = '79';
   string public constant SDT_BURN_EXCEEDS_BALANCE = '80';
-  string public constant CT_CALLER_MUST_BE_REWARD_ADMIN = '81'; // The caller of this function must be a reward admin
+  string public constant CALLER_NOT_REWARD_CONFIG_ADMIN = '81'; // The caller of this function must be a reward admin
   string public constant LP_INVALID_PERCENTAGE = '82'; // Percentage can't be more than 100%
   string public constant LP_IS_NOT_TRUSTED_FLASHLOAN = '83';
-  string public constant CT_CALLER_MUST_BE_SWEEP_ADMIN = '84';
+  string public constant CALLER_NOT_SWEEP_ADMIN = '84';
   string public constant LP_TOO_MANY_NESTED_CALLS = '85';
   string public constant LP_RESTRICTED_FEATURE = '86';
   string public constant LP_TOO_MANY_FLASHLOAN_CALLS = '87';
   string public constant RW_BASELINE_EXCEEDED = '88';
-  string public constant CT_CALLER_MUST_BE_REWARD_RATE_ADMIN = '89';
-  string public constant CT_CALLER_MUST_BE_REWARD_CONTROLLER = '90';
+  string public constant CALLER_NOT_REWARD_RATE_ADMIN = '89';
+  string public constant CALLER_NOT_REWARD_CONTROLLER = '90';
   string public constant RW_REWARD_PAUSED = '91';
-  string public constant CT_CALLER_MUST_BE_TEAM_MANAGER = '92';
+  string public constant CALLER_NOT_TEAM_MANAGER = '92';
   string public constant STK_REDEEM_PAUSED = '93';
   string public constant STK_INSUFFICIENT_COOLDOWN = '94';
   string public constant STK_UNSTAKE_WINDOW_FINISHED = '95';
   string public constant STK_INVALID_BALANCE_ON_COOLDOWN = '96';
   string public constant STK_EXCESSIVE_SLASH_PCT = '97';
   string public constant STK_EXCESSIVE_COOLDOWN_PERIOD = '98';
-  string public constant STK_WRONG_UNSTAKE_PERIOD = '98';
-
-  string public constant VL_INSUFFICIENT_REWARD_AVAILABLE = '99';
+  string public constant STK_WRONG_UNSTAKE_PERIOD = '99';
 
   string public constant TXT_OWNABLE_CALLER_NOT_OWNER = 'Ownable: caller is not the owner';
   string public constant TXT_CALLER_NOT_PROXY_OWNER = 'ProxyOwner: caller is not the owner';
