@@ -17,7 +17,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     uint256 rewardLimit,
     uint32 meltDownAt,
     string memory rewardPoolName
-  ) ControlledRewardPool(controller, 0, NO_BASELINE) BasePermitRewardPool(rewardPoolName) {
+  ) ControlledRewardPool(controller, 0, 0) BasePermitRewardPool(rewardPoolName) {
     _rewardLimit = rewardLimit;
     internalSetMeltDownAt(meltDownAt);
   }
