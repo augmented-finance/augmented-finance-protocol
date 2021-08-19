@@ -80,16 +80,12 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     emit RewardPoolRemoved(address(pool), poolMask);
   }
 
-  function getPoolMask(address pool) public view returns (uint256 poolMask) {
+  function getPoolMask(address pool) public view returns (uint256) {
     uint256 poolDesc = _poolDesc[address(pool)];
     if (poolDesc == 0) {
       return 0;
     }
-    poolMask = 1 << ((poolDesc & POOL_ID_MASK) - 1);
-    if (poolMask & _ignoreMask != 0) {
-      return 0;
-    }
-    return poolMask;
+    return 1 << ((poolDesc & POOL_ID_MASK) - 1);
   }
 
   function internalSetPoolInfo(address pool, uint256 info) internal {
@@ -204,10 +200,7 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
   ) external override {
     uint256 poolDesc = _poolDesc[msg.sender];
     uint256 poolMask = poolDesc & POOL_ID_MASK;
-    if (poolMask > 0) {
-      poolMask = 1 << (poolMask - 1);
-    }
-    require(poolMask & ~_ignoreMask != 0, 'unknown pool');
+    require(poolMask != 0, 'unknown pool');
     poolDesc >>= POOL_ID_BITS;
 
     if (allocated > 0) {
@@ -219,6 +212,7 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
       return;
     }
 
+    poolMask = 1 << (poolMask - 1);
     uint256 pullMask = _memberOf[holder];
     if (pullMask & poolMask != poolMask) {
       _memberOf[holder] = pullMask | poolMask;
