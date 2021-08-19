@@ -84,7 +84,7 @@ contract RewardConfigurator is
   }
 
   function _createRewardPool(IManagedRewardController ctl, PoolInitData calldata entry) private returns (address) {
-    IInitializableRewardPool.InitData memory params = IInitializableRewardPool.InitData(
+    IInitializableRewardPool.InitRewardPoolData memory params = IInitializableRewardPool.InitRewardPoolData(
       ctl,
       entry.poolName,
       entry.baselinePercentage
@@ -109,7 +109,7 @@ contract RewardConfigurator is
 
   function _initRewardPool(IManagedRewardController ctl, PoolInitData calldata entry) private returns (address) {
     IInitializableRewardPool(entry.provider).initializeRewardPool(
-      IInitializableRewardPool.InitData(ctl, entry.poolName, entry.baselinePercentage)
+      IInitializableRewardPool.InitRewardPoolData(ctl, entry.poolName, entry.baselinePercentage)
     );
 
     ctl.addRewardPool(IManagedRewardPool(entry.provider));
@@ -154,7 +154,8 @@ contract RewardConfigurator is
   }
 
   function updateRewardPool(PoolUpdateData calldata input) external onlyRewardAdmin {
-    IInitializableRewardPool.InitData memory params = IInitializableRewardPool(input.pool).initializedRewardPoolWith();
+    IInitializableRewardPool.InitRewardPoolData memory params = IInitializableRewardPool(input.pool)
+      .initializedRewardPoolWith();
     _proxies.upgradeAndCall(
       IProxy(input.pool),
       input.impl,
@@ -168,7 +169,7 @@ contract RewardConfigurator is
     view
     returns (bytes memory)
   {
-    IInitializableRewardPool.InitData memory data = IInitializableRewardPool.InitData(
+    IInitializableRewardPool.InitRewardPoolData memory data = IInitializableRewardPool.InitRewardPoolData(
       getDefaultController(),
       poolName,
       baselinePercentage
@@ -181,13 +182,13 @@ contract RewardConfigurator is
     string calldata symbol,
     uint8 decimals
   ) external view returns (bytes memory) {
-    IInitializableRewardToken.InitData memory data = IInitializableRewardToken.InitData(
+    IInitializableRewardToken.InitRewardTokenData memory data = IInitializableRewardToken.InitRewardTokenData(
       _remoteAcl,
       name,
       symbol,
       decimals
     );
-    return abi.encodeWithSelector(IInitializableRewardToken.initialize.selector, data);
+    return abi.encodeWithSelector(IInitializableRewardToken.initializeRewardToken.selector, data);
   }
 
   function configureRewardBoost(
