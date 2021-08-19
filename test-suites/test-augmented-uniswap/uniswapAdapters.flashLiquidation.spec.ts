@@ -18,7 +18,7 @@ const { expect } = require('chai');
 makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
   let mockUniswapRouter: MockUniswapV2Router02;
   let evmSnapshotId: string;
-  const { INVALID_HF, LP_LIQUIDATION_CALL_FAILED } = ProtocolErrors;
+  const { INVALID_HF } = ProtocolErrors;
 
   before(async () => {
     mockUniswapRouter = await getMockUniswapRouter();
@@ -311,7 +311,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           return;
         }
         const txTimestamp = new BigNumber(
-          (await DRE.ethers.provider.getBlock(tx.blockNumber)).timestamp
+          (await (<any>DRE).ethers.provider.getBlock(tx.blockNumber)).timestamp
         );
 
         const stableDebtBeforeTx = calcExpectedStableDebtTokenBalance(
@@ -557,7 +557,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           return;
         }
         const txTimestamp = new BigNumber(
-          (await DRE.ethers.provider.getBlock(tx.blockNumber)).timestamp
+          (await (<any>DRE).ethers.provider.getBlock(tx.blockNumber)).timestamp
         );
 
         const stableDebtBeforeTx = calcExpectedStableDebtTokenBalance(
@@ -798,7 +798,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
               params,
               0
             )
-        ).to.be.revertedWith(LP_LIQUIDATION_CALL_FAILED);
+        ).to.be.revertedWith('SafeERC20: low-level call failed');
       });
 
       it('Revert if requested multiple assets', async () => {

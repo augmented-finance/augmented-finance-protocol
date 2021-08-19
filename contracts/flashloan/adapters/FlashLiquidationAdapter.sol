@@ -151,7 +151,8 @@ contract FlashLiquidationAdapter is BaseUniswapAdapter {
     }
 
     // Allow repay of flash loan
-    IERC20(borrowedAsset).safeApprove(address(LENDING_POOL), vars.flashLoanDebt);
+    // Dont use safeApprove here as there can be leftovers
+    IERC20(borrowedAsset).approve(address(LENDING_POOL), vars.flashLoanDebt);
 
     // Transfer remaining tokens to initiator
     if (vars.remainingTokens > 0) {

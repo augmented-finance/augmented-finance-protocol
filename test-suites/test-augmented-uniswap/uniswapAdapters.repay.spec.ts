@@ -1,23 +1,19 @@
 import { makeSuite, TestEnv } from '../test-augmented/helpers/make-suite';
 import {
   convertToCurrencyDecimals,
-  getContract,
   buildPermitParams,
   getSignatureFromTypedData,
   buildRepayAdapterParams,
 } from '../../helpers/contracts-helpers';
-import { getMockUniswapRouter } from '../../helpers/contracts-getters';
+import { getMockUniswapRouter, getStableDebtToken, getVariableDebtToken } from '../../helpers/contracts-getters';
 import { deployUniswapRepayAdapter } from '../../helpers/contracts-deployments';
 import { MockUniswapV2Router02 } from '../../types/MockUniswapV2Router02';
 import { Zero } from '@ethersproject/constants';
 import BigNumber from 'bignumber.js';
 import { DRE, evmRevert, evmSnapshot } from '../../helpers/misc-utils';
 import { ethers } from 'ethers';
-import { eContractid } from '../../helpers/types';
-import { StableDebtToken } from '../../types/StableDebtToken';
 import { BUIDLEREVM_CHAINID } from '../../helpers/buidler-constants';
 import { MAX_UINT_AMOUNT } from '../../helpers/constants';
-import { VariableDebtToken } from '../../types';
 const { parseEther } = ethers.utils;
 
 const { expect } = require('chai');
@@ -127,10 +123,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           await helpersContract.getReserveTokensAddresses(dai.address)
         ).stableDebtTokenAddress;
 
-        const daiStableDebtContract = await getContract<StableDebtToken>(
-          eContractid.StableDebtToken,
-          daiStableDebtTokenAddress
-        );
+        const daiStableDebtContract = await getStableDebtToken(daiStableDebtTokenAddress);
 
         const userDaiStableDebtAmountBefore = await daiStableDebtContract.balanceOf(userAddress);
 
@@ -221,8 +214,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           await helpersContract.getReserveTokensAddresses(dai.address)
         ).stableDebtTokenAddress;
 
-        const daiStableDebtContract = await getContract<StableDebtToken>(
-          eContractid.StableDebtToken,
+        const daiStableDebtContract = await getStableDebtToken(
           daiStableDebtTokenAddress
         );
 
@@ -353,7 +345,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         ).to.be.revertedWith('CALLER_MUST_BE_LENDING_POOL');
       });
 
-      it('should revert if there is not debt to repay with the specified rate mode', async () => {
+      it('should revert if there is no debt to repay with the specified rate mode', async () => {
         const { users, pool, weth, oracle, dai, uniswapRepayAdapter, aWETH } = testEnv;
         const user = users[0].signer;
         const userAddress = users[0].address;
@@ -404,7 +396,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         ).to.be.reverted;
       });
 
-      it('should revert if there is not debt to repay', async () => {
+      it('should revert if there is no debt to repay', async () => {
         const { users, pool, weth, oracle, dai, uniswapRepayAdapter, aWETH } = testEnv;
         const user = users[0].signer;
         const userAddress = users[0].address;
@@ -511,7 +503,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         ).to.be.revertedWith('maxAmountToSwap exceed max slippage');
       });
 
-      it('should swap, repay debt and pull the needed ATokens leaving no leftovers', async () => {
+      it('should swap, repay debt and pull the needed deposit tokens leaving no leftovers', async () => {
         const {
           users,
           pool,
@@ -540,8 +532,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           await helpersContract.getReserveTokensAddresses(dai.address)
         ).stableDebtTokenAddress;
 
-        const daiStableDebtContract = await getContract<StableDebtToken>(
-          eContractid.StableDebtToken,
+        const daiStableDebtContract = await getStableDebtToken(
           daiStableDebtTokenAddress
         );
 
@@ -643,8 +634,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           await helpersContract.getReserveTokensAddresses(dai.address)
         ).stableDebtTokenAddress;
 
-        const daiStableDebtContract = await getContract<StableDebtToken>(
-          eContractid.StableDebtToken,
+        const daiStableDebtContract = await getStableDebtToken(
           daiStableDebtTokenAddress
         );
 
@@ -734,9 +724,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           await helpersContract.getReserveTokensAddresses(dai.address)
         ).variableDebtTokenAddress;
 
-        const daiVariableDebtContract = await getContract<StableDebtToken>(
-          eContractid.VariableDebtToken,
-          daiStableVariableTokenAddress
+        const daiVariableDebtContract = await getStableDebtToken(daiStableVariableTokenAddress
         );
 
         const userDaiVariableDebtAmountBefore = await daiVariableDebtContract.balanceOf(
@@ -818,8 +806,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           await helpersContract.getReserveTokensAddresses(dai.address)
         ).variableDebtTokenAddress;
 
-        const daiVariableDebtContract = await getContract<VariableDebtToken>(
-          eContractid.VariableDebtToken,
+        const daiVariableDebtContract = await getVariableDebtToken(
           daiVariableDebtTokenAddress
         );
 
@@ -917,8 +904,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           await helpersContract.getReserveTokensAddresses(dai.address)
         ).stableDebtTokenAddress;
 
-        const daiStableDebtContract = await getContract<StableDebtToken>(
-          eContractid.StableDebtToken,
+        const daiStableDebtContract = await getStableDebtToken(
           daiStableDebtTokenAddress
         );
 
@@ -990,8 +976,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           await helpersContract.getReserveTokensAddresses(dai.address)
         ).stableDebtTokenAddress;
 
-        const daiStableDebtContract = await getContract<StableDebtToken>(
-          eContractid.StableDebtToken,
+        const daiStableDebtContract = await getStableDebtToken(
           daiStableDebtTokenAddress
         );
 
@@ -1055,7 +1040,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         expect(userAEthBalance).to.be.gte(userAEthBalanceBefore.sub(liquidityToSwap));
       });
 
-      it('should revert if there is not debt to repay', async () => {
+      it('should revert if there is no debt to repay', async () => {
         const { users, weth, aWETH, oracle, dai, uniswapRepayAdapter } = testEnv;
         const user = users[0].signer;
 
@@ -1135,7 +1120,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         ).to.be.revertedWith('maxAmountToSwap exceed max slippage');
       });
 
-      it('should swap, repay debt and pull the needed ATokens leaving no leftovers', async () => {
+      it('should swap, repay debt and pull the needed deposit tokens leaving no leftovers', async () => {
         const {
           users,
           pool,
@@ -1164,8 +1149,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           await helpersContract.getReserveTokensAddresses(dai.address)
         ).stableDebtTokenAddress;
 
-        const daiStableDebtContract = await getContract<StableDebtToken>(
-          eContractid.StableDebtToken,
+        const daiStableDebtContract = await getStableDebtToken(
           daiStableDebtTokenAddress
         );
 
@@ -1246,8 +1230,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           await helpersContract.getReserveTokensAddresses(dai.address)
         ).stableDebtTokenAddress;
 
-        const daiStableDebtContract = await getContract<StableDebtToken>(
-          eContractid.StableDebtToken,
+        const daiStableDebtContract = await getStableDebtToken(
           daiStableDebtTokenAddress
         );
 
@@ -1329,10 +1312,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           await helpersContract.getReserveTokensAddresses(dai.address)
         ).variableDebtTokenAddress;
 
-        const daiVariableDebtContract = await getContract<StableDebtToken>(
-          eContractid.VariableDebtToken,
-          daiStableVariableTokenAddress
-        );
+        const daiVariableDebtContract = await getStableDebtToken(daiStableVariableTokenAddress);
 
         const userDaiVariableDebtAmountBefore = await daiVariableDebtContract.balanceOf(
           userAddress
@@ -1406,8 +1386,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           await helpersContract.getReserveTokensAddresses(dai.address)
         ).variableDebtTokenAddress;
 
-        const daiVariableDebtContract = await getContract<StableDebtToken>(
-          eContractid.StableDebtToken,
+        const daiVariableDebtContract = await getStableDebtToken(
           daiVariableDebtTokenAddress
         );
 
