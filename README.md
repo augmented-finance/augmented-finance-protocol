@@ -80,7 +80,7 @@ This program is free software: you can redistribute it and/or modify it under th
 1. [Aave](https://github.com/aave)
 2. [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts)
 3. [Componund](https://github.com/compound-finance)
-4. [Curve] (https://github.com/curvefi)
+4. [Curve](https://github.com/curvefi)
 
 ## More Questions?
 
