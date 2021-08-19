@@ -22,11 +22,9 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
     bool useEthPath;
   }
 
-  constructor(
-    IFlashLoanAddressProvider addressesProvider,
-    IUniswapV2Router02 uniswapRouter,
-    address wethAddress
-  ) BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
+  constructor(IFlashLoanAddressProvider addressesProvider, IUniswapV2Router02 uniswapRouter)
+    BaseUniswapAdapter(addressesProvider, uniswapRouter)
+  {}
 
   /**
    * @dev Uses the received funds from the flash loan to repay a debt on the protocol on behalf of the user. Then pulls

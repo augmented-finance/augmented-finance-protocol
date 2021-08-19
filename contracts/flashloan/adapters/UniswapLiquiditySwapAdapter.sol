@@ -29,11 +29,9 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     bool[] useEthPath;
   }
 
-  constructor(
-    IFlashLoanAddressProvider addressesProvider,
-    IUniswapV2Router02 uniswapRouter,
-    address wethAddress
-  ) BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
+  constructor(IFlashLoanAddressProvider addressesProvider, IUniswapV2Router02 uniswapRouter)
+    BaseUniswapAdapter(addressesProvider, uniswapRouter)
+  {}
 
   /**
    * @dev Swaps the received reserve amount from the flash loan into the asset specified in the params.

@@ -188,21 +188,18 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
 
     describe('constructor', () => {
       it('should deploy with correct parameters', async () => {
-        const { addressesProvider, weth } = testEnv;
+        const { addressesProvider } = testEnv;
         await deployFlashLiquidationAdapter([
           addressesProvider.address,
-          mockUniswapRouter.address,
-          weth.address,
+          mockUniswapRouter.address
         ]);
       });
 
       it('should revert if not valid addresses provider', async () => {
-        const { weth } = testEnv;
         expect(
           deployFlashLiquidationAdapter([
             mockUniswapRouter.address,
-            mockUniswapRouter.address,
-            weth.address,
+            mockUniswapRouter.address
           ])
         ).to.be.reverted;
       });

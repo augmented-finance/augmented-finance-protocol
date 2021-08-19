@@ -5,19 +5,22 @@ import '../../tools/math/PercentageMath.sol';
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import '../../dependencies/openzeppelin/contracts/Ownable.sol';
 import '../../interfaces/IFlashLoanAddressProvider.sol';
 import '../../protocol/libraries/types/DataTypes.sol';
 import '../../interfaces/IPriceOracleGetter.sol';
 import '../../tools/tokens/IERC20WithPermit.sol';
 import '../../tools/tokens/IERC20Details.sol';
+import '../../tools/SweepBase.sol';
+import '../../access/AccessFlags.sol';
+import '../../access/AccessHelper.sol';
+import '../../misc/interfaces/IWETHGateway.sol';
 import '../base/FlashLoanReceiverBase.sol';
 import './interfaces/IUniswapV2Router02.sol';
 import './interfaces/IBaseUniswapAdapter.sol';
 
 // solhint-disable var-name-mixedcase, func-name-mixedcase
 /// @dev Access to Uniswap V2
-abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapter {
+abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, SweepBase, IBaseUniswapAdapter {
   using SafeMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
@@ -28,29 +31,26 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
   address public constant override USD_ADDRESS = 0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96;
 
   address public immutable override WETH_ADDRESS;
-  IPriceOracleGetter public immutable override ORACLE;
   IUniswapV2Router02 public immutable override UNISWAP_ROUTER;
 
-  // Equals to (1 - Flash Loan fee)
-  uint16 private immutable flashloanPremiumRev;
-
-  constructor(
-    IFlashLoanAddressProvider provider,
-    IUniswapV2Router02 uniswapRouter,
-    address wethAddress
-  ) FlashLoanReceiverBase(provider) {
-    ILendingPool pool = ILendingPool(provider.getLendingPool());
-    flashloanPremiumRev = uint16(
-      SafeMath.sub(PercentageMath.ONE, pool.getFlashloanPremiumPct(), 'INVALID_FLASHLOAN_PREMIUM')
-    );
-
-    ORACLE = IPriceOracleGetter(provider.getPriceOracle());
+  constructor(IFlashLoanAddressProvider provider, IUniswapV2Router02 uniswapRouter) FlashLoanReceiverBase(provider) {
     UNISWAP_ROUTER = uniswapRouter;
-    WETH_ADDRESS = wethAddress;
+    IMarketAccessController ac = IMarketAccessController(
+      ILendingPool(provider.getLendingPool()).getAddressesProvider()
+    );
+    WETH_ADDRESS = IWETHGateway(ac.getAddress(AccessFlags.WETH_GATEWAY)).getWETHAddress();
+  }
+
+  function ORACLE() public view override returns (IPriceOracleGetter) {
+    return IPriceOracleGetter(ADDRESS_PROVIDER.getPriceOracle());
+  }
+
+  function getFlashloanPremiumRev() private view returns (uint16) {
+    return uint16(SafeMath.sub(PercentageMath.ONE, LENDING_POOL.getFlashloanPremiumPct(), 'INVALID_FLASHLOAN_PREMIUM'));
   }
 
   function FLASHLOAN_PREMIUM_TOTAL() external view override returns (uint256) {
-    return PercentageMath.ONE - flashloanPremiumRev;
+    return LENDING_POOL.getFlashloanPremiumPct();
   }
 
   /**
@@ -133,8 +133,10 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     uint256 fromAssetDecimals = _getDecimals(assetToSwapFrom);
     uint256 toAssetDecimals = _getDecimals(assetToSwapTo);
 
-    uint256 fromAssetPrice = _getPrice(assetToSwapFrom);
-    uint256 toAssetPrice = _getPrice(assetToSwapTo);
+    IPriceOracleGetter oracle = ORACLE();
+
+    uint256 fromAssetPrice = oracle.getAssetPrice(assetToSwapFrom);
+    uint256 toAssetPrice = oracle.getAssetPrice(assetToSwapTo);
 
     uint256 expectedMinAmountOut = amountToSwap
       .mul(fromAssetPrice.mul(10**toAssetDecimals))
@@ -190,8 +192,10 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     uint256 fromAssetDecimals = _getDecimals(assetToSwapFrom);
     uint256 toAssetDecimals = _getDecimals(assetToSwapTo);
 
-    uint256 fromAssetPrice = _getPrice(assetToSwapFrom);
-    uint256 toAssetPrice = _getPrice(assetToSwapTo);
+    IPriceOracleGetter oracle = ORACLE();
+
+    uint256 fromAssetPrice = oracle.getAssetPrice(assetToSwapFrom);
+    uint256 toAssetPrice = oracle.getAssetPrice(assetToSwapTo);
 
     uint256 expectedMaxAmountToSwap = amountToReceive
       .mul(toAssetPrice.mul(10**fromAssetDecimals))
@@ -227,15 +231,6 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     emit Swapped(assetToSwapFrom, assetToSwapTo, amounts[0], amounts[amounts.length - 1]);
 
     return amounts[0];
-  }
-
-  /**
-   * @dev Get the price of the asset from the oracle denominated in eth
-   * @param asset address
-   * @return eth price for the asset
-   */
-  function _getPrice(address asset) internal view returns (uint256) {
-    return ORACLE.getAssetPrice(asset);
   }
 
   /**
@@ -298,22 +293,20 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     return !(uint256(signature.deadline) == uint256(signature.v) && uint256(signature.deadline) == 0);
   }
 
+  struct AssetUsdPrice {
+    uint256 ethUsdPrice;
+    uint256 reservePrice;
+    uint256 decimals;
+  }
+
   /**
    * @dev Calculates the value denominated in USD
-   * @param reserve Address of the reserve
+   * @param reserve Reserve price params
    * @param amount Amount of the reserve
-   * @param decimals Decimals of the reserve
    * @return whether or not permit should be called
    */
-  function _calcUsdValue(
-    address reserve,
-    uint256 amount,
-    uint256 decimals
-  ) internal view returns (uint256) {
-    uint256 ethUsdPrice = _getPrice(USD_ADDRESS);
-    uint256 reservePrice = _getPrice(reserve);
-
-    return amount.mul(reservePrice).div(10**decimals).mul(ethUsdPrice).div(10**18);
+  function _calcUsdValue(AssetUsdPrice memory reserve, uint256 amount) internal pure returns (uint256) {
+    return amount.mul(reserve.reservePrice).div(10**reserve.decimals).mul(reserve.ethUsdPrice).div(10**18);
   }
 
   /**
@@ -332,11 +325,20 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     address reserveOut,
     uint256 amountIn
   ) internal view returns (AmountCalc memory) {
-    // Subtract flash loan fee
-    uint256 finalAmountIn = amountIn.percentMul(flashloanPremiumRev);
+    // Deduct flash loan fee
+    uint256 finalAmountIn = amountIn.percentMul(getFlashloanPremiumRev());
+
+    IPriceOracleGetter oracle = ORACLE();
+
+    AssetUsdPrice memory reserveInPrice = AssetUsdPrice(
+      oracle.getAssetPrice(USD_ADDRESS),
+      oracle.getAssetPrice(reserveIn),
+      _getDecimals(reserveIn)
+    );
+    AssetUsdPrice memory reserveOutPrice;
 
     if (reserveIn == reserveOut) {
-      uint256 reserveDecimals = _getDecimals(reserveIn);
+      reserveOutPrice = reserveInPrice;
       address[] memory path = new address[](1);
       path[0] = reserveIn;
 
@@ -344,10 +346,16 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
         AmountCalc(
           finalAmountIn,
           finalAmountIn.mul(10**18).div(amountIn),
-          _calcUsdValue(reserveIn, amountIn, reserveDecimals),
-          _calcUsdValue(reserveIn, finalAmountIn, reserveDecimals),
+          _calcUsdValue(reserveInPrice, amountIn),
+          _calcUsdValue(reserveInPrice, finalAmountIn),
           path
         );
+    } else {
+      reserveOutPrice = AssetUsdPrice(
+        reserveInPrice.ethUsdPrice,
+        oracle.getAssetPrice(reserveOut),
+        _getDecimals(reserveOut)
+      );
     }
 
     address[] memory simplePath = new address[](2);
@@ -382,19 +390,16 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
       bestAmountOut = amountsWithWeth[2];
     }
 
-    uint256 reserveInDecimals = _getDecimals(reserveIn);
-    uint256 reserveOutDecimals = _getDecimals(reserveOut);
-
-    uint256 outPerInPrice = finalAmountIn.mul(10**18).mul(10**reserveOutDecimals).div(
-      bestAmountOut.mul(10**reserveInDecimals)
+    uint256 outPerInPrice = finalAmountIn.mul(10**18).mul(10**reserveOutPrice.decimals).div(
+      bestAmountOut.mul(10**reserveInPrice.decimals)
     );
 
     return
       AmountCalc(
         bestAmountOut,
         outPerInPrice,
-        _calcUsdValue(reserveIn, amountIn, reserveInDecimals),
-        _calcUsdValue(reserveOut, bestAmountOut, reserveOutDecimals),
+        _calcUsdValue(reserveInPrice, amountIn),
+        _calcUsdValue(reserveOutPrice, bestAmountOut),
         (bestAmountOut == 0) ? new address[](2) : (bestAmountOut == amountsWithoutWeth[1]) ? simplePath : pathWithWeth
       );
   }
@@ -415,10 +420,21 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     address reserveOut,
     uint256 amountOut
   ) internal view returns (AmountCalc memory) {
+    IPriceOracleGetter oracle = ORACLE();
+
+    AssetUsdPrice memory reserveInPrice = AssetUsdPrice(
+      oracle.getAssetPrice(USD_ADDRESS),
+      oracle.getAssetPrice(reserveIn),
+      _getDecimals(reserveIn)
+    );
+    AssetUsdPrice memory reserveOutPrice;
+
+    uint16 flashloanPremiumRev = getFlashloanPremiumRev();
+
     if (reserveIn == reserveOut) {
+      reserveOutPrice = reserveInPrice;
       // Add flash loan fee
       uint256 amountIn = amountOut.percentDiv(flashloanPremiumRev);
-      uint256 reserveDecimals = _getDecimals(reserveIn);
       address[] memory path_ = new address[](1);
       path_[0] = reserveIn;
 
@@ -426,10 +442,16 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
         AmountCalc(
           amountIn,
           amountOut.mul(10**18).div(amountIn),
-          _calcUsdValue(reserveIn, amountIn, reserveDecimals),
-          _calcUsdValue(reserveIn, amountOut, reserveDecimals),
+          _calcUsdValue(reserveInPrice, amountIn),
+          _calcUsdValue(reserveInPrice, amountOut),
           path_
         );
+    } else {
+      reserveOutPrice = AssetUsdPrice(
+        reserveInPrice.ethUsdPrice,
+        oracle.getAssetPrice(reserveOut),
+        _getDecimals(reserveOut)
+      );
     }
 
     (uint256[] memory amounts, address[] memory path) = _getAmountsInAndPath(reserveIn, reserveOut, amountOut);
@@ -437,19 +459,16 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     // Add flash loan fee
     uint256 finalAmountIn = amounts[0].percentDiv(flashloanPremiumRev);
 
-    uint256 reserveInDecimals = _getDecimals(reserveIn);
-    uint256 reserveOutDecimals = _getDecimals(reserveOut);
-
-    uint256 inPerOutPrice = amountOut.mul(10**18).mul(10**reserveInDecimals).div(
-      finalAmountIn.mul(10**reserveOutDecimals)
+    uint256 inPerOutPrice = amountOut.mul(10**18).mul(10**reserveInPrice.decimals).div(
+      finalAmountIn.mul(10**reserveOutPrice.decimals)
     );
 
     return
       AmountCalc(
         finalAmountIn,
         inPerOutPrice,
-        _calcUsdValue(reserveIn, finalAmountIn, reserveInDecimals),
-        _calcUsdValue(reserveOut, amountOut, reserveOutDecimals),
+        _calcUsdValue(reserveInPrice, finalAmountIn),
+        _calcUsdValue(reserveOutPrice, amountOut),
         path
       );
   }
@@ -529,18 +548,8 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     return UNISWAP_ROUTER.getAmountsIn(amountOut, path);
   }
 
-  // /**
-  //  * @dev transfer ERC20 from the utility contract, for ERC20 recovery in case of stuck tokens due
-  //  * direct transfers to the contract address.
-  //  * @param token token to transfer
-  //  * @param to recipient of the transfer
-  //  * @param amount amount to send
-  //  */
-  // function sweepToken(
-  //   address token,
-  //   address to,
-  //   uint256 amount
-  // ) external onlyOwner {
-  //   IERC20(token).safeTransfer(to, amount);
-  // }
+  function _onlySweepAdmin() internal view override {
+    IMarketAccessController ac = IMarketAccessController(LENDING_POOL.getAddressesProvider());
+    AccessHelper.requireAnyOf(ac, msg.sender, AccessFlags.SWEEP_ADMIN, Errors.CALLER_NOT_SWEEP_ADMIN);
+  }
 }

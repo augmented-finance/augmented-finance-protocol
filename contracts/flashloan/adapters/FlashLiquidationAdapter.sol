@@ -39,11 +39,9 @@ contract FlashLiquidationAdapter is BaseUniswapAdapter {
     uint256 borrowedAssetLeftovers;
   }
 
-  constructor(
-    IFlashLoanAddressProvider addressesProvider,
-    IUniswapV2Router02 uniswapRouter,
-    address wethAddress
-  ) BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
+  constructor(IFlashLoanAddressProvider addressesProvider, IUniswapV2Router02 uniswapRouter)
+    BaseUniswapAdapter(addressesProvider, uniswapRouter)
+  {}
 
   /**
    * @dev Liquidate a non-healthy position collateral-wise, with a Health Factor below 1, using Flash Loan and Uniswap to repay flash loan premium.
