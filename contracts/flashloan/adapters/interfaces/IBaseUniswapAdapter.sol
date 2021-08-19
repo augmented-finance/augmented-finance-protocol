@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../interfaces/IPriceOracleGetter.sol';
-import '../../interfaces/IUniswapV2Router02.sol';
+import '../../../interfaces/IPriceOracleGetter.sol';
+import './IUniswapV2Router02.sol';
 
 // solhint-disable func-name-mixedcase
 interface IBaseUniswapAdapter {

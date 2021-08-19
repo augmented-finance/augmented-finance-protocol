@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../interfaces/IUniswapV2Router02.sol';
+import '../../flashloan/adapters/interfaces/IUniswapV2Router02.sol';
 import '../tokens/MintableERC20.sol';
 
 contract MockUniswapV2Router02 is IUniswapV2Router02 {
@@ -75,12 +75,7 @@ contract MockUniswapV2Router02 is IUniswapV2Router02 {
     defaultMockValue = value;
   }
 
-  function getAmountsOut(uint256 amountIn, address[] calldata path)
-    external
-    view
-    override
-    returns (uint256[] memory)
-  {
+  function getAmountsOut(uint256 amountIn, address[] calldata path) external view override returns (uint256[] memory) {
     uint256[] memory amounts = new uint256[](path.length);
     amounts[0] = amountIn;
     amounts[1] = _amountsOut[path[0]][path[1]][amountIn] > 0
@@ -89,12 +84,7 @@ contract MockUniswapV2Router02 is IUniswapV2Router02 {
     return amounts;
   }
 
-  function getAmountsIn(uint256 amountOut, address[] calldata path)
-    external
-    view
-    override
-    returns (uint256[] memory)
-  {
+  function getAmountsIn(uint256 amountOut, address[] calldata path) external view override returns (uint256[] memory) {
     uint256[] memory amounts = new uint256[](path.length);
     amounts[0] = _amountsIn[path[0]][path[1]][amountOut] > 0
       ? _amountsIn[path[0]][path[1]][amountOut]

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import '../../../tools/Errors.sol';
-import '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
+import '../../../tools/tokens/IERC20Details.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../interfaces/IPoolToken.sol';

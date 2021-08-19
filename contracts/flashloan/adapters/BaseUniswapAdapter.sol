@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../tools/math/PercentageMath.sol';
-import '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../dependencies/openzeppelin/contracts/IERC20.sol';
-import '../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
-import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import '../dependencies/openzeppelin/contracts/Ownable.sol';
-import '../interfaces/IFlashLoanAddressProvider.sol';
-import '../protocol/libraries/types/DataTypes.sol';
-import '../interfaces/IUniswapV2Router02.sol';
-import '../interfaces/IPriceOracleGetter.sol';
-import '../interfaces/IERC20WithPermit.sol';
-import '../flashloan/base/FlashLoanReceiverBase.sol';
+import '../../tools/math/PercentageMath.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../dependencies/openzeppelin/contracts/Ownable.sol';
+import '../../interfaces/IFlashLoanAddressProvider.sol';
+import '../../protocol/libraries/types/DataTypes.sol';
+import '../../interfaces/IPriceOracleGetter.sol';
+import '../../tools/tokens/IERC20WithPermit.sol';
+import '../../tools/tokens/IERC20Details.sol';
+import '../base/FlashLoanReceiverBase.sol';
+import './interfaces/IUniswapV2Router02.sol';
 import './interfaces/IBaseUniswapAdapter.sol';
 
 // solhint-disable var-name-mixedcase, func-name-mixedcase
-/// @dev Implements the logic for performing assets swaps in Uniswap V2
-abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapter, Ownable {
+/// @dev Access to Uniswap V2
+abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapter {
   using SafeMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
@@ -31,7 +31,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
   IPriceOracleGetter public immutable override ORACLE;
   IUniswapV2Router02 public immutable override UNISWAP_ROUTER;
 
-  // = (1 - Flash Loan fee)
+  // Equals to (1 - Flash Loan fee)
   uint16 private immutable flashloanPremiumRev;
 
   constructor(
@@ -243,7 +243,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
    * @return number of decimals of the asset
    */
   function _getDecimals(address asset) internal view returns (uint256) {
-    return IERC20Detailed(asset).decimals();
+    return IERC20Details(asset).decimals();
   }
 
   /**
@@ -529,18 +529,18 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     return UNISWAP_ROUTER.getAmountsIn(amountOut, path);
   }
 
-  /**
-   * @dev transfer ERC20 from the utility contract, for ERC20 recovery in case of stuck tokens due
-   * direct transfers to the contract address.
-   * @param token token to transfer
-   * @param to recipient of the transfer
-   * @param amount amount to send
-   */
-  function sweepToken(
-    address token,
-    address to,
-    uint256 amount
-  ) external onlyOwner {
-    IERC20(token).safeTransfer(to, amount);
-  }
+  // /**
+  //  * @dev transfer ERC20 from the utility contract, for ERC20 recovery in case of stuck tokens due
+  //  * direct transfers to the contract address.
+  //  * @param token token to transfer
+  //  * @param to recipient of the transfer
+  //  * @param amount amount to send
+  //  */
+  // function sweepToken(
+  //   address token,
+  //   address to,
+  //   uint256 amount
+  // ) external onlyOwner {
+  //   IERC20(token).safeTransfer(to, amount);
+  // }
 }
