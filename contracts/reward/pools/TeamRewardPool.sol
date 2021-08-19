@@ -44,9 +44,9 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     super.setLinearRate(newRate);
   }
 
-  function internalGetReward(address holder, uint256) internal override returns (uint256, uint32) {
+  function internalGetReward(address holder, uint256) internal override returns (uint256, uint32, bool) {
     if (!isUnlocked(getCurrentTick())) {
-      return (0, 0);
+      return (0, 0, true);
     }
     return doGetReward(holder);
   }
@@ -129,7 +129,6 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     } else {
       _totalShare = 0;
     }
-    internalAllocateReward(member, 0, 0, AllocationMode.UnsetPull);
   }
 
   function setTeamManager(address member) external onlyTeamManagerOrConfigurator {

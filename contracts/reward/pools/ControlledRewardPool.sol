@@ -137,7 +137,16 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return address(_controller);
   }
 
-  function claimRewardFor(address holder, uint256 limit) external override onlyController returns (uint256, uint32) {
+  function claimRewardFor(address holder, uint256 limit)
+    external
+    override
+    onlyController
+    returns (
+      uint256,
+      uint32,
+      bool
+    )
+  {
     return internalGetReward(holder, limit);
   }
 
@@ -166,7 +175,14 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _controller.allocatedByPool(holder, allocated, since, mode);
   }
 
-  function internalGetReward(address holder, uint256 limit) internal virtual returns (uint256, uint32);
+  function internalGetReward(address holder, uint256 limit)
+    internal
+    virtual
+    returns (
+      uint256,
+      uint32,
+      bool
+    );
 
   function internalCalcReward(address holder, uint32 at) internal view virtual returns (uint256, uint32);
 

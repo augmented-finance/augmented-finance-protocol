@@ -116,29 +116,28 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     return totalRate;
   }
 
-  function internalUpdateBaseline(uint256 baseline, uint256 baselineMask)
+  function internalUpdateBaseline(uint256 baseline, uint256 allMask)
     internal
     virtual
     returns (uint256 totalRate, uint256)
   {
-    baselineMask &= ~_ignoreMask;
+    allMask &= ~_ignoreMask;
 
-    for (uint8 i = 0; i <= 255; i++) {
-      uint256 mask = uint256(1) << i;
-      if (mask & baselineMask == 0) {
-        if (mask > baselineMask) {
-          break;
-        }
+    for ((uint8 i, uint256 mask) = (0, 1); mask <= allMask; (i, mask) = (i + 1, mask << 1)) {
+      if (mask & allMask == 0) {
+        if (mask == 0) break;
         continue;
       }
+
       (bool hasBaseline, uint256 appliedRate) = _poolList[i].updateBaseline(baseline);
-      if (appliedRate != 0 || hasBaseline) {
+      if (appliedRate != 0) {
         totalRate += appliedRate;
         continue;
+      } else if (!hasBaseline) {
+        allMask &= ~mask;
       }
-      baselineMask &= ~mask;
     }
-    return (totalRate, baselineMask);
+    return (totalRate, allMask);
   }
 
   function setRewardMinter(IRewardMinter minter) external override onlyConfigAdmin {
@@ -216,19 +215,20 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
       emit RewardsAllocated(holder, allocated, msg.sender);
     }
 
-    if (mode == AllocationMode.Push) {
+    if (mode != AllocationMode.SetPull) {
       return;
     }
 
     uint256 pullMask = _memberOf[holder];
-    if (mode == AllocationMode.UnsetPull) {
-      if (pullMask & poolMask != 0) {
-        _memberOf[holder] = pullMask & ~poolMask;
-      }
-    } else {
-      if (pullMask & poolMask != poolMask) {
-        _memberOf[holder] = pullMask | poolMask;
-      }
+    if (pullMask & poolMask != poolMask) {
+      _memberOf[holder] = pullMask | poolMask;
+    }
+  }
+
+  function internalUnsetPull(address holder, uint256 mask) internal {
+    uint256 pullMask = _memberOf[holder];
+    if (pullMask & mask != 0) {
+      _memberOf[holder] = pullMask & ~mask;
     }
   }
 

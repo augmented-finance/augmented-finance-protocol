@@ -118,7 +118,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     return mask;
   }
 
-  function internalClaimAndMintReward(address holder, uint256 mask)
+  function internalClaimAndMintReward(address holder, uint256 allMask)
     internal
     override
     returns (uint256 claimableAmount, uint256)
@@ -130,13 +130,18 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
       delete (_workRewards[holder]);
     }
 
-    for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
-      if (mask & 1 == 0) {
+    for ((uint8 i, uint256 mask) = (0, 1); mask <= allMask; (i, mask) = (i + 1, mask << 1)) {
+      if (mask & allMask == 0) {
+        if (mask == 0) break;
         continue;
       }
 
       IManagedRewardPool pool = getPool(i);
-      (uint256 amount_, ) = pool.claimRewardFor(holder, type(uint256).max);
+      (uint256 amount_, , bool keepPull) = pool.claimRewardFor(holder, type(uint256).max);
+      if (!keepPull) {
+        internalUnsetPull(holder, mask);
+      }
+
       if (amount_ == 0) {
         continue;
       }
@@ -155,13 +160,13 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
       uint256 boost_;
 
       if (_mintExcess || _boostExcessDelegate != address(_boostPool)) {
-        (boost_, boostSince) = _boostPool.claimRewardFor(holder, type(uint256).max);
+        (boost_, boostSince, ) = _boostPool.claimRewardFor(holder, type(uint256).max);
       } else {
         uint256 boostLimit_;
         if (boostLimit > boostAmount) {
           boostLimit_ = boostLimit - boostAmount;
         }
-        (boost_, boostSince) = _boostPool.claimRewardFor(holder, boostLimit_);
+        (boost_, boostSince, ) = _boostPool.claimRewardFor(holder, boostLimit_);
       }
 
       boostAmount += boost_;

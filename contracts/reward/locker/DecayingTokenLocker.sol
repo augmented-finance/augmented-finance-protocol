@@ -77,13 +77,17 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     internal
     virtual
     override
-    returns (uint256 amount, uint32 since)
+    returns (
+      uint256 amount,
+      uint32 since,
+      bool keepPull
+    )
   {
     internalUpdate(true, 0);
 
     (uint32 startTS, uint32 endTS) = expiryOf(holder);
     if (endTS == 0) {
-      return (0, 0);
+      return (0, 0, false);
     }
 
     uint256 stakeAmount; // cached value as it may not be available after removal
@@ -92,14 +96,15 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     uint32 current = getCurrentTick();
     if (current >= endTS) {
       current = endTS;
-      (maxAmount, since) = super.doGetRewardAt(holder, current);
+      (maxAmount, since, ) = super.doGetRewardAt(holder, current);
       stakeAmount = super.doRemoveRewardBalance(holder);
+      keepPull = false;
     } else {
-      (maxAmount, since) = super.doGetRewardAt(holder, current);
+      (maxAmount, since, keepPull) = super.doGetRewardAt(holder, current);
     }
 
     if (maxAmount == 0) {
-      return (0, 0);
+      return (0, 0, keepPull);
     }
 
     uint256 decayAmount = maxAmount.rayMul(calcDecayForReward(startTS, endTS, since, current));
@@ -127,10 +132,10 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     }
 
     if (amount == 0) {
-      return (0, 0);
+      return (0, 0, keepPull);
     }
 
-    return (amount, since);
+    return (amount, since, keepPull);
   }
 
   function setStakeBalance(address holder, uint224 stakeAmount) internal override {
@@ -142,23 +147,14 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     internalAllocateReward(holder, amount, since, mode);
   }
 
-  function unsetStakeBalance(
-    address holder,
-    uint32 at,
-    bool interim
-  ) internal override {
-    (uint256 amount, uint32 since) = doGetRewardAt(holder, at);
+  function unsetStakeBalance(address holder, uint32 at) internal override {
+    (uint256 amount, uint32 since, ) = doGetRewardAt(holder, at);
     uint256 stakeAmount = doRemoveRewardBalance(holder);
-    AllocationMode mode = AllocationMode.Push;
-
-    if (!interim) {
-      mode = AllocationMode.UnsetPull;
-    } else if (amount == 0) {
+    if (amount == 0) {
       return;
     }
-
     amount = rewardForBalance(holder, stakeAmount, amount, since, at);
-    internalAllocateReward(holder, amount, since, mode);
+    internalAllocateReward(holder, amount, since, AllocationMode.Push);
   }
 
   function rewardForBalance(
