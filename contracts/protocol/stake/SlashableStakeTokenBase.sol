@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import '../../dependencies/openzeppelin/contracts/Address.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import '../../misc/ERC20WithPermit.sol';
+import '../../tools/tokens/ERC20BaseWithPermit.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../tools/Errors.sol';
@@ -21,7 +21,7 @@ import './interfaces/IManagedStakeToken.sol';
 abstract contract SlashableStakeTokenBase is
   IStakeToken,
   IManagedStakeToken,
-  ERC20WithPermit,
+  ERC20BaseWithPermit,
   MarketAccessBitmask(IMarketAccessController(address(0))),
   IInitializableStakeToken
 {
@@ -45,7 +45,7 @@ abstract contract SlashableStakeTokenBase is
     string memory name,
     string memory symbol,
     uint8 decimals
-  ) ERC20WithPermit(name, symbol, decimals) {
+  ) ERC20BaseWithPermit(name, symbol, decimals) {
     _initializeToken(params);
   }
 
@@ -398,7 +398,7 @@ abstract contract SlashableStakeTokenBase is
     return _unstakePeriod;
   }
 
-  function initializedWith()
+  function initializedStakeTokenWith()
     external
     view
     override

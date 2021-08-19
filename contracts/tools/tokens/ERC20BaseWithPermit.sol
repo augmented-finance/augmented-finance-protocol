@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../dependencies/openzeppelin/contracts/ERC20.sol';
-import './PermitForERC20.sol';
+import './ERC20Base.sol';
+import './ERC20PermitBase.sol';
 
-abstract contract ERC20WithPermit is ERC20, PermitForERC20 {
+abstract contract ERC20BaseWithPermit is ERC20Base, ERC20PermitBase {
   constructor(
-    string memory name,
-    string memory symbol,
-    uint8 decimals
-  ) ERC20(name, symbol, decimals) PermitForERC20() {}
+    string memory name_,
+    string memory symbol_,
+    uint8 decimals_
+  ) ERC20Base(name_, symbol_, decimals_) ERC20PermitBase() {}
 
   function _approveByPermit(
     address owner,

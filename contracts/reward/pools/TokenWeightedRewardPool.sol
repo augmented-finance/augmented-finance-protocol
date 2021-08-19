@@ -10,18 +10,7 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
     IRewardController controller,
     uint256 initialRate,
     uint16 baselinePercentage
-  )
-    BaseTokenAbsRewardPool(controller, initialRate, baselinePercentage)
-    CalcLinearWeightedReward()
-  {}
-
-  function _initialize(
-    IRewardController controller,
-    uint256 initialRate,
-    uint16 baselinePercentage
-  ) internal override {
-    super._initialize(controller, initialRate, baselinePercentage);
-  }
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {}
 
   function internalGetRate() internal view override returns (uint256) {
     return super.getLinearRate();
@@ -35,19 +24,14 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
     return doGetReward(holder);
   }
 
-  function internalCalcReward(address holder, uint32 at)
-    internal
-    view
-    override
-    returns (uint256, uint32)
-  {
+  function internalCalcReward(address holder, uint32 at) internal view override returns (uint256, uint32) {
     return doCalcRewardAt(holder, at);
   }
 
   function internalUpdateReward(
     address,
     address holder,
-    uint256 oldBalance,
+    uint256,
     uint256 newBalance
   )
     internal
@@ -58,7 +42,7 @@ contract TokenWeightedRewardPool is BaseTokenAbsRewardPool, CalcLinearWeightedRe
       AllocationMode mode
     )
   {
-    return doUpdateReward(holder, oldBalance, newBalance);
+    return doUpdateRewardBalance(holder, newBalance);
   }
 
   function internalUpdateTotal(uint256 totalBalance) internal override {

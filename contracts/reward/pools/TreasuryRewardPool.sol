@@ -2,10 +2,10 @@
 pragma solidity ^0.8.4;
 
 import '../interfaces/IRewardController.sol';
-import '../calcs/CalcLinearRateAccum.sol';
+import '../calcs/CalcLinearRewardAccum.sol';
 import './ControlledRewardPool.sol';
 
-contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRateAccum {
+contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRewardAccum {
   address private _treasury;
 
   constructor(
@@ -39,25 +39,14 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRateAccum {
     return uint32(block.timestamp);
   }
 
-  function internalGetReward(address holder, uint256 limit)
-    internal
-    virtual
-    override
-    returns (uint256, uint32)
-  {
+  function internalGetReward(address holder, uint256 limit) internal virtual override returns (uint256, uint32) {
     if (holder == _treasury) {
       return (doGetAllReward(limit), uint32(block.timestamp));
     }
     return (0, 0);
   }
 
-  function internalCalcReward(address holder, uint32 at)
-    internal
-    view
-    virtual
-    override
-    returns (uint256, uint32)
-  {
+  function internalCalcReward(address holder, uint32 at) internal view virtual override returns (uint256, uint32) {
     if (holder == _treasury) {
       return (doCalcRewardAt(at), at);
     }

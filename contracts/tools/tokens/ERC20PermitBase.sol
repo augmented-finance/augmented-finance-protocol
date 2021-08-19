@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-abstract contract PermitForERC20 {
+abstract contract ERC20PermitBase {
   // solhint-disable-next-line var-name-mixedcase
   bytes32 public DOMAIN_SEPARATOR;
   bytes public constant EIP712_REVISION = bytes('1');

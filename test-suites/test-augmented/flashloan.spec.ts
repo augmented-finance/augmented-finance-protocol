@@ -6,11 +6,7 @@ import { convertToCurrencyDecimals } from '../../helpers/contracts-helpers';
 import { ethers } from 'ethers';
 import { MockFlashLoanReceiver } from '../../types/MockFlashLoanReceiver';
 import { ProtocolErrors } from '../../helpers/types';
-import {
-  getMockFlashLoanReceiver,
-  getStableDebtToken,
-  getVariableDebtToken,
-} from '../../helpers/contracts-getters';
+import { getMockFlashLoanReceiver, getStableDebtToken, getVariableDebtToken } from '../../helpers/contracts-getters';
 
 const { expect } = require('chai');
 
@@ -19,7 +15,6 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
   const {
     VL_COLLATERAL_BALANCE_IS_0,
     TRANSFER_AMOUNT_EXCEEDS_BALANCE,
-    LP_INVALID_FLASHLOAN_MODE,
     SAFEERC20_LOWLEVEL_CALL,
     LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN,
     LP_BORROW_ALLOWANCE_NOT_ENOUGH,
@@ -186,9 +181,7 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
         '0x10',
         '0'
       );
-    const { variableDebtTokenAddress } = await helpersContract.getReserveTokensAddresses(
-      weth.address
-    );
+    const { variableDebtTokenAddress } = await helpersContract.getReserveTokensAddresses(weth.address);
 
     const wethDebtToken = await getVariableDebtToken(variableDebtTokenAddress);
 
@@ -220,15 +213,7 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
     const caller = users[1];
 
     await expect(
-      pool.flashLoan(
-        deployer.address,
-        [weth.address],
-        ['1000000000000000000'],
-        [2],
-        caller.address,
-        '0x10',
-        '0'
-      )
+      pool.flashLoan(deployer.address, [weth.address], ['1000000000000000000'], [2], caller.address, '0x10', '0')
     ).to.be.reverted;
   });
 
@@ -299,15 +284,7 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
     await expect(
       pool
         .connect(caller.signer)
-        .flashLoan(
-          _mockFlashLoanReceiver.address,
-          [usdc.address],
-          [flashloanAmount],
-          [2],
-          caller.address,
-          '0x10',
-          '0'
-        )
+        .flashLoan(_mockFlashLoanReceiver.address, [usdc.address], [flashloanAmount], [2], caller.address, '0x10', '0')
     ).to.be.revertedWith(VL_COLLATERAL_BALANCE_IS_0);
   });
 
@@ -330,18 +307,8 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
 
     await pool
       .connect(caller.signer)
-      .flashLoan(
-        _mockFlashLoanReceiver.address,
-        [usdc.address],
-        [flashloanAmount],
-        [2],
-        caller.address,
-        '0x10',
-        '0'
-      );
-    const { variableDebtTokenAddress } = await helpersContract.getReserveTokensAddresses(
-      usdc.address
-    );
+      .flashLoan(_mockFlashLoanReceiver.address, [usdc.address], [flashloanAmount], [2], caller.address, '0x10', '0');
+    const { variableDebtTokenAddress } = await helpersContract.getReserveTokensAddresses(usdc.address);
 
     const usdcDebtToken = await getVariableDebtToken(variableDebtTokenAddress);
 
@@ -370,15 +337,7 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
     await expect(
       pool
         .connect(caller.signer)
-        .flashLoan(
-          _mockFlashLoanReceiver.address,
-          [weth.address],
-          [flashAmount],
-          [0],
-          caller.address,
-          '0x10',
-          '0'
-        )
+        .flashLoan(_mockFlashLoanReceiver.address, [weth.address], [flashAmount], [0], caller.address, '0x10', '0')
     ).to.be.revertedWith(SAFEERC20_LOWLEVEL_CALL);
   });
 
@@ -393,19 +352,9 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
 
     await pool
       .connect(caller.signer)
-      .flashLoan(
-        _mockFlashLoanReceiver.address,
-        [weth.address],
-        [flashAmount],
-        [1],
-        caller.address,
-        '0x10',
-        '0'
-      );
+      .flashLoan(_mockFlashLoanReceiver.address, [weth.address], [flashAmount], [1], caller.address, '0x10', '0');
 
-    const { stableDebtTokenAddress } = await helpersContract.getReserveTokensAddresses(
-      weth.address
-    );
+    const { stableDebtTokenAddress } = await helpersContract.getReserveTokensAddresses(weth.address);
 
     const wethDebtToken = await getStableDebtToken(stableDebtTokenAddress);
 
@@ -427,9 +376,7 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
 
     const amountToDeposit = await convertToCurrencyDecimals(dai.address, '1000');
 
-    await pool
-      .connect(onBehalfOf.signer)
-      .deposit(dai.address, amountToDeposit, onBehalfOf.address, '0');
+    await pool.connect(onBehalfOf.signer).deposit(dai.address, amountToDeposit, onBehalfOf.address, '0');
 
     const flashAmount = ethers.utils.parseEther('0.8');
 
@@ -438,15 +385,7 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
     await expect(
       pool
         .connect(caller.signer)
-        .flashLoan(
-          _mockFlashLoanReceiver.address,
-          [weth.address],
-          [flashAmount],
-          [1],
-          onBehalfOf.address,
-          '0x10',
-          '0'
-        )
+        .flashLoan(_mockFlashLoanReceiver.address, [weth.address], [flashAmount], [1], onBehalfOf.address, '0x10', '0')
     ).to.be.revertedWith(LP_BORROW_ALLOWANCE_NOT_ENOUGH);
   });
 
@@ -469,27 +408,14 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
 
     await pool
       .connect(caller.signer)
-      .flashLoan(
-        _mockFlashLoanReceiver.address,
-        [weth.address],
-        [flashAmount],
-        [1],
-        onBehalfOf.address,
-        '0x10',
-        '0'
-      );
+      .flashLoan(_mockFlashLoanReceiver.address, [weth.address], [flashAmount], [1], onBehalfOf.address, '0x10', '0');
 
-    const { stableDebtTokenAddress } = await helpersContract.getReserveTokensAddresses(
-      weth.address
-    );
+    const { stableDebtTokenAddress } = await helpersContract.getReserveTokensAddresses(weth.address);
 
     const wethDebtToken = await getStableDebtToken(stableDebtTokenAddress);
 
     const onBehalfOfDebt = await wethDebtToken.balanceOf(onBehalfOf.address);
 
-    expect(onBehalfOfDebt.toString()).to.be.equal(
-      '800000000000000000',
-      'Invalid onBehalfOf user debt'
-    );
+    expect(onBehalfOfDebt.toString()).to.be.equal('800000000000000000', 'Invalid onBehalfOf user debt');
   });
 });

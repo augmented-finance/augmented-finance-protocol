@@ -1,36 +1,16 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import './CalcLinearRateReward.sol';
+import './CalcLinearRewardBalances.sol';
 
-abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
+abstract contract CalcLinearWeightedReward is CalcLinearRewardBalances {
   uint256 private _accumRate;
   uint256 private _totalSupply;
 
   uint256 private constant _maxWeightBase = 1e36;
 
-  function doUpdateTotalSupplyDiff(uint256 oldSupply, uint256 newSupply) internal returns (bool) {
-    if (newSupply > oldSupply) {
-      return internalSetTotalSupply(_totalSupply + (newSupply - oldSupply), getCurrentTick());
-    }
-    if (oldSupply > newSupply) {
-      return internalSetTotalSupply(_totalSupply - (oldSupply - newSupply), getCurrentTick());
-    }
-    return false;
-  }
-
-  function doUpdateTotalSupply(uint256 newSupply) internal returns (bool) {
-    if (newSupply == _totalSupply) {
-      return false;
-    }
-    return internalSetTotalSupply(newSupply, getCurrentTick());
-  }
-
-  function doUpdateTotalSupplyAt(uint256 newSupply, uint32 at) internal returns (bool) {
-    if (newSupply == _totalSupply) {
-      return false;
-    }
-    return internalSetTotalSupply(newSupply, at);
+  function internalGetTotalSupply() internal view returns (uint256) {
+    return _totalSupply;
   }
 
   function internalRateUpdated(
@@ -49,12 +29,23 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
     }
   }
 
-  function internalSetTotalSupply(uint256 totalSupply, uint32 at)
-    internal
-    returns (bool rateUpdated)
-  {
-    uint256 lastRate = getLinearRate();
-    uint32 lastAt = getRateUpdatedAt();
+  function doUpdateTotalSupply(uint256 newSupply) internal returns (bool) {
+    if (newSupply == _totalSupply) {
+      return false;
+    }
+    return internalSetTotalSupply(newSupply, getCurrentTick());
+  }
+
+  function doIncrementTotalSupply(uint256 amount) internal {
+    doUpdateTotalSupply(_totalSupply + amount);
+  }
+
+  function doDecrementTotalSupply(uint256 amount) internal {
+    doUpdateTotalSupply(_totalSupply - amount);
+  }
+
+  function internalSetTotalSupply(uint256 totalSupply, uint32 at) internal returns (bool rateUpdated) {
+    (uint256 lastRate, uint32 lastAt) = getRateAndUpdatedAt();
     internalMarkRateUpdate(at);
 
     if (lastRate > 0) {
@@ -71,7 +62,7 @@ abstract contract CalcLinearWeightedReward is CalcLinearRateReward {
   }
 
   function internalCalcRateAndReward(
-    RewardEntry memory entry,
+    RewardBalance memory entry,
     uint256 lastAccumRate,
     uint32 at
   )

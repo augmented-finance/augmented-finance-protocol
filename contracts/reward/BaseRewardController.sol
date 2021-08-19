@@ -209,7 +209,7 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
   }
 
   function _onlyRateAdmin() private view {
-    require(isRateAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN);
+    require(isRateAdmin(msg.sender), Errors.CALLER_NOT_REWARD_RATE_ADMIN);
   }
 
   modifier onlyRateAdmin() {
@@ -225,7 +225,7 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
   }
 
   function _onlyConfigAdmin() private view {
-    require(isConfigAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_ADMIN);
+    require(isConfigAdmin(msg.sender), Errors.CALLER_NOT_REWARD_CONFIG_ADMIN);
   }
 
   modifier onlyConfigAdmin() {
@@ -234,19 +234,12 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
   }
 
   function _onlyConfigOrRateAdmin() private view {
-    require(isConfigAdmin(msg.sender) || isRateAdmin(msg.sender), Errors.CT_CALLER_MUST_BE_REWARD_RATE_ADMIN);
+    require(isConfigAdmin(msg.sender) || isRateAdmin(msg.sender), Errors.CALLER_NOT_REWARD_RATE_ADMIN);
   }
 
   modifier onlyConfigOrRateAdmin() {
     _onlyConfigOrRateAdmin();
     _;
-  }
-
-  function isEmergencyAdmin(address addr) public view override returns (bool) {
-    if (!hasRemoteAcl()) {
-      return addr == address(this);
-    }
-    return acl_hasAnyOf(addr, AccessFlags.EMERGENCY_ADMIN);
   }
 
   function getClaimMask(address holder, uint256 mask) internal view virtual returns (uint256) {

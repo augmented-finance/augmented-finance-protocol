@@ -1,21 +1,18 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/ERC20.sol';
-import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {IGovernancePowerDelegationToken} from '../interfaces/IGovernancePowerDelegationToken.sol';
 
 /**
  * @notice implementation of the delegatable voting token
  */
 abstract contract VoteDelegator is IGovernancePowerDelegationToken {
-  using SafeMath for uint256;
+  //  using SafeMath for uint256;
   /// @notice The EIP-712 typehash for the delegation struct used by the contract
   bytes32 public constant DELEGATE_BY_TYPE_TYPEHASH =
     keccak256('DelegateByType(address delegatee,uint256 type,uint256 nonce,uint256 expiry)');
 
-  bytes32 public constant DELEGATE_TYPEHASH =
-    keccak256('Delegate(address delegatee,uint256 nonce,uint256 expiry)');
+  bytes32 public constant DELEGATE_TYPEHASH = keccak256('Delegate(address delegatee,uint256 nonce,uint256 expiry)');
 
   /// @dev snapshot of a value on a specific block, used for votes
   struct Snapshot {
@@ -61,12 +58,7 @@ abstract contract VoteDelegator is IGovernancePowerDelegationToken {
    * power delegated at the time of the last snapshot
    * @param user the user
    **/
-  function getPowerCurrent(address user, DelegationType delegationType)
-    external
-    view
-    override
-    returns (uint256)
-  {
+  function getPowerCurrent(address user, DelegationType delegationType) external view override returns (uint256) {
     (
       mapping(address => mapping(uint256 => Snapshot)) storage snapshots,
       mapping(address => uint256) storage snapshotsCounts,
@@ -151,15 +143,9 @@ abstract contract VoteDelegator is IGovernancePowerDelegationToken {
         previous = getDelegationBalance(from);
       }
 
-      _writeSnapshot(
-        snapshots,
-        snapshotsCounts,
-        from,
-        uint128(previous),
-        uint128(previous.sub(amount))
-      );
+      _writeSnapshot(snapshots, snapshotsCounts, from, uint128(previous), uint128(previous - amount));
 
-      emit DelegatedPowerChanged(from, previous.sub(amount), delegationType);
+      emit DelegatedPowerChanged(from, previous - amount, delegationType);
     }
     if (to != address(0)) {
       uint256 previous = 0;
@@ -170,15 +156,9 @@ abstract contract VoteDelegator is IGovernancePowerDelegationToken {
         previous = getDelegationBalance(to);
       }
 
-      _writeSnapshot(
-        snapshots,
-        snapshotsCounts,
-        to,
-        uint128(previous),
-        uint128(previous.add(amount))
-      );
+      _writeSnapshot(snapshots, snapshotsCounts, to, uint128(previous), uint128(previous + amount));
 
-      emit DelegatedPowerChanged(to, previous.add(amount), delegationType);
+      emit DelegatedPowerChanged(to, previous + amount, delegationType);
     }
   }
 
@@ -268,10 +248,7 @@ abstract contract VoteDelegator is IGovernancePowerDelegationToken {
     mapping(uint256 => Snapshot) storage snapshotsOwner = snapshots[owner];
 
     // Doing multiple operations in the same block
-    if (
-      ownerSnapshotsCount != 0 &&
-      snapshotsOwner[ownerSnapshotsCount - 1].blockNumber == currentBlock
-    ) {
+    if (ownerSnapshotsCount != 0 && snapshotsOwner[ownerSnapshotsCount - 1].blockNumber == currentBlock) {
       snapshotsOwner[ownerSnapshotsCount - 1].value = newValue;
     } else {
       snapshotsOwner[ownerSnapshotsCount] = Snapshot(currentBlock, newValue);

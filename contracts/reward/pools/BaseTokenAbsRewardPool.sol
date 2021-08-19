@@ -8,12 +8,6 @@ import './ControlledRewardPool.sol';
 abstract contract BaseTokenAbsRewardPool is ControlledRewardPool, IRewardPool {
   address private _provider;
 
-  constructor(
-    IRewardController controller,
-    uint256 initialRate,
-    uint16 baselinePercentage
-  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {}
-
   function handleBalanceUpdate(
     address,
     address holder,
@@ -50,17 +44,16 @@ abstract contract BaseTokenAbsRewardPool is ControlledRewardPool, IRewardPool {
   ) private {
     require(_provider == msg.sender, 'unknown reward provider');
 
-    (uint256 allocated, uint32 since, AllocationMode mode) =
-      internalUpdateReward(msg.sender, holder, oldBalance, newBalance);
+    (uint256 allocated, uint32 since, AllocationMode mode) = internalUpdateReward(
+      msg.sender,
+      holder,
+      oldBalance,
+      newBalance
+    );
     internalAllocateReward(holder, allocated, since, mode);
   }
 
-  function addRewardProvider(address provider, address token)
-    external
-    virtual
-    override
-    onlyConfigAdmin
-  {
+  function addRewardProvider(address provider, address token) external virtual override onlyConfigAdmin {
     require(provider != address(0), 'provider is required');
     require(_provider == address(0), 'provider is already set');
     _provider = provider;
