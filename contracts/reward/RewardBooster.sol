@@ -226,7 +226,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
       return;
     }
 
-    if (poolInfo & BOOST_POOL_MARK != 0) {
+    if (poolInfo == BOOST_POOL_MARK) {
       _boostRewards[holder] += allocated;
       return;
     }
@@ -237,9 +237,10 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     require(v <= type(uint128).max);
     workReward.claimableReward = uint128(v);
 
-    uint32 factor = uint32(poolInfo);
-    if (factor != 0) {
-      v = workReward.boostLimit + allocated.percentMul(factor);
+    if (poolInfo != 0) {
+      unchecked {
+        v = workReward.boostLimit + allocated.percentMul(uint32(poolInfo));
+      }
       require(v <= type(uint128).max);
       workReward.boostLimit = uint128(v);
     }
