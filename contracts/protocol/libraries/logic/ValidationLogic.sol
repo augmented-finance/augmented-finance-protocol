@@ -290,10 +290,15 @@ library ValidationLogic {
 
     require(isActive, Errors.VL_NO_ACTIVE_RESERVE);
 
-    //if the usage ratio is below 95%, no rebalances are needed
-    uint256 totalDebt = (stableDebtToken.totalSupply() + variableDebtToken.totalSupply()).wadToRay();
-    uint256 availableLiquidity = IERC20(reserveAddress).balanceOf(depositTokenAddress).wadToRay();
-    uint256 usageRatio = totalDebt == 0 ? 0 : totalDebt.rayDiv(availableLiquidity + totalDebt);
+    uint256 usageRatio = stableDebtToken.totalSupply() + variableDebtToken.totalSupply(); /* totalDebt */
+    if (usageRatio != 0) {
+      uint256 availableLiquidity = IERC20(reserveAddress).balanceOf(depositTokenAddress);
+      usageRatio = usageRatio.wadToRay().wadDiv(
+        availableLiquidity +
+          /* totalDebt */
+          usageRatio
+      );
+    }
 
     //if the liquidity rate is below REBALANCE_UP_THRESHOLD of the max variable APR at 95% usage,
     //then we allow rebalancing of the stable rate positions.

@@ -95,7 +95,6 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
   struct MintLocalVars {
     uint256 previousSupply;
     uint256 nextSupply;
-    uint256 amountInRay;
     uint256 newStableRate;
     uint256 currentAvgStableRate;
   }
@@ -129,10 +128,11 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     vars.currentAvgStableRate = _avgStableRate;
     vars.nextSupply = _totalSupply = vars.previousSupply + amount;
 
-    vars.amountInRay = amount.wadToRay();
+    uint256 weightedRate = rate.wadMul(amount);
 
-    vars.newStableRate = (_usersStableRate[onBehalfOf].rayMul(currentBalance.wadToRay()) +
-      vars.amountInRay.rayMul(rate)).rayDiv((currentBalance + amount).wadToRay());
+    vars.newStableRate = (_usersStableRate[onBehalfOf].wadMul(currentBalance) + weightedRate).wadDiv(
+      currentBalance + amount
+    );
 
     require(vars.newStableRate <= type(uint128).max, Errors.SDT_STABLE_DEBT_OVERFLOW);
     _usersStableRate[onBehalfOf] = vars.newStableRate;
@@ -140,8 +140,8 @@ contract StableDebtToken is DebtTokenBase, VersionedInitializable, IStableDebtTo
     _totalSupplyTimestamp = _timestamps[onBehalfOf] = uint40(block.timestamp);
 
     // Calculates the updated average stable rate
-    vars.currentAvgStableRate = _avgStableRate = (vars.currentAvgStableRate.rayMul(vars.previousSupply.wadToRay()) +
-      rate.rayMul(vars.amountInRay)).rayDiv(vars.nextSupply.wadToRay());
+    vars.currentAvgStableRate = _avgStableRate = (vars.currentAvgStableRate.wadMul(vars.previousSupply) + weightedRate)
+      .wadDiv(vars.nextSupply);
 
     _mintWithTotal(onBehalfOf, amount + balanceIncrease, vars.nextSupply);
 
