@@ -79,7 +79,6 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
       _reserves,
       userConfig,
       _reservesList,
-      _reservesCount,
       _addressesProvider.getPriceOracle()
     );
 
@@ -162,7 +161,7 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
 
       if (vars.liquidatorPreviousDepositTokenBalance == 0) {
         DataTypes.UserConfigurationMap storage liquidatorConfig = _usersConfig[msg.sender];
-        liquidatorConfig.setUsingAsCollateral(collateralReserve.id, true);
+        liquidatorConfig.setUsingAsCollateral(collateralReserve.id);
         emit ReserveUsedAsCollateralEnabled(collateralAsset, msg.sender);
       }
     } else {
@@ -181,7 +180,7 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     // If the collateral being liquidated is equal to the user balance,
     // we set the currency as not being used as collateral anymore
     if (vars.maxCollateralToLiquidate == vars.userCollateralBalance) {
-      userConfig.setUsingAsCollateral(collateralReserve.id, false);
+      userConfig.unsetUsingAsCollateral(collateralReserve.id);
       emit ReserveUsedAsCollateralDisabled(collateralAsset, user);
     }
 
@@ -522,7 +521,6 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
       _reserves,
       userConfig,
       _reservesList,
-      _reservesCount,
       v.oracle
     );
 
@@ -550,7 +548,7 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     }
 
     if (isFirstBorrowing) {
-      userConfig.setBorrowing(reserve.id, true);
+      userConfig.setBorrowing(reserve.id);
     }
 
     reserve.updateInterestRates(vars.asset, vars.depositToken, 0, vars.releaseUnderlying ? vars.amount : 0);

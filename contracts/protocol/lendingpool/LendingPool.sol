@@ -79,7 +79,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     bool isFirstDeposit = IDepositToken(depositToken).mint(onBehalfOf, amount, liquidityIndex);
 
     if (isFirstDeposit) {
-      _usersConfig[onBehalfOf].setUsingAsCollateral(reserve.id, true);
+      _usersConfig[onBehalfOf].setUsingAsCollateral(reserve.id);
       emit ReserveUsedAsCollateralEnabled(asset, onBehalfOf);
     }
 
@@ -110,7 +110,6 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
       _reserves,
       _usersConfig[msg.sender],
       _reservesList,
-      _reservesCount,
       _addressesProvider.getPriceOracle()
     );
 
@@ -118,7 +117,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     reserve.updateInterestRates(asset, depositToken, 0, amountToWithdraw);
 
     if (amountToWithdraw == userBalance) {
-      _usersConfig[msg.sender].setUsingAsCollateral(reserve.id, false);
+      _usersConfig[msg.sender].unsetUsingAsCollateral(reserve.id);
       emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
     }
 
@@ -172,7 +171,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     reserve.updateInterestRates(asset, depositToken, paybackAmount, 0);
 
     if (stableDebt + variableDebt <= paybackAmount) {
-      _usersConfig[onBehalfOf].setBorrowing(reserve.id, false);
+      _usersConfig[onBehalfOf].unsetBorrowing(reserve.id);
     }
 
     IERC20(asset).safeTransferFrom(msg.sender, depositToken, paybackAmount);
@@ -249,15 +248,14 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
       _reserves,
       _usersConfig[msg.sender],
       _reservesList,
-      _reservesCount,
       _addressesProvider.getPriceOracle()
     );
 
-    _usersConfig[msg.sender].setUsingAsCollateral(reserve.id, useAsCollateral);
-
     if (useAsCollateral) {
+      _usersConfig[msg.sender].setUsingAsCollateral(reserve.id);
       emit ReserveUsedAsCollateralEnabled(asset, msg.sender);
     } else {
+      _usersConfig[msg.sender].unsetUsingAsCollateral(reserve.id);
       emit ReserveUsedAsCollateralDisabled(asset, msg.sender);
     }
   }
@@ -314,7 +312,6 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
         _reserves,
         _usersConfig[user],
         _reservesList,
-        _reservesCount,
         _addressesProvider.getPriceOracle()
       );
 
@@ -413,7 +410,6 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
       _reserves,
       _usersConfig[from],
       _reservesList,
-      _reservesCount,
       _addressesProvider.getPriceOracle()
     );
 
@@ -422,13 +418,13 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     if (from != to) {
       if (balanceFromBefore <= amount) {
         DataTypes.UserConfigurationMap storage fromConfig = _usersConfig[from];
-        fromConfig.setUsingAsCollateral(reserveId, false);
+        fromConfig.unsetUsingAsCollateral(reserveId);
         emit ReserveUsedAsCollateralDisabled(asset, from);
       }
 
       if (balanceToBefore == 0 && amount != 0) {
         DataTypes.UserConfigurationMap storage toConfig = _usersConfig[to];
-        toConfig.setUsingAsCollateral(reserveId, true);
+        toConfig.setUsingAsCollateral(reserveId);
         emit ReserveUsedAsCollateralEnabled(asset, to);
       }
     }
