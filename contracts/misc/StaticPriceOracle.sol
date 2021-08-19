@@ -10,6 +10,8 @@ import '../interfaces/IPriceOracleGetter.sol';
 contract StaticPriceOracle is MarketAccessBitmask, IPriceOracleGetter {
   mapping(address => uint256) private prices;
 
+  address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
   constructor(
     IMarketAccessController remoteAcl,
     address[] memory assets_,
@@ -27,8 +29,18 @@ contract StaticPriceOracle is MarketAccessBitmask, IPriceOracleGetter {
     return price;
   }
 
-  function setAssetPrice(address asset, uint256 price) external aclHas(AccessFlags.ORACLE_ADMIN) {
+  function _setAssetPrice(address asset, uint256 price) private {
+    require(asset != address(0));
     prices[asset] = price;
+    if (asset == ETH) {
+      emit EthPriceUpdated(price, block.timestamp);
+    } else {
+      emit AssetPriceUpdated(asset, price, block.timestamp);
+    }
+  }
+
+  function setAssetPrice(address asset, uint256 price) external aclHas(AccessFlags.ORACLE_ADMIN) {
+    _setAssetPrice(asset, price);
   }
 
   function setAssetPrices(address[] calldata assets_, uint256[] calldata prices_)
@@ -37,7 +49,7 @@ contract StaticPriceOracle is MarketAccessBitmask, IPriceOracleGetter {
   {
     require(assets_.length == prices_.length, 'length mismatch');
     for (uint256 i = 0; i < assets_.length; i++) {
-      prices[assets_[i]] = prices_[i];
+      _setAssetPrice(assets_[i], prices_[i]);
     }
   }
 }
