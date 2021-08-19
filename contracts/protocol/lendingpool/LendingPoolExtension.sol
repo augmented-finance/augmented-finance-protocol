@@ -79,7 +79,6 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
       _reserves,
       userConfig,
       _reservesList,
-      _reservesCount,
       _addressesProvider.getPriceOracle()
     );
 
@@ -522,7 +521,6 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
       _reserves,
       userConfig,
       _reservesList,
-      _reservesCount,
       v.oracle
     );
 

@@ -9,49 +9,28 @@ library UserConfiguration {
   uint256 private constant ANY_BORROWING_MASK = 0x5555555555555555555555555555555555555555555555555555555555555555;
   uint256 private constant BORROW_BIT_MASK = 1;
   uint256 private constant COLLATERAL_BIT_MASK = 2;
-  uint256 private constant ANY_BIT_MASK = BORROW_BIT_MASK | COLLATERAL_BIT_MASK;
+  uint256 internal constant ANY_MASK = BORROW_BIT_MASK | COLLATERAL_BIT_MASK;
+  uint256 internal constant SHIFT_STEP = 2;
 
-  function setBorrowing(
-    DataTypes.UserConfigurationMap storage self,
-    uint256 reserveIndex
-  ) internal {
-    self.data |= BORROW_BIT_MASK << (reserveIndex<<1);
+  function setBorrowing(DataTypes.UserConfigurationMap storage self, uint256 reserveIndex) internal {
+    self.data |= BORROW_BIT_MASK << (reserveIndex << 1);
   }
 
-  function unsetBorrowing(
-    DataTypes.UserConfigurationMap storage self,
-    uint256 reserveIndex
-  ) internal {
-    self.data &= ~(BORROW_BIT_MASK << (reserveIndex<<1));
+  function unsetBorrowing(DataTypes.UserConfigurationMap storage self, uint256 reserveIndex) internal {
+    self.data &= ~(BORROW_BIT_MASK << (reserveIndex << 1));
   }
 
-  function setUsingAsCollateral(
-    DataTypes.UserConfigurationMap storage self,
-    uint256 reserveIndex
-  ) internal {
-    self.data |= COLLATERAL_BIT_MASK << (reserveIndex<<1);
+  function setUsingAsCollateral(DataTypes.UserConfigurationMap storage self, uint256 reserveIndex) internal {
+    self.data |= COLLATERAL_BIT_MASK << (reserveIndex << 1);
   }
 
-  function unsetUsingAsCollateral(
-    DataTypes.UserConfigurationMap storage self,
-    uint256 reserveIndex
-  ) internal {
-    self.data &= ~(COLLATERAL_BIT_MASK << (reserveIndex<<1));
-  }
-
-  /// @dev Returns true if the user is using the reserve for borrowing or as collateral
-  function isUsingAsCollateralOrBorrowing(DataTypes.UserConfigurationMap memory self, uint256 reserveIndex)
-    internal
-    pure
-    returns (bool, bool)
-  {
-    uint256 data = self.data >> (reserveIndex << 1);
-    return (data > 0, data & ANY_BIT_MASK != 0);
+  function unsetUsingAsCollateral(DataTypes.UserConfigurationMap storage self, uint256 reserveIndex) internal {
+    self.data &= ~(COLLATERAL_BIT_MASK << (reserveIndex << 1));
   }
 
   /// @dev Returns true if the user is using the reserve for borrowing
   function isBorrowing(DataTypes.UserConfigurationMap memory self, uint256 reserveIndex) internal pure returns (bool) {
-    return (self.data >> (reserveIndex<<1)) & BORROW_BIT_MASK != 0;
+    return (self.data >> (reserveIndex << 1)) & BORROW_BIT_MASK != 0;
   }
 
   /// @dev Returns true if the user is using the reserve as collateral
@@ -60,7 +39,7 @@ library UserConfiguration {
     pure
     returns (bool)
   {
-    return (self.data >> (reserveIndex<<1)) & COLLATERAL_BIT_MASK != 0;
+    return (self.data >> (reserveIndex << 1)) & COLLATERAL_BIT_MASK != 0;
   }
 
   /// @dev Returns true if the user is borrowing from any reserve

@@ -110,7 +110,6 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
       _reserves,
       _usersConfig[msg.sender],
       _reservesList,
-      _reservesCount,
       _addressesProvider.getPriceOracle()
     );
 
@@ -249,7 +248,6 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
       _reserves,
       _usersConfig[msg.sender],
       _reservesList,
-      _reservesCount,
       _addressesProvider.getPriceOracle()
     );
 
@@ -314,7 +312,6 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
         _reserves,
         _usersConfig[user],
         _reservesList,
-        _reservesCount,
         _addressesProvider.getPriceOracle()
       );
 
@@ -413,7 +410,6 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
       _reserves,
       _usersConfig[from],
       _reservesList,
-      _reservesCount,
       _addressesProvider.getPriceOracle()
     );
 

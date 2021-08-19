@@ -51,7 +51,6 @@ library ValidationLogic {
    * @param reservesData The reserves state
    * @param userConfig The user configuration
    * @param reserves The addresses of the reserves
-   * @param reservesCount The number of reserves
    * @param oracle The price oracle
    */
   function validateWithdraw(
@@ -61,7 +60,6 @@ library ValidationLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     DataTypes.UserConfigurationMap storage userConfig,
     mapping(uint256 => address) storage reserves,
-    uint256 reservesCount,
     address oracle
   ) internal view {
     require(amount != 0, Errors.VL_INVALID_AMOUNT);
@@ -78,7 +76,6 @@ library ValidationLogic {
         reservesData,
         userConfig,
         reserves,
-        reservesCount,
         oracle
       ),
       Errors.VL_TRANSFER_NOT_ALLOWED
@@ -125,7 +122,6 @@ library ValidationLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     DataTypes.UserConfigurationMap storage userConfig,
     mapping(uint256 => address) storage reserves,
-    uint256 reservesCount,
     address oracle
   ) internal view {
     ValidateBorrowLocalVars memory vars;
@@ -153,7 +149,7 @@ library ValidationLogic {
       vars.currentLtv,
       vars.currentLiquidationThreshold,
       vars.healthFactor
-    ) = GenericLogic.calculateUserAccountData(userAddress, reservesData, userConfig, reserves, reservesCount, oracle);
+    ) = GenericLogic.calculateUserAccountData(userAddress, reservesData, userConfig, reserves, oracle);
 
     require(vars.userCollateralBalanceETH > 0, Errors.VL_COLLATERAL_BALANCE_IS_0);
 
@@ -328,7 +324,6 @@ library ValidationLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     DataTypes.UserConfigurationMap storage userConfig,
     mapping(uint256 => address) storage reserves,
-    uint256 reservesCount,
     address oracle
   ) internal view {
     uint256 underlyingBalance = IERC20(reserve.depositTokenAddress).balanceOf(msg.sender);
@@ -346,7 +341,6 @@ library ValidationLogic {
           reservesData,
           userConfig,
           reserves,
-          reservesCount,
           oracle
         ),
         Errors.VL_DEPOSIT_ALREADY_IN_USE
@@ -413,7 +407,6 @@ library ValidationLogic {
     mapping(address => DataTypes.ReserveData) storage reservesData,
     DataTypes.UserConfigurationMap storage userConfig,
     mapping(uint256 => address) storage reserves,
-    uint256 reservesCount,
     address oracle
   ) internal view {
     (, , , , uint256 healthFactor) = GenericLogic.calculateUserAccountData(
@@ -421,7 +414,6 @@ library ValidationLogic {
       reservesData,
       userConfig,
       reserves,
-      reservesCount,
       oracle
     );
 
