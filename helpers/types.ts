@@ -387,6 +387,8 @@ export interface ICommonConfiguration {
   RewardParams: IRewardParams;
 
   ForkTest: IForkTest;
+
+  AGF: IAgfParams;
 }
 
 export interface ITestConfiguration extends ICommonConfiguration {
@@ -497,4 +499,8 @@ export enum LPFeature {
   FLASHLOAN_WITHDRAW = 1 << 3,
   FLASHLOAN_BORROW = 1 << 4,
   FLASHLOAN_REPAY = 1 << 5,
+}
+
+export interface IAgfParams {
+  DefaultPriceEth?: number;
 }

@@ -36,6 +36,7 @@ task('full:deploy-oracles', 'Deploys oracles')
       OracleRouter,
       FallbackOracle,
       ChainlinkAggregator,
+      AGF: { DefaultPriceEth: AgfDefaultPriceEth },
     } = poolConfig as ICommonConfiguration;
     const oracleRouter = getParamPerNetwork(OracleRouter, network);
     const fallbackOracle = getParamPerNetwork(FallbackOracle, network);
@@ -95,20 +96,19 @@ task('full:deploy-oracles', 'Deploys oracles')
     }
     console.log('LendingRateOracle:', lroAddress);
 
-    let fallbackOracleAddress: tEthereumAddress;
-
     if (falsyOrZeroAddress(poAddress)) {
+      let fallbackOracleAddress: tEthereumAddress = '';
+
+      const tokenAddressList: string[] = [];
+      const tokenPriceList: string[] = [];
+
       if (typeof fallbackOracle == 'string') {
-        if (fallbackOracle == '') {
-          fallbackOracleAddress = ZERO_ADDRESS;
-        } else {
+        if (fallbackOracle != '') {
           fallbackOracleAddress = fallbackOracle;
+        } else if (!AgfDefaultPriceEth) {
+          fallbackOracleAddress = ZERO_ADDRESS;
         }
       } else {
-        console.log('Deploying StaticPriceOracle as fallback');
-        const tokenAddressList: string[] = [];
-        const tokenPriceList: string[] = [];
-
         for (const [tokenSymbol, tokenPrice] of Object.entries(fallbackOracle)) {
           const tokenAddress = tokensToWatch[tokenSymbol];
           if (falsyOrZeroAddress(tokenAddress)) {
@@ -119,6 +119,10 @@ task('full:deploy-oracles', 'Deploys oracles')
           tokenPriceList.push(ethPrice.toString());
           console.log(`\t${tokenSymbol}: ${tokenPrice} (${ethPrice} ether)`);
         }
+      }
+
+      if (fallbackOracleAddress == '') {
+        console.log('Deploying StaticPriceOracle as fallback');
         const oracle = await deployStaticPriceOracle(
           [addressProvider.address, tokenAddressList, tokenPriceList],
           verify
