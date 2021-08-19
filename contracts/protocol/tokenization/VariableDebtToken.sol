@@ -36,8 +36,10 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     string calldata symbol,
     bytes calldata params
   ) external override initializerRunAlways(DEBT_TOKEN_REVISION) {
-    _initializeERC20(name, symbol, config.underlyingDecimals);
-    if (!isRevisionInitialized(DEBT_TOKEN_REVISION)) {
+    if (isRevisionInitialized(DEBT_TOKEN_REVISION)) {
+      _initializeERC20(name, symbol, super.decimals());
+    } else {
+      _initializeERC20(name, symbol, config.underlyingDecimals);
       _initializePoolToken(config, params);
     }
 

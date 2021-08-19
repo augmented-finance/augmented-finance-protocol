@@ -22,8 +22,10 @@ contract DepositToken is DepositTokenBase, VersionedInitializable {
     string calldata symbol,
     bytes calldata params
   ) external override initializerRunAlways(TOKEN_REVISION) {
-    _initializeERC20(name, symbol, config.underlyingDecimals);
-    if (!isRevisionInitialized(TOKEN_REVISION)) {
+    if (isRevisionInitialized(TOKEN_REVISION)) {
+      _initializeERC20(name, symbol, super.decimals());
+    } else {
+      _initializeERC20(name, symbol, config.underlyingDecimals);
       _initializePoolToken(config, params);
     }
 
