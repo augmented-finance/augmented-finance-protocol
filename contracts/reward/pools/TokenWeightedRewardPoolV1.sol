@@ -15,11 +15,11 @@ contract TokenWeightedRewardPoolV1 is IInitializableRewardPool, TokenWeightedRew
 
   constructor() TokenWeightedRewardPool(IRewardController(address(0)), 0, 0) {}
 
-  function initializeRewardPool(InitData memory data) public override initializer(POOL_REVISION) {
-    super._initialize(data.controller, internalGetRate(), data.baselinePercentage);
+  function initializeRewardPool(InitRewardPoolData memory data) public override initializer(POOL_REVISION) {
+    super._initialize(data.controller, internalGetRate(), data.baselinePercentage, data.poolName);
   }
 
-  function initializedRewardPoolWith() external view override returns (InitData memory) {
-    return InitData(IRewardController(getRewardController()), getPoolName(), internalGetBaselinePercentage());
+  function initializedRewardPoolWith() external view override returns (InitRewardPoolData memory) {
+    return InitRewardPoolData(IRewardController(getRewardController()), getPoolName(), internalGetBaselinePercentage());
   }
 }

@@ -633,7 +633,7 @@ export const deployMockAgfToken = async (args: [tEthereumAddress, string, string
     verify
   );
 
-  await instance['initialize((address,string,string,uint8))']({
+  await instance.initializeRewardToken({
     remoteAcl: args[0],
     name: args[1],
     symbol: args[2],
