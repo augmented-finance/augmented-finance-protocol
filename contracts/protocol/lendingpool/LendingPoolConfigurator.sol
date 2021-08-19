@@ -30,6 +30,7 @@ contract LendingPoolConfigurator is
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   ICombinedPool internal pool;
+  mapping(string => address) private _namedAdapters;
 
   uint256 private constant CONFIGURATOR_REVISION = 0x1;
 
@@ -364,6 +365,18 @@ contract LendingPoolConfigurator is
         disableBorrowingOnReserve(inputParams[i].asset);
       }
       setReserveFactor(inputParams[i].asset, inputParams[i].reserveFactor);
+    }
+  }
+
+  function getFlashloanAdapter(string calldata name) external view returns (address) {
+    return _namedAdapters[name];
+  }
+
+  function setFlashloanAdapters(string[] calldata names, address[] calldata adapters) external onlyPoolAdmin {
+    require(names.length == adapters.length);
+
+    for (uint256 i = 0; i < names.length; i++) {
+      _namedAdapters[names[i]] = adapters[i];
     }
   }
 }
