@@ -51,8 +51,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
   }
 
   function getBoostFactor(address pool) public view returns (uint32 pctFactor) {
-    (, uint256 info) = internalGetPoolInfo(pool);
-    return uint32(info);
+    return uint32(internalGetPoolInfo(pool));
   }
 
   function setUpdateBoostPoolRate(bool updateBoostPool) external override onlyConfigAdmin {

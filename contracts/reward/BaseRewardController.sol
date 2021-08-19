@@ -95,12 +95,8 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     _poolDesc[address(pool)] = poolId | (info << POOL_ID_BITS);
   }
 
-  function internalGetPoolInfo(address pool) internal view returns (bool, uint256) {
-    uint256 poolDesc = _poolDesc[address(pool)];
-    if (poolDesc & POOL_ID_MASK == 0) {
-      return (false, 0);
-    }
-    return (true, poolDesc >> POOL_ID_BITS);
+  function internalGetPoolInfo(address pool) internal view returns (uint256) {
+    return _poolDesc[address(pool)] >> POOL_ID_BITS;
   }
 
   function internalOnPoolRemoved(IManagedRewardPool) internal virtual {}
