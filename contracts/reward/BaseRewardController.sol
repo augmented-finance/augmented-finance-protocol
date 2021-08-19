@@ -15,8 +15,9 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
   IRewardMinter private _rewardMinter;
 
   IManagedRewardPool[] private _poolList;
-  /* IManagedRewardPool => mask */
-  mapping(address => uint256) private _poolMask;
+
+  /* IManagedRewardPool =>  */
+  mapping(address => uint256) private _poolDesc;
   /* holder => masks of related pools */
   mapping(address => uint256) private _memberOf;
 
@@ -40,15 +41,19 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     return _remoteAcl;
   }
 
+  uint256 private constant POOL_ID_BITS = 16;
+  uint256 private constant POOL_ID_MASK = (1 << (POOL_ID_BITS + 1)) - 1;
+  uint256 private constant MAX_POOL_INFO = type(uint256).max >> POOL_ID_BITS;
+
   function addRewardPool(IManagedRewardPool pool) external override onlyConfigAdmin {
     require(address(pool) != address(0), 'reward pool required');
-    require(_poolMask[address(pool)] == 0, 'already registered');
+    require(_poolDesc[address(pool)] == 0, 'already registered');
     require(_poolList.length <= 255, 'too many pools');
 
     uint256 poolMask = 1 << _poolList.length;
-    _poolMask[address(pool)] = poolMask;
-    _baselineMask |= poolMask;
     _poolList.push(pool);
+    _poolDesc[address(pool)] = _poolList.length;
+    _baselineMask |= poolMask;
 
     pool.attachedToRewardController(); // access check
 
@@ -57,15 +62,17 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
 
   function removeRewardPool(IManagedRewardPool pool) external override onlyConfigAdmin {
     require(address(pool) != address(0), 'reward pool required');
-    uint256 poolMask = _poolMask[address(pool)];
-    if (poolMask == 0) {
+    uint256 poolDesc = _poolDesc[address(pool)];
+    if (poolDesc == 0) {
       return;
     }
-    uint256 idx = BitUtils.bitLength(poolMask);
+    uint256 idx = (poolDesc & POOL_ID_MASK) - 1;
     require(_poolList[idx] == pool, 'unexpected pool');
 
     _poolList[idx] = IManagedRewardPool(address(0));
-    delete (_poolMask[address(pool)]);
+    delete (_poolDesc[address(pool)]);
+
+    uint256 poolMask = 1 << idx;
     _ignoreMask |= poolMask;
 
     internalOnPoolRemoved(pool);
@@ -74,11 +81,30 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
   }
 
   function getPoolMask(address pool) public view returns (uint256 poolMask) {
-    poolMask = _poolMask[pool];
+    uint256 poolDesc = _poolDesc[address(pool)];
+    if (poolDesc == 0) {
+      return 0;
+    }
+    poolMask = 1 << ((poolDesc & POOL_ID_MASK) - 1);
     if (poolMask & _ignoreMask != 0) {
       return 0;
     }
     return poolMask;
+  }
+
+  function internalSetPoolInfo(address pool, uint256 info) internal {
+    require(info <= MAX_POOL_INFO, 'excessive pool info');
+    uint256 poolDesc = _poolDesc[address(pool)];
+    require(poolDesc != 0, 'unknown pool');
+    _poolDesc[address(pool)] = (poolDesc & POOL_ID_MASK) | (poolDesc << POOL_ID_BITS);
+  }
+
+  function internalGetPoolInfo(address pool) internal view returns (bool, uint256) {
+    uint256 poolDesc = _poolDesc[address(pool)];
+    if (poolDesc == 0) {
+      return (false, 0);
+    }
+    return (true, poolDesc >> POOL_ID_BITS);
   }
 
   function internalOnPoolRemoved(IManagedRewardPool) internal virtual {}
@@ -177,11 +203,16 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     uint32 since,
     AllocationMode mode
   ) external override {
-    uint256 poolMask = _poolMask[msg.sender];
-    require(poolMask != 0, 'unknown pool');
+    uint256 poolDesc = _poolDesc[msg.sender];
+    uint256 poolMask = poolDesc & POOL_ID_MASK;
+    if (poolMask > 0) {
+      poolMask = 1 << (poolMask - 1);
+    }
+    require(poolMask & ~_ignoreMask != 0, 'unknown pool');
+    poolDesc >>= POOL_ID_BITS;
 
     if (allocated > 0) {
-      internalAllocatedByPool(holder, allocated, msg.sender, since);
+      internalAllocatedByPool(holder, allocated, poolDesc, since);
       emit RewardsAllocated(holder, allocated, msg.sender);
     }
 
@@ -308,7 +339,7 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
   function internalAllocatedByPool(
     address holder,
     uint256 allocated,
-    address pool,
+    uint256 poolInfo,
     uint32 since
   ) internal virtual;
 

@@ -17,7 +17,6 @@ import './BaseRewardController.sol';
 contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardController, AutolockBase {
   using PercentageMath for uint256;
 
-  mapping(address => uint32) private _boostFactor;
   IManagedRewardPool private _boostPool;
   uint256 private _boostPoolMask;
 
@@ -43,19 +42,17 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     if (_boostPool == pool) {
       _boostPool = IManagedRewardPool(address(0));
       _boostPoolMask = 0;
-    } else {
-      delete (_boostFactor[address(pool)]);
     }
   }
 
   function setBoostFactor(address pool, uint32 pctFactor) external override onlyConfigOrRateAdmin {
-    require(getPoolMask(pool) != 0, 'unknown pool');
     require(pool != address(_boostPool), 'factor for the boost pool');
-    _boostFactor[pool] = pctFactor;
+    internalSetPoolInfo(pool, pctFactor);
   }
 
-  function getBoostFactor(address pool) external view returns (uint32 pctFactor) {
-    return uint32(_boostFactor[pool]);
+  function getBoostFactor(address pool) public view returns (uint32 pctFactor) {
+    (, uint256 info) = internalGetPoolInfo(pool);
+    return uint32(info);
   }
 
   function setUpdateBoostPoolRate(bool updateBoostPool) external override onlyConfigAdmin {
@@ -82,15 +79,22 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     return (totalRate, baselineMask);
   }
 
+  uint256 private constant BOOST_POOL_MARK = 1 << 33;
+
   function setBoostPool(address pool) external override onlyConfigAdmin {
+    if (address(_boostPool) == pool) {
+      return;
+    }
+    if (address(_boostPool) != address(0)) {
+      internalSetPoolInfo(address(_boostPool), 0);
+    }
+
     if (pool == address(0)) {
       _boostPoolMask = 0;
     } else {
-      uint256 mask = getPoolMask(pool);
-      require(mask != 0, 'unknown pool');
-      _boostPoolMask = mask;
-
-      delete (_boostFactor[pool]);
+      internalSetPoolInfo(pool, BOOST_POOL_MARK); // it also checks for known pool
+      _boostPoolMask = getPoolMask(pool);
+      require(_boostPoolMask != 0);
     }
     _boostPool = IManagedRewardPool(pool);
   }
@@ -138,7 +142,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
       }
 
       claimableAmount += amount_;
-      boostLimit += amount_.percentMul(_boostFactor[address(pool)]);
+      boostLimit += amount_.percentMul(getBoostFactor(address(pool)));
     }
 
     uint256 boostAmount = _boostRewards[holder];
@@ -194,7 +198,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
       }
 
       claimableAmount += amount_;
-      boostLimit += amount_.percentMul(_boostFactor[address(pool)]);
+      boostLimit += amount_.percentMul(getBoostFactor(address(pool)));
     }
 
     uint256 boostAmount = _boostRewards[holder];
@@ -217,13 +221,15 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
   function internalAllocatedByPool(
     address holder,
     uint256 allocated,
-    address pool,
+    uint256 poolInfo,
     uint32
   ) internal override {
-    if (address(_boostPool) == pool) {
-      if (allocated > 0) {
-        _boostRewards[holder] += allocated;
-      }
+    if (allocated == 0) {
+      return;
+    }
+
+    if (poolInfo & BOOST_POOL_MARK != 0) {
+      _boostRewards[holder] += allocated;
       return;
     }
 
@@ -233,7 +239,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     require(v <= type(uint128).max);
     workReward.claimableReward = uint128(v);
 
-    uint32 factor = _boostFactor[pool];
+    uint32 factor = uint32(poolInfo);
     if (factor != 0) {
       v = workReward.boostLimit + allocated.percentMul(factor);
       require(v <= type(uint128).max);
@@ -328,7 +334,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
         r.maxBoost = _boostRewards[holder] + amount_;
       } else {
         r.allocations[n].rewardType = RewardType.WorkReward;
-        r.allocations[n].factor = _boostFactor[address(pool)];
+        r.allocations[n].factor = getBoostFactor(address(pool));
 
         if (amount_ > 0) {
           r.amountClaimable += amount_;
