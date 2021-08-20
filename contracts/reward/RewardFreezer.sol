@@ -25,7 +25,7 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
   function internalAllocatedByPool(
     address holder,
     uint256 allocated,
-    address,
+    uint256,
     uint32 since
   ) internal override {
     allocated = doAllocatedByPool(holder, allocated, since);
@@ -56,13 +56,7 @@ contract RewardFreezer is BasicRewardController, CalcLinearFreezer {
     uint32 since,
     bool incremental
   ) internal view override returns (uint256 claimableAmount, uint256 frozenReward) {
-    (claimableAmount, frozenReward) = doCalcByPull(
-      holder,
-      allocated,
-      since,
-      uint32(block.timestamp),
-      incremental
-    );
+    (claimableAmount, frozenReward) = doCalcByPull(holder, allocated, since, uint32(block.timestamp), incremental);
     claimableAmount += _claimableRewards[holder];
     return (claimableAmount, frozenReward);
   }
