@@ -11,9 +11,8 @@ jobs:
       - image: vitalinfo/circleci-cancel-draft
     steps:
       - run: cancel-draft-build
-  test_all:
+  test_set1:
     <<: *defaults
-    parallelism: 4
     steps:
       - checkout
       - restore_cache:
@@ -22,7 +21,13 @@ jobs:
             - yarn-packages-{{ checksum "yarn.lock" }}
       - run: yarn install --immutable
       - run: yarn run compile
-      - run: circleci tests split solhint test-boost test-pools test test-stake test-deploy:fork test-deploy:fork:test-incremental | xargs yarn run 
+      - run: yarn run solhint
+      - run: yarn run test-boost
+      - run: yarn run test-pools
+      - run: yarn run test
+      - run: yarn run test-stake
+      - run: yarn run test-deploy:fork
+      - run: yarn run test-deploy:fork:test-incremental
       - run: yarn run build:package
       - save_cache:
           name: Save yarn package cache
