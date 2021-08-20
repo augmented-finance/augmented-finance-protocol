@@ -1,23 +1,18 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
+import '../../interfaces/IFlashLoanAddressProvider.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../protocol/libraries/types/DataTypes.sol';
+import '../../protocol/libraries/helpers/Helpers.sol';
+import '../../interfaces/IPriceOracleGetter.sol';
+import '../../interfaces/IDepositToken.sol';
+import '../../protocol/libraries/configuration/ReserveConfiguration.sol';
 import './BaseUniswapAdapter.sol';
-import '../interfaces/IFlashLoanAddressProvider.sol';
-import '../interfaces/IUniswapV2Router02.sol';
-import '../dependencies/openzeppelin/contracts/IERC20.sol';
-import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../protocol/libraries/types/DataTypes.sol';
-import '../protocol/libraries/helpers/Helpers.sol';
-import '../interfaces/IPriceOracleGetter.sol';
-import '../interfaces/IDepositToken.sol';
-import '../protocol/libraries/configuration/ReserveConfiguration.sol';
 
-/**
- * @title UniswapLiquiditySwapAdapter
- * @notice Uniswap V2 Adapter to swap liquidity.
- * @author Aave
- **/
+/// @notice Liquidation adapter via Uniswap V2
 contract FlashLiquidationAdapter is BaseUniswapAdapter {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
@@ -43,11 +38,9 @@ contract FlashLiquidationAdapter is BaseUniswapAdapter {
     uint256 borrowedAssetLeftovers;
   }
 
-  constructor(
-    IFlashLoanAddressProvider addressesProvider,
-    IUniswapV2Router02 uniswapRouter,
-    address wethAddress
-  ) BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
+  constructor(IFlashLoanAddressProvider addressesProvider, IUniswapV2Router02ForAdapter uniswapRouter)
+    BaseUniswapAdapter(addressesProvider, uniswapRouter)
+  {}
 
   /**
    * @dev Liquidate a non-healthy position collateral-wise, with a Health Factor below 1, using Flash Loan and Uniswap to repay flash loan premium.
@@ -155,7 +148,8 @@ contract FlashLiquidationAdapter is BaseUniswapAdapter {
     }
 
     // Allow repay of flash loan
-    IERC20(borrowedAsset).safeApprove(address(LENDING_POOL), vars.flashLoanDebt);
+    // Dont use safeApprove here as there can be leftovers
+    IERC20(borrowedAsset).approve(address(LENDING_POOL), vars.flashLoanDebt);
 
     // Transfer remaining tokens to initiator
     if (vars.remainingTokens > 0) {
@@ -174,13 +168,10 @@ contract FlashLiquidationAdapter is BaseUniswapAdapter {
    * @return LiquidationParams struct containing decoded params
    */
   function _decodeParams(bytes memory params) internal pure returns (LiquidationParams memory) {
-    (
-      address collateralAsset,
-      address borrowedAsset,
-      address user,
-      uint256 debtToCover,
-      bool useEthPath
-    ) = abi.decode(params, (address, address, address, uint256, bool));
+    (address collateralAsset, address borrowedAsset, address user, uint256 debtToCover, bool useEthPath) = abi.decode(
+      params,
+      (address, address, address, uint256, bool)
+    );
 
     return LiquidationParams(collateralAsset, borrowedAsset, user, debtToCover, useEthPath);
   }

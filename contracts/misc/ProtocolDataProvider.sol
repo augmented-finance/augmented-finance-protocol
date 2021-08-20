@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../dependencies/openzeppelin/contracts/IERC20Detailed.sol';
+import '../tools/tokens/IERC20Detailed.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 import '../access/AccessFlags.sol';
 import '../interfaces/ILendingPool.sol';
+import '../interfaces/ILendingPoolConfigurator.sol';
 import '../interfaces/IStableDebtToken.sol';
 import '../interfaces/IVariableDebtToken.sol';
 import '../protocol/libraries/configuration/ReserveConfiguration.sol';
@@ -29,35 +30,6 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
   address public constant USD = 0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96;
 
-  enum TokenType {
-    PoolAsset,
-    Deposit,
-    VariableDebt,
-    StableDebt,
-    Stake,
-    Reward,
-    RewardStake
-  }
-
-  struct TokenDescription {
-    address token;
-    // priceToken == 0 for a non-transferrable token
-    address priceToken;
-    address rewardPool;
-    string tokenSymbol;
-    address underlying;
-    uint8 decimals;
-    TokenType tokenType;
-    bool active;
-    bool frozen;
-  }
-
-  struct StakeTokenBalance {
-    uint256 balance;
-    uint32 unstakeWindowStart;
-    uint32 unstakeWindowEnd;
-  }
-
   // solhint-disable-next-line var-name-mixedcase
   IMarketAccessController public immutable ADDRESS_PROVIDER;
 
@@ -68,6 +40,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   function getAllTokenDescriptions(bool includeAssets)
     external
     view
+    override
     returns (TokenDescription[] memory tokens, uint256 tokenCount)
   {
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
@@ -215,7 +188,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     return (tokens, tokenCount);
   }
 
-  function getAllTokens(bool includeAssets) public view returns (address[] memory tokens, uint256 tokenCount) {
+  function getAllTokens(bool includeAssets) public view override returns (address[] memory tokens, uint256 tokenCount) {
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
     address[] memory reserveList = pool.getReservesList();
 
@@ -278,6 +251,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   function getReserveConfigurationData(address asset)
     external
     view
+    override
     returns (
       uint256 decimals,
       uint256 ltv,
@@ -303,6 +277,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   function getReserveData(address asset)
     external
     view
+    override
     returns (
       uint256 availableLiquidity,
       uint256 totalStableDebt,
@@ -346,6 +321,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   function getUserReserveData(address asset, address user)
     external
     view
+    override
     returns (
       uint256 currentDepositBalance,
       uint256 currentStableDebt,
@@ -512,6 +488,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   function batchStakeBalanceOf(address[] calldata users, address[] calldata tokens)
     external
     view
+    override
     returns (StakeTokenBalance[] memory balances)
   {
     balances = new StakeTokenBalance[](users.length * tokens.length);
@@ -550,6 +527,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   function batchBalanceOf(address[] calldata users, address[] calldata tokens)
     external
     view
+    override
     returns (uint256[] memory)
   {
     uint256[] memory balances = new uint256[](users.length * tokens.length);
@@ -569,6 +547,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   function getUserWalletBalances(address user, bool includeAssets)
     external
     view
+    override
     returns (
       address[] memory tokens,
       uint256[] memory balances,
@@ -613,5 +592,12 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   {
     DataTypes.ReserveData memory reserve = ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
     return (reserve.depositTokenAddress, reserve.stableDebtTokenAddress, reserve.variableDebtTokenAddress);
+  }
+
+  function getFlashloanAdapters(string[] calldata names) external view override returns (address[] memory) {
+    ILendingPoolConfigurator lpc = ILendingPoolConfigurator(
+      ADDRESS_PROVIDER.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR)
+    );
+    return lpc.getFlashloanAdapters(names);
   }
 }

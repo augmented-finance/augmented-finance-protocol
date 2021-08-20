@@ -153,7 +153,7 @@ export const initReservesByHelper = async (
     console.log('Strategy address for asset %s: %s', symbol, strategyInfo.address);
 
     if (depositTokenImpl === eContractid.DepositTokenImpl) {
-      console.log('---- generic depost:', symbol);
+      console.log('---- generic deposit:', symbol);
     } else if (depositTokenImpl === eContractid.DelegationAwareDepositTokenImpl) {
       hasDelegationAware = true;
       console.log('---- delegation-aware:', symbol);

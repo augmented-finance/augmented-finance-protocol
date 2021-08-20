@@ -2,12 +2,12 @@
 pragma solidity ^0.8.4;
 
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../interfaces/IDepositToken.sol';
 import '../../../tools/Errors.sol';
 import '../../../tools/math/WadRayMath.sol';
+import '../../../tools/tokens/ERC20Events.sol';
 import '../../../access/AccessFlags.sol';
 import '../../../tools/tokens/ERC20PermitBase.sol';
 import './PoolTokenBase.sol';

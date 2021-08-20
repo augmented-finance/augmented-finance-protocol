@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../interfaces/IPriceOracleGetter.sol';
-import '../../interfaces/IUniswapV2Router02.sol';
+import '../../../interfaces/IPriceOracleGetter.sol';
+import './IUniswapV2Router02ForAdapter.sol';
 
 // solhint-disable func-name-mixedcase
 interface IBaseUniswapAdapter {
@@ -34,7 +34,7 @@ interface IBaseUniswapAdapter {
 
   function ORACLE() external view returns (IPriceOracleGetter);
 
-  function UNISWAP_ROUTER() external view returns (IUniswapV2Router02);
+  function UNISWAP_ROUTER() external view returns (IUniswapV2Router02ForAdapter);
 
   /**
    * @dev Given an input asset amount, returns the maximum output amount of the other asset and the prices

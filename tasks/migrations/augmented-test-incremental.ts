@@ -26,12 +26,12 @@ task('augmented:test-incremental', 'Test incremental deploy').setAction(async ({
     let lastEntryMap = new Map<string, tEthereumAddress>();
     let lastInstanceCount = 0;
     let stop = false;
+    const trackVerify = false;
+    const reuse = false;
 
     for (let maxStep = 1; ; maxStep++) {
       if (maxStep > 1) {
-        const [entryMap, instanceCount, multiCount] = printContracts(
-          (await getFirstSigner()).address
-        );
+        const [entryMap, instanceCount, multiCount] = printContracts((await getFirstSigner()).address);
         if (multiCount > 0) {
           throw `illegal multi-deployment detected after step ${maxStep}`;
         }
@@ -69,61 +69,61 @@ task('augmented:test-incremental', 'Test incremental deploy').setAction(async ({
       };
 
       console.log('01. Deploy address provider registry');
-      await DRE.run('full:deploy-address-provider', { pool: POOL_NAME });
+      await DRE.run('full:deploy-address-provider', { pool: POOL_NAME, verify: trackVerify });
       if (isLastStep()) {
         continue;
       }
 
-      console.log('02. Deploy lending pool');
-      await DRE.run('full:deploy-lending-pool', { pool: POOL_NAME });
+      console.log('02. Deploy oracles');
+      await DRE.run('full:deploy-oracles', { pool: POOL_NAME, verify: trackVerify, reuse: reuse });
       if (isLastStep()) {
         continue;
       }
 
-      console.log('03. Deploy oracles');
-      await DRE.run('full:deploy-oracles', { pool: POOL_NAME });
+      console.log('03. Deploy lending pool');
+      await DRE.run('full:deploy-lending-pool', { pool: POOL_NAME, verify: trackVerify });
       if (isLastStep()) {
         continue;
       }
 
-      console.log('04. Deploy Data Provider');
-      await DRE.run('full:data-provider', { pool: POOL_NAME });
+      console.log('04. Deploy WETH Gateway');
+      await DRE.run('full-deploy-weth-gateway', { pool: POOL_NAME, verify: trackVerify });
       if (isLastStep()) {
         continue;
       }
 
-      console.log('05. Deploy WETH Gateway');
-      await DRE.run('full-deploy-weth-gateway', { pool: POOL_NAME });
+      console.log('05. Deploy auxiliary contracts');
+      await DRE.run('full:aux-contracts', { pool: POOL_NAME, verify: trackVerify });
       if (isLastStep()) {
         continue;
       }
 
       console.log('06. Initialize lending pool');
-      await DRE.run('full:initialize-lending-pool', { pool: POOL_NAME });
+      await DRE.run('full:initialize-lending-pool', { pool: POOL_NAME, verify: trackVerify });
       if (isLastStep()) {
         continue;
       }
 
       console.log('07. Deploy StakeConfigurator');
-      await DRE.run('full:deploy-stake-configurator', { pool: POOL_NAME });
+      await DRE.run('full:deploy-stake-configurator', { pool: POOL_NAME, verify: trackVerify });
       if (isLastStep()) {
         continue;
       }
 
       console.log('08. Deploy and initialize stake tokens');
-      await DRE.run('full:init-stake-tokens', { pool: POOL_NAME });
+      await DRE.run('full:init-stake-tokens', { pool: POOL_NAME, verify: trackVerify });
       if (isLastStep()) {
         continue;
       }
 
       console.log('09. Deploy reward contracts and AGF token');
-      await DRE.run('full:deploy-reward-contracts', { pool: POOL_NAME });
+      await DRE.run('full:deploy-reward-contracts', { pool: POOL_NAME, verify: trackVerify });
       if (isLastStep()) {
         continue;
       }
 
       console.log('10. Deploy reward pools');
-      await DRE.run('full:init-reward-pools', { pool: POOL_NAME });
+      await DRE.run('full:init-reward-pools', { pool: POOL_NAME, verify: trackVerify });
       if (isLastStep()) {
         continue;
       }
