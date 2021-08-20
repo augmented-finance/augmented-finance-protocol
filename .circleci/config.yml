@@ -11,7 +11,7 @@ jobs:
       - image: vitalinfo/circleci-cancel-draft
     steps:
       - run: cancel-draft-build
-  test_set1:
+  test_all:
     <<: *defaults
     steps:
       - checkout
