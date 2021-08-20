@@ -7,6 +7,7 @@ defaults: &defaults
     - image: cimg/node:16.6
 jobs:
   cancel_draft_build:
+    name: Check for draft
     docker:
       - image: vitalinfo/circleci-cancel-draft
     steps:
@@ -21,7 +22,11 @@ jobs:
             - yarn-packages-{{ checksum "yarn.lock" }}
       - run: yarn install --immutable
       - run: yarn run compile
-      - run: yarn run solhint
+      - save_cache:
+          name: Save yarn package cache
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
       - persist_to_workspace:
           root: ~/
           paths: .
@@ -30,77 +35,43 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/
-      - run: yarn run build:package
-      - save_cache:
-          name: Save yarn package cache
-          key: yarn-packages-{{ checksum "yarn.lock" }}
-          paths:
-            - ~/.cache/yarn
-      - persist_to_workspace:
-          root: ~/
-          paths: .
       - slack/notify:
           channel: build
           event: fail
           template: basic_fail_1
   test_set1:
     <<: *defaults
+    name: Extra test sets
     steps:
       - attach_workspace:
           at: ~/
+      - run: yarn run solhint
       - run: yarn run test-boost
       - run: yarn run test-pools
       - run: yarn run test-stake
   test_set2:
     <<: *defaults
+    name: Main test set
     steps:
       - attach_workspace:
           at: ~/
       - run: yarn run test
   test_set3:
     <<: *defaults
+    name: Deployment and build tests
     steps:
       - attach_workspace:
           at: ~/
       - run: yarn run test-deploy:fork
       - run: yarn run test-deploy:fork:test-incremental
-  test_all_in_one:
-    <<: *defaults
-    steps:
-      - checkout
-      - restore_cache:
-          name: Restore yarn package cache
-          keys:
-            - yarn-packages-{{ checksum "yarn.lock" }}
-      - run: yarn install --immutable
-      - run: yarn run compile
-      - run: yarn run solhint
-      - run: yarn run test-boost
-      - run: yarn run test-pools
-      - run: yarn run test
-      - run: yarn run test-stake
-      - run: yarn run test-deploy:fork
-      - run: yarn run test-deploy:fork:test-incremental
       - run: yarn run build:package
-      - save_cache:
-          name: Save yarn package cache
-          key: yarn-packages-{{ checksum "yarn.lock" }}
-          paths:
-            - ~/.cache/yarn
-      - persist_to_workspace:
-          root: ~/
-          paths: .
-      - slack/notify:
-          channel: build
-          event: fail
-          template: basic_fail_1
-
           
   npm-publish:
     <<: *defaults
     steps:
       - attach_workspace:
           at: ~/
+      - run: yarn run build:package
       - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
       - run: git config --global user.email "$CIRCLE_USERNAME@augmented.finance"
       - run: git config --global user.name $CIRCLE_USERNAME
