@@ -22,8 +22,7 @@ jobs:
             - yarn-packages-{{ checksum "yarn.lock" }}
       - run: yarn install --immutable
       - run: yarn run compile
-      - run: yarn run solhint
-      - run: echo 'test-boost test-pools test test-stake test-deploy:fork test-deploy:fork:test-incremental' | circleci tests split | xargs yarn run 
+      - run: circleci tests split solhint test-boost test-pools test test-stake test-deploy:fork test-deploy:fork:test-incremental | xargs yarn run 
       - run: yarn run build:package
       - save_cache:
           name: Save yarn package cache
