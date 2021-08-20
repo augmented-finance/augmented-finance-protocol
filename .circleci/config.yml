@@ -13,6 +13,7 @@ jobs:
       - run: cancel-draft-build
   test_all:
     <<: *defaults
+    parallelism: 4
     steps:
       - checkout
       - restore_cache:
@@ -22,12 +23,7 @@ jobs:
       - run: yarn install --immutable
       - run: yarn run compile
       - run: yarn run solhint
-      - run: yarn run test-boost
-      - run: yarn run test-pools
-      - run: yarn run test
-      - run: yarn run test-stake
-      - run: yarn run test-deploy:fork
-      - run: yarn run test-deploy:fork:test-incremental
+      - run: echo 'test-boost test-pools test test-stake test-deploy:fork test-deploy:fork:test-incremental' | circleci tests split | xargs yarn run 
       - run: yarn run build:package
       - save_cache:
           name: Save yarn package cache
