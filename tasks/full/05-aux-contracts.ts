@@ -99,7 +99,7 @@ const deployFlashloanAdapters = async <T>(
 
   if (newAdapters.length > 0) {
     await grantPoolAdmin(addressProvider);
-    await configurator.setFlashloanAdapters(newNames, newAdapters);
+    await mustWaitTx(configurator.setFlashloanAdapters(newNames, newAdapters));
     console.log('Flashloan adapter(s) registered: ', newNames);
   }
 };
@@ -109,6 +109,6 @@ const grantPoolAdmin = async (addressProvider: MarketAccessController) => {
   if (await addressProvider.isAddress(AccessFlags.POOL_ADMIN, deployer)) {
     return;
   }
-  //  await waitTx(addressProvider.grantRoles(deployer, AccessFlags.POOL_ADMIN));
+  await mustWaitTx(addressProvider.grantRoles(deployer, AccessFlags.POOL_ADMIN));
   console.log('Granted POOL_ADMIN');
 };
