@@ -10,7 +10,6 @@ import '../../protocol/libraries/helpers/Helpers.sol';
 import '../../interfaces/IPriceOracleGetter.sol';
 import '../../interfaces/IDepositToken.sol';
 import '../../protocol/libraries/configuration/ReserveConfiguration.sol';
-import './interfaces/IUniswapV2Router02.sol';
 import './BaseUniswapAdapter.sol';
 
 /// @notice Liquidation adapter via Uniswap V2
@@ -39,7 +38,7 @@ contract FlashLiquidationAdapter is BaseUniswapAdapter {
     uint256 borrowedAssetLeftovers;
   }
 
-  constructor(IFlashLoanAddressProvider addressesProvider, IUniswapV2Router02 uniswapRouter)
+  constructor(IFlashLoanAddressProvider addressesProvider, IUniswapV2Router02ForAdapter uniswapRouter)
     BaseUniswapAdapter(addressesProvider, uniswapRouter)
   {}
 

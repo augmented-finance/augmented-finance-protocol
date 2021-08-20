@@ -2,7 +2,6 @@
 pragma solidity ^0.8.4;
 
 import './BaseUniswapAdapter.sol';
-import './interfaces/IUniswapV2Router02.sol';
 import '../../interfaces/IFlashLoanAddressProvider.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
@@ -29,7 +28,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     bool[] useEthPath;
   }
 
-  constructor(IFlashLoanAddressProvider addressesProvider, IUniswapV2Router02 uniswapRouter)
+  constructor(IFlashLoanAddressProvider addressesProvider, IUniswapV2Router02ForAdapter uniswapRouter)
     BaseUniswapAdapter(addressesProvider, uniswapRouter)
   {}
 

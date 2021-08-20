@@ -15,7 +15,7 @@ import '../../access/AccessFlags.sol';
 import '../../access/AccessHelper.sol';
 import '../../misc/interfaces/IWETHGateway.sol';
 import '../base/FlashLoanReceiverBase.sol';
-import './interfaces/IUniswapV2Router02.sol';
+import './interfaces/IUniswapV2Router02ForAdapter.sol';
 import './interfaces/IBaseUniswapAdapter.sol';
 
 // solhint-disable var-name-mixedcase, func-name-mixedcase
@@ -31,9 +31,11 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, SweepBase, IBaseU
   address public constant override USD_ADDRESS = 0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96;
 
   address public immutable override WETH_ADDRESS;
-  IUniswapV2Router02 public immutable override UNISWAP_ROUTER;
+  IUniswapV2Router02ForAdapter public immutable override UNISWAP_ROUTER;
 
-  constructor(IFlashLoanAddressProvider provider, IUniswapV2Router02 uniswapRouter) FlashLoanReceiverBase(provider) {
+  constructor(IFlashLoanAddressProvider provider, IUniswapV2Router02ForAdapter uniswapRouter)
+    FlashLoanReceiverBase(provider)
+  {
     UNISWAP_ROUTER = uniswapRouter;
     IMarketAccessController ac = IMarketAccessController(
       ILendingPool(provider.getLendingPool()).getAddressesProvider()

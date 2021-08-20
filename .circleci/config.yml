@@ -59,10 +59,10 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/
+      - run: yarn run solhint
       - run: yarn run test-boost
       - run: yarn run test-pools
       - run: yarn run test-stake
-      - run: yarn run solhint
       - run: yarn run test-deploy:fork
       - run: yarn run test-deploy:fork:test-incremental
       - run: yarn run build:package

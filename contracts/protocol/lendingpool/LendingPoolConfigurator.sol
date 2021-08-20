@@ -368,7 +368,7 @@ contract LendingPoolConfigurator is
     }
   }
 
-  function getFlashloanAdapters(string[] calldata names) external view returns (address[] memory adapters) {
+  function getFlashloanAdapters(string[] calldata names) external view override returns (address[] memory adapters) {
     adapters = new address[](names.length);
     for (uint256 i = 0; i < names.length; i++) {
       adapters[i] = _namedAdapters[names[i]];

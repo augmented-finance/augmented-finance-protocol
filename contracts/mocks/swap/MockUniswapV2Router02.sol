@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../flashloan/adapters/interfaces/IUniswapV2Router02.sol';
+import '../../flashloan/adapters/interfaces/IUniswapV2Router02ForAdapter.sol';
 import '../tokens/MintableERC20.sol';
 
-contract MockUniswapV2Router02 is IUniswapV2Router02 {
+contract MockUniswapV2Router02 is IUniswapV2Router02ForAdapter {
   mapping(address => uint256) internal _amountToReturn;
   mapping(address => uint256) internal _amountToSwap;
   mapping(address => mapping(address => mapping(uint256 => uint256))) internal _amountsIn;

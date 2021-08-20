@@ -6,7 +6,6 @@ import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../protocol/libraries/types/DataTypes.sol';
 import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import './interfaces/IUniswapV2Router02.sol';
 import './BaseUniswapAdapter.sol';
 
 /// @notice Performs a repay of a debt with collateral via Uniswap V2
@@ -22,7 +21,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
     bool useEthPath;
   }
 
-  constructor(IFlashLoanAddressProvider addressesProvider, IUniswapV2Router02 uniswapRouter)
+  constructor(IFlashLoanAddressProvider addressesProvider, IUniswapV2Router02ForAdapter uniswapRouter)
     BaseUniswapAdapter(addressesProvider, uniswapRouter)
   {}
 

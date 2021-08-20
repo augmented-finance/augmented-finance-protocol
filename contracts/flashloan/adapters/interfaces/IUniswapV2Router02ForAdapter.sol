@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-interface IUniswapV2Router02 {
+/// @dev Defines a minimal subset of functions used by Uniswap adapters
+interface IUniswapV2Router02ForAdapter {
   function swapExactTokensForTokens(
     uint256 amountIn,
     uint256 amountOutMin,
