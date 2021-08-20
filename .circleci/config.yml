@@ -46,22 +46,22 @@ jobs:
       - attach_workspace:
           at: ~/
       - run: yarn run test
-  test_extra:
+  test_adapters:
     <<: *defaults
     description: Extra test sets
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run: yarn run test-uniswap
+  test_extra:
+    <<: *defaults
+    description: Deployment and build tests
     steps:
       - attach_workspace:
           at: ~/
       - run: yarn run test-boost
       - run: yarn run test-pools
       - run: yarn run test-stake
-      - run: yarn run test-uniswap
-  test_deploy:
-    <<: *defaults
-    description: Deployment and build tests
-    steps:
-      - attach_workspace:
-          at: ~/
       - run: yarn run solhint
       - run: yarn run test-deploy:fork
       - run: yarn run test-deploy:fork:test-incremental
@@ -97,7 +97,7 @@ workflows:
             - compile_all
           context:
             - alchemy-secret
-      - test_deploy:
+      - test_adapters:
           requires:
             - compile_all
           context:
@@ -106,7 +106,7 @@ workflows:
           requires:
             - test_main
             - test_extra
-            - test_deploy
+            - test_adapters
           context:
             - slack-secret
       - npm-publish:
