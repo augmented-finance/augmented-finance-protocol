@@ -15,23 +15,14 @@ import {
 import { MockAgfToken, ReferralRewardPool, RewardFreezer } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { currentTick, mineBlocks, mineTicks, revertSnapshot, takeSnapshot } from './utils';
-import {
-  MAX_LOCKER_PERIOD,
-  MAX_UINT_AMOUNT,
-  ONE_ADDRESS,
-  PERC_100,
-  WEEK,
-} from '../../helpers/constants';
+import { MAX_LOCKER_PERIOD, MAX_UINT_AMOUNT, ONE_ADDRESS, PERC_100, WEEK } from '../../helpers/constants';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
-import {
-  deployReferralRewardPool,
-  deployTreasuryRewardPool,
-} from '../../helpers/contracts-deployments';
+import { deployReferralRewardPool, deployTreasuryRewardPool } from '../../helpers/contracts-deployments';
 import { AccessFlags } from '../../helpers/access-flags';
 import { IManagedRewardPool } from '../../types/IManagedRewardPool';
 import { IManagedRewardPoolFactory } from '../../types/IManagedRewardPoolFactory';
 import { BigNumber, Contract } from 'ethers';
-import { ProtocolErrors } from '../../helpers/types';
+import { ProtocolErrors, tEthereumAddress } from '../../helpers/types';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -57,8 +48,12 @@ describe('Reward rates suite', () => {
     await rewardController.setFreezePercentage(0);
 
     pools = [];
+    const poolPct: number[] = [];
+    const poolAddr: tEthereumAddress[] = [];
     const pushPool = (c: Contract) => {
       pools.push(IManagedRewardPoolFactory.connect(c.address, root));
+      poolPct.push(poolShare);
+      poolAddr.push(c.address);
     };
 
     const ac = await getMarketAccessController();
@@ -70,25 +65,18 @@ describe('Reward rates suite', () => {
     await rewardController.addRewardPool(refPool.address);
 
     {
-      const pool = await deployTreasuryRewardPool([
-        rewardController.address,
-        0,
-        poolShare,
-        root.address,
-      ]);
+      const pool = await deployTreasuryRewardPool([rewardController.address, 0, poolShare, root.address]);
       await rewardController.addRewardPool(pool.address);
       pushPool(pool);
     }
     {
       const pool = await getTokenWeightedRewardPoolAGFSeparate();
-      await pool.setBaselinePercentage(poolShare);
       await pool.handleBalanceUpdate(ONE_ADDRESS, root.address, 0, 1, 1); // 100%
       pushPool(pool);
     }
 
     {
       const pool = await getTeamRewardPool();
-      await pool.setBaselinePercentage(poolShare);
       await pool.setUnlockedAt(1);
       await pool.updateTeamMember(root.address, 10000); // 100%
       pushPool(pool);
@@ -98,12 +86,12 @@ describe('Reward rates suite', () => {
       agf.mintReward(root.address, 1, false);
 
       const pool = await getMockTokenLocker();
-      await pool.setBaselinePercentage(poolShare);
       await agf.approve(pool.address, MAX_UINT_AMOUNT);
       await pool.lock(1, MAX_LOCKER_PERIOD + WEEK, 0);
       pushPool(pool);
     }
 
+    await rewardController.setBaselinePercentages(poolAddr, poolPct);
     await rewardController.updateBaseline(defaultRate * poolCount);
   });
 
@@ -128,11 +116,7 @@ describe('Reward rates suite', () => {
     const postValues: string[] = [];
 
     for (const pool of pools) {
-      postValues.push(
-        (await pool.calcRewardFor(root.address, tick)).amount
-          .sub(tickCount * defaultRate)
-          .toString()
-      );
+      postValues.push((await pool.calcRewardFor(root.address, tick)).amount.sub(tickCount * defaultRate).toString());
     }
     postValues.push((await refPool.availableReward()).sub(tickCount * defaultRate).toString());
 
@@ -172,13 +156,11 @@ describe('Reward rates suite', () => {
     const perPoolReward3 = tickCount * defaultRate + tickCount3 * defaultRate2;
 
     expect(await refPool.availableReward()).eq(preRewardRef.add(perPoolReward3).toNumber());
-    expect(await agf.balanceOf(root.address)).eq(
-      preReward.add(perPoolReward3 * pools.length).toNumber()
-    );
+    expect(await agf.balanceOf(root.address)).eq(preReward.add(perPoolReward3 * pools.length).toNumber());
   });
 
   it('all pool total must be less than 100%', async () => {
-    await refPool.setBaselinePercentage(PERC_100);
+    await rewardController.setBaselinePercentages([refPool.address], [PERC_100]);
     await expect(rewardController.updateBaseline(defaultRate * poolCount)).to.be.revertedWith(
       ProtocolErrors.RW_BASELINE_EXCEEDED
     );
