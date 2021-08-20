@@ -7,7 +7,7 @@ defaults: &defaults
     - image: cimg/node:16.6
 jobs:
   cancel_draft_build:
-    name: Check for draft
+    description: Stop if a draft build
     docker:
       - image: vitalinfo/circleci-cancel-draft
     steps:
@@ -17,13 +17,13 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          name: Restore yarn package cache
+          description: Restore yarn package cache
           keys:
             - yarn-packages-{{ checksum "yarn.lock" }}
       - run: yarn install --immutable
       - run: yarn run compile
       - save_cache:
-          name: Save yarn package cache
+          description: Save yarn package cache
           key: yarn-packages-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
@@ -41,7 +41,7 @@ jobs:
           template: basic_fail_1
   test_set1:
     <<: *defaults
-    name: Extra test sets
+    description: Extra test sets
     steps:
       - attach_workspace:
           at: ~/
@@ -51,14 +51,14 @@ jobs:
       - run: yarn run test-stake
   test_set2:
     <<: *defaults
-    name: Main test set
+    description: Main test set
     steps:
       - attach_workspace:
           at: ~/
       - run: yarn run test
   test_set3:
     <<: *defaults
-    name: Deployment and build tests
+    description: Deployment and build tests
     steps:
       - attach_workspace:
           at: ~/
