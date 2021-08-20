@@ -11,18 +11,31 @@ import {
 task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
   .addOptionalParam('n', 'Batch index, 0 <= n < total number of batches', 0, types.int)
   .addOptionalParam('of', 'Total number of batches, > 0', 1, types.int)
-  .addOptionalParam('proxies', 'Selection of proxies: none, first, all, core, ...', 'core', types.string)
+  .addOptionalParam('select', 'Selection of : any, contracts, proxies', 'any', types.string)
+  .addOptionalParam('proxies', 'Selection of proxies: none, first, all, core, ...', '', types.string)
   .addOptionalVariadicPositionalParam('filter', 'Names or addresses of contracts to verify', [], types.string)
-  .setAction(async ({ n, of, filter, proxies }, DRE: HardhatRuntimeEnvironment) => {
+  .setAction(async ({ n, of, filter, proxies, select }, DRE: HardhatRuntimeEnvironment) => {
     await DRE.run('set-DRE');
 
     if (n >= of) {
       throw 'invalid batch parameters';
     }
 
+    let ignoreContracts = false;
+    switch (select.toLowerCase()) {
+      case 'contracts':
+        proxies = 'none';
+        break;
+      case 'proxies':
+        if (proxies == '') {
+          proxies = 'all';
+        }
+        ignoreContracts = true;
+        break;
+    }
+
     let filterProxy: (subType: string) => boolean;
     switch (proxies.toLowerCase()) {
-      case '':
       case 'none':
         filterProxy = (subType: string) => false;
         break;
@@ -40,6 +53,8 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
       case 'all':
         filterProxy = (subType: string) => true;
         break;
+      case '':
+        proxies = 'core';
       default:
         filterProxy = (subType: string) => subType == proxies;
         break;
@@ -58,8 +73,9 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
       if (!entry.verify) {
         return;
       }
+
+      let found = false;
       if (filterSet.size > 0) {
-        let found = false;
         for (const key of [addr, entry.id]) {
           const kv = key.toUpperCase();
           if (filterSet.has(kv)) {
@@ -74,10 +90,13 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
           return;
         }
         // explicit filter takes precedence
-      } else if (entry.verify?.subType != undefined) {
-        if (!filterProxy(entry.verify!.subType!)) {
+      } else if (entry.verify.impl) {
+        if (!filterProxy(entry.verify.subType || 'core')) {
           return;
         }
+      }
+      if (!found && ignoreContracts && !entry.verify.impl) {
+        return;
       }
 
       if (batchIndex++ % of != n) {
