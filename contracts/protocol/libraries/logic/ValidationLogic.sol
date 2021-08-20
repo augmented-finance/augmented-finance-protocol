@@ -350,6 +350,8 @@ library ValidationLogic {
         ),
         Errors.VL_DEPOSIT_ALREADY_IN_USE
       );
+    } else {
+      require(reserve.configuration.getLtv() > 0, Errors.VL_RESERVE_MUST_BE_COLLATERAL);
     }
   }
 
@@ -408,13 +410,14 @@ library ValidationLogic {
    * @param oracle The price oracle
    */
   function validateTransfer(
+    address asset,
     address from,
     mapping(address => DataTypes.ReserveData) storage reservesData,
     DataTypes.UserConfigurationMap storage userConfig,
     mapping(uint256 => address) storage reserves,
     address oracle
   ) internal view {
-    if (!userConfig.isBorrowingAny()) {
+    if (!userConfig.isBorrowingAny() || !userConfig.isUsingAsCollateral(reservesData[asset].id)) {
       return;
     }
 
