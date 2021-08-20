@@ -76,4 +76,6 @@ interface ILendingPoolConfigurator {
   event StableDebtTokenUpgraded(address indexed asset, address indexed proxy, address indexed implementation);
 
   event VariableDebtTokenUpgraded(address indexed asset, address indexed proxy, address indexed implementation);
+
+  function getFlashloanAdapters(string[] calldata names) external view returns (address[] memory adapters);
 }

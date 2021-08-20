@@ -140,6 +140,8 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const lendingRateOracle = await deployLendingRateOracle([addressProvider.address]);
 
+  const wethGateway = await deployWETHGateway([addressProvider.address, mockTokens.WETH]);
+
   await addressProvider.grantRoles(
     await deployer.getAddress(),
     AccessFlags.LENDING_RATE_ADMIN | AccessFlags.ORACLE_ADMIN
@@ -151,12 +153,16 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   };
   await setInitialMarketRatesInRatesOracleByHelper(LENDING_RATE_ORACLE_RATES, allReservesAddresses, lendingRateOracle);
 
+  // NB! Flashloan adapters uses setAssetPrice on the oracle
   await addressProvider.setAddress(AccessFlags.PRICE_ORACLE, fallbackOracle.address);
   await addressProvider.setAddress(AccessFlags.LENDING_RATE_ORACLE, lendingRateOracle.address);
+  await addressProvider.setAddress(AccessFlags.WETH_GATEWAY, wethGateway.address);
 
   const reservesParams = getReservesTestConfig();
 
   const testHelpers = await deployProtocolDataProvider(addressProvider.address);
+
+  await addressProvider.setAddress(AccessFlags.DATA_HELPER, testHelpers.address);
 
   console.log('Initialize configuration');
 
@@ -175,13 +181,11 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const mockUniswapRouter = await deployMockUniswapRouter();
 
-  const adapterParams: [string, string, string] = [addressProvider.address, mockUniswapRouter.address, mockTokens.WETH];
+  const adapterParams: [string, string] = [addressProvider.address, mockUniswapRouter.address];
 
   await deployUniswapLiquiditySwapAdapter(adapterParams);
   await deployUniswapRepayAdapter(adapterParams);
   await deployFlashLiquidationAdapter(adapterParams);
-
-  await deployWETHGateway([addressProvider.address, mockTokens.WETH]);
 
   console.timeEnd('setup');
 };

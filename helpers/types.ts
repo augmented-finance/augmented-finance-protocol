@@ -378,6 +378,8 @@ export interface ICommonConfiguration {
   ReserveAssetsOpt: iParamsPerNetwork<boolean>;
   LendingDisableFeatures: iParamsPerNetwork<LPFeature[]>;
 
+  Dependencies: iParamsPerNetwork<IDependencies>;
+
   ReservesConfig: {
     [key: string]: IReserveParams;
   };
@@ -503,4 +505,8 @@ export enum LPFeature {
 
 export interface IAgfParams {
   DefaultPriceEth?: number;
+}
+
+export interface IDependencies {
+  UniswapV2Router?: tEthereumAddress;
 }
