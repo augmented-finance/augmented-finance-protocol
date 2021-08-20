@@ -11,7 +11,60 @@ jobs:
       - image: vitalinfo/circleci-cancel-draft
     steps:
       - run: cancel-draft-build
-  test_all:
+  compile_all:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore yarn package cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
+      - run: yarn install --immutable
+      - run: yarn run compile
+      - run: yarn run solhint
+      - persist_to_workspace:
+          root: ~/
+          paths: .
+  finish_all:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run: yarn run build:package
+      - save_cache:
+          name: Save yarn package cache
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+      - persist_to_workspace:
+          root: ~/
+          paths: .
+      - slack/notify:
+          channel: build
+          event: fail
+          template: basic_fail_1
+  test_set1:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run: yarn run test-boost
+      - run: yarn run test-pools
+      - run: yarn run test-stake
+  test_set2:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run: yarn run test
+  test_set3:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run: yarn run test-deploy:fork
+      - run: yarn run test-deploy:fork:test-incremental
+  test_all_in_one:
     <<: *defaults
     steps:
       - checkout
@@ -41,6 +94,8 @@ jobs:
           channel: build
           event: fail
           template: basic_fail_1
+
+          
   npm-publish:
     <<: *defaults
     steps:
@@ -59,13 +114,32 @@ workflows:
             branches:
               ignore: /develop/
           context: cancel-draft
-      - test_all:
+      - compile_all
+      - test_set1:
+          requires:
+            - compile_all
+          context:
+            - alchemy-secret
+      - test_set2:
+          requires:
+            - compile_all
+          context:
+            - alchemy-secret
+      - test_set2:
+          requires:
+            - compile_all
+          context:
+            - alchemy-secret
+      - finish_all:
+          requires:
+            - test_set1
+            - test_set2
+            - test_set3
           context:
             - slack-secret
-            - alchemy-secret
       - npm-publish:
           requires:
-            - test_all
+            - finish_all
           filters:
             branches:
               only: /develop/
