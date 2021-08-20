@@ -4,13 +4,13 @@ pragma solidity ^0.8.4;
 import './IRewardController.sol';
 
 interface IInitializableRewardPool {
-  struct InitData {
+  struct InitRewardPoolData {
     IRewardController controller;
     string poolName;
     uint16 baselinePercentage;
   }
 
-  function initializeRewardPool(InitData calldata) external;
+  function initializeRewardPool(InitRewardPoolData calldata) external;
 
-  function initializedRewardPoolWith() external view returns (InitData memory);
+  function initializedRewardPoolWith() external view returns (InitRewardPoolData memory);
 }

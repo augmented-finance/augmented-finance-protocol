@@ -5,6 +5,7 @@ import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../../interfaces/IDepositToken.sol';
 import '../../../tools/Errors.sol';
 import '../../../tools/math/WadRayMath.sol';
+import '../../../tools/tokens/ERC20Events.sol';
 import '../../../access/AccessFlags.sol';
 import '../../../tools/tokens/ERC20PermitBase.sol';
 import '../../../tools/tokens/ERC20AllowanceBase.sol';

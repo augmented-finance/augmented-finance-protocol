@@ -110,13 +110,13 @@ abstract contract RewardedTokenBase is
     return super.symbol();
   }
 
-  function initializeRewardPool(InitData calldata config) external override onlyRewardConfiguratorOrAdmin {
+  function initializeRewardPool(InitRewardPoolData calldata config) external override onlyRewardConfiguratorOrAdmin {
     require(address(config.controller) != address(0));
     require(address(getRewardController()) == address(0));
-    _initialize(IRewardController(config.controller), 0, config.baselinePercentage);
+    _initialize(IRewardController(config.controller), 0, config.baselinePercentage, config.poolName);
   }
 
-  function initializedRewardPoolWith() external view override returns (InitData memory) {
-    return InitData(IRewardController(getRewardController()), getPoolName(), internalGetBaselinePercentage());
+  function initializedRewardPoolWith() external view override returns (InitRewardPoolData memory) {
+    return InitRewardPoolData(IRewardController(getRewardController()), getPoolName(), internalGetBaselinePercentage());
   }
 }

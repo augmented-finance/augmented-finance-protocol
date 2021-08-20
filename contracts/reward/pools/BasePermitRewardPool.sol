@@ -31,10 +31,10 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
     uint256 initialRate,
     uint16 baselinePercentage,
     string memory rewardPoolName
-  ) internal {
+  ) internal override {
     _rewardPoolName = rewardPoolName;
     _initializeDomainSeparator();
-    super._initialize(controller, initialRate, baselinePercentage);
+    super._initialize(controller, initialRate, baselinePercentage, rewardPoolName);
   }
 
   function _initializeDomainSeparator() internal {

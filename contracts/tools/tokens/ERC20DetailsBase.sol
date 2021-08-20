@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/IERC20Details.sol';
+import './IERC20Details.sol';
 
 abstract contract ERC20DetailsBase is IERC20Details {
   string private _name;

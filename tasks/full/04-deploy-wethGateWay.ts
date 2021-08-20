@@ -22,8 +22,7 @@ task(`full-deploy-weth-gateway`, `Deploys ${CONTRACT_NAME}`)
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
     // WETHGateway is NOT updated for existing installations
-    let wgAddress =
-      freshStart && !continuation ? '' : await addressProvider.getAddress(AccessFlags.WETH_GATEWAY);
+    let wgAddress = freshStart && !continuation ? '' : await addressProvider.getAddress(AccessFlags.WETH_GATEWAY);
 
     if (falsyOrZeroAddress(wgAddress)) {
       const Weth = await getWethAddress(poolConfig);

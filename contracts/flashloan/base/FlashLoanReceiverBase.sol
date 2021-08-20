@@ -5,13 +5,18 @@ import '../interfaces/IFlashLoanReceiver.sol';
 import '../../interfaces/IFlashLoanAddressProvider.sol';
 import '../../interfaces/ILendingPool.sol';
 
-// solhint-disable var-name-mixedcase
+// solhint-disable var-name-mixedcase, func-name-mixedcase
 abstract contract FlashLoanReceiverBase is IFlashLoanReceiver {
-  IFlashLoanAddressProvider public immutable override ADDRESSES_PROVIDER;
+  IFlashLoanAddressProvider public immutable override ADDRESS_PROVIDER;
   ILendingPool public immutable override LENDING_POOL;
 
   constructor(IFlashLoanAddressProvider provider) {
-    ADDRESSES_PROVIDER = provider;
+    ADDRESS_PROVIDER = provider;
     LENDING_POOL = ILendingPool(provider.getLendingPool());
+  }
+
+  /// @dev backward compatibility
+  function ADDRESSES_PROVIDER() external view returns (IFlashLoanAddressProvider) {
+    return ADDRESS_PROVIDER;
   }
 }
