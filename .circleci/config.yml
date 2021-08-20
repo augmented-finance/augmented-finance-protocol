@@ -125,7 +125,7 @@ workflows:
             - compile_all
           context:
             - alchemy-secret
-      - test_set2:
+      - test_set3:
           requires:
             - compile_all
           context:
