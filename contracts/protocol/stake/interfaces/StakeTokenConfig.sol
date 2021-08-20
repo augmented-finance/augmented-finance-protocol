@@ -12,4 +12,5 @@ struct StakeTokenConfig {
   uint32 cooldownPeriod;
   uint32 unstakePeriod;
   uint16 maxSlashable;
+  uint8 stakedTokenDecimals;
 }

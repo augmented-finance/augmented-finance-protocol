@@ -1,7 +1,12 @@
 import { eContractid, IReserveParams, ITokenNames, tEthereumAddress } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
-import { chunk, falsyOrZeroAddress, waitForTx } from './misc-utils';
-import { getLendingPoolConfiguratorProxy, getLendingPoolProxy, getWETHGateway } from './contracts-getters';
+import { addProxyToJsonDb, chunk, falsyOrZeroAddress, waitForTx } from './misc-utils';
+import {
+  getIInitializablePoolToken,
+  getLendingPoolConfiguratorProxy,
+  getLendingPoolProxy,
+  getWETHGateway,
+} from './contracts-getters';
 import { AccessFlags } from './access-flags';
 import {
   deployDelegatedStrategyAave,
@@ -57,8 +62,6 @@ export const initReservesByHelper = async (
     underlyingAssetDecimals: number;
     strategy: string;
     underlyingAsset: string;
-    incentivesController: string;
-    underlyingAssetName: string;
     depositTokenName: string;
     depositTokenSymbol: string;
     variableDebtTokenName: string;
@@ -79,14 +82,19 @@ export const initReservesByHelper = async (
 
   const existingAssets = new Set<string>();
 
+  const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
+
   if (skipExistingAssets) {
-    const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
     const reserves = await lendingPool.getReservesList();
     reserves.forEach((addr) => existingAssets.add(addr.toUpperCase()));
     console.log('Existing assets:', existingAssets);
   }
 
+  let hasDeposit = false;
   let hasDelegationAware = false;
+  let hasVariableDebt = false;
+  let hasStableDebt = false;
+
   for (let [symbol, params] of Object.entries(reservesParams)) {
     const tokenAddress = tokenAddresses[symbol];
     if (falsyOrZeroAddress(tokenAddress)) {
@@ -124,6 +132,8 @@ export const initReservesByHelper = async (
           ],
           verify
         );
+        hasVariableDebt = true;
+        hasStableDebt = true;
         info.address = strategyContract.address;
       } else if (strategy.strategyImpl == eContractid.DelegatedStrategyAave) {
         const strategyContract = await deployDelegatedStrategyAave([strategy.name], verify);
@@ -153,6 +163,7 @@ export const initReservesByHelper = async (
     console.log('Strategy address for asset %s: %s', symbol, strategyInfo.address);
 
     if (depositTokenImpl === eContractid.DepositTokenImpl) {
+      hasDeposit = true;
       console.log('---- generic deposit:', symbol);
     } else if (depositTokenImpl === eContractid.DelegationAwareDepositTokenImpl) {
       hasDelegationAware = true;
@@ -176,9 +187,11 @@ export const initReservesByHelper = async (
     return;
   }
 
-  const stableDebtTokenImpl = await deployStableDebtTokenImpl(verify, skipExistingAssets);
-  const variableDebtTokenImpl = await deployVariableDebtTokenImpl(verify, skipExistingAssets);
-  const depositTokenImpl = await deployDepositTokenImpl(verify, skipExistingAssets);
+  const stableDebtTokenImpl = hasStableDebt ? await deployStableDebtTokenImpl(verify, skipExistingAssets) : undefined;
+  const variableDebtTokenImpl = hasVariableDebt
+    ? await deployVariableDebtTokenImpl(verify, skipExistingAssets)
+    : undefined;
+  const depositTokenImpl = hasDeposit ? await deployDepositTokenImpl(verify, skipExistingAssets) : undefined;
 
   const delegationAwareTokenImpl = hasDelegationAware
     ? await deployDelegationAwareDepositTokenImpl(verify, skipExistingAssets)
@@ -188,7 +201,7 @@ export const initReservesByHelper = async (
   for (const info of reserveInfo) {
     let tokenToUse: string;
     if (info.depositTokenType == eContractid.DepositTokenImpl) {
-      tokenToUse = depositTokenImpl.address;
+      tokenToUse = depositTokenImpl!.address;
     } else {
       tokenToUse = delegationAwareTokenImpl!.address;
     }
@@ -196,13 +209,11 @@ export const initReservesByHelper = async (
     reserveSymbols.push(info.symbol);
     initInputParams.push({
       depositTokenImpl: tokenToUse,
-      stableDebtTokenImpl: stableDebtTokenImpl.address,
-      variableDebtTokenImpl: variableDebtTokenImpl.address,
+      stableDebtTokenImpl: info.external ? ZERO_ADDRESS : stableDebtTokenImpl!.address,
+      variableDebtTokenImpl: info.external ? ZERO_ADDRESS : variableDebtTokenImpl!.address,
       underlyingAssetDecimals: info.decimals,
       strategy: info.strategyAddress,
       underlyingAsset: info.tokenAddress,
-      incentivesController: ZERO_ADDRESS,
-      underlyingAssetName: info.symbol,
 
       depositTokenName: `${names.DepositTokenNamePrefix} ${info.symbol}`,
       depositTokenSymbol: `${names.DepositSymbolPrefix}${names.SymbolPrefix}${info.symbol}`,
@@ -216,6 +227,10 @@ export const initReservesByHelper = async (
       externalStrategy: info.external,
       params: '0x10',
     });
+  }
+
+  if (initInputParams.length == 0) {
+    return;
   }
 
   // Deploy init reserves per chunks
@@ -232,12 +247,86 @@ export const initReservesByHelper = async (
     console.log(param);
     const tx3 = await waitForTx(
       await configurator.batchInitReserve(param, {
-        gasLimit: 5000000, // TODO: remove ?
+        gasLimit: 5000000,
       })
     );
 
     console.log(`  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
     console.log('    * gasUsed', tx3.gasUsed.toString());
+  }
+
+  if (!verify) {
+    return;
+  }
+
+  const treasuryAddr = await addressProvider.getAddress(AccessFlags.TREASURY);
+
+  const registerTokenProxy = async (
+    assetAddr: string,
+    tokenSymbol: string,
+    tokenName: string,
+    decimals: number,
+    params: string,
+    proxyAddr: string,
+    implAddr: string
+  ) => {
+    console.log('\t', tokenSymbol, proxyAddr, implAddr);
+
+    const v = await getIInitializablePoolToken(proxyAddr);
+    const data = v.interface.encodeFunctionData('initialize', [
+      {
+        pool: lendingPool.address,
+        treasury: treasuryAddr,
+        underlyingAsset: assetAddr,
+        underlyingDecimals: decimals,
+      },
+      tokenName,
+      tokenSymbol,
+      params,
+    ]);
+    await addProxyToJsonDb('POOL_TOKEN_' + tokenSymbol, proxyAddr, implAddr, 'poolToken', [
+      configurator.address,
+      implAddr,
+      data,
+    ]);
+  };
+
+  console.log('Collecting verification data for pool tokens');
+  for (const params of initInputParams) {
+    const reserve = await lendingPool.getReserveData(params.underlyingAsset);
+    await registerTokenProxy(
+      params.underlyingAsset,
+      params.depositTokenSymbol,
+      params.depositTokenName,
+      params.underlyingAssetDecimals,
+      params.params,
+      reserve.depositTokenAddress,
+      params.depositTokenImpl
+    );
+
+    if (!falsyOrZeroAddress(reserve.variableDebtTokenAddress)) {
+      await registerTokenProxy(
+        params.underlyingAsset,
+        params.variableDebtTokenSymbol,
+        params.variableDebtTokenName,
+        params.underlyingAssetDecimals,
+        params.params,
+        reserve.variableDebtTokenAddress,
+        params.variableDebtTokenImpl
+      );
+    }
+
+    if (!falsyOrZeroAddress(reserve.stableDebtTokenAddress)) {
+      await registerTokenProxy(
+        params.underlyingAsset,
+        params.stableDebtTokenSymbol,
+        params.stableDebtTokenName,
+        params.underlyingAssetDecimals,
+        params.params,
+        reserve.stableDebtTokenAddress,
+        params.stableDebtTokenImpl
+      );
+    }
   }
 };
 

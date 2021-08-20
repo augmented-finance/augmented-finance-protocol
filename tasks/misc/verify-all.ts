@@ -3,6 +3,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { verifyContractStringified } from '../../helpers/etherscan-verification';
 import {
   DbInstanceEntry,
+  falsyOrZeroAddress,
   getExternalsFromJsonDb,
   getInstancesFromJsonDb,
 } from '../../helpers/misc-utils';
@@ -10,22 +11,43 @@ import {
 task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
   .addOptionalParam('n', 'Batch index, 0 <= n < total number of batches', 0, types.int)
   .addOptionalParam('of', 'Total number of batches, > 0', 1, types.int)
-  .addOptionalVariadicPositionalParam(
-    'filter',
-    'Names or addresses of contracts to verify',
-    [],
-    types.string
-  )
-  .setAction(async ({ n, of, filter }, DRE: HardhatRuntimeEnvironment) => {
+  .addOptionalParam('proxies', 'Selection of proxies: none, first, all, core, ...', 'core', types.string)
+  .addOptionalVariadicPositionalParam('filter', 'Names or addresses of contracts to verify', [], types.string)
+  .setAction(async ({ n, of, filter, proxies }, DRE: HardhatRuntimeEnvironment) => {
     await DRE.run('set-DRE');
 
     if (n >= of) {
       throw 'invalid batch parameters';
     }
 
-    const filterSet = new Set<string>();
+    let filterProxy: (subType: string) => boolean;
+    switch (proxies.toLowerCase()) {
+      case '':
+      case 'none':
+        filterProxy = (subType: string) => false;
+        break;
+      case 'first':
+        let hasFirst = false;
+        filterProxy = (subType: string) => {
+          if (hasFirst) {
+            return false;
+          }
+          hasFirst = true;
+          return true;
+        };
+        break;
+      case '*':
+      case 'all':
+        filterProxy = (subType: string) => true;
+        break;
+      default:
+        filterProxy = (subType: string) => subType == proxies;
+        break;
+    }
+
+    const filterSet = new Map<string, string>();
     (<string[]>filter).forEach((value) => {
-      filterSet.add(value.toUpperCase());
+      filterSet.set(value.toUpperCase(), value);
     });
 
     const addrList: string[] = [];
@@ -37,7 +59,23 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
         return;
       }
       if (filterSet.size > 0) {
-        if (!filterSet.has(addr.toUpperCase()) && !filterSet.has(entry.id.toUpperCase())) {
+        let found = false;
+        for (const key of [addr, entry.id]) {
+          const kv = key.toUpperCase();
+          if (filterSet.has(kv)) {
+            found = true;
+            if (key == addr) {
+              filterSet.delete(kv);
+            }
+            break;
+          }
+        }
+        if (!found) {
+          return;
+        }
+        // explicit filter takes precedence
+      } else if (entry.verify?.subType != undefined) {
+        if (!filterProxy(entry.verify!.subType!)) {
           return;
         }
       }
@@ -57,11 +95,20 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
       addEntry(key, entry);
     }
 
+    for (const [key, value] of filterSet) {
+      if (!falsyOrZeroAddress(value)) {
+        addEntry(value, {
+          id: 'ID_' + key,
+          verify: {
+            args: '[]',
+          },
+        });
+      }
+    }
+
     console.log('======================================================================');
     console.log('======================================================================');
-    console.log(
-      `Verification batch ${n} of ${of} with ${addrList.length} entries of ${batchIndex} total.`
-    );
+    console.log(`Verification batch ${n} of ${of} with ${addrList.length} entries of ${batchIndex} total.`);
     console.log('======================================================================');
 
     const summary: string[] = [];

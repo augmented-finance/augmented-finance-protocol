@@ -134,6 +134,7 @@ export interface DbInstanceEntry {
   verify?: {
     args?: string;
     impl?: string;
+    subType?: string;
   };
 }
 
@@ -188,7 +189,13 @@ export const addContractToJsonDb = async (
   }
 };
 
-export const addProxyToJsonDb = async (id: string, proxyAddress: string, implAddress: string, verifyArgs?: any[]) => {
+export const addProxyToJsonDb = async (
+  id: string,
+  proxyAddress: string,
+  implAddress: string,
+  subType: string,
+  verifyArgs?: any[]
+) => {
   const currentNetwork = DRE.network.name;
   const db = getDb();
 
@@ -196,6 +203,7 @@ export const addProxyToJsonDb = async (id: string, proxyAddress: string, implAdd
     id: id,
     verify: {
       impl: implAddress,
+      subType: subType,
     },
   };
 
