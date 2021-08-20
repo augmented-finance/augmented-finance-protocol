@@ -55,7 +55,7 @@ jobs:
       - run: yarn run test-boost
       - run: yarn run test-pools
       - run: yarn run test-stake
-      - run: test-uniswap
+      - run: yarn run test-uniswap
   test_deploy:
     <<: *defaults
     description: Deployment and build tests
