@@ -47,8 +47,12 @@ abstract contract MarketAccessBitmask {
     _;
   }
 
-  modifier onlySweepAdmin() {
+  function _onlySweepAdmin() internal view virtual {
     _remoteAcl.requireAnyOf(msg.sender, AccessFlags.SWEEP_ADMIN, Errors.CALLER_NOT_SWEEP_ADMIN);
+  }
+
+  modifier onlySweepAdmin() {
+    _onlySweepAdmin();
     _;
   }
 

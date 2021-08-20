@@ -64,11 +64,11 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('03. Deploy lending pool');
       await DRE.run('full:deploy-lending-pool', { pool: POOL_NAME, verify: trackVerify });
 
-      console.log('04. Deploy Data Provider');
-      await DRE.run('full:data-provider', { pool: POOL_NAME, verify: trackVerify });
-
-      console.log('05. Deploy WETH Gateway');
+      console.log('04. Deploy WETH Gateway');
       await DRE.run('full-deploy-weth-gateway', { pool: POOL_NAME, verify: trackVerify });
+
+      console.log('05. Deploy auxiliary contracts');
+      await DRE.run('full:aux-contracts', { pool: POOL_NAME, verify: trackVerify });
 
       console.log('06. Initialize lending pool');
       await DRE.run('full:initialize-lending-pool', { pool: POOL_NAME, verify: trackVerify });

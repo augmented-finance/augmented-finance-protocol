@@ -8,7 +8,4 @@ interface ISweeper {
     address to,
     uint256 amount
   ) external;
-
-  /// @dev transfer native Ether from the utility contract, for native Ether recovery in case of stuck Ether
-  function sweepEth(address to, uint256 amount) external;
 }

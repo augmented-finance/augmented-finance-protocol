@@ -1,19 +1,14 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
+import '../../interfaces/IFlashLoanAddressProvider.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../protocol/libraries/types/DataTypes.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import './BaseUniswapAdapter.sol';
-import '../interfaces/IFlashLoanAddressProvider.sol';
-import '../interfaces/IUniswapV2Router02.sol';
-import '../dependencies/openzeppelin/contracts/IERC20.sol';
-import '../protocol/libraries/types/DataTypes.sol';
-import '../dependencies/openzeppelin/contracts/SafeMath.sol';
-import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 
-/**
- * @title UniswapRepayAdapter
- * @notice Uniswap V2 Adapter to perform a repay of a debt with collateral.
- * @author Aave
- **/
+/// @notice Performs a repay of a debt with collateral via Uniswap V2
 contract UniswapRepayAdapter is BaseUniswapAdapter {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
@@ -26,11 +21,9 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
     bool useEthPath;
   }
 
-  constructor(
-    IFlashLoanAddressProvider addressesProvider,
-    IUniswapV2Router02 uniswapRouter,
-    address wethAddress
-  ) BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
+  constructor(IFlashLoanAddressProvider addressesProvider, IUniswapV2Router02ForAdapter uniswapRouter)
+    BaseUniswapAdapter(addressesProvider, uniswapRouter)
+  {}
 
   /**
    * @dev Uses the received funds from the flash loan to repay a debt on the protocol on behalf of the user. Then pulls
@@ -104,10 +97,9 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
     DataTypes.ReserveData memory collateralReserveData = _getReserveData(collateralAsset);
     DataTypes.ReserveData memory debtReserveData = _getReserveData(debtAsset);
 
-    address debtToken =
-      DataTypes.InterestRateMode(debtRateMode) == DataTypes.InterestRateMode.STABLE
-        ? debtReserveData.stableDebtTokenAddress
-        : debtReserveData.variableDebtTokenAddress;
+    address debtToken = DataTypes.InterestRateMode(debtRateMode) == DataTypes.InterestRateMode.STABLE
+      ? debtReserveData.stableDebtTokenAddress
+      : debtReserveData.variableDebtTokenAddress;
 
     uint256 currentDebt = IERC20(debtToken).balanceOf(msg.sender);
     uint256 amountToRepay = debtRepayAmount <= currentDebt ? debtRepayAmount : currentDebt;
@@ -119,8 +111,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       }
 
       // Get exact collateral needed for the swap to avoid leftovers
-      uint256[] memory amounts =
-        _getAmountsIn(collateralAsset, debtAsset, amountToRepay, useEthPath);
+      uint256[] memory amounts = _getAmountsIn(collateralAsset, debtAsset, amountToRepay, useEthPath);
       require(amounts[0] <= maxCollateralToSwap, 'slippage too high');
 
       // Pull depositTokens from user
@@ -190,8 +181,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       }
 
       uint256 neededForFlashLoanDebt = repaidAmount.add(premium);
-      uint256[] memory amounts =
-        _getAmountsIn(collateralAsset, debtAsset, neededForFlashLoanDebt, useEthPath);
+      uint256[] memory amounts = _getAmountsIn(collateralAsset, debtAsset, neededForFlashLoanDebt, useEthPath);
       require(amounts[0] <= maxCollateralToSwap, 'slippage too high');
 
       // Pull depositTokens from user
@@ -204,13 +194,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       );
 
       // Swap collateral asset to the debt asset
-      _swapTokensForExactTokens(
-        collateralAsset,
-        debtAsset,
-        amounts[0],
-        neededForFlashLoanDebt,
-        useEthPath
-      );
+      _swapTokensForExactTokens(collateralAsset, debtAsset, amounts[0], neededForFlashLoanDebt, useEthPath);
     } else {
       // Pull depositTokens from user
       _pullDepositToken(
@@ -252,11 +236,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       bytes32 r,
       bytes32 s,
       bool useEthPath
-    ) =
-      abi.decode(
-        params,
-        (address, uint256, uint256, uint256, uint256, uint8, bytes32, bytes32, bool)
-      );
+    ) = abi.decode(params, (address, uint256, uint256, uint256, uint256, uint8, bytes32, bytes32, bool));
 
     return
       RepayParams(

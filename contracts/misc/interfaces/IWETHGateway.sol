@@ -27,4 +27,6 @@ interface IWETHGateway {
     uint256 interesRateMode,
     uint16 referralCode
   ) external;
+
+  function getWETHAddress() external view returns (address);
 }
