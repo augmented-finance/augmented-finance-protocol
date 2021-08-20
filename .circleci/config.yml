@@ -17,13 +17,13 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          description: Restore yarn package cache
+          name: Restore yarn package cache
           keys:
             - yarn-packages-{{ checksum "yarn.lock" }}
       - run: yarn install --immutable
       - run: yarn run compile
       - save_cache:
-          description: Save yarn package cache
+          name: Save yarn package cache
           key: yarn-packages-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
@@ -39,7 +39,14 @@ jobs:
           channel: build
           event: fail
           template: basic_fail_1
-  test_set1:
+  test_main:
+    <<: *defaults
+    description: Main test set
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run: yarn run test
+  test_extra:
     <<: *defaults
     description: Extra test sets
     steps:
@@ -49,14 +56,7 @@ jobs:
       - run: yarn run test-boost
       - run: yarn run test-pools
       - run: yarn run test-stake
-  test_set2:
-    <<: *defaults
-    description: Main test set
-    steps:
-      - attach_workspace:
-          at: ~/
-      - run: yarn run test
-  test_set3:
+  test_deploy:
     <<: *defaults
     description: Deployment and build tests
     steps:
@@ -86,26 +86,26 @@ workflows:
               ignore: /develop/
           context: cancel-draft
       - compile_all
-      - test_set1:
+      - test_main:
           requires:
             - compile_all
           context:
             - alchemy-secret
-      - test_set2:
+      - test_extra:
           requires:
             - compile_all
           context:
             - alchemy-secret
-      - test_set3:
+      - test_deploy:
           requires:
             - compile_all
           context:
             - alchemy-secret
       - finish_all:
           requires:
-            - test_set1
-            - test_set2
-            - test_set3
+            - test_main
+            - test_extra
+            - test_deploy
           context:
             - slack-secret
       - npm-publish:
