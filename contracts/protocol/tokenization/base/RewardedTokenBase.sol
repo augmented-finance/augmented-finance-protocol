@@ -57,7 +57,15 @@ abstract contract RewardedTokenBase is
     return uint32(block.timestamp);
   }
 
-  function internalGetReward(address holder, uint256) internal override returns (uint256, uint32) {
+  function internalGetReward(address holder, uint256)
+    internal
+    override
+    returns (
+      uint256,
+      uint32,
+      bool
+    )
+  {
     return doGetReward(holder);
   }
 
@@ -117,6 +125,6 @@ abstract contract RewardedTokenBase is
   }
 
   function initializedRewardPoolWith() external view override returns (InitRewardPoolData memory) {
-    return InitRewardPoolData(IRewardController(getRewardController()), getPoolName(), internalGetBaselinePercentage());
+    return InitRewardPoolData(IRewardController(getRewardController()), getPoolName(), getBaselinePercentage());
   }
 }
