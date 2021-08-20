@@ -414,6 +414,10 @@ library ValidationLogic {
     mapping(uint256 => address) storage reserves,
     address oracle
   ) internal view {
+    if (!userConfig.isBorrowingAny()) {
+      return;
+    }
+
     (, , , , uint256 healthFactor) = GenericLogic.calculateUserAccountData(
       from,
       reservesData,
