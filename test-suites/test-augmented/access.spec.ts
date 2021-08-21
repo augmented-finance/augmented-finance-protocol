@@ -19,18 +19,15 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
     const { INVALID_OWNER_REVERT_MSG } = ProtocolErrors;
 
     await addressesProvider.transferOwnership(users[1].address);
+    await addressesProvider.connect(users[1].address).acceptOwnership();
 
     for (const contractFunction of [addressesProvider.setMarketId]) {
       await expect(contractFunction(mockAddress)).to.be.revertedWith(INVALID_OWNER_REVERT_MSG);
     }
 
-    await expect(addressesProvider.setAddress(BIT62, mockAddress)).to.be.revertedWith(
-      INVALID_OWNER_REVERT_MSG
-    );
+    await expect(addressesProvider.setAddress(BIT62, mockAddress)).to.be.revertedWith(INVALID_OWNER_REVERT_MSG);
 
-    await expect(addressesProvider.setAddressAsProxy(BIT62, mockAddress)).to.be.revertedWith(
-      INVALID_OWNER_REVERT_MSG
-    );
+    await expect(addressesProvider.setAddressAsProxy(BIT62, mockAddress)).to.be.revertedWith(INVALID_OWNER_REVERT_MSG);
   });
 
   it('Tests adding a proxied address with `setAddressAsProxy()`', async () => {
@@ -55,9 +52,7 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
     expect(proxiedAddressSetReceipt.events[0].event).to.be.equal('ProxyCreated');
     expect(proxiedAddressSetReceipt.events[1].event).to.be.equal('AddressSet');
     expect(proxiedAddressSetReceipt.events[1].args?.id).to.be.equal(BIT62);
-    expect(proxiedAddressSetReceipt.events[1].args?.newAddress).to.be.equal(
-      mockLendingPool.address
-    );
+    expect(proxiedAddressSetReceipt.events[1].args?.newAddress).to.be.equal(mockLendingPool.address);
     expect(proxiedAddressSetReceipt.events[1].args?.hasProxy).to.be.equal(true);
   });
 
@@ -68,9 +63,7 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
     const mockNonProxiedAddress = createRandomAddress();
     const proxiedAddressId = 1 << 62;
 
-    await addressesProvider
-      .connect(currentAddressesProviderOwner.signer)
-      .markProxies(proxiedAddressId);
+    await addressesProvider.connect(currentAddressesProviderOwner.signer).markProxies(proxiedAddressId);
 
     await expect(
       addressesProvider
@@ -86,14 +79,10 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
 
     const nonProxiedAddressId = 1 << 62;
 
-    await addressesProvider
-      .connect(currentAddressesProviderOwner.signer)
-      .unmarkProxies(nonProxiedAddressId);
+    await addressesProvider.connect(currentAddressesProviderOwner.signer).unmarkProxies(nonProxiedAddressId);
 
     await expect(
-      addressesProvider
-        .connect(currentAddressesProviderOwner.signer)
-        .setAddress(nonProxiedAddressId, ONE_ADDRESS)
+      addressesProvider.connect(currentAddressesProviderOwner.signer).setAddress(nonProxiedAddressId, ONE_ADDRESS)
     ).to.be.revertedWith('must be contract');
   });
 
@@ -106,9 +95,7 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
     const mockNonProxiedAddress = (await deployMintableERC20(['', '', 0])).address;
     const nonProxiedAddressId = 1 << 62;
 
-    await addressesProvider
-      .connect(currentAddressesProviderOwner.signer)
-      .unmarkProxies(nonProxiedAddressId);
+    await addressesProvider.connect(currentAddressesProviderOwner.signer).unmarkProxies(nonProxiedAddressId);
 
     const nonProxiedAddressSetReceipt = await waitForTx(
       await addressesProvider
@@ -126,9 +113,7 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
 
     expect(nonProxiedAddressSetReceipt.events[0].event).to.be.equal('AddressSet');
     expect(nonProxiedAddressSetReceipt.events[0].args?.id).to.be.equal(nonProxiedAddressId);
-    expect(nonProxiedAddressSetReceipt.events[0].args?.newAddress).to.be.equal(
-      mockNonProxiedAddress
-    );
+    expect(nonProxiedAddressSetReceipt.events[0].args?.newAddress).to.be.equal(mockNonProxiedAddress);
     expect(nonProxiedAddressSetReceipt.events[0].args?.hasProxy).to.be.equal(false);
   });
 });
