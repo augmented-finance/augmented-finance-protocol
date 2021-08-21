@@ -7,7 +7,7 @@ import './IProxy.sol';
 
 /// @dev This contract is a transparent upgradeability proxy with admin. The admin role is immutable.
 contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
-  address internal immutable _admin;
+  bytes32 internal constant ADMIN_SLOT = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
 
   constructor(
     address admin,
@@ -15,15 +15,34 @@ contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
     bytes memory data
   ) {
     require(admin != address(0));
-    _admin = admin;
-    initialize(logic, data);
+    assert(IMPLEMENTATION_SLOT == bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1));
+    assert(ADMIN_SLOT == bytes32(uint256(keccak256('eip1967.proxy.admin')) - 1));
+
+    bytes32 slot = ADMIN_SLOT;
+    // solhint-disable-next-line no-inline-assembly
+    assembly {
+      sstore(slot, admin)
+    }
+
+    _setImplementation(logic);
+    if (data.length > 0) {
+      Address.functionDelegateCall(logic, data);
+    }
   }
 
   modifier ifAdmin() {
-    if (msg.sender == _admin) {
+    if (msg.sender == _admin()) {
       _;
     } else {
       _fallback();
+    }
+  }
+
+  function _admin() internal view returns (address impl) {
+    bytes32 slot = ADMIN_SLOT;
+    // solhint-disable-next-line no-inline-assembly
+    assembly {
+      impl := sload(slot)
     }
   }
 
@@ -40,16 +59,7 @@ contract TransparentProxy is BaseUpgradeabilityProxy, IProxy {
 
   /// @dev Only fall back when the sender is not the admin.
   function _willFallback() internal virtual override {
-    require(msg.sender != _admin, 'Cannot call fallback function from the proxy admin');
+    require(msg.sender != _admin(), 'Cannot call fallback function from the proxy admin');
     super._willFallback();
-  }
-
-  function initialize(address logic, bytes memory data) private {
-    require(_implementation() == address(0));
-    assert(IMPLEMENTATION_SLOT == bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1));
-    _setImplementation(logic);
-    if (data.length > 0) {
-      Address.functionDelegateCall(logic, data);
-    }
   }
 }
