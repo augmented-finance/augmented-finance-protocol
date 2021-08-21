@@ -247,7 +247,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         if (falsyOrZeroAddress(params.impl)) {
           continue;
         }
-        const proxyAddr = activePools[i + newPoolsOffset];
+        const proxyAddr = activePools[activePools.length - (initParams.length - i)]; // new pools are at the end of all pools
         const implAddr = params.impl;
         console.log('\t', params.poolName, proxyAddr, implAddr);
 

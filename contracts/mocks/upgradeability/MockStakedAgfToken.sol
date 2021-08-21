@@ -39,4 +39,7 @@ contract MockStakedAgfToken is SlashableStakeTokenBase, VersionedInitializable {
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
   }
+
+  /// @dev This method ensures different bytecode with StakeToken (to avoid ambiguity during verification)
+  function stub() external {}
 }
