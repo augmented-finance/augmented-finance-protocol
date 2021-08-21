@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import '../dependencies/openzeppelin/contracts/Address.sol';
-import '../dependencies/openzeppelin/contracts/Ownable.sol';
+import '../tools/SafeOwnable.sol';
 import '../tools/Errors.sol';
 import '../tools/math/BitUtils.sol';
 import '../tools/upgradeability/TransparentProxy.sol';
@@ -10,7 +10,7 @@ import '../tools/upgradeability/IProxy.sol';
 import './interfaces/IAccessController.sol';
 import './interfaces/IManagedAccessController.sol';
 
-contract AccessController is Ownable, IManagedAccessController {
+contract AccessController is SafeOwnable, IManagedAccessController {
   using BitUtils for uint256;
 
   mapping(uint256 => address) private _addresses;
@@ -41,22 +41,17 @@ contract AccessController is Ownable, IManagedAccessController {
 
   function _onlyAdmin() private view {
     require(
-      _msgSender() == owner() || (_msgSender() == _tempAdmin && _expiresAt > block.number),
+      msg.sender == owner() || (msg.sender == _tempAdmin && _expiresAt > block.number),
       Errors.TXT_OWNABLE_CALLER_NOT_OWNER
     );
   }
 
-  modifier onlyAdmin {
+  modifier onlyAdmin() {
     _onlyAdmin();
     _;
   }
 
-  function queryAccessControlMask(address addr, uint256 filter)
-    external
-    view
-    override
-    returns (uint256 flags)
-  {
+  function queryAccessControlMask(address addr, uint256 filter) external view override returns (uint256 flags) {
     flags = _masks[addr];
     if (filter == 0) {
       return flags;
@@ -75,12 +70,7 @@ contract AccessController is Ownable, IManagedAccessController {
     emit TemporaryAdminAssigned(_tempAdmin, _expiresAt);
   }
 
-  function getTemporaryAdmin()
-    external
-    view
-    override
-    returns (address admin, uint256 expiresAtBlock)
-  {
+  function getTemporaryAdmin() external view override returns (address admin, uint256 expiresAtBlock) {
     if (admin != address(0)) {
       return (_tempAdmin, _expiresAt);
     }
@@ -92,7 +82,7 @@ contract AccessController is Ownable, IManagedAccessController {
     if (_tempAdmin == address(0)) {
       return;
     }
-    if (_msgSender() != _tempAdmin && _expiresAt > block.number) {
+    if (msg.sender != _tempAdmin && _expiresAt > block.number) {
       return;
     }
     _revokeAllRoles(_tempAdmin);
@@ -256,11 +246,7 @@ contract AccessController is Ownable, IManagedAccessController {
     return addrList;
   }
 
-  function roleActiveGrantees(uint256 id)
-    external
-    view
-    returns (address[] memory addrList, uint256 count)
-  {
+  function roleActiveGrantees(uint256 id) external view returns (address[] memory addrList, uint256 count) {
     require(id.isPowerOf2nz(), 'only one role is allowed');
 
     address addr;

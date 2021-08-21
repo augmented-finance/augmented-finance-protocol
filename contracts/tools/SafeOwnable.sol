@@ -32,11 +32,9 @@ abstract contract SafeOwnable {
     emit OwnershipTransferred(address(0), msg.sender);
   }
 
-  /**
-   * @dev Returns the address of the current or pending owner.
-   */
+  /// @dev Returns active owner
   function owner() public view returns (address) {
-    return _pendingOwner;
+    return _activeOwner;
   }
 
   function owners()
@@ -57,7 +55,7 @@ abstract contract SafeOwnable {
   modifier onlyOwner() {
     require(
       _activeOwner == msg.sender,
-      _pendingOwner == msg.sender ? 'SafeOwnable: caller is the pending owner' : 'Ownable: caller is not the owner'
+      _pendingOwner == msg.sender ? 'Ownable: caller is not the owner (pending)' : 'Ownable: caller is not the owner'
     );
     _;
   }

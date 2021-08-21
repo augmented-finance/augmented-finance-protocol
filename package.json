@@ -44,7 +44,7 @@
     "test-access": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/access.spec.ts",
     "test-stake": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-stake/stake.spec.ts",
     "test-boost": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-stake/stake_boost.spec.ts",
-    "test-utils": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-libs/math_libs.spec.ts",
+    "test-libs": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-libs/*.spec.ts",
     "test-pools": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented-pools/*.spec.ts",
     "test-burners": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/burner_rewards.spec.ts",
     "test-locker": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/locker_rewards.spec.ts",
