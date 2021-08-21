@@ -1,6 +1,6 @@
 import { task, types } from 'hardhat/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { verifyContractStringified } from '../../helpers/etherscan-verification';
+import { verifyContractStringified, verifyProxy } from '../../helpers/etherscan-verification';
 import {
   DbInstanceEntry,
   falsyOrZeroAddress,
@@ -145,9 +145,15 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
         console.log('\tProxy impl: ', params.impl);
       }
 
-      const [ok, err] = await verifyContractStringified(addr, params.args!);
+      let [ok, err] = [true, '']; // await verifyContractStringified(addr, params.args!);
       if (err) {
         console.log(err);
+      }
+      if (ok && params.impl) {
+        [ok, err] = await verifyProxy(addr, params.impl!);
+        if (err) {
+          console.log(err);
+        }
       }
       if (!ok) {
         summary.push(`${addr} ${entry.id}: ${err}`);
