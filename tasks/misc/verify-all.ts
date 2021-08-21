@@ -11,11 +11,11 @@ import {
 } from '../../helpers/misc-utils';
 
 task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
+  .addFlag('force', 'Ignore verified status')
   .addOptionalParam('n', 'Batch index, 0 <= n < total number of batches', 0, types.int)
   .addOptionalParam('of', 'Total number of batches, > 0', 1, types.int)
   .addOptionalParam('proxy', 'Proxy verification mode: auto, full, min', 'auto', types.string)
   .addOptionalVariadicPositionalParam('filter', 'Names or addresses of contracts to verify', [], types.string)
-  .addFlag('force', 'Ignore verified flag')
   .setAction(async ({ n, of, filter, proxy, force }, DRE: HardhatRuntimeEnvironment) => {
     await DRE.run('set-DRE');
 
