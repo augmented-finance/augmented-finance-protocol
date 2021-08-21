@@ -53,13 +53,16 @@ const _verifyContract = async (
   try {
     await DRE.run('verify:verify', params);
   } catch (error) {
+    if (error.message === 'Contract source code already verified') {
+      return [true, ''];
+    }
     return [false, error.message];
   }
 
   return [true, ''];
 };
 
-export const verifyProxy = async (proxyAddr: string, implAddr: string) => {
+export const verifyProxy = async (proxyAddr: string, implAddr: string): Promise<[ok: boolean, errMsg: string]> => {
   try {
     await _verifyProxy(proxyAddr, implAddr);
   } catch (error) {
@@ -87,7 +90,7 @@ const _verifyProxy = async (proxyAddr: string, implAddr: string) => {
     const result = await axios(optionsVerify);
     const response = new EtherscanResponse(result.data);
     if (!response.isOk()) {
-      throw `Proxy verification failed. Reason: ${response.message}`;
+      throw new Error(response.message);
     }
     guid = response.message;
   }
@@ -107,10 +110,10 @@ const _verifyProxy = async (proxyAddr: string, implAddr: string) => {
       }
 
       if (!response.isPending()) {
-        throw `Proxy verification failed. Reason: ${response.message}`;
+        throw Error(response.message);
       }
       if (i >= 20) {
-        throw `Proxy verification failed. Too many retries`;
+        throw Error('Too many retries');
       }
       await sleep(100 + i * 200);
     }

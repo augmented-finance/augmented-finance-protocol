@@ -6,42 +6,28 @@ import {
   falsyOrZeroAddress,
   getExternalsFromJsonDb,
   getInstancesFromJsonDb,
+  getVerifiedFromJsonDb,
+  setVerifiedToJsonDb,
 } from '../../helpers/misc-utils';
 
 task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
   .addOptionalParam('n', 'Batch index, 0 <= n < total number of batches', 0, types.int)
   .addOptionalParam('of', 'Total number of batches, > 0', 1, types.int)
-  .addOptionalParam('select', 'Selection of : any, contracts, proxies', 'any', types.string)
-  .addOptionalParam('proxies', 'Selection of proxies: none, first, all, core, ...', '', types.string)
+  .addOptionalParam('proxy', 'Proxy verification mode: auto, full, min', 'auto', types.string)
   .addOptionalVariadicPositionalParam('filter', 'Names or addresses of contracts to verify', [], types.string)
-  .setAction(async ({ n, of, filter, proxies, select }, DRE: HardhatRuntimeEnvironment) => {
+  .addFlag('force', 'Ignore verified flag')
+  .setAction(async ({ n, of, filter, proxy, force }, DRE: HardhatRuntimeEnvironment) => {
     await DRE.run('set-DRE');
 
     if (n >= of) {
       throw 'invalid batch parameters';
     }
 
-    let ignoreContracts = false;
-    switch (select.toLowerCase()) {
-      case 'contracts':
-        proxies = 'none';
-        break;
-      case 'proxies':
-        if (proxies == '') {
-          proxies = 'all';
-        }
-        ignoreContracts = true;
-        break;
-    }
-
-    let filterProxy: (subType: string) => boolean;
-    switch (proxies.toLowerCase()) {
-      case 'none':
-        filterProxy = (subType: string) => false;
-        break;
-      case 'first':
+    let filterProxy: () => boolean;
+    switch (proxy.toLowerCase()) {
+      case 'auto':
         let hasFirst = false;
-        filterProxy = (subType: string) => {
+        filterProxy = () => {
           if (hasFirst) {
             return false;
           }
@@ -49,14 +35,12 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
           return true;
         };
         break;
-      case '*':
-      case 'all':
-        filterProxy = (subType: string) => true;
+      case 'full':
+        filterProxy = () => true;
         break;
-      case '':
-        proxies = 'core';
+      case 'min':
       default:
-        filterProxy = (subType: string) => subType == proxies;
+        filterProxy = () => false;
         break;
     }
 
@@ -64,6 +48,7 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
     (<string[]>filter).forEach((value) => {
       filterSet.set(value.toUpperCase(), value);
     });
+    const hasFilter = filterSet.size > 0;
 
     const addrList: string[] = [];
     const entryList: DbInstanceEntry[] = [];
@@ -74,8 +59,8 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
         return;
       }
 
-      let found = false;
-      if (filterSet.size > 0) {
+      if (hasFilter) {
+        let found = false;
         for (const key of [addr, entry.id]) {
           const kv = key.toUpperCase();
           if (filterSet.has(kv)) {
@@ -89,14 +74,6 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
         if (!found) {
           return;
         }
-        // explicit filter takes precedence
-      } else if (entry.verify.impl) {
-        if (!filterProxy(entry.verify.subType || 'core')) {
-          return;
-        }
-      }
-      if (!found && ignoreContracts && !entry.verify.impl) {
-        return;
       }
 
       if (batchIndex++ % of != n) {
@@ -141,11 +118,18 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
       console.log(`[${i}/${addrList.length}] Verify contract: ${entry.id} ${addr}`);
       console.log('\tArgs:', params.args);
 
+      let fullVerify = true;
       if (params.impl) {
         console.log('\tProxy impl: ', params.impl);
+        fullVerify = filterProxy();
       }
 
-      let [ok, err] = [true, '']; // await verifyContractStringified(addr, params.args!);
+      if (!force && (await getVerifiedFromJsonDb(addr))) {
+        console.log('Already verified');
+        continue;
+      }
+
+      let [ok, err] = fullVerify ? await verifyContractStringified(addr, params.args!) : [true, ''];
       if (err) {
         console.log(err);
       }
@@ -155,7 +139,9 @@ task('verify:verify-all-contracts', 'Use JsonDB to perform verification')
           console.log(err);
         }
       }
-      if (!ok) {
+      if (ok) {
+        setVerifiedToJsonDb(addr, true);
+      } else {
         summary.push(`${addr} ${entry.id}: ${err}`);
       }
     }

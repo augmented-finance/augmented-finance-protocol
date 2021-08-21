@@ -245,6 +245,18 @@ export const addNamedToJsonDb = async (contractId: string, contractAddress: stri
     .write();
 };
 
+export const setVerifiedToJsonDb = async (address: string, verified: boolean) => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+  await db.set(`${currentNetwork}.verified.${address}`, verified).write();
+};
+
+export const getVerifiedFromJsonDb = async (address: string) => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+  return (await db.get(`${currentNetwork}.verified.${address}`).value()) as boolean;
+};
+
 export const getInstancesFromJsonDb = () =>
   Object.entries<DbInstanceEntry>(getDb().get(`${DRE.network.name}.instance`).value() || []);
 
