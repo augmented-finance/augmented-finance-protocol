@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { createRandomAddress } from '../../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ProtocolErrors } from '../../helpers/types';
-import { ethers } from 'ethers';
+import { ethers, Signer } from 'ethers';
 import { waitForTx } from '../../helpers/misc-utils';
 import { deployLendingPoolImpl, deployMintableERC20 } from '../../helpers/contracts-deployments';
 import { ONE_ADDRESS } from '../../helpers/constants';
@@ -19,7 +19,7 @@ makeSuite('MarketAccessController', (testEnv: TestEnv) => {
     const { INVALID_OWNER_REVERT_MSG } = ProtocolErrors;
 
     await addressesProvider.transferOwnership(users[1].address);
-    await addressesProvider.connect(users[1].address).acceptOwnership();
+    await addressesProvider.connect(users[1].signer).acceptOwnership();
 
     for (const contractFunction of [addressesProvider.setMarketId]) {
       await expect(contractFunction(mockAddress)).to.be.revertedWith(INVALID_OWNER_REVERT_MSG);
