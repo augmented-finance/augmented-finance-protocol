@@ -59,6 +59,9 @@ import { IManagedLendingPoolFactory } from '../types/IManagedLendingPoolFactory'
 import { IAaveLendingPoolFactory } from '../types/IAaveLendingPoolFactory';
 import { IPriceOracleGetterFactory } from '../types/IPriceOracleGetterFactory';
 import { IChainlinkAggregatorFactory } from '../types/IChainlinkAggregatorFactory';
+import { IInitializablePoolTokenFactory } from '../types/IInitializablePoolTokenFactory';
+import { IInitializableStakeTokenFactory } from '../types/IInitializableStakeTokenFactory';
+import { IInitializableRewardPoolFactory } from '../types/IInitializableRewardPoolFactory';
 
 const getAddr = async (id: eContractid) => {
   const entry = await getFromJsonDb(id);
@@ -385,6 +388,15 @@ export const getIChainlinkAggregator = async (address: tEthereumAddress) =>
 
 export const getIManagedLendingPool = async (address: tEthereumAddress) =>
   IManagedLendingPoolFactory.connect(address, await getFirstSigner());
+
+export const getIInitializablePoolToken = async (address: tEthereumAddress) =>
+  IInitializablePoolTokenFactory.connect(address, await getFirstSigner());
+
+export const getIInitializableStakeToken = async (address: tEthereumAddress) =>
+  IInitializableStakeTokenFactory.connect(address, await getFirstSigner());
+
+export const getIInitializableRewardPool = async (address: tEthereumAddress) =>
+  IInitializableRewardPoolFactory.connect(address, await getFirstSigner());
 
 export const getDelegatedStrategyAave = async (address?: tEthereumAddress) =>
   DelegatedStrategyAaveFactory.connect(

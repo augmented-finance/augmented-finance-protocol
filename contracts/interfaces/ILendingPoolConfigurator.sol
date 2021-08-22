@@ -12,7 +12,6 @@ interface ILendingPoolConfigurator {
     bool externalStrategy;
     address strategy;
     address underlyingAsset;
-    string underlyingAssetName;
     string depositTokenName;
     string depositTokenSymbol;
     string variableDebtTokenName;
