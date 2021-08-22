@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import '../../tools/math/WadRayMath.sol';
+import '../../tools/math/InterestMath.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/compound-protocol/contracts/ICToken.sol';
@@ -37,14 +38,15 @@ abstract contract DelegatedStrategyCompoundBase is DelegatedStrategyBase {
       _msecPerBlock = msecPerBlock;
     }
 
-    rate = (rate * 1000) / msecPerBlock;
+    // Compound uses per-block rate, while the lending pool uses per-annum rate
+    rate *= InterestMath.MILLIS_PER_YEAR / msecPerBlock;
     require(rate <= type(uint128).max);
 
     return
       DelegatedState({
         liquidityIndex: uint128(WadRayMath.RAY),
         variableBorrowIndex: uint128(WadRayMath.RAY),
-        liquidityRate: uint128(rate * 1000),
+        liquidityRate: uint128(rate),
         variableBorrowRate: 0,
         stableBorrowRate: 0,
         lastUpdateTimestamp: uint32(block.timestamp)
