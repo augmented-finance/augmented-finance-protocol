@@ -269,7 +269,8 @@ export const getNamedFromJsonDb = () =>
 
 export const getFromJsonDb = (id: string) => getDb().get(`${DRE.network.name}.named.${id}`).value();
 
-export const getFromJsonDbByAddr = (id: string) => getDb().get(`${DRE.network.name}.instance.${id}`).value();
+export const getFromJsonDbByAddr = (id: string) =>
+  getDb().get(`${DRE.network.name}.instance.${id}`).value() as DbInstanceEntry;
 
 export const hasInJsonDb = (id: string) => !falsyOrZeroAddress(getFromJsonDb(id)?.address);
 

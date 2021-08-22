@@ -84,6 +84,9 @@ task('augmented:mainnet', 'Deploy enviroment')
 
       const balanceBeforePluck = await deployer.getBalance();
       if (MAINNET_FORK) {
+        console.log('Access test');
+        await DRE.run('full:access-test', { pool: POOL_NAME });
+
         console.log('Pluck');
         await DRE.run('dev:pluck-tokens', { pool: POOL_NAME });
       }

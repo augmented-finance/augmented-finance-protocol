@@ -18,6 +18,13 @@ const uniswapAdapter: ContractAccessExceptions = {
   },
 };
 
+const externalStrategy: ContractAccessExceptions = {
+  functions: {
+    delegatedWithdrawUnderlying: true,
+    getDelegatedState: true,
+  },
+};
+
 const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
   [eContractid.AddressesProviderRegistry]: {
     functions: {
@@ -43,6 +50,31 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
       repayETH: true,
       sweepToken: ProtocolErrors.CT_CALLER_MUST_BE_SWEEP_ADMIN,
     },
+  },
+
+  [eContractid.DelegatedStrategyAave]: externalStrategy,
+  [eContractid.DelegatedStrategyCompoundErc20]: externalStrategy,
+  [eContractid.DelegatedStrategyCompoundEth]: externalStrategy,
+
+  [eContractid.TeamRewardPool]: {
+    functions: {},
+    reasons: [
+      ProtocolErrors.RW_NOT_REWARD_CONTROLLER,
+      ProtocolErrors.RW_NOT_REWARD_RATE_ADMIN,
+      ProtocolErrors.CALLER_NOT_EMERGENCY_ADMIN,
+      ProtocolErrors.CT_CALLER_MUST_BE_REWARD_ADMIN,
+      ProtocolErrors.RW_NOT_TEAM_MANAGER,
+    ],
+  },
+
+  [eContractid.TreasuryRewardPool]: {
+    functions: {},
+    reasons: [
+      ProtocolErrors.RW_NOT_REWARD_CONTROLLER,
+      ProtocolErrors.RW_NOT_REWARD_RATE_ADMIN,
+      ProtocolErrors.CALLER_NOT_EMERGENCY_ADMIN,
+      ProtocolErrors.CT_CALLER_MUST_BE_REWARD_ADMIN,
+    ],
   },
 };
 
@@ -70,12 +102,18 @@ const _verifyMutableAccess = async (
   expected?: string[],
   checkAll?: boolean
 ) => {
-  const DEFAULT_REVERTS = [ProtocolErrors.TXT_ACCESS_RESTRICTED, ProtocolErrors.TXT_OWNABLE_CALLER_NOT_OWNER];
+  const DEFAULT_REVERTS = [
+    ProtocolErrors.TXT_ACCESS_RESTRICTED,
+    ProtocolErrors.TXT_OWNABLE_CALLER_NOT_OWNER,
+    ProtocolErrors.CALLER_NOT_EMERGENCY_ADMIN,
+  ];
+
   const expectedReverts = new Set<string>(expected ? expected : DEFAULT_REVERTS);
 
   let hasErrors = false;
 
-  const reportError = (error) => {
+  const reportError = (error, fnName: string, args) => {
+    console.log(fnName, args);
     console.error(error);
     hasErrors = true;
     if (!checkAll) {
@@ -119,19 +157,17 @@ const _verifyMutableAccess = async (
         if ((pos = message.indexOf(prefixReasonStr)) >= 0) {
           reason = unquote(message.substring(pos + prefixReasonStr.length - 1));
         } else {
-          console.log(fnName, fnDesc.stateMutability, args);
-          reportError(error);
+          reportError(error, fnName, args);
           continue;
         }
       }
       if ((exception == undefined && expectedReverts.has(reason)) || exception === reason) {
         continue;
       }
-      console.log(fnName, fnDesc.stateMutability, args);
-      reportError(error);
+      reportError(error, fnName, args);
       continue;
     }
-    reportError(new Error(`Mutable function is accessible: ${name}.${fnName}`));
+    reportError(new Error(`Mutable function is accessible: ${name}.${fnName}`), fnName, args);
   }
 
   if (hasErrors) {
