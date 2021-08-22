@@ -57,7 +57,7 @@ export interface ContractInstanceFactory<ContractType extends Contract> {
 // }
 
 const verifyCallback = async (id: string, contract: Contract) => {
-  // if (_verifyCallback !== undefined) {
+  // if (_verifyCallback != undefined) {
   //   await _verifyCallback(id, contract);
   // }
 };

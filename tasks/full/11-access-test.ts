@@ -2,18 +2,14 @@ import { task } from 'hardhat/config';
 import { eContractid, eNetwork, tEthereumAddress } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import {
-  falsyOrZeroAddress,
   getExternalsFromJsonDb,
-  getFirstSigner,
   getFromJsonDbByAddr,
   getInstancesFromJsonDb,
   getSignerN,
 } from '../../helpers/misc-utils';
-import { getLendingPoolProxy, getProtocolDataProvider } from '../../helpers/contracts-getters';
-import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
-import { getContractGetterById } from '../../helpers/contract-mapper';
-import { verifyMutableAccess } from '../../helpers/method-checker';
+import { getContractGetterById } from '../../helpers/contracts-mapper';
+import { verifyContractMutableAccess, verifyProxyMutableAccess } from '../../helpers/method-checker';
 import { Contract, Signer } from 'ethers';
 
 task('full:access-test', 'Tests access to mutable functions of the deployed contracts')
@@ -21,8 +17,8 @@ task('full:access-test', 'Tests access to mutable functions of the deployed cont
   .setAction(async ({ pool }, DRE) => {
     await DRE.run('set-DRE');
 
+    const checkAll = true;
     const user = (await getSignerN(1)) as Signer;
-    console.log(user);
 
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
@@ -31,16 +27,22 @@ task('full:access-test', 'Tests access to mutable functions of the deployed cont
 
     console.log('Check access to mutable methods');
 
+    let hasErorrs = false;
     for (const [addr, entry] of getInstancesFromJsonDb()) {
-      const getter = getContractGetterById(entry.id);
+      const name = `${entry.id} ${addr}`;
+
+      const [contractId, getter] = getContractGetterById(entry.id);
       if (getter == undefined) {
-        console.log(`\t${entry.id} ${addr}: contract getter is unknown`);
-        // throw `Unable to inspect contract: ${entry.id} ${addr}`;
+        hasErorrs = true;
+        console.log(`\tError: unknown getter ${name}`);
+        if (!checkAll) {
+          throw `Unable to check contract - unknown getter ${name}`;
+        }
         continue;
       }
       const subj = (await getter(addr)) as Contract;
-      console.log(`\t${entry.id}: ${subj.address}`);
-      await verifyMutableAccess(user, subj, entry.id as eContractid, true);
+      console.log(`\tChecking: ${name}`);
+      await verifyContractMutableAccess(user, subj, contractId, checkAll);
     }
 
     for (const [addr, entry] of getExternalsFromJsonDb()) {
@@ -49,15 +51,23 @@ task('full:access-test', 'Tests access to mutable functions of the deployed cont
         continue;
       }
       const implId = getFromJsonDbByAddr(implAddr).id;
+      const name = `${entry.id} ${addr} => ${implId} ${implAddr}`;
 
-      const getter = getContractGetterById(implId);
+      const [contractId, getter] = getContractGetterById(implId);
       if (getter == undefined) {
-        console.log(`\t${implId} ${addr}: proxy impl contract getter is unknown`);
-        // throw `Unable to inspect proxy contract: ${entry.id} ${addr} ${implAddr}`;
+        console.log(`\tError: unknown getter ${name}`);
+        if (!checkAll) {
+          throw `Unable to check contract - unknown getter ${name}`;
+        }
         continue;
       }
       const subj = (await getter(addr)) as Contract;
-      await verifyMutableAccess(user, subj, entry.id as eContractid, false);
+      console.log(`\tChecking: ${name}`);
+      await verifyProxyMutableAccess(user, subj, contractId, checkAll);
+    }
+
+    if (hasErorrs) {
+      throw 'Mutable access check has failed';
     }
 
     console.log('');

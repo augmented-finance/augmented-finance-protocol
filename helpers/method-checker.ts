@@ -1,103 +1,36 @@
 import { defaultAbiCoder } from '@ethersproject/abi';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Contract } from '@ethersproject/contracts';
+import { FunctionAccessExceptions, getContractAccessExceptions } from './contracts-access';
 import { eContractid, ProtocolErrors } from './types';
 
-export type FunctionAccessExceptions = { [key: string]: string | true | { args: any[]; reason?: string } };
-export type ContractAccessExceptions = {
-  functions: FunctionAccessExceptions;
-  reasons?: string[];
-};
-
-const uniswapAdapter: ContractAccessExceptions = {
-  functions: {
-    executeOperation: 'CALLER_MUST_BE_LENDING_POOL',
-    sweepToken: ProtocolErrors.CT_CALLER_MUST_BE_SWEEP_ADMIN,
-    swapAndRepay: true,
-    swapAndDeposit: true,
-  },
-};
-
-const externalStrategy: ContractAccessExceptions = {
-  functions: {
-    delegatedWithdrawUnderlying: true,
-    getDelegatedState: true,
-  },
-};
-
-const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
-  [eContractid.AddressesProviderRegistry]: {
-    functions: {
-      renounceOneTimeRegistrar: true,
-    },
-  },
-  [eContractid.MarketAccessController]: {
-    functions: {
-      createProxy: true,
-      renounceTemporaryAdmin: true,
-    },
-  },
-
-  [eContractid.UniswapLiquiditySwapAdapter]: uniswapAdapter,
-  [eContractid.UniswapRepayAdapter]: uniswapAdapter,
-  [eContractid.FlashLiquidationAdapter]: uniswapAdapter,
-
-  [eContractid.WETHGateway]: {
-    functions: {
-      depositETH: true,
-      withdrawETH: true,
-      borrowETH: true,
-      repayETH: true,
-      sweepToken: ProtocolErrors.CT_CALLER_MUST_BE_SWEEP_ADMIN,
-    },
-  },
-
-  [eContractid.DelegatedStrategyAave]: externalStrategy,
-  [eContractid.DelegatedStrategyCompoundErc20]: externalStrategy,
-  [eContractid.DelegatedStrategyCompoundEth]: externalStrategy,
-
-  [eContractid.TeamRewardPool]: {
-    functions: {},
-    reasons: [
-      ProtocolErrors.RW_NOT_REWARD_CONTROLLER,
-      ProtocolErrors.RW_NOT_REWARD_RATE_ADMIN,
-      ProtocolErrors.CALLER_NOT_EMERGENCY_ADMIN,
-      ProtocolErrors.CT_CALLER_MUST_BE_REWARD_ADMIN,
-      ProtocolErrors.RW_NOT_TEAM_MANAGER,
-    ],
-  },
-
-  [eContractid.TreasuryRewardPool]: {
-    functions: {},
-    reasons: [
-      ProtocolErrors.RW_NOT_REWARD_CONTROLLER,
-      ProtocolErrors.RW_NOT_REWARD_RATE_ADMIN,
-      ProtocolErrors.CALLER_NOT_EMERGENCY_ADMIN,
-      ProtocolErrors.CT_CALLER_MUST_BE_REWARD_ADMIN,
-    ],
-  },
-};
-
-export const verifyMutableAccess = async (
+export const verifyContractMutableAccess = async (
   signer: Signer,
   contract: Contract,
   name: eContractid,
   checkAll?: boolean
 ) => {
-  await _verifyMutableAccess(
-    signer,
-    contract,
-    name,
-    DEFAULT_EXCEPTIONS[name]?.functions,
-    DEFAULT_EXCEPTIONS[name]?.reasons,
-    checkAll
-  );
+  const exceptions = getContractAccessExceptions(name);
+  const isImpl = exceptions?.implOverride != undefined;
+  const functions = isImpl ? { ...exceptions.functions, ...exceptions.implOverride! } : exceptions?.functions;
+  await _verifyMutableAccess(signer, contract, name, isImpl, functions, exceptions?.reasons, checkAll);
+};
+
+export const verifyProxyMutableAccess = async (
+  signer: Signer,
+  contract: Contract,
+  name: eContractid,
+  checkAll?: boolean
+) => {
+  const exceptions = getContractAccessExceptions(name);
+  await _verifyMutableAccess(signer, contract, name, false, exceptions?.functions, exceptions?.reasons, checkAll);
 };
 
 const _verifyMutableAccess = async (
   signer: Signer,
   contract: Contract,
   name: string,
+  isImpl: boolean,
   exceptions?: FunctionAccessExceptions,
   expected?: string[],
   checkAll?: boolean
@@ -113,7 +46,7 @@ const _verifyMutableAccess = async (
   let hasErrors = false;
 
   const reportError = (error, fnName: string, args) => {
-    console.log(fnName, args);
+    console.log(`${name}.${fnName}`, args);
     console.error(error);
     hasErrors = true;
     if (!checkAll) {
@@ -149,9 +82,15 @@ const _verifyMutableAccess = async (
       const prefixReasonStr = "VM Exception while processing transaction: reverted with reason string '";
       const prefixNoReason = 'Transaction reverted without a reason string';
 
+      const prefixNullCall = 'Transaction reverted: function call to a non-contract account';
+      const prefixBrokenRedirect =
+        "Transaction reverted: function selector was not recognized and there's no fallback function";
+
       let reason: string;
       if (message === prefixNoReason) {
         reason = '\n';
+      } else if (isImpl && (message === prefixNullCall || message === prefixBrokenRedirect)) {
+        continue;
       } else {
         let pos: number;
         if ((pos = message.indexOf(prefixReasonStr)) >= 0) {

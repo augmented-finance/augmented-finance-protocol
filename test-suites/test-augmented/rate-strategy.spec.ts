@@ -1,5 +1,5 @@
 import { TestEnv, makeSuite } from './helpers/make-suite';
-import { deployDefaultReserveInterestRateStrategy } from '../../helpers/contracts-deployments';
+import { deployMockReserveInterestRateStrategy } from '../../helpers/contracts-deployments';
 
 import { APPROVAL_AMOUNT_LENDING_POOL, PERCENTAGE_FACTOR, RAY } from '../../helpers/constants';
 
@@ -23,7 +23,7 @@ makeSuite('Interest rate strategy tests', (testEnv: TestEnv) => {
 
     const { addressesProvider } = testEnv;
 
-    strategyInstance = await deployDefaultReserveInterestRateStrategy(
+    strategyInstance = await deployMockReserveInterestRateStrategy(
       [
         addressesProvider.address,
         rateStrategyStableOne.optimalUtilizationRate,
@@ -64,16 +64,7 @@ makeSuite('Interest rate strategy tests', (testEnv: TestEnv) => {
       2: currentVariableBorrowRate,
     } = await strategyInstance[
       'calculateInterestRates(address,address,uint256,uint256,uint256,uint256,uint256,uint256)'
-    ](
-      dai.address,
-      aDai.address,
-      '200000000000000000',
-      '0',
-      '0',
-      '800000000000000000',
-      '0',
-      strategyDAI.reserveFactor
-    );
+    ](dai.address, aDai.address, '200000000000000000', '0', '0', '800000000000000000', '0', strategyDAI.reserveFactor);
 
     const expectedVariableRate = new BigNumber(rateStrategyStableOne.baseVariableBorrowRate).plus(
       rateStrategyStableOne.variableRateSlope1
@@ -87,10 +78,7 @@ makeSuite('Interest rate strategy tests', (testEnv: TestEnv) => {
       'Invalid liquidity rate'
     );
 
-    expect(currentVariableBorrowRate.toString()).to.be.equal(
-      expectedVariableRate.toFixed(0),
-      'Invalid variable rate'
-    );
+    expect(currentVariableBorrowRate.toString()).to.be.equal(expectedVariableRate.toFixed(0), 'Invalid variable rate');
 
     expect(currentStableBorrowRate.toString()).to.be.equal(
       new BigNumber(0.039).times(RAY).plus(rateStrategyStableOne.stableRateSlope1).toFixed(0),
@@ -105,32 +93,18 @@ makeSuite('Interest rate strategy tests', (testEnv: TestEnv) => {
       2: currentVariableBorrowRate,
     } = await strategyInstance[
       'calculateInterestRates(address,address,uint256,uint256,uint256,uint256,uint256,uint256)'
-    ](
-      dai.address,
-      aDai.address,
-      '0',
-      '0',
-      '0',
-      '800000000000000000',
-      '0',
-      strategyDAI.reserveFactor
-    );
+    ](dai.address, aDai.address, '0', '0', '0', '800000000000000000', '0', strategyDAI.reserveFactor);
 
     const expectedVariableRate = new BigNumber(rateStrategyStableOne.baseVariableBorrowRate)
       .plus(rateStrategyStableOne.variableRateSlope1)
       .plus(rateStrategyStableOne.variableRateSlope2);
 
     expect(currentLiquidityRate.toString()).to.be.equal(
-      expectedVariableRate
-        .percentMul(new BigNumber(PERCENTAGE_FACTOR).minus(strategyDAI.reserveFactor))
-        .toFixed(0),
+      expectedVariableRate.percentMul(new BigNumber(PERCENTAGE_FACTOR).minus(strategyDAI.reserveFactor)).toFixed(0),
       'Invalid liquidity rate'
     );
 
-    expect(currentVariableBorrowRate.toString()).to.be.equal(
-      expectedVariableRate.toFixed(0),
-      'Invalid variable rate'
-    );
+    expect(currentVariableBorrowRate.toString()).to.be.equal(expectedVariableRate.toFixed(0), 'Invalid variable rate');
 
     expect(currentStableBorrowRate.toString()).to.be.equal(
       new BigNumber(0.039)
@@ -170,15 +144,9 @@ makeSuite('Interest rate strategy tests', (testEnv: TestEnv) => {
       .percentMul(new BigNumber(PERCENTAGE_FACTOR).minus(strategyDAI.reserveFactor))
       .toFixed(0);
 
-    expect(currentLiquidityRate.toString()).to.be.equal(
-      expectedLiquidityRate,
-      'Invalid liquidity rate'
-    );
+    expect(currentLiquidityRate.toString()).to.be.equal(expectedLiquidityRate, 'Invalid liquidity rate');
 
-    expect(currentVariableBorrowRate.toString()).to.be.equal(
-      expectedVariableRate.toFixed(0),
-      'Invalid variable rate'
-    );
+    expect(currentVariableBorrowRate.toString()).to.be.equal(expectedVariableRate.toFixed(0), 'Invalid variable rate');
 
     expect(currentStableBorrowRate.toString()).to.be.equal(
       new BigNumber(0.039)
