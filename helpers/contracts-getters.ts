@@ -46,6 +46,7 @@ import {
   DelegatedStrategyCompoundErc20Factory,
   DelegatedStrategyCompoundEthFactory,
   StaticPriceOracleFactory,
+  TreasuryRewardPoolFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -62,6 +63,7 @@ import { IChainlinkAggregatorFactory } from '../types/IChainlinkAggregatorFactor
 import { IInitializablePoolTokenFactory } from '../types/IInitializablePoolTokenFactory';
 import { IInitializableStakeTokenFactory } from '../types/IInitializableStakeTokenFactory';
 import { IInitializableRewardPoolFactory } from '../types/IInitializableRewardPoolFactory';
+import { ZERO_ADDRESS } from './constants';
 
 const getAddr = async (id: eContractid) => {
   const entry = await getFromJsonDb(id);
@@ -418,3 +420,6 @@ export const getDelegatedStrategyCompoundEth = async (address?: tEthereumAddress
 
 export const getStaticPriceOracle = async (address?: tEthereumAddress) =>
   StaticPriceOracleFactory.connect(address || (await getAddr(eContractid.StaticPriceOracle)), await getFirstSigner());
+
+export const getTreasuryRewardPool = async (address?: tEthereumAddress) =>
+  TreasuryRewardPoolFactory.connect(address || (await getAddr(eContractid.TreasuryRewardPool)), await getFirstSigner());
