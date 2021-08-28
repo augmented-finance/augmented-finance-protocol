@@ -140,7 +140,7 @@ contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
     address to,
     uint256 amount
   ) external override onlySweepAdmin {
-    IERC20(token).transfer(to, amount);
+    IERC20(token).safeTransfer(to, amount);
   }
 
   /**
