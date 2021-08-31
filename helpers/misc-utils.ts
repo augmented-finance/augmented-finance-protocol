@@ -120,6 +120,7 @@ export const getTenderlyDashboardLink = () => {
 };
 
 export const getFirstSigner = async () => (await (<any>DRE).ethers.getSigners())[0];
+export const getSignerN = async (n: number) => (await (<any>DRE).ethers.getSigners())[n];
 
 export const getContractFactory = async (abi: any[], bytecode: string) =>
   await (<any>DRE).ethers.getContractFactory(abi, bytecode);
@@ -268,7 +269,8 @@ export const getNamedFromJsonDb = () =>
 
 export const getFromJsonDb = (id: string) => getDb().get(`${DRE.network.name}.named.${id}`).value();
 
-export const getFromJsonDbByAddr = (id: string) => getDb().get(`${DRE.network.name}.instance.${id}`).value();
+export const getFromJsonDbByAddr = (id: string) =>
+  getDb().get(`${DRE.network.name}.instance.${id}`).value() as DbInstanceEntry;
 
 export const hasInJsonDb = (id: string) => !falsyOrZeroAddress(getFromJsonDb(id)?.address);
 

@@ -14,7 +14,7 @@ contract MockRewardedTokenLocker is RewardedTokenLocker {
     address underlying
   ) RewardedTokenLocker(controller, initialRate, baselinePercentage, underlying) {}
 
-  function isController(address addr) internal pure override returns (bool) {
+  function _isController(address addr) internal pure override returns (bool) {
     return addr != address(0);
   }
 }

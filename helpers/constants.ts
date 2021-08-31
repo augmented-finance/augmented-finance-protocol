@@ -52,10 +52,10 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
 };
 
 export const DefaultTokenNames: ITokenNames = {
-  DepositTokenNamePrefix: 'Augmented deposit',
-  StableDebtTokenNamePrefix: 'Augmented stable debt',
-  VariableDebtTokenNamePrefix: 'Augmented debt',
-  StakeTokenNamePrefix: 'Augmented stake',
+  DepositTokenNamePrefix: 'Augmented Deposit',
+  StableDebtTokenNamePrefix: 'Augmented Stable Debt',
+  VariableDebtTokenNamePrefix: 'Augmented Debt',
+  StakeTokenNamePrefix: 'Augmented Stake',
 
   SymbolPrefix: '',
   DepositSymbolPrefix: 'ag',
@@ -63,9 +63,9 @@ export const DefaultTokenNames: ITokenNames = {
   VariableDebtSymbolPrefix: 'agv',
   StakeSymbolPrefix: 'xag',
 
-  RewardTokenName: 'Augmented reward',
+  RewardTokenName: 'Augmented Finance',
   RewardTokenSymbol: 'AGF',
 
-  RewardStakeTokenName: 'Augmented booster',
+  RewardStakeTokenName: 'Augmented Booster',
   RewardStakeTokenSymbol: 'xAGF',
 };

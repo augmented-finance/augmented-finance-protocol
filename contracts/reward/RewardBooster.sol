@@ -17,7 +17,6 @@ import './BaseRewardController.sol';
 contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardController, AutolockBase {
   using PercentageMath for uint256;
 
-  mapping(address => uint32) private _boostFactor;
   IManagedRewardPool private _boostPool;
   uint256 private _boostPoolMask;
 
@@ -44,19 +43,16 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     if (_boostPool == pool) {
       _boostPool = IManagedRewardPool(address(0));
       _boostPoolMask = 0;
-    } else {
-      delete (_boostFactor[address(pool)]);
     }
   }
 
   function setBoostFactor(address pool, uint32 pctFactor) external override onlyConfigOrRateAdmin {
-    require(getPoolMask(pool) != 0, 'unknown pool');
     require(pool != address(_boostPool), 'factor for the boost pool');
-    _boostFactor[pool] = pctFactor;
+    internalSetPoolInfo(pool, pctFactor);
   }
 
-  function getBoostFactor(address pool) external view returns (uint32 pctFactor) {
-    return uint32(_boostFactor[pool]);
+  function getBoostFactor(address pool) public view returns (uint32 pctFactor) {
+    return uint32(internalGetPoolInfo(pool));
   }
 
   function setUpdateBoostPoolRate(bool updateBoostPool) external override onlyConfigAdmin {
@@ -83,15 +79,22 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     return (totalRate, baselineMask);
   }
 
+  uint256 private constant BOOST_POOL_MARK = 1 << 33;
+
   function setBoostPool(address pool) external override onlyConfigAdmin {
+    if (address(_boostPool) == pool) {
+      return;
+    }
+    if (address(_boostPool) != address(0)) {
+      internalSetPoolInfo(address(_boostPool), 0);
+    }
+
     if (pool == address(0)) {
       _boostPoolMask = 0;
     } else {
-      uint256 mask = getPoolMask(pool);
-      require(mask != 0, 'unknown pool');
-      _boostPoolMask = mask;
-
-      delete (_boostFactor[pool]);
+      internalSetPoolInfo(pool, BOOST_POOL_MARK); // it also checks for known pool
+      _boostPoolMask = getPoolMask(pool);
+      require(_boostPoolMask != 0);
     }
     _boostPool = IManagedRewardPool(pool);
   }
@@ -109,13 +112,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     return (_boostExcessDelegate, _mintExcess);
   }
 
-  function getClaimMask(address holder, uint256 mask) internal view override returns (uint256) {
-    mask = super.getClaimMask(holder, mask);
-    mask &= ~_boostPoolMask;
-    return mask;
-  }
-
-  function internalClaimAndMintReward(address holder, uint256 mask)
+  function internalClaimAndMintReward(address holder, uint256 allMask)
     internal
     override
     returns (uint256 claimableAmount, uint256)
@@ -126,19 +123,24 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
 
     _workRewards[holder] = WorkReward(0, 0, uint32(block.timestamp));
 
-    for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
-      if (mask & 1 == 0) {
+    for ((uint8 i, uint256 mask) = (0, 1); mask <= allMask; (i, mask) = (i + 1, mask << 1)) {
+      if (mask & allMask == 0) {
+        if (mask == 0) break;
         continue;
       }
 
       IManagedRewardPool pool = getPool(i);
-      (uint256 amount_, ) = pool.claimRewardFor(holder, type(uint256).max);
+      (uint256 amount_, , bool keepPull) = pool.claimRewardFor(holder, type(uint256).max);
+      if (!keepPull) {
+        internalUnsetPull(holder, mask);
+      }
+
       if (amount_ == 0) {
         continue;
       }
 
       claimableAmount += amount_;
-      boostLimit += amount_.percentMul(_boostFactor[address(pool)]);
+      boostLimit += amount_.percentMul(getBoostFactor(address(pool)));
     }
 
     uint256 boostAmount = _boostRewards[holder];
@@ -151,13 +153,13 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
       uint256 boost_;
 
       if (_mintExcess || _boostExcessDelegate != address(_boostPool)) {
-        (boost_, boostSince) = _boostPool.claimRewardFor(holder, type(uint256).max);
+        (boost_, boostSince, ) = _boostPool.claimRewardFor(holder, type(uint256).max);
       } else {
         uint256 boostLimit_;
         if (boostLimit > boostAmount) {
           boostLimit_ = boostLimit - boostAmount;
         }
-        (boost_, boostSince) = _boostPool.claimRewardFor(holder, boostLimit_);
+        (boost_, boostSince, ) = _boostPool.claimRewardFor(holder, boostLimit_);
       }
 
       boostAmount += boost_;
@@ -195,7 +197,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
       }
 
       claimableAmount += amount_;
-      boostLimit += amount_.percentMul(_boostFactor[address(pool)]);
+      boostLimit += amount_.percentMul(getBoostFactor(address(pool)));
     }
 
     uint256 boostAmount = _boostRewards[holder];
@@ -218,13 +220,15 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
   function internalAllocatedByPool(
     address holder,
     uint256 allocated,
-    address pool,
+    uint256 poolInfo,
     uint32
   ) internal override {
-    if (address(_boostPool) == pool) {
-      if (allocated > 0) {
-        _boostRewards[holder] += allocated;
-      }
+    if (allocated == 0) {
+      return;
+    }
+
+    if (poolInfo == BOOST_POOL_MARK) {
+      _boostRewards[holder] += allocated;
       return;
     }
 
@@ -237,9 +241,10 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     require(v <= type(uint112).max);
     workReward.claimableReward = uint112(v);
 
-    uint32 factor = _boostFactor[pool];
-    if (factor != 0) {
-      v = workReward.boostLimit + allocated.percentMul(factor);
+    if (poolInfo != 0) {
+      unchecked {
+        v = workReward.boostLimit + allocated.percentMul(uint32(poolInfo));
+      }
       if (v < type(uint112).max) {
         workReward.boostLimit = uint112(v);
       } else {
@@ -292,18 +297,20 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     return lockAmount;
   }
 
+  function claimableMask(address holder, uint256 includeMask) internal view override returns (uint256) {
+    return super.claimableMask(holder, includeMask) & ~_boostPoolMask;
+  }
+
   function explainReward(address holder, uint32 at) external view override returns (RewardExplained memory) {
     require(at >= uint32(block.timestamp));
-    return internalExplainReward(holder, ~uint256(0), at);
+    return internalExplainReward(holder, claimableMask(holder, 0), at);
   }
 
   function internalExplainReward(
     address holder,
     uint256 mask,
     uint32 at
-  ) internal view returns (RewardExplained memory r) {
-    mask = getClaimMask(holder, mask) | _boostPoolMask;
-
+  ) private view returns (RewardExplained memory r) {
     WorkReward memory workReward = _workRewards[holder];
     (r.amountClaimable, r.boostLimit, r.latestClaimAt) = (
       workReward.claimableReward,
@@ -340,7 +347,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
         r.maxBoost = _boostRewards[holder] + amount_;
       } else {
         r.allocations[n].rewardType = RewardType.WorkReward;
-        r.allocations[n].factor = _boostFactor[address(pool)];
+        r.allocations[n].factor = getBoostFactor(address(pool));
 
         if (amount_ > 0) {
           r.amountClaimable += amount_;

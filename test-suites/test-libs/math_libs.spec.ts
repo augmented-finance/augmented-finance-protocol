@@ -1,37 +1,33 @@
 import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
-import rawBRE, { ethers } from 'hardhat';
+import rawBRE from 'hardhat';
 import { LibTestUtils } from '../../types';
-import { mineBlocks, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
-import { BigNumber } from 'ethers';
-import moment = require('moment');
-import { RAY } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
 
 describe('Library tests example', () => {
-  let i: LibTestUtils;
-  let blkBeforeDeploy;
+  let lib: LibTestUtils;
 
-  beforeEach(async () => {
-    blkBeforeDeploy = await takeSnapshot();
-    const c = await ethers.getContractFactory('LibTestUtils');
-    i = await c.deploy();
+  before(async () => {
+    const c = await (<any>rawBRE).ethers.getContractFactory('LibTestUtils');
+    lib = await c.deploy();
   });
 
-  afterEach(async () => {
-    await revertSnapshot(blkBeforeDeploy);
-  });
+  it('test bitLength', async () => {
+    expect(await lib.callStatic.testBitLength(0)).eq(0);
+    expect(await lib.callStatic.testBitLength(1)).eq(1);
+    expect(await lib.callStatic.testBitLength(2)).eq(2);
+    expect(await lib.callStatic.testBitLength(3)).eq(2);
+    expect(await lib.callStatic.testBitLength(4)).eq(3);
+    expect(await lib.callStatic.testBitLength(5)).eq(3);
+    expect(await lib.callStatic.testBitLength(6)).eq(3);
+    expect(await lib.callStatic.testBitLength(7)).eq(3);
+    expect(await lib.callStatic.testBitLength(8)).eq(4);
 
-  it.skip('test linear interest', async () => {
-    {
-      let oneDayAgo = moment().subtract(1, 'days').unix();
-      let res = await i.callStatic.TestLinearInterest(RAY, BigNumber.from(oneDayAgo));
-      console.log(`linear rate: ${res}`);
-      await mineBlocks(1);
-      expect(res).eq(BigNumber.from('1002739186960933536276002029'));
+    for (let i = 0; i < 256; i++) {
+      expect(await lib.callStatic.testBitLengthShift(i)).eq(i + 1);
     }
   });
 });

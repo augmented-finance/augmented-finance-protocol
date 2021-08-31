@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 library BitUtils {
   function isBit(uint256 v, uint8 index) internal pure returns (bool) {
-    return v & (uint256(1) << index) != 0;
+    return (v >> index) & 1 != 0;
   }
 
   function nextPowerOf2(uint256 v) internal pure returns (uint256) {
@@ -27,10 +27,7 @@ library BitUtils {
   }
 
   function isPowerOf2nz(uint256 v) internal pure returns (bool) {
-    if (v == 0) {
-      return false;
-    }
-    return (v & (v - 1)) == 0;
+    return (v != 0) && (v & (v - 1) == 0);
   }
 
   function bitLength(uint256 v) internal pure returns (uint256 len) {
@@ -68,6 +65,6 @@ library BitUtils {
     if (v > 1) {
       len += 1;
     }
-    return len;
+    return len + 1;
   }
 }
