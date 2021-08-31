@@ -277,7 +277,7 @@ export const deployMintableDelegationERC20 = async (
     verify
   );
 
-export const deployDefaultReserveInterestRateStrategy = async (
+export const deployMockReserveInterestRateStrategy = async (
   args: [
     provider: string,
     optimalUtilizationRate: BigNumberish,
@@ -311,7 +311,7 @@ export const deployReserveInterestRateStrategy = async (
 ) =>
   withSaveAndVerify(
     await new DefaultReserveInterestRateStrategyFactory(await getFirstSigner()).deploy(...args),
-    name,
+    eContractid.DefaultReserveInterestRateStrategy + '-' + name,
     args,
     verify
   );
@@ -835,7 +835,7 @@ export const deployNamedPermitFreezerRewardPool = async (
 ) =>
   withSaveAndVerify(
     await new PermitFreezerRewardPoolFactory(await getFirstSigner()).deploy(...args, rewardPoolName),
-    rewardPoolName,
+    eContractid.PermitFreezerRewardPool + '-' + rewardPoolName,
     [...args, rewardPoolName],
     verify
   );

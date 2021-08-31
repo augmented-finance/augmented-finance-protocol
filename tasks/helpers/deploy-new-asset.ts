@@ -5,7 +5,7 @@ import * as reserveConfigs from '../../markets/augmented/reservesConfigs';
 import { chooseDepositTokenDeployment } from '../../helpers/init-helpers';
 import { getMarketAddressController } from './../../helpers/contracts-getters';
 import {
-  deployDefaultReserveInterestRateStrategy,
+  deployMockReserveInterestRateStrategy,
   deployStableDebtToken,
   deployVariableDebtToken,
 } from './../../helpers/contracts-deployments';
@@ -79,7 +79,7 @@ task('external:deploy-new-asset', 'Deploy new reserve(s)')
     //       ],
     //       verify
     //     );
-    //     const rates = await deployDefaultReserveInterestRateStrategy(
+    //     const rates = await deployMockReserveInterestRateStrategy(
     //       [
     //         addressProvider.address,
     //         strategyParams.strategy.optimalUtilizationRate,

@@ -176,7 +176,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   function internalAttachedToRewardController() internal virtual {}
 
-  function isController(address addr) internal view virtual returns (bool) {
+  function _isController(address addr) internal view virtual returns (bool) {
     return address(_controller) == addr;
   }
 
@@ -185,7 +185,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   }
 
   function _onlyController() private view {
-    require(isController(msg.sender), Errors.CALLER_NOT_REWARD_CONTROLLER);
+    require(_isController(msg.sender), Errors.CALLER_NOT_REWARD_CONTROLLER);
   }
 
   modifier onlyController() {
@@ -194,11 +194,11 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
   }
 
   function _isConfigAdmin(address addr) internal view returns (bool) {
-    return _controller.isConfigAdmin(addr);
+    return address(_controller) != address(0) && _controller.isConfigAdmin(addr);
   }
 
   function _onlyConfigAdmin() private view {
-    require(_controller.isConfigAdmin(msg.sender), Errors.CALLER_NOT_REWARD_CONFIG_ADMIN);
+    require(_isConfigAdmin(msg.sender), Errors.CALLER_NOT_REWARD_CONFIG_ADMIN);
   }
 
   modifier onlyConfigAdmin() {
@@ -206,8 +206,12 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _;
   }
 
+  function _isRateAdmin(address addr) internal view returns (bool) {
+    return address(_controller) != address(0) && _controller.isRateAdmin(addr);
+  }
+
   function _onlyRateAdmin() private view {
-    require(_controller.isRateAdmin(msg.sender), Errors.CALLER_NOT_REWARD_RATE_ADMIN);
+    require(_isRateAdmin(msg.sender), Errors.CALLER_NOT_REWARD_RATE_ADMIN);
   }
 
   modifier onlyRateAdmin() {

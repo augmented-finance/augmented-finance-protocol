@@ -79,7 +79,10 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('10. Deploy reward pools');
       await DRE.run('full:init-reward-pools', { pool: POOL_NAME, verify: trackVerify });
 
-      console.log('11. Smoke test');
+      console.log('11. Access test');
+      await DRE.run('full:access-test', { pool: POOL_NAME });
+
+      console.log('12. Smoke test');
       await DRE.run('full:smoke-test', { pool: POOL_NAME });
 
       const balanceBeforePluck = await deployer.getBalance();
