@@ -8,6 +8,7 @@ import '../../tools/upgradeability/VersionedInitializable.sol';
 import './interfaces/PoolTokenConfig.sol';
 import './base/PoolTokenBase.sol';
 import './base/DebtTokenBase.sol';
+import '../../tools/tokens/ERC20DetailsBase.sol';
 
 /**
  * @title VariableDebtToken
@@ -17,20 +18,9 @@ import './base/DebtTokenBase.sol';
 contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDebtToken {
   using WadRayMath for uint256;
 
-  uint256 private constant DEBT_TOKEN_REVISION = 0x1;
+  constructor() PoolTokenBase(address(0), address(0)) ERC20DetailsBase('', '', 0) {}
 
-  function initialize(
-    PoolTokenConfig memory config,
-    string memory name,
-    string memory symbol,
-    bytes calldata params
-  ) public override initializerRunAlways(DEBT_TOKEN_REVISION) {
-    _initializeERC20(name, symbol, config.underlyingDecimals);
-    if (!isRevisionInitialized(DEBT_TOKEN_REVISION)) {
-      _initializePoolToken(config, params);
-    }
-    _emitInitialized(config, params);
-  }
+  uint256 private constant DEBT_TOKEN_REVISION = 0x1;
 
   /**
    * @dev Gets the revision of the stable debt token implementation
@@ -40,11 +30,35 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     return DEBT_TOKEN_REVISION;
   }
 
+  function initialize(
+    PoolTokenConfig calldata config,
+    string calldata name,
+    string calldata symbol,
+    bytes calldata params
+  ) external override initializerRunAlways(DEBT_TOKEN_REVISION) {
+    if (isRevisionInitialized(DEBT_TOKEN_REVISION)) {
+      _initializeERC20(name, symbol, super.decimals());
+    } else {
+      _initializeERC20(name, symbol, config.underlyingDecimals);
+      _initializePoolToken(config, params);
+    }
+
+    emit Initialized(
+      config.underlyingAsset,
+      address(config.pool),
+      address(0),
+      super.name(),
+      super.symbol(),
+      super.decimals(),
+      params
+    );
+  }
+
   /**
    * @dev Calculates the accumulated debt balance of the user
    * @return The debt balance of the user
    **/
-  function balanceOf(address user) public view virtual override(IERC20, PoolTokenBase) returns (uint256) {
+  function balanceOf(address user) public view virtual override returns (uint256) {
     uint256 scaledBalance = super.balanceOf(user);
 
     if (scaledBalance == 0) {
@@ -119,7 +133,7 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
    * @dev Returns the total supply of the variable debt token. Represents the total debt accrued by the users
    * @return The total supply
    **/
-  function totalSupply() public view virtual override(IERC20, PoolTokenBase) returns (uint256) {
+  function totalSupply() public view virtual override returns (uint256) {
     return super.totalSupply().rayMul(_pool.getReserveNormalizedVariableDebt(_underlyingAsset));
   }
 

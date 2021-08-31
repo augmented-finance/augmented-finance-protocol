@@ -653,7 +653,7 @@ export const deployMockStakedAgToken = async (
     args,
     verify
   );
-  await instance.initialize(
+  await instance.initializeStakeToken(
     {
       stakeController: args[0],
       stakedToken: args[1],
@@ -661,10 +661,10 @@ export const deployMockStakedAgToken = async (
       cooldownPeriod: args[4],
       unstakePeriod: args[5],
       maxSlashable: 3000, // 30%
+      stakedTokenDecimals: 18,
     },
     args[2],
-    args[3],
-    '18'
+    args[3]
   );
 
   return instance;
@@ -680,7 +680,7 @@ export const deployMockStakedAgfToken = async (
     args,
     verify
   );
-  await instance.initialize(
+  await instance.initializeStakeToken(
     {
       stakeController: args[0],
       stakedToken: args[1],
@@ -688,10 +688,10 @@ export const deployMockStakedAgfToken = async (
       cooldownPeriod: args[4],
       unstakePeriod: args[5],
       maxSlashable: 3000, // 30%
+      stakedTokenDecimals: 18,
     },
     args[2],
-    args[3],
-    '18'
+    args[3]
   );
 
   return instance;
@@ -713,10 +713,7 @@ export const deployMockUniswapRouter = async (verify?: boolean) =>
     verify
   );
 
-export const deployUniswapLiquiditySwapAdapter = async (
-  args: [tEthereumAddress, tEthereumAddress, tEthereumAddress],
-  verify?: boolean
-) =>
+export const deployUniswapLiquiditySwapAdapter = async (args: [tEthereumAddress, tEthereumAddress], verify?: boolean) =>
   withSaveAndVerify(
     await new UniswapLiquiditySwapAdapterFactory(await getFirstSigner()).deploy(...args),
     eContractid.UniswapLiquiditySwapAdapter,
@@ -724,10 +721,7 @@ export const deployUniswapLiquiditySwapAdapter = async (
     verify
   );
 
-export const deployUniswapRepayAdapter = async (
-  args: [tEthereumAddress, tEthereumAddress, tEthereumAddress],
-  verify?: boolean
-) =>
+export const deployUniswapRepayAdapter = async (args: [tEthereumAddress, tEthereumAddress], verify?: boolean) =>
   withSaveAndVerify(
     await new UniswapRepayAdapterFactory(await getFirstSigner()).deploy(...args),
     eContractid.UniswapRepayAdapter,
@@ -735,10 +729,7 @@ export const deployUniswapRepayAdapter = async (
     verify
   );
 
-export const deployFlashLiquidationAdapter = async (
-  args: [tEthereumAddress, tEthereumAddress, tEthereumAddress],
-  verify?: boolean
-) =>
+export const deployFlashLiquidationAdapter = async (args: [tEthereumAddress, tEthereumAddress], verify?: boolean) =>
   withSaveAndVerify(
     await new FlashLiquidationAdapterFactory(await getFirstSigner()).deploy(...args),
     eContractid.FlashLiquidationAdapter,

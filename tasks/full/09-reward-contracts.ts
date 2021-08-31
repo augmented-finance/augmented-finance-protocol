@@ -101,11 +101,11 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       if (RewardParams.Autolock == 'stop') {
         console.log('\tAutolock default mode: stop');
         // AutolockMode.Stop
-        booster.enableAutolockAndSetDefault(1, 0, 0);
+        await waitTx(booster.enableAutolockAndSetDefault(1, 0, 0));
       } else {
         console.log('\tAutolock default mode: prolongate for ', RewardParams.Autolock, 'week(s)');
         // AutolockMode.Prolongate
-        booster.enableAutolockAndSetDefault(2, RewardParams.Autolock * WEEK, 0);
+        await waitTx(booster.enableAutolockAndSetDefault(2, RewardParams.Autolock * WEEK, 0));
       }
     }
 
@@ -156,7 +156,7 @@ const grantRewardConfigAdmin = async (addressProvider: MarketAccessController) =
   if (await addressProvider.isAddress(AccessFlags.REWARD_CONFIG_ADMIN, deployer)) {
     return;
   }
-  await waitTx(addressProvider.grantRoles(deployer, AccessFlags.REWARD_CONFIG_ADMIN));
+  await mustWaitTx(addressProvider.grantRoles(deployer, AccessFlags.REWARD_CONFIG_ADMIN));
   console.log('Granted REWARD_CONFIG_ADMIN');
 };
 
@@ -184,7 +184,7 @@ const configureAgfPrice = async (
     const fallback = await getStaticPriceOracle(await oracle.getFallbackOracle());
 
     const deployer = (await getFirstSigner()).address;
-    await waitTx(addressProvider.grantRoles(deployer, AccessFlags.ORACLE_ADMIN));
+    await mustWaitTx(addressProvider.grantRoles(deployer, AccessFlags.ORACLE_ADMIN));
     console.log('Granted ORACLE_ADMIN');
 
     await waitTx(fallback.setAssetPrice(agfAddr, agfPrice));

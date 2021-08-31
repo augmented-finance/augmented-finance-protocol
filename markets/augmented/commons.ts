@@ -58,8 +58,8 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.tenderlyMain]: undefined,
   },
   ProviderRegistry: {
-    [eEthereumNetwork.kovan]: '0xe28BdBF3C2440C97aBA7250ED1bb9F20559E351a',
-    [eEthereumNetwork.ropsten]: '0x2931bAf940EE995E563BB27BCc7B60Aa8F9af298',
+    [eEthereumNetwork.kovan]: '0xFFfdda318F1FE4f048c99E5C6C03C14434B35FA0', // 0xe28BdBF3C2440C97aBA7250ED1bb9F20559E351a
+    [eEthereumNetwork.ropsten]: '', // '0x2931bAf940EE995E563BB27BCc7B60Aa8F9af298',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',
@@ -68,8 +68,8 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.tenderlyMain]: '',
   },
   ProviderRegistryOwner: {
-    [eEthereumNetwork.kovan]: '', // '0x31B29E1d3524f281f513B34F3855Ee8E473c0264',
-    [eEthereumNetwork.ropsten]: '', // '0x31B29E1d3524f281f513B34F3855Ee8E473c0264',
+    [eEthereumNetwork.kovan]: '',
+    [eEthereumNetwork.ropsten]: '',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
     [eEthereumNetwork.coverage]: '',
@@ -215,14 +215,15 @@ export const CommonsConfig: ICommonConfiguration = {
   ReserveAssetsOpt: {
     [eEthereumNetwork.ropsten]: true,
     [eEthereumNetwork.rinkeby]: true,
+    [eEthereumNetwork.kovan]: true,
 
     [eEthereumNetwork.coverage]: false,
     [eEthereumNetwork.hardhat]: false,
     [eEthereumNetwork.docker]: false,
-    [eEthereumNetwork.kovan]: false,
     [eEthereumNetwork.main]: false,
     [eEthereumNetwork.tenderlyMain]: false,
   },
+
   ReserveAssets: {
     [eEthereumNetwork.hardhat]: {},
     [eEthereumNetwork.docker]: {},
@@ -272,6 +273,26 @@ export const CommonsConfig: ICommonConfiguration = {
       WBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
       WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     },
+  },
+
+  Dependencies: {
+    [eEthereumNetwork.kovan]: {
+      UniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+    },
+    [eEthereumNetwork.ropsten]: {
+      UniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+    },
+    [eEthereumNetwork.rinkeby]: {
+      UniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+    },
+    [eEthereumNetwork.main]: {
+      UniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+    },
+
+    [eEthereumNetwork.coverage]: {},
+    [eEthereumNetwork.hardhat]: {},
+    [eEthereumNetwork.docker]: {},
+    [eEthereumNetwork.tenderlyMain]: {},
   },
 
   ReservesConfig: {},

@@ -3,8 +3,13 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { deployStakeTokenImpl } from '../../helpers/contracts-deployments';
 import { eNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../../helpers/types';
-import { getIErc20Detailed, getLendingPoolProxy, getStakeConfiguratorImpl } from '../../helpers/contracts-getters';
-import { chunk, falsyOrZeroAddress, getFirstSigner, mustWaitTx } from '../../helpers/misc-utils';
+import {
+  getIErc20Detailed,
+  getIInitializableStakeToken,
+  getLendingPoolProxy,
+  getStakeConfiguratorImpl,
+} from '../../helpers/contracts-getters';
+import { addProxyToJsonDb, chunk, falsyOrZeroAddress, getFirstSigner, mustWaitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumberish } from 'ethers';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
@@ -127,5 +132,36 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
 
       console.log(`  - Stake(s) ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
       console.log('    * gasUsed', tx3.gasUsed.toString());
+    }
+
+    if (!verify) {
+      return;
+    }
+
+    console.log('Collecting verification data for stake tokens');
+    for (const params of initParams) {
+      const proxyAddr = await stakeConfigurator.stakeTokenOf(params.stakedToken);
+      const implAddr = params.stakeTokenImpl;
+      console.log('\t', params.stkTokenSymbol, proxyAddr, implAddr);
+
+      const v = await getIInitializableStakeToken(proxyAddr);
+      const data = v.interface.encodeFunctionData('initializeStakeToken', [
+        {
+          stakeController: stakeConfigurator.address,
+          stakedToken: params.stakedToken,
+          strategy: params.strategy,
+          cooldownPeriod: params.cooldownPeriod,
+          unstakePeriod: params.unstakePeriod,
+          maxSlashable: params.maxSlashable,
+          stakedTokenDecimals: params.stkTokenDecimals,
+        },
+        params.stkTokenName,
+        params.stkTokenSymbol,
+      ]);
+      await addProxyToJsonDb('STAKE_TOKEN_' + params.stkTokenSymbol, proxyAddr, implAddr, 'stakeToken', [
+        stakeConfigurator.address,
+        implAddr,
+        data,
+      ]);
     }
   });

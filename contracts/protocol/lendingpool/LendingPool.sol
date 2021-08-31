@@ -405,10 +405,12 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
   ) external override whenNotPaused {
     require(msg.sender == _reserves[asset].depositTokenAddress, Errors.LP_CALLER_MUST_BE_DEPOSIT_TOKEN);
 
+    DataTypes.UserConfigurationMap storage fromConfig = _usersConfig[from];
     ValidationLogic.validateTransfer(
+      asset,
       from,
       _reserves,
-      _usersConfig[from],
+      fromConfig,
       _reservesList,
       _addressesProvider.getPriceOracle()
     );
@@ -417,7 +419,6 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
 
     if (from != to) {
       if (balanceFromBefore <= amount) {
-        DataTypes.UserConfigurationMap storage fromConfig = _usersConfig[from];
         fromConfig.unsetUsingAsCollateral(reserveId);
         emit ReserveUsedAsCollateralDisabled(asset, from);
       }

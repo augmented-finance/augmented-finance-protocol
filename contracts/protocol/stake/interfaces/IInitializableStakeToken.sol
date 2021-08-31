@@ -5,13 +5,12 @@ import './StakeTokenConfig.sol';
 
 /// @dev Interface for the initialize function on StakeToken
 interface IInitializableStakeToken {
-  event Initialized(StakeTokenConfig params, string tokenName, string tokenSymbol, uint8 decimals);
+  event Initialized(StakeTokenConfig params, string tokenName, string tokenSymbol);
 
-  function initialize(
+  function initializeStakeToken(
     StakeTokenConfig calldata params,
     string calldata name,
-    string calldata symbol,
-    uint8 decimals
+    string calldata symbol
   ) external;
 
   function initializedStakeTokenWith()
@@ -20,7 +19,6 @@ interface IInitializableStakeToken {
     returns (
       StakeTokenConfig memory params,
       string memory name,
-      string memory symbol,
-      uint8 decimals
+      string memory symbol
     );
 }

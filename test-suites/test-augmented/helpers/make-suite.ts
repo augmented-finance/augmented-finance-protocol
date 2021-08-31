@@ -176,7 +176,7 @@ export async function initializeMakeSuite() {
 const setSnapshot = async () => {
   const hre = DRE as HardhatRuntimeEnvironment;
   if (usingTenderly()) {
-    setBuidlerevmSnapshotId((await hre.tenderlyNetwork.getHead()) || '0x1');
+    setBuidlerevmSnapshotId((await (<any>hre).tenderlyNetwork.getHead()) || '0x1');
     return;
   }
   setBuidlerevmSnapshotId(await evmSnapshot());
@@ -185,7 +185,7 @@ const setSnapshot = async () => {
 const revertHead = async () => {
   const hre = DRE as HardhatRuntimeEnvironment;
   if (usingTenderly()) {
-    await hre.tenderlyNetwork.setHead(buidlerevmSnapshotId);
+    await (<any>hre).tenderlyNetwork.setHead(buidlerevmSnapshotId);
     return;
   }
   await evmRevert(buidlerevmSnapshotId);
