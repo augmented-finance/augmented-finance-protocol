@@ -131,9 +131,7 @@ abstract contract CalcLinearRewardBalances {
       AllocationMode mode
     )
   {
-    if (newBalance == 0) {
-      mode = AllocationMode.UnsetPull;
-    } else if (entry.claimedAt == 0) {
+    if (entry.claimedAt == 0) {
       mode = AllocationMode.SetPull;
     } else {
       mode = AllocationMode.Push;
@@ -160,24 +158,39 @@ abstract contract CalcLinearRewardBalances {
     return rewardBase;
   }
 
-  function doGetReward(address holder) internal returns (uint256, uint32) {
+  function doGetReward(address holder)
+    internal
+    returns (
+      uint256,
+      uint32,
+      bool
+    )
+  {
     return doGetRewardAt(holder, getCurrentTick());
   }
 
-  function doGetRewardAt(address holder, uint32 currentTick) internal returns (uint256, uint32) {
-    if (_balances[holder].rewardBase == 0) {
-      return (0, 0);
+  function doGetRewardAt(address holder, uint32 currentTick)
+    internal
+    returns (
+      uint256,
+      uint32,
+      bool
+    )
+  {
+    RewardBalance memory balance = _balances[holder];
+    if (balance.rewardBase == 0) {
+      return (0, 0, false);
     }
 
     (uint256 adjRate, uint256 allocated, uint32 since) = internalCalcRateAndReward(
-      _balances[holder],
+      balance,
       _accumRates[holder],
       currentTick
     );
 
     _accumRates[holder] = adjRate;
     _balances[holder].claimedAt = currentTick;
-    return (allocated, since);
+    return (allocated, since, true);
   }
 
   function doCalcReward(address holder) internal view returns (uint256, uint32) {

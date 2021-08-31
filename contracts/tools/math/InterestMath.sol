@@ -8,6 +8,7 @@ library InterestMath {
 
   /// @dev Ignoring leap years
   uint256 internal constant SECONDS_PER_YEAR = 365 days;
+  uint256 internal constant MILLIS_PER_YEAR = SECONDS_PER_YEAR * 1000;
 
   /**
    * @dev Function to calculate the interest accumulated using a linear interest rate formula

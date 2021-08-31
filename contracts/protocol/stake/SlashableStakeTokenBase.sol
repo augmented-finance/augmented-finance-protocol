@@ -405,8 +405,7 @@ abstract contract SlashableStakeTokenBase is
     returns (
       StakeTokenConfig memory params,
       string memory name_,
-      string memory symbol_,
-      uint8 decimals_
+      string memory symbol_
     )
   {
     params.stakeController = _remoteAcl;
@@ -414,7 +413,8 @@ abstract contract SlashableStakeTokenBase is
     params.cooldownPeriod = _cooldownPeriod;
     params.unstakePeriod = _unstakePeriod;
     params.maxSlashable = _maxSlashablePercentage;
-    return (params, name(), symbol(), decimals());
+    params.stakedTokenDecimals = super.decimals();
+    return (params, super.name(), super.symbol());
   }
 
   function setIncentivesController(address addr) external override onlyRewardConfiguratorOrAdmin {
