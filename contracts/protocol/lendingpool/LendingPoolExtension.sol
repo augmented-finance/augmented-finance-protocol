@@ -79,7 +79,6 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
       _reserves,
       userConfig,
       _reservesList,
-      _reservesCount,
       _addressesProvider.getPriceOracle()
     );
 
@@ -162,7 +161,7 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
 
       if (vars.liquidatorPreviousDepositTokenBalance == 0) {
         DataTypes.UserConfigurationMap storage liquidatorConfig = _usersConfig[msg.sender];
-        liquidatorConfig.setUsingAsCollateral(collateralReserve.id, true);
+        liquidatorConfig.setUsingAsCollateral(collateralReserve.id);
         emit ReserveUsedAsCollateralEnabled(collateralAsset, msg.sender);
       }
     } else {
@@ -181,7 +180,7 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     // If the collateral being liquidated is equal to the user balance,
     // we set the currency as not being used as collateral anymore
     if (vars.maxCollateralToLiquidate == vars.userCollateralBalance) {
-      userConfig.setUsingAsCollateral(collateralReserve.id, false);
+      userConfig.unsetUsingAsCollateral(collateralReserve.id);
       emit ReserveUsedAsCollateralDisabled(collateralAsset, user);
     }
 
@@ -522,7 +521,6 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
       _reserves,
       userConfig,
       _reservesList,
-      _reservesCount,
       v.oracle
     );
 
@@ -550,7 +548,7 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     }
 
     if (isFirstBorrowing) {
-      userConfig.setBorrowing(reserve.id, true);
+      userConfig.setBorrowing(reserve.id);
     }
 
     reserve.updateInterestRates(vars.asset, vars.depositToken, 0, vars.releaseUnderlying ? vars.amount : 0);
@@ -581,7 +579,9 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     if (_reserves[asset].strategy != address(0)) {
       require(isExternal == _reserves[asset].configuration.isExternalStrategy());
     } else {
-      _reserves[asset].configuration.setExternalStrategy(isExternal);
+      DataTypes.ReserveConfigurationMap memory cfg = _reserves[asset].configuration;
+      cfg.setExternalStrategy(isExternal);
+      _reserves[asset].configuration = cfg;
     }
     _reserves[asset].strategy = strategy;
   }
@@ -625,12 +625,12 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     }
   }
 
-  function setDisabledFeatures(uint16 disabledFeatures) external onlyConfiguratorOrAdmin {
+  function setDisabledFeatures(uint16 disabledFeatures) external override onlyConfiguratorOrAdmin {
     _disabledFeatures = disabledFeatures;
     emit DisabledFeaturesUpdated(disabledFeatures);
   }
 
-  function getDisabledFeatures() external view returns (uint16 disabledFeatures) {
+  function getDisabledFeatures() external view override returns (uint16 disabledFeatures) {
     return _disabledFeatures;
   }
 

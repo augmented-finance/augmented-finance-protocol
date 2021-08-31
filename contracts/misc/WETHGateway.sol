@@ -6,7 +6,7 @@ import '../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import './interfaces/IWETH.sol';
 import './interfaces/IWETHGateway.sol';
-import '../interfaces/ISweeper.sol';
+import '../tools/SweepBase.sol';
 import '../interfaces/ILendingPool.sol';
 import '../interfaces/IDepositToken.sol';
 import '../protocol/libraries/configuration/ReserveConfiguration.sol';
@@ -16,7 +16,7 @@ import '../protocol/libraries/types/DataTypes.sol';
 import '../access/MarketAccessBitmask.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 
-contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
+contract WETHGateway is IWETHGateway, SweepBase, MarketAccessBitmask {
   using SafeERC20 for IERC20;
 
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -128,35 +128,14 @@ contract WETHGateway is IWETHGateway, ISweeper, MarketAccessBitmask {
     Address.sendValue(payable(msg.sender), amount);
   }
 
-  /**
-   * @dev transfer ERC20 from the utility contract, for ERC20 recovery in case of stuck tokens due
-   * direct transfers to the contract address.
-   * @param token token to transfer
-   * @param to recipient of the transfer
-   * @param amount amount to send
-   */
-  function sweepToken(
-    address token,
-    address to,
-    uint256 amount
-  ) external override onlySweepAdmin {
-    IERC20(token).safeTransfer(to, amount);
-  }
-
-  /**
-   * @dev transfer native Ether from the utility contract, for native Ether recovery in case of stuck Ether
-   * due selfdestructs or transfer ether to pre-computated contract address before deployment.
-   * @param to recipient of the transfer
-   * @param amount amount to send
-   */
-  function sweepEth(address to, uint256 amount) external override onlySweepAdmin {
-    Address.sendValue(payable(to), amount);
+  function _onlySweepAdmin() internal view override(MarketAccessBitmask, SweepBase) {
+    MarketAccessBitmask._onlySweepAdmin();
   }
 
   /**
    * @dev Get WETH address used by WETHGateway
    */
-  function getWETHAddress() external view returns (address) {
+  function getWETHAddress() external view override returns (address) {
     return address(WETH);
   }
 

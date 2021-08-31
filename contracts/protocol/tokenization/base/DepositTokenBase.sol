@@ -2,18 +2,18 @@
 pragma solidity ^0.8.4;
 
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import '../../../dependencies/openzeppelin/contracts/ERC20Events.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../interfaces/IDepositToken.sol';
 import '../../../tools/Errors.sol';
 import '../../../tools/math/WadRayMath.sol';
+import '../../../tools/tokens/ERC20Events.sol';
 import '../../../access/AccessFlags.sol';
-import '../../../misc/PermitForERC20.sol';
+import '../../../tools/tokens/ERC20PermitBase.sol';
 import './PoolTokenBase.sol';
 
 /// @dev Implementation of the interest bearing token for the Augmented Finance protocol
-abstract contract DepositTokenBase is PoolTokenBase('', '', 0), PermitForERC20, ERC20Events, IDepositToken {
+abstract contract DepositTokenBase is PoolTokenBase('', '', 0), ERC20PermitBase, ERC20Events, IDepositToken {
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 

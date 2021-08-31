@@ -37,11 +37,10 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
   describe('UniswapLiquiditySwapAdapter', () => {
     describe('constructor', () => {
       it('should deploy with correct parameters', async () => {
-        const { addressesProvider, weth } = testEnv;
+        const { addressesProvider } = testEnv;
         await deployUniswapLiquiditySwapAdapter([
           addressesProvider.address,
-          mockUniswapRouter.address,
-          weth.address,
+          mockUniswapRouter.address
         ]);
       });
 
@@ -50,8 +49,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         expect(
           deployUniswapLiquiditySwapAdapter([
             mockUniswapRouter.address,
-            mockUniswapRouter.address,
-            weth.address,
+            mockUniswapRouter.address
           ])
         ).to.be.reverted;
       });

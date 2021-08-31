@@ -10,10 +10,6 @@ interface IManagedRewardPool is IEmergencyAccess {
 
   function getBaselinePercentage() external view returns (bool, uint16);
 
-  function disableBaseline() external;
-
-  function disableRewardPool() external;
-
   function getRate() external view returns (uint256);
 
   function getPoolName() external view returns (string memory);

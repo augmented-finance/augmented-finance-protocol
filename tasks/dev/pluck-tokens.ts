@@ -67,7 +67,18 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
       const token = await getIErc20Detailed(tokenAddress);
       const decimals = await token.decimals();
 
+      let factor: BigNumber;
+      let divisor: number;
+      if (decimals > 3) {
+        divisor = 10 ** 3;
+        factor = BigNumber.from(10).pow(decimals - 3);
+      } else {
+        divisor = 10 ** decimals;
+        factor = BigNumber.from(1);
+      }
+
       const balance = await token.balanceOf(tokenHolder);
+      console.log(`\t${tokenName} balance: ${balance.div(factor).toNumber() / divisor} of ${tokenHolder}`);
 
       const donation = balance.mul(mustDeposit ? 0 : donatePct).div(100);
       if (donation.gt(0)) {
@@ -87,30 +98,19 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
           const tx = await mustWaitTx(
             lendingPool.connect(deployer).deposit(token.address, deposit, deployer.address, 0)
           );
-          console.log('\t\tDeposit gas: ', tx.gasUsed.toNumber());
+          console.log(`\t\tDeposit ${tokenName} gas: ${tx.gasUsed.toNumber()}`);
           hasDeposits = true;
         }
       }
 
-      let factor: BigNumber;
-      let divisor: number;
-      if (decimals > 3) {
-        divisor = 10 ** 3;
-        factor = BigNumber.from(10).pow(decimals - 3);
-      } else {
-        divisor = 10 ** decimals;
-        factor = BigNumber.from(1);
-      }
-
-      BigNumber.from(10).pow(decimals - 3);
       if (donation.gt(0)) {
-        console.log(`\t${tokenName}: ${donation.div(factor).toNumber() / divisor} plucked from ${tokenHolder}`);
+        console.log(`\t${tokenName}: ${donation.div(factor).toNumber() / divisor} plucked`);
       }
       if (deposit.gt(0)) {
         console.log(
           `\t${tokenName}: ${deposit.div(factor).toNumber() / divisor} plucked & ${
             canDepositToken ? 'deposited' : 'skipped deposit'
-          } from ${tokenHolder}`
+          }`
         );
       }
     }

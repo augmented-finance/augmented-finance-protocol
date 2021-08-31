@@ -12,7 +12,6 @@ interface ILendingPoolConfigurator {
     bool externalStrategy;
     address strategy;
     address underlyingAsset;
-    string underlyingAssetName;
     string depositTokenName;
     string depositTokenSymbol;
     string variableDebtTokenName;
@@ -45,7 +44,8 @@ interface ILendingPoolConfigurator {
     address indexed depositToken,
     address stableDebtToken,
     address variableDebtToken,
-    address strategy
+    address strategy,
+    bool externalStrategy
   );
 
   event BorrowingEnabledOnReserve(address indexed asset, bool stableRateEnabled);
@@ -75,4 +75,6 @@ interface ILendingPoolConfigurator {
   event StableDebtTokenUpgraded(address indexed asset, address indexed proxy, address indexed implementation);
 
   event VariableDebtTokenUpgraded(address indexed asset, address indexed proxy, address indexed implementation);
+
+  function getFlashloanAdapters(string[] calldata names) external view returns (address[] memory adapters);
 }

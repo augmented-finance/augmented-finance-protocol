@@ -2,17 +2,12 @@
 pragma solidity ^0.8.4;
 
 import './BaseUniswapAdapter.sol';
-import '../interfaces/IFlashLoanAddressProvider.sol';
-import '../interfaces/IUniswapV2Router02.sol';
-import '../dependencies/openzeppelin/contracts/IERC20.sol';
-import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import '../dependencies/openzeppelin/contracts/SafeMath.sol';
+import '../../interfaces/IFlashLoanAddressProvider.sol';
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 
-/**
- * @title UniswapLiquiditySwapAdapter
- * @notice Uniswap V2 Adapter to swap liquidity.
- * @author Aave
- **/
+/// @notice Swaps liquidity via Uniswap V2
 contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
@@ -33,11 +28,9 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     bool[] useEthPath;
   }
 
-  constructor(
-    IFlashLoanAddressProvider addressesProvider,
-    IUniswapV2Router02 uniswapRouter,
-    address wethAddress
-  ) BaseUniswapAdapter(addressesProvider, uniswapRouter, wethAddress) {}
+  constructor(IFlashLoanAddressProvider addressesProvider, IUniswapV2Router02ForAdapter uniswapRouter)
+    BaseUniswapAdapter(addressesProvider, uniswapRouter)
+  {}
 
   /**
    * @dev Swaps the received reserve amount from the flash loan into the asset specified in the params.
@@ -269,11 +262,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
       bytes32[] memory r,
       bytes32[] memory s,
       bool[] memory useEthPath
-    ) =
-      abi.decode(
-        params,
-        (address[], uint256[], bool[], uint256[], uint256[], uint8[], bytes32[], bytes32[], bool[])
-      );
+    ) = abi.decode(params, (address[], uint256[], bool[], uint256[], uint256[], uint8[], bytes32[], bytes32[], bool[]));
 
     return
       SwapParams(

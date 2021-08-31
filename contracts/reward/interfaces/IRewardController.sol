@@ -3,7 +3,11 @@ pragma solidity ^0.8.4;
 
 import '../../access/interfaces/IMarketAccessController.sol';
 
-enum AllocationMode {Push, SetPull, UnsetPull}
+enum AllocationMode {
+  Push,
+  SetPull,
+  UnsetPull
+}
 
 interface IRewardController {
   function allocatedByPool(
@@ -16,8 +20,6 @@ interface IRewardController {
   function isRateAdmin(address) external view returns (bool);
 
   function isConfigAdmin(address) external view returns (bool);
-
-  function isEmergencyAdmin(address) external view returns (bool);
 
   function getAccessController() external view returns (IMarketAccessController);
 }

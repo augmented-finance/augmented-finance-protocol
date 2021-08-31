@@ -158,9 +158,7 @@ library ReserveLogic {
     uint256 totalLiquidity,
     uint256 amount
   ) internal {
-    uint256 amountToLiquidityRatio = amount.wadToRay().rayDiv(totalLiquidity.wadToRay());
-
-    uint256 result = amountToLiquidityRatio + WadRayMath.RAY;
+    uint256 result = WadRayMath.RAY + amount.wadToRay().wadDiv(totalLiquidity);
 
     result = result.rayMul(reserve.liquidityIndex);
     require(result <= type(uint128).max, Errors.RL_LIQUIDITY_INDEX_OVERFLOW);
@@ -180,7 +178,11 @@ library ReserveLogic {
     reserve.stableDebtTokenAddress = data.stableDebtAddress;
     reserve.variableDebtTokenAddress = data.variableDebtAddress;
     reserve.strategy = data.strategy;
-    reserve.configuration.setExternalStrategy(data.externalStrategy);
+    {
+      DataTypes.ReserveConfigurationMap memory cfg = reserve.configuration;
+      cfg.setExternalStrategy(data.externalStrategy);
+      reserve.configuration = cfg;
+    }
   }
 
   struct UpdateInterestRatesLocalVars {

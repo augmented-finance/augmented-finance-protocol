@@ -7,21 +7,13 @@ import {
   hasMarketAddressController,
   hasPreDeployedAddressController,
 } from './contracts-getters';
-import {
-  falsyOrZeroAddress,
-  addNamedToJsonDb,
-  sleep,
-  waitForTx,
-  addProxyToJsonDb,
-} from './misc-utils';
+import { falsyOrZeroAddress, addNamedToJsonDb, sleep, waitForTx, addProxyToJsonDb } from './misc-utils';
 import { eContractid, tEthereumAddress } from './types';
 
-export const getDeployAccessController = async (): Promise<
-  [boolean, boolean, MarketAccessController]
-> => {
-  if (await hasPreDeployedAddressController()) {
+export const getDeployAccessController = async (): Promise<[boolean, boolean, MarketAccessController]> => {
+  if (hasPreDeployedAddressController()) {
     const ac = await getPreDeployedAddressController();
-    if (await hasMarketAddressController()) {
+    if (hasMarketAddressController()) {
       return [true, true, ac];
     }
     // TODO continuation for pre-deployed
@@ -36,7 +28,7 @@ export const setPreDeployAccessController = async (
   if (!falsyOrZeroAddress(existingProvider)) {
     addNamedToJsonDb(eContractid.PreDeployedMarketAccessController, existingProvider!);
     return [false, await getMarketAddressController(existingProvider)];
-  } else if (await hasMarketAddressController()) {
+  } else if (hasMarketAddressController()) {
     const ac = await getMarketAddressController();
     addNamedToJsonDb(eContractid.PreDeployedMarketAccessController, ac.address);
     return [true, ac];
@@ -47,16 +39,12 @@ export const setPreDeployAccessController = async (
 
 const initEncoder = new ethers.utils.Interface(['function initialize(address)']);
 
-export const setAndGetAddressAsProxy = async (
-  ac: AccessController,
-  id: AccessFlags,
-  addr: tEthereumAddress
-) => {
+export const setAndGetAddressAsProxy = async (ac: AccessController, id: AccessFlags, addr: tEthereumAddress) => {
   waitForTx(await ac.setAddressAsProxy(id, addr, { gasLimit: 2000000 }));
   const proxyAddr = await waitForAddress(ac, id);
 
   const data = initEncoder.encodeFunctionData('initialize', [ac.address]);
-  await addProxyToJsonDb(AccessFlags[id], proxyAddr, addr, [ac.address, addr, data]);
+  await addProxyToJsonDb(AccessFlags[id], proxyAddr, addr, 'core', [ac.address, addr, data]);
   return proxyAddr;
 };
 
@@ -68,7 +56,7 @@ export const setAndGetAddressAsProxyWithInit = async (
 ) => {
   waitForTx(await ac.setAddressAsProxyWithInit(id, addr, data, { gasLimit: 2000000 }));
   const proxyAddr = await waitForAddress(ac, id);
-  await addProxyToJsonDb(AccessFlags[id], proxyAddr, addr, [ac.address, addr, data]);
+  await addProxyToJsonDb(AccessFlags[id], proxyAddr, addr, 'core', [ac.address, addr, data]);
   return proxyAddr;
 };
 

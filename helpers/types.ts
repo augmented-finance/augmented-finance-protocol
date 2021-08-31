@@ -241,7 +241,23 @@ export interface iAssetBase<T> {
   LINK: T;
 
   ADAI: T;
+  CDAI: T;
+  CETH: T;
 }
+
+const tokenSymbols: iAssetBase<string> = {
+  WETH: '',
+  DAI: '',
+  USDC: '',
+  USDT: '',
+  WBTC: '',
+  USD: '',
+  AAVE: '',
+  LINK: '',
+  ADAI: '',
+  CDAI: '',
+  CETH: '',
+};
 
 type testAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC' | 'AAVE' | 'LINK';
 type testOnlyAssets = 'AAVE' | 'LINK';
@@ -266,18 +282,6 @@ export type iAugmentedPoolAssetsOpt<T> = OmitOpt<iAssetsWithoutUSD<T>, testOnlyA
 type iMultiPoolsAssets<T> = iAssetsWithoutUSD<T> | iAugmentedPoolAssets<T> | iTestPoolAssets<T>;
 
 export type iAssetAggregatorBase<T> = iAssetBase<T>;
-
-const tokenSymbols: iAssetBase<string> = {
-  WETH: '',
-  DAI: '',
-  USDC: '',
-  USDT: '',
-  WBTC: '',
-  USD: '',
-  AAVE: '',
-  LINK: '',
-  ADAI: '',
-};
 
 export const DefaultTokenSymbols: string[] = Object.keys(tokenSymbols);
 
@@ -363,15 +367,19 @@ export interface ICommonConfiguration {
 
   OracleRouter: iParamsPerNetwork<tEthereumAddress>;
   FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
-
   ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
+
   LendingRateOracleRates: iAssetsWithoutUSDOpt<IMarketRates>;
 
   PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
   EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
 
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
-  //  ReservesConfig: iMultiPoolsAssets<IReserveParams>;
+  ReserveAssetsOpt: iParamsPerNetwork<boolean>;
+  LendingDisableFeatures: iParamsPerNetwork<LPFeature[]>;
+
+  Dependencies: iParamsPerNetwork<IDependencies>;
+
   ReservesConfig: {
     [key: string]: IReserveParams;
   };
@@ -381,6 +389,8 @@ export interface ICommonConfiguration {
   RewardParams: IRewardParams;
 
   ForkTest: IForkTest;
+
+  AGF: IAgfParams;
 }
 
 export interface ITestConfiguration extends ICommonConfiguration {
@@ -428,6 +438,7 @@ export interface ITokenNames {
 }
 
 export interface IRewardParams {
+  Autolock: 'disable' | 'stop' | number;
   InitialRateWad: number;
   TokenPools: iAugmentedPoolAssetsOpt<ITokenRewardPoolParams>;
   TeamPool: ITeamPool;
@@ -453,6 +464,7 @@ export interface IBurnersPool {
   TotalWad: number;
   BoostFactor: number;
   MeltDownAt: Date;
+  Providers: tEthereumAddress[];
 }
 
 export interface ITokenRewardPoolParams {
@@ -480,4 +492,21 @@ export interface IForkTest {
 
 export interface IPrices {
   [token: string]: number;
+}
+
+export enum LPFeature {
+  LIQUIDATION = 1 << 0,
+  FLASHLOAN = 1 << 1,
+  FLASHLOAN_DEPOSIT = 1 << 2,
+  FLASHLOAN_WITHDRAW = 1 << 3,
+  FLASHLOAN_BORROW = 1 << 4,
+  FLASHLOAN_REPAY = 1 << 5,
+}
+
+export interface IAgfParams {
+  DefaultPriceEth?: number;
+}
+
+export interface IDependencies {
+  UniswapV2Router?: tEthereumAddress;
 }

@@ -8,6 +8,8 @@ import {
   rateStrategyVolatileOne,
   rateStrategyVolatileTwo,
   externalReserveAAVE,
+  externalReserveCOMP,
+  externalReserveCETH,
 } from './rateStrategies';
 
 export const strategyDAI: IReserveParams = {
@@ -110,4 +112,5 @@ const externalAsset = (template: IReserveParams, strategy: IInterestRateStrategy
 }
 
 export const strategyADAI = externalAsset(strategyDAI, externalReserveAAVE, 2000);
-
+export const strategyCDAI = externalAsset(strategyDAI, externalReserveCOMP, 2000);
+export const strategyCETH = externalAsset(strategyWETH, externalReserveCETH, 2000);

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-abstract contract PermitForERC20 {
+import './IERC20WithPermit.sol';
+
+abstract contract ERC20PermitBase is IERC20WithPermit {
   // solhint-disable-next-line var-name-mixedcase
   bytes32 public DOMAIN_SEPARATOR;
   bytes public constant EIP712_REVISION = bytes('1');
@@ -54,7 +56,7 @@ abstract contract PermitForERC20 {
     uint8 v,
     bytes32 r,
     bytes32 s
-  ) external {
+  ) external override {
     require(owner != address(0), 'INVALID_OWNER');
     require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
     uint256 currentValidNonce = _nonces[owner];

@@ -16,12 +16,13 @@ task('full:initialize-lending-pool', 'Initializes lending pool and configures re
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const { Names, ReserveAssets, ReservesConfig } = poolConfig as ICommonConfiguration;
+    const { Names, ReserveAssets, ReserveAssetsOpt, ReservesConfig } = poolConfig as ICommonConfiguration;
 
-    const reserveAssets = await getParamPerNetwork(ReserveAssets, network);
+    const reserveAssets = getParamPerNetwork(ReserveAssets, network);
     if (!reserveAssets) {
       throw 'Reserve assets are undefined. Check configuration.';
     }
+    const reserveAssetsOpt = getParamPerNetwork(ReserveAssetsOpt, network);
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
@@ -43,6 +44,7 @@ task('full:initialize-lending-pool', 'Initializes lending pool and configures re
     await initReservesByHelper(
       addressProvider,
       ReservesConfig,
+      reserveAssetsOpt,
       reserveAssets,
       Names,
       // existing reserves will be skipped for existing installations

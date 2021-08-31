@@ -17,7 +17,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     uint256 rewardLimit,
     uint32 meltDownAt,
     string memory rewardPoolName
-  ) BasePermitRewardPool(controller, 0, NO_BASELINE, rewardPoolName) {
+  ) ControlledRewardPool(controller, 0, NO_BASELINE) BasePermitRewardPool(rewardPoolName) {
     _rewardLimit = rewardLimit;
     internalSetMeltDownAt(meltDownAt);
   }
@@ -106,7 +106,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     _rewardLimit = SafeMath.sub(_rewardLimit, value, Errors.VL_INSUFFICIENT_REWARD_AVAILABLE);
   }
 
-  function internalSetBaselinePercentage(uint16) internal pure override {
+  function _setBaselinePercentage(uint16) internal pure override {
     revert('UNSUPPORTED');
   }
 

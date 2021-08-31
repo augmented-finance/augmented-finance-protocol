@@ -33,8 +33,7 @@ export const timeLatest = async () => {
   return new BigNumber(block.timestamp);
 };
 
-export const advanceBlock = async (timestamp: number) =>
-  await (<any>DRE).ethers.provider.send('evm_mine', [timestamp]);
+export const advanceBlock = async (timestamp: number) => await (<any>DRE).ethers.provider.send('evm_mine', [timestamp]);
 
 export const increaseTime = async (secondsToIncrease: number) => {
   const ethers = (<any>DRE).ethers;
@@ -92,9 +91,7 @@ export const filterMapBy = (raw: { [key: string]: any }, fn: (key: string) => bo
 export const chunk = <T>(arr: Array<T>, chunkSize: number): Array<Array<T>> => {
   return arr.reduce(
     (prevVal: any, currVal: any, currIndx: number, array: Array<T>) =>
-      !(currIndx % chunkSize)
-        ? prevVal.concat([array.slice(currIndx, currIndx + chunkSize)])
-        : prevVal,
+      !(currIndx % chunkSize) ? prevVal.concat([array.slice(currIndx, currIndx + chunkSize)]) : prevVal,
     []
   );
 };
@@ -137,6 +134,7 @@ export interface DbInstanceEntry {
   verify?: {
     args?: string;
     impl?: string;
+    subType?: string;
   };
 }
 
@@ -195,6 +193,7 @@ export const addProxyToJsonDb = async (
   id: string,
   proxyAddress: string,
   implAddress: string,
+  subType: string,
   verifyArgs?: any[]
 ) => {
   const currentNetwork = DRE.network.name;
@@ -204,6 +203,7 @@ export const addProxyToJsonDb = async (
     id: id,
     verify: {
       impl: implAddress,
+      subType: subType,
     },
   };
 
@@ -245,6 +245,18 @@ export const addNamedToJsonDb = async (contractId: string, contractAddress: stri
     .write();
 };
 
+export const setVerifiedToJsonDb = async (address: string, verified: boolean) => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+  await db.set(`${currentNetwork}.verified.${address}`, verified).write();
+};
+
+export const getVerifiedFromJsonDb = async (address: string) => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+  return (await db.get(`${currentNetwork}.verified.${address}`).value()) as boolean;
+};
+
 export const getInstancesFromJsonDb = () =>
   Object.entries<DbInstanceEntry>(getDb().get(`${DRE.network.name}.instance`).value() || []);
 
@@ -256,18 +268,15 @@ export const getNamedFromJsonDb = () =>
 
 export const getFromJsonDb = (id: string) => getDb().get(`${DRE.network.name}.named.${id}`).value();
 
-export const getFromJsonDbByAddr = (id: string) =>
-  getDb().get(`${DRE.network.name}.instance.${id}`).value();
+export const getFromJsonDbByAddr = (id: string) => getDb().get(`${DRE.network.name}.instance.${id}`).value();
 
-export const hasInJsonDb = async (id: string) => !falsyOrZeroAddress(getFromJsonDb(id)?.address);
+export const hasInJsonDb = (id: string) => !falsyOrZeroAddress(getFromJsonDb(id)?.address);
 
 export const getInstanceCountFromJsonDb = () => {
   return getInstancesFromJsonDb().length;
 };
 
-export const printContracts = (
-  deployer: string
-): [Map<string, tEthereumAddress>, number, number] => {
+export const printContracts = (deployer: string): [Map<string, tEthereumAddress>, number, number] => {
   const currentNetwork = DRE.network.name;
   const db = getDb();
 

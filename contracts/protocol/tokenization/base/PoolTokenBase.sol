@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import '../../../tools/Errors.sol';
-import '../../../dependencies/openzeppelin/contracts/IERC20Details.sol';
+import '../../../tools/tokens/IERC20Details.sol';
 import '../../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import '../../../interfaces/IPoolToken.sol';
@@ -58,7 +58,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
   }
 
   function _onlyLendingPool() private view {
-    require(msg.sender == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
+    require(msg.sender == address(_pool), Errors.CALLER_NOT_LENDING_POOL);
   }
 
   modifier onlyLendingPool() {
@@ -99,7 +99,7 @@ abstract contract PoolTokenBase is IERC20, IInitializablePoolToken, IPoolToken, 
       _pool.getAccessController(),
       msg.sender,
       AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR,
-      Errors.CT_CALLER_MUST_BE_REWARD_ADMIN
+      Errors.CALLER_NOT_REWARD_CONFIG_ADMIN
     );
   }
 

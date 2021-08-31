@@ -15,6 +15,7 @@ import {
   ITokenRewardPoolParams,
   IRewardPoolParams,
   IRewardParams,
+  eContractid,
 } from '../../helpers/types';
 import {
   getLendingPoolProxy,
@@ -23,8 +24,10 @@ import {
   getRewardBooster,
   getIManagedRewardPool,
   getIRewardedToken,
+  getIInitializableRewardPool,
 } from '../../helpers/contracts-getters';
 import {
+  addProxyToJsonDb,
   chunk,
   falsyOrZeroAddress,
   getFirstSigner,
@@ -33,13 +36,10 @@ import {
 } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumber } from 'ethers';
-import { oneWad } from '../../helpers/constants';
+import { oneWad, ZERO_ADDRESS } from '../../helpers/constants';
 import { transpose } from 'underscore';
-import {
-  getDeployAccessController,
-  setAndGetAddressAsProxyWithInit,
-} from '../../helpers/deploy-helpers';
-import { MarketAccessController, RewardConfigurator } from '../../types';
+import { getDeployAccessController, setAndGetAddressAsProxyWithInit } from '../../helpers/deploy-helpers';
+import { MarketAccessController, RewardBooster, RewardConfigurator } from '../../types';
 
 interface poolInitParams {
   provider: tEthereumAddress;
@@ -69,65 +69,120 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
 
     await waitTx(
       addressProvider.grantRoles(
-        (await getFirstSigner()).address,
+        (
+          await getFirstSigner()
+        ).address,
         AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_RATE_ADMIN
       )
     );
 
-    const poolImpl = await deployTokenWeightedRewardPoolImpl(verify, continuation);
     const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
+    const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
+
+    //    const prefixes: string[] = ;
+    const knownReserves: {
+      baseSymbol: string;
+      tokens: tEthereumAddress[];
+      shares: (IRewardPoolParams | undefined)[];
+    }[] = [];
+
+    for (const [sym, opt] of Object.entries(rewardParams.TokenPools)) {
+      if (opt == undefined) {
+        continue;
+      }
+      const tp: ITokenRewardPoolParams = opt;
+
+      const asset = reserveAssets[sym];
+      if (falsyOrZeroAddress(asset)) {
+        console.log('Reward asset (underlying) is missing:', sym);
+        continue;
+      }
+
+      const rd = await lendingPool.getReserveData(asset);
+      if (falsyOrZeroAddress(rd.depositTokenAddress)) {
+        console.log('Reserve is missing for asset (underlying):', sym);
+        continue;
+      }
+
+      const info = {
+        baseSymbol: sym,
+        tokens: [rd.depositTokenAddress, rd.variableDebtTokenAddress, rd.stableDebtTokenAddress],
+        shares: [tp.Share.deposit, tp.Share.vDebt, tp.Share.sDebt],
+      };
+      if (tp.Share.stake != undefined) {
+        info.tokens.push(await stakeConfigurator.stakeTokenOf(rd.depositTokenAddress));
+        info.shares.push(tp.Share.stake);
+      }
+      knownReserves.push(info);
+    }
+
+    let prepParams: poolInitParams[] = [];
+    let prepNames: string[] = [];
+    let prepProviders: tEthereumAddress[] = [];
+
+    {
+      const subTypePrefixes: string[] = [
+        Names.DepositSymbolPrefix,
+        Names.VariableDebtSymbolPrefix,
+        Names.StableDebtSymbolPrefix,
+        Names.StakeSymbolPrefix,
+      ];
+
+      // Put the most frequently used token types at the beginning
+      for (let subType of [0, 1, 3, 2]) {
+        // Deposit, Variable, Stake, Stable
+        for (const knownReserve of knownReserves) {
+          const token = knownReserve.tokens[subType];
+          const share = knownReserve.shares[subType];
+          if (share == undefined || falsyOrZeroAddress(token)) {
+            continue;
+          }
+          const tokenSymbol = subTypePrefixes[subType] + Names.SymbolPrefix + knownReserve.baseSymbol;
+          prepNames.push(tokenSymbol);
+          prepProviders.push(token);
+          prepParams.push({
+            provider: token,
+            baselinePercentage: BigNumber.from(share.BasePoints),
+            poolName: tokenSymbol,
+            initialRate: BigNumber.from(0),
+            boostFactor: BigNumber.from(share!.BoostFactor),
+            impl: '',
+          });
+        }
+      }
+    }
+
+    const rewardController = await getRewardBooster(await addressProvider.getAddress(AccessFlags.REWARD_CONTROLLER));
+    const configurator = await getRewardConfiguratorProxy(
+      await addressProvider.getAddress(AccessFlags.REWARD_CONFIGURATOR)
+    );
+
+    const { pools, controllers, baselinePcts } = await configurator.getRewardedTokenParams(prepProviders);
 
     let initParams: poolInitParams[] = [];
     let initNames: string[] = [];
 
-    const buildPool = async (
-      share: IRewardPoolParams,
-      provider: tEthereumAddress,
-      impl: tEthereumAddress,
-      name: string,
-      poolName: string
-    ) => {
-      initParams.push({
-        provider: provider,
-        baselinePercentage: BigNumber.from(share.BasePoints),
-        poolName: poolName,
-        initialRate: BigNumber.from(0),
-        boostFactor: BigNumber.from(share!.BoostFactor),
-        impl: impl,
-      });
-      initNames.push(name);
-    };
+    let poolImplAddr: tEthereumAddress = ZERO_ADDRESS;
 
-    let symbol: string;
-
-    const buildToken = async (
-      share: IRewardPoolParams | undefined,
-      token: tEthereumAddress,
-      prefix: string
-    ) => {
-      if (share == undefined || falsyOrZeroAddress(token)) {
-        return;
-      }
-      const tokenSymbol = prefix + Names.SymbolPrefix + symbol;
-      if (!freshStart || continuation) {
-        const rewardedToken = await getIRewardedToken(token);
-        const ctl = await rewardedToken.getIncentivesController();
-        if (!falsyOrZeroAddress(ctl)) {
-          console.log('Token has a reward pool already:', tokenSymbol, ctl);
-          return;
+    for (let i = 0; i < prepParams.length; i++) {
+      let poolParams = prepParams[i];
+      if (falsyOrZeroAddress(pools[i])) {
+        // a separate pool should be created and connected
+        if (falsyOrZeroAddress(poolImplAddr)) {
+          const poolImpl = await deployTokenWeightedRewardPoolImpl(verify, continuation);
+          poolImplAddr = poolImpl.address;
         }
+        poolParams.impl = poolImplAddr;
+      } else if (falsyOrZeroAddress(controllers[i])) {
+        // a self-pool should be initialized, but not created
+        poolParams.impl = ZERO_ADDRESS;
+      } else {
+        console.log('Token has an active reward pool already:', prepNames[i], pools[i]);
+        continue;
       }
-      buildPool(share!, token, poolImpl.address, tokenSymbol, '');
-    };
-
-    const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
-
-    const rewardController = await getRewardBooster(
-      await addressProvider.getAddress(AccessFlags.REWARD_CONTROLLER)
-    );
-    const configurator = await getRewardConfiguratorProxy(
-      await addressProvider.getAddress(AccessFlags.REWARD_CONFIGURATOR)
-    );
+      initParams.push(poolParams);
+      initNames.push(prepNames[i]);
+    }
 
     let totalShare = 0;
     let newPoolsOffset = 0;
@@ -153,38 +208,6 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       verify
     );
     totalShare += extraShare;
-
-    for (const [sym, opt] of Object.entries(rewardParams.TokenPools)) {
-      if (opt == undefined) {
-        continue;
-      }
-      const tp: ITokenRewardPoolParams = opt;
-      symbol = sym;
-
-      const asset = reserveAssets[symbol];
-      if (falsyOrZeroAddress(asset)) {
-        console.log('Reward asset (underlying) is missing:', symbol);
-        continue;
-      }
-
-      const rd = await lendingPool.getReserveData(asset);
-      if (falsyOrZeroAddress(rd.depositTokenAddress)) {
-        console.log('Reserve is missing for asset (underlying):', symbol);
-        continue;
-      }
-
-      await buildToken(tp.Share.deposit, rd.depositTokenAddress, Names.DepositSymbolPrefix);
-      await buildToken(tp.Share.vDebt, rd.variableDebtTokenAddress, Names.VariableDebtSymbolPrefix);
-      await buildToken(tp.Share.sDebt, rd.stableDebtTokenAddress, Names.StableDebtSymbolPrefix);
-
-      if (tp.Share.stake != undefined) {
-        await buildToken(
-          tp.Share.stake,
-          await stakeConfigurator.stakeTokenOf(rd.depositTokenAddress),
-          Names.StakeSymbolPrefix
-        );
-      }
-    }
 
     for (const params of initParams) {
       totalShare += params.baselinePercentage.toNumber();
@@ -215,37 +238,75 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       console.log('    * gasUsed', tx3.gasUsed.toString());
     }
 
+    const activePools = await configurator.list();
+
+    if (verify) {
+      console.log('Collecting verification data for reward pools');
+      for (let i = 0; i < initParams.length; i++) {
+        const params = initParams[i];
+        if (falsyOrZeroAddress(params.impl)) {
+          continue;
+        }
+        const proxyAddr = activePools[activePools.length - (initParams.length - i)]; // new pools are at the end of all pools
+        const implAddr = params.impl;
+        console.log('\t', params.poolName, proxyAddr, implAddr);
+
+        const v = await getIInitializableRewardPool(proxyAddr);
+        const data = v.interface.encodeFunctionData('initializeRewardPool', [
+          {
+            controller: configurator.address,
+            poolName: params.poolName,
+            baselinePercentage: params.baselinePercentage,
+          },
+        ]);
+        await addProxyToJsonDb('REWARD_POOL_' + params.poolName, proxyAddr, implAddr, 'rewardPool', [
+          configurator.address,
+          implAddr,
+          data,
+        ]);
+      }
+    }
+
     newNames.push(...extraNames);
     newNames.push(...initNames);
 
-    const initialRate = BigNumber.from(oneWad.multipliedBy(rewardParams.InitialRateWad).toFixed());
-    await mustWaitTx(rewardController.updateBaseline(initialRate));
-
-    console.log(`Reward pools initialized with total rate: ${rewardParams.InitialRateWad} wad/s`);
-    const activePools = await configurator.list();
-
-    if (newNames.length + newPoolsOffset != activePools.length) {
-      console.log(
-        `Different number of reward pools. Expected ${newNames.length} + ${newPoolsOffset}, actual ${activePools.length}`
-      );
-      console.log('Actual reward pools: ', activePools);
-    } else {
-      let totalRate = BigNumber.from(0);
-
-      console.log(`Rates of ${newNames.length} reward pools configured:`);
-      let index = 0;
-      for (const poolAddr of activePools.slice(newPoolsOffset)) {
-        const pool = await getIManagedRewardPool(poolAddr);
-        const poolRate = await pool.getRate();
-
-        totalRate = totalRate.add(poolRate);
-        console.log(`\t${newNames[index]}:\t${poolRate.div(1e9).toNumber() / 1e9} wad/s`);
-        index++;
-      }
-      console.log(`Assigned reward rate: ${totalRate.div(1e9).toNumber() / 1e9} wad/s`);
-      console.log(`Initial reward rate:  ${initialRate.div(1e9).toNumber() / 1e9} wad/s`);
-    }
+    await updateRates(rewardController, activePools, rewardParams.InitialRateWad, newNames, newPoolsOffset);
   });
+
+const updateRates = async (
+  rewardController: RewardBooster,
+  activePools: string[],
+  initialRateWad: number,
+  newNames: string[],
+  newPoolsOffset: number
+) => {
+  const initialRate = BigNumber.from(oneWad.multipliedBy(initialRateWad).toFixed(0));
+  await mustWaitTx(rewardController.updateBaseline(initialRate));
+
+  console.log(`Reward pools initialized with total rate: ${initialRateWad} wad/s`);
+
+  if (newNames.length + newPoolsOffset != activePools.length) {
+    console.log(
+      `Different number of reward pools. Expected ${newNames.length} + ${newPoolsOffset}, actual ${activePools.length}`
+    );
+    console.log('Actual reward pools: ', activePools);
+  } else {
+    let totalRate = BigNumber.from(0);
+
+    console.log(`Rates of ${newNames.length} reward pools configured:`);
+    let index = 0;
+    for (const poolAddr of activePools.slice(newPoolsOffset)) {
+      const pool = await getIManagedRewardPool(poolAddr);
+      const poolRate = await pool.getRate();
+
+      totalRate = totalRate.add(poolRate);
+      console.log(`\t${newNames[index]}:\t${poolRate.div(1e9).toNumber() / 1e9} wad/s`);
+      index++;
+    }
+    console.log(`Assigned reward rate: ${totalRate.div(1e9).toNumber() / 1e9} wad/s`);
+    console.log(`Initial reward rate:  ${initialRate.div(1e9).toNumber() / 1e9} wad/s`);
+  }
+};
 
 const deployExtraPools = async (
   addressProvider: MarketAccessController,
@@ -282,10 +343,7 @@ const deployExtraPools = async (
 
     extraNames.push(poolName);
     totalShare += params.BasePoints;
-    const trp = await deployTeamRewardPool(
-      [rewardCtlAddress, 0, params.BasePoints, params.Manager],
-      verify
-    );
+    const trp = await deployTeamRewardPool([rewardCtlAddress, 0, params.BasePoints, params.Manager], verify);
 
     const unlockTimestamp = (params.UnlockAt.getTime() / 1000) | 0;
     let memberAddresses: tEthereumAddress[] = [];
@@ -297,13 +355,7 @@ const deployExtraPools = async (
     }
 
     await mustWaitTx(
-      configurator.configureTeamRewardPool(
-        trp.address,
-        poolName,
-        unlockTimestamp,
-        memberAddresses,
-        memberShares
-      )
+      configurator.configureTeamRewardPool(trp.address, poolName, unlockTimestamp, memberAddresses, memberShares)
     );
 
     const allocation = await trp.getAllocatedShares();
@@ -354,10 +406,7 @@ const deployExtraPools = async (
 
     const treasury = await addressProvider.getAddress(AccessFlags.TREASURY);
 
-    const impl = await deployTreasuryRewardPool(
-      [rewardCtlAddress, 0, baselinePct, treasury],
-      verify
-    );
+    const impl = await deployTreasuryRewardPool([rewardCtlAddress, 0, baselinePct, treasury], verify);
     console.log(`Deployed ${poolName}: `, impl.address);
 
     poolAddrs.push(impl.address);
@@ -376,6 +425,15 @@ const deployExtraPools = async (
       [rewardCtlAddress, oneWad.multipliedBy(params.TotalWad).toFixed(), unlockTimestamp],
       verify
     );
+
+    if (params.Providers.length > 0) {
+      console.log(`Adding providers to ${poolName}: ${params.Providers.length}`);
+      for (const value of params.Providers) {
+        if (!falsyOrZeroAddress(value)) {
+          await mustWaitTx(brp.addRewardProvider(value, ZERO_ADDRESS));
+        }
+      }
+    }
 
     poolAddrs.push(brp.address);
     poolNames.push(poolName);

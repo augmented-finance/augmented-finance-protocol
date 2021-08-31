@@ -4,13 +4,14 @@ import {
   deployLendingPoolConfiguratorImpl,
   deployLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
-import { eNetwork } from '../../helpers/types';
+import { eNetwork, ICommonConfiguration, LPFeature } from '../../helpers/types';
 import { falsyOrZeroAddress, getFirstSigner, waitTx } from '../../helpers/misc-utils';
-import { getLendingPoolProxy } from '../../helpers/contracts-getters';
+import { getIManagedLendingPool, getLendingPoolProxy } from '../../helpers/contracts-getters';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
+import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 
 task('full:deploy-lending-pool', 'Deploys lending pool')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -19,6 +20,8 @@ task('full:deploy-lending-pool', 'Deploys lending pool')
     await DRE.run('set-DRE');
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
+    const { LendingDisableFeatures } = poolConfig as ICommonConfiguration;
+    const disableFeatures = getParamPerNetwork(LendingDisableFeatures, network);
 
     const deployer = await getFirstSigner();
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
@@ -31,11 +34,7 @@ task('full:deploy-lending-pool', 'Deploys lending pool')
       console.log('\tDeploying lending pool...');
       const lendingPoolImpl = await deployLendingPoolImpl(verify, continuation);
       console.log('\tLending pool implementation:', lendingPoolImpl.address);
-      lpAddress = await setAndGetAddressAsProxy(
-        addressProvider,
-        AccessFlags.LENDING_POOL,
-        lendingPoolImpl.address
-      );
+      lpAddress = await setAndGetAddressAsProxy(addressProvider, AccessFlags.LENDING_POOL, lendingPoolImpl.address);
     }
 
     const lendingPoolProxy = await getLendingPoolProxy(lpAddress);
@@ -51,20 +50,28 @@ task('full:deploy-lending-pool', 'Deploys lending pool')
     }
     console.log('Lending pool extension:', lpExt);
 
-    let lpConfigurator = newLendingPool
-      ? ''
-      : await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR);
+    {
+      let featureMask = 0;
+      const features: string[] = [];
+      disableFeatures.forEach((value) => {
+        if (value != 0) {
+          featureMask |= value;
+          features.push(LPFeature[value]);
+        }
+      });
+      if (featureMask > 0) {
+        console.log(`Disable lending pool features: 0x${featureMask.toString(16)} [${features.join(', ')}]`);
+        const lp = await getIManagedLendingPool(lpAddress);
+        await waitTx(lp.setDisabledFeatures(featureMask));
+      }
+    }
+
+    let lpConfigurator = newLendingPool ? '' : await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR);
 
     if (falsyOrZeroAddress(lpConfigurator)) {
       console.log('\tDeploying configurator...');
-      const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(
-        verify,
-        continuation
-      );
-      console.log(
-        '\tLending pool configurator implementation:',
-        lendingPoolConfiguratorImpl.address
-      );
+      const lendingPoolConfiguratorImpl = await deployLendingPoolConfiguratorImpl(verify, continuation);
+      console.log('\tLending pool configurator implementation:', lendingPoolConfiguratorImpl.address);
 
       lpConfigurator = await setAndGetAddressAsProxy(
         addressProvider,
