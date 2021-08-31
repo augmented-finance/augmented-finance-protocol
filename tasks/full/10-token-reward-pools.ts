@@ -24,14 +24,22 @@ import {
   getRewardBooster,
   getIManagedRewardPool,
   getIRewardedToken,
+  getIInitializableRewardPool,
 } from '../../helpers/contracts-getters';
-import { chunk, falsyOrZeroAddress, getFirstSigner, mustWaitTx, waitTx } from '../../helpers/misc-utils';
+import {
+  addProxyToJsonDb,
+  chunk,
+  falsyOrZeroAddress,
+  getFirstSigner,
+  mustWaitTx,
+  waitTx,
+} from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumber } from 'ethers';
 import { oneWad, ZERO_ADDRESS } from '../../helpers/constants';
 import { transpose } from 'underscore';
 import { getDeployAccessController, setAndGetAddressAsProxyWithInit } from '../../helpers/deploy-helpers';
-import { MarketAccessController, RewardConfigurator } from '../../types';
+import { MarketAccessController, RewardBooster, RewardConfigurator } from '../../types';
 
 interface poolInitParams {
   provider: tEthereumAddress;
@@ -135,7 +143,7 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
           prepParams.push({
             provider: token,
             baselinePercentage: BigNumber.from(share.BasePoints),
-            poolName: '',
+            poolName: tokenSymbol,
             initialRate: BigNumber.from(0),
             boostFactor: BigNumber.from(share!.BoostFactor),
             impl: '',
@@ -230,37 +238,75 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
       console.log('    * gasUsed', tx3.gasUsed.toString());
     }
 
+    const activePools = await configurator.list();
+
+    if (verify) {
+      console.log('Collecting verification data for reward pools');
+      for (let i = 0; i < initParams.length; i++) {
+        const params = initParams[i];
+        if (falsyOrZeroAddress(params.impl)) {
+          continue;
+        }
+        const proxyAddr = activePools[activePools.length - (initParams.length - i)]; // new pools are at the end of all pools
+        const implAddr = params.impl;
+        console.log('\t', params.poolName, proxyAddr, implAddr);
+
+        const v = await getIInitializableRewardPool(proxyAddr);
+        const data = v.interface.encodeFunctionData('initializeRewardPool', [
+          {
+            controller: configurator.address,
+            poolName: params.poolName,
+            baselinePercentage: params.baselinePercentage,
+          },
+        ]);
+        await addProxyToJsonDb('REWARD_POOL_' + params.poolName, proxyAddr, implAddr, 'rewardPool', [
+          configurator.address,
+          implAddr,
+          data,
+        ]);
+      }
+    }
+
     newNames.push(...extraNames);
     newNames.push(...initNames);
 
-    const initialRate = BigNumber.from(oneWad.multipliedBy(rewardParams.InitialRateWad).toFixed());
-    await mustWaitTx(rewardController.updateBaseline(initialRate));
-
-    console.log(`Reward pools initialized with total rate: ${rewardParams.InitialRateWad} wad/s`);
-    const activePools = await configurator.list();
-
-    if (newNames.length + newPoolsOffset != activePools.length) {
-      console.log(
-        `Different number of reward pools. Expected ${newNames.length} + ${newPoolsOffset}, actual ${activePools.length}`
-      );
-      console.log('Actual reward pools: ', activePools);
-    } else {
-      let totalRate = BigNumber.from(0);
-
-      console.log(`Rates of ${newNames.length} reward pools configured:`);
-      let index = 0;
-      for (const poolAddr of activePools.slice(newPoolsOffset)) {
-        const pool = await getIManagedRewardPool(poolAddr);
-        const poolRate = await pool.getRate();
-
-        totalRate = totalRate.add(poolRate);
-        console.log(`\t${newNames[index]}:\t${poolRate.div(1e9).toNumber() / 1e9} wad/s`);
-        index++;
-      }
-      console.log(`Assigned reward rate: ${totalRate.div(1e9).toNumber() / 1e9} wad/s`);
-      console.log(`Initial reward rate:  ${initialRate.div(1e9).toNumber() / 1e9} wad/s`);
-    }
+    await updateRates(rewardController, activePools, rewardParams.InitialRateWad, newNames, newPoolsOffset);
   });
+
+const updateRates = async (
+  rewardController: RewardBooster,
+  activePools: string[],
+  initialRateWad: number,
+  newNames: string[],
+  newPoolsOffset: number
+) => {
+  const initialRate = BigNumber.from(oneWad.multipliedBy(initialRateWad).toFixed(0));
+  await mustWaitTx(rewardController.updateBaseline(initialRate));
+
+  console.log(`Reward pools initialized with total rate: ${initialRateWad} wad/s`);
+
+  if (newNames.length + newPoolsOffset != activePools.length) {
+    console.log(
+      `Different number of reward pools. Expected ${newNames.length} + ${newPoolsOffset}, actual ${activePools.length}`
+    );
+    console.log('Actual reward pools: ', activePools);
+  } else {
+    let totalRate = BigNumber.from(0);
+
+    console.log(`Rates of ${newNames.length} reward pools configured:`);
+    let index = 0;
+    for (const poolAddr of activePools.slice(newPoolsOffset)) {
+      const pool = await getIManagedRewardPool(poolAddr);
+      const poolRate = await pool.getRate();
+
+      totalRate = totalRate.add(poolRate);
+      console.log(`\t${newNames[index]}:\t${poolRate.div(1e9).toNumber() / 1e9} wad/s`);
+      index++;
+    }
+    console.log(`Assigned reward rate: ${totalRate.div(1e9).toNumber() / 1e9} wad/s`);
+    console.log(`Initial reward rate:  ${initialRate.div(1e9).toNumber() / 1e9} wad/s`);
+  }
+};
 
 const deployExtraPools = async (
   addressProvider: MarketAccessController,

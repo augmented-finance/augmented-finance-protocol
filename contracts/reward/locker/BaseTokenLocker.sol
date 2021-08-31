@@ -284,7 +284,7 @@ abstract contract BaseTokenLocker is ERC20NoTransferBase, IDerivedToken {
 
       if (userBalance.endPoint <= currentPoint) {
         // sum up rewards for the previous balance
-        unsetStakeBalance(to, userBalance.endPoint * _pointPeriod, true);
+        unsetStakeBalance(to, userBalance.endPoint * _pointPeriod);
         prevStake = 0;
       }
 
@@ -366,7 +366,7 @@ abstract contract BaseTokenLocker is ERC20NoTransferBase, IDerivedToken {
     }
 
     // pay off rewards and stop
-    unsetStakeBalance(from, userBalance.endPoint * _pointPeriod, false);
+    unsetStakeBalance(from, userBalance.endPoint * _pointPeriod);
 
     delete (_balances[from]);
 
@@ -582,12 +582,7 @@ abstract contract BaseTokenLocker is ERC20NoTransferBase, IDerivedToken {
   /// @dev is called to sum up reward and to stop issuing it
   /// @param holder of reward
   /// @param at timestamp till which reward should be calculated
-  /// @param interim is true when setStakeBalance will be called right after this one
-  function unsetStakeBalance(
-    address holder,
-    uint32 at,
-    bool interim
-  ) internal virtual;
+  function unsetStakeBalance(address holder, uint32 at) internal virtual;
 
   /// @dev is called to sum up reward upto now and start calculation of the reward for the new stakeAmount
   /// @param holder of reward

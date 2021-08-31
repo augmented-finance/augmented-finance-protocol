@@ -12,16 +12,15 @@ contract StakeToken is SlashableStakeTokenBase, VersionedInitializable {
 
   function zeroConfig() private pure returns (StakeTokenConfig memory) {}
 
-  function initialize(
+  function initializeStakeToken(
     StakeTokenConfig calldata params,
     string calldata name,
-    string calldata symbol,
-    uint8 decimals
+    string calldata symbol
   ) external virtual override initializer(TOKEN_REVISION) {
-    super._initializeERC20(name, symbol, decimals);
+    super._initializeERC20(name, symbol, params.stakedTokenDecimals);
     super._initializeToken(params);
     super._initializeDomainSeparator();
-    emit Initialized(params, name, symbol, decimals);
+    emit Initialized(params, name, symbol);
   }
 
   function getRevision() internal pure virtual override returns (uint256) {

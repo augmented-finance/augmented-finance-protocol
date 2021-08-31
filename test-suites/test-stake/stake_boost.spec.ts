@@ -1,7 +1,7 @@
 import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
-import rawBRE, { ethers } from 'hardhat';
+import rawBRE from 'hardhat';
 
 import {
   getAGTokenByName,
@@ -23,6 +23,7 @@ import {
 } from '../../types';
 import { applyDepositPlanAndClaimAll, TestInfo } from '../test_utils';
 import { min } from 'underscore';
+import { ZERO_ADDRESS } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -46,7 +47,7 @@ describe('Staking with boosting', () => {
 
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
-    [root, user1, user2, slasher] = await ethers.getSigners();
+    [root, user1, user2, slasher] = await (<any>rawBRE).ethers.getSigners();
     await rawBRE.run('augmented:test-local-staking', CFG);
     rb = await getMockRewardBooster();
 
@@ -62,6 +63,31 @@ describe('Staking with boosting', () => {
 
   afterEach(async () => {
     await revertSnapshot(blkBeforeDeploy);
+  });
+
+  it('check boost factor and mask for boost pool', async () => {
+    const bp1 = await rb.getBoostPool();
+    expect(bp1.pool).eq(rpAGF.address);
+    expect(bp1.mask).eq(await rb.getPoolMask(rpAGF.address));
+    expect(await rb.getBoostFactor(rpAGF.address)).eq(0);
+    await expect(rb.setBoostFactor(rpAGF.address, 3)).to.be.revertedWith('factor for the boost pool');
+
+    await rb.setBoostPool(ZERO_ADDRESS);
+    const bp2 = await rb.getBoostPool();
+    expect(bp2.pool).eq(ZERO_ADDRESS);
+    expect(bp2.mask).eq(0);
+    expect((await rb.getBoostPool()).pool).eq(ZERO_ADDRESS);
+
+    expect(bp1.mask).eq(await rb.getPoolMask(rpAGF.address));
+
+    await rb.setBoostFactor(rpAGF.address, 3);
+    expect(await rb.getBoostFactor(rpAGF.address)).eq(3);
+
+    expect(bp1.mask).eq(await rb.getPoolMask(rpAGF.address));
+
+    await rb.setBoostPool(rpAGF.address);
+    expect((await rb.getBoostPool()).pool).eq(rpAGF.address);
+    expect(await rb.getBoostFactor(rpAGF.address)).eq(0);
   });
 
   it('no boost or rewards', async () => {

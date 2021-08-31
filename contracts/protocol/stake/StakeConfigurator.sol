@@ -60,7 +60,7 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
   }
 
   function dataOf(address stakeToken) public view override returns (StakeTokenData memory data) {
-    (data.config, data.stkTokenName, data.stkTokenSymbol, data.stkTokenDecimals) = IInitializableStakeToken(stakeToken)
+    (data.config, data.stkTokenName, data.stkTokenSymbol) = IInitializableStakeToken(stakeToken)
       .initializedStakeTokenWith();
     data.token = stakeToken;
 
@@ -127,15 +127,15 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
       IUnderlyingStrategy(input.strategy),
       input.cooldownPeriod,
       input.unstakePeriod,
-      input.maxSlashable
+      input.maxSlashable,
+      input.stkTokenDecimals
     );
 
     bytes memory params = abi.encodeWithSelector(
-      IInitializableStakeToken.initialize.selector,
+      IInitializableStakeToken.initializeStakeToken.selector,
       config,
       input.stkTokenName,
-      input.stkTokenSymbol,
-      input.stkTokenDecimals
+      input.stkTokenSymbol
     );
 
     token = address(_remoteAcl.createProxy(address(_proxies), input.stakeTokenImpl, params));
@@ -155,11 +155,10 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     StakeTokenData memory data = dataOf(input.token);
 
     bytes memory params = abi.encodeWithSelector(
-      IInitializableStakeToken.initialize.selector,
+      IInitializableStakeToken.initializeStakeToken.selector,
       data.config,
       input.stkTokenName,
-      input.stkTokenSymbol,
-      data.stkTokenDecimals
+      input.stkTokenSymbol
     );
 
     _proxies.upgradeAndCall(IProxy(input.token), input.stakeTokenImpl, params);

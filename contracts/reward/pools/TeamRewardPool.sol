@@ -44,20 +44,6 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     super.setLinearRate(newRate);
   }
 
-  function internalGetReward(address holder, uint256) internal override returns (uint256, uint32) {
-    if (!isUnlocked(getCurrentTick())) {
-      return (0, 0);
-    }
-    return doGetReward(holder);
-  }
-
-  function internalCalcReward(address holder, uint32 at) internal view override returns (uint256, uint32) {
-    if (!isUnlocked(at)) {
-      return (0, 0);
-    }
-    return doCalcRewardAt(holder, at);
-  }
-
   function internalCalcRateAndReward(
     RewardBalance memory entry,
     uint256 lastAccumRate,
@@ -129,7 +115,6 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     } else {
       _totalShare = 0;
     }
-    internalAllocateReward(member, 0, 0, AllocationMode.UnsetPull);
   }
 
   function setTeamManager(address member) external onlyTeamManagerOrConfigurator {
@@ -152,5 +137,41 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
 
   function getCurrentTick() internal view override returns (uint32) {
     return uint32(block.timestamp);
+  }
+
+  function internalGetReward(address holder, uint256)
+    internal
+    override
+    returns (
+      uint256,
+      uint32,
+      bool
+    )
+  {
+    if (!isUnlocked(getCurrentTick())) {
+      return (0, 0, true);
+    }
+    return doGetReward(holder);
+  }
+
+  function internalCalcReward(address holder, uint32 at) internal view override returns (uint256, uint32) {
+    return doCalcRewardAt(holder, at);
+  }
+
+  function calcRewardFor(address holder, uint32 at)
+    external
+    view
+    override
+    returns (
+      uint256 amount,
+      uint256 delayedAmount,
+      uint32 since
+    )
+  {
+    (amount, since) = internalCalcReward(holder, at);
+    if (!isUnlocked(at)) {
+      (amount, delayedAmount) = (0, amount);
+    }
+    return (amount, delayedAmount, since);
   }
 }

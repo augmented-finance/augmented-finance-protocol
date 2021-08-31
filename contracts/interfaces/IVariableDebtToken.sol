@@ -3,9 +3,10 @@ pragma solidity ^0.8.4;
 
 import './IScaledBalanceToken.sol';
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import './IPoolToken.sol';
 
 /// @dev Defines the basic interface for a variable debt token.
-interface IVariableDebtToken is IERC20, IScaledBalanceToken {
+interface IVariableDebtToken is IPoolToken, IScaledBalanceToken {
   /**
    * @dev Emitted after the mint action
    * @param from The address performing the mint
