@@ -13,7 +13,7 @@ makeSuite('Mutable methods', (testEnv: TestEnv) => {
     console.log('user', testEnv.users[1].address, testEnv.users[0].address);
   });
 
-  it.skip('test stub', async function () {});
+  //  it.skip('test stub', async function () {});
 
   for (const contractType in eContractid) {
     const [contractId, getter] = getContractGetterById(contractType);

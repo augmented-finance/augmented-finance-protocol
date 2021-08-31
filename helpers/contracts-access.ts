@@ -1,6 +1,3 @@
-import { defaultAbiCoder } from '@ethersproject/abi';
-import { Signer } from '@ethersproject/abstract-signer';
-import { Contract } from '@ethersproject/contracts';
 import { eContractid, ProtocolErrors } from './types';
 
 export type FunctionAccessExceptions = { [key: string]: string | true | { args: any[]; reason?: string } };
@@ -54,6 +51,29 @@ const rewardPoolImpl: ContractAccessExceptions = {
   ...rewardPool,
   implOverride: {
     initialize: 'initializer blocked',
+  },
+};
+
+const poolTokenImpl: ContractAccessExceptions = {
+  reasons: [
+    ProtocolErrors.CT_CALLER_MUST_BE_LENDING_POOL,
+    ProtocolErrors.RW_NOT_REWARD_CONTROLLER,
+    ProtocolErrors.CT_CALLER_MUST_BE_REWARD_ADMIN,
+  ],
+  functions: {
+    setPaused: ProtocolErrors.CALLER_NOT_EMERGENCY_ADMIN,
+    initialize: 'already initialized',
+  },
+  implOverride: {
+    initialize: 'initializer blocked',
+  },
+};
+
+const poolDebtTokenImpl: ContractAccessExceptions = {
+  ...poolTokenImpl,
+  functions: {
+    ...poolTokenImpl.functions,
+    approveDelegation: true,
   },
 };
 
@@ -162,40 +182,15 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
     },
   },
 
-  [eContractid.StableDebtTokenImpl]: {
-    reasons: [ProtocolErrors.CT_CALLER_MUST_BE_LENDING_POOL],
-    functions: {
-      approveDelegation: true,
-      setIncentivesController: ProtocolErrors.CT_CALLER_MUST_BE_REWARD_ADMIN,
-      initialize: 'already initialized',
-    },
-    implOverride: {
-      initialize: 'initializer blocked',
-    },
-  },
-
-  [eContractid.VariableDebtTokenImpl]: {
-    reasons: [ProtocolErrors.CT_CALLER_MUST_BE_LENDING_POOL],
-    functions: {
-      approveDelegation: true,
-      setIncentivesController: ProtocolErrors.CT_CALLER_MUST_BE_REWARD_ADMIN,
-      initialize: 'already initialized',
-    },
-    implOverride: {
-      initialize: 'initializer blocked',
-    },
-  },
+  [eContractid.StableDebtTokenImpl]: poolDebtTokenImpl,
+  [eContractid.VariableDebtTokenImpl]: poolDebtTokenImpl,
 
   [eContractid.DepositTokenImpl]: {
-    reasons: [ProtocolErrors.CT_CALLER_MUST_BE_LENDING_POOL],
+    ...poolTokenImpl,
     functions: {
+      ...poolTokenImpl.functions,
       ...erc20.functions,
-      setIncentivesController: ProtocolErrors.CT_CALLER_MUST_BE_REWARD_ADMIN,
       updateTreasury: ProtocolErrors.CALLER_NOT_POOL_ADMIN,
-      initialize: 'already initialized',
-    },
-    implOverride: {
-      initialize: 'initializer blocked',
     },
   },
 
@@ -253,6 +248,8 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
     functions: {
       claimReward: true,
       claimRewardTo: true,
+      setClaimablePools: true,
+
       autolockStop: true,
       autolockProlongate: true,
       autolockKeepUpBalance: true,
