@@ -125,7 +125,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       address subToken = reserveData.depositTokenAddress;
       tokens[tokenCount] = TokenDescription(
         subToken,
-        subToken,
+        token,
         IRewardedToken(subToken).getIncentivesController(),
         IERC20Detailed(subToken).symbol(),
         token,
@@ -140,7 +140,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         subToken = reserveData.variableDebtTokenAddress;
         tokens[tokenCount] = TokenDescription(
           subToken,
-          address(0),
+          token,
           IRewardedToken(subToken).getIncentivesController(),
           IERC20Detailed(subToken).symbol(),
           token,
@@ -156,7 +156,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         subToken = reserveData.stableDebtTokenAddress;
         tokens[tokenCount] = TokenDescription(
           subToken,
-          address(0),
+          token,
           IRewardedToken(subToken).getIncentivesController(),
           IERC20Detailed(subToken).symbol(),
           token,
@@ -171,12 +171,13 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
 
     for (uint256 i = 0; i < stakeList.length; i++) {
       token = stakeList[i];
+      address underlying = IDerivedToken(token).UNDERLYING_ASSET_ADDRESS();
       tokens[tokenCount] = TokenDescription(
         token,
-        address(0),
+        underlying,
         IRewardedToken(token).getIncentivesController(),
         IERC20Detailed(token).symbol(),
-        IDerivedToken(token).UNDERLYING_ASSET_ADDRESS(),
+        underlying,
         IERC20Detailed(token).decimals(),
         TokenType.Stake,
         true,
