@@ -55,21 +55,13 @@ contract RewardedTokenLocker is
     internalAllocateReward(holder, amount, since, mode);
   }
 
-  function unsetStakeBalance(
-    address holder,
-    uint32 at,
-    bool interim
-  ) internal virtual override {
-    (uint256 amount, uint32 since) = doGetRewardAt(holder, at);
+  function unsetStakeBalance(address holder, uint32 at) internal virtual override {
+    (uint256 amount, uint32 since, ) = doGetRewardAt(holder, at);
     doRemoveRewardBalance(holder);
-    AllocationMode mode = AllocationMode.Push;
-
-    if (!interim) {
-      mode = AllocationMode.UnsetPull;
-    } else if (amount == 0) {
+    if (amount == 0) {
       return;
     }
-    internalAllocateReward(holder, amount, since, mode);
+    internalAllocateReward(holder, amount, since, AllocationMode.Push);
   }
 
   function getStakeBalance(address holder) internal view override returns (uint224) {
@@ -117,27 +109,32 @@ contract RewardedTokenLocker is
     internal
     virtual
     override
-    returns (uint256 amount, uint32 since)
+    returns (
+      uint256 amount,
+      uint32 since,
+      bool keepPull
+    )
   {
     internalUpdate(true, 0);
 
     (, uint32 expiry) = expiryOf(holder);
     if (expiry == 0) {
-      return (0, 0);
+      return (0, 0, false);
     }
     uint32 current = getCurrentTick();
     if (current < expiry) {
-      (amount, since) = doGetRewardAt(holder, current);
+      (amount, since, keepPull) = doGetRewardAt(holder, current);
     } else {
-      (amount, since) = doGetRewardAt(holder, expiry);
+      (amount, since, ) = doGetRewardAt(holder, expiry);
       doRemoveRewardBalance(holder);
+      keepPull = false;
     }
 
     if (amount > limit) {
       internalAddExcess(amount - limit, since);
-      return (limit, since);
+      return (limit, since, keepPull);
     }
-    return (amount, since);
+    return (amount, since, keepPull);
   }
 
   function internalGetRate() internal view override returns (uint256) {

@@ -90,7 +90,7 @@ contract XAGFTokenV1 is
       InitRewardPoolData(
         IRewardController(super.getRewardController()),
         super.getPoolName(),
-        super.internalGetBaselinePercentage()
+        super.getBaselinePercentage()
       );
   }
 }

@@ -8,13 +8,19 @@ interface IManagedRewardPool is IEmergencyAccess {
 
   function setBaselinePercentage(uint16) external;
 
-  function getBaselinePercentage() external view returns (bool, uint16);
+  function getBaselinePercentage() external view returns (uint16);
 
   function getRate() external view returns (uint256);
 
   function getPoolName() external view returns (string memory);
 
-  function claimRewardFor(address holder, uint256 limit) external returns (uint256 amount, uint32 since);
+  function claimRewardFor(address holder, uint256 limit)
+    external
+    returns (
+      uint256 amount,
+      uint32 since,
+      bool keepPull
+    );
 
   function calcRewardFor(address holder, uint32 at)
     external
@@ -34,8 +40,7 @@ interface IManagedRewardPool is IEmergencyAccess {
   function attachedToRewardController() external;
 
   event RateUpdated(uint256 rate);
-  event BaselineFactorUpdated(uint16);
-  event BaselineDisabled();
+  event BaselinePercentageUpdated(uint16);
   event ProviderAdded(address provider, address token);
   event ProviderRemoved(address provider);
 }

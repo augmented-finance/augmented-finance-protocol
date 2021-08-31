@@ -17,7 +17,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     uint256 rewardLimit,
     uint32 meltDownAt,
     string memory rewardPoolName
-  ) ControlledRewardPool(controller, 0, NO_BASELINE) BasePermitRewardPool(rewardPoolName) {
+  ) ControlledRewardPool(controller, 0, 0) BasePermitRewardPool(rewardPoolName) {
     _rewardLimit = rewardLimit;
     internalSetMeltDownAt(meltDownAt);
   }
@@ -60,12 +60,17 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     return currentValidNonce + 1;
   }
 
-  function internalGetReward(address holder, uint256) internal override returns (uint256 allocated, uint32) {
+  function internalGetReward(address holder, uint256)
+    internal
+    override
+    returns (
+      uint256 allocated,
+      uint32,
+      bool
+    )
+  {
     (allocated, ) = doClaimByPull(holder, 0, 0);
-    if (allocated == 0 && internalGetFrozenReward(holder) == 0) {
-      internalAllocateReward(holder, 0, uint32(block.timestamp), AllocationMode.UnsetPull);
-    }
-    return (allocated, uint32(block.timestamp));
+    return (allocated, uint32(block.timestamp), allocated != 0 || internalGetFrozenReward(holder) != 0);
   }
 
   function internalCalcReward(address holder, uint32 at) internal view override returns (uint256 allocated, uint32) {

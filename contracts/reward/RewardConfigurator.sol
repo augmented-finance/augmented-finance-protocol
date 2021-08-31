@@ -224,17 +224,6 @@ contract RewardConfigurator is
     }
   }
 
-  function setBaselinePercentages(IManagedRewardPool[] calldata pools, uint16[] calldata pcts)
-    external
-    onlyRewardRateAdmin
-  {
-    require(pools.length == pcts.length);
-
-    for (uint256 i = 0; i < pools.length; i++) {
-      pools[i].setBaselinePercentage(pcts[i]);
-    }
-  }
-
   function getPoolTotals(bool excludeBoost)
     external
     view
@@ -262,10 +251,7 @@ contract RewardConfigurator is
     for (uint256 i = 0; i < pools.length; i++) {
       if (ignoreMask & 1 == 0 && pools[i] != IManagedRewardPool(address(0))) {
         activePoolCount++;
-        (bool ok, uint16 pct) = pools[i].getBaselinePercentage();
-        if (ok) {
-          totalBaselinePercentage += uint256(pct);
-        }
+        totalBaselinePercentage += pools[i].getBaselinePercentage();
         totalRate += pools[i].getRate();
       }
       ignoreMask >>= 1;
@@ -314,7 +300,7 @@ contract RewardConfigurator is
       IManagedRewardPool pool = IManagedRewardPool(pools[i]);
       controllers[i] = pool.getRewardController();
       rates[i] = pool.getRate();
-      (, baselinePcts[i]) = pool.getBaselinePercentage();
+      baselinePcts[i] = pool.getBaselinePercentage();
     }
   }
 }

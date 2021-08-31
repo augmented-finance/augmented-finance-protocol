@@ -5,7 +5,7 @@ import '../dependencies/openzeppelin/contracts/IERC20.sol';
 import './IScaledBalanceToken.sol';
 import './IPoolToken.sol';
 
-interface IDepositToken is IERC20, IScaledBalanceToken, IPoolToken {
+interface IDepositToken is IERC20, IPoolToken, IScaledBalanceToken {
   /**
    * @dev Emitted after the mint action
    * @param from The address performing the mint

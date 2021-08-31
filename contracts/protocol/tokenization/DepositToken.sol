@@ -10,6 +10,8 @@ import './base/DepositTokenBase.sol';
 contract DepositToken is DepositTokenBase, VersionedInitializable {
   uint256 private constant TOKEN_REVISION = 0x1;
 
+  constructor() PoolTokenBase(address(0), address(0)) DepositTokenBase(address(0)) ERC20DetailsBase('', '', 0) {}
+
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
   }
@@ -20,13 +22,21 @@ contract DepositToken is DepositTokenBase, VersionedInitializable {
     string calldata symbol,
     bytes calldata params
   ) external override initializerRunAlways(TOKEN_REVISION) {
-    require(config.treasury != address(0), Errors.VL_TREASURY_REQUIRED);
-    _initializeERC20(name, symbol, config.underlyingDecimals);
-    if (!isRevisionInitialized(TOKEN_REVISION)) {
-      _initializeDomainSeparator();
-      _treasury = config.treasury;
+    if (isRevisionInitialized(TOKEN_REVISION)) {
+      _initializeERC20(name, symbol, super.decimals());
+    } else {
+      _initializeERC20(name, symbol, config.underlyingDecimals);
       _initializePoolToken(config, params);
     }
-    _emitInitialized(config, params);
+
+    emit Initialized(
+      config.underlyingAsset,
+      address(config.pool),
+      address(config.treasury),
+      super.name(),
+      super.symbol(),
+      super.decimals(),
+      params
+    );
   }
 }
