@@ -63,7 +63,7 @@ export const DefaultTokenNames: ITokenNames = {
   VariableDebtSymbolPrefix: 'agv',
   StakeSymbolPrefix: 'xag',
 
-  RewardTokenName: 'Augmented reward',
+  RewardTokenName: 'Augmented Finance',
   RewardTokenSymbol: 'AGF',
 
   RewardStakeTokenName: 'Augmented booster',
