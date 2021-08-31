@@ -44,7 +44,7 @@ export const setAndGetAddressAsProxy = async (ac: AccessController, id: AccessFl
   const proxyAddr = await waitForAddress(ac, id);
 
   const data = initEncoder.encodeFunctionData('initialize', [ac.address]);
-  await addProxyToJsonDb(AccessFlags[id], proxyAddr, addr, [ac.address, addr, data]);
+  await addProxyToJsonDb(AccessFlags[id], proxyAddr, addr, 'core', [ac.address, addr, data]);
   return proxyAddr;
 };
 
@@ -56,7 +56,7 @@ export const setAndGetAddressAsProxyWithInit = async (
 ) => {
   waitForTx(await ac.setAddressAsProxyWithInit(id, addr, data, { gasLimit: 2000000 }));
   const proxyAddr = await waitForAddress(ac, id);
-  await addProxyToJsonDb(AccessFlags[id], proxyAddr, addr, [ac.address, addr, data]);
+  await addProxyToJsonDb(AccessFlags[id], proxyAddr, addr, 'core', [ac.address, addr, data]);
   return proxyAddr;
 };
 

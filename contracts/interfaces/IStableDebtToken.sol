@@ -3,9 +3,10 @@ pragma solidity ^0.8.4;
 
 import './IBalanceHook.sol';
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
+import './IPoolToken.sol';
 
 /// @dev Defines the interface for the stable debt token
-interface IStableDebtToken is IERC20 {
+interface IStableDebtToken is IPoolToken {
   /**
    * @dev Emitted when new stable debt is minted
    * @param user The address of the user who triggered the minting

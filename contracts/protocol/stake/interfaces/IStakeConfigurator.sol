@@ -27,7 +27,6 @@ interface IStakeConfigurator {
     address token;
     string stkTokenName;
     string stkTokenSymbol;
-    uint8 stkTokenDecimals;
     StakeTokenConfig config;
   }
 

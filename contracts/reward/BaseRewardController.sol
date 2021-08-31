@@ -144,7 +144,6 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
       (bool hasBaseline, uint256 appliedRate) = _poolList[i].updateBaseline(baseline);
       if (appliedRate != 0) {
         totalRate += appliedRate;
-        continue;
       } else if (!hasBaseline) {
         allMask &= ~mask;
       }
@@ -377,5 +376,24 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
 
   function isPaused() public view override returns (bool) {
     return _paused;
+  }
+
+  function setBaselinePercentages(IManagedRewardPool[] calldata pools, uint16[] calldata pcts)
+    external
+    onlyRewardRateAdmin
+  {
+    require(pools.length == pcts.length, 'mismatched length');
+    uint256 baselineMask = _baselineMask;
+
+    for (uint256 i = 0; i < pools.length; i++) {
+      uint256 mask = getPoolMask(address(pools[i]));
+      require(mask != 0, 'unknown pool');
+      pools[i].setBaselinePercentage(pcts[i]);
+      if (pcts[i] > 0) {
+        baselineMask |= mask;
+      }
+    }
+
+    _baselineMask = baselineMask;
   }
 }

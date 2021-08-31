@@ -1,5 +1,4 @@
 import { task } from 'hardhat/config';
-import { checkEtherscanVerification } from '../../helpers/etherscan-verification';
 import { ConfigNames } from '../../helpers/configuration';
 import { getFirstSigner, printContracts } from '../../helpers/misc-utils';
 
@@ -9,11 +8,6 @@ task('augmented:dev', 'Deploy development enviroment')
     const POOL_NAME = ConfigNames.Augmented;
 
     await localBRE.run('set-DRE');
-
-    // Prevent loss of gas verifying all the needed ENVs for Etherscan verification
-    if (verify) {
-      checkEtherscanVerification();
-    }
 
     console.log('Deployment started\n');
 
