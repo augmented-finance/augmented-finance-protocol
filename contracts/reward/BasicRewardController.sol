@@ -11,7 +11,7 @@ abstract contract BasicRewardController is BaseRewardController {
     BaseRewardController(accessController, rewardMinter)
   {}
 
-  function internalClaimAndMintReward(address holder, uint256 mask)
+  function internalClaimAndMintReward(address holder, uint256 allMask)
     internal
     override
     returns (uint256 claimableAmount, uint256 delayedAmount)
@@ -20,12 +20,17 @@ abstract contract BasicRewardController is BaseRewardController {
     uint256 amountSince = 0;
     bool incremental = false;
 
-    for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
-      if (mask & 1 == 0) {
+    for ((uint8 i, uint256 mask) = (0, 1); mask <= allMask; (i, mask) = (i + 1, mask << 1)) {
+      if (mask & allMask == 0) {
+        if (mask == 0) break;
         continue;
       }
 
-      (uint256 amount_, uint32 since_) = getPool(i).claimRewardFor(holder, type(uint256).max);
+      (uint256 amount_, uint32 since_, bool keepPull) = getPool(i).claimRewardFor(holder, type(uint256).max);
+      if (!keepPull) {
+        internalUnsetPull(holder, mask);
+      }
+
       if (amount_ == 0) {
         continue;
       }

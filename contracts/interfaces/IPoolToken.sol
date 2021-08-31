@@ -2,9 +2,8 @@
 pragma solidity ^0.8.4;
 
 import './IDerivedToken.sol';
-import './IRewardedToken.sol';
 
 // solhint-disable func-name-mixedcase
-interface IPoolToken is IDerivedToken, IRewardedToken {
+interface IPoolToken is IDerivedToken {
   function POOL() external view returns (address);
 }

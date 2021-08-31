@@ -2,14 +2,20 @@
 pragma solidity ^0.8.4;
 
 import './InterestMath.sol';
+import './BitUtils.sol';
 
 import 'hardhat/console.sol';
 
 contract LibTestUtils {
-  // solhint-disable-next-line func-name-mixedcase
-  function TestLinearInterest(uint256 rate, uint256 ts) public view returns (uint256) {
-    // console.log('block ts:', ts);
-    uint256 res = InterestMath.calculateLinearInterest(rate, uint40(ts));
-    return res;
+  function testLinearInterest(uint256 rate, uint256 ts) external view returns (uint256) {
+    return InterestMath.calculateLinearInterest(rate, uint40(ts));
+  }
+
+  function testBitLengthShift(uint16 n) external pure returns (uint256) {
+    return BitUtils.bitLength(uint256(1) << n);
+  }
+
+  function testBitLength(uint256 n) external pure returns (uint256) {
+    return BitUtils.bitLength(n);
   }
 }
