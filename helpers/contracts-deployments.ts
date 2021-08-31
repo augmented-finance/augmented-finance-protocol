@@ -277,7 +277,7 @@ export const deployMintableDelegationERC20 = async (
     verify
   );
 
-export const deployDefaultReserveInterestRateStrategy = async (
+export const deployMockReserveInterestRateStrategy = async (
   args: [
     provider: string,
     optimalUtilizationRate: BigNumberish,
@@ -311,7 +311,7 @@ export const deployReserveInterestRateStrategy = async (
 ) =>
   withSaveAndVerify(
     await new DefaultReserveInterestRateStrategyFactory(await getFirstSigner()).deploy(...args),
-    name,
+    eContractid.DefaultReserveInterestRateStrategy + '-' + name,
     args,
     verify
   );
@@ -653,7 +653,7 @@ export const deployMockStakedAgToken = async (
     args,
     verify
   );
-  await instance.initialize(
+  await instance.initializeStakeToken(
     {
       stakeController: args[0],
       stakedToken: args[1],
@@ -661,10 +661,10 @@ export const deployMockStakedAgToken = async (
       cooldownPeriod: args[4],
       unstakePeriod: args[5],
       maxSlashable: 3000, // 30%
+      stakedTokenDecimals: 18,
     },
     args[2],
-    args[3],
-    '18'
+    args[3]
   );
 
   return instance;
@@ -680,7 +680,7 @@ export const deployMockStakedAgfToken = async (
     args,
     verify
   );
-  await instance.initialize(
+  await instance.initializeStakeToken(
     {
       stakeController: args[0],
       stakedToken: args[1],
@@ -688,10 +688,10 @@ export const deployMockStakedAgfToken = async (
       cooldownPeriod: args[4],
       unstakePeriod: args[5],
       maxSlashable: 3000, // 30%
+      stakedTokenDecimals: 18,
     },
     args[2],
-    args[3],
-    '18'
+    args[3]
   );
 
   return instance;
@@ -835,7 +835,7 @@ export const deployNamedPermitFreezerRewardPool = async (
 ) =>
   withSaveAndVerify(
     await new PermitFreezerRewardPoolFactory(await getFirstSigner()).deploy(...args, rewardPoolName),
-    rewardPoolName,
+    eContractid.PermitFreezerRewardPool + '-' + rewardPoolName,
     [...args, rewardPoolName],
     verify
   );

@@ -5,7 +5,7 @@ import * as reserveConfigs from '../../markets/augmented/reservesConfigs';
 import { chooseDepositTokenDeployment } from '../../helpers/init-helpers';
 import { getMarketAddressController } from './../../helpers/contracts-getters';
 import {
-  deployDefaultReserveInterestRateStrategy,
+  deployMockReserveInterestRateStrategy,
   deployStableDebtToken,
   deployVariableDebtToken,
 } from './../../helpers/contracts-deployments';
@@ -24,77 +24,78 @@ const isSymbolValid = (symbol: string, network: eEthereumNetwork) =>
   cfg.ReserveAssets[network][symbol] &&
   cfg.ReservesConfig[symbol] === reserveConfigs['strategy' + symbol];
 
-task('external:deploy-new-asset', 'Deploy A token, Debt Tokens, Risk Parameters')
-  .addParam('symbol', `Asset symbol, needs to have configuration ready`)
+task('external:deploy-new-asset', 'Deploy new reserve(s)')
   .addFlag('verify', 'Verify contracts at Etherscan')
-  .setAction(async ({ verify, symbol }, localBRE) => {
+  .addOptionalVariadicPositionalParam('symbols', `Asset symbol(s)`)
+  .setAction(async ({ verify, symbols }, localBRE) => {
     const network = localBRE.network.name;
-    if (!isSymbolValid(symbol, network as eEthereumNetwork)) {
-      throw new Error(
-        `
-WRONG RESERVE ASSET SETUP:
-        The symbol ${symbol} has no reserve Config and/or reserve Asset setup.
-        update /markets/aave/index.ts and add the asset address for ${network} network
-        update /markets/aave/reservesConfigs.ts and add parameters for ${symbol}
-        `
-      );
-    }
-    setDRE(localBRE);
-    const strategyParams = reserveConfigs['strategy' + symbol];
-    const reserveAssetAddress = cfg.ReserveAssets[localBRE.network.name][symbol];
-    const deployDepositToken = chooseDepositTokenDeployment(strategyParams.depositTokenImpl);
-    const addressProvider = await getMarketAddressController(LENDING_POOL_ADDRESS_PROVIDER[network]);
-    const poolAddress = await addressProvider.getLendingPool();
-    const treasuryAddress = await addressProvider.getAddress(AccessFlags.TREASURY);
+    throw 'not implemented';
+    //     if (!isSymbolValid(symbol, network as eEthereumNetwork)) {
+    //       throw new Error(
+    //         `
+    // WRONG RESERVE ASSET SETUP:
+    //         The symbol ${symbol} has no reserve Config and/or reserve Asset setup.
+    //         update /markets/aave/index.ts and add the asset address for ${network} network
+    //         update /markets/aave/reservesConfigs.ts and add parameters for ${symbol}
+    //         `
+    //       );
+    //     }
+    //     setDRE(localBRE);
+    //     const strategyParams = reserveConfigs['strategy' + symbol];
+    //     const reserveAssetAddress = cfg.ReserveAssets[localBRE.network.name][symbol];
+    //     const deployDepositToken = chooseDepositTokenDeployment(strategyParams.depositTokenImpl);
+    //     const addressProvider = await getMarketAddressController(LENDING_POOL_ADDRESS_PROVIDER[network]);
+    //     const poolAddress = await addressProvider.getLendingPool();
+    //     const treasuryAddress = await addressProvider.getAddress(AccessFlags.TREASURY);
 
-    const names = cfg.Names;
-    const depositToken = await deployDepositToken(
-      [
-        poolAddress,
-        reserveAssetAddress,
-        treasuryAddress,
-        `${names.DepositTokenNamePrefix} ${symbol}`,
-        `${names.DepositSymbolPrefix}${symbol}`,
-      ],
-      verify
-    );
-    const stableDebt = await deployStableDebtToken(
-      [
-        poolAddress,
-        reserveAssetAddress,
-        treasuryAddress,
-        `${names.StableDebtTokenNamePrefix} ${symbol}`,
-        `${names.StableDebtSymbolPrefix}${symbol}`,
-      ],
-      verify
-    );
-    const variableDebt = await deployVariableDebtToken(
-      [
-        poolAddress,
-        reserveAssetAddress,
-        treasuryAddress,
-        `${names.VariableDebtTokenNamePrefix} ${symbol}`,
-        `${names.VariableDebtSymbolPrefix}${symbol}`,
-      ],
-      verify
-    );
-    const rates = await deployDefaultReserveInterestRateStrategy(
-      [
-        addressProvider.address,
-        strategyParams.strategy.optimalUtilizationRate,
-        strategyParams.strategy.baseVariableBorrowRate,
-        strategyParams.strategy.variableRateSlope1,
-        strategyParams.strategy.variableRateSlope2,
-        strategyParams.strategy.stableRateSlope1,
-        strategyParams.strategy.stableRateSlope2,
-      ],
-      verify
-    );
-    console.log(`
-    New asset ${symbol} deployed on ${network}:
-    Deposit address: ${depositToken.address}
-    Variable Debt address: ${variableDebt.address}
-    Stable Debt address: ${stableDebt.address}
-    Strategy Implementation for ${symbol} address: ${rates.address}
-    `);
+    //     const names = cfg.Names;
+    //     const depositToken = await deployDepositToken(
+    //       [
+    //         poolAddress,
+    //         reserveAssetAddress,
+    //         treasuryAddress,
+    //         `${names.DepositTokenNamePrefix} ${symbol}`,
+    //         `${names.DepositSymbolPrefix}${symbol}`,
+    //       ],
+    //       verify
+    //     );
+    //     const stableDebt = await deployStableDebtToken(
+    //       [
+    //         poolAddress,
+    //         reserveAssetAddress,
+    //         treasuryAddress,
+    //         `${names.StableDebtTokenNamePrefix} ${symbol}`,
+    //         `${names.StableDebtSymbolPrefix}${symbol}`,
+    //       ],
+    //       verify
+    //     );
+    //     const variableDebt = await deployVariableDebtToken(
+    //       [
+    //         poolAddress,
+    //         reserveAssetAddress,
+    //         treasuryAddress,
+    //         `${names.VariableDebtTokenNamePrefix} ${symbol}`,
+    //         `${names.VariableDebtSymbolPrefix}${symbol}`,
+    //       ],
+    //       verify
+    //     );
+    //     const rates = await deployMockReserveInterestRateStrategy(
+    //       [
+    //         addressProvider.address,
+    //         strategyParams.strategy.optimalUtilizationRate,
+    //         strategyParams.strategy.baseVariableBorrowRate,
+    //         strategyParams.strategy.variableRateSlope1,
+    //         strategyParams.strategy.variableRateSlope2,
+    //         strategyParams.strategy.stableRateSlope1,
+    //         strategyParams.strategy.stableRateSlope2,
+    //       ],
+    //       verify
+    //     );
+    //     console.log(`
+    //     New asset ${symbol} deployed on ${network}:
+    //     Deposit address: ${depositToken.address}
+    //     Variable Debt address: ${variableDebt.address}
+    //     Stable Debt address: ${stableDebt.address}
+    //     Strategy Implementation for ${symbol} address: ${rates.address}
+    //     `);
   });

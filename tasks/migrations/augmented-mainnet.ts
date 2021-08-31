@@ -1,5 +1,4 @@
 import { task } from 'hardhat/config';
-import { checkEtherscanVerification } from '../../helpers/etherscan-verification';
 import { ConfigNames } from '../../helpers/configuration';
 import {
   cleanupJsonDb,
@@ -33,11 +32,6 @@ task('augmented:mainnet', 'Deploy enviroment')
     try {
       await cleanupUiConfig();
       console.log('Deployer start balance: ', startBalance.div(1e12).toNumber() / 1e6);
-
-      // Check if Etherscan verification is eligible for the current configuration before wasting any gas
-      if (verify) {
-        checkEtherscanVerification();
-      }
 
       if (incremental) {
         console.log('======================================================================');
@@ -85,7 +79,10 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('10. Deploy reward pools');
       await DRE.run('full:init-reward-pools', { pool: POOL_NAME, verify: trackVerify });
 
-      console.log('11. Smoke test');
+      console.log('11. Access test');
+      await DRE.run('full:access-test', { pool: POOL_NAME });
+
+      console.log('12. Smoke test');
       await DRE.run('full:smoke-test', { pool: POOL_NAME });
 
       const balanceBeforePluck = await deployer.getBalance();

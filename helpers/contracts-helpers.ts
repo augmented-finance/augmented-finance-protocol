@@ -2,13 +2,7 @@ import { Contract, Signer, utils, ethers, BigNumberish, Overrides } from 'ethers
 import { signTypedData_v4 } from 'eth-sig-util';
 import { fromRpcSig, ECDSASignature } from 'ethereumjs-util';
 import BigNumber from 'bignumber.js';
-import {
-  DRE,
-  falsyOrZeroAddress,
-  getFromJsonDb,
-  addContractToJsonDb,
-  waitForTx,
-} from './misc-utils';
+import { DRE, falsyOrZeroAddress, getFromJsonDb, addContractToJsonDb, waitForTx } from './misc-utils';
 import {
   tEthereumAddress,
   tStringTokenSmallUnits,
@@ -29,8 +23,7 @@ export type MockTokenMap = { [symbol: string]: MintableERC20 };
 export const registerContractInJsonDb = async (contractId: string, contractInstance: Contract) =>
   addContractToJsonDb(contractId, contractInstance, true);
 
-export const getEthersSigners = async (): Promise<Signer[]> =>
-  await Promise.all(await (<any>DRE).ethers.getSigners());
+export const getEthersSigners = async (): Promise<Signer[]> => await Promise.all(await (<any>DRE).ethers.getSigners());
 
 export const getEthersSignersAddresses = async (): Promise<tEthereumAddress[]> =>
   await Promise.all((await (<any>DRE).ethers.getSigners()).map((signer) => signer.getAddress()));
@@ -46,9 +39,7 @@ export const deployContract = async <ContractType extends Contract>(
   contractName: string,
   args: any[]
 ): Promise<ContractType> => {
-  const contract = (await (await (<any>DRE).ethers.getContractFactory(contractName)).deploy(
-    ...args
-  )) as ContractType;
+  const contract = (await (await (<any>DRE).ethers.getContractFactory(contractName)).deploy(...args)) as ContractType;
   await waitForTx(contract.deployTransaction);
   await registerContractInJsonDb(contractName, contract);
   return contract;
@@ -58,6 +49,18 @@ export interface ContractInstanceFactory<ContractType extends Contract> {
   deploy(overrides?: Overrides): Promise<ContractType>;
   attach(address: string): ContractType;
 }
+
+// let _verifyCallback : (id: string, contract: Contract) => Promise<void> = undefined;
+//
+// export const setVerifyCallback = (fn: (id: string, contract: Contract) => Promise<void>) => {
+//   _verifyCallback = fn;
+// }
+
+const verifyCallback = async (id: string, contract: Contract) => {
+  // if (_verifyCallback != undefined) {
+  //   await _verifyCallback(id, contract);
+  // }
+};
 
 export const withSaveAndVerifyOnce = async <ContractType extends Contract>(
   factory: ContractInstanceFactory<ContractType>,
@@ -82,6 +85,7 @@ export const withSaveAndVerify = async <ContractType extends Contract>(
 ): Promise<ContractType> => {
   await waitForTx(instance.deployTransaction);
   if (verify) {
+    await verifyCallback(id, instance);
     await addContractToJsonDb(id, instance, true, args);
   } else {
     await addContractToJsonDb(id, instance, true);
@@ -97,6 +101,7 @@ export const registerAndVerify = async <ContractType extends Contract>(
   verify?: boolean
 ): Promise<ContractType> => {
   if (verify) {
+    await verifyCallback(id, instance);
     await addContractToJsonDb(id, instance, true, args);
   } else {
     await addContractToJsonDb(id, instance, true);
@@ -113,6 +118,7 @@ export const withVerify = async <ContractType extends Contract>(
 ): Promise<ContractType> => {
   await waitForTx(instance.deployTransaction);
   if (verify) {
+    await verifyCallback(id, instance);
     addContractToJsonDb(id, instance, false, args);
   } else {
     addContractToJsonDb(id, instance, false);
@@ -121,10 +127,7 @@ export const withVerify = async <ContractType extends Contract>(
   return instance;
 };
 
-const verifyOnTenderly = async <ContractType extends Contract>(
-  instance: ContractType,
-  id: string
-) => {
+const verifyOnTenderly = async <ContractType extends Contract>(instance: ContractType, id: string) => {
   if (usingTenderly()) {
     console.log();
     console.log('Doing Tenderly contract verification of', id);
@@ -161,16 +164,8 @@ export const linkBytecode = (artifact: Artifact, libraries: any) => {
 };
 
 export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNetwork) => {
-  const {
-    main,
-    ropsten,
-    rinkeby,
-    kovan,
-    hardhat,
-    docker,
-    coverage,
-    tenderlyMain,
-  } = param as iEthereumParamsPerNetwork<T>;
+  const { main, ropsten, rinkeby, kovan, hardhat, docker, coverage, tenderlyMain } =
+    param as iEthereumParamsPerNetwork<T>;
   const { matic, mumbai } = param as iPolygonParamsPerNetwork<T>;
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
   if (MAINNET_FORK) {
@@ -279,28 +274,8 @@ export const buildLiquiditySwapParams = (
   useEthPath: boolean[]
 ) => {
   return ethers.utils.defaultAbiCoder.encode(
-    [
-      'address[]',
-      'uint256[]',
-      'bool[]',
-      'uint256[]',
-      'uint256[]',
-      'uint8[]',
-      'bytes32[]',
-      'bytes32[]',
-      'bool[]',
-    ],
-    [
-      assetToSwapToList,
-      minAmountsToReceive,
-      swapAllBalances,
-      permitAmounts,
-      deadlines,
-      v,
-      r,
-      s,
-      useEthPath,
-    ]
+    ['address[]', 'uint256[]', 'bool[]', 'uint256[]', 'uint256[]', 'uint8[]', 'bytes32[]', 'bytes32[]', 'bool[]'],
+    [assetToSwapToList, minAmountsToReceive, swapAllBalances, permitAmounts, deadlines, v, r, s, useEthPath]
   );
 };
 

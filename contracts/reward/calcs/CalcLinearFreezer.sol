@@ -50,12 +50,8 @@ abstract contract CalcLinearFreezer {
     (allocated, ) = internalApplyAllocated(holder, allocated, since, uint32(block.timestamp));
 
     AllocationMode mode = AllocationMode.Push;
-    if (_frozenRewards[holder].frozenReward > 0) {
-      if (frozenBefore == 0) {
-        mode = AllocationMode.SetPull;
-      }
-    } else if (frozenBefore > 0) {
-      mode = AllocationMode.UnsetPull;
+    if (frozenBefore == 0 && _frozenRewards[holder].frozenReward > 0) {
+      mode = AllocationMode.SetPull;
     }
 
     return (allocated, uint32(block.timestamp), mode);

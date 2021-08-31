@@ -46,6 +46,9 @@ import {
   DelegatedStrategyCompoundErc20Factory,
   DelegatedStrategyCompoundEthFactory,
   StaticPriceOracleFactory,
+  TreasuryRewardPoolFactory,
+  DelegationAwareDepositTokenFactory,
+  DefaultReserveInterestRateStrategyFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -59,6 +62,10 @@ import { IManagedLendingPoolFactory } from '../types/IManagedLendingPoolFactory'
 import { IAaveLendingPoolFactory } from '../types/IAaveLendingPoolFactory';
 import { IPriceOracleGetterFactory } from '../types/IPriceOracleGetterFactory';
 import { IChainlinkAggregatorFactory } from '../types/IChainlinkAggregatorFactory';
+import { IInitializablePoolTokenFactory } from '../types/IInitializablePoolTokenFactory';
+import { IInitializableStakeTokenFactory } from '../types/IInitializableStakeTokenFactory';
+import { IInitializableRewardPoolFactory } from '../types/IInitializableRewardPoolFactory';
+import { ZERO_ADDRESS } from './constants';
 
 const getAddr = async (id: eContractid) => {
   const entry = await getFromJsonDb(id);
@@ -96,6 +103,9 @@ export const getMockPriceOracle = async (address: tEthereumAddress) =>
 
 export const getDepositToken = async (address: tEthereumAddress) =>
   DepositTokenFactory.connect(address, await getFirstSigner());
+
+export const getDelegationAwareDepositToken = async (address: tEthereumAddress) =>
+  DelegationAwareDepositTokenFactory.connect(address, await getFirstSigner());
 
 export const getStableDebtToken = async (address: tEthereumAddress) =>
   StableDebtTokenFactory.connect(address, await getFirstSigner());
@@ -305,6 +315,9 @@ export const getPermitFreezerRewardPool = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getTokenWeightedRewardPool = async (address: tEthereumAddress) =>
+  TokenWeightedRewardPoolFactory.connect(address, await getFirstSigner());
+
 export const getTokenWeightedRewardPoolAGFBooster = async (address?: tEthereumAddress) =>
   TokenWeightedRewardPoolFactory.connect(
     address || (await getAddr(eContractid.TokenWeightedRewardPoolAGFBoosted)),
@@ -386,6 +399,15 @@ export const getIChainlinkAggregator = async (address: tEthereumAddress) =>
 export const getIManagedLendingPool = async (address: tEthereumAddress) =>
   IManagedLendingPoolFactory.connect(address, await getFirstSigner());
 
+export const getIInitializablePoolToken = async (address: tEthereumAddress) =>
+  IInitializablePoolTokenFactory.connect(address, await getFirstSigner());
+
+export const getIInitializableStakeToken = async (address: tEthereumAddress) =>
+  IInitializableStakeTokenFactory.connect(address, await getFirstSigner());
+
+export const getIInitializableRewardPool = async (address: tEthereumAddress) =>
+  IInitializableRewardPoolFactory.connect(address, await getFirstSigner());
+
 export const getDelegatedStrategyAave = async (address?: tEthereumAddress) =>
   DelegatedStrategyAaveFactory.connect(
     address || (await getAddr(eContractid.DelegatedStrategyAave)),
@@ -406,3 +428,18 @@ export const getDelegatedStrategyCompoundEth = async (address?: tEthereumAddress
 
 export const getStaticPriceOracle = async (address?: tEthereumAddress) =>
   StaticPriceOracleFactory.connect(address || (await getAddr(eContractid.StaticPriceOracle)), await getFirstSigner());
+
+export const getTreasuryRewardPool = async (address?: tEthereumAddress) =>
+  TreasuryRewardPoolFactory.connect(address || (await getAddr(eContractid.TreasuryRewardPool)), await getFirstSigner());
+
+export const getReferralRewardPoolImpl = async (address: tEthereumAddress) =>
+  ReferralRewardPoolFactory.connect(
+    address || (await getAddr(eContractid.ReferralRewardPoolV1Impl)),
+    await getFirstSigner()
+  );
+
+export const getDefaultReserveInterestRateStrategy = async (address: tEthereumAddress) =>
+  DefaultReserveInterestRateStrategyFactory.connect(
+    address || (await getAddr(eContractid.DefaultReserveInterestRateStrategy)),
+    await getFirstSigner()
+  );

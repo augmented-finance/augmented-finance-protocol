@@ -123,6 +123,7 @@ export const getTenderlyDashboardLink = () => {
 export const getFirstSigner = async () => (await getSigners())[0];
 export const getSignerAddress = async (n: number) => (await getSigners())[n].address;
 export const getSigners = async () => (await (<any>DRE).ethers.getSigners()) as SignerWithAddress[];
+export const getSignerN = async (n: number) => (await getSigners())[n];
 
 export const getContractFactory = async (abi: any[], bytecode: string) =>
   await (<any>DRE).ethers.getContractFactory(abi, bytecode);
@@ -137,6 +138,7 @@ export interface DbInstanceEntry {
   verify?: {
     args?: string;
     impl?: string;
+    subType?: string;
   };
 }
 
@@ -191,7 +193,13 @@ export const addContractToJsonDb = async (
   }
 };
 
-export const addProxyToJsonDb = async (id: string, proxyAddress: string, implAddress: string, verifyArgs?: any[]) => {
+export const addProxyToJsonDb = async (
+  id: string,
+  proxyAddress: string,
+  implAddress: string,
+  subType: string,
+  verifyArgs?: any[]
+) => {
   const currentNetwork = DRE.network.name;
   const db = getDb();
 
@@ -199,6 +207,7 @@ export const addProxyToJsonDb = async (id: string, proxyAddress: string, implAdd
     id: id,
     verify: {
       impl: implAddress,
+      subType: subType,
     },
   };
 
@@ -240,6 +249,18 @@ export const addNamedToJsonDb = async (contractId: string, contractAddress: stri
     .write();
 };
 
+export const setVerifiedToJsonDb = async (address: string, verified: boolean) => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+  await db.set(`${currentNetwork}.verified.${address}`, verified).write();
+};
+
+export const getVerifiedFromJsonDb = async (address: string) => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+  return (await db.get(`${currentNetwork}.verified.${address}`).value()) as boolean;
+};
+
 export const getInstancesFromJsonDb = () =>
   Object.entries<DbInstanceEntry>(getDb().get(`${DRE.network.name}.instance`).value() || []);
 
@@ -251,7 +272,8 @@ export const getNamedFromJsonDb = () =>
 
 export const getFromJsonDb = (id: string) => getDb().get(`${DRE.network.name}.named.${id}`).value();
 
-export const getFromJsonDbByAddr = (id: string) => getDb().get(`${DRE.network.name}.instance.${id}`).value();
+export const getFromJsonDbByAddr = (id: string) =>
+  getDb().get(`${DRE.network.name}.instance.${id}`).value() as DbInstanceEntry;
 
 export const hasInJsonDb = (id: string) => !falsyOrZeroAddress(getFromJsonDb(id)?.address);
 
