@@ -29,8 +29,9 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
 
   struct WorkReward {
     // saves some of storage cost
-    uint128 claimableReward;
-    uint128 boostLimit;
+    uint112 claimableReward;
+    uint112 boostLimit;
+    uint32 claimedAt;
   }
   mapping(address => WorkReward) private _workRewards;
 
@@ -119,12 +120,11 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     override
     returns (uint256 claimableAmount, uint256)
   {
-    uint256 boostLimit;
-    (claimableAmount, boostLimit) = (_workRewards[holder].claimableReward, _workRewards[holder].boostLimit);
+    WorkReward memory workReward = _workRewards[holder];
+    claimableAmount = workReward.claimableReward;
+    uint256 boostLimit = workReward.boostLimit;
 
-    if (boostLimit > 0 || claimableAmount > 0) {
-      delete (_workRewards[holder]);
-    }
+    _workRewards[holder] = WorkReward(0, 0, uint32(block.timestamp));
 
     for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
       if (mask & 1 == 0) {
@@ -178,8 +178,9 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     uint256 mask,
     uint32 at
   ) internal view override returns (uint256 claimableAmount, uint256 delayedAmount) {
-    uint256 boostLimit;
-    (claimableAmount, boostLimit) = (_workRewards[holder].claimableReward, _workRewards[holder].boostLimit);
+    WorkReward memory workReward = _workRewards[holder];
+    claimableAmount = workReward.claimableReward;
+    uint256 boostLimit = workReward.boostLimit;
 
     for (uint256 i = 0; mask != 0; (i, mask) = (i + 1, mask >> 1)) {
       if (mask & 1 == 0) {
@@ -228,16 +229,22 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     }
 
     WorkReward memory workReward = _workRewards[holder];
+    if (workReward.claimedAt == 0) {
+      workReward.claimedAt = uint32(block.timestamp);
+    }
 
     uint256 v = workReward.claimableReward + allocated;
-    require(v <= type(uint128).max);
-    workReward.claimableReward = uint128(v);
+    require(v <= type(uint112).max);
+    workReward.claimableReward = uint112(v);
 
     uint32 factor = _boostFactor[pool];
     if (factor != 0) {
       v = workReward.boostLimit + allocated.percentMul(factor);
-      require(v <= type(uint128).max);
-      workReward.boostLimit = uint128(v);
+      if (v < type(uint112).max) {
+        workReward.boostLimit = uint112(v);
+      } else {
+        workReward.boostLimit = type(uint112).max;
+      }
     }
 
     _workRewards[holder] = workReward;
@@ -297,7 +304,12 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
   ) internal view returns (RewardExplained memory r) {
     mask = getClaimMask(holder, mask) | _boostPoolMask;
 
-    (r.amountClaimable, r.boostLimit) = (_workRewards[holder].claimableReward, _workRewards[holder].boostLimit);
+    WorkReward memory workReward = _workRewards[holder];
+    (r.amountClaimable, r.boostLimit, r.latestClaimAt) = (
+      workReward.claimableReward,
+      workReward.boostLimit,
+      workReward.claimedAt
+    );
 
     uint256 n;
     for (uint256 mask_ = mask; mask_ != 0; mask_ >>= 1) {
