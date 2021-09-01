@@ -81,12 +81,16 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
   [eContractid.AddressesProviderRegistry]: {
     functions: {
       renounceOneTimeRegistrar: true,
+      acceptOwnership: 'SafeOwnable: caller is not the pending owner',
+      recoverOwnership: 'SafeOwnable: caller can not recover ownership',
     },
   },
   [eContractid.MarketAccessController]: {
     functions: {
       createProxy: true,
       renounceTemporaryAdmin: true,
+      acceptOwnership: 'SafeOwnable: caller is not the pending owner',
+      recoverOwnership: 'SafeOwnable: caller can not recover ownership',
     },
   },
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../dependencies/openzeppelin/contracts/Ownable.sol';
+import '../tools/SafeOwnable.sol';
 import '../interfaces/IAddressesProviderRegistry.sol';
 import '../tools/Errors.sol';
 
@@ -12,7 +12,7 @@ import '../tools/Errors.sol';
  * - The id assigned to an AddressesProvider refers to the market it is connected with,
  *   for example with `1` for the first market, `2` for the next one, etc
  **/
-contract AddressesProviderRegistry is Ownable, IAddressesProviderRegistry {
+contract AddressesProviderRegistry is SafeOwnable, IAddressesProviderRegistry {
   struct Entry {
     uint256 id;
     uint16 index;
@@ -29,7 +29,7 @@ contract AddressesProviderRegistry is Ownable, IAddressesProviderRegistry {
   }
 
   function renounceOneTimeRegistrar() external override {
-    if (_oneTimeRegistrar == _msgSender()) {
+    if (_oneTimeRegistrar == msg.sender) {
       _oneTimeRegistrar = address(0);
     }
   }
@@ -55,11 +55,11 @@ contract AddressesProviderRegistry is Ownable, IAddressesProviderRegistry {
    * @param id The id for the new AddressesProvider, referring to the market it belongs to
    **/
   function registerAddressesProvider(address provider, uint256 id) external override {
-    if (_msgSender() == _oneTimeRegistrar) {
+    if (msg.sender == _oneTimeRegistrar) {
       require(_oneTimeId == 0 || _oneTimeId == id, Errors.LPAPR_INVALID_ADDRESSES_PROVIDER_ID);
       _oneTimeRegistrar = address(0);
     } else {
-      require(_msgSender() == owner(), Errors.TXT_OWNABLE_CALLER_NOT_OWNER);
+      require(msg.sender == owner(), Errors.TXT_OWNABLE_CALLER_NOT_OWNER);
       require(id != 0, Errors.LPAPR_INVALID_ADDRESSES_PROVIDER_ID);
     }
 
