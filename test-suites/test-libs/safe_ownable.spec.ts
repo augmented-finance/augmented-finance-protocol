@@ -96,4 +96,34 @@ describe('SafeOwnable', () => {
     await expect(subject.connect(user1).recoverOwnership()).to.be.revertedWith('SafeOwnable: caller can not recover ownership');
     await expect(subject.connect(user2).recoverOwnership()).to.be.revertedWith('SafeOwnable: caller can not recover ownership');
   });
+
+  it('accept transfer to itself', async () => {
+    await subject.connect(user1).testAccess();
+
+    await subject.connect(user1).transferOwnership(user1.address);
+    expect(await subject.owners()).eql([user1.address, ZERO_ADDRESS, user1.address]);
+
+    await expect(subject.connect(user1).testAccess()).to.be.revertedWith('Ownable: caller is not the owner');
+
+    await expect(subject.connect(user0).acceptOwnership()).to.be.revertedWith('SafeOwnable: caller is not the pending owner');
+    await expect(subject.connect(user2).acceptOwnership()).to.be.revertedWith('SafeOwnable: caller is not the pending owner');
+
+    await subject.connect(user1).acceptOwnership();
+    await subject.connect(user1).testAccess();
+  });
+
+  it('recover transfer to itself', async () => {
+    await subject.connect(user1).testAccess();
+
+    await subject.connect(user1).transferOwnership(user1.address);
+    expect(await subject.owners()).eql([user1.address, ZERO_ADDRESS, user1.address]);
+
+    await expect(subject.connect(user1).testAccess()).to.be.revertedWith('Ownable: caller is not the owner');
+
+    await expect(subject.connect(user0).recoverOwnership()).to.be.revertedWith('SafeOwnable: caller can not recover ownership');
+    await expect(subject.connect(user2).recoverOwnership()).to.be.revertedWith('SafeOwnable: caller can not recover ownership');
+
+    await subject.connect(user1).recoverOwnership();
+    await subject.connect(user1).testAccess();
+  });
 });

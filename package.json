@@ -66,10 +66,7 @@
     "verify:ropsten": "npm run hardhat:ropsten -- verify:verify-all-contracts",
     "verify:kovan": "npm run hardhat:kovan -- verify:verify-all-contracts",
     "prettier:check": "npx prettier -c 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'",
-    "prettier:write": "prettier --write 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'",
-    "todo:main:deployUniswapRepayAdapter": "hardhat --network main deploy-UniswapRepayAdapter --provider 0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5 --router 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D --weth 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-    "todo:main:UniswapLiquiditySwapAdapter": "hardhat --network main deploy-UniswapLiquiditySwapAdapter  --provider 0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5 --router 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D --weth 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-    "todo:deploy:kovan:asset": "npm run compile && hardhat --network kovan external:deploy-new-asset --symbol ${SYMBOL} --verify"
+    "prettier:write": "prettier --write 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.0",
