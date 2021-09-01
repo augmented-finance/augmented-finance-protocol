@@ -55,14 +55,22 @@ jobs:
       - run: yarn run test-uniswap
   test_extra:
     <<: *defaults
+    description: Extra test set
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run: yarn run test-libs
+      - run: yarn run test-boost
+      - run: yarn run test-pools
+      - run: yarn run test-stake
+          
+  test_deploy:
+    <<: *defaults
     description: Deployment and build tests
     steps:
       - attach_workspace:
           at: ~/
       - run: yarn run solhint
-      - run: yarn run test-boost
-      - run: yarn run test-pools
-      - run: yarn run test-stake
       - run: yarn run test-deploy:fork
       - run: yarn run test-deploy:fork:test-incremental
       - run: yarn run build:package
@@ -102,11 +110,17 @@ workflows:
             - compile_all
           context:
             - alchemy-secret
+      - test_deploy:
+          requires:
+            - compile_all
+          context:
+            - alchemy-secret
       - finish_all:
           requires:
             - test_main
             - test_extra
             - test_adapters
+            - test_deploy
           context:
             - slack-secret
       - npm-publish:
