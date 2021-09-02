@@ -206,6 +206,7 @@ task('dev:calc-apy', 'Calculates current APYs')
 
       let totalValue = BigNumber.from(0);
       let totalRate = BigNumber.from(0);
+      let boostRate = BigNumber.from(0);
       const totalDecimals = basePriceDecimals;
       const totalExp = powerOf10(totalDecimals);
 
@@ -220,6 +221,7 @@ task('dev:calc-apy', 'Calculates current APYs')
         const annualRate = perAnnum(value.poolRate);
         totalRate = totalRate.add(annualRate);
         if (value.poolToken == xagfAddr) {
+          boostRate = boostRate.add(annualRate);
           return;
         }
         const token = tokenInfo.get(value.poolToken)!;
@@ -263,21 +265,29 @@ task('dev:calc-apy', 'Calculates current APYs')
         );
       });
 
-      const maxBoostAPY = totalValue.eq(0)
-        ? 'INF'
-        : formatFixed(
-            totalRate
-              .mul(agfPrice.price)
-              .mul(10 ** 4) // keep precision for 4 digits => 100.00%
-              .div(totalValue),
-            agfToken.decimals + agfPrice.decimals + 4 - totalDecimals - 2,
-            2
-          );
+      const maxBoostAPY = (v: BigNumber) =>
+        totalValue.eq(0)
+          ? 'INF'
+          : formatFixed(
+              v
+                .mul(agfPrice.price)
+                .mul(10 ** 4) // keep precision for 4 digits => 100.00%
+                .div(totalValue),
+              agfToken.decimals + agfPrice.decimals + 4 - totalDecimals - 2,
+              2
+            );
       console.log(
-        '\n\tMax Reward+Boost APY',
+        '\n\tAvg Max APY',
         formatFixed(totalRate, agfToken.decimals, 4),
         'AGF p.a.;\tAPY%:\t',
-        maxBoostAPY,
+        maxBoostAPY(totalRate),
+        '%'
+      );
+      console.log(
+        '\tAvg Boost APY',
+        formatFixed(boostRate, agfToken.decimals, 4),
+        'AGF p.a.;\tAPY%:\t',
+        maxBoostAPY(boostRate),
         '%'
       );
     }
