@@ -101,11 +101,6 @@ task('dev:calc-apy', 'Calculates current APYs')
       const descs = await dp.getAllTokenDescriptions(true);
       for (let i = descs.tokenCount.toNumber(); i > 0; i--) {
         let token = { ...descs.tokens[i - 1] };
-        if (token.tokenType >= TokenType.Deposit && token.tokenType <= TokenType.StableDebt) {
-          // this is to fix a bug of UI data provider.
-          token.priceToken = token.underlying;
-        }
-
         const key = token.token.toLowerCase();
         tokenInfo.set(key, { ...token, totalSupply: BigNumber.from(0) });
         const tokenAddr = token.token;
@@ -375,8 +370,6 @@ task('dev:calc-apy', 'Calculates current APYs')
         }
       }
 
-      let boostDuration = 0;
-
       console.log('\tRewards by pools:');
       for (const poolAlloc of explained.allocations) {
         const pool = poolInfo.get(poolAlloc.pool.toLowerCase())!;
@@ -385,8 +378,6 @@ task('dev:calc-apy', 'Calculates current APYs')
         const tokenKey = pool.poolToken.toLowerCase();
 
         if (poolAlloc.rewardType == 1 /* BoostReward */) {
-          // TODO this will change
-          boostDuration = duration;
           continue;
         }
 
@@ -417,6 +408,7 @@ task('dev:calc-apy', 'Calculates current APYs')
         );
       }
 
+      const boostDuration = explainedAt - explained.latestClaimAt;
       if (boostDuration > 0) {
         const formatBoostAPY = (v: BigNumber) =>
           formatFixed(
