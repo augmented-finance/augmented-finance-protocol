@@ -204,15 +204,24 @@ task('dev:calc-apy', 'Calculates current APYs')
     {
       console.log('\nRewards and boosts');
 
+      let totalValue = BigNumber.from(0);
+      let totalRate = BigNumber.from(0);
+      const totalDecimals = basePriceDecimals;
+      const totalExp = powerOf10(totalDecimals);
+
       const xagfAddr = xagfToken.token.toLowerCase();
 
       poolInfo.forEach((value, key) => {
-        if (value.poolToken === '' || value.poolToken == xagfAddr) {
+        if (value.poolToken === '') {
           // ignore special pools
           return;
         }
-        const annualRate = perAnnum(value.poolRate);
 
+        const annualRate = perAnnum(value.poolRate);
+        totalRate = totalRate.add(annualRate);
+        if (value.poolToken == xagfAddr) {
+          return;
+        }
         const token = tokenInfo.get(value.poolToken)!;
 
         if (token.totalSupply.eq(0)) {
@@ -232,6 +241,10 @@ task('dev:calc-apy', 'Calculates current APYs')
           return;
         }
 
+        const tokenValue = token.totalSupply.mul(tokenPrice.price);
+        const tokenValueDecimals = token.decimals + tokenPrice.decimals;
+        totalValue = totalValue.add(tokenValue.mul(totalExp).div(powerOf10(tokenValueDecimals)));
+
         console.log(
           '\t',
           value.poolName,
@@ -242,16 +255,33 @@ task('dev:calc-apy', 'Calculates current APYs')
             annualRate
               .mul(agfPrice.price)
               .mul(10 ** 4) // keep precision for 4 digits => 100.00%
-              .div(token.totalSupply.mul(tokenPrice.price)),
-            agfToken.decimals + agfPrice.decimals + 4 - (token.decimals + tokenPrice.decimals) - 2,
+              .div(tokenValue),
+            agfToken.decimals + agfPrice.decimals + 4 - tokenValueDecimals - 2,
             2
           ),
           '%'
         );
       });
+
+      const maxBoostAPY = totalValue.eq(0)
+        ? 'INF'
+        : formatFixed(
+            totalRate
+              .mul(agfPrice.price)
+              .mul(10 ** 4) // keep precision for 4 digits => 100.00%
+              .div(totalValue),
+            agfToken.decimals + agfPrice.decimals + 4 - totalDecimals - 2,
+            2
+          );
+      console.log(
+        '\n\tMax Reward+Boost APY',
+        formatFixed(totalRate, agfToken.decimals, 4),
+        'AGF p.a.;\tAPY%:\t',
+        maxBoostAPY,
+        '%'
+      );
     }
 
-    const currencyPrice = priceInfo.get(priceCurrency)!;
     {
       // console.log('\nBalances of user:', userAddr);
       // console.log('\t', priceCurrencyName, '\t@', formatFixed(currencyPrice.price, currencyPrice.decimals, 6), 'ETH');
@@ -259,7 +289,7 @@ task('dev:calc-apy', 'Calculates current APYs')
       const balanceValues = new Map<string, BigNumber>();
 
       let totalValue = BigNumber.from(0);
-      const totalDecimals = currencyPrice.decimals;
+      const totalDecimals = basePriceDecimals;
       const totalExp = powerOf10(totalDecimals);
 
       {
@@ -272,9 +302,9 @@ task('dev:calc-apy', 'Calculates current APYs')
 
           const tokenKey = balances.tokens[i - 1].toLowerCase();
           const token = tokenInfo.get(tokenKey)!;
-          const balanceV = formatFixed(balance, token.decimals, 4);
+          // const balanceV = formatFixed(balance, token.decimals, 4);
           if (falsyOrZeroAddress(token.priceToken)) {
-            console.log('\t', token.tokenSymbol, '\t', balanceV);
+            // console.log('\t', token.tokenSymbol, '\t', balanceV);
             continue;
           }
           const price = priceInfo.get(token.priceToken)!;
