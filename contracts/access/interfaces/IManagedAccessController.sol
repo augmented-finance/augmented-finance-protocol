@@ -21,11 +21,20 @@ interface IManagedAccessController is IAccessController {
     bytes calldata initCall
   ) external;
 
-  function callWithRoles(
+  function directCallWithRoles(
     uint256 flags,
     address addr,
     bytes calldata data
   ) external returns (bytes memory result);
+
+  struct CallParams {
+    uint256 accessFlags;
+    uint256 callFlag;
+    address callAddr;
+    bytes callData;
+  }
+
+  function callWithRoles(CallParams[] calldata params) external returns (bytes[] memory result);
 
   event ProxyCreated(uint256 indexed id, address indexed newAddress);
   event AddressSet(uint256 indexed id, address indexed newAddress, bool hasProxy);
