@@ -204,15 +204,26 @@ task('dev:calc-apy', 'Calculates current APYs')
     {
       console.log('\nRewards and boosts');
 
+      let totalValue = BigNumber.from(0);
+      let totalRate = BigNumber.from(0);
+      let boostRate = BigNumber.from(0);
+      const totalDecimals = basePriceDecimals;
+      const totalExp = powerOf10(totalDecimals);
+
       const xagfAddr = xagfToken.token.toLowerCase();
 
       poolInfo.forEach((value, key) => {
-        if (value.poolToken === '' || value.poolToken == xagfAddr) {
+        if (value.poolToken === '') {
           // ignore special pools
           return;
         }
-        const annualRate = perAnnum(value.poolRate);
 
+        const annualRate = perAnnum(value.poolRate);
+        totalRate = totalRate.add(annualRate);
+        if (value.poolToken == xagfAddr) {
+          boostRate = boostRate.add(annualRate);
+          return;
+        }
         const token = tokenInfo.get(value.poolToken)!;
 
         if (token.totalSupply.eq(0)) {
@@ -232,6 +243,10 @@ task('dev:calc-apy', 'Calculates current APYs')
           return;
         }
 
+        const tokenValue = token.totalSupply.mul(tokenPrice.price);
+        const tokenValueDecimals = token.decimals + tokenPrice.decimals;
+        totalValue = totalValue.add(tokenValue.mul(totalExp).div(powerOf10(tokenValueDecimals)));
+
         console.log(
           '\t',
           value.poolName,
@@ -242,16 +257,41 @@ task('dev:calc-apy', 'Calculates current APYs')
             annualRate
               .mul(agfPrice.price)
               .mul(10 ** 4) // keep precision for 4 digits => 100.00%
-              .div(token.totalSupply.mul(tokenPrice.price)),
-            agfToken.decimals + agfPrice.decimals + 4 - (token.decimals + tokenPrice.decimals) - 2,
+              .div(tokenValue),
+            agfToken.decimals + agfPrice.decimals + 4 - tokenValueDecimals - 2,
             2
           ),
           '%'
         );
       });
+
+      const maxBoostAPY = (v: BigNumber) =>
+        totalValue.eq(0)
+          ? 'INF'
+          : formatFixed(
+              v
+                .mul(agfPrice.price)
+                .mul(10 ** 4) // keep precision for 4 digits => 100.00%
+                .div(totalValue),
+              agfToken.decimals + agfPrice.decimals + 4 - totalDecimals - 2,
+              2
+            );
+      console.log(
+        '\n\tAvg Max APY',
+        formatFixed(totalRate, agfToken.decimals, 4),
+        'AGF p.a.;\tAPY%:\t',
+        maxBoostAPY(totalRate),
+        '%'
+      );
+      console.log(
+        '\tAvg Boost APY',
+        formatFixed(boostRate, agfToken.decimals, 4),
+        'AGF p.a.;\tAPY%:\t',
+        maxBoostAPY(boostRate),
+        '%'
+      );
     }
 
-    const currencyPrice = priceInfo.get(priceCurrency)!;
     {
       // console.log('\nBalances of user:', userAddr);
       // console.log('\t', priceCurrencyName, '\t@', formatFixed(currencyPrice.price, currencyPrice.decimals, 6), 'ETH');
@@ -259,7 +299,7 @@ task('dev:calc-apy', 'Calculates current APYs')
       const balanceValues = new Map<string, BigNumber>();
 
       let totalValue = BigNumber.from(0);
-      const totalDecimals = currencyPrice.decimals;
+      const totalDecimals = basePriceDecimals;
       const totalExp = powerOf10(totalDecimals);
 
       {
@@ -272,9 +312,9 @@ task('dev:calc-apy', 'Calculates current APYs')
 
           const tokenKey = balances.tokens[i - 1].toLowerCase();
           const token = tokenInfo.get(tokenKey)!;
-          const balanceV = formatFixed(balance, token.decimals, 4);
+          // const balanceV = formatFixed(balance, token.decimals, 4);
           if (falsyOrZeroAddress(token.priceToken)) {
-            console.log('\t', token.tokenSymbol, '\t', balanceV);
+            // console.log('\t', token.tokenSymbol, '\t', balanceV);
             continue;
           }
           const price = priceInfo.get(token.priceToken)!;
@@ -311,28 +351,27 @@ task('dev:calc-apy', 'Calculates current APYs')
         explained.allocations.length
       );
 
-      const boostAlloc = explained.boostLimit > explained.maxBoost ? explained.maxBoost : explained.boostLimit;
+      const [boostAlloc, boostMax] = explained.boostLimit.gt(explained.maxBoost)
+        ? [explained.maxBoost, explained.boostLimit]
+        : [explained.boostLimit, explained.maxBoost];
+
+      const boostDifference =
+        boostMax
+          .mul(10 ** 4)
+          .div(boostAlloc)
+          .toNumber() /
+        10 ** 2;
 
       const adviceTolerance = 120; // %
-      if (explained.boostLimit.gt(boostAlloc)) {
-        const up =
-          explained.boostLimit
-            .mul(10 ** 4)
-            .div(boostAlloc)
-            .toNumber() /
-          10 ** 2;
-        if (up >= adviceTolerance) {
-          console.log('\n\tGet upto', up, '% more rewards by locking AGF\n');
-        }
-      } else if (explained.maxBoost.gt(boostAlloc)) {
-        const up =
-          explained.maxBoost
-            .mul(10 ** 4)
-            .div(boostAlloc)
-            .toNumber() /
-          10 ** 2;
-        if (up >= adviceTolerance) {
-          console.log('\n\tGet upto', up, '% more rewards by making more deposits, borrows or stakes\n');
+      if (boostDifference > adviceTolerance) {
+        if (explained.boostLimit.gt(boostAlloc)) {
+          console.log('\n\tGet upto', boostDifference, '% more boost rewards by locking AGF\n');
+        } else if (explained.maxBoost.gt(boostAlloc)) {
+          console.log(
+            '\n\tGet upto',
+            boostDifference,
+            '% more boost rewards by making more deposits, borrows or stakes\n'
+          );
         }
       }
 
@@ -391,7 +430,7 @@ task('dev:calc-apy', 'Calculates current APYs')
           );
 
         console.log('\tCurrent boost APY:', formatBoostAPY(boostAlloc), '%');
-        console.log('\tMax boost APY (by locked xAGF):', formatBoostAPY(explained.maxBoost), '%');
+        console.log('\tMax boost APY (by locked xAGF):', formatBoostAPY(boostMax), '%');
       }
     }
   });
