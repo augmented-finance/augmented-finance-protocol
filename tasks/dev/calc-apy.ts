@@ -311,28 +311,27 @@ task('dev:calc-apy', 'Calculates current APYs')
         explained.allocations.length
       );
 
-      const boostAlloc = explained.boostLimit > explained.maxBoost ? explained.maxBoost : explained.boostLimit;
+      const [boostAlloc, boostMax] = explained.boostLimit.gt(explained.maxBoost)
+        ? [explained.maxBoost, explained.boostLimit]
+        : [explained.boostLimit, explained.maxBoost];
+
+      const boostDifference =
+        boostMax
+          .mul(10 ** 4)
+          .div(boostAlloc)
+          .toNumber() /
+        10 ** 2;
 
       const adviceTolerance = 120; // %
-      if (explained.boostLimit.gt(boostAlloc)) {
-        const up =
-          explained.boostLimit
-            .mul(10 ** 4)
-            .div(boostAlloc)
-            .toNumber() /
-          10 ** 2;
-        if (up >= adviceTolerance) {
-          console.log('\n\tGet upto', up, '% more rewards by locking AGF\n');
-        }
-      } else if (explained.maxBoost.gt(boostAlloc)) {
-        const up =
-          explained.maxBoost
-            .mul(10 ** 4)
-            .div(boostAlloc)
-            .toNumber() /
-          10 ** 2;
-        if (up >= adviceTolerance) {
-          console.log('\n\tGet upto', up, '% more rewards by making more deposits, borrows or stakes\n');
+      if (boostDifference > adviceTolerance) {
+        if (explained.boostLimit.gt(boostAlloc)) {
+          console.log('\n\tGet upto', boostDifference, '% more boost rewards by locking AGF\n');
+        } else if (explained.maxBoost.gt(boostAlloc)) {
+          console.log(
+            '\n\tGet upto',
+            boostDifference,
+            '% more boost rewards by making more deposits, borrows or stakes\n'
+          );
         }
       }
 
@@ -391,7 +390,7 @@ task('dev:calc-apy', 'Calculates current APYs')
           );
 
         console.log('\tCurrent boost APY:', formatBoostAPY(boostAlloc), '%');
-        console.log('\tMax boost APY (by locked xAGF):', formatBoostAPY(explained.maxBoost), '%');
+        console.log('\tMax boost APY (by locked xAGF):', formatBoostAPY(boostMax), '%');
       }
     }
   });
