@@ -18,10 +18,10 @@ Augmented Finance is on a mission to help you achieve and secure financial indep
 
 | Pool | % of Total AGF |
 | ---- | :------------- |
-|Liquidity Incentives | 52% |
-|Staking Incentives | 25% |
-|Referral Incentives | 2% |
-|Token Burner Incentives| 1% |
+|Liquidity Rewards | 52% |
+|Staking Rewards | 25% |
+|Referral Rewards | 2% |
+|Token Burner Rewards| 1% |
 |Dev Fund | 10% |
 |Ecosystem Fund | 10% |
 
@@ -42,9 +42,9 @@ A user can lock AGF for a period from 1 week to 4 years, and receive xAGF to unl
 
 ## Supply & Borrow
 
-**Suppliers** (lenders) earn high APY on supported assets supplied to the protocol, with the highest safety (e.g. supply USDC, earn interest in USDC, and receive liquidity incentives in AGF).
+**Suppliers** (lenders) earn high APY on supported assets supplied to the protocol, with the highest safety (e.g. supply USDC, earn interest in USDC, and receive liquidity rewards in AGF).
 
-**Borrowers** pay low interest on supported assets borrowed from the protocol, with the highest safety (e.g. borrow USDC, pay interest in USDC, and receive liquidity incentives in AGF).
+**Borrowers** pay low interest on supported assets borrowed from the protocol, with the highest safety (e.g. borrow USDC, pay interest in USDC, and receive liquidity rewards in AGF).
 
 ## Stake
 
@@ -56,9 +56,9 @@ A user can lock AGF for a period from 1 week to 4 years, and receive xAGF to unl
 
 **Lock**: lockup AGF for a period from 1 week to 4 years to receive xAGF. 
 
-**Boost**: Holding xAGF gives a boost (up to 4x) of AGF incentives for those who actively use the protocol — supply and borrow supported assets, stake agTokens (Augmented Finance's interest-bearing tokens), and stake AGF-ETH UNI LP (Uniswap liquidity pool tokens). 
+**Boost**: Holding xAGF gives a boost (up to 4x) of AGF rewards for those who actively use the protocol — supply and borrow supported assets, stake agTokens (Augmented Finance's interest-bearing tokens), and stake AGF-ETH UNI LP (Uniswap liquidity pool tokens). 
 
-**The users who lock AGF and actively use the protocol — get the maximum amount of AGF incentives.**
+**The users who lock AGF and actively use the protocol — get the maximum amount of AGF rewards.**
 
 ## Trade
 
