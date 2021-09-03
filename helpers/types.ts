@@ -141,12 +141,14 @@ export enum ProtocolErrors {
   VL_DEPOSIT_ALREADY_IN_USE = '20', // 'User deposit is already being used as collateral'
 
   LP_INTEREST_RATE_REBALANCE_CONDITIONS_NOT_MET = '22', // 'Interest rate rebalance conditions were not met'
+  AT_OVERDRAFT_DISABLED = '23', // User doesn't accept allocation of overdraft
+  VL_INVALID_SUB_BALANCE_ARGS = '24',
 
   LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR = '27', // 'The caller is not the lending pool configurator'
 
   CT_CALLER_MUST_BE_LENDING_POOL = '29', // 'The caller of this function must be a lending pool'
-  CT_CANNOT_GIVE_ALLOWANCE_TO_HIMSELF = '30', // 'User cannot give allowance to himself'
-  CT_TRANSFER_AMOUNT_NOT_GT_0 = '31', // 'Transferred amount needs to be greater than zero'
+  AT_CALLER_NOT_SUB_BALANCE_OPERATOR = '30', // The caller of this function must be a lending pool or a sub-balance operator
+
   RL_RESERVE_ALREADY_INITIALIZED = '32', // 'Reserve has already been initialized'
   CALLER_NOT_POOL_ADMIN = '33', // 'The caller must be the pool admin'
   LPC_RESERVE_LIQUIDITY_NOT_0 = '34', // The liquidity of the reserve needs to be 0

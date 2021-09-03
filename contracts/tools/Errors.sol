@@ -48,7 +48,7 @@ library Errors {
   string public constant LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR = '27'; // The caller of the function is not the lending pool configurator
 
   string public constant CALLER_NOT_LENDING_POOL = '29'; // The caller of this function must be a lending pool
-  string public constant AT_CALLER_NOT_SUB_BALANCE_OPERATOR = '30'; // The caller of this function must be a lending pool
+  string public constant AT_CALLER_NOT_SUB_BALANCE_OPERATOR = '30'; // The caller of this function must be a lending pool or a sub-balance operator
 
   string public constant RL_RESERVE_ALREADY_INITIALIZED = '32'; // Reserve has already been initialized
   string public constant CALLER_NOT_POOL_ADMIN = '33'; // The caller must be the pool admin
