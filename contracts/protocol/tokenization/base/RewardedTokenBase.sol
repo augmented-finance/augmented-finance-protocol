@@ -30,7 +30,7 @@ abstract contract RewardedTokenBase is
   }
 
   function internalSetFlagsOf(address account, uint32 flags) internal override {
-    revert('not implemented'); // TODO
+    super.internalSetRewardEntryCustom(account, flags);
   }
 
   function internalSetIncentivesController(address) internal override {

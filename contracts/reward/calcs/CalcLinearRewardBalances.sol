@@ -81,6 +81,10 @@ abstract contract CalcLinearRewardBalances {
     return _balances[holder];
   }
 
+  function internalSetRewardEntryCustom(address holder, uint32 custom) internal {
+    _balances[holder].custom = custom;
+  }
+
   function doIncrementRewardBalance(address holder, uint256 amount)
     internal
     returns (
