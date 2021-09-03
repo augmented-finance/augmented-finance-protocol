@@ -195,6 +195,8 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
       ...poolTokenImpl.functions,
       ...erc20.functions,
 
+      addSubBalanceOperator: ProtocolErrors.CALLER_NOT_POOL_ADMIN,
+      removeSubBalanceOperator: ProtocolErrors.CALLER_NOT_POOL_ADMIN,
       provideSubBalance: ProtocolErrors.AT_CALLER_NOT_SUB_BALANCE_OPERATOR,
       returnSubBalance: ProtocolErrors.AT_CALLER_NOT_SUB_BALANCE_OPERATOR,
       updateTreasury: ProtocolErrors.CALLER_NOT_POOL_ADMIN,

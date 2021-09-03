@@ -75,8 +75,12 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     return addr == address(_pool) || _subBalanceOperators[addr];
   }
 
-  modifier onlySubBalanceOperator() {
+  function _onlySubBalanceOperator() private view {
     require(isSubBalanceOperator(msg.sender), Errors.AT_CALLER_NOT_SUB_BALANCE_OPERATOR);
+  }
+
+  modifier onlySubBalanceOperator() {
+    _onlySubBalanceOperator();
     _;
   }
 
