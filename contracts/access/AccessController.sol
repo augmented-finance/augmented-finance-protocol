@@ -9,9 +9,12 @@ import '../tools/upgradeability/TransparentProxy.sol';
 import '../tools/upgradeability/IProxy.sol';
 import './interfaces/IAccessController.sol';
 import './interfaces/IManagedAccessController.sol';
+import './AccessCallHelper.sol';
 
 contract AccessController is SafeOwnable, IManagedAccessController {
   using BitUtils for uint256;
+
+  AccessCallHelper private _callHelper;
 
   mapping(uint256 => address) private _addresses;
   mapping(address => uint256) private _masks;
@@ -37,6 +40,7 @@ contract AccessController is SafeOwnable, IManagedAccessController {
     _singletons = singletons;
     _nonSingletons = nonSingletons;
     _proxies = proxies;
+    _callHelper = new AccessCallHelper(address(this));
   }
 
   function _onlyAdmin() private view {
@@ -399,13 +403,24 @@ contract AccessController is SafeOwnable, IManagedAccessController {
     return _createProxy(adminAddress, implAddress, params);
   }
 
-  function callWithRoles(
+  function directCallWithRoles(
     uint256 flags,
     address addr,
     bytes calldata data
   ) external override onlyAdmin returns (bytes memory result) {
-    require(Address.isContract(addr) && addr != address(this), 'must be contract');
+    require(addr != address(this) && Address.isContract(addr), 'must be another contract');
 
+    (bool restoreMask, uint256 oldMask) = _beforeDirectCallWithRoles(flags, addr);
+
+    result = Address.functionCall(addr, data);
+
+    if (restoreMask) {
+      _afterDirectCallWithRoles(addr, oldMask);
+    }
+    return result;
+  }
+
+  function _beforeDirectCallWithRoles(uint256 flags, address addr) private returns (bool restoreMask, uint256 oldMask) {
     if (_singletons & flags != 0) {
       require(_anyRoleMode == anyRoleEnabled, 'singleton should use setAddress');
       _nonSingletons |= flags & ~_singletons;
@@ -413,20 +428,35 @@ contract AccessController is SafeOwnable, IManagedAccessController {
       _nonSingletons |= flags;
     }
 
-    uint256 oldMask = _masks[addr];
-    flags &= ~oldMask;
-    if (flags != 0) {
+    oldMask = _masks[addr];
+    if (flags & ~oldMask != 0) {
       _masks[addr] = oldMask | flags;
       emit RolesUpdated(addr, oldMask | flags);
+      return (true, oldMask);
     }
+    return (false, oldMask);
+  }
 
-    result = Address.functionCall(addr, data);
+  function _afterDirectCallWithRoles(address addr, uint256 oldMask) private {
+    _masks[addr] = oldMask;
+    emit RolesUpdated(addr, oldMask);
+  }
 
-    if (flags != 0) {
-      _masks[addr] = oldMask;
-      emit RolesUpdated(addr, oldMask);
+  function callWithRoles(CallParams[] calldata params) external override onlyAdmin returns (bytes[] memory results) {
+    address callHelper = address(_callHelper);
+
+    results = new bytes[](params.length);
+
+    for (uint256 i = 0; i < params.length; i++) {
+      (bool restoreMask, ) = _beforeDirectCallWithRoles(params[i].accessFlags, callHelper);
+
+      address callAddr = params[i].callFlag != 0 ? getAddress(params[i].callFlag) : params[i].callAddr;
+      results[i] = AccessCallHelper(callHelper).doCall(callAddr, params[i].callData);
+
+      if (restoreMask) {
+        _afterDirectCallWithRoles(callHelper, 0); // call helper can't have any default roles
+      }
     }
-
-    return result;
+    return results;
   }
 }
