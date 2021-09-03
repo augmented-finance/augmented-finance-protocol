@@ -40,12 +40,15 @@ library Errors {
   string public constant VL_NO_VARIABLE_RATE_LOAN_IN_RESERVE = '18'; // User does not have a variable rate loan in progress on this reserve
   string public constant VL_UNDERLYING_BALANCE_NOT_GREATER_THAN_0 = '19'; // The underlying balance needs to be greater than 0
   string public constant VL_DEPOSIT_ALREADY_IN_USE = '20'; // User deposit is already being used as collateral
-  string public constant VL_RESERVE_MUST_BE_COLLATERAL = '21';
+  string public constant VL_RESERVE_MUST_BE_COLLATERAL = '21'; // This reserve must be enabled as collateral
   string public constant LP_INTEREST_RATE_REBALANCE_CONDITIONS_NOT_MET = '22'; // Interest rate rebalance conditions were not met
+  string public constant AT_OVERDRAFT_DISABLED = '23'; // User doesn't accept allocation of overdraft
+  string public constant VL_INVALID_SUB_BALANCE_ARGS = '24';
 
   string public constant LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR = '27'; // The caller of the function is not the lending pool configurator
 
   string public constant CALLER_NOT_LENDING_POOL = '29'; // The caller of this function must be a lending pool
+  string public constant AT_CALLER_NOT_SUB_BALANCE_OPERATOR = '30'; // The caller of this function must be a lending pool
 
   string public constant RL_RESERVE_ALREADY_INITIALIZED = '32'; // Reserve has already been initialized
   string public constant CALLER_NOT_POOL_ADMIN = '33'; // The caller must be the pool admin

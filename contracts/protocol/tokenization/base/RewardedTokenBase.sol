@@ -29,6 +29,10 @@ abstract contract RewardedTokenBase is
     return (balance.rewardBase, balance.custom);
   }
 
+  function internalSetFlagsOf(address account, uint32 flags) internal override {
+    revert('not implemented'); // TODO
+  }
+
   function internalSetIncentivesController(address) internal override {
     _mutable();
     _notSupported();

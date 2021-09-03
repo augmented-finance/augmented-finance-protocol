@@ -5,36 +5,50 @@ import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../../interfaces/IDepositToken.sol';
 import '../../../tools/Errors.sol';
 import '../../../tools/math/WadRayMath.sol';
+import '../../../tools/math/PercentageMath.sol';
 import '../../../tools/tokens/ERC20Events.sol';
 import '../../../access/AccessFlags.sol';
 import '../../../tools/tokens/ERC20PermitBase.sol';
 import '../../../tools/tokens/ERC20AllowanceBase.sol';
-import './PoolTokenWithRewardsBase.sol';
+import './RewardedTokenBase.sol';
 
 /// @dev Implementation of the interest bearing token for the Augmented Finance protocol
-abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, ERC20PermitBase, ERC20AllowanceBase {
+abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20PermitBase, ERC20AllowanceBase {
   using WadRayMath for uint256;
+  using PercentageMath for uint256;
   using SafeERC20 for IERC20;
+
+  uint32 private constant FLAG_OUT_BALANCE = 1 << 0;
+  uint32 private constant FLAG_ALLOW_OVERDRAFT = 1 << 1;
+  uint32 private constant FLAG_IN_BALANCE = 1 << 2;
 
   address internal _treasury;
 
-  // struct SubBalances {
-  //   uint128 inBalance;
-  //   uint128 outBalance;
-  // }
-  // mapping(address => SubBalances) private _subBalances;
-  // mapping(address => bool) private _subBalanceOperators;
-  // mapping(address => SubBalances) private _lostBalances;
-  // uint256 private totalLostBalance;
+  struct InBalance {
+    uint128 allowance;
+    uint128 overdraft;
+  }
+
+  struct OutBalance {
+    uint128 outBalance;
+  }
+
+  mapping(address => bool) private _subBalanceOperators;
+  mapping(address => OutBalance) private _outBalances;
+  mapping(address => InBalance) private _inBalances;
+  uint256 private _totalOverdraft;
+  uint16 private _overdraftTolerancePct;
 
   constructor(address treasury_) {
     _treasury = treasury_;
+    _overdraftTolerancePct = PercentageMath.HALF_ONE;
   }
 
   function _initializePoolToken(PoolTokenConfig memory config, bytes calldata params) internal virtual override {
     require(config.treasury != address(0), Errors.VL_TREASURY_REQUIRED);
     super._initializeDomainSeparator();
     super._initializePoolToken(config, params);
+    _overdraftTolerancePct = PercentageMath.HALF_ONE;
     _treasury = config.treasury;
   }
 
@@ -48,75 +62,155 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, E
     _treasury = treasury;
   }
 
-  // function addSubBalanceOperator(address addr) external onlyLendingPoolConfiguratorOrAdmin {
-  //   require(addr != address(0));
-  //   _subBalanceOperators[addr] = true;
-  // }
+  function addSubBalanceOperator(address addr) external onlyLendingPoolConfiguratorOrAdmin {
+    require(addr != address(0), 'address is required');
+    _subBalanceOperators[addr] = true;
+  }
 
-  // function removeSubBalanceOperator(address addr) external onlyLendingPoolConfiguratorOrAdmin {
-  //   delete(_subBalanceOperators[addr]);
-  // }
+  function removeSubBalanceOperator(address addr) external onlyLendingPoolConfiguratorOrAdmin {
+    delete (_subBalanceOperators[addr]);
+  }
 
-  // function isSubBalanceOperator(address addr) private view returns (bool) {
-  //   return addr == address(_pool) || _subBalanceOperators[addr];
-  // }
+  function isSubBalanceOperator(address addr) private view returns (bool) {
+    return addr == address(_pool) || _subBalanceOperators[addr];
+  }
 
-  // modifier onlySubBalanceOperator() {
-  //   require(isSubBalanceOperator(msg.sender), 'not a SubBalanceProvider');
-  //   _;
-  // }
+  modifier onlySubBalanceOperator() {
+    require(isSubBalanceOperator(msg.sender), Errors.AT_CALLER_NOT_SUB_BALANCE_OPERATOR);
+    _;
+  }
 
-  // function provideSubBalance(
-  //   address from,
-  //   address to,
-  //   uint256 amount
-  // ) external onlySubBalanceOperator {
-  //   require(from != address(0) && from != to);
+  function provideSubBalance(
+    address provider,
+    address recipient,
+    uint256 scaledAmount
+  ) external onlySubBalanceOperator {
+    require(provider != address(0) && provider != recipient, Errors.VL_INVALID_SUB_BALANCE_ARGS);
 
-  //   {
-  //     uint256 outBalance = amount + _subBalances[from].outBalance;
-  //     require(outBalance <= super.balanceOf(from), 'insufficient balance');
-  //     require(outBalance <= type(uint128).max);
-  //     _subBalances[from].outBalance = uint128(outBalance);
-  //   }
+    {
+      (uint256 balance, uint32 flags) = internalBalanceAndFlagsOf(provider);
+      uint256 outBalance = scaledAmount + _outBalances[provider].outBalance;
+      require(outBalance <= balance, Errors.VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE);
 
-  //   if (to != address(0)) {
-  //     amount += _subBalances[to].inBalance;
-  //     require(amount <= type(uint128).max);
-  //     _subBalances[to].inBalance = uint128(amount);
-  //   }
-  // }
+      require(outBalance <= type(uint128).max, 'balance is too high');
+      _outBalances[provider].outBalance = uint128(outBalance);
 
-  // function returnSubBalance(
-  //   address from,
-  //   address to,
-  //   uint256 amount
-  // ) external onlySubBalanceOperator {
-  //   require(from != address(0) && from != to);
+      if (flags & FLAG_OUT_BALANCE == 0) {
+        internalSetFlagsOf(provider, flags | FLAG_OUT_BALANCE);
+      }
+    }
 
-  //   if (from != address(0)) {
-  //     _subBalances[from].inBalance = uint128(uint256(_subBalances[from].inBalance) - amount);
-  //   }
+    if (recipient != address(0)) {
+      (, uint32 flags) = internalBalanceAndFlagsOf(recipient);
+      require(flags & FLAG_ALLOW_OVERDRAFT != 0, Errors.AT_OVERDRAFT_DISABLED);
+      scaledAmount += _inBalances[recipient].allowance;
 
-  //   _subBalances[to].outBalance = uint128(uint256(_subBalances[to].outBalance) - amount);
-  // }
+      require(scaledAmount <= type(uint128).max, 'balance is too high');
+      _inBalances[recipient].allowance = uint128(scaledAmount);
+
+      if (flags & FLAG_IN_BALANCE == 0) {
+        internalSetFlagsOf(recipient, flags | FLAG_IN_BALANCE);
+      }
+    }
+
+    uint256 index = _pool.getReserveNormalizedIncome(_underlyingAsset);
+    emit SubBalanceProvided(provider, recipient, scaledAmount.rayMul(index), index);
+  }
+
+  function returnSubBalance(
+    address provider,
+    address recipient,
+    uint256 scaledAmount,
+    bool preferOverdraft
+  ) external onlySubBalanceOperator returns (uint256) {
+    require(provider != address(0) && provider != recipient, Errors.VL_INVALID_SUB_BALANCE_ARGS);
+
+    uint256 index = _pool.getReserveNormalizedIncome(_underlyingAsset);
+    uint128 overdraft;
+
+    if (recipient != address(0)) {
+      (, uint32 flags) = internalBalanceAndFlagsOf(recipient);
+      require(flags & FLAG_ALLOW_OVERDRAFT != 0, Errors.AT_OVERDRAFT_DISABLED);
+
+      InBalance memory inBalance = _inBalances[recipient];
+
+      if (
+        inBalance.overdraft > 0 &&
+        (preferOverdraft || inBalance.overdraft >= scaledAmount.percentMul(_overdraftTolerancePct))
+      ) {
+        if (inBalance.overdraft > scaledAmount) {
+          overdraft = uint128(scaledAmount);
+          unchecked {
+            inBalance.overdraft -= uint128(scaledAmount);
+          }
+        } else {
+          overdraft = inBalance.overdraft;
+          inBalance.overdraft = 0;
+        }
+        _totalOverdraft -= overdraft;
+      }
+      inBalance.allowance = uint128(uint256(inBalance.allowance) - (scaledAmount - overdraft));
+
+      _inBalances[recipient] = inBalance;
+      if (inBalance.allowance == 0) {
+        internalSetFlagsOf(recipient, flags & ~FLAG_IN_BALANCE);
+      }
+    }
+
+    {
+      uint256 outBalance = uint256(_outBalances[provider].outBalance) - scaledAmount;
+
+      if (overdraft > 0) {
+        // A provider of overdraft is not know when overdraft is applied, so there is an excess of tokens minted at that time.
+        // So this excess of tokens will be burned here.
+
+        _burnBalance(provider, overdraft, outBalance, index);
+        emit OverdraftCovered(provider, recipient, uint256(overdraft).rayMul(index), index);
+      }
+      _outBalances[provider].outBalance = uint128(outBalance);
+
+      if (outBalance == 0) {
+        (, uint32 flags) = internalBalanceAndFlagsOf(recipient);
+        internalSetFlagsOf(recipient, flags & ~FLAG_OUT_BALANCE);
+      }
+    }
+
+    emit SubBalanceReturned(provider, recipient, scaledAmount.rayMul(index), index);
+    return overdraft;
+  }
 
   function mint(
     address user,
     uint256 amount,
     uint256 index,
-    bool // repayOverdraft
+    bool repayOverdraft
   ) external override onlyLendingPool returns (bool) {
-    bool firstBalance = internalBalanceOf(user) == 0;
-
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
-    _mintBalance(user, amountScaled, index);
 
+    (uint256 firstBalance, uint32 flags) = internalBalanceAndFlagsOf(user);
+    if (repayOverdraft && flags & FLAG_IN_BALANCE != 0) {
+      InBalance memory inBalance = _inBalances[user];
+
+      if (inBalance.overdraft > 0) {
+        unchecked {
+          if (inBalance.overdraft >= amountScaled) {
+            inBalance.overdraft -= uint128(amountScaled);
+            _inBalances[user] = inBalance;
+            return firstBalance == 0;
+          }
+          amountScaled -= inBalance.overdraft;
+        }
+        inBalance.overdraft = 0;
+        _inBalances[user] = inBalance;
+      }
+    }
+
+    _mintBalance(user, amountScaled, index);
     emit Transfer(address(0), user, amount);
     emit Mint(user, amount, index);
 
-    return firstBalance;
+    return firstBalance == 0;
   }
 
   function mintToTreasury(uint256 amount, uint256 index) external override onlyLendingPool {
@@ -142,12 +236,7 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, E
   ) external override onlyLendingPool {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
-    _burnBalance(
-      user,
-      amountScaled,
-      0, /* _subBalances[user].outBalance */
-      index
-    );
+    _burnBalance(user, amountScaled, _outBalances[user].outBalance, index);
 
     IERC20(_underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
 
@@ -156,8 +245,8 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, E
   }
 
   function transferOnLiquidation(
-    address from,
-    address to,
+    address user,
+    address receiver,
     uint256 amount,
     uint256 index,
     bool transferUnderlying
@@ -167,47 +256,63 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, E
       return false;
     }
 
-    if (transferUnderlying) {
-      // Burn the equivalent amount of depositToken, sending the underlying to the liquidator
-      _burnBalance(
-        from,
-        scaledAmount,
-        0, /* _subBalances[user].outBalance */
-        index
-      );
-      IERC20(_underlyingAsset).safeTransfer(to, amount);
+    firstBalance = internalBalanceOf(receiver) == 0;
+    (uint256 scaledBalanceFrom, uint32 flags) = internalBalanceAndFlagsOf(user);
 
-      emit Transfer(from, address(0), amount);
-      emit Burn(from, to, amount, index);
+    uint256 outBalance;
+    if (flags & FLAG_OUT_BALANCE != 0) {
+      outBalance = _outBalances[user].outBalance;
+    }
+
+    if (flags & FLAG_IN_BALANCE != 0 && scaledAmount + outBalance > scaledBalanceFrom) {
+      // lack of own funds - use overdraft
+
+      uint256 requiredAmount;
+      unchecked {
+        requiredAmount = scaledAmount + outBalance - scaledBalanceFrom;
+      }
+
+      InBalance memory inBalance = _inBalances[user];
+      if (inBalance.allowance > requiredAmount) {
+        unchecked {
+          inBalance.allowance -= uint128(requiredAmount);
+        }
+        inBalance.overdraft += uint128(requiredAmount);
+      } else {
+        inBalance.overdraft += inBalance.allowance;
+        requiredAmount = inBalance.allowance;
+        inBalance.allowance = 0;
+      }
+
+      scaledAmount -= requiredAmount;
+      if (!transferUnderlying) {
+        // A provider of overdraft is not known here and tokens cant be transferred from it.
+        // So new tokens will be minted here for liquidator and existing tokens will
+        // be burned when the provider will return its sub-balance.
+        //
+        // But the totalSupply will remain unchanged as it is reduced by _totalOverdraft.
+
+        _mintBalance(receiver, requiredAmount, index);
+        _totalOverdraft += requiredAmount;
+
+        emit OverdraftApplied(user, requiredAmount.rayMul(index), index);
+      }
+    }
+
+    if (transferUnderlying) {
+      // Burn the equivalent amount of tokens, sending the underlying to the liquidator
+      _burnBalance(user, scaledAmount, outBalance, index);
+      IERC20(_underlyingAsset).safeTransfer(receiver, amount);
+
+      emit Transfer(user, address(0), amount);
+      emit Burn(user, receiver, amount, index);
       return false;
     }
 
-    firstBalance = internalBalanceOf(to) == 0;
-    super._transferBalance(from, to, scaledAmount, 0, index);
+    super._transferBalance(user, receiver, scaledAmount, outBalance, index);
 
-    // SubBalances memory subBalances = _subBalances[from];
-    // uint256 scaledBalanceFrom;
-
-    // if (subBalances.inBalance == 0) {
-    //   super._transferBalance(from, to, scaledAmount, subBalances.outBalance, index);
-    // } else if (scaledAmount + subBalances.outBalance <= (scaledBalanceFrom = super.balanceOf(from))) {
-    //   super._transferBalance(from, to, scaledAmount, subBalances.outBalance, index);
-    // } else {
-    //   unchecked {
-    //     uint256 availableAmount = scaledBalanceFrom - subBalances.outBalance;
-    //     scaledAmount -= availableAmount;
-    //     super._transferBalance(from, to, availableAmount, subBalances.outBalance, index);
-    //   }
-    //   subBalances.inBalance = uint128(uint256(subBalances.inBalance) - scaledAmount);
-    //   _subBalances[from] = subBalances;
-    //   _lostBalances[from].inBalance += uint128(scaledAmount);
-    //   totalLostBalance += scaledAmount;
-
-    //   _mintBalance(to, scaledAmount, index);
-    // }
-
-    emit BalanceTransfer(from, to, amount, index);
-    emit Transfer(from, to, amount);
+    emit BalanceTransfer(user, receiver, amount, index);
+    emit Transfer(user, receiver, amount);
     return firstBalance;
   }
 
@@ -221,40 +326,50 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, E
   }
 
   function scaledBalanceOf(address user) public view override returns (uint256) {
-    return internalBalanceOf(user);
-    // uint256 userBalance = super.balanceOf(user);
-    // if (userBalance == 0) {
-    //   return 0;
-    // }
-    // return userBalance - _subBalances[user].outBalance;
+    (uint256 userBalance, uint32 flags) = internalBalanceAndFlagsOf(user);
+    if (userBalance == 0) {
+      return 0;
+    }
+    if (flags & FLAG_OUT_BALANCE == 0) {
+      return userBalance;
+    }
+
+    return userBalance - _outBalances[user].outBalance;
   }
 
   function scaledRewardedBalanceOf(address user) external view override returns (uint256) {
     return internalBalanceOf(user);
   }
 
-  function collateralBalanceOf(address user) public view override returns (uint256 userBalance) {
-    // SubBalances memory subBalances = _subBalances[user];
-    // userBalance = super.balanceOf(user) - subBalances.outBalance;
-    // userBalance += subBalances.inBalance;
-    return internalBalanceOf(user).rayMul(_pool.getReserveNormalizedIncome(_underlyingAsset));
+  function collateralBalanceOf(address user) public view override returns (uint256) {
+    (uint256 userBalance, uint32 flags) = internalBalanceAndFlagsOf(user);
+    if (flags & FLAG_OUT_BALANCE != 0) {
+      // the out-balance can only be with own finds, hence it is subtracted before adding the in-balance
+      userBalance -= _outBalances[user].outBalance;
+    }
+    if (flags & FLAG_IN_BALANCE != 0) {
+      userBalance += _inBalances[user].allowance;
+    }
+    if (userBalance == 0) {
+      return 0;
+    }
+    return userBalance.rayMul(_pool.getReserveNormalizedIncome(_underlyingAsset));
   }
 
   function getScaledUserBalanceAndSupply(address user) external view override returns (uint256, uint256) {
-    return (scaledBalanceOf(user), super.totalSupply());
+    return (scaledBalanceOf(user), scaledTotalSupply());
   }
 
   function totalSupply() public view override(IERC20, PoolTokenBase) returns (uint256) {
-    uint256 currentSupplyScaled = super.totalSupply();
+    uint256 currentSupplyScaled = scaledTotalSupply();
     if (currentSupplyScaled == 0) {
       return 0;
     }
-
     return currentSupplyScaled.rayMul(_pool.getReserveNormalizedIncome(_underlyingAsset));
   }
 
   function scaledTotalSupply() public view virtual override returns (uint256) {
-    return super.totalSupply();
+    return super.totalSupply() - _totalOverdraft;
   }
 
   function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
@@ -294,12 +409,14 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, E
     uint256 index = _pool.getReserveNormalizedIncome(underlyingAsset);
     uint256 scaledAmount = amount.rayDiv(index);
 
-    // SubBalances memory subBalances = _subBalances[from];
-
-    uint256 scaledBalanceBeforeFrom = internalBalanceOf(from);
+    (uint256 scaledBalanceBeforeFrom, uint256 flags) = internalBalanceAndFlagsOf(from);
     uint256 scaledBalanceBeforeTo = internalBalanceOf(to);
 
-    super._transferBalance(from, to, scaledAmount, 0, index);
+    if (flags & FLAG_OUT_BALANCE != 0) {
+      super._transferBalance(from, to, scaledAmount, _outBalances[from].outBalance, index);
+    } else {
+      super._transferBalance(from, to, scaledAmount, 0, index);
+    }
 
     _pool.finalizeTransfer(
       underlyingAsset,

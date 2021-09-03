@@ -7,12 +7,12 @@ import './IPoolToken.sol';
 
 interface IDepositToken is IERC20, IPoolToken, IScaledBalanceToken {
   /**
-   * @dev Emitted after the mint action
-   * @param from The address performing the mint
-   * @param value The amount being
+   * @dev Emitted on mint
+   * @param account The receiver of minted tokens
+   * @param value The amount minted
    * @param index The new liquidity index of the reserve
    **/
-  event Mint(address indexed from, uint256 value, uint256 index);
+  event Mint(address indexed account, uint256 value, uint256 index);
 
   /**
    * @dev Mints `amount` depositTokens to `user`
@@ -30,19 +30,19 @@ interface IDepositToken is IERC20, IPoolToken, IScaledBalanceToken {
   ) external returns (bool);
 
   /**
-   * @dev Emitted after depositTokens are burned
-   * @param from The owner of the depositTokens, getting them burned
-   * @param target The address that will receive the underlying
-   * @param value The amount being burned
+   * @dev Emitted on burn
+   * @param account The owner of tokens burned
+   * @param target The receiver of the underlying
+   * @param value The amount burned
    * @param index The new liquidity index of the reserve
    **/
-  event Burn(address indexed from, address indexed target, uint256 value, uint256 index);
+  event Burn(address indexed account, address indexed target, uint256 value, uint256 index);
 
   /**
-   * @dev Emitted during the transfer action
-   * @param from The user whose tokens are being transferred
+   * @dev Emitted on transfer
+   * @param from The sender
    * @param to The recipient
-   * @param value The amount being transferred
+   * @param value The amount transferred
    * @param index The new liquidity index of the reserve
    **/
   event BalanceTransfer(address indexed from, address indexed to, uint256 value, uint256 index);
@@ -97,4 +97,24 @@ interface IDepositToken is IERC20, IPoolToken, IScaledBalanceToken {
   function collateralBalanceOf(address) external view returns (uint256);
 
   function scaledRewardedBalanceOf(address) external view returns (uint256);
+
+  /**
+   * @dev Emitted on use of overdraft (by liquidation)
+   * @param account The receiver of overdraft (user with shortage)
+   * @param value The amount received
+   * @param index The liquidity index of the reserve
+   **/
+  event OverdraftApplied(address indexed account, uint256 value, uint256 index);
+
+  /**
+   * @dev Emitted on return of overdraft allowance when it was fully or partially used
+   * @param provider The provider of overdraft
+   * @param recipient The receiver of overdraft
+   * @param overdraft The amount overdraft that was covered by the provider
+   * @param index The liquidity index of the reserve
+   **/
+  event OverdraftCovered(address indexed provider, address indexed recipient, uint256 overdraft, uint256 index);
+
+  event SubBalanceProvided(address indexed provider, address indexed recipient, uint256 amount, uint256 index);
+  event SubBalanceReturned(address indexed provider, address indexed recipient, uint256 amount, uint256 index);
 }

@@ -98,6 +98,8 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
 
   function internalBalanceAndFlagsOf(address account) internal view virtual returns (uint256, uint32);
 
+  function internalSetFlagsOf(address account, uint32 flags) internal virtual;
+
   function internalSetIncentivesController(address hook) internal virtual;
 
   function totalSupply() public view virtual override returns (uint256) {
