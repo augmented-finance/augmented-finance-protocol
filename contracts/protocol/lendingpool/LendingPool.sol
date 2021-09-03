@@ -14,6 +14,7 @@ import '../../flashloan/interfaces/IFlashLoanReceiver.sol';
 import '../../interfaces/IStableDebtToken.sol';
 import '../../tools/upgradeability/Delegator.sol';
 import '../../tools/Errors.sol';
+import '../../tools/math/WadRayMath.sol';
 import '../libraries/helpers/Helpers.sol';
 import '../libraries/logic/GenericLogic.sol';
 import '../libraries/logic/ValidationLogic.sol';
@@ -36,6 +37,7 @@ import './LendingPoolBase.sol';
  **/
 contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolForTokens {
   using SafeERC20 for IERC20;
+  using WadRayMath for uint256;
   using AccessHelper for IMarketAccessController;
   using ReserveLogic for DataTypes.ReserveData;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -76,7 +78,7 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
 
     IERC20(asset).safeTransferFrom(msg.sender, depositToken, amount);
 
-    bool isFirstDeposit = IDepositToken(depositToken).mint(onBehalfOf, amount, liquidityIndex);
+    bool isFirstDeposit = IDepositToken(depositToken).mint(onBehalfOf, amount, liquidityIndex, false);
 
     if (isFirstDeposit) {
       _usersConfig[onBehalfOf].setUsingAsCollateral(reserve.id);
@@ -88,18 +90,18 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
 
   function withdraw(
     address asset,
-    uint256 amount,
+    uint256 amountToWithdraw,
     address to
   ) external override whenNotPaused noReentryOrFlashloanFeature(FEATURE_FLASHLOAN_WITHDRAW) returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     address depositToken = reserve.depositTokenAddress;
+    uint256 liquidityIndex = reserve.updateStateForDeposit(asset);
 
-    uint256 userBalance = IDepositToken(depositToken).balanceOf(msg.sender);
+    uint256 userBalance = IDepositToken(depositToken).scaledBalanceOf(msg.sender);
+    userBalance = userBalance.rayMul(liquidityIndex);
 
-    uint256 amountToWithdraw = amount;
-
-    if (amount == type(uint256).max) {
+    if (amountToWithdraw == type(uint256).max) {
       amountToWithdraw = userBalance;
     }
 
@@ -113,7 +115,6 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
       _addressesProvider.getPriceOracle()
     );
 
-    uint256 liquidityIndex = reserve.updateStateForDeposit(asset);
     reserve.updateInterestRates(asset, depositToken, 0, amountToWithdraw);
 
     if (amountToWithdraw == userBalance) {
@@ -176,8 +177,6 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
 
     IERC20(asset).safeTransferFrom(msg.sender, depositToken, paybackAmount);
 
-    IDepositToken(depositToken).handleRepayment(msg.sender, paybackAmount);
-
     emit Repay(asset, onBehalfOf, msg.sender, paybackAmount);
 
     return paybackAmount;
@@ -221,12 +220,10 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     DataTypes.ReserveData storage reserve = _reserves[asset];
 
     IERC20 stableDebtToken = IERC20(reserve.stableDebtTokenAddress);
-    IERC20 variableDebtToken = IERC20(reserve.variableDebtTokenAddress);
+    uint256 stableDebt = IERC20(stableDebtToken).balanceOf(user);
     address depositToken = reserve.depositTokenAddress;
 
-    uint256 stableDebt = IERC20(stableDebtToken).balanceOf(user);
-
-    ValidationLogic.validateRebalanceStableBorrowRate(reserve, asset, stableDebtToken, variableDebtToken, depositToken);
+    ValidationLogic.validateRebalanceStableBorrowRate(reserve, asset, stableDebtToken, depositToken);
 
     reserve.updateState(asset);
 

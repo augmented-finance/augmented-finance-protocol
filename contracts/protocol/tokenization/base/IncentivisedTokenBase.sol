@@ -45,10 +45,11 @@ abstract contract IncentivisedTokenBase is PoolTokenBase {
   function internalDecrementBalance(
     address account,
     uint256 amount,
+    uint256 minBalance,
     uint256 scale
   ) internal override {
     uint256 oldAccountBalance = _balances[account];
-    require(oldAccountBalance >= amount, 'ERC20: amount exceeds balance');
+    require(oldAccountBalance >= minBalance + amount, 'ERC20: amount exceeds balance');
 
     unchecked {
       amount = oldAccountBalance - amount;

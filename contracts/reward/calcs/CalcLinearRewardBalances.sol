@@ -94,7 +94,11 @@ abstract contract CalcLinearRewardBalances {
     return _doUpdateRewardBalance(holder, entry, uint224(amount));
   }
 
-  function doDecrementRewardBalance(address holder, uint256 amount)
+  function doDecrementRewardBalance(
+    address holder,
+    uint256 amount,
+    uint256 minBalance
+  )
     internal
     returns (
       uint256,
@@ -103,7 +107,10 @@ abstract contract CalcLinearRewardBalances {
     )
   {
     RewardBalance memory entry = _balances[holder];
-    amount = entry.rewardBase - amount;
+    require(entry.rewardBase >= minBalance + amount, 'amount exceeds balance');
+    unchecked {
+      amount = entry.rewardBase - amount;
+    }
     return _doUpdateRewardBalance(holder, entry, uint224(amount));
   }
 

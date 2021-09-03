@@ -19,12 +19,14 @@ interface IDepositToken is IERC20, IPoolToken, IScaledBalanceToken {
    * @param user The address receiving the minted tokens
    * @param amount The amount of tokens getting minted
    * @param index The new liquidity index of the reserve
+   * @param repayOverdraft Enables to use this amount cover an overdraft
    * @return `true` if the the previous balance of the user was 0
    */
   function mint(
     address user,
     uint256 amount,
-    uint256 index
+    uint256 index,
+    bool repayOverdraft
   ) external returns (bool);
 
   /**
@@ -71,12 +73,17 @@ interface IDepositToken is IERC20, IPoolToken, IScaledBalanceToken {
    * @param from The address getting liquidated, current owner of the depositTokens
    * @param to The recipient
    * @param value The amount of tokens getting transferred
+   * @param index The liquidity index of the reserve
+   * @param transferUnderlying is true when the underlying should be, otherwise the depositToken
+   * @return true when transferUnderlying is false and the recipient had zero balance
    **/
   function transferOnLiquidation(
     address from,
     address to,
-    uint256 value
-  ) external;
+    uint256 value,
+    uint256 index,
+    bool transferUnderlying
+  ) external returns (bool);
 
   /**
    * @dev Transfers the underlying asset to `target`. Used by the LendingPool to transfer
@@ -87,10 +94,7 @@ interface IDepositToken is IERC20, IPoolToken, IScaledBalanceToken {
    **/
   function transferUnderlyingTo(address user, uint256 amount) external returns (uint256);
 
-  /**
-   * @dev Invoked to execute actions on the depositToken side after a repayment.
-   * @param user The user executing the repayment
-   * @param amount The amount getting repaid
-   **/
-  function handleRepayment(address user, uint256 amount) external;
+  function collateralBalanceOf(address) external view returns (uint256);
+
+  function scaledRewardedBalanceOf(address) external view returns (uint256);
 }

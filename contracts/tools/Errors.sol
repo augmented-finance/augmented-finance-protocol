@@ -24,8 +24,7 @@ library Errors {
   string public constant VL_NO_ACTIVE_RESERVE = '2'; // Action requires an active reserve
   string public constant VL_RESERVE_FROZEN = '3'; // Action cannot be performed because the reserve is frozen
   string public constant VL_UNKNOWN_RESERVE = '4'; // Action requires an active reserve
-
-  string public constant VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE = '5'; // User cannot withdraw more than the available balance
+  string public constant VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE = '5'; // User cannot withdraw more than the available balance (above min limit)
   string public constant VL_TRANSFER_NOT_ALLOWED = '6'; // Transfer cannot be allowed.
   string public constant VL_BORROWING_NOT_ENABLED = '7'; // Borrowing is not enabled
   string public constant VL_INVALID_INTEREST_RATE_MODE_SELECTED = '8'; // Invalid interest rate mode selected

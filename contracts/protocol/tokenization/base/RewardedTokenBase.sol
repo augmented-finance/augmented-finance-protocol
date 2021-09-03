@@ -103,10 +103,11 @@ abstract contract RewardedTokenBase is
   function internalDecrementBalance(
     address account,
     uint256 amount,
+    uint256 minBalance,
     uint256
   ) internal override {
     // require(oldAccountBalance >= amount, 'ERC20: burn amount exceeds balance');
-    (uint256 allocated, uint32 since, AllocationMode mode) = doDecrementRewardBalance(account, amount);
+    (uint256 allocated, uint32 since, AllocationMode mode) = doDecrementRewardBalance(account, amount, minBalance);
     internalAllocatedReward(account, allocated, since, mode);
   }
 

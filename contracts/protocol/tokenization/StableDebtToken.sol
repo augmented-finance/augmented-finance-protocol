@@ -92,11 +92,11 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, VersionedInitializa
    * @return The accumulated debt of the user
    **/
   function balanceOf(address account) public view virtual override returns (uint256) {
-    uint256 accountBalance = super.balanceOf(account);
-    if (accountBalance == 0) {
+    uint256 scaledBalance = super.balanceOf(account);
+    if (scaledBalance == 0) {
       return 0;
     }
-    return accountBalance.rayMul(cumulatedInterest(account));
+    return scaledBalance.rayMul(cumulatedInterest(account));
   }
 
   function cumulatedInterest(address account) public view virtual returns (uint256) {

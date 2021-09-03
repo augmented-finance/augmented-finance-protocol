@@ -60,11 +60,9 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
    **/
   function balanceOf(address user) public view virtual override returns (uint256) {
     uint256 scaledBalance = super.balanceOf(user);
-
     if (scaledBalance == 0) {
       return 0;
     }
-
     return scaledBalance.rayMul(_pool.getReserveNormalizedVariableDebt(_underlyingAsset));
   }
 
@@ -88,7 +86,7 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
       _decreaseBorrowAllowance(onBehalfOf, user, amount);
     }
 
-    uint256 previousBalance = super.balanceOf(onBehalfOf);
+    bool firstBalance = super.balanceOf(onBehalfOf) == 0;
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
@@ -97,7 +95,7 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     emit Transfer(address(0), onBehalfOf, amount);
     emit Mint(user, onBehalfOf, amount, index);
 
-    return previousBalance == 0;
+    return firstBalance;
   }
 
   /**
@@ -115,7 +113,7 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
 
-    _burnBalance(user, amountScaled, index);
+    _burnBalance(user, amountScaled, 0, index);
 
     emit Transfer(user, address(0), amount);
     emit Burn(user, amount, index);
