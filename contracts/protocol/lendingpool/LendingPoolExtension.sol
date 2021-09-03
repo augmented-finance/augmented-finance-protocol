@@ -94,7 +94,7 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
 
     vars.collateralDepositToken = IDepositToken(collateralReserve.depositTokenAddress);
 
-    vars.userCollateralBalance = vars.collateralDepositToken.balanceOf(user);
+    vars.userCollateralBalance = vars.collateralDepositToken.collateralBalanceOf(user);
 
     vars.maxLiquidatableDebt = (vars.userStableDebt + vars.userVariableDebt).percentMul(
       LIQUIDATION_CLOSE_FACTOR_PERCENT

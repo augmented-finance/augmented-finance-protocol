@@ -181,7 +181,7 @@ library ValidationLogic {
       require(
         !userConfig.isUsingAsCollateral(reserve.id) ||
           reserve.configuration.getLtv() == 0 ||
-          amount > IERC20(reserve.depositTokenAddress).balanceOf(userAddress),
+          amount > IDepositToken(reserve.depositTokenAddress).collateralBalanceOf(userAddress),
         Errors.VL_COLLATERAL_SAME_AS_BORROWING_CURRENCY
       );
 
@@ -262,7 +262,7 @@ library ValidationLogic {
       require(
         !userConfig.isUsingAsCollateral(reserve.id) ||
           reserve.configuration.getLtv() == 0 ||
-          (stableDebt + variableDebt) > IERC20(reserve.depositTokenAddress).balanceOf(msg.sender),
+          (stableDebt + variableDebt) > IDepositToken(reserve.depositTokenAddress).collateralBalanceOf(msg.sender),
         Errors.VL_COLLATERAL_SAME_AS_BORROWING_CURRENCY
       );
     } else {
@@ -328,7 +328,7 @@ library ValidationLogic {
     mapping(uint256 => address) storage reserves,
     address oracle
   ) internal view {
-    uint256 underlyingBalance = IERC20(reserve.depositTokenAddress).balanceOf(msg.sender);
+    uint256 underlyingBalance = IDepositToken(reserve.depositTokenAddress).collateralBalanceOf(msg.sender);
 
     require(underlyingBalance > 0, Errors.VL_UNDERLYING_BALANCE_NOT_GREATER_THAN_0);
 
