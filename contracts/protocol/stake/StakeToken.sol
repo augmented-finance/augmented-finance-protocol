@@ -8,9 +8,11 @@ import '../../tools/upgradeability/VersionedInitializable.sol';
 contract StakeToken is SlashableStakeTokenBase, VersionedInitializable {
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor() SlashableStakeTokenBase(zeroConfig(), 'STAKE_STUB', 'STAKE_STUB', 0) {}
-
-  function zeroConfig() private pure returns (StakeTokenConfig memory) {}
+  constructor()
+    ERC20BaseWithPermit('', '', 0)
+    SlashableBase(0)
+    MarketAccessBitmask(IMarketAccessController(address(0)))
+  {}
 
   function initializeStakeToken(
     StakeTokenConfig calldata params,
