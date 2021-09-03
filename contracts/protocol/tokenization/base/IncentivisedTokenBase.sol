@@ -9,12 +9,23 @@ import './PoolTokenBase.sol';
 
 abstract contract IncentivisedTokenBase is PoolTokenBase {
   uint256 private _totalSupply;
-  mapping(address => uint256) private _balances;
+
+  struct Balance {
+    uint224 balance;
+    uint32 custom;
+  }
+
+  mapping(address => Balance) private _balances;
 
   IBalanceHook private _incentivesController;
 
-  function balanceOf(address account) public view virtual override returns (uint256) {
-    return _balances[account];
+  function internalBalanceOf(address account) internal view override returns (uint256) {
+    return _balances[account].balance;
+  }
+
+  function internalBalanceAndFlagsOf(address account) internal view override returns (uint256, uint32) {
+    Balance memory balance = _balances[account];
+    return (balance.balance, balance.custom);
   }
 
   function internalUpdateTotalSupply() internal view override returns (uint256) {
@@ -35,10 +46,11 @@ abstract contract IncentivisedTokenBase is PoolTokenBase {
     uint256 amount,
     uint256 scale
   ) internal override {
-    uint256 oldAccountBalance = _balances[account];
+    uint256 oldAccountBalance = _balances[account].balance;
     amount += oldAccountBalance;
 
-    _balances[account] = amount;
+    require(amount <= type(uint224).max, 'balance is too high');
+    _balances[account].balance = uint224(amount);
     handleScaledBalanceUpdate(account, oldAccountBalance, amount, scale);
   }
 
@@ -48,14 +60,14 @@ abstract contract IncentivisedTokenBase is PoolTokenBase {
     uint256 minBalance,
     uint256 scale
   ) internal override {
-    uint256 oldAccountBalance = _balances[account];
+    uint256 oldAccountBalance = _balances[account].balance;
     require(oldAccountBalance >= minBalance + amount, 'ERC20: amount exceeds balance');
 
     unchecked {
       amount = oldAccountBalance - amount;
     }
 
-    _balances[account] = amount;
+    _balances[account].balance = uint224(amount);
     handleScaledBalanceUpdate(account, oldAccountBalance, amount, scale);
   }
 

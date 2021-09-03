@@ -59,7 +59,7 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
    * @return The debt balance of the user
    **/
   function balanceOf(address user) public view virtual override returns (uint256) {
-    uint256 scaledBalance = super.balanceOf(user);
+    uint256 scaledBalance = internalBalanceOf(user);
     if (scaledBalance == 0) {
       return 0;
     }
@@ -74,19 +74,19 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
    * @param onBehalfOf The address receiving the debt tokens
    * @param amount The amount of debt being minted
    * @param index The variable debt index of the reserve
-   * @return `true` if the the previous balance of the user is 0
+   * @return firstBalance `true` if the the previous balance of the user is 0
    **/
   function mint(
     address user,
     address onBehalfOf,
     uint256 amount,
     uint256 index
-  ) external override onlyLendingPool returns (bool) {
+  ) external override onlyLendingPool returns (bool firstBalance) {
     if (user != onBehalfOf) {
       _decreaseBorrowAllowance(onBehalfOf, user, amount);
     }
 
-    bool firstBalance = super.balanceOf(onBehalfOf) == 0;
+    firstBalance = internalBalanceOf(onBehalfOf) == 0;
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
@@ -124,7 +124,7 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
    * @return The debt balance of the user since the last burn/mint action
    **/
   function scaledBalanceOf(address user) public view virtual override returns (uint256) {
-    return super.balanceOf(user);
+    return internalBalanceOf(user);
   }
 
   /**
@@ -150,6 +150,6 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
    * @return The principal total supply
    **/
   function getScaledUserBalanceAndSupply(address user) external view override returns (uint256, uint256) {
-    return (super.balanceOf(user), super.totalSupply());
+    return (internalBalanceOf(user), super.totalSupply());
   }
 }

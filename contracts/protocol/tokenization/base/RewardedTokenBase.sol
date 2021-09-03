@@ -20,8 +20,13 @@ abstract contract RewardedTokenBase is
     return super.internalGetTotalSupply();
   }
 
-  function balanceOf(address account) public view virtual override returns (uint256) {
+  function internalBalanceOf(address account) internal view override returns (uint256) {
     return super.getRewardEntry(account).rewardBase;
+  }
+
+  function internalBalanceAndFlagsOf(address account) internal view override returns (uint256, uint32) {
+    RewardBalance memory balance = super.getRewardEntry(account);
+    return (balance.rewardBase, balance.custom);
   }
 
   function internalSetIncentivesController(address) internal override {

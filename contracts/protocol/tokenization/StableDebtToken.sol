@@ -92,7 +92,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, VersionedInitializa
    * @return The accumulated debt of the user
    **/
   function balanceOf(address account) public view virtual override returns (uint256) {
-    uint256 scaledBalance = super.balanceOf(account);
+    uint256 scaledBalance = internalBalanceOf(account);
     if (scaledBalance == 0) {
       return 0;
     }
@@ -249,8 +249,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, VersionedInitializa
       uint256
     )
   {
-    uint256 previousPrincipalBalance = super.balanceOf(user);
-
+    uint256 previousPrincipalBalance = internalBalanceOf(user);
     if (previousPrincipalBalance == 0) {
       return (0, 0, 0);
     }
@@ -299,7 +298,7 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, VersionedInitializa
    * @return The debt balance of the user since the last burn/mint action
    **/
   function principalBalanceOf(address user) external view virtual override returns (uint256) {
-    return super.balanceOf(user);
+    return internalBalanceOf(user);
   }
 
   /**

@@ -5,7 +5,8 @@ import '../interfaces/IRewardController.sol';
 
 abstract contract CalcLinearRewardBalances {
   struct RewardBalance {
-    uint224 rewardBase;
+    uint192 rewardBase;
+    uint32 custom;
     uint32 claimedAt;
   }
   mapping(address => RewardBalance) private _balances;
@@ -90,8 +91,8 @@ abstract contract CalcLinearRewardBalances {
   {
     RewardBalance memory entry = _balances[holder];
     amount += entry.rewardBase;
-    require(amount <= type(uint224).max, 'balance is too high');
-    return _doUpdateRewardBalance(holder, entry, uint224(amount));
+    require(amount <= type(uint192).max, 'balance is too high');
+    return _doUpdateRewardBalance(holder, entry, uint192(amount));
   }
 
   function doDecrementRewardBalance(
@@ -111,7 +112,7 @@ abstract contract CalcLinearRewardBalances {
     unchecked {
       amount = entry.rewardBase - amount;
     }
-    return _doUpdateRewardBalance(holder, entry, uint224(amount));
+    return _doUpdateRewardBalance(holder, entry, uint192(amount));
   }
 
   function doUpdateRewardBalance(address holder, uint256 newBalance)
@@ -122,14 +123,14 @@ abstract contract CalcLinearRewardBalances {
       AllocationMode mode
     )
   {
-    require(newBalance <= type(uint224).max, 'balance is too high');
-    return _doUpdateRewardBalance(holder, _balances[holder], uint224(newBalance));
+    require(newBalance <= type(uint192).max, 'balance is too high');
+    return _doUpdateRewardBalance(holder, _balances[holder], uint192(newBalance));
   }
 
   function _doUpdateRewardBalance(
     address holder,
     RewardBalance memory entry,
-    uint224 newBalance
+    uint192 newBalance
   )
     private
     returns (
@@ -152,7 +153,7 @@ abstract contract CalcLinearRewardBalances {
     );
 
     _accumRates[holder] = adjRate;
-    _balances[holder] = RewardBalance(newBalance, currentTick);
+    _balances[holder] = RewardBalance(newBalance, entry.custom, currentTick);
     return (allocated, since, mode);
   }
 
