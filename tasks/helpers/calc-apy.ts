@@ -21,7 +21,7 @@ enum TokenType {
   RewardStake,
 }
 
-task('dev:calc-apy', 'Calculates current APYs')
+task('helper:calc-apy', 'Calculates current APYs')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
   .addParam('user', 'User address to calc APY', ZERO_ADDRESS, types.string)
   .setAction(async ({ ctl, userAddr }, DRE) => {
