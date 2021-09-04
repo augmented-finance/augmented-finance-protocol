@@ -6,12 +6,7 @@ import '../../../interfaces/IRewardedToken.sol';
 
 interface IStakeToken is IDerivedToken, IRewardedToken {
   event Staked(address indexed from, address indexed to, uint256 amount, uint256 indexed referal);
-  event Redeemed(
-    address indexed from,
-    address indexed to,
-    uint256 amount,
-    uint256 underlyingAmount
-  );
+  event Redeemed(address indexed from, address indexed to, uint256 amount, uint256 underlyingAmount);
   event CooldownStarted(address indexed account, uint32 at);
 
   function stake(
@@ -20,14 +15,24 @@ interface IStakeToken is IDerivedToken, IRewardedToken {
     uint256 referral
   ) external returns (uint256 stakeAmount);
 
+  /**
+   * @dev Redeems staked tokens, and stop earning rewards. Reverts if cooldown is not finished or is outside of the unstake window.
+   * @param to Address to redeem to
+   * @param stakeAmount Amount of stake to redeem
+   **/
   function redeem(address to, uint256 maxStakeAmount) external returns (uint256 stakeAmount);
 
-  function redeemUnderlying(address to, uint256 maxUnderlyingAmount)
-    external
-    returns (uint256 underlyingAmount);
+  /**
+   * @dev Redeems staked tokens, and stop earning rewards. Reverts if cooldown is not finished or is outside of the unstake window.
+   * @param to Address to redeem to
+   * @param underlyingAmount Amount of underlying to redeem
+   **/
+  function redeemUnderlying(address to, uint256 maxUnderlyingAmount) external returns (uint256 underlyingAmount);
 
+  /// @dev Activates the cooldown period to unstake. Reverts if the user has no stake.
   function cooldown() external;
 
+  /// @dev Returns beginning of the current cooldown period or zero when cooldown was not triggered.
   function getCooldown(address) external view returns (uint32);
 
   function exchangeRate() external view returns (uint256);

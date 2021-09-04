@@ -9,7 +9,7 @@ interface IManagedStakeToken is IEmergencyAccess {
   event MaxSlashUpdated(uint16 maxSlash);
   event CooldownUpdated(uint32 cooldownPeriod, uint32 unstakePeriod);
 
-  event RedeemUpdated(bool redeemable);
+  event RedeemableUpdated(bool redeemable);
 
   function setRedeemable(bool redeemable) external;
 
