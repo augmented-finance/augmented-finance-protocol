@@ -4,7 +4,12 @@ pragma solidity ^0.8.4;
 import '../../dependencies/openzeppelin/contracts/Address.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import '../../tools/tokens/ERC20BaseWithPermit.sol';
+import '../../reward/calcs/CalcLinearWeightedReward.sol';
+import '../../reward/pools/ControlledRewardPool.sol';
+import '../../tools/tokens/ERC20DetailsBase.sol';
+import '../../tools/tokens/ERC20AllowanceBase.sol';
+import '../../tools/tokens/ERC20TransferBase.sol';
+import '../../tools/tokens/ERC20PermitBase.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../tools/Errors.sol';
@@ -18,34 +23,47 @@ import './interfaces/IInitializableStakeToken.sol';
 import './CooldownBase.sol';
 import './SlashableBase.sol';
 
-abstract contract SlashableStakeTokenBase is
+abstract contract RewardedBase is
+  IERC20,
   SlashableBase,
   CooldownBase,
-  ERC20BaseWithPermit,
-  IInitializableStakeToken
+  CalcLinearWeightedReward,
+  ControlledRewardPool,
+  IInitializableStakeToken,
+  ERC20DetailsBase,
+  ERC20AllowanceBase,
+  ERC20TransferBase,
+  ERC20PermitBase
 {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
   IERC20 private _stakedToken;
-  IBalanceHook internal _incentivesController;
   IUnderlyingStrategy private _strategy;
-  bool private _redeemPaused;
 
-  mapping(address => uint32) private _stakersCooldowns;
-
-  function _initializeToken(StakeTokenConfig memory params) internal virtual {
-    _remoteAcl = params.stakeController;
-    _stakedToken = params.stakedToken;
-    _strategy = params.strategy;
-    _initializeSlashable(params.maxSlashable);
-
-    if (params.unstakePeriod == 0) {
-      params.unstakePeriod = MIN_UNSTAKE_PERIOD;
-    }
-    internalSetCooldown(params.cooldownPeriod, params.unstakePeriod);
+  function _approveTransferFrom(address owner, uint256 amount)
+    internal
+    override(ERC20AllowanceBase, ERC20TransferBase)
+  {
+    ERC20AllowanceBase._approveTransferFrom(owner, amount);
   }
+
+  function getAccessController() internal view override returns (IMarketAccessController) {
+    return _remoteAcl;
+  }
+
+  // function _initializeToken(StakeTokenConfig memory params) internal virtual {
+  //   _remoteAcl = params.stakeController;
+  //   _stakedToken = params.stakedToken;
+  //   _strategy = params.strategy;
+  //   _initializeSlashable(params.maxSlashable);
+
+  //   if (params.unstakePeriod == 0) {
+  //     params.unstakePeriod = MIN_UNSTAKE_PERIOD;
+  //   }
+  //   internalSetCooldown(params.cooldownPeriod, params.unstakePeriod);
+  // }
 
   // solhint-disable-next-line func-name-mixedcase
   function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
@@ -57,33 +75,34 @@ abstract contract SlashableStakeTokenBase is
     uint256 underlyingAmount,
     uint256 referral
   ) external override returns (uint256) {
-    return internalStake(msg.sender, to, underlyingAmount, referral, true);
+    return internalStake(msg.sender, to, underlyingAmount, referral);
   }
 
   function internalStake(
     address from,
     address to,
     uint256 underlyingAmount,
-    uint256 referral,
-    bool transferFrom
-  ) internal returns (uint256 stakeAmount) {
+    uint256 referral
+  ) internal notPaused returns (uint256 stakeAmount) {
     require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
-    uint256 oldReceiverBalance = balanceOf(to);
+
     stakeAmount = underlyingAmount.rayDiv(exchangeRate());
+    (uint256 toBalance, uint32 toCooldown) = internalBalanceAndCooldownOf(to);
 
-    _stakersCooldowns[to] = getNextCooldown(0, stakeAmount, oldReceiverBalance, _stakersCooldowns[to]);
+    toCooldown = getNextCooldown(0, stakeAmount, toBalance, toCooldown);
 
-    if (transferFrom) {
-      _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
-    }
-    _mint(to, stakeAmount);
+    _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
 
-    if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(address(this), to, oldReceiverBalance, balanceOf(to), totalSupply());
-    }
+    doIncrementRewardBalance(to, stakeAmount);
+    super.internalSetRewardEntryCustom(to, toCooldown);
 
     emit Staked(from, to, underlyingAmount, referral);
     return stakeAmount;
+  }
+
+  function internalBalanceAndCooldownOf(address holder) internal view returns (uint256, uint32) {
+    RewardBalance memory balance = super.getRewardEntry(holder);
+    return (balance.rewardBase, balance.custom);
   }
 
   function redeem(address to, uint256 stakeAmount) external override returns (uint256 stakeAmount_) {
@@ -107,11 +126,10 @@ abstract contract SlashableStakeTokenBase is
     address to,
     uint256 stakeAmount,
     uint256 underlyingAmount
-  ) internal returns (uint256, uint256) {
-    require(!_redeemPaused, Errors.STK_REDEEM_PAUSED);
+  ) internal notPaused returns (uint256, uint256) {
     _ensureCooldown(from);
 
-    uint256 oldBalance = balanceOf(from);
+    (uint256 oldBalance, uint32 cooldownFrom) = internalBalanceAndCooldownOf(from);
     if (stakeAmount == 0) {
       uint256 rate = exchangeRate();
       stakeAmount = underlyingAmount.rayDiv(rate);
@@ -135,14 +153,9 @@ abstract contract SlashableStakeTokenBase is
       }
     }
 
-    _burn(from, stakeAmount);
-
-    if (oldBalance == stakeAmount) {
-      delete (_stakersCooldowns[from]);
-    }
-
-    if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleBalanceUpdate(address(this), from, oldBalance, balanceOf(from), totalSupply());
+    doDecrementRewardBalance(from, stakeAmount, 0);
+    if (oldBalance == stakeAmount && cooldownFrom != 0) {
+      super.internalSetRewardEntryCustom(from, 0);
     }
 
     IERC20(_stakedToken).safeTransfer(to, underlyingAmount);
@@ -151,20 +164,24 @@ abstract contract SlashableStakeTokenBase is
     return (stakeAmount, underlyingAmount);
   }
 
-  function internalTotalSupply() internal view override returns (uint256) {
-    return super.totalSupply();
+  function balanceOf(address account) public view virtual override returns (uint256) {
+    return super.getRewardEntry(account).rewardBase;
+  }
+
+  function totalSupply() public view override returns (uint256) {
+    return super.internalGetTotalSupply();
   }
 
   /// @dev Activates the cooldown period to unstake. Reverts if the user has no stake.
   function cooldown() external override {
     require(balanceOf(msg.sender) != 0, Errors.STK_INVALID_BALANCE_ON_COOLDOWN);
 
-    _stakersCooldowns[msg.sender] = uint32(block.timestamp);
+    super.internalSetRewardEntryCustom(msg.sender, uint32(block.timestamp));
     emit CooldownStarted(msg.sender, uint32(block.timestamp));
   }
 
   function getCooldown(address holder) public view override(CooldownBase, IStakeToken) returns (uint32) {
-    return _stakersCooldowns[holder];
+    return super.getRewardEntry(holder).custom;
   }
 
   function balanceAndCooldownOf(address holder)
@@ -177,7 +194,7 @@ abstract contract SlashableStakeTokenBase is
       uint32 windowEnd
     )
   {
-    windowStart = _stakersCooldowns[holder];
+    windowStart = getCooldown(holder);
     if (windowStart != 0) {
       windowStart += uint32(COOLDOWN_PERIOD());
       unchecked {
@@ -203,54 +220,42 @@ abstract contract SlashableStakeTokenBase is
     override
     aclHas(AccessFlags.STAKE_ADMIN | AccessFlags.STAKE_CONFIGURATOR)
   {
-    internalSetCooldown(cooldownPeriod, unstakePeriod);
+    super.internalSetCooldown(cooldownPeriod, unstakePeriod);
   }
 
   function isRedeemable() external view override returns (bool) {
-    return !_redeemPaused;
+    return super.isPaused();
   }
 
   function setRedeemable(bool redeemable) external override aclHas(AccessFlags.LIQUIDITY_CONTROLLER) {
-    _redeemPaused = !redeemable;
+    super.internalPause(!redeemable);
     emit RedeemUpdated(redeemable);
-  }
-
-  function setPaused(bool paused) external override {
-    AccessHelper.requireAnyOf(_remoteAcl, msg.sender, AccessFlags.EMERGENCY_ADMIN, Errors.CALLER_NOT_EMERGENCY_ADMIN);
-    _redeemPaused = paused;
-    emit RedeemUpdated(!paused);
-    emit EmergencyPaused(msg.sender, paused);
-  }
-
-  function isPaused() external view override returns (bool) {
-    return _redeemPaused;
   }
 
   function getUnderlying() internal view returns (address) {
     return address(_stakedToken);
   }
 
-  function _transfer(
+  function transferBalance(
     address from,
     address to,
     uint256 amount
   ) internal override {
-    uint256 balanceOfFrom = balanceOf(from);
+    (uint256 balanceFrom, uint32 cooldownFrom) = internalBalanceAndCooldownOf(from);
 
-    // Recipient
-    if (from != to) {
-      uint256 balanceOfTo = balanceOf(to);
-
-      uint32 previousSenderCooldown = _stakersCooldowns[from];
-      _stakersCooldowns[to] = getNextCooldown(previousSenderCooldown, amount, balanceOfTo, _stakersCooldowns[to]);
-
-      // if cooldown was set and whole balance of sender was transferred - clear cooldown
-      if (balanceOfFrom == amount && previousSenderCooldown != 0) {
-        delete (_stakersCooldowns[from]);
-      }
+    super.doDecrementRewardBalance(from, amount, 0);
+    // if cooldown was set and whole balance of sender was transferred - clear cooldown
+    if (balanceFrom == amount && cooldownFrom != 0) {
+      super.internalSetRewardEntryCustom(from, 0);
     }
 
-    super._transfer(from, to, amount);
+    (uint256 balanceTo, uint32 cooldownTo) = internalBalanceAndCooldownOf(to);
+    uint32 newCooldownTo = getNextCooldown(cooldownFrom, amount, balanceTo, cooldownTo);
+
+    super.doIncrementRewardBalance(to, amount);
+    if (newCooldownTo != cooldownTo) {
+      super.internalSetRewardEntryCustom(to, newCooldownTo);
+    }
   }
 
   function initializedStakeTokenWith()
@@ -272,11 +277,11 @@ abstract contract SlashableStakeTokenBase is
     return (params, super.name(), super.symbol());
   }
 
-  function setIncentivesController(address addr) external override onlyRewardConfiguratorOrAdmin {
-    _incentivesController = IBalanceHook(addr);
+  function setIncentivesController(address) external view override onlyRewardConfiguratorOrAdmin {
+    revert('unsupported');
   }
 
   function getIncentivesController() public view override returns (address) {
-    return address(_incentivesController);
+    return address(this);
   }
 }

@@ -8,9 +8,7 @@ import '../../access/MarketAccessBitmask.sol';
 import './interfaces/IStakeToken.sol';
 import './interfaces/IManagedStakeToken.sol';
 
-import 'hardhat/console.sol';
-
-abstract contract SlashableBase is IStakeToken, IManagedStakeToken, MarketAccessBitmask {
+abstract contract SlashableBase is IStakeToken, IManagedStakeToken, MarketAccessBitmaskMin {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
 
@@ -46,8 +44,6 @@ abstract contract SlashableBase is IStakeToken, IManagedStakeToken, MarketAccess
     uint256 scaledSupply = totalSupply.rayMul(_exchangeRate);
     uint256 maxSlashable = scaledSupply.percentMul(_maxSlashablePercentage);
 
-    console.log(totalSupply, scaledSupply, maxSlashable);
-
     if (maxAmount >= maxSlashable) {
       amount = maxSlashable;
     } else {
@@ -64,7 +60,6 @@ abstract contract SlashableBase is IStakeToken, IManagedStakeToken, MarketAccess
       amount = scaledSupply - totalSupply;
     }
     _exchangeRate = newExchangeRate;
-    console.log(totalSupply, amount, newExchangeRate);
 
     internalTransferUnderlying(destination, amount);
 

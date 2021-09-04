@@ -17,7 +17,7 @@ contract MockStakedAgfToken is SlashableStakeTokenBase, VersionedInitializable {
   constructor()
     ERC20BaseWithPermit(NAME, SYMBOL, 0)
     SlashableBase(0)
-    MarketAccessBitmask(IMarketAccessController(address(0)))
+    MarketAccessBitmaskMin(IMarketAccessController(address(0)))
   {
     // enables use of this instance without a proxy
     _unsafeResetVersionedInitializers();

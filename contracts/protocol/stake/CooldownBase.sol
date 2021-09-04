@@ -47,17 +47,16 @@ abstract contract CooldownBase is IStakeToken, IManagedStakeToken {
    *  - If the receiver's cooldown time passed (too old), the next is 0
    * @param fromCooldownPeriod Cooldown time of the sender
    * @param amountToReceive Amount
-   * @param toAddress Address of the recipient
    * @param toBalance Current balance of the receiver
-   * @return The new cooldown time
+   * @param toCooldownPeriod Cooldown of the recipient
+   * @return The new cooldown time of the recipient
    **/
   function getNextCooldown(
     uint32 fromCooldownPeriod,
     uint256 amountToReceive,
-    address toAddress,
-    uint256 toBalance
+    uint256 toBalance,
+    uint32 toCooldownPeriod
   ) internal view returns (uint32) {
-    uint32 toCooldownPeriod = getCooldown(toAddress);
     if (toCooldownPeriod == 0) {
       return 0;
     }

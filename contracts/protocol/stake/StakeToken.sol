@@ -11,7 +11,7 @@ contract StakeToken is SlashableStakeTokenBase, VersionedInitializable {
   constructor()
     ERC20BaseWithPermit('', '', 0)
     SlashableBase(0)
-    MarketAccessBitmask(IMarketAccessController(address(0)))
+    MarketAccessBitmaskMin(IMarketAccessController(address(0)))
   {}
 
   function initializeStakeToken(
