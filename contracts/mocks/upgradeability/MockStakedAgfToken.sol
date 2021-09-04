@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../protocol/stake/SlashableStakeTokenBase.sol';
+import '../../protocol/stake/RewardedStakeBase.sol';
 import '../../access/AccessFlags.sol';
 import '../../protocol/stake/interfaces/StakeTokenConfig.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 
-contract MockStakedAgfToken is SlashableStakeTokenBase, VersionedInitializable {
+contract MockStakedAgfToken is RewardedStakeBase, VersionedInitializable {
   string internal constant NAME = 'Staked AGF mock';
   string internal constant SYMBOL = 'stkAGF';
   uint32 internal constant COOLDOWN_BLOCKS = 100;
@@ -14,7 +14,12 @@ contract MockStakedAgfToken is SlashableStakeTokenBase, VersionedInitializable {
 
   uint256 private constant TOKEN_REVISION = 1;
 
-  constructor() SlashableStakeTokenBase(zeroConfig(), NAME, SYMBOL, 0) {
+  constructor()
+    ERC20DetailsBase('', '', 0)
+    MarketAccessBitmaskMin(IMarketAccessController(address(0)))
+    SlashableBase(0)
+    ControlledRewardPool(IRewardController(address(0)), 0, 0)
+  {
     // enables use of this instance without a proxy
     _unsafeResetVersionedInitializers();
   }
