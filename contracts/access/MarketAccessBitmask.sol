@@ -7,7 +7,7 @@ import './AccessHelper.sol';
 import './AccessFlags.sol';
 
 // solhint-disable func-name-mixedcase
-abstract contract MarketAccessBitmask {
+abstract contract MarketAccessBitmaskMin {
   using AccessHelper for IMarketAccessController;
   IMarketAccessController internal _remoteAcl;
 
@@ -42,20 +42,6 @@ abstract contract MarketAccessBitmask {
     _;
   }
 
-  modifier onlyEmergencyAdmin() {
-    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN, Errors.CALLER_NOT_EMERGENCY_ADMIN);
-    _;
-  }
-
-  function _onlySweepAdmin() internal view virtual {
-    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.SWEEP_ADMIN, Errors.CALLER_NOT_SWEEP_ADMIN);
-  }
-
-  modifier onlySweepAdmin() {
-    _onlySweepAdmin();
-    _;
-  }
-
   modifier onlyRewardAdmin() {
     _remoteAcl.requireAnyOf(msg.sender, AccessFlags.REWARD_CONFIG_ADMIN, Errors.CALLER_NOT_REWARD_CONFIG_ADMIN);
     _;
@@ -72,6 +58,26 @@ abstract contract MarketAccessBitmask {
 
   modifier onlyRewardRateAdmin() {
     _remoteAcl.requireAnyOf(msg.sender, AccessFlags.REWARD_RATE_ADMIN, Errors.CALLER_NOT_REWARD_RATE_ADMIN);
+    _;
+  }
+}
+
+abstract contract MarketAccessBitmask is MarketAccessBitmaskMin {
+  using AccessHelper for IMarketAccessController;
+
+  constructor(IMarketAccessController remoteAcl) MarketAccessBitmaskMin(remoteAcl) {}
+
+  modifier onlyEmergencyAdmin() {
+    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN, Errors.CALLER_NOT_EMERGENCY_ADMIN);
+    _;
+  }
+
+  function _onlySweepAdmin() internal view virtual {
+    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.SWEEP_ADMIN, Errors.CALLER_NOT_SWEEP_ADMIN);
+  }
+
+  modifier onlySweepAdmin() {
+    _onlySweepAdmin();
     _;
   }
 }
