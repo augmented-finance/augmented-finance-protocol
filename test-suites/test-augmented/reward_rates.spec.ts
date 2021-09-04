@@ -39,8 +39,7 @@ describe('Reward rates suite', () => {
   const defaultRate = 1;
   const poolCount = 5;
 
-  beforeEach(async () => {
-    blkBeforeDeploy = await takeSnapshot();
+  before(async () => {
     [root, user1, user2] = await (<any>rawBRE).ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
     agf = await getMockAgfToken();
@@ -95,11 +94,15 @@ describe('Reward rates suite', () => {
     await rewardController.updateBaseline(defaultRate * poolCount);
   });
 
+  beforeEach(async () => {
+    blkBeforeDeploy = await takeSnapshot();
+  });
+
   afterEach(async () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  it('different pool types should have same outcome for the same rate', async () => {
+  it('different pool types should have the same outcome for the same rate', async () => {
     await mineBlocks(1);
     const startedAt = await currentTick();
     const preValues: string[] = [];
