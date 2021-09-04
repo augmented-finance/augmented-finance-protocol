@@ -17,7 +17,7 @@ abstract contract IncentivisedTokenBase is PoolTokenBase {
     return _balances[account];
   }
 
-  function internalUpdateTotalSupply() internal view override returns (uint256) {
+  function internalTotalSupply() internal view override returns (uint256) {
     return _totalSupply;
   }
 
