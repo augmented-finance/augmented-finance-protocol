@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/Address.sol';
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
+import '../../reward/interfaces/IInitializableRewardPool.sol';
 import '../../reward/calcs/CalcLinearWeightedReward.sol';
 import '../../reward/pools/ControlledRewardPool.sol';
 import '../../tools/tokens/ERC20DetailsBase.sol';
@@ -13,17 +13,16 @@ import '../../tools/tokens/ERC20PermitBase.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../tools/Errors.sol';
-import '../../interfaces/IBalanceHook.sol';
-import '../libraries/helpers/UnderlyingHelper.sol';
 import '../../access/AccessFlags.sol';
 import '../../access/MarketAccessBitmask.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
+import '../libraries/helpers/UnderlyingHelper.sol';
 import './interfaces/StakeTokenConfig.sol';
 import './interfaces/IInitializableStakeToken.sol';
 import './CooldownBase.sol';
 import './SlashableBase.sol';
 
-abstract contract RewardedBase is
+abstract contract RewardedStakeBase is
   IERC20,
   SlashableBase,
   CooldownBase,
@@ -33,7 +32,8 @@ abstract contract RewardedBase is
   ERC20DetailsBase,
   ERC20AllowanceBase,
   ERC20TransferBase,
-  ERC20PermitBase
+  ERC20PermitBase,
+  IInitializableRewardPool
 {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
@@ -49,21 +49,97 @@ abstract contract RewardedBase is
     ERC20AllowanceBase._approveTransferFrom(owner, amount);
   }
 
+  function _approveByPermit(
+    address owner,
+    address spender,
+    uint256 amount
+  ) internal override {
+    _approve(owner, spender, amount);
+  }
+
+  function _getPermitDomainName() internal view override returns (bytes memory) {
+    return bytes(super.name());
+  }
+
   function getAccessController() internal view override returns (IMarketAccessController) {
     return _remoteAcl;
   }
 
-  // function _initializeToken(StakeTokenConfig memory params) internal virtual {
-  //   _remoteAcl = params.stakeController;
-  //   _stakedToken = params.stakedToken;
-  //   _strategy = params.strategy;
-  //   _initializeSlashable(params.maxSlashable);
+  function _notSupported() private pure {
+    revert('UNSUPPORTED');
+  }
 
-  //   if (params.unstakePeriod == 0) {
-  //     params.unstakePeriod = MIN_UNSTAKE_PERIOD;
-  //   }
-  //   internalSetCooldown(params.cooldownPeriod, params.unstakePeriod);
-  // }
+  function addRewardProvider(address, address) external view override onlyConfigAdmin {
+    _notSupported();
+  }
+
+  function removeRewardProvider(address provider) external override onlyConfigAdmin {}
+
+  function internalGetRate() internal view override returns (uint256) {
+    return super.getLinearRate();
+  }
+
+  function internalSetRate(uint256 rate) internal override {
+    super.setLinearRate(rate);
+  }
+
+  function internalTotalSupply() internal view override returns (uint256) {
+    return super.internalGetTotalSupply();
+  }
+
+  function getIncentivesController() public view override returns (address) {
+    return address(this);
+  }
+
+  function setIncentivesController(address) external view override onlyRewardConfiguratorOrAdmin {
+    _notSupported();
+  }
+
+  function getCurrentTick() internal view override returns (uint32) {
+    return uint32(block.timestamp);
+  }
+
+  function internalGetReward(address holder, uint256)
+    internal
+    override
+    returns (
+      uint256,
+      uint32,
+      bool
+    )
+  {
+    return doGetReward(holder);
+  }
+
+  function internalCalcReward(address holder, uint32 at) internal view override returns (uint256, uint32) {
+    return doCalcRewardAt(holder, at);
+  }
+
+  function getPoolName() public view virtual override returns (string memory) {
+    return super.symbol();
+  }
+
+  function initializeRewardPool(InitRewardPoolData calldata config) external override onlyRewardConfiguratorOrAdmin {
+    require(address(config.controller) != address(0));
+    require(address(getRewardController()) == address(0));
+    _initialize(IRewardController(config.controller), 0, config.baselinePercentage, config.poolName);
+  }
+
+  function initializedRewardPoolWith() external view override returns (InitRewardPoolData memory) {
+    return InitRewardPoolData(IRewardController(getRewardController()), getPoolName(), getBaselinePercentage());
+  }
+
+  function _initializeToken(StakeTokenConfig memory params) internal virtual {
+    _remoteAcl = params.stakeController;
+    _stakedToken = params.stakedToken;
+    _strategy = params.strategy;
+    _initializeSlashable(params.maxSlashable);
+
+    if (params.unstakePeriod == 0) {
+      params.unstakePeriod = MIN_UNSTAKE_PERIOD;
+    }
+    internalSetCooldown(params.cooldownPeriod, params.unstakePeriod);
+  }
 
   // solhint-disable-next-line func-name-mixedcase
   function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
@@ -215,11 +291,7 @@ abstract contract RewardedBase is
     }
   }
 
-  function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod)
-    external
-    override
-    aclHas(AccessFlags.STAKE_ADMIN | AccessFlags.STAKE_CONFIGURATOR)
-  {
+  function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod) external override onlyStakeAdminOrConfigurator {
     super.internalSetCooldown(cooldownPeriod, unstakePeriod);
   }
 
@@ -227,7 +299,7 @@ abstract contract RewardedBase is
     return super.isPaused();
   }
 
-  function setRedeemable(bool redeemable) external override aclHas(AccessFlags.LIQUIDITY_CONTROLLER) {
+  function setRedeemable(bool redeemable) external override onlyLiquidityController {
     super.internalPause(!redeemable);
     emit RedeemUpdated(redeemable);
   }
@@ -275,13 +347,5 @@ abstract contract RewardedBase is
     params.maxSlashable = super.getMaxSlashablePercentage();
     params.stakedTokenDecimals = super.decimals();
     return (params, super.name(), super.symbol());
-  }
-
-  function setIncentivesController(address) external view override onlyRewardConfiguratorOrAdmin {
-    revert('unsupported');
-  }
-
-  function getIncentivesController() public view override returns (address) {
-    return address(this);
   }
 }

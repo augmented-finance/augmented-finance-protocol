@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import './SlashableStakeTokenBase.sol';
+import './RewardedStakeBase.sol';
 import './interfaces/StakeTokenConfig.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 
-contract StakeToken is SlashableStakeTokenBase, VersionedInitializable {
+contract StakeToken is RewardedStakeBase, VersionedInitializable {
   uint256 private constant TOKEN_REVISION = 1;
 
   constructor()
-    ERC20BaseWithPermit('', '', 0)
-    SlashableBase(0)
+    ERC20DetailsBase('', '', 0)
     MarketAccessBitmaskMin(IMarketAccessController(address(0)))
+    SlashableBase(0)
+    ControlledRewardPool(IRewardController(address(0)), 0, 0)
   {}
 
   function initializeStakeToken(

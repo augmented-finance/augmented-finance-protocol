@@ -67,10 +67,10 @@ library Errors {
   string public constant RL_VARIABLE_BORROW_RATE_OVERFLOW = '54'; //  Variable borrow rate overflows uint128
   string public constant RL_STABLE_BORROW_RATE_OVERFLOW = '55'; //  Stable borrow rate overflows uint128
   string public constant CT_INVALID_MINT_AMOUNT = '56'; //invalid amount to mint
-
+  string public constant CALLER_NOT_STAKE_ADMIN = '57';
   string public constant CT_INVALID_BURN_AMOUNT = '58'; //invalid amount to burn
   string public constant BORROW_ALLOWANCE_NOT_ENOUGH = '59'; // User borrows on behalf, but allowance are too small
-
+  string public constant CALLER_NOT_LIQUIDITY_CONTROLLER = '60';
   string public constant CALLER_NOT_REF_ADMIN = '61';
   string public constant VL_INSUFFICIENT_REWARD_AVAILABLE = '62';
   string public constant LP_CALLER_MUST_BE_DEPOSIT_TOKEN = '63';

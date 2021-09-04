@@ -9,6 +9,7 @@ import './interfaces/IStakeToken.sol';
 import './interfaces/IManagedStakeToken.sol';
 
 abstract contract SlashableBase is IStakeToken, IManagedStakeToken, MarketAccessBitmaskMin {
+  using AccessHelper for IMarketAccessController;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
 
@@ -39,7 +40,7 @@ abstract contract SlashableBase is IStakeToken, IManagedStakeToken, MarketAccess
     address destination,
     uint256 minAmount,
     uint256 maxAmount
-  ) external override aclHas(AccessFlags.LIQUIDITY_CONTROLLER) returns (uint256 amount) {
+  ) external override onlyLiquidityController returns (uint256 amount) {
     uint256 totalSupply = internalTotalSupply();
     uint256 scaledSupply = totalSupply.rayMul(_exchangeRate);
     uint256 maxSlashable = scaledSupply.percentMul(_maxSlashablePercentage);
@@ -73,7 +74,21 @@ abstract contract SlashableBase is IStakeToken, IManagedStakeToken, MarketAccess
     return _maxSlashablePercentage;
   }
 
-  function setMaxSlashablePercentage(uint16 slashPct) external override aclHas(AccessFlags.STAKE_ADMIN) {
+  modifier onlyStakeAdminOrConfigurator() {
+    _remoteAcl.requireAnyOf(
+      msg.sender,
+      AccessFlags.STAKE_ADMIN | AccessFlags.STAKE_CONFIGURATOR,
+      Errors.CALLER_NOT_STAKE_ADMIN
+    );
+    _;
+  }
+
+  modifier onlyLiquidityController() {
+    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.LIQUIDITY_CONTROLLER, Errors.CALLER_NOT_LIQUIDITY_CONTROLLER);
+    _;
+  }
+
+  function setMaxSlashablePercentage(uint16 slashPct) external override onlyStakeAdminOrConfigurator {
     require(slashPct <= PercentageMath.HALF_ONE, Errors.STK_EXCESSIVE_SLASH_PCT);
     _maxSlashablePercentage = slashPct;
     emit MaxSlashUpdated(slashPct);
