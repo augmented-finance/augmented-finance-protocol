@@ -8,9 +8,10 @@ task('augmented:call-cmd', 'Invokes a configuration command')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
   .addOptionalParam('cmd', 'Name of command', undefined, types.string)
   .addFlag('static', 'Make this call as static')
+  .addFlag('compatible', 'Use backward compatible mode')
   .addOptionalParam('roles', 'Roles required', '', types.string)
   .addOptionalVariadicPositionalParam('args', 'Command arguments')
-  .setAction(async ({ ctl, cmd, roles, static: staticCall, args }, DRE) => {
+  .setAction(async ({ ctl, cmd, roles, static: staticCall, compatible, args }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
     await DRE.run('set-DRE');
 
@@ -28,7 +29,7 @@ task('augmented:call-cmd', 'Invokes a configuration command')
     const roleList: string[] = roles === '' ? [] : roles[0] !== '[' ? [roles] : JSON.parse(roles);
 
     try {
-      await DRE.run('helper:call-cmd', { ctl, cmd, roles: roleList, static: staticCall, args });
+      await DRE.run('helper:call-cmd', { ctl, cmd, roles: roleList, static: staticCall, compatible, args });
     } catch (err) {
       console.error(err);
       exit(1);
