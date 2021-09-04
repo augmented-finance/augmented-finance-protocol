@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../reward/interfaces/IInitializableRewardPool.sol';
 import '../../reward/calcs/CalcLinearWeightedReward.sol';
@@ -23,7 +22,6 @@ import './CooldownBase.sol';
 import './SlashableBase.sol';
 
 abstract contract RewardedStakeBase is
-  IERC20,
   SlashableBase,
   CooldownBase,
   CalcLinearWeightedReward,
@@ -39,6 +37,7 @@ abstract contract RewardedStakeBase is
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
+  bool private _notRedeemable;
   IERC20 private _stakedToken;
   IUnderlyingStrategy private _strategy;
 
@@ -159,7 +158,7 @@ abstract contract RewardedStakeBase is
     address to,
     uint256 underlyingAmount,
     uint256 referral
-  ) internal notPaused returns (uint256 stakeAmount) {
+  ) internal notPausedCustom(Errors.STK_PAUSED) returns (uint256 stakeAmount) {
     require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
 
     stakeAmount = underlyingAmount.rayDiv(exchangeRate());
@@ -169,7 +168,8 @@ abstract contract RewardedStakeBase is
 
     _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
 
-    doIncrementRewardBalance(to, stakeAmount);
+    super.doIncrementRewardBalance(to, stakeAmount);
+    super.doIncrementTotalSupply(stakeAmount);
     super.internalSetRewardEntryCustom(to, toCooldown);
 
     emit Staked(from, to, underlyingAmount, referral);
@@ -193,7 +193,11 @@ abstract contract RewardedStakeBase is
     returns (uint256 underlyingAmount_)
   {
     require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
-    (, underlyingAmount_) = internalRedeem(msg.sender, to, 0, underlyingAmount);
+    if (underlyingAmount == type(uint256).max) {
+      (, underlyingAmount_) = internalRedeem(msg.sender, to, type(uint256).max, 0);
+    } else {
+      (, underlyingAmount_) = internalRedeem(msg.sender, to, 0, underlyingAmount);
+    }
     return underlyingAmount_;
   }
 
@@ -202,7 +206,8 @@ abstract contract RewardedStakeBase is
     address to,
     uint256 stakeAmount,
     uint256 underlyingAmount
-  ) internal notPaused returns (uint256, uint256) {
+  ) internal notPausedCustom(Errors.STK_PAUSED) returns (uint256, uint256) {
+    require(!_notRedeemable, Errors.STK_REDEEM_PAUSED);
     _ensureCooldown(from);
 
     (uint256 oldBalance, uint32 cooldownFrom) = internalBalanceAndCooldownOf(from);
@@ -214,12 +219,8 @@ abstract contract RewardedStakeBase is
         // don't allow tiny withdrawals
         return (0, 0);
       }
-      if (stakeAmount > oldBalance) {
-        stakeAmount = oldBalance;
-        underlyingAmount = stakeAmount.rayMul(rate);
-      }
     } else {
-      if (stakeAmount > oldBalance) {
+      if (stakeAmount == type(uint256).max) {
         stakeAmount = oldBalance;
       }
       underlyingAmount = stakeAmount.rayMul(exchangeRate());
@@ -229,7 +230,8 @@ abstract contract RewardedStakeBase is
       }
     }
 
-    doDecrementRewardBalance(from, stakeAmount, 0);
+    super.doDecrementRewardBalance(from, stakeAmount, 0);
+    super.doDecrementTotalSupply(stakeAmount);
     if (oldBalance == stakeAmount && cooldownFrom != 0) {
       super.internalSetRewardEntryCustom(from, 0);
     }
@@ -296,12 +298,12 @@ abstract contract RewardedStakeBase is
   }
 
   function isRedeemable() external view override returns (bool) {
-    return super.isPaused();
+    return !(super.isPaused() || _notRedeemable);
   }
 
   function setRedeemable(bool redeemable) external override onlyLiquidityController {
-    super.internalPause(!redeemable);
-    emit RedeemUpdated(redeemable);
+    _notRedeemable = !redeemable;
+    emit RedeemableUpdated(redeemable);
   }
 
   function getUnderlying() internal view returns (address) {

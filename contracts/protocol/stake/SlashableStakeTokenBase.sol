@@ -212,13 +212,13 @@ abstract contract SlashableStakeTokenBase is
 
   function setRedeemable(bool redeemable) external override aclHas(AccessFlags.LIQUIDITY_CONTROLLER) {
     _redeemPaused = !redeemable;
-    emit RedeemUpdated(redeemable);
+    emit RedeemableUpdated(redeemable);
   }
 
   function setPaused(bool paused) external override {
     AccessHelper.requireAnyOf(_remoteAcl, msg.sender, AccessFlags.EMERGENCY_ADMIN, Errors.CALLER_NOT_EMERGENCY_ADMIN);
     _redeemPaused = paused;
-    emit RedeemUpdated(!paused);
+    emit RedeemableUpdated(!paused);
     emit EmergencyPaused(msg.sender, paused);
   }
 

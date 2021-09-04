@@ -108,8 +108,8 @@ library Errors {
   string public constant STK_UNSTAKE_WINDOW_FINISHED = '95';
   string public constant STK_INVALID_BALANCE_ON_COOLDOWN = '96';
   string public constant STK_EXCESSIVE_SLASH_PCT = '97';
-  string public constant STK_EXCESSIVE_COOLDOWN_PERIOD = '98';
-  string public constant STK_WRONG_UNSTAKE_PERIOD = '99';
+  string public constant STK_WRONG_COOLDOWN_OR_UNSTAKE = '98';
+  string public constant STK_PAUSED = '99';
 
   string public constant TXT_OWNABLE_CALLER_NOT_OWNER = 'Ownable: caller is not the owner';
   string public constant TXT_CALLER_NOT_PROXY_OWNER = 'ProxyOwner: caller is not the owner';

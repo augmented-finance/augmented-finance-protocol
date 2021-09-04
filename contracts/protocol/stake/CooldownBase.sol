@@ -30,8 +30,8 @@ abstract contract CooldownBase is IStakeToken, IManagedStakeToken {
   function getCooldown(address holder) public view virtual override returns (uint32);
 
   function internalSetCooldown(uint32 cooldownPeriod, uint32 unstakePeriod) internal {
-    require(cooldownPeriod <= 52 weeks, Errors.STK_EXCESSIVE_COOLDOWN_PERIOD);
-    require(unstakePeriod >= MIN_UNSTAKE_PERIOD && unstakePeriod <= 52 weeks, Errors.STK_WRONG_UNSTAKE_PERIOD);
+    require(cooldownPeriod <= 52 weeks, Errors.STK_WRONG_COOLDOWN_OR_UNSTAKE);
+    require(unstakePeriod >= MIN_UNSTAKE_PERIOD && unstakePeriod <= 52 weeks, Errors.STK_WRONG_COOLDOWN_OR_UNSTAKE);
     _cooldownPeriod = cooldownPeriod;
     _unstakePeriod = unstakePeriod;
     emit CooldownUpdated(cooldownPeriod, unstakePeriod);
@@ -45,40 +45,35 @@ abstract contract CooldownBase is IStakeToken, IManagedStakeToken {
    *    # The sender time is passed
    *    # The sender has a worse time
    *  - If the receiver's cooldown time passed (too old), the next is 0
-   * @param fromCooldownPeriod Cooldown time of the sender
+   * @param fromCooldownStart Cooldown time of the sender
    * @param amountToReceive Amount
    * @param toBalance Current balance of the receiver
-   * @param toCooldownPeriod Cooldown of the recipient
+   * @param toCooldownStart Cooldown of the recipient
    * @return The new cooldown time of the recipient
    **/
   function getNextCooldown(
-    uint32 fromCooldownPeriod,
+    uint32 fromCooldownStart,
     uint256 amountToReceive,
     uint256 toBalance,
-    uint32 toCooldownPeriod
+    uint32 toCooldownStart
   ) internal view returns (uint32) {
-    if (toCooldownPeriod == 0) {
+    if (toCooldownStart == 0) {
       return 0;
     }
 
     uint256 minimalValidCooldown = (block.timestamp - _cooldownPeriod) - _unstakePeriod;
 
-    if (minimalValidCooldown > toCooldownPeriod) {
-      toCooldownPeriod = 0;
-    } else {
-      if (minimalValidCooldown > fromCooldownPeriod) {
-        fromCooldownPeriod = uint32(block.timestamp);
-      }
-      if (fromCooldownPeriod < toCooldownPeriod) {
-        return toCooldownPeriod;
-      }
-
-      toCooldownPeriod = uint32(
-        (amountToReceive * fromCooldownPeriod + toBalance * toCooldownPeriod) / (amountToReceive + toBalance)
-      );
+    if (minimalValidCooldown > toCooldownStart) {
+      return 0;
+    }
+    if (minimalValidCooldown > fromCooldownStart) {
+      fromCooldownStart = uint32(block.timestamp);
+    }
+    if (fromCooldownStart < toCooldownStart) {
+      return toCooldownStart;
     }
 
-    return toCooldownPeriod;
+    return uint32((amountToReceive * fromCooldownStart + toBalance * toCooldownStart) / (amountToReceive + toBalance));
   }
 
   // solhint-disable-next-line func-name-mixedcase

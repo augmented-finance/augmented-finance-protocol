@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
+import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../access/AccessFlags.sol';
@@ -8,12 +9,12 @@ import '../../access/MarketAccessBitmask.sol';
 import './interfaces/IStakeToken.sol';
 import './interfaces/IManagedStakeToken.sol';
 
-abstract contract SlashableBase is IStakeToken, IManagedStakeToken, MarketAccessBitmaskMin {
+abstract contract SlashableBase is IERC20, IStakeToken, IManagedStakeToken, MarketAccessBitmaskMin {
   using AccessHelper for IMarketAccessController;
   using WadRayMath for uint256;
   using PercentageMath for uint256;
 
-  uint96 private _exchangeRate; // RAY >= _exchangeRate > 0
+  uint96 private _exchangeRate = uint96(WadRayMath.RAY); // RAY >= _exchangeRate > 0
   uint16 private _maxSlashablePercentage;
 
   constructor(uint16 maxSlashablePercentage) {
