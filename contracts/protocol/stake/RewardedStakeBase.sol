@@ -158,12 +158,13 @@ abstract contract RewardedStakeBase is
   ) internal notPausedCustom(Errors.STK_PAUSED) returns (uint256 stakeAmount) {
     require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
 
-    stakeAmount = underlyingAmount.rayDiv(exchangeRate());
+    (uint256 exchangeRate, uint256 index) = internalExchangeRate();
+    stakeAmount = underlyingAmount.rayDiv(exchangeRate);
     (uint256 toBalance, uint32 toCooldown) = internalBalanceAndCooldownOf(to);
 
     toCooldown = getNextCooldown(0, stakeAmount, toBalance, toCooldown);
 
-    internalTransferUnderlyingFrom(from, underlyingAmount);
+    internalTransferUnderlyingFrom(from, underlyingAmount, index);
 
     super.doIncrementRewardBalance(to, stakeAmount);
     super.doIncrementTotalSupply(stakeAmount);
@@ -207,14 +208,16 @@ abstract contract RewardedStakeBase is
     require(!_notRedeemable, Errors.STK_REDEEM_PAUSED);
     _ensureCooldown(from);
 
+    (uint256 exchangeRate, uint256 index) = internalExchangeRate();
+
     (uint256 oldBalance, uint32 cooldownFrom) = internalBalanceAndCooldownOf(from);
     if (stakeAmount == 0) {
-      stakeAmount = underlyingAmount.rayDiv(exchangeRate());
+      stakeAmount = underlyingAmount.rayDiv(exchangeRate);
     } else {
       if (stakeAmount == type(uint256).max) {
         stakeAmount = oldBalance;
       }
-      underlyingAmount = stakeAmount.rayMul(exchangeRate());
+      underlyingAmount = stakeAmount.rayMul(exchangeRate);
       if (underlyingAmount == 0) {
         // protect the user - don't waste balance without an outcome
         return (0, 0);
@@ -227,7 +230,7 @@ abstract contract RewardedStakeBase is
       super.internalSetRewardEntryCustom(from, 0);
     }
 
-    internalTransferUnderlyingTo(to, underlyingAmount);
+    internalTransferUnderlyingTo(to, underlyingAmount, index);
 
     emit Redeemed(from, to, stakeAmount, underlyingAmount);
     return (stakeAmount, underlyingAmount);
@@ -280,20 +283,34 @@ abstract contract RewardedStakeBase is
     return (balanceOf(holder), windowStart, windowEnd);
   }
 
-  function internalTransferUnderlyingFrom(address from, uint256 underlyingAmount) internal virtual {
+  function internalTransferUnderlyingFrom(
+    address from,
+    uint256 underlyingAmount,
+    uint256
+  ) internal virtual {
     _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
   }
 
-  function internalTransferUnderlyingTo(address to, uint256 underlyingAmount) internal virtual {
+  function internalTransferUnderlyingTo(
+    address to,
+    uint256 underlyingAmount,
+    uint256
+  ) internal virtual {
     _stakedToken.safeTransfer(to, underlyingAmount);
   }
 
-  function internalTransferSlashedUnderlying(address destination, uint256 amount) internal virtual override {
+  function internalTransferSlashedUnderlying(address destination, uint256 amount)
+    internal
+    virtual
+    override
+    returns (bool erc20Transfer)
+  {
     if (address(_strategy) == address(0)) {
       _stakedToken.safeTransfer(destination, amount);
     } else {
       amount = UnderlyingHelper.delegateWithdrawUnderlying(_strategy, address(_stakedToken), amount, destination);
     }
+    return true;
   }
 
   function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod) external override onlyStakeAdminOrConfigurator {

@@ -117,4 +117,25 @@ interface IDepositToken is IERC20, IPoolToken, IScaledBalanceToken {
 
   event SubBalanceProvided(address indexed provider, address indexed recipient, uint256 amount, uint256 index);
   event SubBalanceReturned(address indexed provider, address indexed recipient, uint256 amount, uint256 index);
+
+  function updateTreasury() external;
+
+  function addSubBalanceOperator(address addr) external;
+
+  function addStakeOperator(address addr) external;
+
+  function removeSubBalanceOperator(address addr) external;
+
+  function provideSubBalance(
+    address provider,
+    address recipient,
+    uint256 scaledAmount
+  ) external;
+
+  function returnSubBalance(
+    address provider,
+    address recipient,
+    uint256 scaledAmount,
+    bool preferOverdraft
+  ) external returns (uint256 coveredOverdraft);
 }

@@ -44,6 +44,7 @@ library Errors {
   string public constant LP_INTEREST_RATE_REBALANCE_CONDITIONS_NOT_MET = '22'; // Interest rate rebalance conditions were not met
   string public constant AT_OVERDRAFT_DISABLED = '23'; // User doesn't accept allocation of overdraft
   string public constant VL_INVALID_SUB_BALANCE_ARGS = '24';
+  string public constant AT_INVALID_SLASH_DESTINATION = '25';
 
   string public constant LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR = '27'; // The caller of the function is not the lending pool configurator
 

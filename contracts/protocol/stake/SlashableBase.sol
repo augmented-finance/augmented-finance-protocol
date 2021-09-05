@@ -35,19 +35,24 @@ abstract contract SlashableBase is IERC20, IStakeToken, IManagedStakeToken, Mark
     return _exchangeRate;
   }
 
+  function internalExchangeRate() internal view virtual returns (uint256, uint256) {
+    return (_exchangeRate, WadRayMath.RAY);
+  }
+
   function internalTotalSupply() internal view virtual returns (uint256);
 
   function slashUnderlying(
     address destination,
     uint256 minAmount,
     uint256 maxAmount
-  ) external virtual override onlyLiquidityController returns (uint256) {
-    (uint256 amount, uint256 totalSupply) = internalSlash(minAmount, maxAmount);
+  ) external virtual override onlyLiquidityController returns (uint256 amount, bool erc20Transfer) {
+    uint256 totalSupply;
+    (amount, totalSupply) = internalSlash(minAmount, maxAmount);
     if (amount > 0) {
-      internalTransferSlashedUnderlying(destination, amount);
+      erc20Transfer = internalTransferSlashedUnderlying(destination, amount);
       emit Slashed(destination, amount, totalSupply);
     }
-    return amount;
+    return (amount, erc20Transfer);
   }
 
   function internalSlash(uint256 minAmount, uint256 maxAmount) internal returns (uint256 amount, uint256 totalSupply) {
@@ -75,7 +80,10 @@ abstract contract SlashableBase is IERC20, IStakeToken, IManagedStakeToken, Mark
     return (amount, totalSupply);
   }
 
-  function internalTransferSlashedUnderlying(address destination, uint256 amount) internal virtual;
+  function internalTransferSlashedUnderlying(address destination, uint256 amount)
+    internal
+    virtual
+    returns (bool erc20Transfer);
 
   function getMaxSlashablePercentage() public view override returns (uint16) {
     return _maxSlashablePercentage;

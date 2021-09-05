@@ -33,7 +33,11 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     uint128 outBalance;
   }
 
-  mapping(address => bool) private _subBalanceOperators;
+  uint8 internal constant ACCESS_SUB_BALANCE = uint8(1) << 0;
+  uint8 internal constant ACCESS_LOCK_BALANCE = uint8(1) << 1;
+  // uint8 internal constant ACCESS_TRANSFER = uint8(1)<<2;
+
+  mapping(address => uint8) private _subBalanceOperators;
   mapping(address => OutBalance) private _outBalances;
   mapping(address => InBalance) private _inBalances;
   uint256 private _totalOverdraft;
@@ -56,43 +60,58 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     return _treasury;
   }
 
-  function updateTreasury() external onlyLendingPoolConfiguratorOrAdmin {
+  function updateTreasury() external override onlyLendingPoolConfiguratorOrAdmin {
     address treasury = _pool.getAccessController().getAddress(AccessFlags.TREASURY);
     require(treasury != address(0), Errors.VL_TREASURY_REQUIRED);
     _treasury = treasury;
   }
 
-  function addSubBalanceOperator(address addr) external onlyLendingPoolConfiguratorOrAdmin {
-    require(addr != address(0), 'address is required');
-    _subBalanceOperators[addr] = true;
+  function addSubBalanceOperator(address addr) external override onlyLendingPoolConfiguratorOrAdmin {
+    _addSubBalanceOperator(addr, ACCESS_SUB_BALANCE);
   }
 
-  function removeSubBalanceOperator(address addr) external onlyLendingPoolConfiguratorOrAdmin {
+  function addStakeOperator(address addr) external override onlyLendingPoolConfiguratorOrAdmin {
+    _addSubBalanceOperator(addr, ACCESS_LOCK_BALANCE);
+  }
+
+  function _addSubBalanceOperator(address addr, uint8 accessMode) private {
+    require(addr != address(0), 'address is required');
+    _subBalanceOperators[addr] |= accessMode;
+  }
+
+  function removeSubBalanceOperator(address addr) external override onlyLendingPoolConfiguratorOrAdmin {
     delete (_subBalanceOperators[addr]);
   }
 
-  function isSubBalanceOperator(address addr) private view returns (bool) {
-    return addr == address(_pool) || _subBalanceOperators[addr];
-  }
-
-  function _onlySubBalanceOperator() private view {
-    require(isSubBalanceOperator(msg.sender), Errors.AT_CALLER_NOT_SUB_BALANCE_OPERATOR);
-  }
-
-  modifier onlySubBalanceOperator() {
-    _onlySubBalanceOperator();
-    _;
+  function getSubBalanceOperatorAccess(address addr) private view returns (uint8) {
+    if (addr == address(_pool)) {
+      return ~uint8(0);
+    }
+    return _subBalanceOperators[addr];
   }
 
   function getScaleIndex() public view override returns (uint256) {
     return _pool.getReserveNormalizedIncome(_underlyingAsset);
   }
 
+  function _onlySubBalanceOperator(address recipient) private view {
+    uint8 accessMode = getSubBalanceOperatorAccess(msg.sender);
+    require(
+      accessMode & (recipient != address(0) ? ACCESS_SUB_BALANCE : ACCESS_LOCK_BALANCE) != 0,
+      Errors.AT_CALLER_NOT_SUB_BALANCE_OPERATOR
+    );
+  }
+
+  modifier onlySubBalanceOperator(address recipient) {
+    _onlySubBalanceOperator(recipient);
+    _;
+  }
+
   function provideSubBalance(
     address provider,
     address recipient,
     uint256 scaledAmount
-  ) external onlySubBalanceOperator {
+  ) external override onlySubBalanceOperator(recipient) {
     require(provider != address(0) && provider != recipient, Errors.VL_INVALID_SUB_BALANCE_ARGS);
 
     {
@@ -130,7 +149,7 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     address recipient,
     uint256 scaledAmount,
     bool preferOverdraft
-  ) external onlySubBalanceOperator returns (uint256) {
+  ) external override onlySubBalanceOperator(recipient) returns (uint256) {
     require(provider != address(0) && provider != recipient, Errors.VL_INVALID_SUB_BALANCE_ARGS);
 
     uint256 index = getScaleIndex();
@@ -398,6 +417,8 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
   }
 
   function transferUnderlyingTo(address target, uint256 amount) external override onlyLendingPool returns (uint256) {
+    // uint8 accessMode = getSubBalanceOperatorAccess(msg.sender);
+    // require(accessMode & ACCESS_TRANSFER != 0, Errors.AT_CALLER_NOT_ALLOWED_TO_TRANSFER);
     IERC20(_underlyingAsset).safeTransfer(target, amount);
     return amount;
   }
