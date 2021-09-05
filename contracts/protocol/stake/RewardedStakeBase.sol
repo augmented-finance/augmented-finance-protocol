@@ -12,9 +12,6 @@ import '../../tools/tokens/ERC20PermitBase.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../tools/Errors.sol';
-import '../../access/AccessFlags.sol';
-import '../../access/MarketAccessBitmask.sol';
-import '../../access/interfaces/IMarketAccessController.sol';
 import '../libraries/helpers/UnderlyingHelper.sol';
 import './interfaces/StakeTokenConfig.sol';
 import './interfaces/IInitializableStakeToken.sol';
@@ -166,7 +163,7 @@ abstract contract RewardedStakeBase is
 
     toCooldown = getNextCooldown(0, stakeAmount, toBalance, toCooldown);
 
-    _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
+    internalTransferUnderlyingFrom(from, underlyingAmount);
 
     super.doIncrementRewardBalance(to, stakeAmount);
     super.doIncrementTotalSupply(stakeAmount);
@@ -230,7 +227,7 @@ abstract contract RewardedStakeBase is
       super.internalSetRewardEntryCustom(from, 0);
     }
 
-    IERC20(_stakedToken).safeTransfer(to, underlyingAmount);
+    internalTransferUnderlyingTo(to, underlyingAmount);
 
     emit Redeemed(from, to, stakeAmount, underlyingAmount);
     return (stakeAmount, underlyingAmount);
@@ -283,7 +280,15 @@ abstract contract RewardedStakeBase is
     return (balanceOf(holder), windowStart, windowEnd);
   }
 
-  function internalTransferUnderlying(address destination, uint256 amount) internal override {
+  function internalTransferUnderlyingFrom(address from, uint256 underlyingAmount) internal virtual {
+    _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
+  }
+
+  function internalTransferUnderlyingTo(address to, uint256 underlyingAmount) internal virtual {
+    _stakedToken.safeTransfer(to, underlyingAmount);
+  }
+
+  function internalTransferSlashedUnderlying(address destination, uint256 amount) internal virtual override {
     if (address(_strategy) == address(0)) {
       _stakedToken.safeTransfer(destination, amount);
     } else {

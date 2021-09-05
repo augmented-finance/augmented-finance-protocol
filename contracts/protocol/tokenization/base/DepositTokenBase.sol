@@ -84,6 +84,10 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     _;
   }
 
+  function getScaleIndex() public view override returns (uint256) {
+    return _pool.getReserveNormalizedIncome(_underlyingAsset);
+  }
+
   function provideSubBalance(
     address provider,
     address recipient,
@@ -117,7 +121,7 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
       }
     }
 
-    uint256 index = _pool.getReserveNormalizedIncome(_underlyingAsset);
+    uint256 index = getScaleIndex();
     emit SubBalanceProvided(provider, recipient, scaledAmount.rayMul(index), index);
   }
 
@@ -129,7 +133,7 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
   ) external onlySubBalanceOperator returns (uint256) {
     require(provider != address(0) && provider != recipient, Errors.VL_INVALID_SUB_BALANCE_ARGS);
 
-    uint256 index = _pool.getReserveNormalizedIncome(_underlyingAsset);
+    uint256 index = getScaleIndex();
     uint128 overdraft;
 
     if (recipient != address(0)) {
@@ -326,7 +330,7 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     if (scaledBalance == 0) {
       return 0;
     }
-    return scaledBalanceOf(user).rayMul(_pool.getReserveNormalizedIncome(_underlyingAsset));
+    return scaledBalanceOf(user).rayMul(getScaleIndex());
   }
 
   function scaledBalanceOf(address user) public view override returns (uint256) {
@@ -357,7 +361,7 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     if (userBalance == 0) {
       return 0;
     }
-    return userBalance.rayMul(_pool.getReserveNormalizedIncome(_underlyingAsset));
+    return userBalance.rayMul(getScaleIndex());
   }
 
   function getScaledUserBalanceAndSupply(address user) external view override returns (uint256, uint256) {
@@ -369,7 +373,7 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     if (currentSupplyScaled == 0) {
       return 0;
     }
-    return currentSupplyScaled.rayMul(_pool.getReserveNormalizedIncome(_underlyingAsset));
+    return currentSupplyScaled.rayMul(getScaleIndex());
   }
 
   function scaledTotalSupply() public view virtual override returns (uint256) {
@@ -410,7 +414,7 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     uint256 amount
   ) private {
     address underlyingAsset = _underlyingAsset;
-    uint256 index = _pool.getReserveNormalizedIncome(underlyingAsset);
+    uint256 index = getScaleIndex();
     uint256 scaledAmount = amount.rayDiv(index);
 
     (uint256 scaledBalanceBeforeFrom, uint256 flags) = internalBalanceAndFlagsOf(from);

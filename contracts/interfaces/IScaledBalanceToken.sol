@@ -23,4 +23,6 @@ interface IScaledBalanceToken {
    * @return The scaled total supply
    **/
   function scaledTotalSupply() external view returns (uint256);
+
+  function getScaleIndex() external view returns (uint256);
 }

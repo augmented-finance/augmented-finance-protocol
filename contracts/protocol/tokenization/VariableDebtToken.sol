@@ -54,6 +54,10 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     );
   }
 
+  function getScaleIndex() public view override returns (uint256) {
+    return _pool.getReserveNormalizedVariableDebt(_underlyingAsset);
+  }
+
   /**
    * @dev Calculates the accumulated debt balance of the user
    * @return The debt balance of the user
@@ -63,7 +67,7 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     if (scaledBalance == 0) {
       return 0;
     }
-    return scaledBalance.rayMul(_pool.getReserveNormalizedVariableDebt(_underlyingAsset));
+    return scaledBalance.rayMul(getScaleIndex());
   }
 
   /**
@@ -132,7 +136,7 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
    * @return The total supply
    **/
   function totalSupply() public view virtual override returns (uint256) {
-    return super.totalSupply().rayMul(_pool.getReserveNormalizedVariableDebt(_underlyingAsset));
+    return super.totalSupply().rayMul(getScaleIndex());
   }
 
   /**

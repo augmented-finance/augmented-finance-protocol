@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import '../../interfaces/IBalanceHook.sol';
 import '../../interfaces/IScaledBalanceToken.sol';
+import '../../tools/math/WadRayMath.sol';
 
 contract MockBalanceProvider is IScaledBalanceToken {
   IBalanceHook public _aic;
@@ -35,12 +36,7 @@ contract MockBalanceProvider is IScaledBalanceToken {
     _totalSupply = totalSupply;
   }
 
-  function getScaledUserBalanceAndSupply(address user)
-    external
-    view
-    override
-    returns (uint256, uint256)
-  {
+  function getScaledUserBalanceAndSupply(address user) external view override returns (uint256, uint256) {
     user;
     return (_userBalance, _totalSupply);
   }
@@ -57,5 +53,9 @@ contract MockBalanceProvider is IScaledBalanceToken {
   function cleanUserState() external {
     _userBalance = 0;
     _totalSupply = 0;
+  }
+
+  function getScaleIndex() external pure override returns (uint256) {
+    return WadRayMath.RAY;
   }
 }
