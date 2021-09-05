@@ -44,6 +44,7 @@ const erc20: ContractAccessExceptions = {
     permit: true,
     increaseAllowance: true,
     decreaseAllowance: true,
+    useAllowance: true,
   },
 };
 
@@ -212,16 +213,16 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
 
   [eContractid.DepositTokenImpl]: {
     ...poolTokenImpl,
+
+    reasons: [
+      ...poolTokenImpl.reasons!,
+      ProtocolErrors.CALLER_NOT_POOL_ADMIN,
+      ProtocolErrors.AT_CALLER_NOT_SUB_BALANCE_OPERATOR,
+    ],
+
     functions: {
       ...poolTokenImpl.functions,
       ...erc20.functions,
-
-      addSubBalanceOperator: ProtocolErrors.CALLER_NOT_POOL_ADMIN,
-      addStakeOperator: ProtocolErrors.CALLER_NOT_POOL_ADMIN,
-      removeSubBalanceOperator: ProtocolErrors.CALLER_NOT_POOL_ADMIN,
-      provideSubBalance: ProtocolErrors.AT_CALLER_NOT_SUB_BALANCE_OPERATOR,
-      returnSubBalance: ProtocolErrors.AT_CALLER_NOT_SUB_BALANCE_OPERATOR,
-      updateTreasury: ProtocolErrors.CALLER_NOT_POOL_ADMIN,
     },
   },
 

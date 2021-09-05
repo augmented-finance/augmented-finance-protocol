@@ -138,4 +138,12 @@ interface IDepositToken is IERC20, IPoolToken, IScaledBalanceToken {
     uint256 scaledAmount,
     bool preferOverdraft
   ) external returns (uint256 coveredOverdraft);
+
+  function lockSubBalance(address provider, uint256 scaledAmount) external;
+
+  function unlockSubBalance(
+    address provider,
+    uint256 scaledAmount,
+    address transferTo
+  ) external;
 }

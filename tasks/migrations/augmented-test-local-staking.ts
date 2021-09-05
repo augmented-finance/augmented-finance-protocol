@@ -58,6 +58,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
       stakeUnstakeTicks,
     ]);
     await xAG.connect(root).setMaxSlashablePercentage(slashingPercentage);
+    await agDaiToken.addStakeOperator(xAG.address);
 
     const xAGF = await deployMockStakedAgfToken([
       ac.address,

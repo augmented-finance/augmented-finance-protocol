@@ -6,6 +6,7 @@ import '../../interfaces/IDepositToken.sol';
 import '../../reward/interfaces/IInitializableRewardPool.sol';
 import '../../reward/calcs/CalcLinearWeightedReward.sol';
 import '../../reward/pools/ControlledRewardPool.sol';
+import '../../tools/tokens/IERC20Extended.sol';
 import '../../tools/tokens/ERC20DetailsBase.sol';
 import '../../tools/tokens/ERC20AllowanceBase.sol';
 import '../../tools/tokens/ERC20TransferBase.sol';
@@ -57,15 +58,18 @@ abstract contract DepositStakeBase is RewardedStakeBase {
     uint256 underlyingAmount,
     uint256 index
   ) internal override {
-    IDepositToken(super.getUnderlying()).provideSubBalance(from, address(0), underlyingAmount.rayDiv(index));
+    address token = super.getUnderlying();
+    IERC20Extended(token).useAllowance(from, underlyingAmount);
+    IDepositToken(token).lockSubBalance(from, underlyingAmount.rayDiv(index));
   }
 
   function internalTransferUnderlyingTo(
+    address from,
     address to,
     uint256 underlyingAmount,
     uint256 index
   ) internal override {
-    IDepositToken(super.getUnderlying()).returnSubBalance(to, address(0), underlyingAmount.rayDiv(index), false);
+    IDepositToken(super.getUnderlying()).unlockSubBalance(from, underlyingAmount.rayDiv(index), to);
   }
 
   function internalTransferSlashedUnderlying(address destination, uint256)

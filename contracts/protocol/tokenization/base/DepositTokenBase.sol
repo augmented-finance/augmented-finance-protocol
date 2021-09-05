@@ -35,7 +35,7 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
 
   uint8 internal constant ACCESS_SUB_BALANCE = uint8(1) << 0;
   uint8 internal constant ACCESS_LOCK_BALANCE = uint8(1) << 1;
-  // uint8 internal constant ACCESS_TRANSFER = uint8(1)<<2;
+  uint8 internal constant ACCESS_TRANSFER = uint8(1) << 2;
 
   mapping(address => uint8) private _subBalanceOperators;
   mapping(address => OutBalance) private _outBalances;
@@ -71,7 +71,7 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
   }
 
   function addStakeOperator(address addr) external override onlyLendingPoolConfiguratorOrAdmin {
-    _addSubBalanceOperator(addr, ACCESS_LOCK_BALANCE);
+    _addSubBalanceOperator(addr, ACCESS_LOCK_BALANCE | ACCESS_TRANSFER);
   }
 
   function _addSubBalanceOperator(address addr, uint8 accessMode) private {
@@ -94,16 +94,14 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     return _pool.getReserveNormalizedIncome(_underlyingAsset);
   }
 
-  function _onlySubBalanceOperator(address recipient) private view {
-    uint8 accessMode = getSubBalanceOperatorAccess(msg.sender);
-    require(
-      accessMode & (recipient != address(0) ? ACCESS_SUB_BALANCE : ACCESS_LOCK_BALANCE) != 0,
-      Errors.AT_CALLER_NOT_SUB_BALANCE_OPERATOR
-    );
+  function _onlySubBalanceOperator(uint8 requiredMode) private view returns (uint8 accessMode) {
+    accessMode = getSubBalanceOperatorAccess(msg.sender);
+    require(accessMode & requiredMode != 0, Errors.AT_SUB_BALANCE_RESTIRCTED_FUNCTION);
+    return accessMode;
   }
 
-  modifier onlySubBalanceOperator(address recipient) {
-    _onlySubBalanceOperator(recipient);
+  modifier onlySubBalanceOperator() {
+    _onlySubBalanceOperator(ACCESS_SUB_BALANCE);
     _;
   }
 
@@ -111,7 +109,21 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     address provider,
     address recipient,
     uint256 scaledAmount
-  ) external override onlySubBalanceOperator(recipient) {
+  ) external override onlySubBalanceOperator {
+    require(recipient != address(0), Errors.VL_INVALID_SUB_BALANCE_ARGS);
+    _provideSubBalance(provider, recipient, scaledAmount);
+  }
+
+  function lockSubBalance(address provider, uint256 scaledAmount) external override {
+    _onlySubBalanceOperator(ACCESS_LOCK_BALANCE);
+    _provideSubBalance(provider, address(0), scaledAmount);
+  }
+
+  function _provideSubBalance(
+    address provider,
+    address recipient,
+    uint256 scaledAmount
+  ) private {
     require(provider != address(0) && provider != recipient, Errors.VL_INVALID_SUB_BALANCE_ARGS);
 
     {
@@ -149,7 +161,36 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     address recipient,
     uint256 scaledAmount,
     bool preferOverdraft
-  ) external override onlySubBalanceOperator(recipient) returns (uint256) {
+  ) external override onlySubBalanceOperator returns (uint256) {
+    require(recipient != address(0), Errors.VL_INVALID_SUB_BALANCE_ARGS);
+    return _returnSubBalance(provider, recipient, scaledAmount, preferOverdraft);
+  }
+
+  function unlockSubBalance(
+    address provider,
+    uint256 scaledAmount,
+    address transferTo
+  ) external override {
+    uint8 accessMode = _onlySubBalanceOperator(ACCESS_LOCK_BALANCE);
+
+    _returnSubBalance(provider, address(0), scaledAmount, false);
+
+    if (transferTo != address(0) && transferTo != provider) {
+      require(accessMode & ACCESS_TRANSFER != 0, Errors.AT_SUB_BALANCE_RESTIRCTED_FUNCTION);
+
+      uint256 index = getScaleIndex();
+      uint256 amount = scaledAmount.rayMul(index);
+      _transfer(provider, transferTo, amount, index);
+      emit Transfer(provider, transferTo, amount);
+    }
+  }
+
+  function _returnSubBalance(
+    address provider,
+    address recipient,
+    uint256 scaledAmount,
+    bool preferOverdraft
+  ) private returns (uint256) {
     require(provider != address(0) && provider != recipient, Errors.VL_INVALID_SUB_BALANCE_ARGS);
 
     uint256 index = getScaleIndex();
@@ -400,7 +441,7 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
   }
 
   function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-    _transfer(msg.sender, recipient, amount);
+    _transfer(msg.sender, recipient, amount, getScaleIndex());
     emit Transfer(msg.sender, recipient, amount);
     return true;
   }
@@ -410,7 +451,7 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     address recipient,
     uint256 amount
   ) public virtual override returns (bool) {
-    _transfer(sender, recipient, amount);
+    _transfer(sender, recipient, amount, getScaleIndex());
     _approveTransferFrom(sender, amount);
     emit Transfer(sender, recipient, amount);
     return true;
@@ -432,10 +473,10 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
   function _transfer(
     address from,
     address to,
-    uint256 amount
+    uint256 amount,
+    uint256 index
   ) private {
     address underlyingAsset = _underlyingAsset;
-    uint256 index = getScaleIndex();
     uint256 scaledAmount = amount.rayDiv(index);
 
     (uint256 scaledBalanceBeforeFrom, uint256 flags) = internalBalanceAndFlagsOf(from);

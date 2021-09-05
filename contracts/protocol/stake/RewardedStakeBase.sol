@@ -230,7 +230,7 @@ abstract contract RewardedStakeBase is
       super.internalSetRewardEntryCustom(from, 0);
     }
 
-    internalTransferUnderlyingTo(to, underlyingAmount, index);
+    internalTransferUnderlyingTo(from, to, underlyingAmount, index);
 
     emit Redeemed(from, to, stakeAmount, underlyingAmount);
     return (stakeAmount, underlyingAmount);
@@ -286,16 +286,20 @@ abstract contract RewardedStakeBase is
   function internalTransferUnderlyingFrom(
     address from,
     uint256 underlyingAmount,
-    uint256
+    uint256 index
   ) internal virtual {
+    index;
     _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
   }
 
   function internalTransferUnderlyingTo(
+    address from,
     address to,
     uint256 underlyingAmount,
-    uint256
+    uint256 index
   ) internal virtual {
+    from;
+    index;
     _stakedToken.safeTransfer(to, underlyingAmount);
   }
 
