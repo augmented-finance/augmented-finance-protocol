@@ -212,13 +212,7 @@ abstract contract RewardedStakeBase is
 
     (uint256 oldBalance, uint32 cooldownFrom) = internalBalanceAndCooldownOf(from);
     if (stakeAmount == 0) {
-      uint256 rate = exchangeRate();
-      stakeAmount = underlyingAmount.rayDiv(rate);
-
-      if (stakeAmount == 0) {
-        // don't allow tiny withdrawals
-        return (0, 0);
-      }
+      stakeAmount = underlyingAmount.rayDiv(exchangeRate());
     } else {
       if (stakeAmount == type(uint256).max) {
         stakeAmount = oldBalance;
@@ -244,6 +238,10 @@ abstract contract RewardedStakeBase is
 
   function balanceOf(address account) public view virtual override returns (uint256) {
     return super.getRewardEntry(account).rewardBase;
+  }
+
+  function balanceOfUnderlying(address account) public view virtual returns (uint256) {
+    return uint256(super.getRewardEntry(account).rewardBase).rayMul(exchangeRate());
   }
 
   function totalSupply() public view override returns (uint256) {
