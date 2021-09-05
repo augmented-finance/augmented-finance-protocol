@@ -32,8 +32,7 @@ describe('Treasury rewards suite', () => {
   let ac: MarketAccessController;
   let treasury: Treasury;
 
-  beforeEach(async () => {
-    blkBeforeDeploy = await takeSnapshot();
+  before(async () => {
     [root, user1, user2] = await (<any>rawBRE).ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
     agf = await getMockAgfToken();
@@ -55,6 +54,10 @@ describe('Treasury rewards suite', () => {
     await rewardController.addRewardPool(trp.address);
   });
 
+  beforeEach(async () => {
+    blkBeforeDeploy = await takeSnapshot();
+  });
+
   afterEach(async () => {
     await revertSnapshot(blkBeforeDeploy);
   });
@@ -62,21 +65,13 @@ describe('Treasury rewards suite', () => {
   it('revert without permissions', async () => {
     await agf.mintReward(treasury.address, 10, false);
 
-    await expect(
-      treasury.connect(user2).approve(agf.address, user1.address, 10)
-    ).to.be.revertedWith('RESTRICTED');
+    await expect(treasury.connect(user2).approve(agf.address, user1.address, 10)).to.be.revertedWith('RESTRICTED');
 
-    await expect(
-      treasury.connect(user2).transfer(agf.address, user1.address, 10)
-    ).to.be.revertedWith('RESTRICTED');
+    await expect(treasury.connect(user2).transfer(agf.address, user1.address, 10)).to.be.revertedWith('RESTRICTED');
 
-    await expect(treasury.connect(user2).transferEth(user1.address, 10)).to.be.revertedWith(
-      'RESTRICTED'
-    );
+    await expect(treasury.connect(user2).transferEth(user1.address, 10)).to.be.revertedWith('RESTRICTED');
 
-    await expect(treasury.connect(user2).claimRewardsForTreasury()).to.be.revertedWith(
-      'RESTRICTED'
-    );
+    await expect(treasury.connect(user2).claimRewardsForTreasury()).to.be.revertedWith('RESTRICTED');
   });
 
   it('allowance and transfer', async () => {

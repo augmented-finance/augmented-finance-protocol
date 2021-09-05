@@ -42,6 +42,7 @@ makeSuite('Fork test suite', (testEnv: TestEnv) => {
   let aDaiWhaleTHREESigner: Provider | Signer | string;
 
   before(async () => {
+    await rawBRE.run('augmented:test-local', CFG);
     [root] = await ethers.getSigners();
     aDaiContract = await getMintableERC20(ADAI_ADDRESS);
     console.log(`=== aDAI contract addr: ${aDaiContract.address}`);
@@ -50,13 +51,12 @@ makeSuite('Fork test suite', (testEnv: TestEnv) => {
     aDaiWhaleONESigner = await impersonateAndGetSigner(aDaiWhaleONE);
     aDaiWhaleTWOSigner = await impersonateAndGetSigner(aDaiWhaleTWO);
     aDaiWhaleTHREESigner = await impersonateAndGetSigner(aDaiWhaleTHREE);
+    agf = await getMockAgfToken();
+    rc = await getMockRewardFreezer();
   });
 
   beforeEach(async () => {
     blkBeforeDeploy = await takeSnapshot();
-    await rawBRE.run('augmented:test-local', CFG);
-    agf = await getMockAgfToken();
-    rc = await getMockRewardFreezer();
   });
 
   afterEach(async () => {

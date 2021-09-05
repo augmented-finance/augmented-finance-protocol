@@ -16,7 +16,7 @@ abstract contract RewardedTokenBase is
 {
   constructor() ControlledRewardPool(IRewardController(address(0)), 0, 0) {}
 
-  function internalUpdateTotalSupply() internal view override returns (uint256) {
+  function internalTotalSupply() internal view override returns (uint256) {
     return super.internalGetTotalSupply();
   }
 
@@ -106,7 +106,7 @@ abstract contract RewardedTokenBase is
     uint256
   ) internal override {
     // require(oldAccountBalance >= amount, 'ERC20: burn amount exceeds balance');
-    (uint256 allocated, uint32 since, AllocationMode mode) = doDecrementRewardBalance(account, amount);
+    (uint256 allocated, uint32 since, AllocationMode mode) = doDecrementRewardBalance(account, amount, 0);
     internalAllocatedReward(account, allocated, since, mode);
   }
 

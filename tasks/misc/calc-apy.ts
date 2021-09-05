@@ -14,5 +14,5 @@ task('augmented:calc-apy', 'Calculates current APYs')
       userAddr = (await getFirstSigner()).address;
     }
 
-    await DRE.run('dev:calc-apy', { ctl, userAddr });
+    await DRE.run('helper:calc-apy', { ctl, userAddr });
   });
