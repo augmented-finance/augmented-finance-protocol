@@ -168,10 +168,10 @@ export enum ProtocolErrors {
   RL_VARIABLE_BORROW_RATE_OVERFLOW = '54', //  Variable borrow rate overflows uint128
   RL_STABLE_BORROW_RATE_OVERFLOW = '55', //  Stable borrow rate overflows uint128
   CT_INVALID_MINT_AMOUNT = '56', //invalid amount to mint
-
+  CALLER_NOT_STAKE_ADMIN = '57',
   CT_INVALID_BURN_AMOUNT = '58', //invalid amount to burn
   LP_BORROW_ALLOWANCE_NOT_ENOUGH = '59', // User borrows on behalf, but allowance are too small
-
+  CALLER_NOT_LIQUIDITY_CONTROLLER = '60',
   CALLER_NOT_REF_ADMIN = '61',
   VL_INSUFFICIENT_REWARD_AVAILABLE = '62',
   LP_CALLER_MUST_BE_DEPOSIT_TOKEN = '63',
@@ -209,8 +209,8 @@ export enum ProtocolErrors {
   STK_UNSTAKE_WINDOW_FINISHED = '95',
   STK_INVALID_BALANCE_ON_COOLDOWN = '96',
   STK_EXCESSIVE_SLASH_PCT = '97',
-  STK_EXCESSIVE_COOLDOWN_PERIOD = '98',
-  STK_WRONG_UNSTAKE_PERIOD = '99',
+  STK_WRONG_COOLDOWN_OR_UNSTAKE = '98',
+  STK_PAUSED = '99',
 
   TXT_OWNABLE_CALLER_NOT_OWNER = 'Ownable: caller is not the owner',
   TXT_CALLER_NOT_PROXY_OWNER = 'ProxyOwner: caller is not the owner',

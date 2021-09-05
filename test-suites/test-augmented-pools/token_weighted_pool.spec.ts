@@ -33,13 +33,16 @@ describe('Token weighted reward pool tests', () => {
   // reward per block is 100, see deploy
   const rewardPerBlock = 100;
 
-  beforeEach(async () => {
-    blkBeforeDeploy = await takeSnapshot();
+  before(async () => {
     [root, user1, user2] = await (<any>rawBRE).ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
     rc = await getMockRewardFreezer();
     wrp = await getTokenWeightedRewardPoolAGFSeparate();
     agf = await getMockAgfToken();
+  });
+
+  beforeEach(async () => {
+    blkBeforeDeploy = await takeSnapshot();
   });
 
   afterEach(async () => {

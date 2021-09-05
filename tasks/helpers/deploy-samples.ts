@@ -20,7 +20,7 @@ import {
   deployXAGFTokenV1Impl,
 } from '../../helpers/contracts-deployments';
 
-task('dev:deploy-samples', 'Deploy samples for verification').setAction(async (DRE) => {
+task('helper:deploy-samples', 'Deploy samples for verification').setAction(async (DRE) => {
   console.log('Deploy samples for verification');
 
   // await deployTokenWeightedRewardPoolImpl(true, false);

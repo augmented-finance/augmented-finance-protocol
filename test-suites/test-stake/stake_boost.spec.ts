@@ -45,8 +45,7 @@ describe('Staking with boosting', () => {
   let blkBeforeDeploy;
   const defaultStkAmount = 100;
 
-  beforeEach(async () => {
-    blkBeforeDeploy = await takeSnapshot();
+  before(async () => {
     [root, user1, user2, slasher] = await (<any>rawBRE).ethers.getSigners();
     await rawBRE.run('augmented:test-local-staking', CFG);
     rb = await getMockRewardBooster();
@@ -59,6 +58,10 @@ describe('Staking with boosting', () => {
     AGF = await getMockAgfToken();
     xAGF = await getMockStakedAgfToken();
     rpAGF = await getTokenWeightedRewardPoolAGFBooster();
+  });
+
+  beforeEach(async () => {
+    blkBeforeDeploy = await takeSnapshot();
   });
 
   afterEach(async () => {

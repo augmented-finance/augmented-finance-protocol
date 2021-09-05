@@ -6,15 +6,12 @@ import { waitForTx } from '../../helpers/misc-utils';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import rawBRE, { ethers } from 'hardhat';
 
-import {
-  getMockAgfToken,
-  getPermitFreezerRewardPool,
-  getMockRewardFreezer,
-} from '../../helpers/contracts-getters';
+import { getMockAgfToken, getPermitFreezerRewardPool, getMockRewardFreezer } from '../../helpers/contracts-getters';
 
 import { MockAgfToken, RewardFreezer } from '../../types';
 import { ONE_ADDRESS, RAY, ZERO_ADDRESS } from '../../helpers/constants';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
+import { revertSnapshot, takeSnapshot } from './utils';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -28,6 +25,8 @@ describe('Rewards test suite', () => {
 
   let rewardCtl: RewardFreezer;
   let agf: MockAgfToken;
+
+  let blkBeforeDeploy;
 
   before(async () => {
     await rawBRE.run('set-DRE');
@@ -51,6 +50,14 @@ describe('Rewards test suite', () => {
     await rewardCtl.setFreezePercentage(0);
 
     agf = await getMockAgfToken();
+  });
+
+  beforeEach(async () => {
+    blkBeforeDeploy = await takeSnapshot();
+  });
+
+  afterEach(async () => {
+    await revertSnapshot(blkBeforeDeploy);
   });
 
   it.skip('Should claim reward', async () => {
@@ -83,9 +90,7 @@ describe('Rewards test suite', () => {
     await (await rewardCtl.setMeltDownAt(1)).wait(1); // block 18
     // 9000: +50% of 2k for block 18, ttl frozen 5k
 
-    await (await freezer.handleBalanceUpdate(ONE_ADDRESS, user.address, 2000, 10000, 100000)).wait(
-      1
-    ); // block 19
+    await (await freezer.handleBalanceUpdate(ONE_ADDRESS, user.address, 2000, 10000, 100000)).wait(1); // block 19
     // 11000: +2k for block 19, ttl ex-frozen 5k
 
     await (await rewardCtl.connect(user).claimReward()).wait(1); // block 20

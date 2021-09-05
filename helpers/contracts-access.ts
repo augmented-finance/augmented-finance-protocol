@@ -213,19 +213,23 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
   },
 
   [eContractid.StakeTokenImpl]: {
+    ...poolTokenImpl,
+    reasons: [
+      ...poolTokenImpl.reasons!,
+      ProtocolErrors.CALLER_NOT_LIQUIDITY_CONTROLLER,
+      ProtocolErrors.CALLER_NOT_STAKE_ADMIN,
+    ],
     functions: {
+      ...poolTokenImpl.functions,
       ...erc20.functions,
       stake: true,
       redeem: true,
       redeemUnderlying: true,
       cooldown: true,
-      setIncentivesController: ProtocolErrors.CT_CALLER_MUST_BE_REWARD_ADMIN,
       initializeStakeToken: 'already initialized',
-      initialize: 'already initialized',
     },
     implOverride: {
       initializeStakeToken: 'initializer blocked',
-      initialize: 'initializer blocked',
     },
   },
 

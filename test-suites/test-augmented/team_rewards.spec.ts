@@ -3,11 +3,7 @@ import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import rawBRE from 'hardhat';
 
-import {
-  getMockAgfToken,
-  getMockRewardFreezer,
-  getTeamRewardPool,
-} from '../../helpers/contracts-getters';
+import { getMockAgfToken, getMockRewardFreezer, getTeamRewardPool } from '../../helpers/contracts-getters';
 
 import { MockAgfToken, RewardFreezer, TeamRewardPool } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
@@ -31,16 +27,19 @@ describe('Team rewards suite', () => {
   let REWARD_UNLOCKED_AT;
   let rewardPrecision = 1.5;
 
-  beforeEach(async () => {
-    blkBeforeDeploy = await takeSnapshot();
+  before(async () => {
     [root, teamMember1, teamMember2] = await (<any>rawBRE).ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
     rewardController = await getMockRewardFreezer();
     trp = await getTeamRewardPool();
     agf = await getMockAgfToken();
     REWARD_UNLOCKED_AT = 10 + (await currentTick());
-    console.log(`unlock at: ${REWARD_UNLOCKED_AT}`);
+    // console.log(`unlock at: ${REWARD_UNLOCKED_AT}`);
     await trp.setUnlockedAt(REWARD_UNLOCKED_AT);
+  });
+
+  beforeEach(async () => {
+    blkBeforeDeploy = await takeSnapshot();
   });
 
   afterEach(async () => {
@@ -48,9 +47,9 @@ describe('Team rewards suite', () => {
   });
 
   it('share percentage 0 < share <= 10k', async () => {
-    await expect(
-      trp.connect(root).updateTeamMember(teamMember1.address, PERC_100 + 1)
-    ).to.be.revertedWith('invalid share percentage');
+    await expect(trp.connect(root).updateTeamMember(teamMember1.address, PERC_100 + 1)).to.be.revertedWith(
+      'invalid share percentage'
+    );
     await expect(trp.connect(root).updateTeamMember(teamMember1.address, -1)).to.be.reverted;
   });
 
@@ -160,20 +159,11 @@ describe('Team rewards suite', () => {
     expect(shares).to.eq(userShare, 'shares are wrong');
 
     expect(await trp.isUnlocked(await currentTick())).to.be.true;
-    const expectedReward = calcTeamRewardForMember(
-      blocksPassed,
-      CFG.teamRewardInitialRate,
-      userShare,
-      0
-    );
+    const expectedReward = calcTeamRewardForMember(blocksPassed, CFG.teamRewardInitialRate, userShare, 0);
     console.log(`claim is made at: ${await currentTick()}`);
     await (await rewardController.connect(teamMember1).claimReward()).wait(1);
     const rewardClaimed = await agf.balanceOf(teamMember1.address);
-    expect(rewardClaimed.toNumber()).to.be.approximately(
-      expectedReward,
-      rewardPrecision,
-      'reward is wrong'
-    );
+    expect(rewardClaimed.toNumber()).to.be.approximately(expectedReward, rewardPrecision, 'reward is wrong');
     console.log('-----------');
   });
 
@@ -190,27 +180,14 @@ describe('Team rewards suite', () => {
     expect(shares).to.eq(PERC_100, 'shares are wrong');
 
     expect(await trp.isUnlocked(await currentTick())).to.be.true;
-    const expectedReward = calcTeamRewardForMember(
-      blocksPassed,
-      CFG.teamRewardInitialRate,
-      userShare,
-      0
-    );
+    const expectedReward = calcTeamRewardForMember(blocksPassed, CFG.teamRewardInitialRate, userShare, 0);
     console.log(`claim is made at: ${await currentTick()}`);
     await (await rewardController.connect(teamMember1).claimReward()).wait(1);
     await (await rewardController.connect(teamMember2).claimReward()).wait(1);
     const rewardClaimed = await agf.balanceOf(teamMember1.address);
-    expect(rewardClaimed.toNumber()).to.be.approximately(
-      expectedReward,
-      rewardPrecision,
-      'reward is wrong'
-    );
+    expect(rewardClaimed.toNumber()).to.be.approximately(expectedReward, rewardPrecision, 'reward is wrong');
     const rewardClaimed2 = await agf.balanceOf(teamMember2.address);
-    expect(rewardClaimed2.toNumber()).to.be.approximately(
-      expectedReward,
-      rewardPrecision,
-      'reward is wrong'
-    );
+    expect(rewardClaimed2.toNumber()).to.be.approximately(expectedReward, rewardPrecision, 'reward is wrong');
     console.log('-----------');
   });
 
@@ -229,20 +206,11 @@ describe('Team rewards suite', () => {
     expect(shares).to.eq(userShare, 'shares are wrong');
 
     expect(await trp.isUnlocked(await currentTick())).to.be.true;
-    const expectedReward = calcTeamRewardForMember(
-      blocksPassed,
-      CFG.teamRewardInitialRate,
-      userShare,
-      freezePercent
-    );
+    const expectedReward = calcTeamRewardForMember(blocksPassed, CFG.teamRewardInitialRate, userShare, freezePercent);
     console.log(`claim is made at: ${await currentTick()}`);
     await (await rewardController.connect(teamMember1).claimReward()).wait(1);
     const rewardClaimed = await agf.balanceOf(teamMember1.address);
-    expect(rewardClaimed.toNumber()).to.be.approximately(
-      expectedReward,
-      rewardPrecision,
-      'reward is wrong'
-    );
+    expect(rewardClaimed.toNumber()).to.be.approximately(expectedReward, rewardPrecision, 'reward is wrong');
     console.log('-----------');
   });
 
@@ -261,20 +229,11 @@ describe('Team rewards suite', () => {
     expect(shares).to.eq(userShare, 'shares are wrong');
 
     expect(await trp.isUnlocked(await currentTick())).to.be.true;
-    const expectedReward = calcTeamRewardForMember(
-      blocksPassed,
-      CFG.teamRewardInitialRate,
-      userShare,
-      freezePercent
-    );
+    const expectedReward = calcTeamRewardForMember(blocksPassed, CFG.teamRewardInitialRate, userShare, freezePercent);
     console.log(`claim is made at: ${await currentTick()}`);
     await (await rewardController.connect(teamMember1).claimReward()).wait(1);
     const rewardClaimed = await agf.balanceOf(teamMember1.address);
-    expect(rewardClaimed.toNumber()).to.be.approximately(
-      expectedReward,
-      rewardPrecision,
-      'reward is wrong'
-    );
+    expect(rewardClaimed.toNumber()).to.be.approximately(expectedReward, rewardPrecision, 'reward is wrong');
     console.log('-----------');
   });
 
@@ -293,24 +252,11 @@ describe('Team rewards suite', () => {
     expect(shares).to.eq(userShare, 'shares are wrong');
 
     expect(await trp.isUnlocked(await currentTick())).to.be.true;
-    const expectedReward = calcTeamRewardForMember(
-      blocksPassed,
-      CFG.teamRewardInitialRate,
-      userShare,
-      freezePercent
-    );
+    const expectedReward = calcTeamRewardForMember(blocksPassed, CFG.teamRewardInitialRate, userShare, freezePercent);
     console.log(`calc is made at: ${await currentTick()}`);
     const rewardCalc = await rewardController.claimableReward(teamMember1.address);
-    expect(rewardCalc.claimable.toNumber()).to.be.approximately(
-      expectedReward,
-      rewardPrecision,
-      'claimable is wrong'
-    );
-    expect(rewardCalc.extra.toNumber()).to.be.approximately(
-      expectedReward / 2,
-      rewardPrecision,
-      'delayed is wrong'
-    );
+    expect(rewardCalc.claimable.toNumber()).to.be.approximately(expectedReward, rewardPrecision, 'claimable is wrong');
+    expect(rewardCalc.extra.toNumber()).to.be.approximately(expectedReward / 2, rewardPrecision, 'delayed is wrong');
     console.log('-----------');
   });
 });

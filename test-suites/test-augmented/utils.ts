@@ -33,8 +33,7 @@ export const mineBlocks = async (amount: number): Promise<number> => {
 export const increaseTime = async (secondsToIncrease: number) =>
   await ethers.provider.send('evm_increaseTime', [secondsToIncrease]);
 
-export const advanceBlock = async (timestamp: number) =>
-  await ethers.provider.send('evm_mine', [timestamp]);
+export const advanceBlock = async (timestamp: number) => await ethers.provider.send('evm_mine', [timestamp]);
 
 export const mineTicks = async (amount: number): Promise<number> => {
   const blkBefore = await ethers.provider.getBlock('latest');
@@ -130,7 +129,7 @@ export const currentTick = async () => {
 
 export const takeSnapshot = async () => {
   const snap = await ethers.provider.send('evm_snapshot', []);
-  console.log(`snapshot stored: ${snap}`);
+  // console.log(`snapshot stored: ${snap}`);
   return snap;
 };
 
@@ -139,7 +138,7 @@ export const revertSnapshot = async (id: string) => {
   if (!blk) {
     throw Error('failed to restore snapshot');
   }
-  console.log(`snapshot restored: ${id}`);
+  // console.log(`snapshot restored: ${id}`);
   // after mixing evm_mine and real calls block_number is wrong, why?
   // console.log(`current block after restore: ${await currentBlock()}`);
 };

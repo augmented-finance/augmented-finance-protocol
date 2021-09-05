@@ -241,4 +241,9 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _notPaused();
     _;
   }
+
+  modifier notPausedCustom(string memory err) {
+    require(!_paused, err);
+    _;
+  }
 }

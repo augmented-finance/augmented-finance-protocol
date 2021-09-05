@@ -16,7 +16,7 @@ abstract contract RewardedTokenBase is
 {
   constructor() ControlledRewardPool(IRewardController(address(0)), 0, 0) {}
 
-  function internalUpdateTotalSupply() internal view override returns (uint256) {
+  function internalTotalSupply() internal view override returns (uint256) {
     return super.internalGetTotalSupply();
   }
 

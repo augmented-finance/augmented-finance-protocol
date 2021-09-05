@@ -13,14 +13,7 @@ import {
 
 import { MockAgfToken, RewardFreezer, RewardedTokenLocker } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import {
-  currentTick,
-  mineToTicks,
-  mineTicks,
-  revertSnapshot,
-  takeSnapshot,
-  alignTicks,
-} from './utils';
+import { currentTick, mineToTicks, mineTicks, revertSnapshot, takeSnapshot, alignTicks } from './utils';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
 import { MAX_LOCKER_PERIOD, RAY, DAY, WEEK, MAX_LOCKER_WEEKS } from '../../helpers/constants';
@@ -40,8 +33,7 @@ describe('Token locker suite', () => {
   const MIN_PERIOD = WEEK;
   const MAX_PERIOD = MAX_LOCKER_PERIOD;
 
-  beforeEach(async () => {
-    blkBeforeDeploy = await takeSnapshot();
+  before(async () => {
     [root, user1, user2] = await (<any>rawBRE).ethers.getSigners();
     await rawBRE.run('augmented:test-local', CFG);
     rewardController = await getMockRewardFreezer();
@@ -55,6 +47,10 @@ describe('Token locker suite', () => {
 
     await AGF.connect(root).mintReward(user2.address, defaultStkAmount * 2, false);
     await AGF.connect(user2).approve(xAGF.address, defaultStkAmount * 2);
+  });
+
+  beforeEach(async () => {
+    blkBeforeDeploy = await takeSnapshot();
   });
 
   afterEach(async () => {
@@ -71,10 +67,7 @@ describe('Token locker suite', () => {
     expect(await AGF.balanceOf(user1.address)).eq(0);
     expect(await xAGF.balanceOfUnderlying(user1.address)).eq(defaultStkAmount);
 
-    const expectedBalanceMin = BigNumber.from(defaultStkAmount)
-      .mul(MIN_PERIOD)
-      .div(MAX_PERIOD)
-      .toNumber();
+    const expectedBalanceMin = BigNumber.from(defaultStkAmount).mul(MIN_PERIOD).div(MAX_PERIOD).toNumber();
     const actualBalance = (await xAGF.balanceOf(user1.address)).toNumber();
     expect(actualBalance).within(expectedBalanceMin / 2, (expectedBalanceMin * 3) / 2); // depends on current timestamp
     expect(await xAGF.totalSupply()).eq(actualBalance);
@@ -82,10 +75,7 @@ describe('Token locker suite', () => {
     const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
     expect(lockInfo.underlying).eq(defaultStkAmount);
 
-    expect(lockInfo.availableSince).within(
-      lockTick + defaultPeriod / 2,
-      lockTick + (defaultPeriod * 3) / 2
-    );
+    expect(lockInfo.availableSince).within(lockTick + defaultPeriod / 2, lockTick + (defaultPeriod * 3) / 2);
 
     await xAGF.connect(user1).redeem(user1.address);
     expect(await AGF.balanceOf(user1.address)).eq(0); // nothing to redeem yet
@@ -115,9 +105,7 @@ describe('Token locker suite', () => {
 
     await xAGF.connect(user1).allowAdd(user2.address, true);
 
-    await expect(xAGF.connect(user2).lockAdd(user1.address, defaultStkAmount)).to.be.revertedWith(
-      'NOTHING_IS_LOCKED'
-    );
+    await expect(xAGF.connect(user2).lockAdd(user1.address, defaultStkAmount)).to.be.revertedWith('NOTHING_IS_LOCKED');
 
     await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod, 0);
     const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
@@ -156,9 +144,7 @@ describe('Token locker suite', () => {
     expect(await xAGF.totalSupply()).eq(0);
     expect(await xAGF.totalOfUnderlying()).eq(defaultStkAmount * 2);
 
-    await expect(xAGF.connect(user2).lockAdd(user1.address, defaultStkAmount)).to.be.revertedWith(
-      'NOTHING_IS_LOCKED'
-    );
+    await expect(xAGF.connect(user2).lockAdd(user1.address, defaultStkAmount)).to.be.revertedWith('NOTHING_IS_LOCKED');
 
     await expect(xAGF.connect(user2).lockExtend(WEEK * 4)).to.be.revertedWith('NOTHING_IS_LOCKED');
 
@@ -229,10 +215,7 @@ describe('Token locker suite', () => {
     let rewards = await AGF.balanceOf(user1.address);
     rewards = rewards.add(await AGF.balanceOf(user2.address));
 
-    expect(rewards.toNumber()).approximately(
-      (lockInfo.availableSince - startedAt) * rateBase,
-      2 * rateBase
-    );
+    expect(rewards.toNumber()).approximately((lockInfo.availableSince - startedAt) * rateBase, 2 * rateBase);
   });
 
   it('2 users share excess, 3rd user misses it', async () => {
@@ -317,13 +300,11 @@ describe('Token locker suite', () => {
     let lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
 
     await mineToTicks(lockInfo.availableSince);
-    const expectedReward = (await rewardController.connect(user1).claimableReward(user1.address))
-      .claimable;
+    const expectedReward = (await rewardController.connect(user1).claimableReward(user1.address)).claimable;
     await mineTicks(WEEK * 2);
 
     await xAGF.connect(user1).redeem(user2.address);
-    const expectedReward1 = (await rewardController.connect(user1).claimableReward(user1.address))
-      .claimable;
+    const expectedReward1 = (await rewardController.connect(user1).claimableReward(user1.address)).claimable;
     expect(expectedReward1).eq(expectedReward);
 
     await xAGF.connect(user1).lock(defaultStkAmount / 2, WEEK, 0);
@@ -333,18 +314,14 @@ describe('Token locker suite', () => {
 
     await mineToTicks(lockInfo.availableSince);
 
-    const expectedReward2 = (await rewardController.connect(user1).claimableReward(user1.address))
-      .claimable;
+    const expectedReward2 = (await rewardController.connect(user1).claimableReward(user1.address)).claimable;
 
     await rewardController.connect(user1).claimReward();
     const reward1 = await AGF.balanceOf(user1.address);
     console.log(reward1.toString(), expectedReward.toString(), expectedReward2.toString());
 
     expect(reward1).eq(expectedReward2);
-    expect(expectedReward.toNumber()).approximately(
-      expectedReward2.sub(expectedReward).toNumber(),
-      2 * rateBase
-    );
+    expect(expectedReward.toNumber()).approximately(expectedReward2.sub(expectedReward).toNumber(), 2 * rateBase);
   });
 
   it('user gets no reward for inter-lock gap without redeem', async () => {
@@ -356,8 +333,7 @@ describe('Token locker suite', () => {
     let lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
 
     await mineToTicks(lockInfo.availableSince);
-    const expectedReward = (await rewardController.connect(user1).claimableReward(user1.address))
-      .claimable;
+    const expectedReward = (await rewardController.connect(user1).claimableReward(user1.address)).claimable;
     await mineTicks(WEEK * 2);
 
     await xAGF.connect(user1).lock(halfAmount, WEEK, 0);
@@ -366,17 +342,13 @@ describe('Token locker suite', () => {
     expect(lockInfo.underlying).eq(halfAmount * 2);
     await mineToTicks(lockInfo.availableSince);
 
-    const expectedReward2 = (await rewardController.connect(user1).claimableReward(user1.address))
-      .claimable;
+    const expectedReward2 = (await rewardController.connect(user1).claimableReward(user1.address)).claimable;
 
     await rewardController.connect(user1).claimReward();
     const reward1 = await AGF.balanceOf(user1.address);
 
     expect(reward1).eq(expectedReward2);
-    expect(expectedReward.toNumber()).approximately(
-      expectedReward2.sub(expectedReward).toNumber(),
-      2 * rateBase
-    );
+    expect(expectedReward.toNumber()).approximately(expectedReward2.sub(expectedReward).toNumber(), 2 * rateBase);
   });
 
   it('3 users spread over 4 years, apply partial update', async () => {
@@ -440,10 +412,7 @@ describe('Token locker suite', () => {
 
     const xBalance = await xAGF.balanceOf(user1.address);
     await xAGF.connect(user1).lock(1, 0, 0);
-    expect((await xAGF.balanceOf(user1.address)).toNumber()).approximately(
-      xBalance.toNumber(),
-      100
-    );
+    expect((await xAGF.balanceOf(user1.address)).toNumber()).approximately(xBalance.toNumber(), 100);
 
     const lockInfo2 = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
 

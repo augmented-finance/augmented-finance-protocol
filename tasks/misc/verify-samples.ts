@@ -9,7 +9,7 @@ task('augmented:verify-samples', 'Deploy samples for verification').setAction(as
   const deployer = await getFirstSigner();
 
   await cleanupJsonDb(DRE.network.name);
-  await DRE.run('dev:deploy-samples');
+  await DRE.run('helper:deploy-samples');
 
   console.log('Verify all contracts');
   await DRE.run('verify:verify-all-contracts', { pool: POOL_NAME });

@@ -25,18 +25,8 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
   .addOptionalParam('teamRewardInitialRate', 'reward initialRate - bigNumber', 1, types.string)
   .addOptionalParam('teamRewardBaselinePercentage', 'baseline percentage - bigNumber', 0, types.int)
   .addOptionalParam('stakeCooldownTicks', 'staking cooldown ticks', stakingCooldownTicks, types.int)
-  .addOptionalParam(
-    'stakeUnstakeTicks',
-    'staking unstake window ticks',
-    stakingUnstakeTicks,
-    types.int
-  )
-  .addOptionalParam(
-    'slashingPercentage',
-    'slashing default percentage',
-    slashingDefaultPercentage,
-    types.int
-  )
+  .addOptionalParam('stakeUnstakeTicks', 'staking unstake window ticks', stakingUnstakeTicks, types.int)
+  .addOptionalParam('slashingPercentage', 'slashing default percentage', slashingDefaultPercentage, types.int)
   .addFlag('verify', 'Verify contracts at Etherscan')
   .setAction(
     async (
@@ -55,7 +45,7 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       await localBRE.run('set-DRE');
       const [root, user1, user2, slasher] = await (<any>localBRE).ethers.getSigners();
 
-      console.log(`#1 deploying: Access Controller`);
+      // console.log(`#1 deploying: Access Controller`);
       const ac = await deployMarketAccessController('marketId');
       await ac.setAnyRoleMode(true);
       // emergency admin + liquidity admin
@@ -65,20 +55,14 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       );
       await ac.grantAnyRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 
-      console.log(`#2 deploying: mock AGF`);
-      const agfToken = await deployMockAgfToken(
-        [ac.address, 'Reward token for testing', 'AGF'],
-        verify
-      );
+      // console.log(`#2 deploying: mock AGF`);
+      const agfToken = await deployMockAgfToken([ac.address, 'Reward token for testing', 'AGF'], verify);
 
-      console.log(`#3 deploying: RewardFreezer`);
+      // console.log(`#3 deploying: RewardFreezer`);
       const rewardCtl = await deployMockRewardFreezer([ac.address, agfToken.address], verify);
       await rewardCtl.setFreezePercentage(0);
 
-      const freezerRewardPool = await deployPermitFreezerRewardPool(
-        [rewardCtl.address, RAY, 0, 'burners'],
-        verify
-      );
+      const freezerRewardPool = await deployPermitFreezerRewardPool([rewardCtl.address, RAY, 0, 'burners'], verify);
       await waitForTx(await rewardCtl.addRewardPool(freezerRewardPool.address));
 
       // deploy token weighted reward pool, register in controller, separated pool for math tests
@@ -89,21 +73,16 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
       await waitForTx(await rewardCtl.addRewardPool(tokenWeightedRewardPoolSeparate.address));
       await tokenWeightedRewardPoolSeparate.addRewardProvider(root.address, ONE_ADDRESS);
 
-      console.log(`#4 deploying: Team Reward Pool`);
+      // console.log(`#4 deploying: Team Reward Pool`);
       const teamRewardPool = await deployTeamRewardPool(
         [rewardCtl.address, teamRewardInitialRate, teamRewardBaselinePercentage, root.address],
         verify
       );
       await waitForTx(await rewardCtl.addRewardPool(teamRewardPool.address));
 
-      console.log(`#5 deploying: RewardedTokenLocker`);
+      // console.log(`#5 deploying: RewardedTokenLocker`);
 
-      const basicLocker = await deployMockTokenLocker([
-        rewardCtl.address,
-        1e6,
-        0,
-        agfToken.address,
-      ]);
+      const basicLocker = await deployMockTokenLocker([rewardCtl.address, 1e6, 0, agfToken.address]);
       await waitForTx(await rewardCtl.addRewardPool(basicLocker.address));
 
       if (process.env.MAINNET_FORK === 'true') {

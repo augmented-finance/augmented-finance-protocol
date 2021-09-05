@@ -69,10 +69,10 @@ library Errors {
   string public constant RL_VARIABLE_BORROW_RATE_OVERFLOW = '54'; //  Variable borrow rate overflows uint128
   string public constant RL_STABLE_BORROW_RATE_OVERFLOW = '55'; //  Stable borrow rate overflows uint128
   string public constant CT_INVALID_MINT_AMOUNT = '56'; //invalid amount to mint
-
+  string public constant CALLER_NOT_STAKE_ADMIN = '57';
   string public constant CT_INVALID_BURN_AMOUNT = '58'; //invalid amount to burn
   string public constant BORROW_ALLOWANCE_NOT_ENOUGH = '59'; // User borrows on behalf, but allowance are too small
-
+  string public constant CALLER_NOT_LIQUIDITY_CONTROLLER = '60';
   string public constant CALLER_NOT_REF_ADMIN = '61';
   string public constant VL_INSUFFICIENT_REWARD_AVAILABLE = '62';
   string public constant LP_CALLER_MUST_BE_DEPOSIT_TOKEN = '63';
@@ -110,8 +110,8 @@ library Errors {
   string public constant STK_UNSTAKE_WINDOW_FINISHED = '95';
   string public constant STK_INVALID_BALANCE_ON_COOLDOWN = '96';
   string public constant STK_EXCESSIVE_SLASH_PCT = '97';
-  string public constant STK_EXCESSIVE_COOLDOWN_PERIOD = '98';
-  string public constant STK_WRONG_UNSTAKE_PERIOD = '99';
+  string public constant STK_WRONG_COOLDOWN_OR_UNSTAKE = '98';
+  string public constant STK_PAUSED = '99';
 
   string public constant TXT_OWNABLE_CALLER_NOT_OWNER = 'Ownable: caller is not the owner';
   string public constant TXT_CALLER_NOT_PROXY_OWNER = 'ProxyOwner: caller is not the owner';

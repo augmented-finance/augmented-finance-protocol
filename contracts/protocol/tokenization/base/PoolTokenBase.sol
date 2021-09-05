@@ -103,10 +103,10 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
   function internalSetIncentivesController(address hook) internal virtual;
 
   function totalSupply() public view virtual override returns (uint256) {
-    return internalUpdateTotalSupply();
+    return internalTotalSupply();
   }
 
-  function internalUpdateTotalSupply() internal view virtual returns (uint256);
+  function internalTotalSupply() internal view virtual returns (uint256);
 
   function _mintBalance(
     address account,
@@ -115,7 +115,7 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
   ) internal {
     require(account != address(0), 'ERC20: mint to the zero address');
     _beforeTokenTransfer(address(0), account, amount);
-    internalUpdateTotalSupply(internalUpdateTotalSupply() + amount);
+    internalUpdateTotalSupply(internalTotalSupply() + amount);
     internalIncrementBalance(account, amount, scale);
   }
 
@@ -127,7 +127,7 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
   ) internal {
     require(account != address(0), 'ERC20: burn from the zero address');
     _beforeTokenTransfer(account, address(0), amount);
-    internalUpdateTotalSupply(internalUpdateTotalSupply() - amount);
+    internalUpdateTotalSupply(internalTotalSupply() - amount);
     internalDecrementBalance(account, amount, minLimit, scale);
   }
 
