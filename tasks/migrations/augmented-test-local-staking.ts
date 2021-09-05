@@ -3,13 +3,13 @@ import {
   deployMarketAccessController,
   deployMockAgfToken,
   deployMockStakedAgfToken,
-  deployMockStakedAgToken,
   deployMockRewardBooster,
   deployMockRewardFreezer,
   deployTokenWeightedRewardPoolAG,
   deployTokenWeightedRewardPoolAGBoosted,
   deployTokenWeightedRewardPoolAGFBoosted,
   deployTokenWeightedRewardPoolAGUSDCBoosted,
+  deployMockDepositStakeToken,
 } from '../../helpers/contracts-deployments';
 import { PERC_100 } from '../../helpers/constants';
 import { slashingDefaultPercentage, stakingCooldownTicks, stakingUnstakeTicks } from './defaultTestDeployConfig';
@@ -49,7 +49,7 @@ task('augmented:test-local-staking', 'Deploy staking test contracts')
     // console.log(`#4 Staking`);
     const agDaiToken = await getAGTokenByName('agDAI');
     const xAGPool = await deployTokenWeightedRewardPoolAG([rewardCtl.address, 1, 0], verify);
-    const xAG = await deployMockStakedAgToken([
+    const xAG = await deployMockDepositStakeToken([
       ac.address,
       agDaiToken.address,
       'Staked AG Token',

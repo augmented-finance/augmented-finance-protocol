@@ -236,9 +236,6 @@ export const getMockAgfToken = async (address?: tEthereumAddress) =>
 export const getMockStakedAgfToken = async (address?: tEthereumAddress) =>
   MockStakedAgfTokenFactory.connect(address || (await getAddr(eContractid.MockStakedAgfToken)), await getFirstSigner());
 
-export const getMockStakedAgToken = async (address?: tEthereumAddress) =>
-  MockStakedAgfTokenFactory.connect(address || (await getAddr(eContractid.MockStakedAgToken)), await getFirstSigner());
-
 export const getMockLendingPoolImpl = async (address?: tEthereumAddress) =>
   MockLendingPoolFactory.connect(address || (await getAddr(eContractid.LendingPoolImpl)), await getFirstSigner());
 
@@ -446,7 +443,7 @@ export const getDefaultReserveInterestRateStrategy = async (address: tEthereumAd
     await getFirstSigner()
   );
 
-export const getMockDepositStakeToken = async (address: tEthereumAddress) =>
+export const getMockDepositStakeToken = async (address?: tEthereumAddress) =>
   MockDepositStakeTokenFactory.connect(
     address || (await getAddr(eContractid.MockDepositStakeToken)),
     await getFirstSigner()

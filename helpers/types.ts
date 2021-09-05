@@ -89,7 +89,6 @@ export enum eContractid {
   MockVariableDebtToken = 'MockVariableDebtToken',
   MockAgfToken = 'MockAgfToken',
   MockStakedAgfToken = 'MockStakedAgfToken',
-  MockStakedAgToken = 'MockStakedAgToken',
   WETHMocked = 'MockWETH',
   MockUniswapV2Router02 = 'MockUniswapV2Router02',
   MockTokenLocker = 'MockTokenLocker',

@@ -645,33 +645,6 @@ export const deployMockAgfToken = async (args: [tEthereumAddress, string, string
   return instance;
 };
 
-export const deployMockStakedAgToken = async (
-  args: [tEthereumAddress, tEthereumAddress, string, string, number, number],
-  verify?: boolean
-) => {
-  const instance = await withSaveAndVerify(
-    await new MockStakedAgfTokenFactory(await getFirstSigner()).deploy(),
-    eContractid.MockStakedAgToken,
-    args,
-    verify
-  );
-  await instance.initializeStakeToken(
-    {
-      stakeController: args[0],
-      stakedToken: args[1],
-      strategy: ZERO_ADDRESS,
-      cooldownPeriod: args[4],
-      unstakePeriod: args[5],
-      maxSlashable: 3000, // 30%
-      stakedTokenDecimals: 18,
-    },
-    args[2],
-    args[3]
-  );
-
-  return instance;
-};
-
 export const deployMockStakedAgfToken = async (
   args: [tEthereumAddress, tEthereumAddress, string, string, number, number],
   verify?: boolean
@@ -965,36 +938,27 @@ export const deployTokenWeightedRewardPoolImpl = async (verify: boolean, once: b
   );
 
 export const deployMockDepositStakeToken = async (
-  tokenName: string,
-  tokenSymbol: string,
-  stakeController: string,
-  stakedToken: string,
-  strategy: string,
-  cooldownPeriod: BigNumberish,
-  unstakePeriod: BigNumberish,
-  maxSlashable: BigNumberish,
-  stakedTokenDecimals: BigNumberish,
+  args: [tEthereumAddress, tEthereumAddress, string, string, number, number],
   verify?: boolean
 ) => {
   const instance = await withSaveAndVerify(
     await new MockDepositStakeTokenFactory(await getFirstSigner()).deploy(),
     eContractid.MockDepositStakeToken,
-    [],
+    args,
     verify
   );
-
   await instance.initializeStakeToken(
     {
-      stakeController,
-      stakedToken,
-      strategy,
-      cooldownPeriod,
-      unstakePeriod,
-      maxSlashable,
-      stakedTokenDecimals,
+      stakeController: args[0],
+      stakedToken: args[1],
+      strategy: ZERO_ADDRESS,
+      cooldownPeriod: args[4],
+      unstakePeriod: args[5],
+      maxSlashable: 3000, // 30%
+      stakedTokenDecimals: 18,
     },
-    tokenName,
-    tokenSymbol
+    args[2],
+    args[3]
   );
 
   return instance;
