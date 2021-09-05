@@ -69,6 +69,27 @@ const poolTokenImpl: ContractAccessExceptions = {
   },
 };
 
+const stakeTokenImpl: ContractAccessExceptions = {
+  ...poolTokenImpl,
+  reasons: [
+    ...poolTokenImpl.reasons!,
+    ProtocolErrors.CALLER_NOT_LIQUIDITY_CONTROLLER,
+    ProtocolErrors.CALLER_NOT_STAKE_ADMIN,
+  ],
+  functions: {
+    ...poolTokenImpl.functions,
+    ...erc20.functions,
+    stake: true,
+    redeem: true,
+    redeemUnderlying: true,
+    cooldown: true,
+    initializeStakeToken: 'already initialized',
+  },
+  implOverride: {
+    initializeStakeToken: 'initializer blocked',
+  },
+};
+
 const poolDebtTokenImpl: ContractAccessExceptions = {
   ...poolTokenImpl,
   functions: {
@@ -213,26 +234,8 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
     },
   },
 
-  [eContractid.StakeTokenImpl]: {
-    ...poolTokenImpl,
-    reasons: [
-      ...poolTokenImpl.reasons!,
-      ProtocolErrors.CALLER_NOT_LIQUIDITY_CONTROLLER,
-      ProtocolErrors.CALLER_NOT_STAKE_ADMIN,
-    ],
-    functions: {
-      ...poolTokenImpl.functions,
-      ...erc20.functions,
-      stake: true,
-      redeem: true,
-      redeemUnderlying: true,
-      cooldown: true,
-      initializeStakeToken: 'already initialized',
-    },
-    implOverride: {
-      initializeStakeToken: 'initializer blocked',
-    },
-  },
+  [eContractid.StakeTokenImpl]: stakeTokenImpl,
+  [eContractid.DepositStakeTokenImpl]: stakeTokenImpl,
 
   [eContractid.RewardConfiguratorImpl]: {
     reasons: [ProtocolErrors.CT_CALLER_MUST_BE_REWARD_ADMIN, ProtocolErrors.RW_NOT_REWARD_RATE_ADMIN],

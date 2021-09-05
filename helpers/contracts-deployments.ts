@@ -59,6 +59,8 @@ import {
   DelegatedStrategyAaveFactory,
   DelegatedStrategyCompoundEthFactory,
   DelegatedStrategyCompoundErc20Factory,
+  DepositStakeTokenFactory,
+  MockDepositStakeTokenFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -929,6 +931,14 @@ export const deployStakeConfiguratorImpl = async (verify: boolean, once: boolean
 export const deployStakeTokenImpl = async (verify: boolean, once: boolean) =>
   withSaveAndVerifyOnce(new StakeTokenFactory(await getFirstSigner()), eContractid.StakeTokenImpl, verify, once);
 
+export const deployDepositStakeTokenImpl = async (verify: boolean, once: boolean) =>
+  withSaveAndVerifyOnce(
+    new DepositStakeTokenFactory(await getFirstSigner()),
+    eContractid.DepositStakeTokenImpl,
+    verify,
+    once
+  );
+
 export const deployTreasuryImpl = async (verify: boolean, once: boolean) =>
   withSaveAndVerifyOnce(new TreasuryFactory(await getFirstSigner()), eContractid.TreasuryImpl, verify, once);
 
@@ -953,6 +963,42 @@ export const deployTokenWeightedRewardPoolImpl = async (verify: boolean, once: b
     verify,
     once
   );
+
+export const deployMockDepositStakeToken = async (
+  tokenName: string,
+  tokenSymbol: string,
+  stakeController: string,
+  stakedToken: string,
+  strategy: string,
+  cooldownPeriod: BigNumberish,
+  unstakePeriod: BigNumberish,
+  maxSlashable: BigNumberish,
+  stakedTokenDecimals: BigNumberish,
+  verify?: boolean
+) => {
+  const instance = await withSaveAndVerify(
+    await new MockDepositStakeTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.MockDepositStakeToken,
+    [],
+    verify
+  );
+
+  await instance.initializeStakeToken(
+    {
+      stakeController,
+      stakedToken,
+      strategy,
+      cooldownPeriod,
+      unstakePeriod,
+      maxSlashable,
+      stakedTokenDecimals,
+    },
+    tokenName,
+    tokenSymbol
+  );
+
+  return instance;
+};
 
 export const deployDelegatedStrategyAave = async (args: [name: string], verify?: boolean) =>
   withSaveAndVerify(

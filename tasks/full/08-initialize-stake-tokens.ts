@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
-import { deployStakeTokenImpl } from '../../helpers/contracts-deployments';
+import { deployDepositStakeTokenImpl, deployStakeTokenImpl } from '../../helpers/contracts-deployments';
 import { eNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../../helpers/types';
 import {
   getIErc20Detailed,
@@ -47,7 +47,9 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
     let initSymbols: string[] = [];
 
     const stakeParams = poolConfig.StakeParams;
-    let tokenImplAddr: tEthereumAddress = '';
+    let stakeImplAddr: tEthereumAddress = '';
+    let depositStakeImplAddr: tEthereumAddress = '';
+
     for (const [tokenName, mode] of Object.entries(stakeParams.StakeToken)) {
       if (mode == undefined) {
         continue;
@@ -83,10 +85,21 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
         }
       }
 
-      if (falsyOrZeroAddress(tokenImplAddr)) {
-        const impl = await deployStakeTokenImpl(verify, continuation);
-        console.log(`Deployed StakeToken implementation:`, impl.address);
-        tokenImplAddr = impl.address;
+      let tokenImplAddr = '';
+      if (mode == StakeMode.stakeAg) {
+        if (falsyOrZeroAddress(depositStakeImplAddr)) {
+          const impl = await deployDepositStakeTokenImpl(verify, continuation);
+          console.log(`Deployed DepositStakeToken implementation:`, impl.address);
+          depositStakeImplAddr = impl.address;
+        }
+        tokenImplAddr = depositStakeImplAddr;
+      } else {
+        if (falsyOrZeroAddress(stakeImplAddr)) {
+          const impl = await deployStakeTokenImpl(verify, continuation);
+          console.log(`Deployed StakeToken implementation:`, impl.address);
+          stakeImplAddr = impl.address;
+        }
+        tokenImplAddr = stakeImplAddr;
       }
 
       const assetDetailed = await getIErc20Detailed(asset);

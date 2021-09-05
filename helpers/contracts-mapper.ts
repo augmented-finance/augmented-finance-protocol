@@ -7,6 +7,7 @@ import {
   getDelegatedStrategyCompoundErc20,
   getDelegatedStrategyCompoundEth,
   getDelegationAwareDepositToken,
+  getDepositStakeTokenImpl,
   getDepositToken,
   getFlashLiquidationAdapter,
   getLendingPoolConfiguratorProxy,
@@ -16,6 +17,7 @@ import {
   getMarketAddressController,
   getMockAgfToken,
   getMockDecayingTokenLocker,
+  getMockDepositStakeToken,
   getMockDepositToken,
   getMockReferralRewardPool,
   getMockRewardBooster,
@@ -77,6 +79,7 @@ const CONTRACT_GETTERS: Omit<Record<eContractid, ContractGetterFn>, ignoredKeys>
   [eContractid.AGFTokenV1Impl]: getAGFTokenV1Impl,
   [eContractid.ReferralRewardPoolV1Impl]: getReferralRewardPoolImpl,
   [eContractid.RewardBoosterImpl]: getRewardBooster,
+  [eContractid.DepositStakeTokenImpl]: getDepositStakeTokenImpl,
 
   [eContractid.TreasuryRewardPool]: getTreasuryRewardPool,
   [eContractid.PermitFreezerRewardPool]: getPermitFreezerRewardPool,
@@ -98,6 +101,7 @@ const CONTRACT_GETTERS: Omit<Record<eContractid, ContractGetterFn>, ignoredKeys>
   [eContractid.MockStakedAgToken]: getMockStakedAgToken,
   [eContractid.MockTokenLocker]: getMockTokenLocker,
   [eContractid.MockDecayingTokenLocker]: getMockDecayingTokenLocker,
+  [eContractid.MockDepositStakeToken]: getMockDepositStakeToken,
 
   [eContractid.TokenWeightedRewardPoolAG]: getTokenWeightedRewardPoolAG,
   [eContractid.MockReferralRewardPool]: getMockReferralRewardPool,
