@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
 import '../../dependencies/openzeppelin/contracts/IERC20.sol';
@@ -22,6 +22,11 @@ abstract contract ERC20AllowanceBase is IERC20 {
 
   function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
     _decAllowance(msg.sender, spender, subtractedValue, 'ERC20: decreased allowance below zero');
+    return true;
+  }
+
+  function useAllowance(address owner, uint256 subtractedValue) public virtual returns (bool) {
+    _decAllowance(owner, msg.sender, subtractedValue, 'ERC20: decreased allowance below zero');
     return true;
   }
 
