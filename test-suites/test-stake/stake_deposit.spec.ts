@@ -54,10 +54,11 @@ describe('Stake agToken', () => {
     baseToken = await getMintableERC20(await token.UNDERLYING_ASSET_ADDRESS());
 
     {
-      console.log('Initialize reserve index'); // force DAI reserve index to be more than RAY
-      await baseToken.mint(WAD);
-      await baseToken.approve(pool.address, WAD);
-      await pool.deposit(baseToken.address, WAD, root.address, 0);
+      console.log('Initialize reserve index'); 
+      // force DAI reserve index to be more than RAY
+      // as this will make sure that exchange rate works properly
+
+      await deposit(root, WAD);
   
       const token2 = await getAGTokenByName('agUSDC');
       const baseToken2 = await getMintableERC20(await token2.UNDERLYING_ASSET_ADDRESS());
@@ -67,10 +68,7 @@ describe('Stake agToken', () => {
       await pool.connect(user3).borrow(baseToken.address, HALF_WAD, 2 /* variable */, 0, user3.address);
 
       await mineTicks(10);
-
-      await baseToken.mint(WAD);
-      await baseToken.approve(pool.address, WAD);
-      await pool.deposit(baseToken.address, WAD, root.address, 0);
+      await deposit(root, WAD); // trigger index update
 
       expect(await pool.getReserveNormalizedIncome(baseToken.address)).gt(RAY);
     }
@@ -84,10 +82,14 @@ describe('Stake agToken', () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  const stake = async (s: SignerWithAddress, amount: BigNumberish) => {
+  const deposit = async (s: SignerWithAddress, amount: BigNumberish) => {
     await baseToken.mint(amount);
     await baseToken.approve(pool.address, amount);
     await pool.deposit(baseToken.address, amount, s.address, 0);
+  };
+
+  const stake = async (s: SignerWithAddress, amount: BigNumberish) => {
+    await deposit(s, amount);
     await token.connect(s).approve(xToken.address, amount);
     await xToken.connect(s).stake(s.address, amount, 0);
   };
@@ -243,7 +245,7 @@ describe('Stake agToken', () => {
 
     const baseRate = await pool.getReserveNormalizedIncome(baseToken.address);
     const expectedRate = baseRate.mul(oneRay.multipliedBy(1-slashingDefaultPercentageHR).toFixed()).div(RAY);
-    expect(await xToken.exchangeRate()).to.eq(expectedRate);
+    expect(expectedRate.sub(await xToken.exchangeRate())).to.lte(1);
     expect(await xToken.totalSupply()).to.eq(defaultStkAmount);
     expect(await xToken.balanceOf(user1.address)).eq(defaultStkAmount);
     
@@ -384,5 +386,19 @@ describe('Stake agToken', () => {
     await xToken.connect(user2).transfer(user1.address, defaultStkAmount / 2);
     expect(await xToken.getCooldown(user1.address)).eq(((cooldown1 + cooldown2) / 2) | 0);
     expect(await xToken.getCooldown(user2.address)).eq(cooldown2);
+  });
+
+  it('user redeems with yield', async () => {
+    await stake(user2, WAD);
+    const baseRate = await pool.getReserveNormalizedIncome(baseToken.address);
+    await xToken.connect(user2).cooldown();
+    await mineTicks(stakingCooldownTicks);
+
+    await deposit(user1, WAD); // trigger index update
+
+    expect(await pool.getReserveNormalizedIncome(baseToken.address)).gt(baseRate);
+    await xToken.connect(user2).redeemUnderlying(user2.address, WAD);
+    expect(await xToken.balanceOf(user2.address)).to.gt(0); // yield remains staked
+    expect(await token.balanceOf(user2.address)).to.gte(WAD); // transferred can also get yield
   });
 });
