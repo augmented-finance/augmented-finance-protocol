@@ -187,7 +187,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
     });
 
     describe('constructor', () => {
-      it('should deploy with correct parameters', async () => {
+      it.skip('should deploy with correct parameters', async () => {
         const { addressesProvider } = testEnv;
         await deployFlashLiquidationAdapter([
           addressesProvider.address,
