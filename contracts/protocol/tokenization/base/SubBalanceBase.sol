@@ -289,14 +289,18 @@ abstract contract SubBalanceBase is IDepositToken, RewardedTokenBase {
   ) external override {
     uint8 accessMode = _onlySubBalanceOperator(ACCESS_LOCK_BALANCE);
 
-    _returnSubBalance(provider, address(0), scaledAmount, false);
+    _checkSubBalanceArgs(provider, address(0), scaledAmount);
+
+    uint256 index = getScaleIndex();
+    uint256 outBalance = _decrementOutBalance(provider, scaledAmount, 0, index);
+
+    uint256 amount = scaledAmount.rayMul(index);
+    emit SubBalanceReturned(provider, address(0), amount, index);
 
     if (transferTo != address(0) && transferTo != provider) {
       require(accessMode & ACCESS_TRANSFER != 0, Errors.AT_SUB_BALANCE_RESTIRCTED_FUNCTION);
 
-      uint256 index = getScaleIndex();
-      uint256 amount = scaledAmount.rayMul(index);
-      //      _transfer(provider, transferTo, amount, index);
+      _transferScaled(provider, transferTo, scaledAmount, outBalance, index);
       emit Transfer(provider, transferTo, amount);
     }
   }

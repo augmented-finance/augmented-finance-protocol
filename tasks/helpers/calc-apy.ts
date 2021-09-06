@@ -303,6 +303,7 @@ task('helper:calc-apy', 'Calculates current APYs')
       const totalExp = powerOf10(totalDecimals);
 
       {
+        // TODO use rewardedBalanceOf() for pool and stake tokens
         const balances = await dp.getUserWalletBalances(userAddr, true);
         for (let i = balances.tokenCount.toNumber(); i > 0; i--) {
           const balance = balances.balances[i - 1];
