@@ -396,11 +396,11 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
     address asset,
     address from,
     address to,
-    uint256 amount,
-    uint256 balanceFromBefore,
-    uint256 balanceToBefore
+    bool lastBalanceFrom,
+    bool firstBalanceTo
   ) external override whenNotPaused {
-    require(msg.sender == _reserves[asset].depositTokenAddress, Errors.LP_CALLER_MUST_BE_DEPOSIT_TOKEN);
+    DataTypes.ReserveData storage reserve = _reserves[asset];
+    require(msg.sender == reserve.depositTokenAddress, Errors.LP_CALLER_MUST_BE_DEPOSIT_TOKEN);
 
     DataTypes.UserConfigurationMap storage fromConfig = _usersConfig[from];
     ValidationLogic.validateTransfer(
@@ -412,17 +412,15 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
       _addressesProvider.getPriceOracle()
     );
 
-    uint256 reserveId = _reserves[asset].id;
-
     if (from != to) {
-      if (balanceFromBefore <= amount) {
-        fromConfig.unsetUsingAsCollateral(reserveId);
+      if (lastBalanceFrom) {
+        fromConfig.unsetUsingAsCollateral(reserve.id);
         emit ReserveUsedAsCollateralDisabled(asset, from);
       }
 
-      if (balanceToBefore == 0 && amount != 0) {
+      if (firstBalanceTo) {
         DataTypes.UserConfigurationMap storage toConfig = _usersConfig[to];
-        toConfig.setUsingAsCollateral(reserveId);
+        toConfig.setUsingAsCollateral(reserve.id);
         emit ReserveUsedAsCollateralEnabled(asset, to);
       }
     }

@@ -119,41 +119,166 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     _provideSubBalance(provider, address(0), scaledAmount);
   }
 
+  function _incrementOutBalance(address provider, uint256 scaledAmount) private {
+    (uint256 balance, uint32 flags) = internalBalanceAndFlagsOf(provider);
+    uint256 outBalance = scaledAmount + _outBalances[provider].outBalance;
+    require(outBalance <= balance, Errors.VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE);
+
+    require(outBalance <= type(uint128).max, 'balance is too high');
+    _outBalances[provider].outBalance = uint128(outBalance);
+
+    if (flags & FLAG_OUT_BALANCE == 0) {
+      internalSetFlagsOf(provider, flags | FLAG_OUT_BALANCE);
+    }
+  }
+
+  function _decrementOutBalance(
+    address provider,
+    uint256 scaledAmount,
+    uint256 coveredOverdraft,
+    uint256 index
+  ) private returns (uint256) {
+    uint256 outBalance = uint256(_outBalances[provider].outBalance) - scaledAmount;
+
+    if (coveredOverdraft > 0) {
+      // A provider of overdraft is not know when overdraft is applied, so there is an excess of tokens minted at that time.
+      // So this excess of tokens will be burned here.
+      _burnBalance(provider, coveredOverdraft, outBalance, index);
+    }
+    _outBalances[provider].outBalance = uint128(outBalance);
+
+    if (outBalance == 0) {
+      (, uint32 flags) = internalBalanceAndFlagsOf(provider);
+      internalSetFlagsOf(provider, flags & ~FLAG_OUT_BALANCE);
+    }
+    return outBalance;
+  }
+
+  function _incrementInBalance(address recipient, uint256 scaledAmount) private {
+    (, uint32 flags) = internalBalanceAndFlagsOf(recipient);
+    require(flags & FLAG_ALLOW_OVERDRAFT != 0, Errors.AT_OVERDRAFT_DISABLED);
+    scaledAmount += _inBalances[recipient].allowance;
+
+    require(scaledAmount <= type(uint128).max, 'balance is too high');
+    _inBalances[recipient].allowance = uint128(scaledAmount);
+
+    if (flags & FLAG_IN_BALANCE == 0) {
+      internalSetFlagsOf(recipient, flags | FLAG_IN_BALANCE);
+    }
+  }
+
+  function _decrementInBalance(
+    address recipient,
+    uint256 scaledAmount,
+    bool preferOverdraft
+  ) private returns (uint256 overdraft) {
+    InBalance memory inBalance = _inBalances[recipient];
+
+    if (
+      inBalance.overdraft > 0 &&
+      (preferOverdraft || inBalance.overdraft >= scaledAmount.percentMul(_overdraftTolerancePct))
+    ) {
+      if (inBalance.overdraft > scaledAmount) {
+        overdraft = uint128(scaledAmount);
+        unchecked {
+          inBalance.overdraft -= uint128(scaledAmount);
+        }
+      } else {
+        overdraft = inBalance.overdraft;
+        inBalance.overdraft = 0;
+      }
+      _totalOverdraft -= overdraft;
+    }
+    inBalance.allowance = uint128(uint256(inBalance.allowance) - (scaledAmount - overdraft));
+
+    _inBalances[recipient] = inBalance;
+    if (inBalance.allowance == 0) {
+      (, uint32 flags) = internalBalanceAndFlagsOf(recipient);
+      internalSetFlagsOf(recipient, flags & ~FLAG_IN_BALANCE);
+    }
+  }
+
+  function _checkSubBalanceArgs(
+    address provider,
+    address recipient,
+    uint256 scaledAmount
+  ) private pure {
+    require(scaledAmount > 0, Errors.VL_INVALID_SUB_BALANCE_ARGS);
+    require(provider != address(0) && provider != recipient, Errors.VL_INVALID_SUB_BALANCE_ARGS);
+  }
+
   function _provideSubBalance(
     address provider,
     address recipient,
     uint256 scaledAmount
   ) private {
-    require(provider != address(0) && provider != recipient, Errors.VL_INVALID_SUB_BALANCE_ARGS);
+    _checkSubBalanceArgs(provider, recipient, scaledAmount);
 
-    {
-      (uint256 balance, uint32 flags) = internalBalanceAndFlagsOf(provider);
-      uint256 outBalance = scaledAmount + _outBalances[provider].outBalance;
-      require(outBalance <= balance, Errors.VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE);
-
-      require(outBalance <= type(uint128).max, 'balance is too high');
-      _outBalances[provider].outBalance = uint128(outBalance);
-
-      if (flags & FLAG_OUT_BALANCE == 0) {
-        internalSetFlagsOf(provider, flags | FLAG_OUT_BALANCE);
-      }
-    }
+    _incrementOutBalance(provider, scaledAmount);
 
     if (recipient != address(0)) {
-      (, uint32 flags) = internalBalanceAndFlagsOf(recipient);
-      require(flags & FLAG_ALLOW_OVERDRAFT != 0, Errors.AT_OVERDRAFT_DISABLED);
-      scaledAmount += _inBalances[recipient].allowance;
-
-      require(scaledAmount <= type(uint128).max, 'balance is too high');
-      _inBalances[recipient].allowance = uint128(scaledAmount);
-
-      if (flags & FLAG_IN_BALANCE == 0) {
-        internalSetFlagsOf(recipient, flags | FLAG_IN_BALANCE);
-      }
+      _incrementInBalance(recipient, scaledAmount);
     }
 
     uint256 index = getScaleIndex();
     emit SubBalanceProvided(provider, recipient, scaledAmount.rayMul(index), index);
+  }
+
+  function replaceSubBalance(
+    address prevProvider,
+    address recipient,
+    uint256 prevScaledAmount,
+    address newProvider,
+    uint256 newScaledAmount
+  ) external override onlySubBalanceOperator returns (uint256) {
+    require(recipient != address(0), Errors.VL_INVALID_SUB_BALANCE_ARGS);
+    _checkSubBalanceArgs(prevProvider, recipient, prevScaledAmount);
+
+    if (prevProvider != newProvider) {
+      _checkSubBalanceArgs(newProvider, recipient, newScaledAmount);
+      _incrementOutBalance(newProvider, newScaledAmount);
+    } else if (prevScaledAmount == newScaledAmount) {
+      return 0;
+    }
+
+    uint256 overdraft;
+    uint256 delta;
+    uint256 compensation;
+    if (prevScaledAmount > newScaledAmount) {
+      unchecked {
+        delta = prevScaledAmount - newScaledAmount;
+      }
+      overdraft = _decrementInBalance(recipient, delta, true);
+      if (delta > overdraft) {
+        unchecked {
+          compensation = delta - overdraft;
+        }
+      }
+    } else if (prevScaledAmount < newScaledAmount) {
+      unchecked {
+        delta = newScaledAmount - prevScaledAmount;
+      }
+      _incrementInBalance(recipient, delta);
+    }
+
+    uint256 index = getScaleIndex();
+    uint256 outBalance;
+    if (prevProvider != newProvider) {
+      outBalance = _decrementOutBalance(prevProvider, prevScaledAmount, overdraft, index);
+    } else if (prevScaledAmount > newScaledAmount) {
+      outBalance = _decrementOutBalance(prevProvider, delta, overdraft, index);
+    } else {
+      _incrementOutBalance(newProvider, delta);
+    }
+
+    if (overdraft > 0) {
+      emit OverdraftCovered(prevProvider, recipient, uint256(overdraft).rayMul(index), index);
+    }
+    if (compensation > 0) {
+      _transferScaled(prevProvider, recipient, compensation, outBalance, index);
+    }
+
+    return overdraft;
   }
 
   function returnSubBalance(
@@ -191,56 +316,18 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     uint256 scaledAmount,
     bool preferOverdraft
   ) private returns (uint256) {
-    require(provider != address(0) && provider != recipient, Errors.VL_INVALID_SUB_BALANCE_ARGS);
+    _checkSubBalanceArgs(provider, recipient, scaledAmount);
 
     uint256 index = getScaleIndex();
-    uint128 overdraft;
+    uint256 overdraft;
 
     if (recipient != address(0)) {
-      (, uint32 flags) = internalBalanceAndFlagsOf(recipient);
-      require(flags & FLAG_ALLOW_OVERDRAFT != 0, Errors.AT_OVERDRAFT_DISABLED);
-
-      InBalance memory inBalance = _inBalances[recipient];
-
-      if (
-        inBalance.overdraft > 0 &&
-        (preferOverdraft || inBalance.overdraft >= scaledAmount.percentMul(_overdraftTolerancePct))
-      ) {
-        if (inBalance.overdraft > scaledAmount) {
-          overdraft = uint128(scaledAmount);
-          unchecked {
-            inBalance.overdraft -= uint128(scaledAmount);
-          }
-        } else {
-          overdraft = inBalance.overdraft;
-          inBalance.overdraft = 0;
-        }
-        _totalOverdraft -= overdraft;
-      }
-      inBalance.allowance = uint128(uint256(inBalance.allowance) - (scaledAmount - overdraft));
-
-      _inBalances[recipient] = inBalance;
-      if (inBalance.allowance == 0) {
-        internalSetFlagsOf(recipient, flags & ~FLAG_IN_BALANCE);
-      }
+      overdraft = _decrementInBalance(recipient, scaledAmount, preferOverdraft);
     }
 
-    {
-      uint256 outBalance = uint256(_outBalances[provider].outBalance) - scaledAmount;
-
-      if (overdraft > 0) {
-        // A provider of overdraft is not know when overdraft is applied, so there is an excess of tokens minted at that time.
-        // So this excess of tokens will be burned here.
-
-        _burnBalance(provider, overdraft, outBalance, index);
-        emit OverdraftCovered(provider, recipient, uint256(overdraft).rayMul(index), index);
-      }
-      _outBalances[provider].outBalance = uint128(outBalance);
-
-      if (outBalance == 0) {
-        (, uint32 flags) = internalBalanceAndFlagsOf(recipient);
-        internalSetFlagsOf(recipient, flags & ~FLAG_OUT_BALANCE);
-      }
+    _decrementOutBalance(provider, scaledAmount, overdraft, index);
+    if (overdraft > 0) {
+      emit OverdraftCovered(provider, recipient, uint256(overdraft).rayMul(index), index);
     }
 
     emit SubBalanceReturned(provider, recipient, scaledAmount.rayMul(index), index);
@@ -458,8 +545,6 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
   }
 
   function transferUnderlyingTo(address target, uint256 amount) external override onlyLendingPool returns (uint256) {
-    // uint8 accessMode = getSubBalanceOperatorAccess(msg.sender);
-    // require(accessMode & ACCESS_TRANSFER != 0, Errors.AT_CALLER_NOT_ALLOWED_TO_TRANSFER);
     IERC20(_underlyingAsset).safeTransfer(target, amount);
     return amount;
   }
@@ -476,28 +561,51 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     uint256 amount,
     uint256 index
   ) private {
-    address underlyingAsset = _underlyingAsset;
     uint256 scaledAmount = amount.rayDiv(index);
-
     (uint256 scaledBalanceBeforeFrom, uint256 flags) = internalBalanceAndFlagsOf(from);
-    uint256 scaledBalanceBeforeTo = internalBalanceOf(to);
 
-    if (flags & FLAG_OUT_BALANCE != 0) {
-      super._transferBalance(from, to, scaledAmount, _outBalances[from].outBalance, index);
-    } else {
-      super._transferBalance(from, to, scaledAmount, 0, index);
-    }
-
-    _pool.finalizeTransfer(
-      underlyingAsset,
+    _transferAndFinalize(
       from,
       to,
-      amount,
-      scaledBalanceBeforeFrom.rayMul(index),
-      scaledBalanceBeforeTo.rayMul(index)
+      scaledAmount,
+      flags & FLAG_OUT_BALANCE != 0 ? _outBalances[from].outBalance : 0,
+      index,
+      scaledBalanceBeforeFrom
     );
 
     emit BalanceTransfer(from, to, amount, index);
+  }
+
+  function _transferScaled(
+    address from,
+    address to,
+    uint256 scaledAmount,
+    uint256 outBalance,
+    uint256 index
+  ) private {
+    _transferAndFinalize(from, to, scaledAmount, outBalance, index, internalBalanceOf(from));
+
+    emit BalanceTransfer(from, to, scaledAmount.rayMul(index), index);
+  }
+
+  function _transferAndFinalize(
+    address from,
+    address to,
+    uint256 scaledAmount,
+    uint256 outBalance,
+    uint256 index,
+    uint256 scaledBalanceBeforeFrom
+  ) private {
+    uint256 scaledBalanceBeforeTo = internalBalanceOf(to);
+    super._transferBalance(from, to, scaledAmount, outBalance, index);
+
+    _pool.finalizeTransfer(
+      _underlyingAsset,
+      from,
+      to,
+      scaledAmount > 0 && scaledBalanceBeforeFrom == scaledAmount,
+      scaledAmount > 0 && scaledBalanceBeforeTo == 0
+    );
   }
 
   function _approveByPermit(
