@@ -36,7 +36,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
 
   describe('UniswapLiquiditySwapAdapter', () => {
     describe('constructor', () => {
-      it('should deploy with correct parameters', async () => {
+      it.skip('should deploy with correct parameters', async () => {
         const { addressesProvider } = testEnv;
         await deployUniswapLiquiditySwapAdapter([
           addressesProvider.address,
