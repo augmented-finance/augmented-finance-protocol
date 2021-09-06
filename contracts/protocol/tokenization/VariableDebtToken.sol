@@ -22,10 +22,6 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
 
   uint256 private constant DEBT_TOKEN_REVISION = 0x1;
 
-  /**
-   * @dev Gets the revision of the stable debt token implementation
-   * @return The debt token implementation revision
-   **/
   function getRevision() internal pure virtual override returns (uint256) {
     return DEBT_TOKEN_REVISION;
   }
@@ -58,10 +54,6 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     return _pool.getReserveNormalizedVariableDebt(_underlyingAsset);
   }
 
-  /**
-   * @dev Calculates the accumulated debt balance of the user
-   * @return The debt balance of the user
-   **/
   function balanceOf(address user) public view virtual override returns (uint256) {
     uint256 scaledBalance = internalBalanceOf(user);
     if (scaledBalance == 0) {
@@ -70,16 +62,10 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     return scaledBalance.rayMul(getScaleIndex());
   }
 
-  /**
-   * @dev Mints debt token to the `onBehalfOf` address
-   * -  Only callable by the LendingPool
-   * @param user The address receiving the borrowed underlying, being the delegatee in case
-   * of credit delegate, or same as `onBehalfOf` otherwise
-   * @param onBehalfOf The address receiving the debt tokens
-   * @param amount The amount of debt being minted
-   * @param index The variable debt index of the reserve
-   * @return firstBalance `true` if the the previous balance of the user is 0
-   **/
+  function rewardedBalanceOf(address user) external view override returns (uint256) {
+    return balanceOf(user);
+  }
+
   function mint(
     address user,
     address onBehalfOf,
@@ -102,13 +88,6 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     return firstBalance;
   }
 
-  /**
-   * @dev Burns user variable debt
-   * - Only callable by the LendingPool
-   * @param user The user whose debt is getting burned
-   * @param amount The amount getting burned
-   * @param index The variable debt index of the reserve
-   **/
   function burn(
     address user,
     uint256 amount,
@@ -123,36 +102,18 @@ contract VariableDebtToken is DebtTokenBase, VersionedInitializable, IVariableDe
     emit Burn(user, amount, index);
   }
 
-  /**
-   * @dev Returns the principal debt balance of the user from
-   * @return The debt balance of the user since the last burn/mint action
-   **/
   function scaledBalanceOf(address user) public view virtual override returns (uint256) {
     return internalBalanceOf(user);
   }
 
-  /**
-   * @dev Returns the total supply of the variable debt token. Represents the total debt accrued by the users
-   * @return The total supply
-   **/
   function totalSupply() public view virtual override returns (uint256) {
     return super.totalSupply().rayMul(getScaleIndex());
   }
 
-  /**
-   * @dev Returns the scaled total supply of the variable debt token. Represents sum(debt/index)
-   * @return the scaled total supply
-   **/
   function scaledTotalSupply() public view virtual override returns (uint256) {
     return super.totalSupply();
   }
 
-  /**
-   * @dev Returns the principal balance of the user and principal total supply.
-   * @param user The address of the user
-   * @return The principal balance of the user
-   * @return The principal total supply
-   **/
   function getScaledUserBalanceAndSupply(address user) external view override returns (uint256, uint256) {
     return (internalBalanceOf(user), super.totalSupply());
   }

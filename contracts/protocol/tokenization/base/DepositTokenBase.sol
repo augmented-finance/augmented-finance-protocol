@@ -405,8 +405,8 @@ abstract contract DepositTokenBase is IDepositToken, RewardedTokenBase, ERC20Per
     return userBalance - _outBalances[user].outBalance;
   }
 
-  function scaledRewardedBalanceOf(address user) external view override returns (uint256) {
-    return internalBalanceOf(user);
+  function rewardedBalanceOf(address user) external view override returns (uint256) {
+    return internalBalanceOf(user).rayMul(getScaleIndex());
   }
 
   function collateralBalanceOf(address user) public view override returns (uint256) {

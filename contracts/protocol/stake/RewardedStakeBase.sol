@@ -240,6 +240,10 @@ abstract contract RewardedStakeBase is
     return super.getRewardEntry(account).rewardBase;
   }
 
+  function rewardedBalanceOf(address account) external view override returns (uint256) {
+    return super.getRewardEntry(account).rewardBase;
+  }
+
   function balanceOfUnderlying(address account) public view virtual returns (uint256) {
     return uint256(super.getRewardEntry(account).rewardBase).rayMul(exchangeRate());
   }

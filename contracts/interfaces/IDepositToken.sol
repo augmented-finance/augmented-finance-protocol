@@ -96,8 +96,6 @@ interface IDepositToken is IERC20, IPoolToken, IScaledBalanceToken {
 
   function collateralBalanceOf(address) external view returns (uint256);
 
-  function scaledRewardedBalanceOf(address) external view returns (uint256);
-
   /**
    * @dev Emitted on use of overdraft (by liquidation)
    * @param account The receiver of overdraft (user with shortage)

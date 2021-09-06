@@ -5,4 +5,6 @@ interface IRewardedToken {
   function setIncentivesController(address) external;
 
   function getIncentivesController() external view returns (address);
+
+  function rewardedBalanceOf(address) external view returns (uint256);
 }

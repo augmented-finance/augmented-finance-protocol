@@ -54,10 +54,6 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, VersionedInitializa
     );
   }
 
-  /**
-   * @dev Gets the revision of the stable debt token implementation
-   * @return The debt token implementation revision
-   **/
   function getRevision() internal pure virtual override returns (uint256) {
     return DEBT_TOKEN_REVISION;
   }
@@ -87,16 +83,16 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, VersionedInitializa
     return _usersStableRate[user];
   }
 
-  /**
-   * @dev Calculates the current user debt balance
-   * @return The accumulated debt of the user
-   **/
   function balanceOf(address account) public view virtual override returns (uint256) {
     uint256 scaledBalance = internalBalanceOf(account);
     if (scaledBalance == 0) {
       return 0;
     }
     return scaledBalance.rayMul(cumulatedInterest(account));
+  }
+
+  function rewardedBalanceOf(address user) external view override returns (uint256) {
+    return balanceOf(user);
   }
 
   function cumulatedInterest(address account) public view virtual returns (uint256) {
@@ -110,17 +106,6 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, VersionedInitializa
     uint256 currentAvgStableRate;
   }
 
-  /**
-   * @dev Mints debt token to the `onBehalfOf` address.
-   * -  Only callable by the LendingPool
-   * - The resulting rate is the weighted average between the rate of the new debt
-   * and the rate of the previous debt
-   * @param user The address receiving the borrowed underlying, being the delegatee in case
-   * of credit delegate, or same as `onBehalfOf` otherwise
-   * @param onBehalfOf The address receiving the debt tokens
-   * @param amount The amount of debt tokens to mint
-   * @param rate The rate of the debt being minted
-   **/
   function mint(
     address user,
     address onBehalfOf,
@@ -171,11 +156,6 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase, VersionedInitializa
     return currentBalance == 0;
   }
 
-  /**
-   * @dev Burns debt of `user`
-   * @param user The address of the user getting his debt burned
-   * @param amount The amount of debt tokens getting burned
-   **/
   function burn(address user, uint256 amount) external override onlyLendingPool {
     (, uint256 currentBalance, uint256 balanceIncrease) = _calculateBalanceIncrease(user);
 
