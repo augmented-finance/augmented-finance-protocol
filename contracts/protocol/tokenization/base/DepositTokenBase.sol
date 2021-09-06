@@ -150,8 +150,8 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
 
     super._transferBalance(user, receiver, scaledAmount, outBalance, index);
 
-    emit BalanceTransfer(user, receiver, amount, index);
     emit Transfer(user, receiver, amount);
+    emit BalanceTransfer(user, receiver, amount, index);
     return firstBalance;
   }
 
@@ -182,7 +182,6 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
 
   function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
     _transfer(msg.sender, recipient, amount, getScaleIndex());
-    emit Transfer(msg.sender, recipient, amount);
     return true;
   }
 
@@ -193,7 +192,6 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
   ) public virtual override returns (bool) {
     _transfer(sender, recipient, amount, getScaleIndex());
     _approveTransferFrom(sender, amount);
-    emit Transfer(sender, recipient, amount);
     return true;
   }
 
@@ -219,6 +217,7 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
 
     _transferAndFinalize(from, to, scaledAmount, getMinBalance(from, flags), index, scaledBalanceBeforeFrom);
 
+    emit Transfer(from, to, amount);
     emit BalanceTransfer(from, to, amount, index);
   }
 
@@ -231,7 +230,9 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
   ) internal override {
     _transferAndFinalize(from, to, scaledAmount, minBalance, index, internalBalanceOf(from));
 
-    emit BalanceTransfer(from, to, scaledAmount.rayMul(index), index);
+    uint256 amount = scaledAmount.rayMul(index);
+    emit Transfer(from, to, amount);
+    emit BalanceTransfer(from, to, amount, index);
   }
 
   function _transferAndFinalize(

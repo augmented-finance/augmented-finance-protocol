@@ -343,6 +343,24 @@ describe('Stake agToken', () => {
     expect(await xToken.totalSupply()).to.eq(defaultStkAmount);
   });
 
+  it('redeem transferred stake', async () => {
+    await stake(user1, defaultStkAmount);
+
+    await xToken.connect(user1).transfer(user2.address, defaultStkAmount / 2);
+    expect(await xToken.totalSupply()).to.eq(defaultStkAmount);
+    await xToken.connect(user1).cooldown();
+    await xToken.connect(user2).cooldown();
+    await mineTicks(stakingCooldownTicks);
+
+    await xToken.connect(user1).redeemUnderlying(user1.address, defaultStkAmount / 2);
+    expect(await xToken.totalSupply()).to.eq(defaultStkAmount / 2);
+    await xToken.connect(user2).redeemUnderlying(user2.address, defaultStkAmount / 2);
+    expect(await xToken.totalSupply()).to.eq(0);
+
+    expect(await token.balanceOf(user1.address)).to.eq(defaultStkAmount / 2);
+    expect(await token.balanceOf(user2.address)).to.eq(defaultStkAmount / 2);
+  });
+
   it('transfer all unsets cooldown for user1', async () => {
     await stake(user1, defaultStkAmount);
 
