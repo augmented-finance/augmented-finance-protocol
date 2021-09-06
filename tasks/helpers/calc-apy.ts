@@ -50,6 +50,10 @@ task('helper:calc-apy', 'Calculates current APYs')
 
     const addresses = await dp.getAddresses();
 
+    console.log('Access Controller:', ac.address);
+    console.log('Data Helper:', dp.address);
+    console.log('Addresses:', addresses);
+
     {
       const rw = await getRewardConfiguratorProxy(addresses.rewardConfigurator);
 
@@ -186,6 +190,7 @@ task('helper:calc-apy', 'Calculates current APYs')
         const reserve = reserves[i];
         console.log(
           reserve.symbol,
+          reserve.decimals.toNumber(),
           `\tDeposit: ${formatFixed(reserve.liquidityRate, 27 - 2, 4)}%`,
           `\tVariable: ${formatFixed(reserve.variableBorrowRate, 27 - 2, 4)}%`,
           `\tStable: ${formatFixed(reserve.stableBorrowRate, 27 - 2, 4)}%`,
