@@ -19,6 +19,8 @@ struct RewardExplained {
   uint256 maxBoost;
   /// @dev maximum allowed amount of boost based on work rewards (from deposits, debts, stakes etc)
   uint256 boostLimit;
+  /// @dev timestamp of the latest claim
+  uint32 latestClaimAt;
   /// @dev a list of pools currently generating rewards to the holder
   RewardExplainEntry[] allocations;
 }

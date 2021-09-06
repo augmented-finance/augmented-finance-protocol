@@ -1,6 +1,39 @@
 import { oneRay, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames, ONE_ADDRESS } from '../../helpers/constants';
-import { ICommonConfiguration, eEthereumNetwork, StakeMode, LPFeature } from '../../helpers/types';
-import { strategyAAVE, strategyADAI, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
+import { ICommonConfiguration, eEthereumNetwork, StakeMode, LPFeature, ITokenRewardPoolParams } from '../../helpers/types';
+
+const tokenRewardPoolParamsDefault: ITokenRewardPoolParams = {
+  Share: {
+    deposit: {
+      BasePoints: 200,
+      BoostFactor: 30000, // 3x
+    },
+    vDebt: {
+      BasePoints: 200,
+      BoostFactor: 30000, // 3x
+    },
+    stake: {
+      BasePoints: 400,
+      BoostFactor: 30000, // 3x
+    },
+  }
+}
+
+const tokenRewardPoolParamsUSDx: ITokenRewardPoolParams = {
+  Share: {
+    deposit: {
+      BasePoints: 100,
+      BoostFactor: 30000, // 3x
+    },
+    vDebt: {
+      BasePoints: 100,
+      BoostFactor: 30000, // 3x
+    },
+    stake: {
+      BasePoints: 200,
+      BoostFactor: 30000, // 3x
+    },
+  }
+}
 
 // ----------------
 // PROTOCOL GLOBAL PARAMS
@@ -329,86 +362,10 @@ export const CommonsConfig: ICommonConfiguration = {
     Autolock: 12, // 12 weeks auto-prolongate
     InitialRateWad: 2.12,
     TokenPools: {
-      DAI:   {
-        Share: {
-          deposit: {
-            BasePoints: 200,
-            BoostFactor: 3,
-          },
-          vDebt: {
-            BasePoints: 200,
-            BoostFactor: 3,
-          },
-          stake: {
-            BasePoints: 400,
-            BoostFactor: 3,
-          },
-        }
-      },
-      USDC:   {
-        Share: {
-          deposit: {
-            BasePoints: 200,
-            BoostFactor: 3,
-          },
-          vDebt: {
-            BasePoints: 200,
-            BoostFactor: 3,
-          },
-          stake: {
-            BasePoints: 400,
-            BoostFactor: 3,
-          },
-        }
-      },
-      USDT:   {
-        Share: {
-          deposit: {
-            BasePoints: 200,
-            BoostFactor: 3,
-          },
-          vDebt: {
-            BasePoints: 200,
-            BoostFactor: 3,
-          },
-          stake: {
-            BasePoints: 400,
-            BoostFactor: 3,
-          },
-        }
-      },
-      WBTC:   {
-        Share: {
-          deposit: {
-            BasePoints: 100,
-            BoostFactor: 3,
-          },
-          vDebt: {
-            BasePoints: 100,
-            BoostFactor: 3,
-          },
-          stake: {
-            BasePoints: 200,
-            BoostFactor: 3,
-          },
-        }
-      },
-      WETH:   {
-        Share: {
-          deposit: {
-            BasePoints: 100,
-            BoostFactor: 3,
-          },
-          vDebt: {
-            BasePoints: 100,
-            BoostFactor: 3,
-          },
-          stake: {
-            BasePoints: 200,
-            BoostFactor: 3,
-          },
-        }
-      },
+      DAI:   tokenRewardPoolParamsDefault,
+      USDT:  tokenRewardPoolParamsDefault,
+      WBTC:  tokenRewardPoolParamsUSDx,
+      WETH:  tokenRewardPoolParamsUSDx,
     },
     ReferralPool: {
       BasePoints: 100,
