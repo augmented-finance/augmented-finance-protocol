@@ -142,7 +142,8 @@ abstract contract SubBalanceBase is IDepositToken, RewardedTokenBase {
 
     if (
       inBalance.overdraft > 0 &&
-      (preferOverdraft || inBalance.overdraft >= scaledAmount.percentMul(_overdraftTolerancePct))
+      (scaledAmount > inBalance.allowance ||
+        (preferOverdraft && inBalance.overdraft >= scaledAmount.percentMul(_overdraftTolerancePct)))
     ) {
       if (inBalance.overdraft > scaledAmount) {
         overdraft = uint128(scaledAmount);
