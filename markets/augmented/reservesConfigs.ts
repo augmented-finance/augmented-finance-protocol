@@ -96,7 +96,7 @@ export const strategyWBTC: IReserveParams = {
   reserveFactor: 2000
 };
 
-const externalAsset = (template: IReserveParams, strategy: IInterestRateStrategyParams, ltdDelta: number) => {
+const externalAsset = (template: IReserveParams, strategy: IInterestRateStrategyParams, ltdDelta: number, decimals?: number) => {
   const result: IReserveParams = {
     strategy: strategy,
     baseLTVAsCollateral: template.baseLTVAsCollateral - ltdDelta,
@@ -104,7 +104,7 @@ const externalAsset = (template: IReserveParams, strategy: IInterestRateStrategy
     liquidationBonus: template.liquidationBonus + ((ltdDelta / 2)|0),
     borrowingEnabled: false,
     stableBorrowRateEnabled: false,
-    reserveDecimals: template.reserveDecimals,
+    reserveDecimals: decimals || template.reserveDecimals,
     depositTokenImpl: eContractid.DepositTokenImpl,
     reserveFactor: 0
   };
@@ -112,5 +112,5 @@ const externalAsset = (template: IReserveParams, strategy: IInterestRateStrategy
 }
 
 export const strategyADAI = externalAsset(strategyDAI, externalReserveAAVE, 2000);
-export const strategyCDAI = externalAsset(strategyDAI, externalReserveCOMP, 2000);
-export const strategyCETH = externalAsset(strategyWETH, externalReserveCETH, 2000);
+export const strategyCDAI = externalAsset(strategyDAI, externalReserveCOMP, 2000, 8);
+export const strategyCETH = externalAsset(strategyWETH, externalReserveCETH, 2000, 8);
