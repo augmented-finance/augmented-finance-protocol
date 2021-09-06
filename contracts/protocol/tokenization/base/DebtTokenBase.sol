@@ -4,10 +4,10 @@ pragma solidity ^0.8.4;
 import '../../../tools/Errors.sol';
 import '../../../interfaces/ICreditDelegationToken.sol';
 import '../../../tools/tokens/ERC20NoTransferBase.sol';
-import './PoolTokenWithRewardsBase.sol';
+import './RewardedTokenBase.sol';
 
 /// @dev Base contract for a non-transferrable debt tokens: StableDebtToken and VariableDebtToken
-abstract contract DebtTokenBase is PoolTokenWithRewardsBase, ERC20NoTransferBase, ICreditDelegationToken {
+abstract contract DebtTokenBase is RewardedTokenBase, ERC20NoTransferBase, ICreditDelegationToken {
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
 
   /**

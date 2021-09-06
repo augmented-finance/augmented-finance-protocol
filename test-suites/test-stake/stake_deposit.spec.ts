@@ -4,13 +4,17 @@ import { solidity } from 'ethereum-waffle';
 import rawBRE from 'hardhat';
 
 import {
-  getMockAgfToken,
-  getMockStakedAgfToken,
+  getAGTokenByName,
+  getLendingPoolProxy,
+  getMintableERC20,
+  getMockDepositStakeToken,
 } from '../../helpers/contracts-getters';
 
 import {
-  MockAgfToken,
-  MockStakedAgfToken,
+  DepositToken,
+  LendingPool,
+  MintableERC20,
+  MockDepositStakeToken,
 } from '../../types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import {
@@ -22,27 +26,52 @@ import {
 import { mineTicks, revertSnapshot, takeSnapshot } from '../test-augmented/utils';
 import { BigNumberish } from 'ethers';
 import { ProtocolErrors } from '../../helpers/types';
-import { MAX_UINT_AMOUNT, oneRay, RAY } from '../../helpers/constants';
+import { HALF_WAD, MAX_UINT_AMOUNT, oneRay, RAY, WAD } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
 
-describe('Stake ERC20 token', () => {
+describe('Stake agToken', () => {
   let root: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
   let slasher: SignerWithAddress;
-  let token: MockAgfToken;
-  let xToken: MockStakedAgfToken;
+  let baseToken: MintableERC20;
+  let pool: LendingPool;
+  let token: DepositToken;
+  let xToken: MockDepositStakeToken;
   let blkBeforeDeploy;
   const defaultStkAmount = 100;
 
   before(async () => {
     await rawBRE.run('augmented:test-local-staking', CFG);
-    [root, user1, user2, slasher] = await (<any>rawBRE).ethers.getSigners();
+    let user3: SignerWithAddress;
+    [root, user1, user2, slasher, user3] = await (<any>rawBRE).ethers.getSigners();
+    
+    token = await getAGTokenByName('agDAI');
+    pool = await getLendingPoolProxy(await token.POOL());
+    xToken = await getMockDepositStakeToken();
+    baseToken = await getMintableERC20(await token.UNDERLYING_ASSET_ADDRESS());
 
-    token = await getMockAgfToken();
-    xToken = await getMockStakedAgfToken();
+    {
+      console.log('Initialize reserve index'); 
+      // force DAI reserve index to be more than RAY
+      // as this will make sure that exchange rate works properly
+
+      await deposit(root, WAD);
+  
+      const token2 = await getAGTokenByName('agUSDC');
+      const baseToken2 = await getMintableERC20(await token2.UNDERLYING_ASSET_ADDRESS());
+      await baseToken2.mint(WAD);
+      await baseToken2.approve(pool.address, WAD);
+      await pool.deposit(baseToken2.address, WAD, user3.address, 0);
+      await pool.connect(user3).borrow(baseToken.address, HALF_WAD, 2 /* variable */, 0, user3.address);
+
+      await mineTicks(10);
+      await deposit(root, WAD); // trigger index update
+
+      expect(await pool.getReserveNormalizedIncome(baseToken.address)).gt(RAY);
+    }
   });
 
   beforeEach(async () => {
@@ -53,8 +82,14 @@ describe('Stake ERC20 token', () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
+  const deposit = async (s: SignerWithAddress, amount: BigNumberish) => {
+    await baseToken.mint(amount);
+    await baseToken.approve(pool.address, amount);
+    await pool.deposit(baseToken.address, amount, s.address, 0);
+  };
+
   const stake = async (s: SignerWithAddress, amount: BigNumberish) => {
-    await token.connect(root).mintReward(s.address, amount, false);
+    await deposit(s, amount);
     await token.connect(s).approve(xToken.address, amount);
     await xToken.connect(s).stake(s.address, amount, 0);
   };
@@ -71,6 +106,7 @@ describe('Stake ERC20 token', () => {
   it('can stake token and receive xToken', async () => {
     await stake(user1, defaultStkAmount);
     expect(await xToken.balanceOf(user1.address)).to.eq(defaultStkAmount);
+    expect(await xToken.balanceOfUnderlying(user1.address)).to.eq(defaultStkAmount);
     expect(await token.balanceOf(user1.address)).to.eq(0);
     expect(await xToken.totalSupply()).to.eq(defaultStkAmount);
   });
@@ -112,13 +148,13 @@ describe('Stake ERC20 token', () => {
     );
   });
 
-
   it('can redeem max', async () => {
     await stake(user2, defaultStkAmount);
     await xToken.connect(user2).cooldown();
     await mineTicks(stakingCooldownTicks);
     await xToken.connect(user2).redeem(user2.address, MAX_UINT_AMOUNT);
     expect(await xToken.balanceOf(user2.address)).to.eq(0);
+    expect(await xToken.balanceOfUnderlying(user2.address)).to.eq(0);
     expect(await token.balanceOf(user2.address)).to.eq(defaultStkAmount);
   });
 
@@ -128,6 +164,7 @@ describe('Stake ERC20 token', () => {
     await mineTicks(stakingCooldownTicks);
     await xToken.connect(user2).redeemUnderlying(user2.address, MAX_UINT_AMOUNT);
     expect(await xToken.balanceOf(user2.address)).to.eq(0);
+    expect(await xToken.balanceOfUnderlying(user2.address)).to.eq(0);
     expect(await token.balanceOf(user2.address)).to.eq(defaultStkAmount);
   });
 
@@ -193,37 +230,42 @@ describe('Stake ERC20 token', () => {
     );
   });
 
+  it('initial exchange rate is same as reserve index', async () => {
+    expect(await xToken.exchangeRate()).to.eq(await pool.getReserveNormalizedIncome(baseToken.address));
+  });
+
   it('can slash underlying', async () => {
-    expect(await xToken.exchangeRate()).to.eq(RAY);
     await stake(user1, defaultStkAmount);
-    expect(await xToken.exchangeRate()).to.eq(RAY);
+    expect(await xToken.exchangeRate()).to.eq(await pool.getReserveNormalizedIncome(baseToken.address));
+    expect(await xToken.balanceOfUnderlying(user1.address)).to.eq(defaultStkAmount);
 
     await xToken.connect(user1).cooldown();
     await mineTicks(stakingCooldownTicks);
-    await xToken.connect(slasher).slashUnderlying(slasher.address, 1, 110);
-    expect(await xToken.exchangeRate()).to.eq(oneRay.multipliedBy(1-slashingDefaultPercentageHR).toFixed());
+    await xToken.connect(slasher).slashUnderlying(token.address, 1, 110);
 
-    const slashed = defaultStkAmount * slashingDefaultPercentageHR;
-    expect(await token.balanceOf(slasher.address)).to.eq(slashed);
-    expect(await token.balanceOf(xToken.address)).to.eq(defaultStkAmount - slashed);
+    const baseRate = await pool.getReserveNormalizedIncome(baseToken.address);
+    const expectedRate = baseRate.mul(oneRay.multipliedBy(1-slashingDefaultPercentageHR).toFixed()).div(RAY);
+    expect(expectedRate.sub(await xToken.exchangeRate())).to.lte(1);
     expect(await xToken.totalSupply()).to.eq(defaultStkAmount);
+    expect(await xToken.balanceOf(user1.address)).eq(defaultStkAmount);
+    
+    const slashed = defaultStkAmount * slashingDefaultPercentageHR;
+    expect(await xToken.balanceOfUnderlying(user1.address)).eq(defaultStkAmount - slashed);
   });
 
   it('slash not less than minSlashAmount', async () => {
     await stake(user1, defaultStkAmount);
     const slashed = defaultStkAmount * slashingDefaultPercentageHR;
-    await xToken.connect(slasher).slashUnderlying(slasher.address, slashed*2, slashed+100);
-    expect(await token.balanceOf(slasher.address)).to.eq(0);
-    expect(await token.balanceOf(xToken.address)).to.eq(defaultStkAmount);
+    await xToken.connect(slasher).slashUnderlying(token.address, slashed*2, slashed+100);
+    expect(await xToken.balanceOfUnderlying(user1.address)).eq(defaultStkAmount);
   });
 
   it('slash no more than maxSlashAmount', async () => {
     await stake(user1, defaultStkAmount);
 
     const slashed = (defaultStkAmount * slashingDefaultPercentageHR) / 2;
-    await xToken.connect(slasher).slashUnderlying(slasher.address, 1, slashed);
-    expect(await token.balanceOf(slasher.address)).to.eq(slashed);
-    expect(await token.balanceOf(xToken.address)).to.eq(defaultStkAmount - slashed);
+    await xToken.connect(slasher).slashUnderlying(token.address, 1, slashed);
+    expect(await xToken.balanceOfUnderlying(user1.address)).eq(defaultStkAmount - slashed);
   });
 
   it('can redeem after slash', async () => {
@@ -232,7 +274,7 @@ describe('Stake ERC20 token', () => {
     await mineTicks(stakingCooldownTicks);
 
     const slashed = (defaultStkAmount * slashingDefaultPercentageHR) / 2;
-    await xToken.connect(slasher).slashUnderlying(slasher.address, 1, slashed);
+    await xToken.connect(slasher).slashUnderlying(token.address, 1, slashed);
 
     await xToken.connect(user2).redeem(user2.address, defaultStkAmount);
     expect(await xToken.balanceOf(user2.address)).to.eq(0);
@@ -245,7 +287,7 @@ describe('Stake ERC20 token', () => {
     await mineTicks(stakingCooldownTicks);
 
     const slashed = (defaultStkAmount * slashingDefaultPercentageHR) / 2;
-    await xToken.connect(slasher).slashUnderlying(slasher.address, 1, slashed);
+    await xToken.connect(slasher).slashUnderlying(token.address, 1, slashed);
 
     await xToken.connect(user2).redeem(user2.address, MAX_UINT_AMOUNT);
     expect(await xToken.balanceOf(user2.address)).to.eq(0);
@@ -258,7 +300,7 @@ describe('Stake ERC20 token', () => {
     await mineTicks(stakingCooldownTicks);
 
     const slashed = (defaultStkAmount * slashingDefaultPercentageHR) / 2;
-    await xToken.connect(slasher).slashUnderlying(slasher.address, 1, slashed);
+    await xToken.connect(slasher).slashUnderlying(token.address, 1, slashed);
 
     await expect(xToken.connect(user2).redeemUnderlying(user2.address, defaultStkAmount)).to.be.revertedWith(
       'amount exceeds balance'
@@ -275,7 +317,7 @@ describe('Stake ERC20 token', () => {
     await mineTicks(stakingCooldownTicks);
 
     const slashed = (defaultStkAmount * slashingDefaultPercentageHR) / 2;
-    await xToken.connect(slasher).slashUnderlying(slasher.address, 1, slashed);
+    await xToken.connect(slasher).slashUnderlying(token.address, 1, slashed);
 
     await xToken.connect(user2).redeem(user2.address, MAX_UINT_AMOUNT);
     expect(await xToken.balanceOf(user2.address)).to.eq(0);
@@ -344,5 +386,19 @@ describe('Stake ERC20 token', () => {
     await xToken.connect(user2).transfer(user1.address, defaultStkAmount / 2);
     expect(await xToken.getCooldown(user1.address)).eq(((cooldown1 + cooldown2) / 2) | 0);
     expect(await xToken.getCooldown(user2.address)).eq(cooldown2);
+  });
+
+  it('user redeems with yield', async () => {
+    await stake(user2, WAD);
+    const baseRate = await pool.getReserveNormalizedIncome(baseToken.address);
+    await xToken.connect(user2).cooldown();
+    await mineTicks(stakingCooldownTicks);
+
+    await deposit(user1, WAD); // trigger index update
+
+    expect(await pool.getReserveNormalizedIncome(baseToken.address)).gt(baseRate);
+    await xToken.connect(user2).redeemUnderlying(user2.address, WAD);
+    expect(await xToken.balanceOf(user2.address)).to.gt(0); // yield remains staked
+    expect(await token.balanceOf(user2.address)).to.gte(WAD); // transferred can also get yield
   });
 });

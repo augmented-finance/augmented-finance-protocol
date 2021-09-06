@@ -94,6 +94,12 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
     internalSetIncentivesController(hook);
   }
 
+  function internalBalanceOf(address account) internal view virtual returns (uint256);
+
+  function internalBalanceAndFlagsOf(address account) internal view virtual returns (uint256, uint32);
+
+  function internalSetFlagsOf(address account, uint32 flags) internal virtual;
+
   function internalSetIncentivesController(address hook) internal virtual;
 
   function totalSupply() public view virtual override returns (uint256) {
@@ -116,18 +122,20 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
   function _burnBalance(
     address account,
     uint256 amount,
+    uint256 minLimit,
     uint256 scale
   ) internal {
     require(account != address(0), 'ERC20: burn from the zero address');
     _beforeTokenTransfer(account, address(0), amount);
     internalUpdateTotalSupply(internalTotalSupply() - amount);
-    internalDecrementBalance(account, amount, scale);
+    internalDecrementBalance(account, amount, minLimit, scale);
   }
 
   function _transferBalance(
     address sender,
     address recipient,
     uint256 amount,
+    uint256 senderMinLimit,
     uint256 scale
   ) internal {
     require(sender != address(0), 'ERC20: transfer from the zero address');
@@ -136,7 +144,7 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
     _beforeTokenTransfer(sender, recipient, amount);
     if (sender != recipient) {
       // require(oldSenderBalance >= amount, 'ERC20: transfer amount exceeds balance');
-      internalDecrementBalance(sender, amount, scale);
+      internalDecrementBalance(sender, amount, senderMinLimit, scale);
       internalIncrementBalance(recipient, amount, scale);
     }
   }
@@ -158,7 +166,7 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
     uint256 total
   ) internal {
     internalUpdateTotalSupply(total);
-    internalDecrementBalance(account, amount, scale);
+    internalDecrementBalance(account, amount, 0, scale);
   }
 
   function _beforeTokenTransfer(
@@ -176,6 +184,7 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
   function internalDecrementBalance(
     address account,
     uint256 amount,
+    uint256 senderMinLimit,
     uint256 scale
   ) internal virtual;
 

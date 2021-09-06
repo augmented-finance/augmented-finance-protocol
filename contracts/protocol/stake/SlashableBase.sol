@@ -31,8 +31,12 @@ abstract contract SlashableBase is IERC20, IStakeToken, IManagedStakeToken, Mark
     }
   }
 
-  function exchangeRate() public view override returns (uint256) {
+  function exchangeRate() public view virtual override returns (uint256) {
     return _exchangeRate;
+  }
+
+  function internalExchangeRate() internal view virtual returns (uint256, uint256) {
+    return (_exchangeRate, WadRayMath.RAY);
   }
 
   function internalTotalSupply() internal view virtual returns (uint256);
@@ -41,8 +45,18 @@ abstract contract SlashableBase is IERC20, IStakeToken, IManagedStakeToken, Mark
     address destination,
     uint256 minAmount,
     uint256 maxAmount
-  ) external override onlyLiquidityController returns (uint256 amount) {
-    uint256 totalSupply = internalTotalSupply();
+  ) external virtual override onlyLiquidityController returns (uint256 amount, bool erc20Transfer) {
+    uint256 totalSupply;
+    (amount, totalSupply) = internalSlash(minAmount, maxAmount);
+    if (amount > 0) {
+      erc20Transfer = internalTransferSlashedUnderlying(destination, amount);
+      emit Slashed(destination, amount, totalSupply);
+    }
+    return (amount, erc20Transfer);
+  }
+
+  function internalSlash(uint256 minAmount, uint256 maxAmount) internal returns (uint256 amount, uint256 totalSupply) {
+    totalSupply = internalTotalSupply();
     uint256 scaledSupply = totalSupply.rayMul(_exchangeRate);
     uint256 maxSlashable = scaledSupply.percentMul(_maxSlashablePercentage);
 
@@ -52,7 +66,7 @@ abstract contract SlashableBase is IERC20, IStakeToken, IManagedStakeToken, Mark
       amount = maxAmount;
     }
     if (amount < minAmount) {
-      return 0;
+      return (0, totalSupply);
     }
 
     uint96 newExchangeRate;
@@ -63,13 +77,13 @@ abstract contract SlashableBase is IERC20, IStakeToken, IManagedStakeToken, Mark
     }
     _exchangeRate = newExchangeRate;
 
-    internalTransferUnderlying(destination, amount);
-
-    emit Slashed(destination, amount, totalSupply);
-    return amount;
+    return (amount, totalSupply);
   }
 
-  function internalTransferUnderlying(address destination, uint256 amount) internal virtual;
+  function internalTransferSlashedUnderlying(address destination, uint256 amount)
+    internal
+    virtual
+    returns (bool erc20Transfer);
 
   function getMaxSlashablePercentage() public view override returns (uint16) {
     return _maxSlashablePercentage;

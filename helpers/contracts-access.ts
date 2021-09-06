@@ -44,6 +44,7 @@ const erc20: ContractAccessExceptions = {
     permit: true,
     increaseAllowance: true,
     decreaseAllowance: true,
+    useAllowance: true,
   },
 };
 
@@ -66,6 +67,27 @@ const poolTokenImpl: ContractAccessExceptions = {
   },
   implOverride: {
     initialize: 'initializer blocked',
+  },
+};
+
+const stakeTokenImpl: ContractAccessExceptions = {
+  ...poolTokenImpl,
+  reasons: [
+    ...poolTokenImpl.reasons!,
+    ProtocolErrors.CALLER_NOT_LIQUIDITY_CONTROLLER,
+    ProtocolErrors.CALLER_NOT_STAKE_ADMIN,
+  ],
+  functions: {
+    ...poolTokenImpl.functions,
+    ...erc20.functions,
+    stake: true,
+    redeem: true,
+    redeemUnderlying: true,
+    cooldown: true,
+    initializeStakeToken: 'already initialized',
+  },
+  implOverride: {
+    initializeStakeToken: 'initializer blocked',
   },
 };
 
@@ -191,10 +213,16 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
 
   [eContractid.DepositTokenImpl]: {
     ...poolTokenImpl,
+
+    reasons: [
+      ...poolTokenImpl.reasons!,
+      ProtocolErrors.CALLER_NOT_POOL_ADMIN,
+      ProtocolErrors.AT_CALLER_NOT_SUB_BALANCE_OPERATOR,
+    ],
+
     functions: {
       ...poolTokenImpl.functions,
       ...erc20.functions,
-      updateTreasury: ProtocolErrors.CALLER_NOT_POOL_ADMIN,
     },
   },
 
@@ -207,26 +235,8 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
     },
   },
 
-  [eContractid.StakeTokenImpl]: {
-    ...poolTokenImpl,
-    reasons: [
-      ...poolTokenImpl.reasons!,
-      ProtocolErrors.CALLER_NOT_LIQUIDITY_CONTROLLER,
-      ProtocolErrors.CALLER_NOT_STAKE_ADMIN,
-    ],
-    functions: {
-      ...poolTokenImpl.functions,
-      ...erc20.functions,
-      stake: true,
-      redeem: true,
-      redeemUnderlying: true,
-      cooldown: true,
-      initializeStakeToken: 'already initialized',
-    },
-    implOverride: {
-      initializeStakeToken: 'initializer blocked',
-    },
-  },
+  [eContractid.StakeTokenImpl]: stakeTokenImpl,
+  [eContractid.DepositStakeTokenImpl]: stakeTokenImpl,
 
   [eContractid.RewardConfiguratorImpl]: {
     reasons: [ProtocolErrors.CT_CALLER_MUST_BE_REWARD_ADMIN, ProtocolErrors.RW_NOT_REWARD_RATE_ADMIN],

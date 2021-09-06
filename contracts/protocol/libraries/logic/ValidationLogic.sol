@@ -64,7 +64,6 @@ library ValidationLogic {
   ) internal view {
     require(amount != 0, Errors.VL_INVALID_AMOUNT);
     require(amount <= userBalance, Errors.VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE);
-
     (bool isActive, , , ) = reservesData[reserveAddress].configuration.getFlags();
     require(isActive, Errors.VL_NO_ACTIVE_RESERVE);
 
@@ -182,7 +181,7 @@ library ValidationLogic {
       require(
         !userConfig.isUsingAsCollateral(reserve.id) ||
           reserve.configuration.getLtv() == 0 ||
-          amount > IERC20(reserve.depositTokenAddress).balanceOf(userAddress),
+          amount > IDepositToken(reserve.depositTokenAddress).collateralBalanceOf(userAddress),
         Errors.VL_COLLATERAL_SAME_AS_BORROWING_CURRENCY
       );
 
@@ -263,7 +262,7 @@ library ValidationLogic {
       require(
         !userConfig.isUsingAsCollateral(reserve.id) ||
           reserve.configuration.getLtv() == 0 ||
-          (stableDebt + variableDebt) > IERC20(reserve.depositTokenAddress).balanceOf(msg.sender),
+          (stableDebt + variableDebt) > IDepositToken(reserve.depositTokenAddress).collateralBalanceOf(msg.sender),
         Errors.VL_COLLATERAL_SAME_AS_BORROWING_CURRENCY
       );
     } else {
@@ -276,21 +275,19 @@ library ValidationLogic {
    * @param reserve The reserve state on which the user is getting rebalanced
    * @param reserveAddress The address of the reserve
    * @param stableDebtToken The stable debt token instance
-   * @param variableDebtToken The variable debt token instance
    * @param depositTokenAddress The address of the depositToken contract
    */
   function validateRebalanceStableBorrowRate(
     DataTypes.ReserveData storage reserve,
     address reserveAddress,
     IERC20 stableDebtToken,
-    IERC20 variableDebtToken,
     address depositTokenAddress
   ) internal view {
     (bool isActive, , , ) = reserve.configuration.getFlags();
 
     require(isActive, Errors.VL_NO_ACTIVE_RESERVE);
 
-    uint256 usageRatio = stableDebtToken.totalSupply() + variableDebtToken.totalSupply(); /* totalDebt */
+    uint256 usageRatio = stableDebtToken.totalSupply() + IERC20(reserve.variableDebtTokenAddress).totalSupply(); /* totalDebt */
     if (usageRatio != 0) {
       uint256 availableLiquidity = IERC20(reserveAddress).balanceOf(depositTokenAddress);
       usageRatio = usageRatio.wadToRay().wadDiv(
@@ -331,7 +328,7 @@ library ValidationLogic {
     mapping(uint256 => address) storage reserves,
     address oracle
   ) internal view {
-    uint256 underlyingBalance = IERC20(reserve.depositTokenAddress).balanceOf(msg.sender);
+    uint256 underlyingBalance = IDepositToken(reserve.depositTokenAddress).collateralBalanceOf(msg.sender);
 
     require(underlyingBalance > 0, Errors.VL_UNDERLYING_BALANCE_NOT_GREATER_THAN_0);
 

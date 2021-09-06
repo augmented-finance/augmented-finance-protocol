@@ -6,14 +6,10 @@ import './interfaces/IStakeToken.sol';
 import './interfaces/IManagedStakeToken.sol';
 
 abstract contract CooldownBase is IStakeToken, IManagedStakeToken {
-  uint32 private _cooldownPeriod;
-  uint32 private _unstakePeriod;
-
   uint32 internal constant MIN_UNSTAKE_PERIOD = 2 minutes;
 
-  constructor() {
-    _unstakePeriod = MIN_UNSTAKE_PERIOD;
-  }
+  uint32 private _cooldownPeriod;
+  uint32 private _unstakePeriod = MIN_UNSTAKE_PERIOD;
 
   function _ensureCooldown(address user) internal view returns (uint32 cooldownStartedAt) {
     cooldownStartedAt = uint32(getCooldown(user));
@@ -62,7 +58,6 @@ abstract contract CooldownBase is IStakeToken, IManagedStakeToken {
     }
 
     uint256 minimalValidCooldown = (block.timestamp - _cooldownPeriod) - _unstakePeriod;
-
     if (minimalValidCooldown > toCooldownStart) {
       return 0;
     }

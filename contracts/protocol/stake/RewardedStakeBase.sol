@@ -12,9 +12,6 @@ import '../../tools/tokens/ERC20PermitBase.sol';
 import '../../tools/math/WadRayMath.sol';
 import '../../tools/math/PercentageMath.sol';
 import '../../tools/Errors.sol';
-import '../../access/AccessFlags.sol';
-import '../../access/MarketAccessBitmask.sol';
-import '../../access/interfaces/IMarketAccessController.sol';
 import '../libraries/helpers/UnderlyingHelper.sol';
 import './interfaces/StakeTokenConfig.sol';
 import './interfaces/IInitializableStakeToken.sol';
@@ -161,12 +158,13 @@ abstract contract RewardedStakeBase is
   ) internal notPausedCustom(Errors.STK_PAUSED) returns (uint256 stakeAmount) {
     require(underlyingAmount > 0, Errors.VL_INVALID_AMOUNT);
 
-    stakeAmount = underlyingAmount.rayDiv(exchangeRate());
+    (uint256 exchangeRate, uint256 index) = internalExchangeRate();
+    stakeAmount = underlyingAmount.rayDiv(exchangeRate);
     (uint256 toBalance, uint32 toCooldown) = internalBalanceAndCooldownOf(to);
 
     toCooldown = getNextCooldown(0, stakeAmount, toBalance, toCooldown);
 
-    _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
+    internalTransferUnderlyingFrom(from, underlyingAmount, index);
 
     super.doIncrementRewardBalance(to, stakeAmount);
     super.doIncrementTotalSupply(stakeAmount);
@@ -210,20 +208,16 @@ abstract contract RewardedStakeBase is
     require(!_notRedeemable, Errors.STK_REDEEM_PAUSED);
     _ensureCooldown(from);
 
+    (uint256 exchangeRate, uint256 index) = internalExchangeRate();
+
     (uint256 oldBalance, uint32 cooldownFrom) = internalBalanceAndCooldownOf(from);
     if (stakeAmount == 0) {
-      uint256 rate = exchangeRate();
-      stakeAmount = underlyingAmount.rayDiv(rate);
-
-      if (stakeAmount == 0) {
-        // don't allow tiny withdrawals
-        return (0, 0);
-      }
+      stakeAmount = underlyingAmount.rayDiv(exchangeRate);
     } else {
       if (stakeAmount == type(uint256).max) {
         stakeAmount = oldBalance;
       }
-      underlyingAmount = stakeAmount.rayMul(exchangeRate());
+      underlyingAmount = stakeAmount.rayMul(exchangeRate);
       if (underlyingAmount == 0) {
         // protect the user - don't waste balance without an outcome
         return (0, 0);
@@ -236,7 +230,7 @@ abstract contract RewardedStakeBase is
       super.internalSetRewardEntryCustom(from, 0);
     }
 
-    IERC20(_stakedToken).safeTransfer(to, underlyingAmount);
+    internalTransferUnderlyingTo(from, to, underlyingAmount, index);
 
     emit Redeemed(from, to, stakeAmount, underlyingAmount);
     return (stakeAmount, underlyingAmount);
@@ -244,6 +238,14 @@ abstract contract RewardedStakeBase is
 
   function balanceOf(address account) public view virtual override returns (uint256) {
     return super.getRewardEntry(account).rewardBase;
+  }
+
+  function rewardedBalanceOf(address account) external view override returns (uint256) {
+    return super.getRewardEntry(account).rewardBase;
+  }
+
+  function balanceOfUnderlying(address account) public view virtual returns (uint256) {
+    return uint256(super.getRewardEntry(account).rewardBase).rayMul(exchangeRate());
   }
 
   function totalSupply() public view override returns (uint256) {
@@ -285,12 +287,38 @@ abstract contract RewardedStakeBase is
     return (balanceOf(holder), windowStart, windowEnd);
   }
 
-  function internalTransferUnderlying(address destination, uint256 amount) internal override {
+  function internalTransferUnderlyingFrom(
+    address from,
+    uint256 underlyingAmount,
+    uint256 index
+  ) internal virtual {
+    index;
+    _stakedToken.safeTransferFrom(from, address(this), underlyingAmount);
+  }
+
+  function internalTransferUnderlyingTo(
+    address from,
+    address to,
+    uint256 underlyingAmount,
+    uint256 index
+  ) internal virtual {
+    from;
+    index;
+    _stakedToken.safeTransfer(to, underlyingAmount);
+  }
+
+  function internalTransferSlashedUnderlying(address destination, uint256 amount)
+    internal
+    virtual
+    override
+    returns (bool erc20Transfer)
+  {
     if (address(_strategy) == address(0)) {
       _stakedToken.safeTransfer(destination, amount);
     } else {
       amount = UnderlyingHelper.delegateWithdrawUnderlying(_strategy, address(_stakedToken), amount, destination);
     }
+    return true;
   }
 
   function setCooldown(uint32 cooldownPeriod, uint32 unstakePeriod) external override onlyStakeAdminOrConfigurator {

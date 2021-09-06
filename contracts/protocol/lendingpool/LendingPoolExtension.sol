@@ -48,7 +48,6 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     uint256 maxCollateralToLiquidate;
     uint256 debtAmountNeeded;
     uint256 healthFactor;
-    uint256 liquidatorPreviousDepositTokenBalance;
     IDepositToken collateralDepositToken;
     bool isCollateralEnabled;
     DataTypes.InterestRateMode borrowRateMode;
@@ -95,7 +94,7 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
 
     vars.collateralDepositToken = IDepositToken(collateralReserve.depositTokenAddress);
 
-    vars.userCollateralBalance = vars.collateralDepositToken.balanceOf(user);
+    vars.userCollateralBalance = vars.collateralDepositToken.collateralBalanceOf(user);
 
     vars.maxLiquidatableDebt = (vars.userStableDebt + vars.userVariableDebt).percentMul(
       LIQUIDATION_CLOSE_FACTOR_PERCENT
@@ -156,10 +155,17 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     debtReserve.updateInterestRates(debtAsset, debtReserve.depositTokenAddress, vars.actualDebtToLiquidate, 0);
 
     if (receiveDeposit) {
-      vars.liquidatorPreviousDepositTokenBalance = IERC20(vars.collateralDepositToken).balanceOf(msg.sender);
-      vars.collateralDepositToken.transferOnLiquidation(user, msg.sender, vars.maxCollateralToLiquidate);
+      uint256 liquidityIndex = collateralReserve.getNormalizedIncome(collateralAsset);
 
-      if (vars.liquidatorPreviousDepositTokenBalance == 0) {
+      if (
+        vars.collateralDepositToken.transferOnLiquidation(
+          user,
+          msg.sender,
+          vars.maxCollateralToLiquidate,
+          liquidityIndex,
+          false
+        )
+      ) {
         DataTypes.UserConfigurationMap storage liquidatorConfig = _usersConfig[msg.sender];
         liquidatorConfig.setUsingAsCollateral(collateralReserve.id);
         emit ReserveUsedAsCollateralEnabled(collateralAsset, msg.sender);
@@ -173,8 +179,13 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
         vars.maxCollateralToLiquidate
       );
 
-      // Burn the equivalent amount of depositToken, sending the underlying to the liquidator
-      vars.collateralDepositToken.burn(user, msg.sender, vars.maxCollateralToLiquidate, liquidityIndex);
+      vars.collateralDepositToken.transferOnLiquidation(
+        user,
+        msg.sender,
+        vars.maxCollateralToLiquidate,
+        liquidityIndex,
+        true
+      );
     }
 
     // If the collateral being liquidated is equal to the user balance,

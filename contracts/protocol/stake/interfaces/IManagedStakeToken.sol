@@ -21,5 +21,5 @@ interface IManagedStakeToken is IEmergencyAccess {
     address destination,
     uint256 minAmount,
     uint256 maxAmount
-  ) external returns (uint256);
+  ) external returns (uint256 amount, bool erc20Transfer);
 }

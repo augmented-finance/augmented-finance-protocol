@@ -5,15 +5,17 @@ import '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../../interfaces/IDepositToken.sol';
 import '../../../tools/Errors.sol';
 import '../../../tools/math/WadRayMath.sol';
+import '../../../tools/math/PercentageMath.sol';
 import '../../../tools/tokens/ERC20Events.sol';
 import '../../../access/AccessFlags.sol';
 import '../../../tools/tokens/ERC20PermitBase.sol';
 import '../../../tools/tokens/ERC20AllowanceBase.sol';
-import './PoolTokenWithRewardsBase.sol';
+import './SubBalanceBase.sol';
 
 /// @dev Implementation of the interest bearing token for the Augmented Finance protocol
-abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, ERC20PermitBase, ERC20AllowanceBase {
+abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20AllowanceBase {
   using WadRayMath for uint256;
+  using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
   address internal _treasury;
@@ -26,6 +28,7 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, E
     require(config.treasury != address(0), Errors.VL_TREASURY_REQUIRED);
     super._initializeDomainSeparator();
     super._initializePoolToken(config, params);
+    internalSetOverdraftTolerancePct(PercentageMath.HALF_ONE);
     _treasury = config.treasury;
   }
 
@@ -33,39 +36,51 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, E
     return _treasury;
   }
 
-  function updateTreasury() external onlyLendingPoolConfiguratorOrAdmin {
+  function updateTreasury() external override onlyLendingPoolConfiguratorOrAdmin {
     address treasury = _pool.getAccessController().getAddress(AccessFlags.TREASURY);
     require(treasury != address(0), Errors.VL_TREASURY_REQUIRED);
     _treasury = treasury;
   }
 
-  function burn(
-    address user,
-    address receiverOfUnderlying,
-    uint256 amount,
-    uint256 index
-  ) external override onlyLendingPool {
-    uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
-    _burnBalance(user, amountScaled, index);
+  function setOverdraftTolerancePct(uint16 overdraftTolerancePct) external onlyLendingPoolConfiguratorOrAdmin {
+    internalSetOverdraftTolerancePct(overdraftTolerancePct);
+  }
 
-    IERC20(_underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
+  function addSubBalanceOperator(address addr) external override onlyLendingPoolConfiguratorOrAdmin {
+    _addSubBalanceOperator(addr, ACCESS_SUB_BALANCE);
+  }
 
-    emit Transfer(user, address(0), amount);
-    emit Burn(user, receiverOfUnderlying, amount, index);
+  function addStakeOperator(address addr) external override onlyLendingPoolConfiguratorOrAdmin {
+    _addSubBalanceOperator(addr, ACCESS_LOCK_BALANCE | ACCESS_TRANSFER);
+  }
+
+  function removeSubBalanceOperator(address addr) external override onlyLendingPoolConfiguratorOrAdmin {
+    _removeSubBalanceOperator(addr);
+  }
+
+  function getSubBalanceOperatorAccess(address addr) internal view override returns (uint8) {
+    if (addr == address(_pool)) {
+      return ~uint8(0);
+    }
+    return super.getSubBalanceOperatorAccess(addr);
+  }
+
+  function getScaleIndex() public view override returns (uint256) {
+    return _pool.getReserveNormalizedIncome(_underlyingAsset);
   }
 
   function mint(
     address user,
     uint256 amount,
-    uint256 index
-  ) external override onlyLendingPool returns (bool) {
-    bool firstBalance = super.balanceOf(user) == 0;
-
+    uint256 index,
+    bool repayOverdraft
+  ) external override onlyLendingPool returns (bool firstBalance) {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
-    _mintBalance(user, amountScaled, index);
 
+    firstBalance = _mintToSubBalance(user, amountScaled, repayOverdraft);
+
+    _mintBalance(user, amountScaled, index);
     emit Transfer(address(0), user, amount);
     emit Mint(user, amount, index);
 
@@ -87,52 +102,86 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, E
     emit Mint(treasury, amount, index);
   }
 
-  /**
-   * @dev Transfers on liquidation, in case the liquidator claims this token. Only callable by the LendingPool.
-   * @param from The address getting liquidated, current owner of the depositTokens
-   * @param to The recipient
-   * @param value The amount of tokens getting transferred
-   **/
-  function transferOnLiquidation(
-    address from,
-    address to,
-    uint256 value
+  function burn(
+    address user,
+    address receiverOfUnderlying,
+    uint256 amount,
+    uint256 index
   ) external override onlyLendingPool {
-    // Being a normal transfer, the Transfer() and BalanceTransfer() are emitted
-    // so no need to emit a specific event here
-    _transfer(from, to, value, false);
+    uint256 amountScaled = amount.rayDiv(index);
+    require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
+    _burnBalance(user, amountScaled, getMinBalance(user), index);
 
-    emit Transfer(from, to, value);
+    IERC20(_underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
+
+    emit Transfer(user, address(0), amount);
+    emit Burn(user, receiverOfUnderlying, amount, index);
+  }
+
+  function transferOnLiquidation(
+    address user,
+    address receiver,
+    uint256 amount,
+    uint256 index,
+    bool transferUnderlying
+  ) external override onlyLendingPool returns (bool) {
+    uint256 scaledAmount = amount.rayDiv(index);
+    if (scaledAmount == 0) {
+      return false;
+    }
+
+    (bool firstBalance, uint256 outBalance) = _liquidateWithSubBalance(
+      user,
+      receiver,
+      scaledAmount,
+      index,
+      transferUnderlying
+    );
+
+    if (transferUnderlying) {
+      // Burn the equivalent amount of tokens, sending the underlying to the liquidator
+      _burnBalance(user, scaledAmount, outBalance, index);
+      IERC20(_underlyingAsset).safeTransfer(receiver, amount);
+
+      emit Transfer(user, address(0), amount);
+      emit Burn(user, receiver, amount, index);
+      return false;
+    }
+
+    super._transferBalance(user, receiver, scaledAmount, outBalance, index);
+
+    emit BalanceTransfer(user, receiver, amount, index);
+    emit Transfer(user, receiver, amount);
+    return firstBalance;
   }
 
   /// @dev Calculates the balance of the user: principal balance + interest generated by the principal
-  function balanceOf(address user) public view override(IERC20, RewardedTokenBase) returns (uint256) {
-    return super.balanceOf(user).rayMul(_pool.getReserveNormalizedIncome(_underlyingAsset));
+  function balanceOf(address user) public view override returns (uint256) {
+    uint256 scaledBalance = scaledBalanceOf(user);
+    if (scaledBalance == 0) {
+      return 0;
+    }
+    return scaledBalanceOf(user).rayMul(getScaleIndex());
   }
 
-  function scaledBalanceOf(address user) external view override returns (uint256) {
-    return super.balanceOf(user);
+  function rewardedBalanceOf(address user) external view override returns (uint256) {
+    return internalBalanceOf(user).rayMul(getScaleIndex());
   }
 
   function getScaledUserBalanceAndSupply(address user) external view override returns (uint256, uint256) {
-    return (super.balanceOf(user), super.totalSupply());
+    return (scaledBalanceOf(user), scaledTotalSupply());
   }
 
-  function totalSupply() public view override(IERC20, PoolTokenBase) returns (uint256) {
-    uint256 currentSupplyScaled = super.totalSupply();
+  function totalSupply() public view override returns (uint256) {
+    uint256 currentSupplyScaled = scaledTotalSupply();
     if (currentSupplyScaled == 0) {
       return 0;
     }
-
-    return currentSupplyScaled.rayMul(_pool.getReserveNormalizedIncome(_underlyingAsset));
-  }
-
-  function scaledTotalSupply() public view virtual override returns (uint256) {
-    return super.totalSupply();
+    return currentSupplyScaled.rayMul(getScaleIndex());
   }
 
   function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-    _transfer(msg.sender, recipient, amount, true);
+    _transfer(msg.sender, recipient, amount, getScaleIndex());
     emit Transfer(msg.sender, recipient, amount);
     return true;
   }
@@ -142,7 +191,7 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, E
     address recipient,
     uint256 amount
   ) public virtual override returns (bool) {
-    _transfer(sender, recipient, amount, true);
+    _transfer(sender, recipient, amount, getScaleIndex());
     _approveTransferFrom(sender, amount);
     emit Transfer(sender, recipient, amount);
     return true;
@@ -154,39 +203,55 @@ abstract contract DepositTokenBase is IDepositToken, PoolTokenWithRewardsBase, E
   }
 
   /**
-   * @dev Invoked to execute actions on the depositToken side after a repayment.
-   * @param user The user executing the repayment
-   * @param amount The amount getting repaid
-   **/
-  function handleRepayment(address user, uint256 amount) external override onlyLendingPool {}
-
-  /**
    * @dev Validates and executes a transfer.
    * @param from The source address
    * @param to The destination address
    * @param amount The amount getting transferred
-   * @param validate `true` if the transfer needs to be validated
    **/
   function _transfer(
     address from,
     address to,
     uint256 amount,
-    bool validate
-  ) internal {
-    address underlyingAsset = _underlyingAsset;
+    uint256 index
+  ) private {
+    uint256 scaledAmount = amount.rayDiv(index);
+    (uint256 scaledBalanceBeforeFrom, uint256 flags) = internalBalanceAndFlagsOf(from);
 
-    uint256 index = _pool.getReserveNormalizedIncome(underlyingAsset);
-
-    uint256 fromBalanceBefore = super.balanceOf(from).rayMul(index);
-    uint256 toBalanceBefore = super.balanceOf(to).rayMul(index);
-
-    super._transferBalance(from, to, amount.rayDiv(index), index);
-
-    if (validate) {
-      _pool.finalizeTransfer(underlyingAsset, from, to, amount, fromBalanceBefore, toBalanceBefore);
-    }
+    _transferAndFinalize(from, to, scaledAmount, getMinBalance(from, flags), index, scaledBalanceBeforeFrom);
 
     emit BalanceTransfer(from, to, amount, index);
+  }
+
+  function _transferScaled(
+    address from,
+    address to,
+    uint256 scaledAmount,
+    uint256 minBalance,
+    uint256 index
+  ) internal override {
+    _transferAndFinalize(from, to, scaledAmount, minBalance, index, internalBalanceOf(from));
+
+    emit BalanceTransfer(from, to, scaledAmount.rayMul(index), index);
+  }
+
+  function _transferAndFinalize(
+    address from,
+    address to,
+    uint256 scaledAmount,
+    uint256 minBalance,
+    uint256 index,
+    uint256 scaledBalanceBeforeFrom
+  ) private {
+    uint256 scaledBalanceBeforeTo = internalBalanceOf(to);
+    super._transferBalance(from, to, scaledAmount, minBalance, index);
+
+    _pool.finalizeTransfer(
+      _underlyingAsset,
+      from,
+      to,
+      scaledAmount > 0 && scaledBalanceBeforeFrom == scaledAmount,
+      scaledAmount > 0 && scaledBalanceBeforeTo == 0
+    );
   }
 
   function _approveByPermit(

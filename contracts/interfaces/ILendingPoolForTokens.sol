@@ -11,17 +11,15 @@ interface ILendingPoolForTokens {
    * @param asset The address of the underlying asset of the depositToken
    * @param from The user from which the depositToken are transferred
    * @param to The user receiving the depositToken
-   * @param amount The amount being transferred/withdrawn
-   * @param balanceFromBefore The depositToken balance of the `from` user before the transfer
-   * @param balanceToBefore The depositToken balance of the `to` user before the transfer
+   * @param lastBalanceFrom True when from's balance was non-zero and became zero
+   * @param firstBalanceTo True when to's balance was zero and became non-zero
    */
   function finalizeTransfer(
     address asset,
     address from,
     address to,
-    uint256 amount,
-    uint256 balanceFromBefore,
-    uint256 balanceToBefore
+    bool lastBalanceFrom,
+    bool firstBalanceTo
   ) external;
 
   function getAccessController() external view returns (IMarketAccessController);

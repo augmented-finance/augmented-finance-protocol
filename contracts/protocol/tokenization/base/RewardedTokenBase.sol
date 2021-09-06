@@ -20,8 +20,17 @@ abstract contract RewardedTokenBase is
     return super.internalGetTotalSupply();
   }
 
-  function balanceOf(address account) public view virtual override returns (uint256) {
+  function internalBalanceOf(address account) internal view override returns (uint256) {
     return super.getRewardEntry(account).rewardBase;
+  }
+
+  function internalBalanceAndFlagsOf(address account) internal view override returns (uint256, uint32) {
+    RewardBalance memory balance = super.getRewardEntry(account);
+    return (balance.rewardBase, balance.custom);
+  }
+
+  function internalSetFlagsOf(address account, uint32 flags) internal override {
+    super.internalSetRewardEntryCustom(account, flags);
   }
 
   function internalSetIncentivesController(address) internal override {
@@ -103,10 +112,11 @@ abstract contract RewardedTokenBase is
   function internalDecrementBalance(
     address account,
     uint256 amount,
+    uint256 minBalance,
     uint256
   ) internal override {
     // require(oldAccountBalance >= amount, 'ERC20: burn amount exceeds balance');
-    (uint256 allocated, uint32 since, AllocationMode mode) = doDecrementRewardBalance(account, amount, 0);
+    (uint256 allocated, uint32 since, AllocationMode mode) = doDecrementRewardBalance(account, amount, minBalance);
     internalAllocatedReward(account, allocated, since, mode);
   }
 
