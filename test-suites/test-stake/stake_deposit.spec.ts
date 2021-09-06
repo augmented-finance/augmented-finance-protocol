@@ -45,8 +45,8 @@ describe('Stake agToken', () => {
 
   before(async () => {
     await rawBRE.run('augmented:test-local-staking', CFG);
-    let user3: SignerWithAddress;
-    [root, user1, user2, slasher, user3] = await (<any>rawBRE).ethers.getSigners();
+    let user4: SignerWithAddress;
+    [root, user1, user2, slasher, user4] = await (<any>rawBRE).ethers.getSigners();
     
     token = await getAGTokenByName('agDAI');
     pool = await getLendingPoolProxy(await token.POOL());
@@ -64,12 +64,11 @@ describe('Stake agToken', () => {
       const baseToken2 = await getMintableERC20(await token2.UNDERLYING_ASSET_ADDRESS());
       await baseToken2.mint(WAD);
       await baseToken2.approve(pool.address, WAD);
-      await pool.deposit(baseToken2.address, WAD, user3.address, 0);
-      await pool.connect(user3).borrow(baseToken.address, HALF_WAD, 2 /* variable */, 0, user3.address);
+      await pool.deposit(baseToken2.address, WAD, user4.address, 0);
+      await pool.connect(user4).borrow(baseToken.address, HALF_WAD, 2 /* variable */, 0, user4.address);
 
       await mineTicks(10);
-      await deposit(user2, WAD); // also triggers index update
-      
+  
       expect(await pool.getReserveNormalizedIncome(baseToken.address)).gt(RAY);
     }
   });
@@ -94,7 +93,8 @@ describe('Stake agToken', () => {
     await xToken.connect(s).stake(s.address, amount, 0);
   };
 
-  it('can not stake on low healthFactor', async () => {
+  it('can not stake below min healthFactor', async () => {
+    await deposit(user2, WAD); // also triggers index update
     expect((await pool.getUserAccountData(user2.address)).healthFactor).gt(WAD);
     await pool.connect(user2).borrow(baseToken.address, HALF_WAD, 2 /* variable */, 0, user2.address);
     await token.connect(user2).approve(xToken.address, WAD);
