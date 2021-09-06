@@ -254,6 +254,10 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
     );
   }
 
+  function _ensureHealthFactor(address holder) internal override {
+    _pool.finalizeTransfer(_underlyingAsset, holder, holder, false, false);
+  }
+
   function _approveByPermit(
     address owner,
     address spender,

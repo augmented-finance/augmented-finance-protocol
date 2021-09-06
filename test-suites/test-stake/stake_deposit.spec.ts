@@ -68,8 +68,8 @@ describe('Stake agToken', () => {
       await pool.connect(user3).borrow(baseToken.address, HALF_WAD, 2 /* variable */, 0, user3.address);
 
       await mineTicks(10);
-      await deposit(root, WAD); // trigger index update
-
+      await deposit(user2, WAD); // also triggers index update
+      
       expect(await pool.getReserveNormalizedIncome(baseToken.address)).gt(RAY);
     }
   });
@@ -93,6 +93,13 @@ describe('Stake agToken', () => {
     await token.connect(s).approve(xToken.address, amount);
     await xToken.connect(s).stake(s.address, amount, 0);
   };
+
+  it('can not stake on low healthFactor', async () => {
+    expect((await pool.getUserAccountData(user2.address)).healthFactor).gt(WAD);
+    await pool.connect(user2).borrow(baseToken.address, HALF_WAD, 2 /* variable */, 0, user2.address);
+    await token.connect(user2).approve(xToken.address, WAD);
+    await expect(xToken.connect(user2).stake(user2.address, WAD, 0)).to.be.revertedWith(ProtocolErrors.VL_TRANSFER_NOT_ALLOWED);
+  });
 
   it('can not redeem after the unstake window has passed', async () => {
     await stake(user1, defaultStkAmount);

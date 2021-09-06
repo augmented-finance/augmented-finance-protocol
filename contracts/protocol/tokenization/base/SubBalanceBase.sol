@@ -77,26 +77,42 @@ abstract contract SubBalanceBase is IDepositToken, RewardedTokenBase {
     uint256 scaledAmount
   ) external override onlySubBalanceOperator {
     require(recipient != address(0), Errors.VL_INVALID_SUB_BALANCE_ARGS);
-    _provideSubBalance(provider, recipient, scaledAmount);
+    _checkSubBalanceArgs(provider, recipient, scaledAmount);
+
+    _incrementOutBalance(provider, scaledAmount);
+    _incrementInBalance(recipient, scaledAmount);
+
+    uint256 index = getScaleIndex();
+    emit SubBalanceProvided(provider, recipient, scaledAmount.rayMul(index), index);
   }
 
   function lockSubBalance(address provider, uint256 scaledAmount) external override {
     _onlySubBalanceOperator(ACCESS_LOCK_BALANCE);
-    _provideSubBalance(provider, address(0), scaledAmount);
+    _checkSubBalanceArgs(provider, address(0), scaledAmount);
+
+    _incrementOutBalance(provider, scaledAmount);
+
+    uint256 index = getScaleIndex();
+    emit SubBalanceProvided(provider, address(0), scaledAmount.rayMul(index), index);
   }
 
   function _incrementOutBalance(address provider, uint256 scaledAmount) private {
     (uint256 balance, uint32 flags) = internalBalanceAndFlagsOf(provider);
     uint256 outBalance = scaledAmount + _outBalances[provider].outBalance;
-    require(outBalance <= balance, Errors.VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE);
 
+    require(outBalance <= balance, Errors.VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE);
     require(outBalance <= type(uint128).max, 'balance is too high');
+
     _outBalances[provider].outBalance = uint128(outBalance);
 
     if (flags & FLAG_OUT_BALANCE == 0) {
       internalSetFlagsOf(provider, flags | FLAG_OUT_BALANCE);
     }
+
+    _ensureHealthFactor(provider);
   }
+
+  function _ensureHealthFactor(address provider) internal virtual;
 
   function _decrementOutBalance(
     address provider,
@@ -174,23 +190,6 @@ abstract contract SubBalanceBase is IDepositToken, RewardedTokenBase {
     require(provider != address(0) && provider != recipient, Errors.VL_INVALID_SUB_BALANCE_ARGS);
   }
 
-  function _provideSubBalance(
-    address provider,
-    address recipient,
-    uint256 scaledAmount
-  ) private {
-    _checkSubBalanceArgs(provider, recipient, scaledAmount);
-
-    _incrementOutBalance(provider, scaledAmount);
-
-    if (recipient != address(0)) {
-      _incrementInBalance(recipient, scaledAmount);
-    }
-
-    uint256 index = getScaleIndex();
-    emit SubBalanceProvided(provider, recipient, scaledAmount.rayMul(index), index);
-  }
-
   function replaceSubBalance(
     address prevProvider,
     address recipient,
@@ -255,24 +254,12 @@ abstract contract SubBalanceBase is IDepositToken, RewardedTokenBase {
     bool preferOverdraft
   ) external override onlySubBalanceOperator returns (uint256) {
     require(recipient != address(0), Errors.VL_INVALID_SUB_BALANCE_ARGS);
-    return _returnSubBalance(provider, recipient, scaledAmount, preferOverdraft);
-  }
-
-  function _returnSubBalance(
-    address provider,
-    address recipient,
-    uint256 scaledAmount,
-    bool preferOverdraft
-  ) private returns (uint256) {
     _checkSubBalanceArgs(provider, recipient, scaledAmount);
 
+    uint256 overdraft = _decrementInBalance(recipient, scaledAmount, preferOverdraft);
+    _ensureHealthFactor(recipient);
+
     uint256 index = getScaleIndex();
-    uint256 overdraft;
-
-    if (recipient != address(0)) {
-      overdraft = _decrementInBalance(recipient, scaledAmount, preferOverdraft);
-    }
-
     _decrementOutBalance(provider, scaledAmount, overdraft, index);
     if (overdraft > 0) {
       emit OverdraftCovered(provider, recipient, uint256(overdraft).rayMul(index), index);
