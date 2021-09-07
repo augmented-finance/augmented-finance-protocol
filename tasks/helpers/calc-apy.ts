@@ -149,7 +149,7 @@ task('helper:calc-apy', 'Calculates current APYs')
     {
       priceInfo.set(priceCurrency, {
         tokenName: priceCurrencyName,
-        decimals: basePriceDecimals,
+        decimals: 8,
         price: BigNumber.from(0),
       });
 
@@ -162,21 +162,21 @@ task('helper:calc-apy', 'Calculates current APYs')
       });
 
       let allPrices = true;
-      // for (let i = 0; i < priceList.length; i++) {
-      //   const pi = priceInfo.get(priceList[i])!;
-      //   try {
-      //     const price = await po.getAssetPrice(priceList[i]);
-      //     pi.price = price;
-      //   } catch {
-      //     allPrices = false;
-      //     console.log('Failed to get a price:', pi.tokenName, priceList[i]);
-      //   }
-      // }
-
-      const prices = await po.getAssetsPrices(priceList);
       for (let i = 0; i < priceList.length; i++) {
-        priceInfo.get(priceList[i])!.price = prices[i];
+        const pi = priceInfo.get(priceList[i])!;
+        try {
+          const price = await po.getAssetPrice(priceList[i]);
+          pi.price = price;
+        } catch {
+          allPrices = false;
+          console.log('Failed to get a price:', pi.tokenName, priceList[i]);
+        }
       }
+
+      // const prices = await po.getAssetsPrices(priceList);
+      // for (let i = 0; i < priceList.length; i++) {
+      //   priceInfo.get(priceList[i])!.price = prices[i];
+      // }
       if (allPrices) {
         console.log('Found all prices');
       }
@@ -253,14 +253,16 @@ task('helper:calc-apy', 'Calculates current APYs')
           '\t',
           formatFixed(annualRate, agfToken.decimals, 4),
           'AGF p.a.;\tReward APY:\t',
-          formatFixed(
-            annualRate
-              .mul(agfPrice.price)
-              .mul(10 ** 4) // keep precision for 4 digits => 100.00%
-              .div(tokenValue),
-            agfToken.decimals + agfPrice.decimals + 4 - tokenValueDecimals - 2,
-            2
-          ),
+          tokenValue.eq(0)
+            ? 'INF'
+            : formatFixed(
+                annualRate
+                  .mul(agfPrice.price)
+                  .mul(10 ** 4) // keep precision for 4 digits => 100.00%
+                  .div(tokenValue),
+                agfToken.decimals + agfPrice.decimals + 4 - tokenValueDecimals - 2,
+                2
+              ),
           '%'
         );
       });
@@ -293,8 +295,10 @@ task('helper:calc-apy', 'Calculates current APYs')
     }
 
     {
-      // console.log('\nBalances of user:', userAddr);
-      // console.log('\t', priceCurrencyName, '\t@', formatFixed(currencyPrice.price, currencyPrice.decimals, 6), 'ETH');
+      console.log('\nBalances of user:', userAddr);
+
+      // const currencyPrice = priceInfo.get(priceCurrency)!;
+      // console.log('\t ETH', '\t@', formatFixed(currencyPrice.price, currencyPrice.decimals, 6), priceCurrencyName);
 
       const balanceValues = new Map<string, BigNumber>();
 
@@ -313,7 +317,7 @@ task('helper:calc-apy', 'Calculates current APYs')
 
           const tokenKey = balances.tokens[i - 1].toLowerCase();
           const token = tokenInfo.get(tokenKey)!;
-          // const balanceV = formatFixed(balance, token.decimals, 4);
+          const balanceV = formatFixed(balance, token.decimals, 4);
           if (falsyOrZeroAddress(token.priceToken)) {
             // console.log('\t', token.tokenSymbol, '\t', balanceV);
             continue;
@@ -324,13 +328,13 @@ task('helper:calc-apy', 'Calculates current APYs')
           totalValue = totalValue.add(balanceValue.mul(totalExp).div(powerOf10(price.decimals + token.decimals)));
 
           // const priceV = formatFixed(
-          //   price.price.mul(BigNumber.from(10).pow(currencyPrice.decimals)).div(currencyPrice.price),
+          //   price.price.mul(currencyPrice.price).div(BigNumber.from(10).pow(currencyPrice.decimals)),
           //   price.decimals,
           //   6
           // );
           // const totalV = formatFixed(
-          //   balanceValue.div(currencyPrice.price),
-          //   token.decimals + price.decimals - currencyPrice.decimals,
+          //   balanceValue.mul(currencyPrice.price),
+          //   token.decimals + price.decimals + currencyPrice.decimals,
           //   4
           // );
           // console.log('\t', token.tokenSymbol, '\t', balanceV, '\t;\t', totalV, '\t@', priceV, priceCurrencyName);
@@ -356,12 +360,13 @@ task('helper:calc-apy', 'Calculates current APYs')
         ? [explained.maxBoost, explained.boostLimit]
         : [explained.boostLimit, explained.maxBoost];
 
-      const boostDifference =
-        boostMax
-          .mul(10 ** 4)
-          .div(boostAlloc)
-          .toNumber() /
-        10 ** 2;
+      const boostDifference = boostAlloc.eq(0)
+        ? boostMax.mul(0)
+        : boostMax
+            .mul(10 ** 4)
+            .div(boostAlloc)
+            .toNumber() /
+          10 ** 2;
 
       const adviceTolerance = 120; // %
       if (boostDifference > adviceTolerance) {
@@ -428,7 +433,7 @@ task('helper:calc-apy', 'Calculates current APYs')
           );
 
         console.log('\tCurrent boost APY:', formatBoostAPY(boostAlloc), '%');
-        console.log('\tMax boost APY (by locked xAGF):', formatBoostAPY(boostMax), '%');
+        console.log('\tMax boost APY:', formatBoostAPY(boostMax), '%');
       }
     }
   });
