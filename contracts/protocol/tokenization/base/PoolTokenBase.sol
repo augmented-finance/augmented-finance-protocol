@@ -9,16 +9,31 @@ import '../../../interfaces/ILendingPoolForTokens.sol';
 import '../../../interfaces/IRewardedToken.sol';
 import '../../../access/AccessHelper.sol';
 import '../../../access/AccessFlags.sol';
+import '../../../access/MarketAccessBitmask.sol';
+import '../../../access/interfaces/IMarketAccessController.sol';
 import '../interfaces/IInitializablePoolToken.sol';
 import '../interfaces/PoolTokenConfig.sol';
 
-abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, IRewardedToken, ERC20DetailsBase {
+abstract contract PoolTokenBase is
+  IERC20,
+  IPoolToken,
+  IInitializablePoolToken,
+  IRewardedToken,
+  ERC20DetailsBase,
+  MarketAccessBitmaskMin
+{
+  using AccessHelper for IMarketAccessController;
+
   event Transfer(address indexed from, address indexed to, uint256 value);
 
   ILendingPoolForTokens internal _pool;
   address internal _underlyingAsset;
 
-  constructor(address pool_, address underlyingAsset_) {
+  constructor(address pool_, address underlyingAsset_)
+    MarketAccessBitmaskMin(
+      pool_ != address(0) ? ILendingPoolForTokens(pool_).getAccessController() : IMarketAccessController(address(0))
+    )
+  {
     _pool = ILendingPoolForTokens(pool_);
     _underlyingAsset = underlyingAsset_;
   }
@@ -27,6 +42,7 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
     params;
     _pool = ILendingPoolForTokens(config.pool);
     _underlyingAsset = config.underlyingAsset;
+    _remoteAcl = ILendingPoolForTokens(config.pool).getAccessController();
   }
 
   function _onlyLendingPool() private view {
@@ -38,23 +54,8 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
     _;
   }
 
-  function _onlyLendingPoolAdmin() private view {
-    AccessHelper.requireAnyOf(
-      _pool.getAccessController(),
-      msg.sender,
-      AccessFlags.POOL_ADMIN,
-      Errors.CALLER_NOT_POOL_ADMIN
-    );
-  }
-
-  modifier onlyLendingPoolAdmin() {
-    _onlyLendingPoolAdmin();
-    _;
-  }
-
   function _onlyLendingPoolConfiguratorOrAdmin() private view {
-    AccessHelper.requireAnyOf(
-      _pool.getAccessController(),
+    _remoteAcl.requireAnyOf(
       msg.sender,
       AccessFlags.POOL_ADMIN | AccessFlags.LENDING_POOL_CONFIGURATOR,
       Errors.CALLER_NOT_POOL_ADMIN
@@ -66,18 +67,10 @@ abstract contract PoolTokenBase is IERC20, IPoolToken, IInitializablePoolToken, 
     _;
   }
 
-  function _onlyRewardConfiguratorOrAdmin() private view {
-    AccessHelper.requireAnyOf(
-      _pool.getAccessController(),
-      msg.sender,
-      AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_CONFIGURATOR,
-      Errors.CALLER_NOT_REWARD_CONFIG_ADMIN
-    );
-  }
-
-  modifier onlyRewardConfiguratorOrAdmin() {
-    _onlyRewardConfiguratorOrAdmin();
-    _;
+  function updatePool() external override onlyLendingPoolConfiguratorOrAdmin {
+    address pool = _remoteAcl.getLendingPool();
+    require(pool != address(0), Errors.LENDING_POOL_REQUIRED);
+    _pool = ILendingPoolForTokens(pool);
   }
 
   // solhint-disable-next-line func-name-mixedcase

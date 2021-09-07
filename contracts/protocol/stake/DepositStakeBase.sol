@@ -81,4 +81,13 @@ abstract contract DepositStakeBase is RewardedStakeBase {
     require(destination == super.getUnderlying(), Errors.AT_INVALID_SLASH_DESTINATION);
     return false;
   }
+
+  function transferBalance(
+    address from,
+    address to,
+    uint256 amount
+  ) internal virtual override {
+    super.transferBalance(from, to, amount);
+    IDepositToken(super.getUnderlying()).transferLockedBalance(from, to, amount);
+  }
 }

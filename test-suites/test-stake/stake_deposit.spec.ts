@@ -45,8 +45,8 @@ describe('Stake agToken', () => {
 
   before(async () => {
     await rawBRE.run('augmented:test-local-staking', CFG);
-    let user3: SignerWithAddress;
-    [root, user1, user2, slasher, user3] = await (<any>rawBRE).ethers.getSigners();
+    let user4: SignerWithAddress;
+    [root, user1, user2, slasher, user4] = await (<any>rawBRE).ethers.getSigners();
     
     token = await getAGTokenByName('agDAI');
     pool = await getLendingPoolProxy(await token.POOL());
@@ -64,12 +64,11 @@ describe('Stake agToken', () => {
       const baseToken2 = await getMintableERC20(await token2.UNDERLYING_ASSET_ADDRESS());
       await baseToken2.mint(WAD);
       await baseToken2.approve(pool.address, WAD);
-      await pool.deposit(baseToken2.address, WAD, user3.address, 0);
-      await pool.connect(user3).borrow(baseToken.address, HALF_WAD, 2 /* variable */, 0, user3.address);
+      await pool.deposit(baseToken2.address, WAD, user4.address, 0);
+      await pool.connect(user4).borrow(baseToken.address, HALF_WAD, 2 /* variable */, 0, user4.address);
 
       await mineTicks(10);
-      await deposit(root, WAD); // trigger index update
-
+  
       expect(await pool.getReserveNormalizedIncome(baseToken.address)).gt(RAY);
     }
   });
@@ -93,6 +92,14 @@ describe('Stake agToken', () => {
     await token.connect(s).approve(xToken.address, amount);
     await xToken.connect(s).stake(s.address, amount, 0);
   };
+
+  it('can not stake below min healthFactor', async () => {
+    await deposit(user2, WAD); // also triggers index update
+    expect((await pool.getUserAccountData(user2.address)).healthFactor).gt(WAD);
+    await pool.connect(user2).borrow(baseToken.address, HALF_WAD, 2 /* variable */, 0, user2.address);
+    await token.connect(user2).approve(xToken.address, WAD);
+    await expect(xToken.connect(user2).stake(user2.address, WAD, 0)).to.be.revertedWith(ProtocolErrors.VL_TRANSFER_NOT_ALLOWED);
+  });
 
   it('can not redeem after the unstake window has passed', async () => {
     await stake(user1, defaultStkAmount);
@@ -334,6 +341,24 @@ describe('Stake agToken', () => {
     expect(await xToken.balanceOf(user1.address)).to.eq(defaultStkAmount / 2);
     expect(await xToken.balanceOf(user2.address)).to.eq(defaultStkAmount / 2);
     expect(await xToken.totalSupply()).to.eq(defaultStkAmount);
+  });
+
+  it('redeem transferred stake', async () => {
+    await stake(user1, defaultStkAmount);
+
+    await xToken.connect(user1).transfer(user2.address, defaultStkAmount / 2);
+    expect(await xToken.totalSupply()).to.eq(defaultStkAmount);
+    await xToken.connect(user1).cooldown();
+    await xToken.connect(user2).cooldown();
+    await mineTicks(stakingCooldownTicks);
+
+    await xToken.connect(user1).redeemUnderlying(user1.address, defaultStkAmount / 2);
+    expect(await xToken.totalSupply()).to.eq(defaultStkAmount / 2);
+    await xToken.connect(user2).redeemUnderlying(user2.address, defaultStkAmount / 2);
+    expect(await xToken.totalSupply()).to.eq(0);
+
+    expect(await token.balanceOf(user1.address)).to.eq(defaultStkAmount / 2);
+    expect(await token.balanceOf(user2.address)).to.eq(defaultStkAmount / 2);
   });
 
   it('transfer all unsets cooldown for user1', async () => {

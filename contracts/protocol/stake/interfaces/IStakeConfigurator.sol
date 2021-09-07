@@ -14,6 +14,7 @@ interface IStakeConfigurator {
     uint32 unstakePeriod;
     uint16 maxSlashable;
     uint8 stkTokenDecimals;
+    bool depositStake;
   }
 
   struct UpdateStakeTokenData {

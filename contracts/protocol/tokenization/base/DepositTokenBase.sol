@@ -17,6 +17,7 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
+  using AccessHelper for IMarketAccessController;
 
   address internal _treasury;
 
@@ -37,7 +38,7 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
   }
 
   function updateTreasury() external override onlyLendingPoolConfiguratorOrAdmin {
-    address treasury = _pool.getAccessController().getAddress(AccessFlags.TREASURY);
+    address treasury = _remoteAcl.getAddress(AccessFlags.TREASURY);
     require(treasury != address(0), Errors.VL_TREASURY_REQUIRED);
     _treasury = treasury;
   }
@@ -50,7 +51,16 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
     _addSubBalanceOperator(addr, ACCESS_SUB_BALANCE);
   }
 
-  function addStakeOperator(address addr) external override onlyLendingPoolConfiguratorOrAdmin {
+  function addStakeOperator(address addr) external override {
+    _remoteAcl.requireAnyOf(
+      msg.sender,
+      AccessFlags.POOL_ADMIN |
+        AccessFlags.LENDING_POOL_CONFIGURATOR |
+        AccessFlags.STAKE_CONFIGURATOR |
+        AccessFlags.STAKE_ADMIN,
+      Errors.CALLER_NOT_POOL_ADMIN
+    );
+
     _addSubBalanceOperator(addr, ACCESS_LOCK_BALANCE | ACCESS_TRANSFER);
   }
 
@@ -150,8 +160,8 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
 
     super._transferBalance(user, receiver, scaledAmount, outBalance, index);
 
-    emit BalanceTransfer(user, receiver, amount, index);
     emit Transfer(user, receiver, amount);
+    emit BalanceTransfer(user, receiver, amount, index);
     return firstBalance;
   }
 
@@ -182,7 +192,6 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
 
   function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
     _transfer(msg.sender, recipient, amount, getScaleIndex());
-    emit Transfer(msg.sender, recipient, amount);
     return true;
   }
 
@@ -193,7 +202,6 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
   ) public virtual override returns (bool) {
     _transfer(sender, recipient, amount, getScaleIndex());
     _approveTransferFrom(sender, amount);
-    emit Transfer(sender, recipient, amount);
     return true;
   }
 
@@ -219,6 +227,7 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
 
     _transferAndFinalize(from, to, scaledAmount, getMinBalance(from, flags), index, scaledBalanceBeforeFrom);
 
+    emit Transfer(from, to, amount);
     emit BalanceTransfer(from, to, amount, index);
   }
 
@@ -231,7 +240,9 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
   ) internal override {
     _transferAndFinalize(from, to, scaledAmount, minBalance, index, internalBalanceOf(from));
 
-    emit BalanceTransfer(from, to, scaledAmount.rayMul(index), index);
+    uint256 amount = scaledAmount.rayMul(index);
+    emit Transfer(from, to, amount);
+    emit BalanceTransfer(from, to, amount, index);
   }
 
   function _transferAndFinalize(
@@ -252,6 +263,10 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
       scaledAmount > 0 && scaledBalanceBeforeFrom == scaledAmount,
       scaledAmount > 0 && scaledBalanceBeforeTo == 0
     );
+  }
+
+  function _ensureHealthFactor(address holder) internal override {
+    _pool.finalizeTransfer(_underlyingAsset, holder, holder, false, false);
   }
 
   function _approveByPermit(

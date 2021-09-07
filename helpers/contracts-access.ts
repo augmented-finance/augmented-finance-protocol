@@ -62,6 +62,7 @@ const poolTokenImpl: ContractAccessExceptions = {
     ProtocolErrors.CT_CALLER_MUST_BE_REWARD_ADMIN,
   ],
   functions: {
+    updatePool: ProtocolErrors.CALLER_NOT_POOL_ADMIN,
     setPaused: ProtocolErrors.CALLER_NOT_EMERGENCY_ADMIN,
     initialize: 'already initialized',
   },

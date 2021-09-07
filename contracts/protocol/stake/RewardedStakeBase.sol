@@ -342,7 +342,7 @@ abstract contract RewardedStakeBase is
     address from,
     address to,
     uint256 amount
-  ) internal override {
+  ) internal virtual override {
     (uint256 balanceFrom, uint32 cooldownFrom) = internalBalanceAndCooldownOf(from);
 
     super.doDecrementRewardBalance(from, amount, 0);

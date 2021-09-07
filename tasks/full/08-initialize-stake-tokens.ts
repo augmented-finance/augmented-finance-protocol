@@ -43,6 +43,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
       unstakePeriod: BigNumberish;
       stkTokenDecimals: BigNumberish;
       maxSlashable: BigNumberish;
+      depositStake: boolean;
     }[] = [];
     let initSymbols: string[] = [];
 
@@ -65,7 +66,8 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
         continue;
       }
 
-      if (asset && mode == StakeMode.stakeAg) {
+      const depositStake: boolean = mode == StakeMode.stakeAg;
+      if (depositStake) {
         const reserveData = await lendingPool.getReserveData(asset);
         asset = reserveData.depositTokenAddress;
       }
@@ -86,7 +88,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
       }
 
       let tokenImplAddr = '';
-      if (mode == StakeMode.stakeAg) {
+      if (depositStake) {
         if (falsyOrZeroAddress(depositStakeImplAddr)) {
           const impl = await deployDepositStakeTokenImpl(verify, continuation);
           console.log(`Deployed DepositStakeToken implementation:`, impl.address);
@@ -118,6 +120,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
         cooldownPeriod: stakeParams.CooldownPeriod,
         unstakePeriod: stakeParams.UnstakePeriod,
         maxSlashable: stakeParams.MaxSlashBP,
+        depositStake: depositStake,
       });
     }
 

@@ -5,14 +5,15 @@ import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 import '../../access/interfaces/IMarketAccessController.sol';
 import '../../interfaces/IDerivedToken.sol';
+import '../../interfaces/IDepositToken.sol';
 import '../../access/MarketAccessBitmask.sol';
+import '../../access/AccessFlags.sol';
+import '../../tools/upgradeability/IProxy.sol';
+import '../../tools/upgradeability/ProxyAdmin.sol';
 import './interfaces/IStakeConfigurator.sol';
 import './interfaces/IInitializableStakeToken.sol';
 import './interfaces/StakeTokenConfig.sol';
 import './interfaces/IManagedStakeToken.sol';
-import '../../tools/upgradeability/IProxy.sol';
-import '../../access/AccessFlags.sol';
-import '../../tools/upgradeability/ProxyAdmin.sol';
 
 contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStakeConfigurator {
   uint256 private constant CONFIGURATOR_REVISION = 1;
@@ -139,6 +140,9 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     );
 
     token = address(_remoteAcl.createProxy(address(_proxies), input.stakeTokenImpl, params));
+    if (input.depositStake) {
+      IDepositToken(input.stakedToken).addStakeOperator(token);
+    }
 
     emit StakeTokenInitialized(token, input);
 
