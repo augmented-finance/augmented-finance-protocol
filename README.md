@@ -6,11 +6,11 @@ This repository contains the smart contracts source code and markets configurati
 
 **Augmented Finance** is a DeFi liquidity protocol for high-yield lending and low-interest borrowing of digital assets, launched fairly and enabled by artificial intelligence (AI). 
 
-Augmented Finance is on a mission to help you achieve and secure financial independence and be your trusted long-term source of income and liquidity.
+Augmented Finance is on a mission to help everyone achieve and secure financial independence and be a trusted long-term source of income and liquidity.
 
 ## Tokenomics
 
-**Total supply**: 100 000 000 AGF, released over 5 years.
+**Total supply**: 100 000 000 AGF, released over 30 years.
 
 **Fair launch**: no pre-mine, no pre-sale, no ICO, no VC allocation. Unlike Aave and Compound where the majority of tokens distributed to ICO participants or Venture Capital funds, almost all AGF tokens will be distributed to the Augmented Finance protocol's users who actively use the protocol (borrow, supply, stake & lock).
 
@@ -18,9 +18,8 @@ Augmented Finance is on a mission to help you achieve and secure financial indep
 
 | Pool | % of Total AGF |
 | ---- | :------------- |
-|Liquidity Rewards | 52% |
-|Staking Rewards | 25% |
-|Referral Rewards | 2% |
+|Protocol Users | 78% |
+|Referral Rewards | 1% |
 |Token Burner Rewards| 1% |
 |Dev Fund | 10% |
 |Ecosystem Fund | 10% |
@@ -37,8 +36,8 @@ A user can lock AGF for a period from 1 week to 4 years, and receive xAGF to unl
 - supply and borrow of assets
 - staked agTokens (Augmented Finance's interest-bearing tokens)
 - staked AGF-ETH UNI LP (Uniswap liquidity pool tokens)
-2. Profit-share protocol fees (coming soon)
-3. Vote on various DAO proposals and protocol parameters (coming soon)
+2. Profit-share protocol fees
+3. Vote on various DAO proposals and protocol parameters
 
 ## Supply & Borrow
 
@@ -48,7 +47,7 @@ A user can lock AGF for a period from 1 week to 4 years, and receive xAGF to unl
 
 ## Stake
 
-**Stake AGF-ETH UNI LP tokens**: deposit your AGF and ETH to the AGF-ETH pool on Uniswap, get AGF-ETH UNI LP (Uniswap liquidity pool tokens) and earn trading fees, stake your UNI AGF-ETH LP to Augmented Finance’s staking module to earn more AGF and increase the safety of the Augmented Finance protocol.
+**Stake AGF-ETH UNI V2 LP tokens**: deposit your AGF and ETH to the AGF-ETH pool on Uniswap V2, get AGF-ETH UNI V2 LP (Uniswap liquidity pool tokens) and earn trading fees, stake your UNI AGF-ETH LP to Augmented Finance’s staking module to earn more AGF and increase the safety of the Augmented Finance protocol.
 
 **Stake agTokens**: supply the supported assets to the protocol, stake your agTokens (Augmented Finance’s interest-bearing tokens — agUSDC, agUSDT, agDAI, agWBTC, agETH) to Augmented Finance’s staking module, receive more AGF and increase the safety of the Augmented Finance protocol.
 
@@ -68,7 +67,7 @@ Trade AGF on the largest decentralized exchange (DEX) — Uniswap. More exchange
 
 The Augmented Finance protocol security and safety is at the high level: 
 
-1. The **protocol code** will be made **open** and **thoroughly audited** before the launch
+1. The **protocol code** is **open** and **thoroughly audited** by PeckShield before the launch ([link] (https://github.com/peckshield/publications/blob/master/audit_reports/PeckShield-Audit-Report-Augmented-v1.0.pdf))
 2. The **bug bounty** program will be started 
 3. Fast **customer support** and **security alerts** 
 
@@ -77,10 +76,10 @@ Augmented Finance’s team has developed a world-class lending and borrowing pro
 ## License
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or any later version. This project was inspied by and/or includes/modifies code of the following projects:
-1. [Aave Protocol v2](https://github.com/aave/protocol-v2)
+1. [Aave v2](https://github.com/aave/protocol-v2)
 2. [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts)
-3. [Compound Protocol](https://github.com/compound-finance/compound-protocol)
-4. [Curve DAO](https://github.com/curvefi/curve-dao-contracts)
+3. [Compound Finance](https://github.com/compound-finance/compound-protocol)
+4. [Curve](https://github.com/curvefi/curve-dao-contracts)
 
 ## More Questions?
 
