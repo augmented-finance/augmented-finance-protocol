@@ -67,7 +67,7 @@ Trade AGF on the largest decentralized exchange (DEX) — Uniswap. More exchange
 
 The Augmented Finance protocol security and safety is at the high level: 
 
-1. The **protocol code** is **open** and **thoroughly audited** by PeckShield before the launch ([link] (https://github.com/peckshield/publications/blob/master/audit_reports/PeckShield-Audit-Report-Augmented-v1.0.pdf))
+1. The **protocol code** is **open** and **thoroughly audited** by PeckShield before the launch ([link](https://github.com/peckshield/publications/blob/master/audit_reports/PeckShield-Audit-Report-Augmented-v1.0.pdf))
 2. The **bug bounty** program will be started 
 3. Fast **customer support** and **security alerts** 
 
