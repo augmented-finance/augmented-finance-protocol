@@ -17,6 +17,7 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
   using WadRayMath for uint256;
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
+  using AccessHelper for IMarketAccessController;
 
   address internal _treasury;
 
@@ -37,7 +38,7 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
   }
 
   function updateTreasury() external override onlyLendingPoolConfiguratorOrAdmin {
-    address treasury = _pool.getAccessController().getAddress(AccessFlags.TREASURY);
+    address treasury = _remoteAcl.getAddress(AccessFlags.TREASURY);
     require(treasury != address(0), Errors.VL_TREASURY_REQUIRED);
     _treasury = treasury;
   }
@@ -50,7 +51,16 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
     _addSubBalanceOperator(addr, ACCESS_SUB_BALANCE);
   }
 
-  function addStakeOperator(address addr) external override onlyLendingPoolConfiguratorOrAdmin {
+  function addStakeOperator(address addr) external override {
+    _remoteAcl.requireAnyOf(
+      msg.sender,
+      AccessFlags.POOL_ADMIN |
+        AccessFlags.LENDING_POOL_CONFIGURATOR |
+        AccessFlags.STAKE_CONFIGURATOR |
+        AccessFlags.STAKE_ADMIN,
+      Errors.CALLER_NOT_POOL_ADMIN
+    );
+
     _addSubBalanceOperator(addr, ACCESS_LOCK_BALANCE | ACCESS_TRANSFER);
   }
 

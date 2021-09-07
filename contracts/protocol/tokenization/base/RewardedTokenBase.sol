@@ -83,7 +83,7 @@ abstract contract RewardedTokenBase is
   }
 
   function getAccessController() internal view override returns (IMarketAccessController) {
-    return _pool.getAccessController();
+    return _remoteAcl;
   }
 
   function internalAllocatedReward(

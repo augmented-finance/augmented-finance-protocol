@@ -6,4 +6,6 @@ import './IDerivedToken.sol';
 // solhint-disable func-name-mixedcase
 interface IPoolToken is IDerivedToken {
   function POOL() external view returns (address);
+
+  function updatePool() external;
 }

@@ -48,6 +48,7 @@ library Errors {
 
   string public constant LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR = '27'; // The caller of the function is not the lending pool configurator
 
+  string public constant LENDING_POOL_REQUIRED = '28'; // The caller of this function must be a lending pool
   string public constant CALLER_NOT_LENDING_POOL = '29'; // The caller of this function must be a lending pool
   string public constant AT_SUB_BALANCE_RESTIRCTED_FUNCTION = '30'; // The caller of this function must be a lending pool or a sub-balance operator
 
