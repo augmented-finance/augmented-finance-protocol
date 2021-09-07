@@ -76,10 +76,10 @@ Augmented Finance’s team has developed a world-class lending and borrowing pro
 ## License
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or any later version. This project was inspied by and/or includes/modifies code of the following projects:
-1. [Aave v2](https://github.com/aave/protocol-v2)
+1. [Aave Protocol v2](https://github.com/aave/protocol-v2)
 2. [OpenZeppelin](https://github.com/OpenZeppelin/openzeppelin-contracts)
-3. [Compound Finance](https://github.com/compound-finance/compound-protocol)
-4. [Curve](https://github.com/curvefi/curve-dao-contracts)
+3. [Compound Protocol](https://github.com/compound-finance/compound-protocol)
+4. [Curve DAO](https://github.com/curvefi/curve-dao-contracts)
 
 ## More Questions?
 
