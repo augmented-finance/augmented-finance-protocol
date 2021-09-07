@@ -10,8 +10,9 @@ task('augmented:call-cmd', 'Invokes a configuration command')
   .addFlag('static', 'Make this call as static')
   .addFlag('compatible', 'Use backward compatible mode')
   .addOptionalParam('roles', 'Roles required', '', types.string)
+  .addOptionalParam('gasLimit', 'Gas limit', undefined, types.int)
   .addOptionalVariadicPositionalParam('args', 'Command arguments')
-  .setAction(async ({ ctl, cmd, roles, static: staticCall, compatible, args }, DRE) => {
+  .setAction(async ({ ctl, cmd, roles, static: staticCall, compatible, gasLimit, args }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
     await DRE.run('set-DRE');
 
@@ -29,7 +30,7 @@ task('augmented:call-cmd', 'Invokes a configuration command')
     const roleList: string[] = roles === '' ? [] : roles[0] !== '[' ? [roles] : JSON.parse(roles);
 
     try {
-      await DRE.run('helper:call-cmd', { ctl, cmd, roles: roleList, static: staticCall, compatible, args });
+      await DRE.run('helper:call-cmd', { ctl, cmd, roles: roleList, static: staticCall, compatible, gasLimit, args });
     } catch (err) {
       console.error(err);
       exit(1);

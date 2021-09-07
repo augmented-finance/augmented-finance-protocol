@@ -23,6 +23,9 @@ task('full:access-test', 'Tests access to mutable functions of the deployed cont
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
 
+    const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+    const estimateGas = true; // !MAINNET_FORK;
+
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
     console.log('Check access to mutable methods');
@@ -42,7 +45,7 @@ task('full:access-test', 'Tests access to mutable functions of the deployed cont
       }
       const subj = (await getter(addr)) as Contract;
       console.log(`\tChecking: ${name}`);
-      await verifyContractMutableAccess(user, subj, contractId, checkAll);
+      await verifyContractMutableAccess(user, subj, contractId, estimateGas, checkAll);
     }
 
     for (const [addr, entry] of getExternalsFromJsonDb()) {
@@ -63,7 +66,7 @@ task('full:access-test', 'Tests access to mutable functions of the deployed cont
       }
       const subj = (await getter(addr)) as Contract;
       console.log(`\tChecking: ${name}`);
-      await verifyProxyMutableAccess(user, subj, contractId, checkAll);
+      await verifyProxyMutableAccess(user, subj, contractId, estimateGas, checkAll);
     }
 
     if (hasErorrs) {

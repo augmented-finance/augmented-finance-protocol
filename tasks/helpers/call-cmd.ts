@@ -14,8 +14,9 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
   .addFlag('static', 'Make this call as static')
   .addFlag('compatible', 'Use backward compatible mode')
   .addParam('roles', 'Roles required', [], types.any)
+  .addOptionalParam('gasLimit', 'Gas limit', undefined, types.int)
   .addParam('args', 'Command arguments', [], types.any)
-  .setAction(async ({ ctl, cmd, static: staticCall, compatible, roles, args }, DRE) => {
+  .setAction(async ({ ctl, cmd, static: staticCall, compatible, roles, args, gasLimit }, DRE) => {
     if (falsyOrZeroAddress(ctl)) {
       throw new Error('Unknown MarketAddressController');
     }
@@ -23,13 +24,13 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
 
     const dotPos = (<string>cmd).indexOf('.');
     if (dotPos >= 0) {
-      await callFunc(ac, staticCall, compatible, roles, cmd, args);
+      await callFunc(ac, staticCall, compatible, roles, cmd, args, gasLimit);
       return;
     }
 
     const call = async (cmd: string, args: any[], role: number | undefined) => {
       console.log('Call alias:', cmd, args);
-      await callFunc(ac, staticCall, compatible, role === undefined ? [] : [role], cmd, args);
+      await callFunc(ac, staticCall, compatible, role === undefined ? [] : [role], cmd, args, gasLimit);
     };
 
     const callName = (typeId: eContractid, instanceId: AccessFlags, funcName: string) =>
@@ -71,14 +72,15 @@ const callFunc = async (
   compatible: boolean,
   roles: (number | string)[],
   cmd: string,
-  args: any[]
+  args: any[],
+  gasLimit?: number
 ) => {
   const dotPos = (<string>cmd).indexOf('.');
   const objName = (<string>cmd).substring(0, dotPos);
   const funcName = (<string>cmd).substring(dotPos + 1);
   const contract = await findObject(ac, objName);
 
-  await callContract(staticCall, compatible, ac, roles, contract, funcName, args);
+  await callContract(staticCall, compatible, ac, roles, contract, funcName, args, gasLimit);
 };
 
 const findObject = async (ac: MarketAccessController, objName: string): Promise<Contract> => {
@@ -124,7 +126,8 @@ const callContract = async (
   roles: (number | string)[],
   contract: Contract,
   funcName: string,
-  args: any[]
+  args: any[],
+  gasLimit?: number
 ) => {
   let accessFlags: number = 0;
   roles.forEach((value) => {
@@ -147,7 +150,9 @@ const callContract = async (
   console.log('Call', useStatic ? 'static:' : 'mutable:', contract.address, fnFrag.name, args);
 
   if (accessFlags == 0) {
-    const result = await (useStatic ? contract.callStatic : contract.functions)[fnFrag.name](...(args || []));
+    const result = await (useStatic ? contract.callStatic : contract.functions)[fnFrag.name](...(args || []), {
+      gasLimit: gasLimit,
+    });
     if (useStatic) {
       console.log('Result: ', result);
     }
