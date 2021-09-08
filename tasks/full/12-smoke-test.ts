@@ -5,6 +5,7 @@ import { falsyOrZeroAddress, getFirstSigner } from '../../helpers/misc-utils';
 import { getLendingPoolProxy, getOracleRouter, getProtocolDataProvider } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
+import { USD_ADDRESS } from '../../helpers/constants';
 
 task('full:smoke-test', 'Does a smoke test of the deployed contracts')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -48,16 +49,19 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
 
     console.log('\nCheck getAllTokenDescriptions');
     const allTokenDesc = await dataHelper.getAllTokenDescriptions(true);
-    console.log('All tokens:');
-    allTokenDesc.tokens.slice(0, allTokenDesc.tokenCount.toNumber()).map((x) => {
-      if (!falsyOrZeroAddress(x.priceToken)) {
-        pricingTokens.push(x.priceToken);
-      }
-
-      console.log(
-        ` ${x.tokenSymbol} (${x.tokenType} ${x.active} ${x.decimals}):\t${x.token} ${x.underlying} ${x.priceToken}`
-      );
-    });
+    {
+      const pricingTokenSet = new Set<string>();
+      console.log('All tokens:');
+      allTokenDesc.tokens.slice(0, allTokenDesc.tokenCount.toNumber()).map((x) => {
+        if (!falsyOrZeroAddress(x.priceToken) && !pricingTokenSet.has(x.priceToken)) {
+          pricingTokens.push(x.priceToken);
+          pricingTokenSet.add(x.priceToken);
+        }
+        console.log(
+          ` ${x.tokenSymbol} (${x.tokenType} ${x.active} ${x.decimals}):\t${x.token} ${x.underlying} ${x.priceToken}`
+        );
+      });
+    }
 
     {
       console.log('\nCheck getAllTokens');
@@ -75,12 +79,11 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
     }
 
     {
+      pricingTokens.push(USD_ADDRESS);
       console.log('\nCheck ', pricingTokens.length, 'listed prices');
-      if (pricingTokens.length > 0) {
-        const priceOracle = await getOracleRouter(await addressProvider.getAddress(AccessFlags.PRICE_ORACLE));
 
-        await priceOracle.getAssetsPrices(pricingTokens);
-      }
+      const priceOracle = await getOracleRouter(await addressProvider.getAddress(AccessFlags.PRICE_ORACLE));
+      await priceOracle.getAssetsPrices(pricingTokens);
     }
 
     const userAddr = (await getFirstSigner()).address;
