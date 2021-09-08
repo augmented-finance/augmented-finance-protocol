@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 import { eNetwork, tEthereumAddress } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { falsyOrZeroAddress, getFirstSigner } from '../../helpers/misc-utils';
-import { getLendingPoolProxy, getProtocolDataProvider } from '../../helpers/contracts-getters';
+import { getLendingPoolProxy, getOracleRouter, getProtocolDataProvider } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 
@@ -44,10 +44,16 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
       }
     }
 
+    const pricingTokens: string[] = [];
+
     console.log('\nCheck getAllTokenDescriptions');
     const allTokenDesc = await dataHelper.getAllTokenDescriptions(true);
     console.log('All tokens:');
     allTokenDesc.tokens.slice(0, allTokenDesc.tokenCount.toNumber()).map((x) => {
+      if (!falsyOrZeroAddress(x.priceToken)) {
+        pricingTokens.push(x.priceToken);
+      }
+
       console.log(
         ` ${x.tokenSymbol} (${x.tokenType} ${x.active} ${x.decimals}):\t${x.token} ${x.underlying} ${x.priceToken}`
       );
@@ -65,6 +71,15 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
         if (allTokensList0[i] != allTokensList1[i].token) {
           throw `inconsisten token at index ${i}`;
         }
+      }
+    }
+
+    {
+      console.log('\nCheck ', pricingTokens.length, 'listed prices');
+      if (pricingTokens.length > 0) {
+        const priceOracle = await getOracleRouter(await addressProvider.getAddress(AccessFlags.PRICE_ORACLE));
+
+        await priceOracle.getAssetsPrices(pricingTokens);
       }
     }
 
