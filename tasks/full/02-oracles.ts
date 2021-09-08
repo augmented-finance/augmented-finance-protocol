@@ -23,10 +23,9 @@ import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 
 task('full:deploy-oracles', 'Deploys oracles')
-  .addFlag('reuse', 'Look for a price oracle to reuse')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .setAction(async ({ reuse, verify, pool }, DRE) => {
+  .setAction(async ({ verify, pool }, DRE) => {
     await DRE.run('set-DRE');
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
@@ -54,7 +53,7 @@ task('full:deploy-oracles', 'Deploys oracles')
 
     let lroAddress = '';
     let poAddress = oracleRouter;
-    const requiredPriceTokens = getRequiredPriceTokens(tokensToWatch);
+    const requiredPriceTokens = getRequiredPrices(tokensToWatch);
 
     const [aggregatorTokens, aggregators] = getTokenAggregatorPairs(tokensToWatch, chainlinkAggregators);
 
@@ -62,16 +61,6 @@ task('full:deploy-oracles', 'Deploys oracles')
       lroAddress = await addressProvider.getLendingRateOracle();
       if (falsyOrZeroAddress(poAddress)) {
         poAddress = await addressProvider.getPriceOracle();
-      }
-    }
-
-    if (reuse && poAddress != 'new' && falsyOrZeroAddress(poAddress) && aggregators.length > 0) {
-      console.log('Looking for a reusable PriceOracle...');
-      const registry = await getCurrentProviderRegistry(poolConfig, network);
-      poAddress = await findOracleForReuse(addressProvider, registry, requiredPriceTokens);
-      if (!falsyOrZeroAddress(poAddress)) {
-        console.log('Reuse PriceOracle:', poAddress);
-        await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, poAddress));
       }
     }
 
@@ -180,17 +169,6 @@ task('full:deploy-oracles', 'Deploys oracles')
     console.log('PriceOracle: ', poAddress);
   });
 
-const getCurrentProviderRegistry = async (poolConfig: PoolConfiguration, network: eNetwork) => {
-  if (hasAddressProviderRegistry()) {
-    return await getAddressesProviderRegistry();
-  }
-  const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
-  if (falsyOrZeroAddress(registryAddress)) {
-    throw 'registry address is unknown';
-  }
-  return await getAddressesProviderRegistry(registryAddress);
-};
-
 const unzipTokens = (tokens: { [tokenSymbol: string]: tEthereumAddress }) => {
   const assetSymbols: string[] = [];
   const assets: string[] = [];
@@ -239,7 +217,7 @@ const findOracleForReuse = async (
   return '';
 };
 
-const getRequiredPriceTokens = (allAssetsAddresses: { [tokenSymbol: string]: tEthereumAddress }) => {
-  const { ETH, USD, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
+const getRequiredPrices = (allAssetsAddresses: { [tokenSymbol: string]: tEthereumAddress }) => {
+  const { ETH, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
   return assetsAddressesWithoutEth;
 };
