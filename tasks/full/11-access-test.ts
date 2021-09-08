@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { eContractid, eNetwork, tEthereumAddress } from '../../helpers/types';
+import { eEthereumNetwork, eNetwork } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import {
   getExternalsFromJsonDb,
@@ -17,16 +17,22 @@ task('full:access-test', 'Tests access to mutable functions of the deployed cont
   .setAction(async ({ pool }, DRE) => {
     await DRE.run('set-DRE');
 
+    const network = <eNetwork>DRE.network.name;
+    // const poolConfig = loadPoolConfig(pool);
+    switch (network) {
+      case eEthereumNetwork.kovan:
+      case eEthereumNetwork.main:
+      case eEthereumNetwork.tenderlyMain:
+        console.log('Access test is not supported for:', network);
+        return;
+    }
+
+    // const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+    const estimateGas = true; // !MAINNET_FORK;
+    const [freshStart, continuation, addressProvider] = await getDeployAccessController();
+
     const checkAll = true;
     const user = (await getSignerN(1)) as Signer;
-
-    const network = <eNetwork>DRE.network.name;
-    const poolConfig = loadPoolConfig(pool);
-
-    const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-    const estimateGas = true; // !MAINNET_FORK;
-
-    const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
     console.log('Check access to mutable methods');
 

@@ -162,21 +162,21 @@ task('helper:calc-apy', 'Calculates current APYs')
       });
 
       let allPrices = true;
-      for (let i = 0; i < priceList.length; i++) {
-        const pi = priceInfo.get(priceList[i])!;
-        try {
-          const price = await po.getAssetPrice(priceList[i]);
-          pi.price = price;
-        } catch {
-          allPrices = false;
-          console.log('Failed to get a price:', pi.tokenName, priceList[i]);
-        }
-      }
-
-      // const prices = await po.getAssetsPrices(priceList);
       // for (let i = 0; i < priceList.length; i++) {
-      //   priceInfo.get(priceList[i])!.price = prices[i];
+      //   const pi = priceInfo.get(priceList[i])!;
+      //   try {
+      //     const price = await po.getAssetPrice(priceList[i]);
+      //     pi.price = price;
+      //   } catch {
+      //     allPrices = false;
+      //     console.log('Failed to get a price:', pi.tokenName, priceList[i]);
+      //   }
       // }
+
+      const prices = await po.getAssetsPrices(priceList);
+      for (let i = 0; i < priceList.length; i++) {
+        priceInfo.get(priceList[i])!.price = prices[i];
+      }
       if (allPrices) {
         console.log('Found all prices');
       }

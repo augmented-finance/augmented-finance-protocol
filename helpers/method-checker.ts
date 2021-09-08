@@ -135,10 +135,10 @@ const _verifyMutableAccess = async (
 
         let reason: string | undefined;
         if ((reason = substringAfter(error.error.message, prefixProviderReverted)) !== undefined) {
-          console.log('00', reason);
+          // console.log('00', reason);
           handleError(error, reason, true);
         } else if (error.error.message.indexOf(prefixProviderRevertedNoReason) != 0) {
-          console.log('01');
+          // console.log('01');
           handleError(error, reasonUnknown, false);
         }
         continue;
@@ -150,18 +150,18 @@ const _verifyMutableAccess = async (
       const prefixReverted = 'Transaction reverted: ';
 
       if (message === prefixNoReason) {
-        console.log('1');
+        // console.log('1');
         handleError(error, '', true);
         continue;
       }
 
       let reason: string | undefined;
       if (isImpl && (reason = substringAfter(message, prefixReverted)) !== undefined) {
-        console.log('2', reason);
+        // console.log('2', reason);
         handleError(error, reason, false);
       } else {
         reason = substringAfter(message, prefixReasonStr, true);
-        console.log('3', reason);
+        // console.log('3', reason);
         handleError(error, reason, true);
       }
       continue;
