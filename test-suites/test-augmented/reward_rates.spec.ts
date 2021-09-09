@@ -90,8 +90,7 @@ describe('Reward rates suite', () => {
       pushPool(pool);
     }
 
-    await rewardController.setBaselinePercentages(poolAddr, poolPct);
-    await rewardController.updateBaseline(defaultRate * poolCount);
+    await rewardController.setBaselinePercentagesAndRate(poolAddr, poolPct, defaultRate * poolCount);
   });
 
   beforeEach(async () => {
@@ -163,7 +162,7 @@ describe('Reward rates suite', () => {
   });
 
   it('all pool total must be less than 100%', async () => {
-    await rewardController.setBaselinePercentages([refPool.address], [PERC_100]);
+    await rewardController.setBaselinePercentagesAndRate([refPool.address], [PERC_100], MAX_UINT_AMOUNT);
     await expect(rewardController.updateBaseline(defaultRate * poolCount)).to.be.revertedWith(
       ProtocolErrors.RW_BASELINE_EXCEEDED
     );

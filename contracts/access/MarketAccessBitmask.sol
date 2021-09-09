@@ -55,11 +55,6 @@ abstract contract MarketAccessBitmaskMin {
     );
     _;
   }
-
-  modifier onlyRewardRateAdmin() {
-    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.REWARD_RATE_ADMIN, Errors.CALLER_NOT_REWARD_RATE_ADMIN);
-    _;
-  }
 }
 
 abstract contract MarketAccessBitmask is MarketAccessBitmaskMin {
