@@ -36,7 +36,7 @@ A user can lock AGF for a period from 1 week to 4 years, and receive xAGF to unl
 - supply and borrow of assets
 - staked agTokens (Augmented Finance's interest-bearing tokens)
 - staked AGF-ETH UNI LP (Uniswap liquidity pool tokens)
-2. Profit-share protocol fees
+2. Profit-share treasury funds
 3. Vote on various DAO proposals and protocol parameters
 
 ## Supply & Borrow
