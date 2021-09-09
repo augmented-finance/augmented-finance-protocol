@@ -121,7 +121,7 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
 
   function internalOnPoolRemoved(IManagedRewardPool) internal virtual {}
 
-  function updateBaseline(uint256 baseline) external override onlyRateAdmin returns (uint256 totalRate) {
+  function updateBaseline(uint256 baseline) public override onlyRateAdmin returns (uint256 totalRate) {
     (totalRate, _baselineMask) = internalUpdateBaseline(baseline, _baselineMask);
     require(totalRate <= baseline, Errors.RW_BASELINE_EXCEEDED);
     emit BaselineUpdated(baseline, totalRate, _baselineMask);
@@ -378,10 +378,11 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     return _paused;
   }
 
-  function setBaselinePercentages(IManagedRewardPool[] calldata pools, uint16[] calldata pcts)
-    external
-    onlyRewardRateAdmin
-  {
+  function setBaselinePercentagesAndRate(
+    IManagedRewardPool[] calldata pools,
+    uint16[] calldata pcts,
+    uint256 baseline
+  ) external onlyRateAdmin {
     require(pools.length == pcts.length, 'mismatched length');
     uint256 baselineMask = _baselineMask;
 
@@ -395,5 +396,9 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     }
 
     _baselineMask = baselineMask;
+
+    if (baseline != type(uint256).max) {
+      updateBaseline(baseline);
+    }
   }
 }
