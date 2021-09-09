@@ -363,6 +363,7 @@ export const CommonsConfig: ICommonConfiguration = {
     InitialRateWad: 2.12,
     TokenPools: {
       DAI:   tokenRewardPoolParamsDefault,
+      USDC:  tokenRewardPoolParamsDefault,
       USDT:  tokenRewardPoolParamsDefault,
       WBTC:  tokenRewardPoolParamsUSDx,
       WETH:  tokenRewardPoolParamsUSDx,
