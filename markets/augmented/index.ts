@@ -54,9 +54,9 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
     USDT: 0.00050314705,
     WBTC: 16.08,
     USD: 0.00050,
-    ADAI: 0.0005022851,
-    CDAI: 0.0005022851,
-    CETH: 1.0
+    ADAI: '288590000000000',
+    CDAI: '6232965267370',
+    CETH: '20052742934920745'
   };
 
   for (const [key, value] of Object.entries(cfg.ReserveAssetsOpt)) {

@@ -1,8 +1,11 @@
 import { task, types } from 'hardhat/config';
 import { exit } from 'process';
-import { ConfigNames } from '../../helpers/configuration';
+import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { ZERO_ADDRESS } from '../../helpers/constants';
+import { getMarketAddressController, hasMarketAddressController } from '../../helpers/contracts-getters';
+import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { falsyOrZeroAddress } from '../../helpers/misc-utils';
+import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 
 task('augmented:call-cmd', 'Invokes a configuration command')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
@@ -17,9 +20,15 @@ task('augmented:call-cmd', 'Invokes a configuration command')
     await DRE.run('set-DRE');
 
     if (falsyOrZeroAddress(ctl)) {
-      ctl = '0xd07fff8a99f65bfee58938065c22580835a27249';
-      // ctl = '0xcC8cD6549B3C1EE792038FDaf760479F1EcADC61';
-      // ctl = await getMarketAddressController('0x3B0867022C53b3bFfeA650D76141f82046AdF541';
+      if (hasMarketAddressController()) {
+        ctl = (await getMarketAddressController()).address;
+      } else {
+        const network = <eNetwork>DRE.network.name;
+        const POOL_NAME = ConfigNames.Augmented;
+        const poolConfig = loadPoolConfig(POOL_NAME);
+        const { AddressProvider } = poolConfig as ICommonConfiguration;
+        ctl = getParamPerNetwork(AddressProvider, network);
+      }
     }
 
     if (cmd === undefined && args.length > 0) {
