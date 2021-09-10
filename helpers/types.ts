@@ -497,7 +497,7 @@ export interface IForkTest {
 }
 
 export interface IPrices {
-  [token: string]: number;
+  [token: string]: number | string;
 }
 
 export enum LPFeature {

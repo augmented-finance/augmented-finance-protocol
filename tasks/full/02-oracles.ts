@@ -21,6 +21,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { oneEther, ZERO_ADDRESS } from '../../helpers/constants';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { AddressesProviderRegistry, MarketAccessController } from '../../types';
+import BigNumber from 'bignumber.js';
 
 task('full:deploy-oracles', 'Deploys oracles')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -104,9 +105,14 @@ task('full:deploy-oracles', 'Deploys oracles')
             continue;
           }
           tokenAddressList.push(tokenAddress);
-          const ethPrice = oneEther.multipliedBy(tokenPrice);
-          tokenPriceList.push(ethPrice.toString());
-          console.log(`\t${tokenSymbol}: ${tokenPrice} (${ethPrice} ether)`);
+          if (typeof tokenPrice == 'string') {
+            tokenPriceList.push(tokenPrice);
+            console.log(`\t${tokenSymbol}: ${tokenPrice} wei`);
+          } else {
+            const ethPrice = oneEther.multipliedBy(tokenPrice).toString();
+            tokenPriceList.push(ethPrice);
+            console.log(`\t${tokenSymbol}: ${tokenPrice} eth (${ethPrice} wei)`);
+          }
         }
       }
 
