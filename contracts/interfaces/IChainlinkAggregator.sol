@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
-interface IChainlinkAggregator {
+interface IChainlinkAggregatorMin {
   function latestAnswer() external view returns (int256);
 
   function latestTimestamp() external view returns (uint256);
+}
 
+interface IChainlinkAggregator is IChainlinkAggregatorMin {
   function latestRound() external view returns (uint256);
 
   function getAnswer(uint256 roundId) external view returns (int256);

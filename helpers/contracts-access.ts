@@ -322,6 +322,12 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
       registerShortCodes: ProtocolErrors.CALLER_NOT_REF_ADMIN,
     },
   },
+
+  [eContractid.OracleRouter]: {
+    functions: {
+      updateAssetSource: true,
+    },
+  },
 };
 
 export const getContractAccessExceptions = (name: string): ContractAccessExceptions => {

@@ -8,7 +8,7 @@ import '../../interfaces/IDerivedToken.sol';
 import './DelegatedStrategyBase.sol';
 
 contract DelegatedStrategyAave is DelegatedStrategyBase {
-  constructor(string memory name) DelegatedStrategyBase(name) {}
+  constructor(string memory name) DelegatedStrategyBase(name, address(0)) {}
 
   function getDelegatedState(address asset, uint40) external view override returns (DelegatedState memory result) {
     address underlying = IDerivedToken(asset).UNDERLYING_ASSET_ADDRESS();

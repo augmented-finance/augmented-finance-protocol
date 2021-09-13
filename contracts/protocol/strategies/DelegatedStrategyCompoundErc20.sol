@@ -12,7 +12,7 @@ import './DelegatedStrategyCompoundBase.sol';
 contract DelegatedStrategyCompoundErc20 is DelegatedStrategyCompoundBase {
   using SafeERC20 for IERC20;
 
-  constructor(string memory name) DelegatedStrategyCompoundBase(name) {}
+  constructor(string memory name, address addressProvider) DelegatedStrategyBase(name, addressProvider) {}
 
   function getUnderlying(address asset) external view override returns (address) {
     return ICTokenErc20(asset).underlying();

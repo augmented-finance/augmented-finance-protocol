@@ -972,7 +972,10 @@ export const deployDelegatedStrategyAave = async (args: [name: string], verify?:
     verify
   );
 
-export const deployDelegatedStrategyCompoundErc20 = async (args: [name: string], verify?: boolean) =>
+export const deployDelegatedStrategyCompoundErc20 = async (
+  args: [name: string, addressProvider: string],
+  verify?: boolean
+) =>
   withSaveAndVerify(
     await new DelegatedStrategyCompoundErc20Factory(await getFirstSigner()).deploy(...args),
     eContractid.DelegatedStrategyCompoundErc20,
@@ -981,7 +984,7 @@ export const deployDelegatedStrategyCompoundErc20 = async (args: [name: string],
   );
 
 export const deployDelegatedStrategyCompoundEth = async (
-  args: [name: string, weth: tEthereumAddress],
+  args: [name: string, addressProvider: string, weth: tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(

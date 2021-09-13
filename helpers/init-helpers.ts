@@ -22,6 +22,7 @@ import {
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
 import { MarketAccessController } from '../types';
+import { Contract } from 'hardhat/internal/hardhat-network/stack-traces/model';
 
 export const chooseDepositTokenDeployment = (id: eContractid) => {
   switch (id) {
@@ -72,13 +73,13 @@ export const initReservesByHelper = async (
     params: string;
   }[] = [];
 
-  let strategyAddressesByName: Record<
-    string,
-    {
-      address: tEthereumAddress;
-      external: boolean;
-    }
-  > = {};
+  interface StrategyInfo {
+    address: tEthereumAddress;
+    priceFeedFactoryFn?: (asset: tEthereumAddress) => Contract;
+    external: boolean;
+  }
+
+  let strategyAddressesByName: Record<string, StrategyInfo> = {};
 
   const existingAssets = new Set<string>();
 
@@ -112,12 +113,13 @@ export const initReservesByHelper = async (
 
     const { strategy, depositTokenImpl, reserveDecimals } = params;
     if (!strategyAddressesByName[strategy.name]) {
-      let info = {
+      // Strategy does not exist, create a new one
+
+      let info: StrategyInfo = {
         address: '',
         external: false,
       };
 
-      // Strategy does not exist, create a new one
       if (strategy.strategyImpl == undefined) {
         const strategyContract = await deployReserveInterestRateStrategy(
           strategy.name,
@@ -140,7 +142,10 @@ export const initReservesByHelper = async (
         info.address = strategyContract.address;
         info.external = true;
       } else if (strategy.strategyImpl == eContractid.DelegatedStrategyCompoundErc20) {
-        const strategyContract = await deployDelegatedStrategyCompoundErc20([strategy.name], verify);
+        const strategyContract = await deployDelegatedStrategyCompoundErc20(
+          [strategy.name, addressProvider.address],
+          verify
+        );
         info.address = strategyContract.address;
         info.external = true;
       } else if (strategy.strategyImpl == eContractid.DelegatedStrategyCompoundEth) {
@@ -150,7 +155,10 @@ export const initReservesByHelper = async (
           throw 'wethAddress is required';
         }
 
-        const strategyContract = await deployDelegatedStrategyCompoundEth([strategy.name, wethAddress], verify);
+        const strategyContract = await deployDelegatedStrategyCompoundEth(
+          [strategy.name, addressProvider.address, wethAddress],
+          verify
+        );
         info.address = strategyContract.address;
         info.external = true;
       } else {

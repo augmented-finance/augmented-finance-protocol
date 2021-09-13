@@ -3,8 +3,8 @@ pragma solidity ^0.8.4;
 
 import '../dependencies/openzeppelin/contracts/IERC20.sol';
 
-import '../interfaces/IPriceOracleGetter.sol';
-import '../interfaces/IChainlinkAggregator.sol';
+import '../interfaces/IPriceOracle.sol';
+import '../interfaces/IPriceFeed.sol';
 import '../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../access/MarketAccessBitmask.sol';
 import '../access/interfaces/IMarketAccessController.sol';
@@ -16,14 +16,14 @@ import '../access/AccessFlags.sol';
 /// - If the returned price by a Chainlink aggregator is <= 0, the call is forwarded to a fallbackOracle
 /// - Owned by the governance system, allowed to add sources for assets, replace them
 ///   and change the fallbackOracle
-contract OracleRouter is IPriceOracleGetter, MarketAccessBitmask {
+contract OracleRouter is IPriceOracle, MarketAccessBitmask {
   using SafeERC20 for IERC20;
 
   event WethSet(address indexed weth);
   event AssetSourceUpdated(address indexed asset, address indexed source);
   event FallbackOracleUpdated(address indexed fallbackOracle);
 
-  mapping(address => IChainlinkAggregator) private assetsSources;
+  mapping(address => IPriceFeed) private _assetsSources;
   IPriceOracleGetter private _fallbackOracle;
   // solhint-disable-next-line var-name-mixedcase
   address public immutable WETH;
@@ -68,7 +68,7 @@ contract OracleRouter is IPriceOracleGetter, MarketAccessBitmask {
   function _setAssetsSources(address[] memory assets, address[] memory sources) internal {
     require(assets.length == sources.length, 'INCONSISTENT_PARAMS_LENGTH');
     for (uint256 i = 0; i < assets.length; i++) {
-      assetsSources[assets[i]] = IChainlinkAggregator(sources[i]);
+      _assetsSources[assets[i]] = IPriceFeed(sources[i]);
       emit AssetSourceUpdated(assets[i], sources[i]);
     }
   }
@@ -87,9 +87,9 @@ contract OracleRouter is IPriceOracleGetter, MarketAccessBitmask {
       return 1 ether;
     }
 
-    IChainlinkAggregator source = assetsSources[asset];
+    IPriceFeed source = _assetsSources[asset];
     if (address(source) != address(0)) {
-      int256 price = IChainlinkAggregator(source).latestAnswer();
+      int256 price = source.latestAnswer();
       if (price > 0) {
         return uint256(price);
       }
@@ -118,12 +118,19 @@ contract OracleRouter is IPriceOracleGetter, MarketAccessBitmask {
   /// @param asset The address of the asset
   /// @return address The address of the source
   function getSourceOfAsset(address asset) external view returns (address) {
-    return address(assetsSources[asset]);
+    return address(_assetsSources[asset]);
   }
 
   /// @notice Gets the address of the fallback oracle
   /// @return address The addres of the fallback oracle
   function getFallbackOracle() external view returns (address) {
     return address(_fallbackOracle);
+  }
+
+  function updateAssetSource(address asset) external override {
+    IPriceFeed source = _assetsSources[asset];
+    if (source != IPriceFeed(address(0))) {
+      source.updatePrice();
+    }
   }
 }

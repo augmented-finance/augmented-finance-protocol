@@ -13,7 +13,7 @@ interface ICToken {
    * @dev This function does not accrue interest before calculating the exchange rate
    * @return Calculated exchange rate scaled by 1e18
    */
-  function exchangeRateStored() external returns (uint256);
+  function exchangeRateStored() external view returns (uint256);
 
   /**
    * @notice Returns the current per-block supply interest rate for this cToken
