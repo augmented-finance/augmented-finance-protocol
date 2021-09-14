@@ -2,8 +2,15 @@
 pragma solidity ^0.8.4;
 
 interface IPriceOracleEvents {
-  event AssetPriceUpdated(address _asset, uint256 _price, uint256 timestamp);
-  event EthPriceUpdated(uint256 _price, uint256 timestamp);
+  event AssetPriceUpdated(address asset, uint256 price, uint256 timestamp);
+  event EthPriceUpdated(uint256 price, uint256 timestamp);
+  event DerivedAssetSourceUpdated(
+    address indexed asset,
+    uint256 index,
+    address indexed underlyingSource,
+    uint256 underlyingPrice,
+    uint256 timestamp
+  );
 }
 
 /// @dev Interface for a price oracle.

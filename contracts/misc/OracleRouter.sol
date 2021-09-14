@@ -69,7 +69,11 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
     require(assets.length == sources.length, 'INCONSISTENT_PARAMS_LENGTH');
     for (uint256 i = 0; i < assets.length; i++) {
       _assetsSources[assets[i]] = IPriceFeed(sources[i]);
+
+      // This event MUST happen before source's events
       emit AssetSourceUpdated(assets[i], sources[i]);
+
+      _updateAssetSource(IPriceFeed(sources[i]));
     }
   }
 
@@ -128,8 +132,11 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
   }
 
   function updateAssetSource(address asset) external override {
-    IPriceFeed source = _assetsSources[asset];
-    if (source != IPriceFeed(address(0))) {
+    _updateAssetSource(_assetsSources[asset]);
+  }
+
+  function _updateAssetSource(IPriceFeed source) private {
+    if (source != IPriceFeed(address(0)) && source.latestRound() == type(uint256).max) {
       source.updatePrice();
     }
   }

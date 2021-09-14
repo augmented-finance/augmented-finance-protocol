@@ -14,37 +14,55 @@ contract PriceFeedCompound is IChainlinkAggregatorMin, IPriceFeed {
   using WadRayMath for uint256;
 
   ICToken private _token;
-  IChainlinkAggregatorMin private _underlyingPrice;
+  IChainlinkAggregatorMin private _underlyingSource;
 
-  struct PriceMark {
-    uint224 price;
-    uint32 timestamp;
-  }
+  uint256 private _lastUpdatedAt;
 
-  PriceMark private _price;
-
-  constructor(ICToken token, IChainlinkAggregatorMin underlyingPrice) {
+  constructor(ICToken token, IChainlinkAggregatorMin underlyingSource) {
     _token = token;
-    _underlyingPrice = underlyingPrice;
+    _underlyingSource = underlyingSource;
     updatePrice();
   }
 
   function updatePrice() public override {
-    uint224 newPrice = uint224(uint256(_underlyingPrice.latestAnswer()).wadDiv(_token.exchangeRateStored()));
-    if (newPrice == 0) {
-      newPrice = 1;
+    if (_lastUpdatedAt == block.timestamp) {
+      return;
     }
-    if (_price.price != newPrice) {
-      _price = PriceMark(newPrice, uint32(block.timestamp));
-      emit AssetPriceUpdated(address(_token), newPrice, uint32(block.timestamp));
-    }
+    _lastUpdatedAt = block.timestamp;
+
+    emit DerivedAssetSourceUpdated(
+      address(_token),
+      rateIndex(),
+      address(_underlyingSource),
+      latestUnderlyingAnswer(),
+      latestTimestamp()
+    );
+  }
+
+  function rateIndex() public view returns (uint256) {
+    return WadRayMath.RAY.wadDiv(_token.exchangeRateStored());
   }
 
   function latestAnswer() external view override returns (int256) {
-    return int256(uint256(_price.price));
+    return int256(latestUnderlyingAnswer().wadDiv(_token.exchangeRateStored()));
   }
 
-  function latestTimestamp() external view override returns (uint256 ts) {
-    return _price.timestamp;
+  function latestUnderlyingAnswer() private view returns (uint256) {
+    if (_underlyingSource == IChainlinkAggregatorMin(address(0))) {
+      return 1 ether;
+    }
+    return uint256(_underlyingSource.latestAnswer());
+  }
+
+  function latestTimestamp() public view override returns (uint256) {
+    if (_underlyingSource == IChainlinkAggregatorMin(address(0))) {
+      return block.timestamp;
+    }
+    return _underlyingSource.latestTimestamp();
+  }
+
+  function latestRound() external pure override returns (uint256) {
+    // this value is checked by the OracleRouter to find out if updatePrice() should be called
+    return type(uint256).max;
   }
 }

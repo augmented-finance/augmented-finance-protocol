@@ -75,7 +75,7 @@ export const initReservesByHelper = async (
 
   interface StrategyInfo {
     address: tEthereumAddress;
-    priceFeedFactoryFn?: (asset: tEthereumAddress) => Contract;
+    feedFactoryFn?: (asset: tEthereumAddress) => Promise<Contract>;
     external: boolean;
   }
 
@@ -148,6 +148,7 @@ export const initReservesByHelper = async (
         );
         info.address = strategyContract.address;
         info.external = true;
+        //        info.feedFactoryFn = async (asset: tEthereumAddress) => {};
       } else if (strategy.strategyImpl == eContractid.DelegatedStrategyCompoundEth) {
         const wethGateway = await getWETHGateway(await addressProvider.getAddress(AccessFlags.WETH_GATEWAY));
         const wethAddress = await wethGateway.getWETHAddress();
@@ -161,6 +162,7 @@ export const initReservesByHelper = async (
         );
         info.address = strategyContract.address;
         info.external = true;
+        //        info.feedFactoryFn = async (asset: tEthereumAddress) => {};
       } else {
         console.log(`Asset ${symbol} has unknown strategy type: ${strategy.strategyImpl}`);
         continue;
