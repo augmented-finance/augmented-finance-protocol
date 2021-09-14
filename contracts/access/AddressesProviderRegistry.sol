@@ -49,6 +49,12 @@ contract AddressesProviderRegistry is SafeOwnable, IAddressesProviderRegistry {
     return _providers;
   }
 
+  function prepareAddressesProvider(address provider) external override {
+    require(msg.sender == _oneTimeRegistrar || msg.sender == owner(), Errors.TXT_OWNABLE_CALLER_NOT_OWNER);
+    require(provider != address(0) && _index[provider].index == 0, Errors.LPAPR_PROVIDER_NOT_REGISTERED);
+    emit AddressesProviderPreparing(provider);
+  }
+
   /**
    * @dev Registers an addresses provider
    * @param provider The address of the new AddressesProvider

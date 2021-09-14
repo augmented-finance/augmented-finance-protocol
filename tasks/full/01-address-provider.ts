@@ -109,6 +109,8 @@ task('full:deploy-address-provider', 'Deploys address provider and registry')
         console.log('Provider ownership transferred to:', registryOwner);
       }
 
+      await waitTx(registry.prepareAddressesProvider(addressProvider.address));
+
       // Since this moment continuation can be detected
       registerAndVerify(addressProvider, eContractid.MarketAccessController, [MarketId], verify);
     }

@@ -2,12 +2,15 @@
 pragma solidity ^0.8.4;
 
 interface IAddressesProviderRegistry {
+  event AddressesProviderPreparing(address indexed newAddress);
   event AddressesProviderRegistered(address indexed newAddress);
   event AddressesProviderUnregistered(address indexed newAddress);
 
   function getAddressesProvidersList() external view returns (address[] memory);
 
   function getAddressesProviderIdByAddress(address) external view returns (uint256);
+
+  function prepareAddressesProvider(address provider) external;
 
   function registerAddressesProvider(address provider, uint256 id) external;
 
