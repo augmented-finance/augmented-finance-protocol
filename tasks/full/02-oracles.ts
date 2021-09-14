@@ -6,22 +6,13 @@ import {
   deployStaticPriceOracle,
 } from '../../helpers/contracts-deployments';
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
-import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress, PoolConfiguration } from '../../helpers/types';
+import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress } from '../../helpers/types';
 import { falsyOrZeroAddress, getFirstSigner, mustWaitTx, waitTx } from '../../helpers/misc-utils';
 import { ConfigNames, loadPoolConfig, getWethAddress, getLendingRateOracles } from '../../helpers/configuration';
-import {
-  getAddressesProviderRegistry,
-  getIChainlinkAggregator,
-  getMarketAddressController,
-  getOracleRouter,
-  getTokenAggregatorPairs,
-  hasAddressProviderRegistry,
-} from '../../helpers/contracts-getters';
+import { getIChainlinkAggregator, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 import { oneEther, ZERO_ADDRESS } from '../../helpers/constants';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
-import { AddressesProviderRegistry, MarketAccessController } from '../../types';
-import BigNumber from 'bignumber.js';
 
 task('full:deploy-oracles', 'Deploys oracles')
   .addFlag('verify', 'Verify contracts at Etherscan')
@@ -185,42 +176,6 @@ const unzipTokens = (tokens: { [tokenSymbol: string]: tEthereumAddress }) => {
     }
   }
   return [assetSymbols, assets];
-};
-
-const findOracleForReuse = async (
-  addressProvider: MarketAccessController,
-  registry: AddressesProviderRegistry,
-  requiredTokens: {
-    [tokenSymbol: string]: tEthereumAddress;
-  }
-) => {
-  const [assetSymbols, assets] = unzipTokens(requiredTokens);
-  console.log('Prices are required for:', assetSymbols);
-
-  const ctlAddrs = await registry.getAddressesProvidersList();
-  for (let i = ctlAddrs.length - 1; i >= 0; i--) {
-    const addr = ctlAddrs[ctlAddrs.length - 1];
-    if (addr == addressProvider.address) {
-      continue;
-    }
-    const ctl = await getMarketAddressController(addr);
-    const poAddress = await ctl.getPriceOracle();
-    if (falsyOrZeroAddress(poAddress)) {
-      continue;
-    }
-    if (assets.length > 0) {
-      const oracle = await getOracleRouter(poAddress);
-      try {
-        const prices = await oracle.getAssetsPrices(assets);
-      } catch (err) {
-        console.log('\tUnable to reuse due to missing prices:', poAddress, 'from', addr);
-        continue;
-      }
-    }
-    return poAddress;
-  }
-
-  return '';
 };
 
 const getRequiredPrices = (allAssetsAddresses: { [tokenSymbol: string]: tEthereumAddress }) => {
