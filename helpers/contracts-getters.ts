@@ -51,6 +51,7 @@ import {
   DefaultReserveInterestRateStrategyFactory,
   MockDepositStakeTokenFactory,
   DepositStakeTokenFactory,
+  PriceFeedCompoundFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -451,3 +452,6 @@ export const getMockDepositStakeToken = async (address?: tEthereumAddress) =>
 
 export const getDepositStakeTokenImpl = async (address: tEthereumAddress) =>
   DepositStakeTokenFactory.connect(address, await getFirstSigner());
+
+export const getPriceFeedCompound = async (address?: tEthereumAddress) =>
+  PriceFeedCompoundFactory.connect(address || (await getAddr(eContractid.PriceFeedCompound)), await getFirstSigner());

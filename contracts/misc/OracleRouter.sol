@@ -125,6 +125,14 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
     return address(_assetsSources[asset]);
   }
 
+  function getAssetSources(address[] calldata assets) external view returns (address[] memory result) {
+    result = new address[](assets.length);
+    for (uint256 i = 0; i < assets.length; i++) {
+      result[i] = address(_assetsSources[assets[i]]);
+    }
+    return result;
+  }
+
   /// @notice Gets the address of the fallback oracle
   /// @return address The addres of the fallback oracle
   function getFallbackOracle() external view returns (address) {

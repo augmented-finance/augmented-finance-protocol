@@ -61,6 +61,7 @@ import {
   DelegatedStrategyCompoundErc20Factory,
   DepositStakeTokenFactory,
   MockDepositStakeTokenFactory,
+  PriceFeedCompoundFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -984,12 +985,24 @@ export const deployDelegatedStrategyCompoundErc20 = async (
   );
 
 export const deployDelegatedStrategyCompoundEth = async (
-  args: [name: string, addressProvider: string, weth: tEthereumAddress],
+  args: [name: string, addressProvider: tEthereumAddress, weth: tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await new DelegatedStrategyCompoundEthFactory(await getFirstSigner()).deploy(...args),
     eContractid.DelegatedStrategyCompoundEth,
+    args,
+    verify
+  );
+
+export const deployPriceFeedCompound = async (
+  name: string,
+  args: [token: tEthereumAddress, underlyingSource: tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new PriceFeedCompoundFactory(await getFirstSigner()).deploy(...args),
+    eContractid.PriceFeedCompound + '-' + name,
     args,
     verify
   );
