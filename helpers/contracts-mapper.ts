@@ -26,6 +26,7 @@ import {
   getMockTokenLocker,
   getOracleRouter,
   getPermitFreezerRewardPool,
+  getPriceFeedCompound,
   getProtocolDataProvider,
   getReferralRewardPoolImpl,
   getRewardBooster,
@@ -83,6 +84,7 @@ const CONTRACT_GETTERS: Omit<Record<eContractid, ContractGetterFn>, ignoredKeys>
   [eContractid.TreasuryRewardPool]: getTreasuryRewardPool,
   [eContractid.PermitFreezerRewardPool]: getPermitFreezerRewardPool,
   [eContractid.DefaultReserveInterestRateStrategy]: getDefaultReserveInterestRateStrategy,
+  [eContractid.PriceFeedCompound]: getPriceFeedCompound,
 
   [eContractid.DelegatedStrategyAave]: getDelegatedStrategyAave,
   [eContractid.DelegatedStrategyCompoundErc20]: getDelegatedStrategyCompoundErc20,
