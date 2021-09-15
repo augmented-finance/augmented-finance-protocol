@@ -5,6 +5,9 @@ import { eNetwork } from '../../helpers/types';
 import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
+import { addFullStep } from '../helpers/full-steps';
+
+addFullStep(7, 'Deploy stake configurator', 'full:deploy-stake-configurator');
 
 const CONTRACT_NAME = 'StakeConfigurator';
 
@@ -20,9 +23,7 @@ task(`full:deploy-stake-configurator`, `Deploys ${CONTRACT_NAME}`)
 
     // StakeConfigurator is always updated
     let stakeConfiguratorAddr =
-      freshStart && continuation
-        ? await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
-        : '';
+      freshStart && continuation ? await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR) : '';
 
     if (falsyOrZeroAddress(stakeConfiguratorAddr)) {
       console.log(`Deploy ${CONTRACT_NAME}`);

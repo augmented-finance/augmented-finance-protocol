@@ -9,6 +9,7 @@ import {
 } from '../../helpers/misc-utils';
 import { exit } from 'process';
 import { tEthereumAddress } from '../../helpers/types';
+import { getFullSteps } from '../helpers/full-steps';
 
 task('augmented:test-incremental', 'Test incremental deploy').setAction(async ({}, DRE) => {
   const POOL_NAME = ConfigNames.Augmented;
@@ -27,7 +28,11 @@ task('augmented:test-incremental', 'Test incremental deploy').setAction(async ({
     let lastInstanceCount = 0;
     let stop = false;
     const trackVerify = false;
-    const reuse = false;
+
+    const steps = await getFullSteps({
+      pool: POOL_NAME,
+      verify: trackVerify,
+    });
 
     for (let maxStep = 1; ; maxStep++) {
       if (maxStep > 1) {
@@ -68,67 +73,18 @@ task('augmented:test-incremental', 'Test incremental deploy').setAction(async ({
         return --step == 0;
       };
 
-      console.log('01. Deploy address provider registry');
-      await DRE.run('full:deploy-address-provider', { pool: POOL_NAME, verify: trackVerify });
-      if (isLastStep()) {
-        continue;
-      }
-
-      console.log('02. Deploy oracles');
-      await DRE.run('full:deploy-oracles', { pool: POOL_NAME, verify: trackVerify, reuse: reuse });
-      if (isLastStep()) {
-        continue;
-      }
-
-      console.log('03. Deploy lending pool');
-      await DRE.run('full:deploy-lending-pool', { pool: POOL_NAME, verify: trackVerify });
-      if (isLastStep()) {
-        continue;
-      }
-
-      console.log('04. Deploy WETH Gateway');
-      await DRE.run('full-deploy-weth-gateway', { pool: POOL_NAME, verify: trackVerify });
-      if (isLastStep()) {
-        continue;
-      }
-
-      console.log('05. Deploy auxiliary contracts');
-      await DRE.run('full:aux-contracts', { pool: POOL_NAME, verify: trackVerify });
-      if (isLastStep()) {
-        continue;
-      }
-
-      console.log('06. Initialize lending pool');
-      await DRE.run('full:initialize-lending-pool', { pool: POOL_NAME, verify: trackVerify });
-      if (isLastStep()) {
-        continue;
-      }
-
-      console.log('07. Deploy StakeConfigurator');
-      await DRE.run('full:deploy-stake-configurator', { pool: POOL_NAME, verify: trackVerify });
-      if (isLastStep()) {
-        continue;
-      }
-
-      console.log('08. Deploy and initialize stake tokens');
-      await DRE.run('full:init-stake-tokens', { pool: POOL_NAME, verify: trackVerify });
-      if (isLastStep()) {
-        continue;
-      }
-
-      console.log('09. Deploy reward contracts and AGF token');
-      await DRE.run('full:deploy-reward-contracts', { pool: POOL_NAME, verify: trackVerify });
-      if (isLastStep()) {
-        continue;
-      }
-
-      console.log('10. Deploy reward pools');
-      await DRE.run('full:init-reward-pools', { pool: POOL_NAME, verify: trackVerify });
-      if (isLastStep()) {
-        continue;
-      }
-
       stop = true;
+      for (const step of steps) {
+        const stepId = '0' + step.seqId;
+        console.log('\n======================================================================');
+        console.log(stepId.substring(stepId.length - 2), step.stepName);
+        console.log('======================================================================\n');
+        await DRE.run(step.taskName, step.args);
+        if (isLastStep()) {
+          stop = false;
+          break;
+        }
+      }
     }
 
     console.log('Smoke test');

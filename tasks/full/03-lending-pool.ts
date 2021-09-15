@@ -12,6 +12,9 @@ import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
+import { addFullStep } from '../helpers/full-steps';
+
+addFullStep(3, 'Deploy lending pool', 'full:deploy-lending-pool');
 
 task('full:deploy-lending-pool', 'Deploys lending pool')
   .addFlag('verify', 'Verify contracts at Etherscan')

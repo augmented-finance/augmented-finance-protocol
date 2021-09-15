@@ -23,6 +23,9 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumberish } from 'ethers';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { WAD, ZERO_ADDRESS } from '../../helpers/constants';
+import { addFullStep } from '../helpers/full-steps';
+
+addFullStep(8, 'Deploy and initialize stake tokens', 'full:init-stake-tokens');
 
 task(`full:init-stake-tokens`, `Deploys stake tokens`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)

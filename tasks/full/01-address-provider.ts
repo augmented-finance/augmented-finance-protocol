@@ -12,6 +12,9 @@ import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
 import { setPreDeployAccessController } from '../../helpers/deploy-helpers';
 import { BigNumber } from 'ethers';
+import { addFullStep } from '../helpers/full-steps';
+
+addFullStep(1, 'Deploy address provider registry', 'full:deploy-address-provider');
 
 task('full:deploy-address-provider', 'Deploys address provider and registry')
   .addFlag('verify', 'Verify contracts at Etherscan')
