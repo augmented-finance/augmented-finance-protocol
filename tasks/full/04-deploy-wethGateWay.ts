@@ -5,6 +5,9 @@ import { eNetwork } from '../../helpers/types';
 import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
+import { addFullStep } from '../helpers/full-steps';
+
+addFullStep(4, 'Deploy WETH Gateway', 'full-deploy-weth-gateway');
 
 const CONTRACT_NAME = 'WETHGateway';
 

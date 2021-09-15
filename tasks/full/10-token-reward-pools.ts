@@ -40,6 +40,9 @@ import { oneWad, ZERO_ADDRESS } from '../../helpers/constants';
 import { transpose } from 'underscore';
 import { getDeployAccessController, setAndGetAddressAsProxyWithInit } from '../../helpers/deploy-helpers';
 import { MarketAccessController, RewardBooster, RewardConfigurator } from '../../types';
+import { addFullStep } from '../helpers/full-steps';
+
+addFullStep(10, 'Deploy reward pools', 'full:init-reward-pools');
 
 interface poolInitParams {
   provider: tEthereumAddress;

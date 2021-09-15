@@ -10,6 +10,7 @@ import {
 import { usingTenderly } from '../../helpers/tenderly-utils';
 import { exit } from 'process';
 import { BigNumber } from 'ethers';
+import { getFullSteps } from '../helpers/full-steps';
 
 task('augmented:mainnet', 'Deploy enviroment')
   .addFlag('incremental', 'Incremental deployment')
@@ -49,45 +50,26 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('Deployment started\n');
       const trackVerify = true;
 
-      console.log('01. Deploy address provider registry');
-      await DRE.run('full:deploy-address-provider', { pool: POOL_NAME, verify: trackVerify });
+      for (const step of await getFullSteps({
+        pool: POOL_NAME,
+        verify: trackVerify,
+      })) {
+        const stepId = '0' + step.seqId;
+        console.log('\n======================================================================');
+        console.log(stepId.substring(stepId.length - 2), step.stepName);
+        console.log('======================================================================\n');
+        await DRE.run(step.taskName, step.args);
+      }
 
-      console.log('02. Deploy oracles');
-      await DRE.run('full:deploy-oracles', { pool: POOL_NAME, verify: trackVerify, reuse: reuse });
-
-      console.log('03. Deploy lending pool');
-      await DRE.run('full:deploy-lending-pool', { pool: POOL_NAME, verify: trackVerify });
-
-      console.log('04. Deploy WETH Gateway');
-      await DRE.run('full-deploy-weth-gateway', { pool: POOL_NAME, verify: trackVerify });
-
-      console.log('05. Deploy auxiliary contracts');
-      await DRE.run('full:aux-contracts', { pool: POOL_NAME, verify: trackVerify });
-
-      console.log('06. Initialize lending pool');
-      await DRE.run('full:initialize-lending-pool', { pool: POOL_NAME, verify: trackVerify });
-
-      console.log('07. Deploy StakeConfigurator');
-      await DRE.run('full:deploy-stake-configurator', { pool: POOL_NAME, verify: trackVerify });
-
-      console.log('08. Deploy and initialize stake tokens');
-      await DRE.run('full:init-stake-tokens', { pool: POOL_NAME, verify: trackVerify });
-
-      console.log('09. Deploy reward contracts and AGF token');
-      await DRE.run('full:deploy-reward-contracts', { pool: POOL_NAME, verify: trackVerify });
-
-      console.log('10. Deploy reward pools');
-      await DRE.run('full:init-reward-pools', { pool: POOL_NAME, verify: trackVerify });
-
-      console.log('11. Access test');
+      console.log('96. Access test');
       await DRE.run('full:access-test', { pool: POOL_NAME });
 
-      console.log('12. Smoke test');
+      console.log('97. Smoke test');
       await DRE.run('full:smoke-test', { pool: POOL_NAME });
 
       const balanceBeforePluck = await deployer.getBalance();
       if (MAINNET_FORK) {
-        console.log('Pluck');
+        console.log('98. Pluck');
         await DRE.run('dev:pluck-tokens', { pool: POOL_NAME });
       }
       spentOnPluck = balanceBeforePluck.sub(await deployer.getBalance());

@@ -8,6 +8,9 @@ import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helper
 import { AccessFlags } from '../../helpers/access-flags';
 import { getProtocolDataProvider } from '../../helpers/contracts-getters';
 import { falsyOrZeroAddress } from '../../helpers/misc-utils';
+import { addFullStep } from '../helpers/full-steps';
+
+addFullStep(6, 'Initialize lending pool', 'full:initialize-lending-pool');
 
 task('full:initialize-lending-pool', 'Initializes lending pool and configures reserves')
   .addFlag('verify', 'Verify contracts at Etherscan')
