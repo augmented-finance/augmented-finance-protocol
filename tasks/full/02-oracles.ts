@@ -13,6 +13,9 @@ import { getIChainlinkAggregator, getTokenAggregatorPairs } from '../../helpers/
 import { AccessFlags } from '../../helpers/access-flags';
 import { oneEther, ZERO_ADDRESS } from '../../helpers/constants';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
+import { addFullStep } from '../helpers/full-steps';
+
+addFullStep(2, 'Deploy oracles', 'full:deploy-oracles');
 
 task('full:deploy-oracles', 'Deploys oracles')
   .addFlag('verify', 'Verify contracts at Etherscan')

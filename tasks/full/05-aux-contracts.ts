@@ -15,6 +15,9 @@ import { LendingPoolConfigurator, MarketAccessController } from '../../types';
 import { Contract } from '@ethersproject/contracts';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
+import { addFullStep } from '../helpers/full-steps';
+
+addFullStep(5, 'Deploy auxiliary contracts', 'full:aux-contracts');
 
 task('full:aux-contracts', 'Deploys auxiliary contracts (UI data provider, adapters etc)')
   .addFlag('verify', 'Verify contracts at Etherscan')
