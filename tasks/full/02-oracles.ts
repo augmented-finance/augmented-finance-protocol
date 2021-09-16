@@ -7,7 +7,7 @@ import {
 } from '../../helpers/contracts-deployments';
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
 import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress } from '../../helpers/types';
-import { falsyOrZeroAddress, getFirstSigner, mustWaitTx, waitTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import { ConfigNames, loadPoolConfig, getWethAddress, getLendingRateOracles } from '../../helpers/configuration';
 import { getIChainlinkAggregator, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
@@ -62,9 +62,6 @@ task('full:deploy-oracles', 'Deploys oracles')
       console.log('Deploying LendingRateOracle');
 
       const lendingRateOracle = await deployLendingRateOracle([addressProvider.address], verify);
-      const deployer = await getFirstSigner();
-      await waitTx(addressProvider.grantRoles(deployer.address, AccessFlags.LENDING_RATE_ADMIN));
-
       const { USD, ...tokensAddressesWithoutUsd } = tokensToWatch;
 
       const lendingRateOracles = getLendingRateOracles(poolConfig);

@@ -6,7 +6,7 @@ import {
   deployUniswapRepayAdapter,
 } from '../../helpers/contracts-deployments';
 import { AccessFlags } from '../../helpers/access-flags';
-import { falsyOrZeroAddress, getFirstSigner, mustWaitTx, waitTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { getLendingPoolConfiguratorProxy } from '../../helpers/contracts-getters';
@@ -101,17 +101,7 @@ const deployFlashloanAdapters = async <T>(
   }
 
   if (newAdapters.length > 0) {
-    await grantPoolAdmin(addressProvider);
     await mustWaitTx(configurator.setFlashloanAdapters(newNames, newAdapters));
     console.log('Flashloan adapter(s) registered: ', newNames);
   }
-};
-
-const grantPoolAdmin = async (addressProvider: MarketAccessController) => {
-  const deployer = (await getFirstSigner()).address;
-  if (await addressProvider.isAddress(AccessFlags.POOL_ADMIN, deployer)) {
-    return;
-  }
-  await mustWaitTx(addressProvider.grantRoles(deployer, AccessFlags.POOL_ADMIN));
-  console.log('Granted POOL_ADMIN');
 };

@@ -367,10 +367,10 @@ export interface ICommonConfiguration {
   Names: ITokenNames;
 
   Mocks: IMocksConfig;
-  ProviderRegistry: iParamsPerNetwork<tEthereumAddress | undefined>;
-  ProviderRegistryOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
-  AddressProvider: iParamsPerNetwork<tEthereumAddress | undefined>;
-  AddressProviderOwner: iParamsPerNetwork<tEthereumAddress | undefined>;
+  ProviderRegistry: iParamsPerNetwork<tEthereumAddress>;
+  ProviderRegistryOwner: iParamsPerNetwork<tEthereumAddress>;
+  AddressProvider: iParamsPerNetwork<tEthereumAddress>;
+  AddressProviderOwner: iParamsPerNetwork<tEthereumAddress>;
 
   OracleRouter: iParamsPerNetwork<tEthereumAddress>;
   FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
@@ -378,8 +378,7 @@ export interface ICommonConfiguration {
 
   LendingRateOracleRates: iAssetsWithoutUSDOpt<IMarketRates>;
 
-  PoolAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
-  EmergencyAdmin: iParamsPerNetwork<tEthereumAddress | undefined>;
+  EmergencyAdmin: iParamsPerNetwork<tEthereumAddress>;
 
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
   ReserveAssetsOpt: iParamsPerNetwork<boolean>;
