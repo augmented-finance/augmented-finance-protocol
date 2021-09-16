@@ -15,7 +15,11 @@ contract DelegatedStrategyCompoundEth is DelegatedStrategyCompoundBase {
 
   IWETH private immutable _weth;
 
-  constructor(string memory name, address weth) DelegatedStrategyCompoundBase(name) {
+  constructor(
+    string memory name,
+    address addressProvider,
+    address weth
+  ) DelegatedStrategyBase(name, addressProvider) {
     _weth = IWETH(weth);
   }
 

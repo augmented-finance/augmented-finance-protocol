@@ -7,7 +7,7 @@ import {
 } from '../../helpers/contracts-deployments';
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
 import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress } from '../../helpers/types';
-import { falsyOrZeroAddress, getFirstSigner, mustWaitTx, waitTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import { ConfigNames, loadPoolConfig, getWethAddress, getLendingRateOracles } from '../../helpers/configuration';
 import { getIChainlinkAggregator, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
@@ -48,7 +48,6 @@ task('full:deploy-oracles', 'Deploys oracles')
 
     let lroAddress = '';
     let poAddress = oracleRouter;
-    const requiredPriceTokens = getRequiredPrices(tokensToWatch);
 
     const [aggregatorTokens, aggregators] = getTokenAggregatorPairs(tokensToWatch, chainlinkAggregators);
 
@@ -63,9 +62,6 @@ task('full:deploy-oracles', 'Deploys oracles')
       console.log('Deploying LendingRateOracle');
 
       const lendingRateOracle = await deployLendingRateOracle([addressProvider.address], verify);
-      const deployer = await getFirstSigner();
-      await waitTx(addressProvider.grantRoles(deployer.address, AccessFlags.LENDING_RATE_ADMIN));
-
       const { USD, ...tokensAddressesWithoutUsd } = tokensToWatch;
 
       const lendingRateOracles = getLendingRateOracles(poolConfig);
@@ -151,37 +147,8 @@ task('full:deploy-oracles', 'Deploys oracles')
         verify
       );
 
-      const [assetSymbols, requiredAssets] = unzipTokens(requiredPriceTokens);
-      console.log('Prices are required for:', assetSymbols);
-      if (requiredAssets.length > 0) {
-        try {
-          await oracleRouter.getAssetsPrices(requiredAssets);
-          console.log('All prices are available');
-        } catch (err) {
-          console.error(err);
-          throw 'some prices are missing';
-        }
-      }
-
       await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address));
       poAddress = oracleRouter.address;
     }
     console.log('PriceOracle: ', poAddress);
   });
-
-const unzipTokens = (tokens: { [tokenSymbol: string]: tEthereumAddress }) => {
-  const assetSymbols: string[] = [];
-  const assets: string[] = [];
-  for (const [tokenSymbol, tokenAddress] of Object.entries(tokens)) {
-    if (!falsyOrZeroAddress(tokenAddress)) {
-      assets.push(tokenAddress);
-      assetSymbols.push(tokenSymbol);
-    }
-  }
-  return [assetSymbols, assets];
-};
-
-const getRequiredPrices = (allAssetsAddresses: { [tokenSymbol: string]: tEthereumAddress }) => {
-  const { ETH, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
-  return assetsAddressesWithoutEth;
-};

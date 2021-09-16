@@ -1,10 +1,13 @@
-import { eContractid, IReserveParams, ITokenNames, tEthereumAddress } from './types';
+import { eContractid, IInterestRateStrategyParams, IReserveParams, ITokenNames, tEthereumAddress } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
-import { addProxyToJsonDb, chunk, falsyOrZeroAddress, waitForTx } from './misc-utils';
+import { addProxyToJsonDb, chunk, falsyOrZeroAddress, mustWaitTx, waitForTx } from './misc-utils';
 import {
+  getIErc20Detailed,
   getIInitializablePoolToken,
+  getIReserveDelegatedStrategy,
   getLendingPoolConfiguratorProxy,
   getLendingPoolProxy,
+  getOracleRouter,
   getWETHGateway,
 } from './contracts-getters';
 import { AccessFlags } from './access-flags';
@@ -16,12 +19,15 @@ import {
   deployDelegationAwareDepositTokenImpl,
   deployDepositToken,
   deployDepositTokenImpl,
+  deployPriceFeedCompoundErc20,
+  deployPriceFeedCompoundEth,
   deployReserveInterestRateStrategy,
   deployStableDebtTokenImpl,
   deployVariableDebtTokenImpl,
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
-import { MarketAccessController } from '../types';
+import { MarketAccessController, OracleRouter } from '../types';
+import { Contract } from '@ethersproject/contracts';
 
 export const chooseDepositTokenDeployment = (id: eContractid) => {
   switch (id) {
@@ -46,7 +52,7 @@ export const initReservesByHelper = async (
   // CHUNK CONFIGURATION
   const initChunks = 1;
 
-  let reserveInfo: {
+  const reserveInfo: {
     tokenAddress: tEthereumAddress;
     symbol: string;
     decimals: number;
@@ -55,7 +61,7 @@ export const initReservesByHelper = async (
     external: boolean;
   }[] = [];
 
-  let initInputParams: {
+  const initInputParams: {
     depositTokenImpl: string;
     stableDebtTokenImpl: string;
     variableDebtTokenImpl: string;
@@ -72,16 +78,14 @@ export const initReservesByHelper = async (
     params: string;
   }[] = [];
 
-  let strategyAddressesByName: Record<
-    string,
-    {
-      address: tEthereumAddress;
-      external: boolean;
-    }
-  > = {};
+  interface StrategyInfo {
+    address: tEthereumAddress;
+    external: boolean;
+  }
+
+  let strategyAddressesByName: Record<string, StrategyInfo> = {};
 
   const existingAssets = new Set<string>();
-
   const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
 
   if (skipExistingAssets) {
@@ -112,52 +116,25 @@ export const initReservesByHelper = async (
 
     const { strategy, depositTokenImpl, reserveDecimals } = params;
     if (!strategyAddressesByName[strategy.name]) {
-      let info = {
-        address: '',
-        external: false,
-      };
-
       // Strategy does not exist, create a new one
-      if (strategy.strategyImpl == undefined) {
-        const strategyContract = await deployReserveInterestRateStrategy(
-          strategy.name,
-          [
-            addressProvider.address,
-            strategy.optimalUtilizationRate,
-            strategy.baseVariableBorrowRate,
-            strategy.variableRateSlope1,
-            strategy.variableRateSlope2,
-            strategy.stableRateSlope1,
-            strategy.stableRateSlope2,
-          ],
-          verify
-        );
-        hasVariableDebt = true;
-        hasStableDebt = true;
-        info.address = strategyContract.address;
-      } else if (strategy.strategyImpl == eContractid.DelegatedStrategyAave) {
-        const strategyContract = await deployDelegatedStrategyAave([strategy.name], verify);
-        info.address = strategyContract.address;
-        info.external = true;
-      } else if (strategy.strategyImpl == eContractid.DelegatedStrategyCompoundErc20) {
-        const strategyContract = await deployDelegatedStrategyCompoundErc20([strategy.name], verify);
-        info.address = strategyContract.address;
-        info.external = true;
-      } else if (strategy.strategyImpl == eContractid.DelegatedStrategyCompoundEth) {
-        const wethGateway = await getWETHGateway(await addressProvider.getAddress(AccessFlags.WETH_GATEWAY));
-        const wethAddress = await wethGateway.getWETHAddress();
-        if (falsyOrZeroAddress(wethAddress)) {
-          throw 'wethAddress is required';
-        }
 
-        const strategyContract = await deployDelegatedStrategyCompoundEth([strategy.name, wethAddress], verify);
-        info.address = strategyContract.address;
-        info.external = true;
-      } else {
+      const factoryInfo = getStrategyFactory(strategy);
+
+      if (factoryInfo == undefined) {
         console.log(`Asset ${symbol} has unknown strategy type: ${strategy.strategyImpl}`);
         continue;
       }
-      strategyAddressesByName[strategy.name] = info;
+
+      const strategyContract = await factoryInfo.deployFn(addressProvider, verify);
+      if (!factoryInfo.external) {
+        hasVariableDebt = true;
+        hasStableDebt = true;
+      }
+
+      strategyAddressesByName[strategy.name] = {
+        address: strategyContract.address,
+        external: factoryInfo.external,
+      };
     }
     const strategyInfo = strategyAddressesByName[strategy.name];
     console.log('Strategy address for asset %s: %s', symbol, strategyInfo.address);
@@ -229,30 +206,28 @@ export const initReservesByHelper = async (
     });
   }
 
-  if (initInputParams.length == 0) {
-    return;
-  }
-
-  // Deploy init reserves per chunks
-  const chunkedSymbols = chunk(reserveSymbols, initChunks);
-  const chunkedInitInputParams = chunk(initInputParams, initChunks);
-
   const configurator = await getLendingPoolConfiguratorProxy(
     await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR)
   );
 
-  console.log(`- Reserves initialization in ${chunkedInitInputParams.length} txs`);
-  for (let chunkIndex = 0; chunkIndex < chunkedInitInputParams.length; chunkIndex++) {
-    const param = chunkedInitInputParams[chunkIndex];
-    console.log(param);
-    const tx3 = await waitForTx(
-      await configurator.batchInitReserve(param, {
-        gasLimit: 5000000,
-      })
-    );
+  if (initInputParams.length > 0) {
+    // Deploy init reserves per chunks
+    const chunkedSymbols = chunk(reserveSymbols, initChunks);
+    const chunkedInitInputParams = chunk(initInputParams, initChunks);
 
-    console.log(`  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
-    console.log('    * gasUsed', tx3.gasUsed.toString());
+    console.log(`- Reserves initialization in ${chunkedInitInputParams.length} txs`);
+    for (let chunkIndex = 0; chunkIndex < chunkedInitInputParams.length; chunkIndex++) {
+      const param = chunkedInitInputParams[chunkIndex];
+      console.log(param);
+      const tx3 = await waitForTx(
+        await configurator.batchInitReserve(param, {
+          gasLimit: 5000000,
+        })
+      );
+
+      console.log(`  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(', ')}`);
+      console.log('    * gasUsed', tx3.gasUsed.toString());
+    }
   }
 
   if (!verify) {
@@ -434,4 +409,189 @@ export const configureReservesByHelper = async (
     console.log(`  - Configured for: ${chunkedSymbols[chunkIndex].join(', ')}`);
     console.log('    * gasUsed', tx3.gasUsed.toString());
   }
+};
+
+interface StrategyFactoryInfo {
+  external: boolean;
+  deployFn: (ac: MarketAccessController, verify: boolean) => Promise<Contract>;
+  staticUnderlying?: boolean;
+  feedFactoryFn?: (
+    name: string,
+    asset: tEthereumAddress,
+    underlyingSource: tEthereumAddress,
+    verify: boolean
+  ) => Promise<Contract>;
+}
+
+const getStrategyFactory = (strategy: IInterestRateStrategyParams): StrategyFactoryInfo | undefined => {
+  if (strategy.strategyImpl == undefined) {
+    return {
+      external: false,
+      deployFn: async (ac: MarketAccessController, verify: boolean) =>
+        await deployReserveInterestRateStrategy(
+          strategy.name,
+          [
+            ac.address,
+            strategy.optimalUtilizationRate,
+            strategy.baseVariableBorrowRate,
+            strategy.variableRateSlope1,
+            strategy.variableRateSlope2,
+            strategy.stableRateSlope1,
+            strategy.stableRateSlope2,
+          ],
+          verify
+        ),
+    };
+  }
+
+  if (strategy.strategyImpl == eContractid.DelegatedStrategyAave) {
+    return {
+      external: true,
+      deployFn: async (ac: MarketAccessController, verify: boolean) =>
+        await deployDelegatedStrategyAave([strategy.name], verify),
+    };
+  }
+
+  if (strategy.strategyImpl == eContractid.DelegatedStrategyCompoundErc20) {
+    return {
+      external: true,
+      staticUnderlying: false,
+
+      feedFactoryFn: async (
+        name: string,
+        asset: tEthereumAddress,
+        underlyingSource: tEthereumAddress,
+        verify: boolean
+      ) => {
+        if (falsyOrZeroAddress(underlyingSource)) {
+          throw 'Unknown underlying price feed for: ' + name;
+        }
+        return await deployPriceFeedCompoundErc20(name, [asset, underlyingSource], verify);
+      },
+
+      deployFn: async (ac: MarketAccessController, verify: boolean) =>
+        await deployDelegatedStrategyCompoundErc20([strategy.name, ac.address], verify),
+    };
+  }
+
+  if (strategy.strategyImpl == eContractid.DelegatedStrategyCompoundEth) {
+    return {
+      external: true,
+      staticUnderlying: true,
+
+      feedFactoryFn: async (name: string, asset: tEthereumAddress, s: tEthereumAddress, verify: boolean) =>
+        await deployPriceFeedCompoundEth(name, [asset], verify),
+
+      deployFn: async (ac: MarketAccessController, verify: boolean) => {
+        const wethGateway = await getWETHGateway(await ac.getAddress(AccessFlags.WETH_GATEWAY));
+        const wethAddress = await wethGateway.getWETHAddress();
+        if (falsyOrZeroAddress(wethAddress)) {
+          throw 'wethAddress is required';
+        }
+
+        return await deployDelegatedStrategyCompoundEth([strategy.name, ac.address, wethAddress], verify);
+      },
+    };
+  }
+
+  return undefined;
+};
+
+export const initReservePriceFeeds = async (
+  addressProvider: MarketAccessController,
+  reservesParams: { [symbol: string]: IReserveParams },
+  tokenAddresses: { [symbol: string]: tEthereumAddress },
+  verify: boolean
+) => {
+  const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
+  const po = await getOracleRouter(await addressProvider.getPriceOracle());
+
+  console.log('Checking for derived price feeds');
+
+  const existingAssets = new Set<string>();
+  const reserves = await lendingPool.getReservesList();
+  reserves.forEach((addr) => existingAssets.add(addr.toUpperCase()));
+
+  const assets: tEthereumAddress[] = [];
+  const names: string[] = [];
+  const factories: StrategyFactoryInfo[] = [];
+
+  for (let [symbol, params] of Object.entries(reservesParams)) {
+    const tokenAddress = tokenAddresses[symbol];
+    if (falsyOrZeroAddress(tokenAddress)) {
+      continue;
+    }
+    if (!existingAssets.has(tokenAddress.toUpperCase())) {
+      continue;
+    }
+
+    const factoryInfo = getStrategyFactory(params.strategy);
+    if (factoryInfo == undefined) {
+      console.log(`Asset ${symbol} has unknown strategy type: ${params.strategy.strategyImpl}`);
+      continue;
+    }
+    if (factoryInfo.feedFactoryFn == undefined) {
+      continue;
+    }
+    names.push(symbol);
+    assets.push(tokenAddress);
+    factories.push(factoryInfo);
+  }
+
+  console.log('Found', assets.length, 'asset(s) for derived price feeds');
+  if (assets.length == 0) {
+    return;
+  }
+
+  const sources = await po.getAssetSources(assets);
+  const indices: number[] = [];
+  const underlyings: tEthereumAddress[] = [];
+
+  for (let i = 0; i < assets.length; i++) {
+    if (!falsyOrZeroAddress(sources[i])) {
+      console.log('\tPrice feed found for ', names[i]);
+      continue;
+    }
+
+    const rd = await lendingPool.getReserveData(assets[i]);
+    const strategy = await getIReserveDelegatedStrategy(rd.strategy);
+    const underlying = await strategy.getUnderlying(assets[i]);
+    underlyings.push(underlying);
+    indices.push(i);
+  }
+
+  console.log('Found', underlyings.length, 'missing derived price feed(s)');
+  if (underlyings.length == 0) {
+    return;
+  }
+
+  const underlyingSources = await po.getAssetSources(underlyings);
+
+  const feedAssets: tEthereumAddress[] = [];
+  const feeds: tEthereumAddress[] = [];
+
+  for (let i = 0; i < underlyingSources.length; i++) {
+    const idx = indices[i];
+    const asset = assets[idx];
+    const symbol = names[idx];
+    const factoryInfo = factories[idx];
+
+    if (!factoryInfo.staticUnderlying && falsyOrZeroAddress(underlyingSources[i])) {
+      console.error('\tUnknown underlying price feed for:', symbol);
+      continue;
+    }
+
+    console.log('\tDeploying derived price feed:', symbol, asset, underlyingSources[i]);
+    const feedContract = await factoryInfo.feedFactoryFn!(symbol, asset, underlyingSources[i], verify);
+
+    feedAssets.push(asset);
+    feeds.push(feedContract.address);
+  }
+
+  console.log('Set ', feeds.length, 'derived price feed(s) as price sources');
+  if (feeds.length == 0) {
+    return;
+  }
+
+  await mustWaitTx(po.setAssetSources(feedAssets, feeds));
 };

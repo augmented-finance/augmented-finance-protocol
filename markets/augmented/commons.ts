@@ -69,26 +69,15 @@ export const CommonsConfig: ICommonConfiguration = {
   // COMMON PROTOCOL ADDRESSES ACROSS POOLS
   // ----------------
 
-  PoolAdmin: {
-    [eEthereumNetwork.coverage]: undefined,
-    [eEthereumNetwork.coverage]: undefined,
-    [eEthereumNetwork.hardhat]: undefined,
-    [eEthereumNetwork.docker]: undefined,
-    [eEthereumNetwork.kovan]: undefined,
-    [eEthereumNetwork.ropsten]: undefined,
-    [eEthereumNetwork.rinkeby]: undefined,
-    [eEthereumNetwork.main]: undefined,
-    [eEthereumNetwork.tenderlyMain]: undefined,
-  },
   EmergencyAdmin: {
-    [eEthereumNetwork.hardhat]: undefined,
-    [eEthereumNetwork.docker]: undefined,
-    [eEthereumNetwork.coverage]: undefined,
-    [eEthereumNetwork.kovan]: undefined,
-    [eEthereumNetwork.ropsten]: undefined,
-    [eEthereumNetwork.rinkeby]: undefined,
-    [eEthereumNetwork.main]: undefined,
-    [eEthereumNetwork.tenderlyMain]: undefined,
+    [eEthereumNetwork.hardhat]: '',
+    [eEthereumNetwork.docker]: '',
+    [eEthereumNetwork.coverage]: '',
+    [eEthereumNetwork.kovan]: '',
+    [eEthereumNetwork.ropsten]: '',
+    [eEthereumNetwork.rinkeby]: '',
+    [eEthereumNetwork.main]: '',
+    [eEthereumNetwork.tenderlyMain]: '',
   },
   ProviderRegistry: {
     [eEthereumNetwork.kovan]: '0x96B2E8707222fD25ce79a998cd47ea8C23E40d14', // '0xFFfdda318F1FE4f048c99E5C6C03C14434B35FA0', // 0xe28BdBF3C2440C97aBA7250ED1bb9F20559E351a
@@ -253,8 +242,8 @@ export const CommonsConfig: ICommonConfiguration = {
   ReserveAssetsOpt: {
     [eEthereumNetwork.ropsten]: true,
     [eEthereumNetwork.rinkeby]: true,
-    [eEthereumNetwork.kovan]: true,
 
+    [eEthereumNetwork.kovan]: false,
     [eEthereumNetwork.coverage]: false,
     [eEthereumNetwork.hardhat]: false,
     [eEthereumNetwork.docker]: false,

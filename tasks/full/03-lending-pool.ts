@@ -47,7 +47,6 @@ task('full:deploy-lending-pool', 'Deploys lending pool')
     if (falsyOrZeroAddress(lpExt)) {
       console.log('\tDeploying lending pool extension...');
       const poolExtension = await deployLendingPoolExtensionImpl(verify, continuation);
-      await waitTx(addressProvider.grantRoles(await deployer.getAddress(), AccessFlags.POOL_ADMIN));
       await waitTx(lendingPoolProxy.setLendingPoolExtension(poolExtension.address));
       lpExt = poolExtension.address;
     }

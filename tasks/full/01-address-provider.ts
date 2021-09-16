@@ -6,7 +6,7 @@ import {
 } from '../../helpers/contracts-deployments';
 import { eContractid, eNetwork } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
-import { falsyOrZeroAddress, getFirstSigner, getSigner, waitForTx, waitTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, getFirstSigner, getSigner, mustWaitTx, waitForTx, waitTx } from '../../helpers/misc-utils';
 import { getAddressesProviderRegistry } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
@@ -123,13 +123,20 @@ task('full:deploy-address-provider', 'Deploys address provider and registry')
       throw 'deployment was already finished';
     }
 
-    const poolAdmin = getParamPerNetwork(poolConfig.PoolAdmin, network);
-    if (!falsyOrZeroAddress(poolAdmin)) {
-      await waitTx(addressProvider.grantRoles(poolAdmin!, AccessFlags.POOL_ADMIN));
-    }
-
     const emergencyAdmin = getParamPerNetwork(poolConfig.EmergencyAdmin, network);
     if (!falsyOrZeroAddress(emergencyAdmin)) {
       await waitTx(addressProvider.grantRoles(emergencyAdmin!, AccessFlags.EMERGENCY_ADMIN));
     }
+
+    await mustWaitTx(
+      addressProvider.grantRoles(
+        deployer.address,
+        AccessFlags.LENDING_RATE_ADMIN |
+          AccessFlags.POOL_ADMIN |
+          AccessFlags.STAKE_ADMIN |
+          AccessFlags.REWARD_CONFIG_ADMIN |
+          AccessFlags.REWARD_RATE_ADMIN |
+          AccessFlags.ORACLE_ADMIN
+      )
+    );
   });

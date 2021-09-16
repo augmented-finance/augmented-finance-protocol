@@ -15,7 +15,7 @@ import {
   getStaticPriceOracle,
   getXAGFTokenV1Impl,
 } from '../../helpers/contracts-getters';
-import { getFirstSigner, falsyOrZeroAddress, waitTx, mustWaitTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, waitTx, mustWaitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import {
   getDeployAccessController,
@@ -100,7 +100,6 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     if (RewardParams.Autolock == 'disable') {
       console.log('\tAutolock disabled');
     } else if (!(await booster.isAutolockEnabled())) {
-      await grantRewardConfigAdmin(addressProvider);
       if (RewardParams.Autolock == 'stop') {
         console.log('\tAutolock default mode: stop');
         // AutolockMode.Stop
@@ -144,7 +143,6 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     }
 
     if (freshStart && (!continuation || falsyOrZeroAddress((await booster.getBoostPool()).pool))) {
-      await grantRewardConfigAdmin(addressProvider);
       await mustWaitTx(
         configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false, {
           gasLimit: 2000000,
@@ -153,15 +151,6 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       console.log('Boost pool: ', xagfAddr);
     }
   });
-
-const grantRewardConfigAdmin = async (addressProvider: MarketAccessController) => {
-  const deployer = (await getFirstSigner()).address;
-  if (await addressProvider.isAddress(AccessFlags.REWARD_CONFIG_ADMIN, deployer)) {
-    return;
-  }
-  await mustWaitTx(addressProvider.grantRoles(deployer, AccessFlags.REWARD_CONFIG_ADMIN));
-  console.log('Granted REWARD_CONFIG_ADMIN');
-};
 
 const configureAgfPrice = async (
   addressProvider: MarketAccessController,
@@ -185,10 +174,6 @@ const configureAgfPrice = async (
   } else {
     const agfPrice = oneEther.multipliedBy(defaulAgfPrice).toFixed(0);
     const fallback = await getStaticPriceOracle(await oracle.getFallbackOracle());
-
-    const deployer = (await getFirstSigner()).address;
-    await mustWaitTx(addressProvider.grantRoles(deployer, AccessFlags.ORACLE_ADMIN));
-    console.log('Granted ORACLE_ADMIN');
 
     await waitTx(fallback.setAssetPrice(agfAddr, agfPrice));
     console.log('AGF price configured:', defaulAgfPrice, 'ethers (', agfPrice, ')');

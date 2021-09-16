@@ -11,14 +11,7 @@ import {
   getStakeConfiguratorImpl,
   getStaticPriceOracle,
 } from '../../helpers/contracts-getters';
-import {
-  addProxyToJsonDb,
-  chunk,
-  falsyOrZeroAddress,
-  getFirstSigner,
-  mustWaitTx,
-  waitTx,
-} from '../../helpers/misc-utils';
+import { addProxyToJsonDb, chunk, falsyOrZeroAddress, mustWaitTx, waitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumberish } from 'ethers';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
@@ -157,8 +150,6 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
 
       const chunkedParams = chunk(initParams, initChunks);
       const chunkedSymbols = chunk(initSymbols, initChunks);
-
-      await mustWaitTx(addressProvider.grantRoles((await getFirstSigner()).address, AccessFlags.STAKE_ADMIN));
 
       console.log(`- Stakes initialization with ${chunkedParams.length} txs`);
       for (let chunkIndex = 0; chunkIndex < chunkedParams.length; chunkIndex++) {

@@ -2,13 +2,16 @@
 pragma solidity ^0.8.4;
 
 import '../../interfaces/IReserveDelegatedStrategy.sol';
+import '../../interfaces/IPriceOracleProvider.sol';
 
 abstract contract DelegatedStrategyBase is IReserveDelegatedStrategy {
   address private immutable self = address(this);
   string private _name;
+  IPriceOracleProvider internal immutable _addressProvider;
 
-  constructor(string memory name) {
+  constructor(string memory name, address addressProvider) {
     _name = name;
+    _addressProvider = IPriceOracleProvider(addressProvider);
   }
 
   function isDelegatedReserve() external pure override returns (bool) {

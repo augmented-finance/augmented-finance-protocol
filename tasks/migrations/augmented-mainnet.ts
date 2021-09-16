@@ -61,15 +61,21 @@ task('augmented:mainnet', 'Deploy enviroment')
         await DRE.run(step.taskName, step.args);
       }
 
-      console.log('96. Access test');
+      console.log('\n======================================================================');
+      console.log('96 Access test');
+      console.log('======================================================================\n');
       await DRE.run('full:access-test', { pool: POOL_NAME });
 
-      console.log('97. Smoke test');
+      console.log('\n======================================================================');
+      console.log('97 Smoke tests');
+      console.log('======================================================================\n');
       await DRE.run('full:smoke-test', { pool: POOL_NAME });
 
       const balanceBeforePluck = await deployer.getBalance();
       if (MAINNET_FORK) {
+        console.log('\n======================================================================');
         console.log('98. Pluck');
+        console.log('======================================================================\n');
         await DRE.run('dev:pluck-tokens', { pool: POOL_NAME });
       }
       spentOnPluck = balanceBeforePluck.sub(await deployer.getBalance());
@@ -109,7 +115,9 @@ task('augmented:mainnet', 'Deploy enviroment')
 
     if (renounce || success) {
       try {
+        console.log('\n======================================================================');
         console.log('99. Finalize');
+        console.log('======================================================================\n');
         await DRE.run('full:deploy-finalize', { pool: POOL_NAME, register: success });
       } catch (err) {
         console.log('Error during finalization & renouncement');

@@ -67,6 +67,9 @@ import { IChainlinkAggregatorFactory } from '../types/IChainlinkAggregatorFactor
 import { IInitializablePoolTokenFactory } from '../types/IInitializablePoolTokenFactory';
 import { IInitializableStakeTokenFactory } from '../types/IInitializableStakeTokenFactory';
 import { IInitializableRewardPoolFactory } from '../types/IInitializableRewardPoolFactory';
+import { IReserveDelegatedStrategyFactory } from '../types/IReserveDelegatedStrategyFactory';
+import { PriceFeedCompoundEthFactory } from '../types/PriceFeedCompoundEthFactory';
+import { PriceFeedCompoundErc20Factory } from '../types/PriceFeedCompoundErc20Factory';
 import { IWETHGatewayFactory } from '../types/IWETHGatewayFactory';
 
 const getAddr = async (id: eContractid) => {
@@ -121,6 +124,9 @@ export const getMintableERC20 = async (address: tEthereumAddress) =>
 export const getIErc20Detailed = async (address: tEthereumAddress) =>
   IERC20DetailedFactory.connect(address, await getFirstSigner());
 
+export const getIReserveDelegatedStrategy = async (address: tEthereumAddress) =>
+  IReserveDelegatedStrategyFactory.connect(address, await getFirstSigner());
+
 export const getIRewardedToken = async (address: tEthereumAddress) =>
   IRewardedTokenFactory.connect(address, await getFirstSigner());
 
@@ -174,7 +180,7 @@ export const getTokenAggregatorPairs = (
   if (aggregatorAddresses == undefined) {
     return [[], []];
   }
-  const { ETH, USD, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
+  const { ETH, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
   console.log(assetsAddressesWithoutEth);
 
   const assets: string[] = [];
@@ -454,3 +460,15 @@ export const getMockDepositStakeToken = async (address?: tEthereumAddress) =>
 
 export const getDepositStakeTokenImpl = async (address: tEthereumAddress) =>
   DepositStakeTokenFactory.connect(address, await getFirstSigner());
+
+export const getPriceFeedCompoundEth = async (address?: tEthereumAddress) =>
+  PriceFeedCompoundEthFactory.connect(
+    address || (await getAddr(eContractid.PriceFeedCompoundEth)),
+    await getFirstSigner()
+  );
+
+export const getPriceFeedCompoundErc20 = async (address?: tEthereumAddress) =>
+  PriceFeedCompoundErc20Factory.connect(
+    address || (await getAddr(eContractid.PriceFeedCompoundErc20)),
+    await getFirstSigner()
+  );

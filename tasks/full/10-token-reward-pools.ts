@@ -15,7 +15,6 @@ import {
   ITokenRewardPoolParams,
   IRewardPoolParams,
   IRewardParams,
-  eContractid,
 } from '../../helpers/types';
 import {
   getLendingPoolProxy,
@@ -23,17 +22,9 @@ import {
   getStakeConfiguratorImpl,
   getRewardBooster,
   getIManagedRewardPool,
-  getIRewardedToken,
   getIInitializableRewardPool,
 } from '../../helpers/contracts-getters';
-import {
-  addProxyToJsonDb,
-  chunk,
-  falsyOrZeroAddress,
-  getFirstSigner,
-  mustWaitTx,
-  waitTx,
-} from '../../helpers/misc-utils';
+import { addProxyToJsonDb, chunk, falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumber } from 'ethers';
 import { oneWad, ZERO_ADDRESS } from '../../helpers/constants';
@@ -68,15 +59,6 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     const reserveAssets = getParamPerNetwork(ReserveAssets, network);
     const stakeConfigurator = await getStakeConfiguratorImpl(
       await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
-    );
-
-    await waitTx(
-      addressProvider.grantRoles(
-        (
-          await getFirstSigner()
-        ).address,
-        AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.REWARD_RATE_ADMIN
-      )
     );
 
     const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());

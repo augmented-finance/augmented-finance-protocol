@@ -73,6 +73,8 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { TreasuryRewardPoolFactory } from '../types/TreasuryRewardPoolFactory';
 import { ReferralRewardPoolV1Factory } from '../types/ReferralRewardPoolV1Factory';
 import { RewardBoosterV1Factory } from '../types/RewardBoosterV1Factory';
+import { PriceFeedCompoundEthFactory } from '../types/PriceFeedCompoundEthFactory';
+import { PriceFeedCompoundErc20Factory } from '../types/PriceFeedCompoundErc20Factory';
 
 const readArtifact = async (id: string) => {
   return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
@@ -972,7 +974,10 @@ export const deployDelegatedStrategyAave = async (args: [name: string], verify?:
     verify
   );
 
-export const deployDelegatedStrategyCompoundErc20 = async (args: [name: string], verify?: boolean) =>
+export const deployDelegatedStrategyCompoundErc20 = async (
+  args: [name: string, addressProvider: string],
+  verify?: boolean
+) =>
   withSaveAndVerify(
     await new DelegatedStrategyCompoundErc20Factory(await getFirstSigner()).deploy(...args),
     eContractid.DelegatedStrategyCompoundErc20,
@@ -981,12 +986,32 @@ export const deployDelegatedStrategyCompoundErc20 = async (args: [name: string],
   );
 
 export const deployDelegatedStrategyCompoundEth = async (
-  args: [name: string, weth: tEthereumAddress],
+  args: [name: string, addressProvider: tEthereumAddress, weth: tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await new DelegatedStrategyCompoundEthFactory(await getFirstSigner()).deploy(...args),
     eContractid.DelegatedStrategyCompoundEth,
+    args,
+    verify
+  );
+
+export const deployPriceFeedCompoundErc20 = async (
+  name: string,
+  args: [token: tEthereumAddress, underlyingSource: tEthereumAddress],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new PriceFeedCompoundErc20Factory(await getFirstSigner()).deploy(...args),
+    eContractid.PriceFeedCompoundErc20 + '-' + name,
+    args,
+    verify
+  );
+
+export const deployPriceFeedCompoundEth = async (name: string, args: [token: tEthereumAddress], verify?: boolean) =>
+  withSaveAndVerify(
+    await new PriceFeedCompoundEthFactory(await getFirstSigner()).deploy(...args),
+    eContractid.PriceFeedCompoundEth + '-' + name,
     args,
     verify
   );

@@ -8,6 +8,7 @@ import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/compound-protocol/contracts/ICToken.sol';
 import '../../interfaces/IPoolToken.sol';
 import '../../interfaces/IDerivedToken.sol';
+import '../../interfaces/IPriceOracle.sol';
 import './DelegatedStrategyBase.sol';
 
 abstract contract DelegatedStrategyCompoundBase is DelegatedStrategyBase {
@@ -18,14 +19,13 @@ abstract contract DelegatedStrategyCompoundBase is DelegatedStrategyBase {
   uint32 private _lastBlock = uint32(block.number);
   uint32 private _lastTS = uint32(block.timestamp);
 
-  constructor(string memory name) DelegatedStrategyBase(name) {}
-
   function getDelegatedState(address asset, uint40) external override returns (DelegatedState memory result) {
     require(ICToken(asset).accrueInterest() == 0, 'CToken: accrueInterest failed');
     uint256 rate = ICToken(asset).supplyRatePerBlock().wadToRay();
 
     uint32 msecPerBlock = _msecPerBlock;
     if (_lastBlock < uint32(block.number)) {
+      _updateAssetSource(asset);
       uint256 v = ((block.timestamp - _lastTS) * 1000) / uint32(block.number - _lastBlock);
       if (msecPerBlock > 0) {
         v += msecPerBlock * 3;
@@ -51,6 +51,13 @@ abstract contract DelegatedStrategyCompoundBase is DelegatedStrategyBase {
         stableBorrowRate: 0,
         lastUpdateTimestamp: uint32(block.timestamp)
       });
+  }
+
+  function _updateAssetSource(address asset) private {
+    if (_addressProvider != IPriceOracleProvider(address(0))) {
+      IPriceOracle oracle = IPriceOracle(_addressProvider.getPriceOracle());
+      oracle.updateAssetSource(asset);
+    }
   }
 
   function getDelegatedDepositIndex(address) external pure override returns (uint256) {
