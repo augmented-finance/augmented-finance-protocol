@@ -51,7 +51,6 @@ import {
   DefaultReserveInterestRateStrategyFactory,
   MockDepositStakeTokenFactory,
   DepositStakeTokenFactory,
-  PriceFeedCompoundFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -68,7 +67,8 @@ import { IChainlinkAggregatorFactory } from '../types/IChainlinkAggregatorFactor
 import { IInitializablePoolTokenFactory } from '../types/IInitializablePoolTokenFactory';
 import { IInitializableStakeTokenFactory } from '../types/IInitializableStakeTokenFactory';
 import { IInitializableRewardPoolFactory } from '../types/IInitializableRewardPoolFactory';
-import { ZERO_ADDRESS } from './constants';
+import { IReserveDelegatedStrategyFactory } from '../types/IReserveDelegatedStrategyFactory';
+import { PriceFeedCompoundFactory } from '../types/PriceFeedCompoundFactory';
 
 const getAddr = async (id: eContractid) => {
   const entry = await getFromJsonDb(id);
@@ -121,6 +121,9 @@ export const getMintableERC20 = async (address: tEthereumAddress) =>
 
 export const getIErc20Detailed = async (address: tEthereumAddress) =>
   IERC20DetailedFactory.connect(address, await getFirstSigner());
+
+export const getIReserveDelegatedStrategy = async (address: tEthereumAddress) =>
+  IReserveDelegatedStrategyFactory.connect(address, await getFirstSigner());
 
 export const getIRewardedToken = async (address: tEthereumAddress) =>
   IRewardedTokenFactory.connect(address, await getFirstSigner());

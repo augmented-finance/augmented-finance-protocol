@@ -61,7 +61,6 @@ import {
   DelegatedStrategyCompoundErc20Factory,
   DepositStakeTokenFactory,
   MockDepositStakeTokenFactory,
-  PriceFeedCompoundFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -74,6 +73,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { TreasuryRewardPoolFactory } from '../types/TreasuryRewardPoolFactory';
 import { ReferralRewardPoolV1Factory } from '../types/ReferralRewardPoolV1Factory';
 import { RewardBoosterV1Factory } from '../types/RewardBoosterV1Factory';
+import { PriceFeedCompoundFactory } from '../types/PriceFeedCompoundFactory';
 
 const readArtifact = async (id: string) => {
   return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
