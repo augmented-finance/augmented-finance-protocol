@@ -73,7 +73,8 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { TreasuryRewardPoolFactory } from '../types/TreasuryRewardPoolFactory';
 import { ReferralRewardPoolV1Factory } from '../types/ReferralRewardPoolV1Factory';
 import { RewardBoosterV1Factory } from '../types/RewardBoosterV1Factory';
-import { PriceFeedCompoundFactory } from '../types/PriceFeedCompoundFactory';
+import { PriceFeedCompoundEthFactory } from '../types/PriceFeedCompoundEthFactory';
+import { PriceFeedCompoundErc20Factory } from '../types/PriceFeedCompoundErc20Factory';
 
 const readArtifact = async (id: string) => {
   return (DRE as HardhatRuntimeEnvironment).artifacts.readArtifact(id);
@@ -995,14 +996,22 @@ export const deployDelegatedStrategyCompoundEth = async (
     verify
   );
 
-export const deployPriceFeedCompound = async (
+export const deployPriceFeedCompoundErc20 = async (
   name: string,
   args: [token: tEthereumAddress, underlyingSource: tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    await new PriceFeedCompoundFactory(await getFirstSigner()).deploy(...args),
-    eContractid.PriceFeedCompound + '-' + name,
+    await new PriceFeedCompoundErc20Factory(await getFirstSigner()).deploy(...args),
+    eContractid.PriceFeedCompoundErc20 + '-' + name,
+    args,
+    verify
+  );
+
+export const deployPriceFeedCompoundEth = async (name: string, args: [token: tEthereumAddress], verify?: boolean) =>
+  withSaveAndVerify(
+    await new PriceFeedCompoundEthFactory(await getFirstSigner()).deploy(...args),
+    eContractid.PriceFeedCompoundEth + '-' + name,
     args,
     verify
   );

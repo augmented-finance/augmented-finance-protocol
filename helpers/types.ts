@@ -78,7 +78,8 @@ export enum eContractid {
   FlashLiquidationAdapter = 'FlashLiquidationAdapter',
 
   DefaultReserveInterestRateStrategy = 'DefaultReserveInterestRateStrategy',
-  PriceFeedCompound = 'PriceFeedCompound',
+  PriceFeedCompoundEth = 'PriceFeedCompoundEth',
+  PriceFeedCompoundErc20 = 'PriceFeedCompoundErc20',
 
   MockRewardFreezer = 'MockRewardFreezer',
   MockRewardBooster = 'MockRewardBooster',

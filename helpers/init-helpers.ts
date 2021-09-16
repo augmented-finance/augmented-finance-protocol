@@ -19,7 +19,8 @@ import {
   deployDelegationAwareDepositTokenImpl,
   deployDepositToken,
   deployDepositTokenImpl,
-  deployPriceFeedCompound,
+  deployPriceFeedCompoundErc20,
+  deployPriceFeedCompoundEth,
   deployReserveInterestRateStrategy,
   deployStableDebtTokenImpl,
   deployVariableDebtTokenImpl,
@@ -465,7 +466,7 @@ const getStrategyFactory = (strategy: IInterestRateStrategyParams): StrategyFact
         if (falsyOrZeroAddress(underlyingSource)) {
           throw 'Unknown underlying price feed for: ' + name;
         }
-        return await deployPriceFeedCompound(name, [asset, underlyingSource], verify);
+        return await deployPriceFeedCompoundErc20(name, [asset, underlyingSource], verify);
       },
 
       deployFn: async (ac: MarketAccessController, verify: boolean) =>
@@ -479,7 +480,7 @@ const getStrategyFactory = (strategy: IInterestRateStrategyParams): StrategyFact
       staticUnderlying: true,
 
       feedFactoryFn: async (name: string, asset: tEthereumAddress, s: tEthereumAddress, verify: boolean) =>
-        await deployPriceFeedCompound(name, [asset, ZERO_ADDRESS], verify),
+        await deployPriceFeedCompoundEth(name, [asset], verify),
 
       deployFn: async (ac: MarketAccessController, verify: boolean) => {
         const wethGateway = await getWETHGateway(await ac.getAddress(AccessFlags.WETH_GATEWAY));

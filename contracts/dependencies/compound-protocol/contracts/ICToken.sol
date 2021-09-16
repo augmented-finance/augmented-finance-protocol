@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 interface ICToken {
   /**
    * @notice Accrue interest then return the up-to-date exchange rate
-   * @return Calculated exchange rate scaled by 1e18
+   * @return Calculated exchange rate scaled by 1 * 10^(18 - 8 + Underlying Token Decimals)
    */
   function exchangeRateCurrent() external returns (uint256);
 

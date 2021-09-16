@@ -329,7 +329,13 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
     },
   },
 
-  [eContractid.PriceFeedCompound]: {
+  [eContractid.PriceFeedCompoundErc20]: {
+    functions: {
+      updatePrice: true,
+    },
+  },
+
+  [eContractid.PriceFeedCompoundEth]: {
     functions: {
       updatePrice: true,
     },

@@ -68,7 +68,8 @@ import { IInitializablePoolTokenFactory } from '../types/IInitializablePoolToken
 import { IInitializableStakeTokenFactory } from '../types/IInitializableStakeTokenFactory';
 import { IInitializableRewardPoolFactory } from '../types/IInitializableRewardPoolFactory';
 import { IReserveDelegatedStrategyFactory } from '../types/IReserveDelegatedStrategyFactory';
-import { PriceFeedCompoundFactory } from '../types/PriceFeedCompoundFactory';
+import { PriceFeedCompoundEthFactory } from '../types/PriceFeedCompoundEthFactory';
+import { PriceFeedCompoundErc20Factory } from '../types/PriceFeedCompoundErc20Factory';
 
 const getAddr = async (id: eContractid) => {
   const entry = await getFromJsonDb(id);
@@ -456,5 +457,14 @@ export const getMockDepositStakeToken = async (address?: tEthereumAddress) =>
 export const getDepositStakeTokenImpl = async (address: tEthereumAddress) =>
   DepositStakeTokenFactory.connect(address, await getFirstSigner());
 
-export const getPriceFeedCompound = async (address?: tEthereumAddress) =>
-  PriceFeedCompoundFactory.connect(address || (await getAddr(eContractid.PriceFeedCompound)), await getFirstSigner());
+export const getPriceFeedCompoundEth = async (address?: tEthereumAddress) =>
+  PriceFeedCompoundEthFactory.connect(
+    address || (await getAddr(eContractid.PriceFeedCompoundEth)),
+    await getFirstSigner()
+  );
+
+export const getPriceFeedCompoundErc20 = async (address?: tEthereumAddress) =>
+  PriceFeedCompoundErc20Factory.connect(
+    address || (await getAddr(eContractid.PriceFeedCompoundErc20)),
+    await getFirstSigner()
+  );
