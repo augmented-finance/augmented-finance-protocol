@@ -5,7 +5,7 @@ interface IWETHGateway {
   function depositETH(
     address lendingPool,
     address onBehalfOf,
-    uint16 referralCode
+    uint256 referralCode
   ) external payable;
 
   function withdrawETH(
@@ -25,8 +25,23 @@ interface IWETHGateway {
     address lendingPool,
     uint256 amount,
     uint256 interesRateMode,
-    uint16 referralCode
+    uint256 referralCode
   ) external;
 
   function getWETHAddress() external view returns (address);
+}
+
+interface IWETHGatewayCompatible {
+  function depositETH(
+    address lendingPool,
+    address onBehalfOf,
+    uint16 referralCode
+  ) external payable;
+
+  function borrowETH(
+    address lendingPool,
+    uint256 amount,
+    uint256 interesRateMode,
+    uint16 referralCode
+  ) external;
 }
