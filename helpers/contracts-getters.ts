@@ -70,6 +70,7 @@ import { IInitializableRewardPoolFactory } from '../types/IInitializableRewardPo
 import { IReserveDelegatedStrategyFactory } from '../types/IReserveDelegatedStrategyFactory';
 import { PriceFeedCompoundEthFactory } from '../types/PriceFeedCompoundEthFactory';
 import { PriceFeedCompoundErc20Factory } from '../types/PriceFeedCompoundErc20Factory';
+import { IWETHGatewayFactory } from '../types/IWETHGatewayFactory';
 
 const getAddr = async (id: eContractid) => {
   const entry = await getFromJsonDb(id);
@@ -216,6 +217,9 @@ export const getGenericLogic = async (address?: tEthereumAddress) =>
 
 export const getWETHGateway = async (address?: tEthereumAddress) =>
   WETHGatewayFactory.connect(address || (await getAddr(eContractid.WETHGateway)), await getFirstSigner());
+
+export const getIWETHGateway = async (address: tEthereumAddress) =>
+  IWETHGatewayFactory.connect(address, await getFirstSigner());
 
 export const getWETHMocked = async (address: tEthereumAddress) =>
   WETH9MockedFactory.connect(address, await getFirstSigner());

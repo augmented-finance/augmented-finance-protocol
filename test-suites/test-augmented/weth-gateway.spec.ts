@@ -4,7 +4,7 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { parseEther } from 'ethers/lib/utils';
 import { DRE, waitForTx } from '../../helpers/misc-utils';
 import { BigNumber } from 'ethers';
-import { getMarketAccessController, getStableDebtToken, getVariableDebtToken } from '../../helpers/contracts-getters';
+import { getIWETHGateway, getStableDebtToken, getVariableDebtToken } from '../../helpers/contracts-getters';
 import { deploySelfdestructTransferMock } from '../../helpers/contracts-deployments';
 import { AccessFlags } from '../../helpers/access-flags';
 
@@ -14,8 +14,10 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
   const zero = BigNumber.from('0');
   const depositSize = parseEther('5');
   const daiSize = parseEther('10000');
+
   it('Deposit WETH via WethGateway and DAI', async () => {
-    const { users, wethGateway, aWETH, pool } = testEnv;
+    const { users, aWETH, pool } = testEnv;
+    const wethGateway = await getIWETHGateway(testEnv.wethGateway.address);
 
     const user = users[1];
     const depositor = users[0];
@@ -99,7 +101,8 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
   });
 
   it('Borrow stable WETH and Full Repay with ETH', async () => {
-    const { users, wethGateway, aDai, weth, dai, pool, helpersContract } = testEnv;
+    const { users, aDai, weth, dai, pool, helpersContract } = testEnv;
+    const wethGateway = await getIWETHGateway(testEnv.wethGateway.address);
     const borrowSize = parseEther('1');
     const repaySize = borrowSize.add(borrowSize.mul(5).div(100));
     const user = users[1];
@@ -147,7 +150,8 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
   });
 
   it('Borrow variable WETH and Full Repay with ETH', async () => {
-    const { users, wethGateway, aWETH, weth, pool, helpersContract } = testEnv;
+    const { users, aWETH, weth, pool, helpersContract } = testEnv;
+    const wethGateway = await getIWETHGateway(testEnv.wethGateway.address);
     const borrowSize = parseEther('1');
     const repaySize = borrowSize.add(borrowSize.mul(5).div(100));
     const user = users[1];
@@ -193,7 +197,9 @@ makeSuite('Use native ETH at LendingPool via WETHGateway', (testEnv: TestEnv) =>
   });
 
   it('Borrow ETH via delegateApprove ETH and repays back', async () => {
-    const { users, wethGateway, aWETH, weth, helpersContract, pool } = testEnv;
+    const { users, aWETH, weth, helpersContract, pool } = testEnv;
+    const wethGateway = await getIWETHGateway(testEnv.wethGateway.address);
+
     const borrowSize = parseEther('1');
     const user = users[2];
     const { variableDebtTokenAddress } = await helpersContract.getReserveTokensAddresses(weth.address);
