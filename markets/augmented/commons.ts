@@ -253,8 +253,8 @@ export const CommonsConfig: ICommonConfiguration = {
   ReserveAssetsOpt: {
     [eEthereumNetwork.ropsten]: true,
     [eEthereumNetwork.rinkeby]: true,
-    [eEthereumNetwork.kovan]: true,
 
+    [eEthereumNetwork.kovan]: false,
     [eEthereumNetwork.coverage]: false,
     [eEthereumNetwork.hardhat]: false,
     [eEthereumNetwork.docker]: false,

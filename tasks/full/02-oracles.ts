@@ -48,7 +48,6 @@ task('full:deploy-oracles', 'Deploys oracles')
 
     let lroAddress = '';
     let poAddress = oracleRouter;
-    const requiredPriceTokens = getRequiredPrices(tokensToWatch);
 
     const [aggregatorTokens, aggregators] = getTokenAggregatorPairs(tokensToWatch, chainlinkAggregators);
 
@@ -151,37 +150,8 @@ task('full:deploy-oracles', 'Deploys oracles')
         verify
       );
 
-      const [assetSymbols, requiredAssets] = unzipTokens(requiredPriceTokens);
-      console.log('Prices are required for:', assetSymbols);
-      if (requiredAssets.length > 0) {
-        try {
-          await oracleRouter.getAssetsPrices(requiredAssets);
-          console.log('All prices are available');
-        } catch (err) {
-          console.error(err);
-          throw 'some prices are missing';
-        }
-      }
-
       await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address));
       poAddress = oracleRouter.address;
     }
     console.log('PriceOracle: ', poAddress);
   });
-
-const unzipTokens = (tokens: { [tokenSymbol: string]: tEthereumAddress }) => {
-  const assetSymbols: string[] = [];
-  const assets: string[] = [];
-  for (const [tokenSymbol, tokenAddress] of Object.entries(tokens)) {
-    if (!falsyOrZeroAddress(tokenAddress)) {
-      assets.push(tokenAddress);
-      assetSymbols.push(tokenSymbol);
-    }
-  }
-  return [assetSymbols, assets];
-};
-
-const getRequiredPrices = (allAssetsAddresses: { [tokenSymbol: string]: tEthereumAddress }) => {
-  const { ETH, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
-  return assetsAddressesWithoutEth;
-};

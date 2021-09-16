@@ -7,7 +7,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { USD_ADDRESS } from '../../helpers/constants';
 
-task('full:smoke-test', 'Does a smoke test of the deployed contracts')
+task('full:smoke-test', 'Does smoke tests of the deployed contracts')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ verify, pool }, DRE) => {
@@ -46,6 +46,7 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
     }
 
     const pricingTokens: string[] = [];
+    const pricingTokenOverlyingNames: string[] = [];
 
     console.log('\nCheck getAllTokenDescriptions');
     const allTokenDesc = await dataHelper.getAllTokenDescriptions(true);
@@ -53,9 +54,10 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
       const pricingTokenSet = new Set<string>();
       console.log('All tokens:');
       allTokenDesc.tokens.slice(0, allTokenDesc.tokenCount.toNumber()).map((x) => {
-        if (!falsyOrZeroAddress(x.priceToken) && !pricingTokenSet.has(x.priceToken)) {
+        if (!falsyOrZeroAddress(x.priceToken) && !pricingTokenSet.has(x.priceToken.toLocaleLowerCase())) {
           pricingTokens.push(x.priceToken);
-          pricingTokenSet.add(x.priceToken);
+          pricingTokenOverlyingNames.push(x.tokenSymbol);
+          pricingTokenSet.add(x.priceToken.toLocaleLowerCase());
         }
         console.log(
           ` ${x.tokenSymbol} (${x.tokenType} ${x.active} ${x.decimals}):\t${x.token} ${x.underlying} ${x.priceToken}`
@@ -80,10 +82,27 @@ task('full:smoke-test', 'Does a smoke test of the deployed contracts')
 
     {
       pricingTokens.push(USD_ADDRESS);
+      pricingTokenOverlyingNames.push('USD');
+
       console.log('\nCheck ', pricingTokens.length, 'listed prices');
 
-      const priceOracle = await getOracleRouter(await addressProvider.getAddress(AccessFlags.PRICE_ORACLE));
-      await priceOracle.getAssetsPrices(pricingTokens);
+      const po = await getOracleRouter(await addressProvider.getAddress(AccessFlags.PRICE_ORACLE));
+
+      let allPrices = true;
+      await Promise.all(
+        pricingTokens.map(async (value, index) => {
+          try {
+            await po.getAssetPrice(value);
+          } catch {
+            allPrices = false;
+            console.log('Failed to get a price:', pricingTokenOverlyingNames[index], value);
+          }
+        })
+      );
+
+      if (!allPrices) {
+        throw 'Some prices are missing';
+      }
     }
 
     const userAddr = (await getFirstSigner()).address;

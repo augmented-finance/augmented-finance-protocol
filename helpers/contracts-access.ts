@@ -328,6 +328,12 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
       updateAssetSource: true,
     },
   },
+
+  [eContractid.PriceFeedCompound]: {
+    functions: {
+      updatePrice: true,
+    },
+  },
 };
 
 export const getContractAccessExceptions = (name: string): ContractAccessExceptions => {

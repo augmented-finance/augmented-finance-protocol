@@ -178,7 +178,7 @@ export const getTokenAggregatorPairs = (
   if (aggregatorAddresses == undefined) {
     return [[], []];
   }
-  const { ETH, USD, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
+  const { ETH, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
   console.log(assetsAddressesWithoutEth);
 
   const assets: string[] = [];

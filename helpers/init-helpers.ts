@@ -414,7 +414,12 @@ interface StrategyFactoryInfo {
   external: boolean;
   deployFn: (ac: MarketAccessController, verify: boolean) => Promise<Contract>;
   staticUnderlying?: boolean;
-  feedFactoryFn?: (name: string, asset: tEthereumAddress, underlyingSource: tEthereumAddress) => Promise<Contract>;
+  feedFactoryFn?: (
+    name: string,
+    asset: tEthereumAddress,
+    underlyingSource: tEthereumAddress,
+    verify: boolean
+  ) => Promise<Contract>;
 }
 
 const getStrategyFactory = (strategy: IInterestRateStrategyParams): StrategyFactoryInfo | undefined => {
@@ -451,11 +456,16 @@ const getStrategyFactory = (strategy: IInterestRateStrategyParams): StrategyFact
       external: true,
       staticUnderlying: false,
 
-      feedFactoryFn: async (name: string, asset: tEthereumAddress, underlyingSource: tEthereumAddress) => {
+      feedFactoryFn: async (
+        name: string,
+        asset: tEthereumAddress,
+        underlyingSource: tEthereumAddress,
+        verify: boolean
+      ) => {
         if (falsyOrZeroAddress(underlyingSource)) {
           throw 'Unknown underlying price feed for: ' + name;
         }
-        return await deployPriceFeedCompound(name, [asset, underlyingSource]);
+        return await deployPriceFeedCompound(name, [asset, underlyingSource], verify);
       },
 
       deployFn: async (ac: MarketAccessController, verify: boolean) =>
@@ -468,8 +478,8 @@ const getStrategyFactory = (strategy: IInterestRateStrategyParams): StrategyFact
       external: true,
       staticUnderlying: true,
 
-      feedFactoryFn: async (name: string, asset: tEthereumAddress, s: tEthereumAddress) =>
-        await deployPriceFeedCompound(name, [asset, ZERO_ADDRESS]),
+      feedFactoryFn: async (name: string, asset: tEthereumAddress, s: tEthereumAddress, verify: boolean) =>
+        await deployPriceFeedCompound(name, [asset, ZERO_ADDRESS], verify),
 
       deployFn: async (ac: MarketAccessController, verify: boolean) => {
         const wethGateway = await getWETHGateway(await ac.getAddress(AccessFlags.WETH_GATEWAY));
@@ -571,7 +581,7 @@ export const initReservePriceFeeds = async (
     }
 
     console.log('\tDeploying derived price feed:', symbol, asset, underlyingSources[i]);
-    const feedContract = await factoryInfo.feedFactoryFn!(symbol, asset, underlyingSources[i]);
+    const feedContract = await factoryInfo.feedFactoryFn!(symbol, asset, underlyingSources[i], verify);
 
     feedAssets.push(asset);
     feeds.push(feedContract.address);

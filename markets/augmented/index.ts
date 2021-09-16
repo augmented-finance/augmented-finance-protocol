@@ -65,7 +65,6 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
     }
   }
   if (MAINNET_FORK) {
-    cfg.FallbackOracle[eEthereumNetwork.main] = defRates;
     cfg.LendingDisableFeatures[eEthereumNetwork.main] = [];
   }
 
