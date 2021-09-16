@@ -16,7 +16,7 @@ import '../protocol/libraries/types/DataTypes.sol';
 import '../access/MarketAccessBitmask.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 
-contract WETHGateway is IWETHGateway, SweepBase, MarketAccessBitmask {
+contract WETHGateway is IWETHGateway, IWETHGatewayCompatible, SweepBase, MarketAccessBitmask {
   using SafeERC20 for IERC20;
 
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -43,11 +43,22 @@ contract WETHGateway is IWETHGateway, SweepBase, MarketAccessBitmask {
   function depositETH(
     address lendingPool,
     address onBehalfOf,
-    uint16 referralCode
+    uint256 referralCode
   ) external payable override {
     WETH.deposit{value: msg.value}();
     WETH.approve(lendingPool, msg.value);
     ILendingPool(lendingPool).deposit(address(WETH), msg.value, onBehalfOf, referralCode);
+  }
+
+  /// @dev backward compatible ABI
+  function depositETH(
+    address lendingPool,
+    address onBehalfOf,
+    uint16 referralCode
+  ) external payable override {
+    WETH.deposit{value: msg.value}();
+    WETH.approve(lendingPool, msg.value);
+    ILendingPool(lendingPool).deposit(address(WETH), msg.value, onBehalfOf, uint256(referralCode));
   }
 
   /**
@@ -121,9 +132,21 @@ contract WETHGateway is IWETHGateway, SweepBase, MarketAccessBitmask {
     address lendingPool,
     uint256 amount,
     uint256 interesRateMode,
-    uint16 referralCode
+    uint256 referralCode
   ) external override {
     ILendingPool(lendingPool).borrow(address(WETH), amount, interesRateMode, referralCode, msg.sender);
+    WETH.withdraw(amount);
+    Address.sendValue(payable(msg.sender), amount);
+  }
+
+  /// @dev backward compatible ABI
+  function borrowETH(
+    address lendingPool,
+    uint256 amount,
+    uint256 interesRateMode,
+    uint16 referralCode
+  ) external override {
+    ILendingPool(lendingPool).borrow(address(WETH), amount, interesRateMode, uint256(referralCode), msg.sender);
     WETH.withdraw(amount);
     Address.sendValue(payable(msg.sender), amount);
   }

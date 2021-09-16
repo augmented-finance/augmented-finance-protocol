@@ -67,7 +67,7 @@ import { IChainlinkAggregatorFactory } from '../types/IChainlinkAggregatorFactor
 import { IInitializablePoolTokenFactory } from '../types/IInitializablePoolTokenFactory';
 import { IInitializableStakeTokenFactory } from '../types/IInitializableStakeTokenFactory';
 import { IInitializableRewardPoolFactory } from '../types/IInitializableRewardPoolFactory';
-import { ZERO_ADDRESS } from './constants';
+import { IWETHGatewayFactory } from '../types/IWETHGatewayFactory';
 
 const getAddr = async (id: eContractid) => {
   const entry = await getFromJsonDb(id);
@@ -211,6 +211,9 @@ export const getGenericLogic = async (address?: tEthereumAddress) =>
 
 export const getWETHGateway = async (address?: tEthereumAddress) =>
   WETHGatewayFactory.connect(address || (await getAddr(eContractid.WETHGateway)), await getFirstSigner());
+
+export const getIWETHGateway = async (address: tEthereumAddress) =>
+  IWETHGatewayFactory.connect(address, await getFirstSigner());
 
 export const getWETHMocked = async (address: tEthereumAddress) =>
   WETH9MockedFactory.connect(address, await getFirstSigner());
