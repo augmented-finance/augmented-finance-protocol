@@ -18,6 +18,7 @@ import '../interfaces/IPriceOracleGetter.sol';
 import '../interfaces/IDepositToken.sol';
 import '../interfaces/IDerivedToken.sol';
 import '../interfaces/IRewardedToken.sol';
+import '../interfaces/IUnderlyingBalance.sol';
 import '../reward/interfaces/IManagedRewardPool.sol';
 import '../reward/interfaces/IRewardExplainer.sol';
 import '../protocol/stake/interfaces/IStakeConfigurator.sol';
@@ -47,7 +48,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     address[] memory reserveList = pool.getReservesList();
 
     address[] memory stakeList;
-    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
+    IStakeConfigurator stakeCfg = IStakeConfigurator(_getAddress(AccessFlags.STAKE_CONFIGURATOR));
     if (address(stakeCfg) != address(0)) {
       stakeList = stakeCfg.list();
     }
@@ -60,7 +61,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     tokens = new TokenDescription[](tokenCount);
 
     tokenCount = 0;
-    address token = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_TOKEN);
+    address token = _getAddress(AccessFlags.REWARD_TOKEN);
     if (token != address(0)) {
       tokens[tokenCount] = TokenDescription(
         token,
@@ -76,7 +77,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       tokenCount++;
     }
 
-    token = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_STAKE_TOKEN);
+    token = _getAddress(AccessFlags.REWARD_STAKE_TOKEN);
     if (token != address(0)) {
       tokens[tokenCount] = TokenDescription(
         token,
@@ -189,12 +190,21 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     return (tokens, tokenCount);
   }
 
-  function getAllTokens(bool includeAssets) public view override returns (address[] memory tokens, uint256 tokenCount) {
+  function getAllTokens(bool includeAssets)
+    public
+    view
+    override
+    returns (
+      address[] memory tokens,
+      uint256 tokenCount,
+      TokenType[] memory tokenTypes
+    )
+  {
     ILendingPool pool = ILendingPool(ADDRESS_PROVIDER.getLendingPool());
     address[] memory reserveList = pool.getReservesList();
 
     address[] memory stakeList;
-    IStakeConfigurator stakeCfg = IStakeConfigurator(ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR));
+    IStakeConfigurator stakeCfg = IStakeConfigurator(_getAddress(AccessFlags.STAKE_CONFIGURATOR));
     if (address(stakeCfg) != address(0)) {
       stakeList = stakeCfg.list();
     }
@@ -204,13 +214,18 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       tokenCount += reserveList.length;
     }
     tokens = new address[](tokenCount);
+    tokenTypes = new TokenType[](tokenCount);
 
     tokenCount = 0;
-    tokens[tokenCount] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_TOKEN);
+
+    tokens[tokenCount] = _getAddress(AccessFlags.REWARD_TOKEN);
+    tokenTypes[tokenCount] = TokenType.Reward;
     if (tokens[tokenCount] != address(0)) {
       tokenCount++;
     }
-    tokens[tokenCount] = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_STAKE_TOKEN);
+
+    tokens[tokenCount] = _getAddress(AccessFlags.REWARD_STAKE_TOKEN);
+    tokenTypes[tokenCount] = TokenType.RewardStake;
     if (tokens[tokenCount] != address(0)) {
       tokenCount++;
     }
@@ -224,29 +239,34 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
 
       if (includeAssets) {
         tokens[tokenCount] = token;
+        tokenTypes[tokenCount] = TokenType.PoolAsset;
         tokenCount++;
       }
 
       tokens[tokenCount] = reserveData.depositTokenAddress;
+      tokenTypes[tokenCount] = TokenType.Deposit;
       tokenCount++;
 
       if (reserveData.variableDebtTokenAddress != address(0)) {
         tokens[tokenCount] = reserveData.variableDebtTokenAddress;
+        tokenTypes[tokenCount] = TokenType.VariableDebt;
         tokenCount++;
       }
 
       if (reserveData.stableDebtTokenAddress != address(0)) {
         tokens[tokenCount] = reserveData.stableDebtTokenAddress;
+        tokenTypes[tokenCount] = TokenType.StableDebt;
         tokenCount++;
       }
     }
 
     for (uint256 i = 0; i < stakeList.length; i++) {
       tokens[tokenCount] = stakeList[i];
+      tokenTypes[tokenCount] = TokenType.Stake;
       tokenCount++;
     }
 
-    return (tokens, tokenCount);
+    return (tokens, tokenCount, tokenTypes);
   }
 
   function getReserveConfigurationData(address asset)
@@ -466,107 +486,77 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     return (reservesData, userReservesData, oracle.getAssetPrice(USD));
   }
 
+  function _getAddress(uint256 flag) private view returns (address) {
+    return ADDRESS_PROVIDER.getAddress(flag);
+  }
+
   function getAddresses() external view override returns (Addresses memory data) {
     data.addressProvider = address(ADDRESS_PROVIDER);
-    data.lendingPool = ADDRESS_PROVIDER.getAddress(AccessFlags.LENDING_POOL);
-    data.stakeConfigurator = ADDRESS_PROVIDER.getAddress(AccessFlags.STAKE_CONFIGURATOR);
-    data.rewardConfigurator = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_CONFIGURATOR);
-    data.rewardController = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_CONTROLLER);
-    data.wethGateway = ADDRESS_PROVIDER.getAddress(AccessFlags.WETH_GATEWAY);
-    data.priceOracle = ADDRESS_PROVIDER.getAddress(AccessFlags.PRICE_ORACLE);
-    data.lendingPriceOracle = ADDRESS_PROVIDER.getAddress(AccessFlags.LENDING_RATE_ORACLE);
-    data.rewardToken = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_TOKEN);
-    data.rewardStake = ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_STAKE_TOKEN);
-    data.referralRegistry = ADDRESS_PROVIDER.getAddress(AccessFlags.REFERRAL_REGISTRY);
+    data.lendingPool = _getAddress(AccessFlags.LENDING_POOL);
+    data.stakeConfigurator = _getAddress(AccessFlags.STAKE_CONFIGURATOR);
+    data.rewardConfigurator = _getAddress(AccessFlags.REWARD_CONFIGURATOR);
+    data.rewardController = _getAddress(AccessFlags.REWARD_CONTROLLER);
+    data.wethGateway = _getAddress(AccessFlags.WETH_GATEWAY);
+    data.priceOracle = _getAddress(AccessFlags.PRICE_ORACLE);
+    data.lendingPriceOracle = _getAddress(AccessFlags.LENDING_RATE_ORACLE);
+    data.rewardToken = _getAddress(AccessFlags.REWARD_TOKEN);
+    data.rewardStake = _getAddress(AccessFlags.REWARD_STAKE_TOKEN);
+    data.referralRegistry = _getAddress(AccessFlags.REFERRAL_REGISTRY);
+  }
+
+  function balanceOf(
+    address user,
+    address token,
+    TokenType tokenType
+  ) public view returns (TokenBalance memory r) {
+    if (tokenType >= TokenType.Stake) {
+      if (tokenType == TokenType.Stake) {
+        (r.balance, r.unstakeWindowStart, r.unstakeWindowEnd) = IStakeToken(token).balanceAndCooldownOf(user);
+        r.underlyingBalance = IStakeToken(token).balanceOfUnderlying(user);
+        r.rewardedBalance = IStakeToken(token).rewardedBalanceOf(user);
+      } else if (tokenType == TokenType.RewardStake) {
+        r.balance = IERC20Detailed(token).balanceOf(user);
+        (r.underlyingBalance, r.unstakeWindowStart) = ILockedUnderlyingBalance(token).balanceOfUnderlyingAndExpiry(
+          user
+        );
+        r.unstakeWindowEnd = type(uint32).max;
+      } else {
+        r.underlyingBalance = r.balance = IERC20Detailed(token).balanceOf(user);
+      }
+    } else if (tokenType == TokenType.PoolAsset) {
+      r.underlyingBalance = r.balance = token == ETH ? user.balance : IERC20Detailed(token).balanceOf(user);
+    } else {
+      r.underlyingBalance = r.balance = IERC20Detailed(token).balanceOf(user);
+      r.rewardedBalance = IRewardedToken(token).rewardedBalanceOf(user);
+    }
   }
 
   /**
-   * @notice Fetches balances for a list of _users and _tokens (ETH included with mock address)
-   * @param users The list of users
-   * @param tokens The list of stake tokens
    * @return balances - an array with the concatenation of balances for each user
    **/
-  function batchStakeBalanceOf(address[] calldata users, address[] calldata tokens)
-    external
-    view
-    override
-    returns (StakeTokenBalance[] memory balances)
-  {
-    balances = new StakeTokenBalance[](users.length * tokens.length);
+  function batchBalanceOf(
+    address[] calldata users,
+    address[] calldata tokens,
+    TokenType[] calldata tokenTypes,
+    TokenType defType
+  ) external view override returns (TokenBalance[] memory balances) {
+    balances = new TokenBalance[](users.length * tokens.length);
 
     for (uint256 i = 0; i < users.length; i++) {
       for (uint256 j = 0; j < tokens.length; j++) {
-        StakeTokenBalance memory b;
-        (b.balance, b.unstakeWindowStart, b.unstakeWindowEnd) = IStakeToken(tokens[j]).balanceAndCooldownOf(users[i]);
-        balances[i * tokens.length + j] = b;
+        balances[i * tokens.length + j] = balanceOf(
+          users[i],
+          tokens[j],
+          tokenTypes.length == 0 ? defType : tokenTypes[j]
+        );
       }
     }
 
     return balances;
-  }
-
-  // influenced by Aave && https://github.com/wbobeirne/eth-balance-checker/blob/master/contracts/BalanceChecker.sol
-
-  /**
-    @dev Check the token balance of a wallet in a token contract
-    Returns the balance of the token for user, and 0 on non-contract address
-    **/
-  function balanceOf(address user, address token) public view returns (uint256) {
-    if (token == ETH) {
-      return user.balance; // ETH balance
-    } else {
-      return IERC20Detailed(token).balanceOf(user);
-    }
-  }
-
-  /**
-   * @notice Fetches balances for a list of _users and _tokens (ETH included with mock address)
-   * @param users The list of users
-   * @param tokens The list of tokens
-   * @return An array with the concatenation of balances for each user
-   **/
-  function batchBalanceOf(address[] calldata users, address[] calldata tokens)
-    external
-    view
-    override
-    returns (uint256[] memory)
-  {
-    uint256[] memory balances = new uint256[](users.length * tokens.length);
-
-    for (uint256 i = 0; i < users.length; i++) {
-      for (uint256 j = 0; j < tokens.length; j++) {
-        balances[i * tokens.length + j] = balanceOf(users[i], tokens[j]);
-      }
-    }
-
-    return balances;
-  }
-
-  /**
-    @dev provides balances of user wallet for all tokens available on the protocol
-    */
-  function getUserWalletBalances(address user, bool includeAssets)
-    external
-    view
-    override
-    returns (
-      address[] memory tokens,
-      uint256[] memory balances,
-      uint256 tokenCount
-    )
-  {
-    (tokens, tokenCount) = getAllTokens(includeAssets);
-
-    balances = new uint256[](tokenCount);
-    for (uint256 j = 0; j < tokenCount; j++) {
-      balances[j] = balanceOf(user, tokens[j]);
-    }
-
-    return (tokens, balances, tokenCount);
   }
 
   function explainReward(address holder, uint32 minDuration) external view returns (RewardExplained memory, uint32 at) {
-    IRewardExplainer re = IRewardExplainer(ADDRESS_PROVIDER.getAddress(AccessFlags.REWARD_CONTROLLER));
+    IRewardExplainer re = IRewardExplainer(_getAddress(AccessFlags.REWARD_CONTROLLER));
     at = uint32(block.timestamp) + minDuration;
     return (re.explainReward(holder, at), at);
   }
@@ -593,12 +583,5 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
   {
     DataTypes.ReserveData memory reserve = ILendingPool(ADDRESS_PROVIDER.getLendingPool()).getReserveData(asset);
     return (reserve.depositTokenAddress, reserve.stableDebtTokenAddress, reserve.variableDebtTokenAddress);
-  }
-
-  function getFlashloanAdapters(string[] calldata names) external view override returns (address[] memory) {
-    ILendingPoolConfigurator lpc = ILendingPoolConfigurator(
-      ADDRESS_PROVIDER.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR)
-    );
-    return lpc.getFlashloanAdapters(names);
   }
 }

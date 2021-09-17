@@ -3,8 +3,9 @@ pragma solidity ^0.8.4;
 
 import '../../../interfaces/IDerivedToken.sol';
 import '../../../interfaces/IRewardedToken.sol';
+import '../../../interfaces/IUnderlyingBalance.sol';
 
-interface IStakeToken is IDerivedToken, IRewardedToken {
+interface IStakeToken is IDerivedToken, IRewardedToken, IUnderlyingBalance {
   event Staked(address indexed from, address indexed to, uint256 amount, uint256 indexed referal);
   event Redeemed(address indexed from, address indexed to, uint256 amount, uint256 underlyingAmount);
   event CooldownStarted(address indexed account, uint32 at);

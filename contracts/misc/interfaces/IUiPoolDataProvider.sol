@@ -134,7 +134,14 @@ interface IUiPoolDataProvider {
     view
     returns (TokenDescription[] memory tokens, uint256 tokenCount);
 
-  function getAllTokens(bool includeAssets) external view returns (address[] memory tokens, uint256 tokenCount);
+  function getAllTokens(bool includeAssets)
+    external
+    view
+    returns (
+      address[] memory tokens,
+      uint256 tokenCount,
+      TokenType[] memory tokenTypes
+    );
 
   function getReserveConfigurationData(address asset)
     external
@@ -152,27 +159,18 @@ interface IUiPoolDataProvider {
       bool isFrozen
     );
 
-  struct StakeTokenBalance {
+  struct TokenBalance {
     uint256 balance;
+    uint256 underlyingBalance;
+    uint256 rewardedBalance;
     uint32 unstakeWindowStart;
     uint32 unstakeWindowEnd;
   }
 
-  function batchStakeBalanceOf(address[] calldata users, address[] calldata tokens)
-    external
-    view
-    returns (StakeTokenBalance[] memory balances);
-
-  function batchBalanceOf(address[] calldata users, address[] calldata tokens) external view returns (uint256[] memory);
-
-  function getUserWalletBalances(address user, bool includeAssets)
-    external
-    view
-    returns (
-      address[] memory tokens,
-      uint256[] memory balances,
-      uint256 tokenCount
-    );
-
-  function getFlashloanAdapters(string[] calldata names) external view returns (address[] memory);
+  function batchBalanceOf(
+    address[] calldata users,
+    address[] calldata tokens,
+    TokenType[] calldata tokenTypes,
+    TokenType defType
+  ) external view returns (TokenBalance[] memory);
 }

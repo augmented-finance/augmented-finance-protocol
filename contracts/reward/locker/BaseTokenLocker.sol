@@ -5,6 +5,7 @@ import '../../dependencies/openzeppelin/contracts/IERC20.sol';
 import '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
 import '../../tools/tokens/ERC20NoTransferBase.sol';
 import '../../interfaces/IDerivedToken.sol';
+import '../../interfaces/IUnderlyingBalance.sol';
 
 /**
   @dev Curve-like locker, that locks an underlying token for some period and mints non-transferrable tokens for that period. 
@@ -14,7 +15,7 @@ import '../../interfaces/IDerivedToken.sol';
   Additionally, this contract recycles token excess of capped rewards by spreading the excess over some period. 
  */
 
-abstract contract BaseTokenLocker is ERC20NoTransferBase, IDerivedToken {
+abstract contract BaseTokenLocker is ERC20NoTransferBase, IDerivedToken, ILockedUnderlyingBalance {
   using SafeERC20 for IERC20;
 
   IERC20 private _underlyingToken;
@@ -326,7 +327,7 @@ abstract contract BaseTokenLocker is ERC20NoTransferBase, IDerivedToken {
   }
 
   /// @dev Returns amount of underlying for the given address
-  function balanceOfUnderlying(address account) public view returns (uint256) {
+  function balanceOfUnderlying(address account) public view override returns (uint256) {
     return _balances[account].underlyingAmount;
   }
 
@@ -334,6 +335,7 @@ abstract contract BaseTokenLocker is ERC20NoTransferBase, IDerivedToken {
   function balanceOfUnderlyingAndExpiry(address account)
     external
     view
+    override
     returns (uint256 underlying, uint32 availableSince)
   {
     underlying = _balances[account].underlyingAmount;
