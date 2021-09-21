@@ -18,6 +18,7 @@
     "console:fork": "MAINNET_FORK=true hardhat console",
     "hardhat": "hardhat",
     "hardhat:kovan": "hardhat --network kovan",
+    "hardhat:rinkeby": "hardhat --network rinkeby",
     "hardhat:tenderly-main": "hardhat --network tenderlyMain",
     "hardhat:ropsten": "hardhat --network ropsten",
     "hardhat:main": "hardhat --network main",
@@ -65,8 +66,10 @@
     "deploy:main:fork:tenderly": "npm run compile && npm run hardhat:tenderly-main -- augmented:mainnet",
     "deploy:ropsten": "npm run compile && npm run hardhat:ropsten -- augmented:mainnet",
     "deploy:kovan": "npm run compile && npm run hardhat:kovan -- augmented:mainnet",
+    "deploy:rinkeby": "npm run compile && npm run hardhat:rinkeby -- augmented:mainnet",
     "verify:ropsten": "npm run hardhat:ropsten -- verify:verify-all-contracts",
     "verify:kovan": "npm run hardhat:kovan -- verify:verify-all-contracts",
+    "verify:rinkeby": "npm run hardhat:rinkeby -- verify:verify-all-contracts",
     "prettier:check": "npx prettier -c 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'",
     "prettier:write": "prettier --write 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'"
   },

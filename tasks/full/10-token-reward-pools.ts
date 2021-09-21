@@ -347,7 +347,7 @@ const deployExtraPools = async (
     console.log(
       `Deployed ${poolName}: ${trp.address}, allocation ${allocation / 100.0}%, ${
         members.length
-      } members(s), unlocks at ${params.UnlockAt} (${unlockTimestamp})`
+      } member(s), unlocks at ${params.UnlockAt} (${unlockTimestamp})`
     );
   }
 

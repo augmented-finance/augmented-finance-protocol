@@ -1,12 +1,27 @@
 import { subtask, task, types } from 'hardhat/config';
 import { AccessFlags } from '../../helpers/access-flags';
 import { ZERO_ADDRESS } from '../../helpers/constants';
-import { getMarketAddressController, getOracleRouter } from '../../helpers/contracts-getters';
+import {
+  getAddressesProviderRegistry,
+  getMarketAddressController,
+  getOracleRouter,
+} from '../../helpers/contracts-getters';
 import { falsyOrZeroAddress, getFirstSigner, getFromJsonDb, waitTx } from '../../helpers/misc-utils';
 import { getContractGetterById } from '../../helpers/contracts-mapper';
 import { Contract, ContractTransaction } from '@ethersproject/contracts';
 import { MarketAccessController } from '../../types';
-import { eContractid } from '../../helpers/types';
+import { eContractid, eNetwork, ICommonConfiguration } from '../../helpers/types';
+import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
+import { getParamPerNetwork } from '../../helpers/contracts-helpers';
+
+interface ICallParams {
+  compatible: boolean;
+  useStatic: boolean;
+  encode: boolean;
+  args: any[];
+  waitTxFlag: boolean;
+  gasLimit?: number;
+}
 
 subtask('helper:call-cmd', 'Invokes a configuration command')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
@@ -14,10 +29,22 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
   .addFlag('static', 'Make this call as static')
   .addFlag('compatible', 'Use backward compatible mode')
   .addFlag('waitTx', 'Waif for mutable tx')
+  .addFlag('encode', 'Return encoded call')
   .addParam('roles', 'Roles required', [], types.any)
   .addOptionalParam('gasLimit', 'Gas limit', undefined, types.int)
   .addParam('args', 'Command arguments', [], types.any)
-  .setAction(async ({ ctl, cmd, static: staticCall, compatible, waitTx, roles, args, gasLimit }, DRE) => {
+  .setAction(async ({ ctl, cmd, static: staticCall, compatible, encode, waitTx, roles, args, gasLimit }, DRE) => {
+    const network = <eNetwork>DRE.network.name;
+
+    if (encode) {
+      if (compatible) {
+        throw 'Flag --compatible is not supported with the flag --encode';
+      }
+      if (staticCall) {
+        console.error('Flag --static is ignored with the flag --compatible');
+      }
+    }
+
     if (falsyOrZeroAddress(ctl)) {
       throw new Error('Unknown MarketAddressController');
     }
@@ -25,23 +52,39 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
 
     const dotPos = (<string>cmd).indexOf('.');
     if (dotPos >= 0) {
-      await callFunc(ac, staticCall, compatible, roles, cmd, args, waitTx, gasLimit);
+      await callFunc(network, ac, roles, cmd, {
+        useStatic: staticCall,
+        compatible: compatible,
+        encode: encode,
+        args: args || [],
+        waitTxFlag: waitTx,
+        gasLimit: gasLimit,
+      });
       return;
     }
 
     const call = async (cmd: string, args: any[], role: number | undefined) => {
       console.log('Call alias:', cmd, args);
-      await callFunc(ac, staticCall, compatible, role === undefined ? [] : [role], cmd, args, waitTx, gasLimit);
+      await callFunc(network, ac, role === undefined ? [] : [role], cmd, {
+        useStatic: staticCall,
+        compatible: compatible,
+        encode: encode,
+        args: args || [],
+        waitTxFlag: waitTx,
+        gasLimit: gasLimit,
+      });
     };
 
     const callName = (typeId: eContractid, instanceId: AccessFlags | string, funcName: string) =>
       typeId + '@' + (typeof instanceId === 'string' ? instanceId : AccessFlags[instanceId]) + '.' + funcName;
 
-    const easyCommands: {
-      [key: string]: {
-        cmd: string;
-        role: AccessFlags;
-      };
+    const cmdAliases: {
+      [key: string]:
+        | (() => Promise<void>)
+        | {
+            cmd: string;
+            role?: AccessFlags;
+          };
     } = {
       setCooldownForAll: {
         cmd: callName(eContractid.StakeConfiguratorImpl, AccessFlags.STAKE_CONFIGURATOR, 'setCooldownForAll'),
@@ -49,62 +92,76 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
       },
       getPrice: {
         cmd: callName(eContractid.OracleRouter, AccessFlags.PRICE_ORACLE, 'getAssetPrice'),
-        role: 0,
       },
       getPriceSource: {
         cmd: callName(eContractid.OracleRouter, AccessFlags.PRICE_ORACLE, 'getSourceOfAsset'),
-        role: 0,
       },
-    };
-
-    const fullCmd = easyCommands[cmd];
-    if (fullCmd !== undefined) {
-      await call(fullCmd.cmd, args, fullCmd.role);
-      return;
-    }
-
-    switch (cmd) {
-      case 'setPriceSource':
+      setPriceSource: async () =>
         await call(
           callName(eContractid.OracleRouter, AccessFlags.PRICE_ORACLE, 'setAssetSources'),
           [[args[0]], [args[1]]],
           AccessFlags.ORACLE_ADMIN
-        );
-        return;
-      case 'setStaticPrice':
+        ),
+      setStaticPrice: async () => {
         const oracle = await getOracleRouter(await ac.getPriceOracle());
         await call(
           callName(eContractid.StaticPriceOracle, await oracle.getFallbackOracle(), 'setAssetPrice'),
           args,
           AccessFlags.ORACLE_ADMIN
         );
-        return;
-      case 'getPrices':
-        await call(callName(eContractid.OracleRouter, AccessFlags.PRICE_ORACLE, 'getAssetsPrices'), [[...args]], 0);
-        return;
+      },
+      getPrices: async () =>
+        await call(callName(eContractid.OracleRouter, AccessFlags.PRICE_ORACLE, 'getAssetsPrices'), [[...args]], 0),
+    };
+
+    const fullCmd = cmdAliases[cmd];
+    if (fullCmd === undefined) {
+      throw new Error('Unknown command: ' + cmd);
+    } else if (typeof fullCmd == 'object') {
+      await call(fullCmd.cmd, args, fullCmd.role || 0);
+    } else {
+      await fullCmd();
     }
-    throw new Error('Unknown command: ' + cmd);
   });
 
 const callFunc = async (
+  network: eNetwork,
   ac: MarketAccessController,
-  staticCall: boolean,
-  compatible: boolean,
   roles: (number | string)[],
   cmd: string,
-  args: any[],
-  waitTx?: boolean,
-  gasLimit?: number
+  callParams: ICallParams
 ) => {
   const dotPos = (<string>cmd).indexOf('.');
   const objName = (<string>cmd).substring(0, dotPos);
   const funcName = (<string>cmd).substring(dotPos + 1);
-  const contract = await findObject(ac, objName);
+  const contract = await findObject(network, ac, objName);
 
-  await callContract(staticCall, compatible, ac, roles, contract, funcName, args, waitTx, gasLimit);
+  await callContract(ac, roles, contract, funcName, callParams);
 };
 
-const findObject = async (ac: MarketAccessController, objName: string): Promise<Contract> => {
+const findObject = async (network: eNetwork, ac: MarketAccessController, objName: string): Promise<Contract> => {
+  if (objName == 'AC' || objName == 'ACCESS_CONTROLLER') {
+    return ac;
+  }
+
+  if (objName == 'REGISTRY') {
+    {
+      const reg = getFromJsonDb(eContractid.AddressesProviderRegistry);
+      if (reg !== undefined) {
+        return getAddressesProviderRegistry(reg!.address);
+      }
+    }
+
+    const POOL_NAME = ConfigNames.Augmented;
+    const poolConfig = loadPoolConfig(POOL_NAME);
+    const { ProviderRegistry } = poolConfig as ICommonConfiguration;
+    const regAddr = getParamPerNetwork(ProviderRegistry, network);
+    if (falsyOrZeroAddress(regAddr)) {
+      throw new Error('Registry was not found');
+    }
+    return getAddressesProviderRegistry(regAddr);
+  }
+
   const bracketPos = objName.indexOf('@');
   if (bracketPos < 0) {
     const objEntry = getFromJsonDb(objName);
@@ -141,15 +198,11 @@ const findObject = async (ac: MarketAccessController, objName: string): Promise<
 };
 
 const callContract = async (
-  useStatic: boolean,
-  compatible: boolean,
   ac: MarketAccessController,
   roles: (number | string)[],
   contract: Contract,
   funcName: string,
-  args: any[],
-  waitTxFlag?: boolean,
-  gasLimit?: number
+  callParams: ICallParams
 ) => {
   let accessFlags: number = 0;
   roles.forEach((value) => {
@@ -165,21 +218,25 @@ const callContract = async (
   });
 
   const fnFrag = contract.interface.getFunction(funcName);
-  if (fnFrag.stateMutability === 'view' || fnFrag.stateMutability === 'pure') {
-    useStatic = true;
-  }
+  const useStatic = callParams.useStatic || fnFrag.stateMutability === 'view' || fnFrag.stateMutability === 'pure';
 
   const handleResult = async (tx: ContractTransaction) => {
-    if (waitTxFlag) {
+    if (callParams.waitTxFlag) {
       console.log('Gas used: ', (await tx.wait(1)).gasUsed.toString());
     }
   };
 
-  console.log('Call', useStatic ? 'static:' : 'mutable:', contract.address, fnFrag.name, args);
+  console.log('Call', useStatic ? 'static:' : 'mutable:', contract.address, fnFrag.name, callParams.args);
+  const callData = contract.interface.encodeFunctionData(fnFrag.name, callParams.args);
 
   if (accessFlags == 0) {
-    const result = await (useStatic ? contract.callStatic : contract.functions)[fnFrag.name](...(args || []), {
-      gasLimit: gasLimit,
+    if (callParams.encode) {
+      console.log(`\nEncoded call:\n\n{\n\tto: "${contract.address}",\n\tdata: "${callData}"\n}\n`);
+      return;
+    }
+
+    const result = await (useStatic ? contract.callStatic : contract.functions)[fnFrag.name](...callParams.args, {
+      gasLimit: callParams.gasLimit,
     });
     if (useStatic) {
       console.log('Result: ', result);
@@ -189,7 +246,7 @@ const callContract = async (
     return;
   }
 
-  if (compatible) {
+  if (callParams.compatible) {
     console.log('Grant temporary admin');
     const user = await getFirstSigner();
     await waitTx(ac.setTemporaryAdmin(user.address, 10));
@@ -197,7 +254,7 @@ const callContract = async (
       console.log('Grant roles');
       await waitTx(ac.grantRoles(user.address, accessFlags));
 
-      const result = await (useStatic ? contract.callStatic : contract.functions)[fnFrag.name](...(args || []));
+      const result = await (useStatic ? contract.callStatic : contract.functions)[fnFrag.name](...callParams.args);
       if (useStatic) {
         console.log('Result: ', result);
       } else {
@@ -210,14 +267,19 @@ const callContract = async (
     return;
   }
 
-  const callData = contract.interface.encodeFunctionData(fnFrag.name, args || []);
-  if (!useStatic) {
-    const tx = await ac.callWithRoles([{ accessFlags, callFlag: 0, callAddr: contract.address, callData }]);
-    await handleResult(tx);
+  const acArgs = [{ accessFlags, callFlag: 0, callAddr: contract.address, callData }];
+
+  if (callParams.encode) {
+    const acCallData = ac.interface.encodeFunctionData('callWithRoles', [acArgs]);
+    console.log(`\nEncoded call:\n\n{\n\tto: "${ac.address}",\n\tdata: "${acCallData}"\n}\n`);
     return;
   }
-  const result = (
-    await ac.callStatic.callWithRoles([{ accessFlags, callFlag: 0, callAddr: contract.address, callData }])
-  )[0];
-  console.log('Result: ', contract.interface.decodeFunctionResult(fnFrag.name, result));
+
+  if (useStatic) {
+    const result = (await ac.callStatic.callWithRoles(acArgs))[0];
+    console.log('Result: ', contract.interface.decodeFunctionResult(fnFrag.name, result));
+  } else {
+    const tx = await ac.callWithRoles(acArgs);
+    await handleResult(tx);
+  }
 };

@@ -254,7 +254,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
 
       if (staticTokens.length > 0) {
         const fb = await getStaticPriceOracle(await po.getFallbackOracle());
-        console.log('Apply', staticTokens.length, 'static prices');
+        console.log('Apply', staticTokens.length, 'static price(s)');
         const callData = fb.interface.encodeFunctionData('setAssetPrices', [staticTokens, staticPrices]);
         await waitTx(
           addressProvider.callWithRoles([
@@ -264,7 +264,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
       }
 
       if (priceTokens.length > 0) {
-        console.log('Apply', priceTokens.length, 'price sources');
+        console.log('Apply', priceTokens.length, 'price source(s)');
         const callData = po.interface.encodeFunctionData('setAssetSources', [priceTokens, priceSources]);
         await waitTx(
           addressProvider.callWithRoles([
