@@ -65,11 +65,17 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
       });
     }
 
+    const userAddr = (await getFirstSigner()).address;
+
     {
       console.log('\nCheck getAllTokens');
       const allTokens = await dataHelper.getAllTokens(true);
+
       const allTokensList0 = allTokens.tokens.slice(0, allTokens.tokenCount.toNumber());
+      const allTokensTypes0 = allTokens.tokenTypes.slice(0, allTokens.tokenCount.toNumber());
+
       const allTokensList1 = allTokenDesc.tokens.slice(0, allTokenDesc.tokenCount.toNumber());
+
       if (allTokensList0.length != allTokensList1.length) {
         throw `inconsisten length: getAllTokens = ${allTokensList0.length}, getAllTokenDescriptions = ${allTokensList1.length}`;
       }
@@ -77,7 +83,13 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
         if (allTokensList0[i] != allTokensList1[i].token) {
           throw `inconsisten token at index ${i}`;
         }
+        if (allTokensTypes0[i] != allTokensList1[i].tokenType) {
+          throw `inconsisten token type at index ${i}`;
+        }
       }
+
+      console.log('\nCheck batchBalanceOf');
+      const balances = await dataHelper.batchBalanceOf([userAddr], allTokensList0, allTokensTypes0, 0);
     }
 
     {
@@ -104,8 +116,6 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
         throw 'Some prices are missing';
       }
     }
-
-    const userAddr = (await getFirstSigner()).address;
 
     console.log('\nCheck getReservesData');
     const rd = await dataHelper.getReservesData(userAddr);
