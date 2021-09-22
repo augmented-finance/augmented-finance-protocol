@@ -428,7 +428,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       if (reserveData.stableDebtTokenAddress != address(0)) {
         (
           reserveData.totalPrincipalStableDebt,
-          ,
+          reserveData.totalStableDebt,
           reserveData.averageStableRate,
           reserveData.stableDebtLastUpdateTimestamp
         ) = IStableDebtToken(reserveData.stableDebtTokenAddress).getSupplyData();

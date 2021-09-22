@@ -51,6 +51,7 @@ interface IUiPoolDataProvider {
     uint256 availableLiquidity;
     uint256 totalPrincipalStableDebt;
     uint256 averageStableRate;
+    uint256 totalStableDebt;
     uint256 stableDebtLastUpdateTimestamp;
     uint256 totalScaledVariableDebt;
     uint256 priceInEth;
