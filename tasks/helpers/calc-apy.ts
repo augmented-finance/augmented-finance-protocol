@@ -1,7 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { task, types } from 'hardhat/config';
 import { AccessFlags } from '../../helpers/access-flags';
-import { DAY, USD_ADDRESS, ZERO_ADDRESS } from '../../helpers/constants';
+import { DAY, RAY, USD_ADDRESS, ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getIErc20Detailed,
   getMarketAddressController,
@@ -9,7 +9,7 @@ import {
   getProtocolDataProvider,
   getRewardConfiguratorProxy,
 } from '../../helpers/contracts-getters';
-import { falsyOrZeroAddress, getFirstSigner } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 
 enum TokenType {
   PoolAsset,
@@ -24,12 +24,12 @@ enum TokenType {
 task('helper:calc-apy', 'Calculates current APYs')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
   .addParam('user', 'User address to calc APY', ZERO_ADDRESS, types.string)
-  .setAction(async ({ ctl, userAddr }, DRE) => {
+  .setAction(async ({ ctl, user: userAddr }, DRE) => {
     if (falsyOrZeroAddress(ctl)) {
       throw new Error('Unknown MarketAddressController');
     }
     if (falsyOrZeroAddress(userAddr)) {
-      throw new Error('Unknown user address');
+      userAddr = ZERO_ADDRESS;
     }
 
     const ac = await getMarketAddressController(ctl);
@@ -183,7 +183,7 @@ task('helper:calc-apy', 'Calculates current APYs')
     }
 
     {
-      const { 0: reserves, 1: userReserves, 2: usdPrice } = await dp.getReservesData(userAddr);
+      const { 0: reserves, 1: userReserves, 2: usdPrice } = await dp.getReservesData(ZERO_ADDRESS);
 
       console.log('\nLending pools:');
       for (let i = 0; i < reserves.length; i++) {
@@ -195,7 +195,11 @@ task('helper:calc-apy', 'Calculates current APYs')
           `\tVariable: ${formatFixed(reserve.variableBorrowRate, 27 - 2, 4)}%`,
           `\tStable: ${formatFixed(reserve.stableBorrowRate, 27 - 2, 4)}%`,
           `\tLiquidity: ${formatFixed(reserve.availableLiquidity, reserve.decimals.toNumber(), 6)}`,
-          `\tDebt: ${formatFixed(reserve.totalScaledVariableDebt, reserve.decimals.toNumber(), 6)}`
+          `\tDebt: ${formatFixed(
+            reserve.totalScaledVariableDebt.mul(reserve.variableBorrowIndex).div(RAY),
+            reserve.decimals.toNumber(),
+            6
+          )}`
         );
       }
     }
@@ -294,11 +298,11 @@ task('helper:calc-apy', 'Calculates current APYs')
       );
     }
 
-    {
+    if (!falsyOrZeroAddress(userAddr)) {
       console.log('\nBalances of user:', userAddr);
 
-      // const currencyPrice = priceInfo.get(priceCurrency)!;
-      // console.log('\t ETH', '\t@', formatFixed(currencyPrice.price, currencyPrice.decimals, 6), priceCurrencyName);
+      const currencyPrice = priceInfo.get(priceCurrency)!;
+      console.log('\t ETH', '\t@', formatFixed(currencyPrice.price, currencyPrice.decimals, 6), priceCurrencyName);
 
       const balanceValues = new Map<string, BigNumber>();
 
@@ -319,7 +323,7 @@ task('helper:calc-apy', 'Calculates current APYs')
           const token = tokenInfo.get(tokenKey)!;
           const balanceV = formatFixed(balance, token.decimals, 4);
           if (falsyOrZeroAddress(token.priceToken)) {
-            // console.log('\t', token.tokenSymbol, '\t', balanceV);
+            console.log('\t', token.tokenSymbol, '\t', balanceV);
             continue;
           }
           const price = priceInfo.get(token.priceToken)!;
@@ -327,17 +331,17 @@ task('helper:calc-apy', 'Calculates current APYs')
           balanceValues.set(tokenKey, balanceValue);
           totalValue = totalValue.add(balanceValue.mul(totalExp).div(powerOf10(price.decimals + token.decimals)));
 
-          // const priceV = formatFixed(
-          //   price.price.mul(currencyPrice.price).div(BigNumber.from(10).pow(currencyPrice.decimals)),
-          //   price.decimals,
-          //   6
-          // );
-          // const totalV = formatFixed(
-          //   balanceValue.mul(currencyPrice.price),
-          //   token.decimals + price.decimals + currencyPrice.decimals,
-          //   4
-          // );
-          // console.log('\t', token.tokenSymbol, '\t', balanceV, '\t;\t', totalV, '\t@', priceV, priceCurrencyName);
+          const priceV = formatFixed(
+            price.price.mul(currencyPrice.price).div(BigNumber.from(10).pow(currencyPrice.decimals)),
+            price.decimals,
+            6
+          );
+          const totalV = formatFixed(
+            balanceValue.mul(currencyPrice.price),
+            token.decimals + price.decimals + currencyPrice.decimals,
+            4
+          );
+          console.log('\t', token.tokenSymbol, '\t', balanceV, '\t;\t', totalV, '\t@', priceV, priceCurrencyName);
         }
       }
 
@@ -443,9 +447,9 @@ const perAnnum = (v: BigNumber) => v.mul(365 * DAY);
 const formatFixed = (v: BigNumber, decimals: number, precision?: number): number => {
   const p = precision || 4;
   if (decimals <= p) {
-    return v.toNumber() / 10.0 ** decimals;
+    return parseFloat(v.toString()) / 10.0 ** decimals;
   }
-  return v.div(powerOf10(decimals - p)).toNumber() / 10.0 ** p;
+  return parseFloat(v.div(powerOf10(decimals - p)).toString()) / 10.0 ** p;
 };
 
 const powerOf10 = (n: number) => BigNumber.from(10).pow(n);

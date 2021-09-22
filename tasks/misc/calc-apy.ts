@@ -9,12 +9,8 @@ import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 task('augmented:calc-apy', 'Calculates current APYs')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
   .addParam('user', 'User address to calc APY', ZERO_ADDRESS, types.string)
-  .setAction(async ({ ctl, userAddr }, DRE) => {
+  .setAction(async ({ ctl, user: userAddr }, DRE) => {
     await DRE.run('set-DRE');
-
-    if (falsyOrZeroAddress(userAddr)) {
-      userAddr = (await getFirstSigner()).address;
-    }
 
     if (falsyOrZeroAddress(ctl)) {
       if (hasMarketAddressController()) {
@@ -28,5 +24,5 @@ task('augmented:calc-apy', 'Calculates current APYs')
       }
     }
 
-    await DRE.run('helper:calc-apy', { ctl, userAddr });
+    await DRE.run('helper:calc-apy', { ctl, user: userAddr });
   });
