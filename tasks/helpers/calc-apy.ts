@@ -1,5 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber';
-import { task, types } from 'hardhat/config';
+import { subtask, types } from 'hardhat/config';
 import { AccessFlags } from '../../helpers/access-flags';
 import { DAY, RAY, USD_ADDRESS, ZERO_ADDRESS } from '../../helpers/constants';
 import {
@@ -10,6 +10,7 @@ import {
   getRewardConfiguratorProxy,
 } from '../../helpers/contracts-getters';
 import { falsyOrZeroAddress } from '../../helpers/misc-utils';
+import { tEthereumAddress } from '../../helpers/types';
 
 enum TokenType {
   PoolAsset,
@@ -21,10 +22,11 @@ enum TokenType {
   RewardStake,
 }
 
-task('helper:calc-apy', 'Calculates current APYs')
+subtask('helper:calc-apy', 'Calculates current APYs')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
   .addParam('user', 'User address to calc APY', ZERO_ADDRESS, types.string)
-  .setAction(async ({ ctl, user: userAddr }, DRE) => {
+  .addFlag('quiet')
+  .setAction(async ({ ctl, user: userAddr, quiet }, DRE) => {
     if (falsyOrZeroAddress(ctl)) {
       throw new Error('Unknown MarketAddressController');
     }
@@ -50,9 +52,11 @@ task('helper:calc-apy', 'Calculates current APYs')
 
     const addresses = await dp.getAddresses();
 
-    console.log('Access Controller:', ac.address);
-    console.log('Data Helper:', dp.address);
-    console.log('Addresses:', addresses);
+    if (!quiet) {
+      console.log('Access Controller:', ac.address);
+      console.log('Data Helper:', dp.address);
+      console.log('Addresses:', addresses);
+    }
 
     {
       const rw = await getRewardConfiguratorProxy(addresses.rewardConfigurator);
@@ -99,6 +103,9 @@ task('helper:calc-apy', 'Calculates current APYs')
       }
     >();
 
+    const tokenAddrList: tEthereumAddress[] = [];
+    const tokenTypeList: number[] = [];
+
     {
       const requests: Promise<void>[] = [];
 
@@ -108,6 +115,9 @@ task('helper:calc-apy', 'Calculates current APYs')
         const key = token.token.toLowerCase();
         tokenInfo.set(key, { ...token, totalSupply: BigNumber.from(0) });
         const tokenAddr = token.token;
+
+        tokenAddrList.push(tokenAddr);
+        tokenTypeList.push(token.tokenType);
 
         // TODO this requires a better function of Data Provider
         requests.push(
@@ -162,27 +172,28 @@ task('helper:calc-apy', 'Calculates current APYs')
       });
 
       let allPrices = true;
-      // for (let i = 0; i < priceList.length; i++) {
-      //   const pi = priceInfo.get(priceList[i])!;
-      //   try {
-      //     const price = await po.getAssetPrice(priceList[i]);
-      //     pi.price = price;
-      //   } catch {
-      //     allPrices = false;
-      //     console.log('Failed to get a price:', pi.tokenName, priceList[i]);
-      //   }
-      // }
-
-      const prices = await po.getAssetsPrices(priceList);
-      for (let i = 0; i < priceList.length; i++) {
-        priceInfo.get(priceList[i])!.price = prices[i];
+      try {
+        const prices = await po.getAssetsPrices(priceList);
+        for (let i = 0; i < priceList.length; i++) {
+          priceInfo.get(priceList[i])!.price = prices[i];
+        }
+      } catch {
+        allPrices = false;
+        for (let i = 0; i < priceList.length; i++) {
+          const pi = priceInfo.get(priceList[i])!;
+          try {
+            pi.price = await po.getAssetPrice(priceList[i]);
+          } catch {
+            console.log('Failed to get a price:', pi.tokenName, priceList[i]);
+          }
+        }
       }
       if (allPrices) {
         console.log('Found all prices');
       }
     }
 
-    {
+    if (!quiet) {
       const { 0: reserves, 1: userReserves, 2: usdPrice } = await dp.getReservesData(ZERO_ADDRESS);
 
       console.log('\nLending pools:');
@@ -304,7 +315,7 @@ task('helper:calc-apy', 'Calculates current APYs')
       const currencyPrice = priceInfo.get(priceCurrency)!;
       console.log('\t ETH', '\t@', formatFixed(currencyPrice.price, currencyPrice.decimals, 6), priceCurrencyName);
 
-      const balanceValues = new Map<string, BigNumber>();
+      const rewardedBalanceValues = new Map<string, BigNumber>();
 
       let totalValue = BigNumber.from(0);
       const totalDecimals = basePriceDecimals;
@@ -312,23 +323,24 @@ task('helper:calc-apy', 'Calculates current APYs')
 
       {
         // TODO use rewardedBalanceOf() for pool and stake tokens
-        const balances = await dp.getUserWalletBalances(userAddr, true);
-        for (let i = balances.tokenCount.toNumber(); i > 0; i--) {
-          const balance = balances.balances[i - 1];
-          if (balance.eq(0)) {
+        const allBalances = await dp.batchBalanceOf([userAddr], tokenAddrList, tokenTypeList, 0);
+
+        for (let i = allBalances.length; i > 0; i--) {
+          const tokenBalances = allBalances[i - 1];
+          if (tokenBalances.rewardedBalance.eq(0)) {
             continue;
           }
 
-          const tokenKey = balances.tokens[i - 1].toLowerCase();
+          const tokenKey = tokenAddrList[i - 1].toLowerCase();
           const token = tokenInfo.get(tokenKey)!;
-          const balanceV = formatFixed(balance, token.decimals, 4);
+          const balanceV = formatFixed(tokenBalances.rewardedBalance, token.decimals, 4);
           if (falsyOrZeroAddress(token.priceToken)) {
             console.log('\t', token.tokenSymbol, '\t', balanceV);
             continue;
           }
           const price = priceInfo.get(token.priceToken)!;
-          const balanceValue = balance.mul(price.price);
-          balanceValues.set(tokenKey, balanceValue);
+          const balanceValue = tokenBalances.rewardedBalance.mul(price.price);
+          rewardedBalanceValues.set(tokenKey, balanceValue);
           totalValue = totalValue.add(balanceValue.mul(totalExp).div(powerOf10(price.decimals + token.decimals)));
 
           const priceV = formatFixed(
@@ -398,7 +410,7 @@ task('helper:calc-apy', 'Calculates current APYs')
 
         const token = tokenInfo.get(tokenKey)!;
         const tokenPrice = priceInfo.get(token.priceToken)!;
-        const balanceValue = balanceValues.get(tokenKey)!;
+        const balanceValue = rewardedBalanceValues.get(tokenKey)!;
         if (balanceValue == undefined || balanceValue!.eq(0)) {
           continue;
         }
@@ -424,7 +436,7 @@ task('helper:calc-apy', 'Calculates current APYs')
       }
 
       const boostDuration = explainedAt - explained.latestClaimAt;
-      if (boostDuration > 0) {
+      if (boostDuration > 0 && totalValue.gt(0)) {
         const formatBoostAPY = (v: BigNumber) =>
           formatFixed(
             perAnnum(v)
