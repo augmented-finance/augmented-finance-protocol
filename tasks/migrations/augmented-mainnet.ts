@@ -1,4 +1,4 @@
-import { task } from 'hardhat/config';
+import { task, types } from 'hardhat/config';
 import { ConfigNames } from '../../helpers/configuration';
 import {
   cleanupJsonDb,
@@ -16,9 +16,9 @@ task('augmented:mainnet', 'Deploy enviroment')
   .addFlag('incremental', 'Incremental deployment')
   .addFlag('secure', 'Renounce credentials on errors')
   .addFlag('strict', 'Fail on warnings')
-  .addFlag('reuse', 'Allow reuse of a price oracle')
   .addFlag('verify', 'Verify contracts at Etherscan')
-  .setAction(async ({ incremental, secure, reuse, strict, verify }, DRE) => {
+  .addOptionalParam('skip', 'Skip steps with less or equal index', 0, types.int)
+  .setAction(async ({ incremental, secure, strict, verify, skip: skipN }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
     const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
     await DRE.run('set-DRE');
@@ -58,6 +58,10 @@ task('augmented:mainnet', 'Deploy enviroment')
         console.log('\n======================================================================');
         console.log(stepId.substring(stepId.length - 2), step.stepName);
         console.log('======================================================================\n');
+        if (step.seqId <= skipN) {
+          console.log('STEP WAS SKIPPED\n');
+          continue;
+        }
         await DRE.run(step.taskName, step.args);
       }
 

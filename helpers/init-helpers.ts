@@ -501,6 +501,7 @@ export const initReservePriceFeeds = async (
   addressProvider: MarketAccessController,
   reservesParams: { [symbol: string]: IReserveParams },
   tokenAddresses: { [symbol: string]: tEthereumAddress },
+  remappings: { [symbol: string]: tEthereumAddress },
   verify: boolean
 ) => {
   const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
@@ -546,6 +547,12 @@ export const initReservePriceFeeds = async (
   const sources = await po.getAssetSources(assets);
   const indices: number[] = [];
   const underlyings: tEthereumAddress[] = [];
+  const remaps = new Map<string, string>();
+
+  for (const [k, v] of Object.entries(remappings)) {
+    remaps.set(k.toLocaleLowerCase(), v);
+  }
+  console.log('Found ', remaps.size, 'remapping(s)');
 
   for (let i = 0; i < assets.length; i++) {
     if (!falsyOrZeroAddress(sources[i])) {
@@ -556,7 +563,14 @@ export const initReservePriceFeeds = async (
     const rd = await lendingPool.getReserveData(assets[i]);
     const strategy = await getIReserveDelegatedStrategy(rd.strategy);
     const underlying = await strategy.getUnderlying(assets[i]);
-    underlyings.push(underlying);
+    const remapped = remaps.get(underlying.toLocaleLowerCase());
+    if (falsyOrZeroAddress(remapped)) {
+      underlyings.push(underlying);
+    } else {
+      console.log('\tUnderlying remapped:', names[i], underlying, '=>', remapped);
+      underlyings.push(remapped!);
+    }
+
     indices.push(i);
   }
 
@@ -577,7 +591,7 @@ export const initReservePriceFeeds = async (
     const factoryInfo = factories[idx];
 
     if (!factoryInfo.staticUnderlying && falsyOrZeroAddress(underlyingSources[i])) {
-      console.error('\tUnknown underlying price feed for:', symbol);
+      console.error('\tUnknown underlying price feed for:', symbol, underlyings[i]);
       continue;
     }
 
@@ -593,5 +607,5 @@ export const initReservePriceFeeds = async (
     return;
   }
 
-  await mustWaitTx(po.setAssetSources(feedAssets, feeds));
+  await mustWaitTx(po.setAssetSources(feedAssets, feeds, { gasLimit: 1000000 }));
 };

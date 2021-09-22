@@ -287,8 +287,6 @@ export type iTestPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, testAssets>;
 export type iAugmentedPoolAssets<T> = Omit<iAssetsWithoutUSD<T>, testOnlyAssets>;
 export type iAugmentedPoolAssetsOpt<T> = OmitOpt<iAssetsWithoutUSD<T>, testOnlyAssets>;
 
-type iMultiPoolsAssets<T> = iAssetsWithoutUSD<T> | iAugmentedPoolAssets<T> | iTestPoolAssets<T>;
-
 export type iAssetAggregatorBase<T> = iAssetBase<T>;
 
 export const DefaultTokenSymbols: string[] = Object.keys(tokenSymbols);
@@ -359,6 +357,7 @@ export interface IMocksConfig {
   MockUsdPriceInWei: string;
   UsdAddress: tEthereumAddress;
   AllAssetsInitialPrices: iAssetBase<string>;
+  UnderlyingMappings: iParamsPerNetwork<iAssetCommon<tEthereumAddress>>;
 }
 
 export interface ICommonConfiguration {
