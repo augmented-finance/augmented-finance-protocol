@@ -66,19 +66,19 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('======================================================================\n');
       await DRE.run('full:access-test', { pool: POOL_NAME });
 
-      console.log('\n======================================================================');
-      console.log('97 Smoke tests');
-      console.log('======================================================================\n');
-      await DRE.run('full:smoke-test', { pool: POOL_NAME });
-
       const balanceBeforePluck = await deployer.getBalance();
       if (MAINNET_FORK) {
         console.log('\n======================================================================');
-        console.log('98. Pluck');
+        console.log('97 Pluck');
         console.log('======================================================================\n');
         await DRE.run('dev:pluck-tokens', { pool: POOL_NAME });
       }
       spentOnPluck = balanceBeforePluck.sub(await deployer.getBalance());
+
+      console.log('\n======================================================================');
+      console.log('98 Smoke tests');
+      console.log('======================================================================\n');
+      await DRE.run('full:smoke-test', { pool: POOL_NAME });
 
       {
         const [entryMap, instanceCount, multiCount] = printContracts((await getFirstSigner()).address);

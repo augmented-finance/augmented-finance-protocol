@@ -139,5 +139,8 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
       await checkReserve(`#${i}`, reserveList[i]);
     }
 
+    console.log('\nCheck calc-apy');
+    await DRE.run('helper:calc-apy', { ctl: addressProvider.address, user: userAddr, quiet: true });
+
     console.log('');
   });
