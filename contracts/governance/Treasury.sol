@@ -14,6 +14,8 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
   using SafeERC20 for IERC20;
   uint256 private constant TREASURY_REVISION = 1;
 
+  address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
   constructor() MarketAccessBitmask(IMarketAccessController(address(0))) {}
 
   // This initializer is invoked by AccessController.setAddressAsImpl
@@ -25,7 +27,7 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
     return TREASURY_REVISION;
   }
 
-  function approve(
+  function approveToken(
     address token,
     address recipient,
     uint256 amount
@@ -33,11 +35,16 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
     IERC20(token).safeApprove(recipient, amount);
   }
 
-  function transfer(
+  function transferToken(
     address token,
     address recipient,
     uint256 amount
   ) external aclHas(AccessFlags.TREASURY_ADMIN) {
+    if (token == ETH) {
+      Address.sendValue(payable(recipient), amount);
+      return;
+    }
+
     if (token == _remoteAcl.getAddress(AccessFlags.REWARD_TOKEN) && IERC20(token).balanceOf(address(this)) < amount) {
       _claimRewards();
     }
@@ -53,9 +60,5 @@ contract Treasury is VersionedInitializable, MarketAccessBitmask {
 
   function claimRewardsForTreasury() external aclHas(AccessFlags.TREASURY_ADMIN) {
     _claimRewards();
-  }
-
-  function transferEth(address recipient, uint256 amount) external aclHas(AccessFlags.TREASURY_ADMIN) {
-    Address.sendValue(payable(recipient), amount);
   }
 }
