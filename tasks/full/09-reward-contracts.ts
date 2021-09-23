@@ -9,6 +9,8 @@ import {
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import {
   getAGFTokenV1Impl,
+  getIInitializableRewardPool,
+  getIInitializableRewardToken,
   getOracleRouter,
   getRewardBooster,
   getRewardConfiguratorProxy,
@@ -27,7 +29,7 @@ import { MarketAccessController } from '../../types';
 import { BigNumber } from '@ethersproject/bignumber';
 import { addFullStep } from '../helpers/full-steps';
 
-addFullStep(9, 'Deploy reward contracts and AGF token', 'full:deploy-reward-contracts');
+addFullStep(8, 'Deploy reward contracts and AGF token', 'full:deploy-reward-contracts');
 
 task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tokens`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
