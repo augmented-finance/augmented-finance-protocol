@@ -6,13 +6,16 @@ import {
   deployRewardConfiguratorImpl,
   deployXAGFTokenV1Impl,
 } from '../../helpers/contracts-deployments';
-import { eNetwork, ICommonConfiguration } from '../../helpers/types';
+import { eNetwork, ICommonConfiguration, tEthereumAddress } from '../../helpers/types';
 import {
   getAGFTokenV1Impl,
+  getIUniswapV2Factory,
+  getIUniswapV2Router02,
   getOracleRouter,
   getRewardBooster,
   getRewardConfiguratorProxy,
   getStaticPriceOracle,
+  getWETHGateway,
   getXAGFTokenV1Impl,
 } from '../../helpers/contracts-getters';
 import { falsyOrZeroAddress, waitTx, mustWaitTx } from '../../helpers/misc-utils';
@@ -21,11 +24,13 @@ import {
   getDeployAccessController,
   setAndGetAddressAsProxy,
   setAndGetAddressAsProxyWithInit,
+  waitForAddressFn,
 } from '../../helpers/deploy-helpers';
 import { oneEther, WEEK } from '../../helpers/constants';
 import { MarketAccessController } from '../../types';
 import { BigNumber } from '@ethersproject/bignumber';
 import { addFullStep } from '../helpers/full-steps';
+import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 
 addFullStep(8, 'Deploy reward contracts and AGF token', 'full:deploy-reward-contracts');
 
@@ -39,6 +44,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     const {
       Names,
       RewardParams,
+      Dependencies,
       AGF: { DefaultPriceEth: AgfDefaultPriceEth },
     } = poolConfig as ICommonConfiguration;
 
@@ -82,6 +88,9 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
 
     if (AgfDefaultPriceEth) {
       await configureAgfPrice(addressProvider, agfAddr, AgfDefaultPriceEth, newAgfToken);
+
+      const dependencies = getParamPerNetwork(Dependencies, network);
+      await deployUniswapAgfEth(addressProvider, agfAddr, dependencies.UniswapV2Router, newAgfToken);
     }
 
     // Reward controller is not updated
@@ -178,4 +187,35 @@ const configureAgfPrice = async (
     await waitTx(fallback.setAssetPrice(agfAddr, agfPrice));
     console.log('AGF price configured:', defaulAgfPrice, 'ethers (', agfPrice, ')');
   }
+};
+
+const deployUniswapAgfEth = async (
+  ac: MarketAccessController,
+  agfAddr: tEthereumAddress,
+  uniswapAddr: tEthereumAddress | undefined,
+  newAgfToken: boolean
+) => {
+  console.log('Deploy Uniswap Pair ETH-AGF');
+  if (falsyOrZeroAddress(uniswapAddr)) {
+    console.log('\tUniswap address is missing');
+    return;
+  }
+
+  const wethGw = await getWETHGateway(await ac.getAddress(AccessFlags.WETH_GATEWAY));
+  const weth = await wethGw.getWETHAddress();
+
+  const uniswapRouter = await getIUniswapV2Router02(uniswapAddr!);
+  const uniWeth = await uniswapRouter.WETH();
+  if (weth.toLocaleLowerCase() != uniWeth.toLocaleLowerCase()) {
+    throw 'WETH address mismatched with Uniswap: ' + weth + ', ' + uniWeth;
+  }
+
+  const uniswapFactory = await getIUniswapV2Factory(await uniswapRouter.factory());
+  let lpPair = newAgfToken ? '' : await uniswapFactory.getPair(weth, agfAddr);
+  if (falsyOrZeroAddress(lpPair)) {
+    console.log('\tCreating uniswap pair ETH-AGF');
+    await mustWaitTx(uniswapFactory.createPair(weth, agfAddr));
+    lpPair = await waitForAddressFn(async () => await uniswapFactory.getPair(weth, agfAddr), 'ETH-AGF');
+  }
+  console.log('Uniswap pair ETH-AGF: ', lpPair);
 };

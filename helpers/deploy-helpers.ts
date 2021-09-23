@@ -61,14 +61,18 @@ export const setAndGetAddressAsProxyWithInit = async (
 };
 
 export const waitForAddress = async (ac: AccessController, id: AccessFlags) => {
+  return await waitForAddressFn(async () => await ac.getAddress(id), AccessFlags[id]);
+};
+
+export const waitForAddressFn = async (getFn: () => Promise<string>, id: string) => {
   for (let i = 0; i <= 20; i++) {
-    const result = await ac.getAddress(id);
+    const result = await getFn();
     if (!falsyOrZeroAddress(result)) {
       return result;
     }
     await sleep(100 + 1000 * i);
     if (i > 3) {
-      console.log('... waiting for address: ', AccessFlags[id], i);
+      console.log('... waiting for address: ', id, i);
     }
   }
   throw 'failed to get an address';

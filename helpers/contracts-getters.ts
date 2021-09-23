@@ -71,6 +71,10 @@ import { IReserveDelegatedStrategyFactory } from '../types/IReserveDelegatedStra
 import { PriceFeedCompoundEthFactory } from '../types/PriceFeedCompoundEthFactory';
 import { PriceFeedCompoundErc20Factory } from '../types/PriceFeedCompoundErc20Factory';
 import { IWETHGatewayFactory } from '../types/IWETHGatewayFactory';
+import { IInitializableRewardTokenFactory } from '../types/IInitializableRewardTokenFactory';
+import { IUniswapV2Router02Factory } from '../types/IUniswapV2Router02Factory';
+import { IUniswapV2FactoryFactory } from '../types/IUniswapV2FactoryFactory';
+import { IUniswapV2PairFactory } from '../types/IUniswapV2PairFactory';
 
 const getAddr = async (id: eContractid) => {
   const entry = await getFromJsonDb(id);
@@ -129,6 +133,15 @@ export const getIReserveDelegatedStrategy = async (address: tEthereumAddress) =>
 
 export const getIRewardedToken = async (address: tEthereumAddress) =>
   IRewardedTokenFactory.connect(address, await getFirstSigner());
+
+export const getIUniswapV2Router02 = async (address: tEthereumAddress) =>
+  IUniswapV2Router02Factory.connect(address, await getFirstSigner());
+
+export const getIUniswapV2Factory = async (address: tEthereumAddress) =>
+  IUniswapV2FactoryFactory.connect(address, await getFirstSigner());
+
+export const getIUniswapV2Pair = async (address: tEthereumAddress) =>
+  IUniswapV2PairFactory.connect(address, await getFirstSigner());
 
 export const getRewardConfiguratorProxy = async (address: tEthereumAddress) =>
   RewardConfiguratorFactory.connect(address, await getFirstSigner());
@@ -415,6 +428,9 @@ export const getIInitializableStakeToken = async (address: tEthereumAddress) =>
 
 export const getIInitializableRewardPool = async (address: tEthereumAddress) =>
   IInitializableRewardPoolFactory.connect(address, await getFirstSigner());
+
+export const getIInitializableRewardToken = async (address: tEthereumAddress) =>
+  IInitializableRewardTokenFactory.connect(address, await getFirstSigner());
 
 export const getDelegatedStrategyAave = async (address?: tEthereumAddress) =>
   DelegatedStrategyAaveFactory.connect(
