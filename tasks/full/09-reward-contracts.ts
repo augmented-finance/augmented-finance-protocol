@@ -9,8 +9,6 @@ import {
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import {
   getAGFTokenV1Impl,
-  getIInitializableRewardPool,
-  getIInitializableRewardToken,
   getOracleRouter,
   getRewardBooster,
   getRewardConfiguratorProxy,
