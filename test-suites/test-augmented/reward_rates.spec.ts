@@ -17,11 +17,11 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { currentTick, mineBlocks, mineTicks, revertSnapshot, takeSnapshot } from './utils';
 import { MAX_LOCKER_PERIOD, MAX_UINT_AMOUNT, ONE_ADDRESS, PERC_100, WEEK } from '../../helpers/constants';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
-import { deployReferralRewardPool, deployTreasuryRewardPool } from '../../helpers/contracts-deployments';
+import { deployMockTreasuryRewardPool, deployReferralRewardPool } from '../../helpers/contracts-deployments';
 import { AccessFlags } from '../../helpers/access-flags';
 import { IManagedRewardPool } from '../../types/IManagedRewardPool';
 import { IManagedRewardPoolFactory } from '../../types/IManagedRewardPoolFactory';
-import { BigNumber, Contract } from 'ethers';
+import { Contract } from 'ethers';
 import { ProtocolErrors, tEthereumAddress } from '../../helpers/types';
 
 chai.use(solidity);
@@ -64,7 +64,7 @@ describe('Reward rates suite', () => {
     await rewardController.addRewardPool(refPool.address);
 
     {
-      const pool = await deployTreasuryRewardPool([rewardController.address, 0, poolShare, root.address]);
+      const pool = await deployMockTreasuryRewardPool([rewardController.address, 0, poolShare, root.address]);
       await rewardController.addRewardPool(pool.address);
       pushPool(pool);
     }

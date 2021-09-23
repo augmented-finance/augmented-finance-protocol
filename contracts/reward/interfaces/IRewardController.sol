@@ -5,7 +5,8 @@ import '../../access/interfaces/IMarketAccessController.sol';
 
 enum AllocationMode {
   Push,
-  SetPull
+  SetPull,
+  SetPullSpecial
 }
 
 interface IRewardController {

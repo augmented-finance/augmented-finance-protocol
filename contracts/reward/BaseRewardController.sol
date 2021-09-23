@@ -229,8 +229,8 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     AllocationMode mode
   ) external override {
     uint256 poolDesc = _poolDesc[msg.sender];
-    uint256 poolMask = poolDesc & POOL_ID_MASK;
-    require(poolMask != 0, 'unknown pool');
+    uint256 poolId = poolDesc & POOL_ID_MASK;
+    require(poolId != 0, 'unknown pool');
     poolDesc >>= POOL_ID_BITS;
 
     if (allocated > 0) {
@@ -238,14 +238,22 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
       emit RewardsAllocated(holder, allocated, msg.sender);
     }
 
-    if (mode != AllocationMode.SetPull) {
+    if (mode == AllocationMode.Push) {
       return;
     }
 
-    poolMask = 1 << (poolMask - 1);
+    internalSetPull(holder, 1 << (poolId - 1), mode);
+  }
+
+  function internalSetPull(
+    address holder,
+    uint256 mask,
+    AllocationMode mode
+  ) internal virtual {
+    mode;
     uint256 pullMask = _memberOf[holder];
-    if (pullMask & poolMask != poolMask) {
-      _memberOf[holder] = pullMask | poolMask;
+    if (pullMask & mask != mask) {
+      _memberOf[holder] = pullMask | mask;
     }
   }
 

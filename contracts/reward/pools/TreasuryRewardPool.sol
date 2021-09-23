@@ -11,20 +11,28 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRewardAccum {
   constructor(
     IRewardController controller,
     uint256 initialRate,
-    uint16 baselinePercentage,
-    address treasury
-  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {
-    require(treasury != address(0));
-    _treasury = treasury;
-  }
+    uint16 baselinePercentage
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) {}
 
   function internalAttachedToRewardController() internal override {
     subscribeTreasury();
   }
 
+  function getTreasury() internal view virtual returns (address) {
+    return getAccessController().getAddress(AccessFlags.TREASURY);
+  }
+
   function subscribeTreasury() private {
-    uint256 allocated = doGetAllReward(type(uint256).max);
-    internalAllocateReward(_treasury, allocated, uint32(block.timestamp), AllocationMode.SetPull);
+    address treasury = getTreasury();
+    if (_treasury == treasury) {
+      return;
+    }
+
+    _treasury = treasury;
+    if (treasury != address(0)) {
+      uint256 allocated = doGetAllReward(type(uint256).max);
+      internalAllocateReward(treasury, allocated, uint32(block.timestamp), AllocationMode.SetPullSpecial);
+    }
   }
 
   function internalSetRate(uint256 rate) internal override {

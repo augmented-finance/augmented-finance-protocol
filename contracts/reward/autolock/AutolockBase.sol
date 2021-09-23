@@ -40,12 +40,11 @@ abstract contract AutolockBase {
     return uint8(v);
   }
 
-  event RewardAutolockConfigured(
-    address indexed account,
-    AutolockMode mode,
-    uint32 lockDuration,
-    uint224 param
-  );
+  event RewardAutolockConfigured(address indexed account, AutolockMode mode, uint32 lockDuration, uint224 param);
+
+  function internalCancelAutolock(address account) internal {
+    _setAutolock(account, AutolockMode.Stop, 0, 0);
+  }
 
   function _setAutolock(
     address account,
