@@ -1,7 +1,11 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
-import { deployDepositStakeTokenImpl, deployStakeTokenImpl } from '../../helpers/contracts-deployments';
+import {
+  deployDepositStakeTokenImpl,
+  deployPriceFeedUniEthPair,
+  deployStakeTokenImpl,
+} from '../../helpers/contracts-deployments';
 import { eNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../../helpers/types';
 import {
   getIErc20Detailed,
@@ -78,9 +82,11 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
     };
 
     const listPricedSymbols: string[] = [];
-    const listPricingTokens: string[] = [];
+    const listStakedTokens: string[] = [];
     const listPricingAssets: string[] = [];
     const listStaticPrices: string[] = [];
+
+    const customPriceFeed = 'custom';
 
     for (const [tokenName, mode] of Object.entries(stakeParams.StakeToken)) {
       if (mode == undefined) {
@@ -115,7 +121,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
       if (depositStake) {
         listPricedSymbols.push(stkTokenSymbol);
         listPricingAssets.push(reserveAsset);
-        listPricingTokens.push(asset);
+        listStakedTokens.push(asset);
         listStaticPrices.push(tokenName === 'WETH' ? WAD : '');
       }
 
@@ -180,6 +186,14 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
           maxSlashable: stakeParams.MaxSlashBP,
           depositStake: false,
         });
+
+        const feed = await deployPriceFeedUniEthPair(symbol, [lpPairAddr], verify);
+        console.log('\tUni ETH-pair price feed:', symbol, feed.address);
+
+        listPricedSymbols.push(stkTokenSymbol);
+        listPricingAssets.push(feed.address);
+        listStakedTokens.push(lpPairAddr);
+        listStaticPrices.push(customPriceFeed);
       }
     }
 
@@ -239,18 +253,17 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
       }
     }
 
-    if (listPricingTokens.length > 0) {
+    if (listStakedTokens.length > 0) {
       const po = await getOracleRouter(await addressProvider.getAddress(AccessFlags.PRICE_ORACLE));
 
       const staticTokens: string[] = [];
       const staticPrices: string[] = [];
-
       const priceTokens: string[] = [];
       const priceSources: string[] = [];
 
       console.log('Set price stubs for stake tokens: ', listPricedSymbols);
-      for (let i = 0; i < listPricingTokens.length; i++) {
-        const stakedToken = listPricingTokens[i];
+      for (let i = 0; i < listStakedTokens.length; i++) {
+        const stakedToken = listStakedTokens[i];
         const stakeToken = await stakeConfigurator.stakeTokenOf(stakedToken);
         const priceAsset = listPricingAssets[i];
 
@@ -274,20 +287,24 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
         }
 
         const staticPrice = listStaticPrices[i];
-        if (staticPrice != '') {
-          console.log('\tStatic price:', listPricedSymbols[i], staticPrice);
-          staticTokens.push(stakedToken);
-          staticPrices.push(staticPrice);
-        } else {
+        if (staticPrice == '') {
           source = await po.getSourceOfAsset(priceAsset);
           if (falsyOrZeroAddress(source)) {
-            console.log('\tPrice source is missing for underlying of', listPricedSymbols[i]);
+            console.log('\tPrice source is missing for underlying of', listPricedSymbols[i], stakedToken);
             continue;
           }
-          console.log('\tPrice source by underlying: ', listPricedSymbols[i], source);
 
+          console.log('\tPrice source by underlying: ', listPricedSymbols[i], stakedToken, source);
           priceTokens.push(stakedToken);
           priceSources.push(source);
+        } else if (staticPrice == customPriceFeed) {
+          console.log('\tCustom price source: ', listPricedSymbols[i], stakedToken, priceAsset);
+          priceTokens.push(stakedToken);
+          priceSources.push(priceAsset);
+        } else {
+          console.log('\tStatic price:', listPricedSymbols[i], stakedToken, staticPrice);
+          staticTokens.push(stakedToken);
+          staticPrices.push(staticPrice);
         }
       }
 

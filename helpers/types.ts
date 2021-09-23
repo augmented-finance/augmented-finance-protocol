@@ -80,6 +80,7 @@ export enum eContractid {
   DefaultReserveInterestRateStrategy = 'DefaultReserveInterestRateStrategy',
   PriceFeedCompoundEth = 'PriceFeedCompoundEth',
   PriceFeedCompoundErc20 = 'PriceFeedCompoundErc20',
+  PriceFeedUniEthPair = 'PriceFeedUniEthPair',
 
   MockTreasuryRewardPool = 'MockTreasuryRewardPool',
   MockRewardFreezer = 'MockRewardFreezer',

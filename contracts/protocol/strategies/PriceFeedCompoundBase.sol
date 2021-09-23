@@ -3,10 +3,9 @@ pragma solidity ^0.8.4;
 
 import '../../tools/math/WadRayMath.sol';
 import '../../dependencies/compound-protocol/contracts/ICToken.sol';
-import '../../interfaces/IChainlinkAggregator.sol';
 import '../../interfaces/IPriceFeed.sol';
 
-abstract contract PriceFeedCompoundBase is IChainlinkAggregatorMin, IPriceFeed {
+abstract contract PriceFeedCompoundBase is IPriceFeed {
   using WadRayMath for uint256;
 
   ICToken private _token;
