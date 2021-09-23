@@ -10,6 +10,7 @@ import {
   getMockTokenLocker,
   getTeamRewardPool,
   getTokenWeightedRewardPoolAGFSeparate,
+  getTreasuryProxy,
 } from '../../helpers/contracts-getters';
 
 import { MockAgfToken, ReferralRewardPool, RewardFreezer } from '../../types';
@@ -17,12 +18,17 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { currentTick, mineBlocks, mineTicks, revertSnapshot, takeSnapshot } from './utils';
 import { MAX_LOCKER_PERIOD, MAX_UINT_AMOUNT, ONE_ADDRESS, PERC_100, WEEK } from '../../helpers/constants';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
-import { deployReferralRewardPool, deployTreasuryRewardPool } from '../../helpers/contracts-deployments';
+import {
+  deployMockTreasuryRewardPool,
+  deployReferralRewardPool,
+  deployTreasuryRewardPool,
+} from '../../helpers/contracts-deployments';
 import { AccessFlags } from '../../helpers/access-flags';
 import { IManagedRewardPool } from '../../types/IManagedRewardPool';
 import { IManagedRewardPoolFactory } from '../../types/IManagedRewardPoolFactory';
 import { BigNumber, Contract } from 'ethers';
 import { ProtocolErrors, tEthereumAddress } from '../../helpers/types';
+import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -31,6 +37,7 @@ describe('Reward rates suite', () => {
   let root: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
+  let rewardReceiver: tEthereumAddress;
   let rewardController: RewardFreezer;
   let pools: IManagedRewardPool[];
   let agf: MockAgfToken;
@@ -64,7 +71,7 @@ describe('Reward rates suite', () => {
     await rewardController.addRewardPool(refPool.address);
 
     {
-      const pool = await deployTreasuryRewardPool([rewardController.address, 0, poolShare, root.address]);
+      const pool = await deployMockTreasuryRewardPool([rewardController.address, 0, poolShare, root.address]);
       await rewardController.addRewardPool(pool.address);
       pushPool(pool);
     }

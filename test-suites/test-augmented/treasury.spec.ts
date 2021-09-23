@@ -50,7 +50,7 @@ describe('Treasury rewards suite', () => {
     treasury = await getTreasuryProxy(await ac.getAddress(AccessFlags.TREASURY));
     await ac.grantRoles(user1.address, AccessFlags.TREASURY_ADMIN);
     await rewardController.setFreezePercentage(0);
-    trp = await deployTreasuryRewardPool([rewardController.address, 1, 0, treasury.address]);
+    trp = await deployTreasuryRewardPool([rewardController.address, 1, 0]);
     await rewardController.addRewardPool(trp.address);
   });
 

@@ -11,7 +11,6 @@ import './interfaces/IBoostExcessReceiver.sol';
 import './interfaces/IBoostRate.sol';
 import './interfaces/IRewardExplainer.sol';
 import './autolock/AutolockBase.sol';
-import './interfaces/IAutolocker.sol';
 import './BaseRewardController.sol';
 
 contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardController, AutolockBase {
@@ -365,5 +364,16 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     }
 
     return r;
+  }
+
+  function internalSetPull(
+    address holder,
+    uint256 mask,
+    AllocationMode mode
+  ) internal override {
+    super.internalSetPull(holder, mask, mode);
+    if (mode == AllocationMode.SetPullSpecial) {
+      super.internalCancelAutolock(holder);
+    }
   }
 }

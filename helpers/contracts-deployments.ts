@@ -61,6 +61,7 @@ import {
   DelegatedStrategyCompoundErc20Factory,
   DepositStakeTokenFactory,
   MockDepositStakeTokenFactory,
+  MockTreasuryRewardPoolFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -795,12 +796,23 @@ export const deployReferralRewardPoolV1Impl = async (verify: boolean, once: bool
   );
 
 export const deployTreasuryRewardPool = async (
-  args: [controller: string, initialRate: BigNumberish, baselinePercentage: BigNumberish, treasury: string],
+  args: [controller: string, initialRate: BigNumberish, baselinePercentage: BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await new TreasuryRewardPoolFactory(await getFirstSigner()).deploy(...args),
     eContractid.TreasuryRewardPool,
+    args,
+    verify
+  );
+
+export const deployMockTreasuryRewardPool = async (
+  args: [controller: string, initialRate: BigNumberish, baselinePercentage: BigNumberish, treasury: string],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new MockTreasuryRewardPoolFactory(await getFirstSigner()).deploy(...args),
+    eContractid.MockTreasuryRewardPool,
     args,
     verify
   );

@@ -389,9 +389,7 @@ const deployExtraPools = async (
     const baselinePct = params.BasePoints;
     totalShare += baselinePct;
 
-    const treasury = await addressProvider.getAddress(AccessFlags.TREASURY);
-
-    const impl = await deployTreasuryRewardPool([rewardCtlAddress, 0, baselinePct, treasury], verify);
+    const impl = await deployTreasuryRewardPool([rewardCtlAddress, 0, baselinePct], verify);
     console.log(`Deployed ${poolName}: `, impl.address);
 
     poolAddrs.push(impl.address);
