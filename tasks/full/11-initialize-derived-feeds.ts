@@ -15,10 +15,16 @@ task('full:initialize-derived-feeds', 'Initializes derived feeds for lending poo
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const { ReserveAssets, ReservesConfig } = poolConfig as ICommonConfiguration;
+    const {
+      ReserveAssets,
+      ReservesConfig,
+      Mocks: { UnderlyingMappings },
+    } = poolConfig as ICommonConfiguration;
 
     const reserveAssets = getParamPerNetwork(ReserveAssets, network);
+    const underlyingMappings = getParamPerNetwork(UnderlyingMappings, network);
+
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-    await initReservePriceFeeds(addressProvider, ReservesConfig, reserveAssets, verify);
+    await initReservePriceFeeds(addressProvider, ReservesConfig, reserveAssets, underlyingMappings, verify);
   });
