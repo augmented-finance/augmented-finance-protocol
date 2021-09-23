@@ -6,6 +6,8 @@ import { eNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../
 import {
   getIErc20Detailed,
   getIInitializableStakeToken,
+  getIUniswapV2Factory,
+  getIUniswapV2Router02,
   getLendingPoolProxy,
   getOracleRouter,
   getStakeConfiguratorImpl,
@@ -30,7 +32,8 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-    const { ReserveAssets, Names } = poolConfig as ICommonConfiguration;
+    const { ReserveAssets, Names, Dependencies } = poolConfig as ICommonConfiguration;
+    const dependencies = getParamPerNetwork(Dependencies, network);
 
     const stakeConfigurator = await getStakeConfiguratorImpl(
       await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
@@ -55,6 +58,24 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
     const stakeParams = poolConfig.StakeParams;
     let stakeImplAddr: tEthereumAddress = '';
     let depositStakeImplAddr: tEthereumAddress = '';
+
+    const getStakeImplAddr = async () => {
+      if (falsyOrZeroAddress(stakeImplAddr)) {
+        const impl = await deployStakeTokenImpl(verify, continuation);
+        console.log(`Deployed StakeToken implementation:`, impl.address);
+        stakeImplAddr = impl.address;
+      }
+      return stakeImplAddr;
+    };
+
+    const getDepositStakeImplAddr = async () => {
+      if (falsyOrZeroAddress(depositStakeImplAddr)) {
+        const impl = await deployDepositStakeTokenImpl(verify, continuation);
+        console.log(`Deployed DepositStakeToken implementation:`, impl.address);
+        depositStakeImplAddr = impl.address;
+      }
+      return depositStakeImplAddr;
+    };
 
     const listPricedSymbols: string[] = [];
     const listPricingTokens: string[] = [];
@@ -109,23 +130,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
         }
       }
 
-      let tokenImplAddr = '';
-      if (depositStake) {
-        if (falsyOrZeroAddress(depositStakeImplAddr)) {
-          const impl = await deployDepositStakeTokenImpl(verify, continuation);
-          console.log(`Deployed DepositStakeToken implementation:`, impl.address);
-          depositStakeImplAddr = impl.address;
-        }
-        tokenImplAddr = depositStakeImplAddr;
-      } else {
-        if (falsyOrZeroAddress(stakeImplAddr)) {
-          const impl = await deployStakeTokenImpl(verify, continuation);
-          console.log(`Deployed StakeToken implementation:`, impl.address);
-          stakeImplAddr = impl.address;
-        }
-        tokenImplAddr = stakeImplAddr;
-      }
-
+      const tokenImplAddr = depositStake ? await getDepositStakeImplAddr() : await getStakeImplAddr();
       const assetDetailed = await getIErc20Detailed(asset);
       const decimals = await assetDetailed.decimals();
 
@@ -142,6 +147,40 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
         maxSlashable: stakeParams.MaxSlashBP,
         depositStake: depositStake,
       });
+    }
+
+    if (!falsyOrZeroAddress(dependencies.UniswapV2Router)) {
+      const uniswapRouter = await getIUniswapV2Router02(dependencies.UniswapV2Router!);
+      const weth = await uniswapRouter.WETH();
+      const uniswapFactory = await getIUniswapV2Factory(await uniswapRouter.factory());
+      const agfAddr = await addressProvider.getAddress(AccessFlags.REWARD_TOKEN);
+      const lpPairAddr = await uniswapFactory.getPair(weth, agfAddr);
+
+      if (falsyOrZeroAddress(lpPairAddr)) {
+        console.log('\tUniswap Pair ETH-AGF not found');
+      } else {
+        const symbol = 'UniV2ETHAGF';
+        const stkTokenName = `${Names.StakeTokenNamePrefix} ${symbol}`;
+        const stkTokenSymbol = `${Names.StakeSymbolPrefix}${Names.SymbolPrefix}${symbol}`;
+
+        const tokenImplAddr = await getStakeImplAddr();
+        const lpPair = await getIErc20Detailed(lpPairAddr);
+        const decimals = await lpPair.decimals();
+
+        initSymbols.push(symbol);
+        initParams.push({
+          stakeTokenImpl: tokenImplAddr,
+          stakedToken: lpPairAddr,
+          strategy: ZERO_ADDRESS,
+          stkTokenName: stkTokenName,
+          stkTokenSymbol: stkTokenSymbol,
+          stkTokenDecimals: decimals,
+          cooldownPeriod: stakeParams.CooldownPeriod,
+          unstakePeriod: stakeParams.UnstakePeriod,
+          maxSlashable: stakeParams.MaxSlashBP,
+          depositStake: false,
+        });
+      }
     }
 
     if (initSymbols.length > 0) {
