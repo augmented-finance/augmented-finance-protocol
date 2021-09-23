@@ -127,6 +127,7 @@ type ignoredKeys =
   | eContractid.MockStableDebtToken
   | eContractid.MockVariableDebtToken
   | eContractid.MockDefaultReserveInterestRateStrategy
+  | eContractid.MockTreasuryRewardPool
   | eContractid.ValidationLogic
   | eContractid.ReserveLogic
   | eContractid.GenericLogic;

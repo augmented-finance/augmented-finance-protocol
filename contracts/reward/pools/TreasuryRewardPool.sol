@@ -22,15 +22,17 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRewardAccum {
     return getAccessController().getAddress(AccessFlags.TREASURY);
   }
 
-  function subscribeTreasury() private returns (address[] memory r) {
+  function subscribeTreasury() private {
     address treasury = getTreasury();
     if (_treasury == treasury) {
-      return r;
+      return;
     }
 
     _treasury = treasury;
-    uint256 allocated = doGetAllReward(type(uint256).max);
-    internalAllocateReward(treasury, allocated, uint32(block.timestamp), AllocationMode.SetPullSpecial);
+    if (treasury != address(0)) {
+      uint256 allocated = doGetAllReward(type(uint256).max);
+      internalAllocateReward(treasury, allocated, uint32(block.timestamp), AllocationMode.SetPullSpecial);
+    }
   }
 
   function internalSetRate(uint256 rate) internal override {

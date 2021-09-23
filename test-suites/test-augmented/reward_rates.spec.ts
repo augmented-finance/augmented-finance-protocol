@@ -10,7 +10,6 @@ import {
   getMockTokenLocker,
   getTeamRewardPool,
   getTokenWeightedRewardPoolAGFSeparate,
-  getTreasuryProxy,
 } from '../../helpers/contracts-getters';
 
 import { MockAgfToken, ReferralRewardPool, RewardFreezer } from '../../types';
@@ -18,11 +17,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { currentTick, mineBlocks, mineTicks, revertSnapshot, takeSnapshot } from './utils';
 import { MAX_LOCKER_PERIOD, MAX_UINT_AMOUNT, ONE_ADDRESS, PERC_100, WEEK } from '../../helpers/constants';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
-import {
-  deployMockTreasuryRewardPool,
-  deployReferralRewardPool,
-  deployTreasuryRewardPool,
-} from '../../helpers/contracts-deployments';
+import { deployMockTreasuryRewardPool, deployReferralRewardPool } from '../../helpers/contracts-deployments';
 import { AccessFlags } from '../../helpers/access-flags';
 import { IManagedRewardPool } from '../../types/IManagedRewardPool';
 import { IManagedRewardPoolFactory } from '../../types/IManagedRewardPoolFactory';
