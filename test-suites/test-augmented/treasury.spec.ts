@@ -65,11 +65,11 @@ describe('Treasury rewards suite', () => {
   it('revert without permissions', async () => {
     await agf.mintReward(treasury.address, 10, false);
 
-    await expect(treasury.connect(user2).approve(agf.address, user1.address, 10)).to.be.revertedWith('RESTRICTED');
+    await expect(treasury.connect(user2).approveToken(agf.address, user1.address, 10)).to.be.revertedWith('RESTRICTED');
 
-    await expect(treasury.connect(user2).transfer(agf.address, user1.address, 10)).to.be.revertedWith('RESTRICTED');
-
-    await expect(treasury.connect(user2).transferEth(user1.address, 10)).to.be.revertedWith('RESTRICTED');
+    await expect(treasury.connect(user2).transferToken(agf.address, user1.address, 10)).to.be.revertedWith(
+      'RESTRICTED'
+    );
 
     await expect(treasury.connect(user2).claimRewardsForTreasury()).to.be.revertedWith('RESTRICTED');
   });
@@ -78,12 +78,12 @@ describe('Treasury rewards suite', () => {
     await agf.mintReward(treasury.address, 10, false);
 
     expect(await agf.allowance(treasury.address, user2.address)).eq(0);
-    await treasury.connect(user1).approve(agf.address, user2.address, 10);
+    await treasury.connect(user1).approveToken(agf.address, user2.address, 10);
     expect(await agf.allowance(treasury.address, user2.address)).eq(10);
 
     expect(await agf.balanceOf(user2.address)).eq(0);
     expect(await agf.balanceOf(treasury.address)).eq(10);
-    await treasury.connect(user1).transfer(agf.address, user2.address, 10);
+    await treasury.connect(user1).transferToken(agf.address, user2.address, 10);
     expect(await agf.balanceOf(user2.address)).eq(10);
     expect(await agf.balanceOf(treasury.address)).eq(0);
   });
@@ -93,7 +93,7 @@ describe('Treasury rewards suite', () => {
 
     expect(await agf.balanceOf(user2.address)).eq(0);
     expect(await agf.balanceOf(treasury.address)).eq(0);
-    await treasury.connect(user1).transfer(agf.address, user2.address, 10);
+    await treasury.connect(user1).transferToken(agf.address, user2.address, 10);
     expect(await agf.balanceOf(user2.address)).eq(10);
     expect(await agf.balanceOf(treasury.address)).gt(0);
   });

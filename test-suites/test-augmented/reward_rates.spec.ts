@@ -21,9 +21,8 @@ import { deployMockTreasuryRewardPool, deployReferralRewardPool } from '../../he
 import { AccessFlags } from '../../helpers/access-flags';
 import { IManagedRewardPool } from '../../types/IManagedRewardPool';
 import { IManagedRewardPoolFactory } from '../../types/IManagedRewardPoolFactory';
-import { BigNumber, Contract } from 'ethers';
+import { Contract } from 'ethers';
 import { ProtocolErrors, tEthereumAddress } from '../../helpers/types';
-import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -32,7 +31,6 @@ describe('Reward rates suite', () => {
   let root: SignerWithAddress;
   let user1: SignerWithAddress;
   let user2: SignerWithAddress;
-  let rewardReceiver: tEthereumAddress;
   let rewardController: RewardFreezer;
   let pools: IManagedRewardPool[];
   let agf: MockAgfToken;
