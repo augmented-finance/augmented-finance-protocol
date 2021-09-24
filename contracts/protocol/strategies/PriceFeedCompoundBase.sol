@@ -23,13 +23,18 @@ abstract contract PriceFeedCompoundBase is IPriceFeed {
     }
     _lastUpdatedAt = uint32(block.timestamp);
 
+    uint256 answer = latestUnderlyingAnswer();
+    uint256 index = rateIndex();
+    uint256 timestamp = latestTimestamp();
     emit DerivedAssetSourceUpdated(
       address(_token),
-      rateIndex(),
+      index,
       address(getUnderlyingSource()),
-      latestUnderlyingAnswer(),
-      latestTimestamp()
+      answer,
+      timestamp,
+      SourceType.AggregatorOrStatic
     );
+    emit AssetPriceUpdated(address(_token), answer.rayMul(index), timestamp);
   }
 
   function scaleByIndex(uint256 v) private view returns (uint256) {
