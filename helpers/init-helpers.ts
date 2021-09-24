@@ -2,9 +2,10 @@ import { eContractid, IInterestRateStrategyParams, IReserveParams, ITokenNames, 
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { addProxyToJsonDb, chunk, falsyOrZeroAddress, mustWaitTx, waitForTx } from './misc-utils';
 import {
-  getIErc20Detailed,
   getIInitializablePoolToken,
   getIReserveDelegatedStrategy,
+  getIUniswapV2Factory,
+  getIUniswapV2Router02,
   getLendingPoolConfiguratorProxy,
   getLendingPoolProxy,
   getOracleRouter,
@@ -28,6 +29,7 @@ import {
 import { ZERO_ADDRESS } from './constants';
 import { MarketAccessController, OracleRouter } from '../types';
 import { Contract } from '@ethersproject/contracts';
+import { waitForAddressFn } from './deploy-helpers';
 
 export const chooseDepositTokenDeployment = (id: eContractid) => {
   switch (id) {
@@ -608,4 +610,57 @@ export const initReservePriceFeeds = async (
   }
 
   await mustWaitTx(po.setAssetSources(feedAssets, feeds, { gasLimit: 1000000 }));
+};
+
+export const getUniAgfEth = async (
+  addressProvider: MarketAccessController,
+  uniswapAddr: undefined | tEthereumAddress
+) => {
+  if (falsyOrZeroAddress(uniswapAddr)) {
+    console.log('\tUniswap address is missing');
+    return '';
+  }
+
+  const uniswapRouter = await getIUniswapV2Router02(uniswapAddr!);
+  const weth = await uniswapRouter.WETH();
+  const uniswapFactory = await getIUniswapV2Factory(await uniswapRouter.factory());
+  const agfAddr = await addressProvider.getAddress(AccessFlags.REWARD_TOKEN);
+  const lpPairAddr = await uniswapFactory.getPair(weth, agfAddr);
+
+  if (falsyOrZeroAddress(lpPairAddr)) {
+    console.log('\tUniswap Pair ETH-AGF not found');
+  }
+
+  return lpPairAddr;
+};
+
+export const deployUniAgfEth = async (
+  ac: MarketAccessController,
+  agfAddr: tEthereumAddress,
+  uniswapAddr: tEthereumAddress | undefined,
+  newAgfToken: boolean
+) => {
+  console.log('Deploy Uniswap Pair ETH-AGF');
+  if (falsyOrZeroAddress(uniswapAddr)) {
+    console.log('\tUniswap address is missing');
+    return;
+  }
+
+  const wethGw = await getWETHGateway(await ac.getAddress(AccessFlags.WETH_GATEWAY));
+  const weth = await wethGw.getWETHAddress();
+
+  const uniswapRouter = await getIUniswapV2Router02(uniswapAddr!);
+  const uniWeth = await uniswapRouter.WETH();
+  if (weth.toLocaleLowerCase() != uniWeth.toLocaleLowerCase()) {
+    throw 'WETH address mismatched with Uniswap: ' + weth + ', ' + uniWeth;
+  }
+
+  const uniswapFactory = await getIUniswapV2Factory(await uniswapRouter.factory());
+  let lpPair = newAgfToken ? '' : await uniswapFactory.getPair(weth, agfAddr);
+  if (falsyOrZeroAddress(lpPair)) {
+    console.log('\tCreating uniswap pair ETH-AGF');
+    await mustWaitTx(uniswapFactory.createPair(weth, agfAddr));
+    lpPair = await waitForAddressFn(async () => await uniswapFactory.getPair(weth, agfAddr), 'ETH-AGF');
+  }
+  console.log('Uniswap pair ETH-AGF: ', lpPair);
 };

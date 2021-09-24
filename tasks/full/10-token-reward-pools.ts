@@ -32,6 +32,7 @@ import { transpose } from 'underscore';
 import { getDeployAccessController, setAndGetAddressAsProxyWithInit } from '../../helpers/deploy-helpers';
 import { MarketAccessController, RewardBooster, RewardConfigurator } from '../../types';
 import { addFullStep } from '../helpers/full-steps';
+import { getUniAgfEth } from '../../helpers/init-helpers';
 
 addFullStep(10, 'Deploy reward pools', 'full:init-reward-pools');
 
@@ -54,7 +55,13 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-    const { ReserveAssets, RewardParams, Names } = poolConfig as ICommonConfiguration;
+    const {
+      ReserveAssets,
+      RewardParams,
+      Names,
+      Dependencies,
+      AGF: { UniV2EthPair },
+    } = poolConfig as ICommonConfiguration;
 
     const reserveAssets = getParamPerNetwork(ReserveAssets, network);
     const stakeConfigurator = await getStakeConfiguratorImpl(
@@ -64,7 +71,6 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
     const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
     const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
 
-    //    const prefixes: string[] = ;
     const knownReserves: {
       baseSymbol: string;
       tokens: tEthereumAddress[];
@@ -99,6 +105,19 @@ task(`full:init-reward-pools`, `Deploys reward pools`)
         info.shares.push(tp.Share.stake);
       }
       knownReserves.push(info);
+    }
+
+    if (UniV2EthPair?.StakeToken?.RewardShare) {
+      const dependencies = getParamPerNetwork(Dependencies, network);
+      const lpPairAddr = await getUniAgfEth(addressProvider, dependencies.UniswapV2Router);
+
+      if (!falsyOrZeroAddress(lpPairAddr)) {
+        knownReserves.push({
+          baseSymbol: UniV2EthPair.Symbol,
+          tokens: ['', '', '', await stakeConfigurator.stakeTokenOf(lpPairAddr)],
+          shares: [undefined, undefined, undefined, UniV2EthPair.StakeToken.RewardShare],
+        });
+      }
     }
 
     let prepParams: poolInitParams[] = [];

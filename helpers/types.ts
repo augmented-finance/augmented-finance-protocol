@@ -80,6 +80,7 @@ export enum eContractid {
   DefaultReserveInterestRateStrategy = 'DefaultReserveInterestRateStrategy',
   PriceFeedCompoundEth = 'PriceFeedCompoundEth',
   PriceFeedCompoundErc20 = 'PriceFeedCompoundErc20',
+  PriceFeedUniEthPair = 'PriceFeedUniEthPair',
 
   MockTreasuryRewardPool = 'MockTreasuryRewardPool',
   MockRewardFreezer = 'MockRewardFreezer',
@@ -512,6 +513,14 @@ export enum LPFeature {
 
 export interface IAgfParams {
   DefaultPriceEth?: number;
+  UniV2EthPair?: IAgfLPParams;
+}
+
+export interface IAgfLPParams {
+  Symbol: string;
+  StakeToken?: {
+    RewardShare?: IRewardPoolParams;
+  };
 }
 
 export interface IDependencies {

@@ -28,6 +28,7 @@ import {
   getPermitFreezerRewardPool,
   getPriceFeedCompoundErc20,
   getPriceFeedCompoundEth,
+  getPriceFeedUniEthPair,
   getProtocolDataProvider,
   getReferralRewardPoolImpl,
   getRewardBooster,
@@ -87,6 +88,7 @@ const CONTRACT_GETTERS: Omit<Record<eContractid, ContractGetterFn>, ignoredKeys>
   [eContractid.DefaultReserveInterestRateStrategy]: getDefaultReserveInterestRateStrategy,
   [eContractid.PriceFeedCompoundEth]: getPriceFeedCompoundEth,
   [eContractid.PriceFeedCompoundErc20]: getPriceFeedCompoundErc20,
+  [eContractid.PriceFeedUniEthPair]: getPriceFeedUniEthPair,
 
   [eContractid.DelegatedStrategyAave]: getDelegatedStrategyAave,
   [eContractid.DelegatedStrategyCompoundErc20]: getDelegatedStrategyCompoundErc20,

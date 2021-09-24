@@ -62,6 +62,7 @@ import {
   DepositStakeTokenFactory,
   MockDepositStakeTokenFactory,
   MockTreasuryRewardPoolFactory,
+  PriceFeedUniEthPairFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -1024,6 +1025,14 @@ export const deployPriceFeedCompoundEth = async (name: string, args: [token: tEt
   withSaveAndVerify(
     await new PriceFeedCompoundEthFactory(await getFirstSigner()).deploy(...args),
     eContractid.PriceFeedCompoundEth + '-' + name,
+    args,
+    verify
+  );
+
+export const deployPriceFeedUniEthPair = async (name: string, args: [token: tEthereumAddress], verify?: boolean) =>
+  withSaveAndVerify(
+    await new PriceFeedUniEthPairFactory(await getFirstSigner()).deploy(...args),
+    eContractid.PriceFeedUniEthPair + '-' + name,
     args,
     verify
   );

@@ -26,8 +26,10 @@ import { oneEther, WEEK } from '../../helpers/constants';
 import { MarketAccessController } from '../../types';
 import { BigNumber } from '@ethersproject/bignumber';
 import { addFullStep } from '../helpers/full-steps';
+import { getParamPerNetwork } from '../../helpers/contracts-helpers';
+import { deployUniAgfEth } from '../../helpers/init-helpers';
 
-addFullStep(9, 'Deploy reward contracts and AGF token', 'full:deploy-reward-contracts');
+addFullStep(8, 'Deploy reward contracts and AGF token', 'full:deploy-reward-contracts');
 
 task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tokens`)
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
@@ -39,7 +41,8 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
     const {
       Names,
       RewardParams,
-      AGF: { DefaultPriceEth: AgfDefaultPriceEth },
+      Dependencies,
+      AGF: { DefaultPriceEth: AgfDefaultPriceEth, UniV2EthPair },
     } = poolConfig as ICommonConfiguration;
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
@@ -82,6 +85,11 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
 
     if (AgfDefaultPriceEth) {
       await configureAgfPrice(addressProvider, agfAddr, AgfDefaultPriceEth, newAgfToken);
+    }
+
+    if (UniV2EthPair) {
+      const dependencies = getParamPerNetwork(Dependencies, network);
+      await deployUniAgfEth(addressProvider, agfAddr, dependencies.UniswapV2Router, newAgfToken);
     }
 
     // Reward controller is not updated

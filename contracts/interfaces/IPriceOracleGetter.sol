@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.4;
 
+enum SourceType {
+  AggregatorOrStatic,
+  UniswapV2Pair
+}
+
 interface IPriceOracleEvents {
   event AssetPriceUpdated(address asset, uint256 price, uint256 timestamp);
   event EthPriceUpdated(uint256 price, uint256 timestamp);
@@ -9,7 +14,8 @@ interface IPriceOracleEvents {
     uint256 index,
     address indexed underlyingSource,
     uint256 underlyingPrice,
-    uint256 timestamp
+    uint256 timestamp,
+    SourceType sourceType
   );
 }
 
