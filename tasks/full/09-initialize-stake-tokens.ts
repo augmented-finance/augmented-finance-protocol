@@ -10,8 +10,6 @@ import { eNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../
 import {
   getIErc20Detailed,
   getIInitializableStakeToken,
-  getIUniswapV2Factory,
-  getIUniswapV2Router02,
   getLendingPoolProxy,
   getOracleRouter,
   getStakeConfiguratorImpl,
@@ -23,7 +21,7 @@ import { BigNumberish } from 'ethers';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { WAD, ZERO_ADDRESS } from '../../helpers/constants';
 import { addFullStep } from '../helpers/full-steps';
-import { MarketAccessController } from '../../types';
+import { getUniAgfEth } from '../../helpers/init-helpers';
 
 addFullStep(9, 'Deploy and initialize stake tokens', 'full:init-stake-tokens');
 
@@ -159,8 +157,8 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
       });
     }
 
-    if (UniV2EthPair) {
-      const lpPairAddr = await getUniAgfPair(addressProvider, dependencies.UniswapV2Router);
+    if (UniV2EthPair?.StakeToken) {
+      const lpPairAddr = await getUniAgfEth(addressProvider, dependencies.UniswapV2Router);
 
       if (!falsyOrZeroAddress(lpPairAddr)) {
         const symbol = UniV2EthPair.Symbol;
@@ -333,22 +331,3 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
       }
     }
   });
-
-const getUniAgfPair = async (addressProvider: MarketAccessController, uniswapAddr: undefined | tEthereumAddress) => {
-  if (falsyOrZeroAddress(uniswapAddr)) {
-    console.log('\tUniswap address is missing');
-    return '';
-  }
-
-  const uniswapRouter = await getIUniswapV2Router02(uniswapAddr!);
-  const weth = await uniswapRouter.WETH();
-  const uniswapFactory = await getIUniswapV2Factory(await uniswapRouter.factory());
-  const agfAddr = await addressProvider.getAddress(AccessFlags.REWARD_TOKEN);
-  const lpPairAddr = await uniswapFactory.getPair(weth, agfAddr);
-
-  if (falsyOrZeroAddress(lpPairAddr)) {
-    console.log('\tUniswap Pair ETH-AGF not found');
-  }
-
-  return lpPairAddr;
-};
