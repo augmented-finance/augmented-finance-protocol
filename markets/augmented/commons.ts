@@ -69,15 +69,21 @@ export const CommonsConfig: ICommonConfiguration = {
   // COMMON PROTOCOL ADDRESSES ACROSS POOLS
   // ----------------
 
-  EmergencyAdmin: {
-    [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.docker]: '',
-    [eEthereumNetwork.coverage]: '',
-    [eEthereumNetwork.kovan]: '',
-    [eEthereumNetwork.ropsten]: '',
-    [eEthereumNetwork.rinkeby]: '',
-    [eEthereumNetwork.main]: '',
-    [eEthereumNetwork.tenderlyMain]: '',
+  EmergencyAdmins: {
+    [eEthereumNetwork.hardhat]: [],
+    [eEthereumNetwork.docker]: [],
+    [eEthereumNetwork.coverage]: [],
+    [eEthereumNetwork.kovan]: [
+      '0x8331Bd35089090249675D023804FC52b7FD18184',
+      '0xE1FbbaBbd21764061734424d3F4f5e2C11101E96',
+    ],
+    [eEthereumNetwork.ropsten]: [],
+    [eEthereumNetwork.rinkeby]: [],
+    [eEthereumNetwork.main]: [
+      '0x8331Bd35089090249675D023804FC52b7FD18184',
+      '0xE1FbbaBbd21764061734424d3F4f5e2C11101E96',
+    ],
+    [eEthereumNetwork.tenderlyMain]: [],
   },
   ProviderRegistry: {
     [eEthereumNetwork.kovan]: '', //'0x96B2E8707222fD25ce79a998cd47ea8C23E40d14', // '0xFFfdda318F1FE4f048c99E5C6C03C14434B35FA0', // 0xe28BdBF3C2440C97aBA7250ED1bb9F20559E351a
@@ -382,13 +388,23 @@ export const CommonsConfig: ICommonConfiguration = {
     BurnersPool: {
       TotalWad: 1e6,
       BoostFactor: 0,
-      MeltDownAt: new Date('2021-03-01'),
-      Providers: [ ONE_ADDRESS ],
+      MeltDownAt: new Date('2022-04-01'),
+      Providers: [ 
+        '0x9745B2357ae7494de2852C1dfDBBB1dAD621896E',
+      ],
+    },
+    RetroPool: {
+      TotalWad: 1e5,
+      BoostFactor: 0,
+      MeltDownAt: new Date('2021-11-11'),
+      Providers: [ 
+        '0x9745B2357ae7494de2852C1dfDBBB1dAD621896E',
+      ],
     },
     TeamPool: {
       BasePoints: 1000,
-      UnlockAt: new Date('2021-12-01'),
-      Manager: ZERO_ADDRESS,
+      UnlockAt: new Date('2022-01-01'),
+      Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
       Members: {
         '0x0000000000000000000000000000000000000001': 5000
       }

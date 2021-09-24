@@ -15,6 +15,7 @@ import {
   ITokenRewardPoolParams,
   IRewardPoolParams,
   IRewardParams,
+  IPermiRewardPool,
 } from '../../helpers/types';
 import {
   getLendingPoolProxy,
@@ -325,6 +326,7 @@ const deployExtraPools = async (
   const teamPoolName = 'TeamPool'; // NB! it is constant in a contract
   const refPoolName = 'RefPool';
   const burnPoolName = 'BurnersPool';
+  const retroPoolName = 'RetroPool';
   const treasuryPoolName = 'TreasuryPool'; // NB! it is constant in a contract
 
   let totalShare: number = 0;
@@ -416,9 +418,10 @@ const deployExtraPools = async (
     poolFactors.push(params.BoostFactor);
   }
 
-  if (rewardParams.BurnersPool.TotalWad > 0 && !knownNamedPools.has(burnPoolName)) {
-    const poolName = burnPoolName;
-    const params = rewardParams.BurnersPool;
+  const deployPermitPool = async (poolName: string, params: IPermiRewardPool) => {
+    if (rewardParams.BurnersPool.TotalWad == 0 || knownNamedPools.has(burnPoolName)) {
+      return;
+    }
 
     const unlockTimestamp = (params.MeltDownAt.getTime() / 1000) | 0;
 
@@ -444,7 +447,10 @@ const deployExtraPools = async (
     console.log(
       `Deployed ${poolName}: ${brp.address}, limit ${params.TotalWad} wad, melts at ${params.MeltDownAt} (${unlockTimestamp})`
     );
-  }
+  };
+
+  await deployPermitPool(burnPoolName, rewardParams.BurnersPool);
+  await deployPermitPool(retroPoolName, rewardParams.RetroPool);
 
   if (poolAddrs.length > 0) {
     await mustWaitTx(configurator.addNamedRewardPools(poolAddrs, poolNames, poolFactors));

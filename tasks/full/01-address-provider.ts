@@ -88,6 +88,7 @@ task('full:deploy-address-provider', 'Deploys address provider and registry')
       }
     }
 
+    let newAddressProvider = false;
     let addressProvider: MarketAccessController;
     if (continuation) {
       addressProvider = existingProvider!;
@@ -96,6 +97,7 @@ task('full:deploy-address-provider', 'Deploys address provider and registry')
     } else {
       console.log('Deploy MarketAccessController');
       addressProvider = await deployMarketAccessControllerNoSave(MarketId);
+      newAddressProvider = true;
       await waitForTx(addressProvider.deployTransaction);
 
       await waitTx(addressProvider.setAnyRoleMode(false));
@@ -123,9 +125,24 @@ task('full:deploy-address-provider', 'Deploys address provider and registry')
       throw 'deployment was already finished';
     }
 
-    const emergencyAdmin = getParamPerNetwork(poolConfig.EmergencyAdmin, network);
-    if (!falsyOrZeroAddress(emergencyAdmin)) {
-      await waitTx(addressProvider.grantRoles(emergencyAdmin!, AccessFlags.EMERGENCY_ADMIN));
+    const emergencyAdmins = getParamPerNetwork(poolConfig.EmergencyAdmins, network);
+    if (emergencyAdmins.length > 0) {
+      console.log('Assign', emergencyAdmins.length, 'emergency admin(s)');
+      const knowEAs = new Set<string>();
+      if (!newAddressProvider) {
+        const knownList = await addressProvider.roleActiveGrantees(AccessFlags.EMERGENCY_ADMIN);
+        for (const addr of knownList.addrList.slice(knownList.count.toNumber())) {
+          knowEAs.add(addr.toLocaleLowerCase());
+        }
+      }
+      for (const admin of emergencyAdmins) {
+        if (knowEAs.has(admin.toLocaleLowerCase())) {
+          console.log('\tSkip', admin, 'already granted');
+          continue;
+        }
+        await waitTx(addressProvider.grantRoles(admin, AccessFlags.EMERGENCY_ADMIN));
+        console.log('\tGranted EMERGENCY_ADMIN:', admin);
+      }
     }
 
     await mustWaitTx(
