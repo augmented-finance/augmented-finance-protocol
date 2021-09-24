@@ -23,6 +23,7 @@ import { BigNumberish } from 'ethers';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { WAD, ZERO_ADDRESS } from '../../helpers/constants';
 import { addFullStep } from '../helpers/full-steps';
+import { MarketAccessController } from '../../types';
 
 addFullStep(9, 'Deploy and initialize stake tokens', 'full:init-stake-tokens');
 
@@ -36,7 +37,12 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-    const { ReserveAssets, Names, Dependencies } = poolConfig as ICommonConfiguration;
+    const {
+      ReserveAssets,
+      Names,
+      Dependencies,
+      AGF: { UniV2EthPair },
+    } = poolConfig as ICommonConfiguration;
     const dependencies = getParamPerNetwork(Dependencies, network);
 
     const stakeConfigurator = await getStakeConfiguratorImpl(
@@ -84,9 +90,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
     const listPricedSymbols: string[] = [];
     const listStakedTokens: string[] = [];
     const listPricingAssets: string[] = [];
-    const listStaticPrices: string[] = [];
-
-    const customPriceFeed = 'custom';
+    const listSpecialFeeds: (undefined | string | (() => Promise<string>))[] = [];
 
     for (const [tokenName, mode] of Object.entries(stakeParams.StakeToken)) {
       if (mode == undefined) {
@@ -122,7 +126,7 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
         listPricedSymbols.push(stkTokenSymbol);
         listPricingAssets.push(reserveAsset);
         listStakedTokens.push(asset);
-        listStaticPrices.push(tokenName === 'WETH' ? WAD : '');
+        listSpecialFeeds.push(tokenName === 'WETH' ? WAD : undefined);
       }
 
       {
@@ -155,45 +159,45 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
       });
     }
 
-    if (!falsyOrZeroAddress(dependencies.UniswapV2Router)) {
-      const uniswapRouter = await getIUniswapV2Router02(dependencies.UniswapV2Router!);
-      const weth = await uniswapRouter.WETH();
-      const uniswapFactory = await getIUniswapV2Factory(await uniswapRouter.factory());
-      const agfAddr = await addressProvider.getAddress(AccessFlags.REWARD_TOKEN);
-      const lpPairAddr = await uniswapFactory.getPair(weth, agfAddr);
+    if (UniV2EthPair) {
+      const lpPairAddr = await getUniAgfPair(addressProvider, dependencies.UniswapV2Router);
 
-      if (falsyOrZeroAddress(lpPairAddr)) {
-        console.log('\tUniswap Pair ETH-AGF not found');
-      } else {
-        const symbol = 'UniV2ETHAGF';
-        const stkTokenName = `${Names.StakeTokenNamePrefix} ${symbol}`;
+      if (!falsyOrZeroAddress(lpPairAddr)) {
+        const symbol = UniV2EthPair.Symbol;
         const stkTokenSymbol = `${Names.StakeSymbolPrefix}${Names.SymbolPrefix}${symbol}`;
+        const stkTokenName = `${Names.StakeTokenNamePrefix} ${symbol}`;
 
-        const tokenImplAddr = await getStakeImplAddr();
-        const lpPair = await getIErc20Detailed(lpPairAddr);
-        const decimals = await lpPair.decimals();
+        const existingToken = await stakeConfigurator.stakeTokenOf(lpPairAddr);
+        if (falsyOrZeroAddress(existingToken)) {
+          const tokenImplAddr = await getStakeImplAddr();
+          const lpPair = await getIErc20Detailed(lpPairAddr);
+          const decimals = await lpPair.decimals();
 
-        initSymbols.push(symbol);
-        initParams.push({
-          stakeTokenImpl: tokenImplAddr,
-          stakedToken: lpPairAddr,
-          strategy: ZERO_ADDRESS,
-          stkTokenName: stkTokenName,
-          stkTokenSymbol: stkTokenSymbol,
-          stkTokenDecimals: decimals,
-          cooldownPeriod: stakeParams.CooldownPeriod,
-          unstakePeriod: stakeParams.UnstakePeriod,
-          maxSlashable: stakeParams.MaxSlashBP,
-          depositStake: false,
-        });
-
-        const feed = await deployPriceFeedUniEthPair(symbol, [lpPairAddr], verify);
-        console.log('\tUni ETH-pair price feed:', symbol, feed.address);
+          initSymbols.push(symbol);
+          initParams.push({
+            stakeTokenImpl: tokenImplAddr,
+            stakedToken: lpPairAddr,
+            strategy: ZERO_ADDRESS,
+            stkTokenName: stkTokenName,
+            stkTokenSymbol: stkTokenSymbol,
+            stkTokenDecimals: decimals,
+            cooldownPeriod: stakeParams.CooldownPeriod,
+            unstakePeriod: stakeParams.UnstakePeriod,
+            maxSlashable: stakeParams.MaxSlashBP,
+            depositStake: false,
+          });
+        } else {
+          console.log('Stake asset is present:', symbol, existingToken);
+        }
 
         listPricedSymbols.push(stkTokenSymbol);
-        listPricingAssets.push(feed.address);
+        listPricingAssets.push('');
         listStakedTokens.push(lpPairAddr);
-        listStaticPrices.push(customPriceFeed);
+        listSpecialFeeds.push(async () => {
+          const feed = await deployPriceFeedUniEthPair(symbol, [lpPairAddr], verify);
+          console.log('\tUni ETH-pair price feed:', symbol, feed.address);
+          return feed.address;
+        });
       }
     }
 
@@ -265,15 +269,13 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
       for (let i = 0; i < listStakedTokens.length; i++) {
         const stakedToken = listStakedTokens[i];
         const stakeToken = await stakeConfigurator.stakeTokenOf(stakedToken);
-        const priceAsset = listPricingAssets[i];
 
         if (falsyOrZeroAddress(stakeToken)) {
           throw 'Missing stake token:' + listPricedSymbols[i];
         }
 
         let priceFound = true;
-        let source = await po.getSourceOfAsset(stakedToken);
-        if (falsyOrZeroAddress(source)) {
+        if (falsyOrZeroAddress(await po.getSourceOfAsset(stakedToken))) {
           try {
             // check for static price
             await po.getAssetPrice(stakedToken);
@@ -286,9 +288,9 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
           continue;
         }
 
-        const staticPrice = listStaticPrices[i];
-        if (staticPrice == '') {
-          source = await po.getSourceOfAsset(priceAsset);
+        const specialFeed = listSpecialFeeds[i];
+        if (specialFeed === undefined) {
+          const source = await po.getSourceOfAsset(listPricingAssets[i]);
           if (falsyOrZeroAddress(source)) {
             console.log('\tPrice source is missing for underlying of', listPricedSymbols[i], stakedToken);
             continue;
@@ -297,14 +299,15 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
           console.log('\tPrice source by underlying: ', listPricedSymbols[i], stakedToken, source);
           priceTokens.push(stakedToken);
           priceSources.push(source);
-        } else if (staticPrice == customPriceFeed) {
-          console.log('\tCustom price source: ', listPricedSymbols[i], stakedToken, priceAsset);
-          priceTokens.push(stakedToken);
-          priceSources.push(priceAsset);
-        } else {
-          console.log('\tStatic price:', listPricedSymbols[i], stakedToken, staticPrice);
+        } else if (typeof specialFeed == 'string') {
+          console.log('\tStatic price:', listPricedSymbols[i], stakedToken, specialFeed);
           staticTokens.push(stakedToken);
-          staticPrices.push(staticPrice);
+          staticPrices.push(specialFeed);
+        } else {
+          const source = await specialFeed();
+          console.log('\tCustom price source: ', listPricedSymbols[i], stakedToken, source);
+          priceTokens.push(stakedToken);
+          priceSources.push(source);
         }
       }
 
@@ -330,3 +333,22 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
       }
     }
   });
+
+const getUniAgfPair = async (addressProvider: MarketAccessController, uniswapAddr: undefined | tEthereumAddress) => {
+  if (falsyOrZeroAddress(uniswapAddr)) {
+    console.log('\tUniswap address is missing');
+    return '';
+  }
+
+  const uniswapRouter = await getIUniswapV2Router02(uniswapAddr!);
+  const weth = await uniswapRouter.WETH();
+  const uniswapFactory = await getIUniswapV2Factory(await uniswapRouter.factory());
+  const agfAddr = await addressProvider.getAddress(AccessFlags.REWARD_TOKEN);
+  const lpPairAddr = await uniswapFactory.getPair(weth, agfAddr);
+
+  if (falsyOrZeroAddress(lpPairAddr)) {
+    console.log('\tUniswap Pair ETH-AGF not found');
+  }
+
+  return lpPairAddr;
+};

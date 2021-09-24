@@ -45,7 +45,7 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       Names,
       RewardParams,
       Dependencies,
-      AGF: { DefaultPriceEth: AgfDefaultPriceEth },
+      AGF: { DefaultPriceEth: AgfDefaultPriceEth, UniV2EthPair },
     } = poolConfig as ICommonConfiguration;
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
@@ -88,7 +88,9 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
 
     if (AgfDefaultPriceEth) {
       await configureAgfPrice(addressProvider, agfAddr, AgfDefaultPriceEth, newAgfToken);
+    }
 
+    if (UniV2EthPair) {
       const dependencies = getParamPerNetwork(Dependencies, network);
       await deployUniswapAgfEth(addressProvider, agfAddr, dependencies.UniswapV2Router, newAgfToken);
     }

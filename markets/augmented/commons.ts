@@ -350,6 +350,15 @@ export const CommonsConfig: ICommonConfiguration = {
 
   AGF: {
     DefaultPriceEth: 10.0/3000.0,
+    UniV2EthPair: {
+      Symbol: 'UniV2ETHAGF',
+      StakeToken: {
+        RewardShare: {
+          BasePoints: 400,
+          BoostFactor: 30000, // 3x
+        }
+      },
+    }
   },
 
   RewardParams: {

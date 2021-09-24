@@ -513,6 +513,14 @@ export enum LPFeature {
 
 export interface IAgfParams {
   DefaultPriceEth?: number;
+  UniV2EthPair?: IAgfLPParams;
+}
+
+export interface IAgfLPParams {
+  Symbol: string;
+  StakeToken?: {
+    RewardShare?: IRewardPoolParams;
+  };
 }
 
 export interface IDependencies {

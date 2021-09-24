@@ -2,7 +2,6 @@ import { eContractid, IInterestRateStrategyParams, IReserveParams, ITokenNames, 
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { addProxyToJsonDb, chunk, falsyOrZeroAddress, mustWaitTx, waitForTx } from './misc-utils';
 import {
-  getIErc20Detailed,
   getIInitializablePoolToken,
   getIReserveDelegatedStrategy,
   getLendingPoolConfiguratorProxy,
