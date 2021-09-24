@@ -35,15 +35,15 @@ contract PriceFeedUniEthPair is IPriceFeed {
   }
 
   function currentPrice() private view returns (uint256, uint32) {
-    (uint112 reserve0, , uint32 timestamp) = IUniswapV2Pair(_token).getReserves();
-    if (reserve0 == 0) {
-      return (0, timestamp);
-    }
+    (uint112 reserve0, uint112 reserve1, uint32 timestamp) = IUniswapV2Pair(_token).getReserves();
     uint256 supply = IUniswapV2Pair(_token).totalSupply();
-    if (supply == 0) {
+    if (supply == 0 || reserve0 == 0) {
       return (0, timestamp);
     }
-    return ((reserve0 << 1) / supply, timestamp);
+    if (reserve1 > 0) {
+      reserve0 <<= 1;
+    }
+    return (reserve0 / supply, timestamp);
   }
 
   function latestAnswer() external view override returns (int256) {
