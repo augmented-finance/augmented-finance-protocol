@@ -380,7 +380,7 @@ export interface ICommonConfiguration {
 
   LendingRateOracleRates: iAssetsWithoutUSDOpt<IMarketRates>;
 
-  EmergencyAdmin: iParamsPerNetwork<tEthereumAddress>;
+  EmergencyAdmins: iParamsPerNetwork<tEthereumAddress[]>;
 
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
   ReserveAssetsOpt: iParamsPerNetwork<boolean>;
@@ -452,7 +452,8 @@ export interface IRewardParams {
   TeamPool: ITeamPool;
   ReferralPool: IBasicRewardPool;
   TreasuryPool: IBasicRewardPool;
-  BurnersPool: IBurnersPool;
+  BurnersPool: IPermiRewardPool;
+  RetroPool: IPermiRewardPool;
 }
 
 export interface ITeamPool {
@@ -468,7 +469,7 @@ export interface ITeamMembers {
 
 export interface IBasicRewardPool extends IRewardPoolParams {}
 
-export interface IBurnersPool {
+export interface IPermiRewardPool {
   TotalWad: number;
   BoostFactor: number;
   MeltDownAt: Date;
