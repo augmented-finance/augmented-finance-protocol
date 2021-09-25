@@ -8,9 +8,8 @@ import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { USD_ADDRESS } from '../../helpers/constants';
 
 task('full:smoke-test', 'Does smoke tests of the deployed contracts')
-  .addFlag('verify', 'Verify contracts at Etherscan')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .setAction(async ({ verify, pool }, DRE) => {
+  .setAction(async ({ pool }, DRE) => {
     await DRE.run('set-DRE');
 
     const network = <eNetwork>DRE.network.name;

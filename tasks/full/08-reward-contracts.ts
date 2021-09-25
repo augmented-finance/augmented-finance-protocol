@@ -1,5 +1,4 @@
-import { task } from 'hardhat/config';
-import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
+import { loadPoolConfig } from '../../helpers/configuration';
 import {
   deployAGFTokenV1Impl,
   deployRewardBoosterV1Impl,
@@ -25,16 +24,12 @@ import {
 import { oneEther, WEEK } from '../../helpers/constants';
 import { MarketAccessController } from '../../types';
 import { BigNumber } from '@ethersproject/bignumber';
-import { addFullStep } from '../helpers/full-steps';
+import { deployTask } from '../helpers/deploy-steps';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { deployUniAgfEth } from '../../helpers/init-helpers';
 
-addFullStep(8, 'Deploy reward contracts and AGF token', 'full:deploy-reward-contracts');
-
-task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tokens`)
-  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .addFlag('verify', `Verify contracts via Etherscan API.`)
-  .setAction(async ({ verify, pool }, localBRE) => {
+deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAGF tokens`, __dirname).setAction(
+  async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
@@ -158,7 +153,8 @@ task(`full:deploy-reward-contracts`, `Deploys reward contracts, AGF and xAGF tok
       );
       console.log('Boost pool: ', xagfAddr);
     }
-  });
+  }
+);
 
 const configureAgfPrice = async (
   addressProvider: MarketAccessController,

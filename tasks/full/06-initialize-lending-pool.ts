@@ -1,21 +1,16 @@
-import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { deployTreasuryImpl } from '../../helpers/contracts-deployments';
-import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
+import { loadPoolConfig } from '../../helpers/configuration';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getProtocolDataProvider } from '../../helpers/contracts-getters';
 import { falsyOrZeroAddress } from '../../helpers/misc-utils';
-import { addFullStep } from '../helpers/full-steps';
+import { deployTask } from '../helpers/deploy-steps';
 
-addFullStep(6, 'Initialize lending pool', 'full:initialize-lending-pool');
-
-task('full:initialize-lending-pool', 'Initializes lending pool and configures reserves')
-  .addFlag('verify', 'Verify contracts at Etherscan')
-  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .setAction(async ({ verify, pool }, localBRE) => {
+deployTask('full:initialize-lending-pool', 'Initialize lending pool and configure reserves', __dirname).setAction(
+  async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
@@ -56,4 +51,5 @@ task('full:initialize-lending-pool', 'Initializes lending pool and configures re
     );
     // but configuration will be always applied
     await configureReservesByHelper(addressProvider, ReservesConfig, reserveAssets, testHelpers);
-  });
+  }
+);

@@ -3,12 +3,8 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { eNetwork } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { falsyOrZeroAddress, writeUiConfig } from '../../helpers/misc-utils';
-import {
-  getAddressesProviderRegistry,
-  getMarketAddressController,
-  getProtocolDataProvider,
-} from '../../helpers/contracts-getters';
-import { AddressesProviderRegistry, MarketAccessController } from '../../types';
+import { getAddressesProviderRegistry } from '../../helpers/contracts-getters';
+import { AddressesProviderRegistry } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 

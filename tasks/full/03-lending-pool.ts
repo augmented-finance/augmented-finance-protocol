@@ -1,4 +1,3 @@
-import { task } from 'hardhat/config';
 import {
   deployLendingPoolExtensionImpl,
   deployLendingPoolConfiguratorImpl,
@@ -8,18 +7,14 @@ import { eNetwork, ICommonConfiguration, LPFeature } from '../../helpers/types';
 import { falsyOrZeroAddress, getFirstSigner, waitTx } from '../../helpers/misc-utils';
 import { getIManagedLendingPool, getLendingPoolProxy } from '../../helpers/contracts-getters';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
+import { loadPoolConfig } from '../../helpers/configuration';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { addFullStep } from '../helpers/full-steps';
+import { deployTask } from '../helpers/deploy-steps';
 
-addFullStep(3, 'Deploy lending pool', 'full:deploy-lending-pool');
-
-task('full:deploy-lending-pool', 'Deploys lending pool')
-  .addFlag('verify', 'Verify contracts at Etherscan')
-  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .setAction(async ({ verify, pool }, DRE: HardhatRuntimeEnvironment) => {
+deployTask('full:deploy-lending-pool', 'Deploy lending pool', __dirname).setAction(
+  async ({ verify, pool }, DRE: HardhatRuntimeEnvironment) => {
     await DRE.run('set-DRE');
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
@@ -83,4 +78,5 @@ task('full:deploy-lending-pool', 'Deploys lending pool')
     }
 
     console.log('Lending pool configurator:', lpConfigurator);
-  });
+  }
+);
