@@ -11,8 +11,11 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   using PercentageMath for uint256;
 
   address private _teamManager;
+  address private _excessTarget;
   uint32 private _lockupTill;
   uint16 private _totalShare;
+
+  mapping(address => uint256) private _delayed;
 
   constructor(
     IRewardController controller,
@@ -27,13 +30,21 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     require(msg.sender == _teamManager || _isConfigAdmin(msg.sender), Errors.CALLER_NOT_TEAM_MANAGER);
   }
 
+  modifier onlyTeamManagerOrConfigurator() {
+    _onlyTeamManagerOrConfigurator();
+    _;
+  }
+
   function getPoolName() public pure override returns (string memory) {
     return 'TeamPool';
   }
 
-  modifier onlyTeamManagerOrConfigurator() {
-    _onlyTeamManagerOrConfigurator();
-    _;
+  function setExcessTarget(address target) external onlyTeamManagerOrConfigurator {
+    require(target != address(this));
+    _excessTarget = target;
+    if (target != address(0)) {
+      internalAllocateReward(target, 0, uint32(block.timestamp), AllocationMode.SetPull);
+    }
   }
 
   function internalGetRate() internal view override returns (uint256) {
@@ -77,6 +88,10 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return _lockupTill > 0 && _lockupTill < at;
   }
 
+  function internalAttachedToRewardController() internal override {
+    _updateTeamExcess();
+  }
+
   function updateTeamMembers(address[] calldata members, uint16[] calldata memberSharePct)
     external
     onlyTeamManagerOrConfigurator
@@ -85,14 +100,17 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     for (uint256 i = 0; i < members.length; i++) {
       _updateTeamMember(members[i], memberSharePct[i]);
     }
+    _updateTeamExcess();
   }
 
   function updateTeamMember(address member, uint16 memberSharePct) external onlyTeamManagerOrConfigurator {
     _updateTeamMember(member, memberSharePct);
+    _updateTeamExcess();
   }
 
   function _updateTeamMember(address member, uint16 memberSharePct) private {
     require(member != address(0), 'member is required');
+    require(member != address(this), 'member is invalid');
     require(memberSharePct <= PercentageMath.ONE, 'invalid share percentage');
 
     uint256 newTotalShare = (uint256(_totalShare) + memberSharePct) - getRewardEntry(member).rewardBase;
@@ -101,19 +119,32 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
 
     (uint256 allocated, uint32 since, AllocationMode mode) = doUpdateRewardBalance(member, memberSharePct);
 
-    require(allocated == 0 || isUnlocked(getCurrentTick()), 'member share can not be changed during lockup');
+    if (isUnlocked(getCurrentTick())) {
+      allocated = _popDelayed(member, allocated);
+    } else if (allocated > 0) {
+      _delayed[member] += allocated;
+      if (mode == AllocationMode.Push) {
+        return;
+      }
+      allocated = 0;
+    }
 
     internalAllocateReward(member, allocated, since, mode);
   }
 
-  function removeTeamMember(address member) external onlyTeamManagerOrConfigurator {
-    require(member != address(0), 'member is required');
+  function _popDelayed(address holder, uint256 amount) private returns (uint256) {
+    uint256 d = _delayed[holder];
+    if (d == 0) {
+      return amount;
+    }
+    delete (_delayed[holder]);
+    return amount + d;
+  }
 
-    uint256 lastShare = doRemoveRewardBalance(member);
-    if (lastShare < _totalShare) {
-      _totalShare -= uint16(lastShare);
-    } else {
-      _totalShare = 0;
+  function _updateTeamExcess() private {
+    (uint256 allocated, , ) = doUpdateRewardBalance(address(this), PercentageMath.ONE - _totalShare);
+    if (allocated > 0) {
+      _delayed[address(this)] += allocated;
     }
   }
 
@@ -143,19 +174,39 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     internal
     override
     returns (
-      uint256,
-      uint32,
-      bool
+      uint256 allocated,
+      uint32 since,
+      bool keep
     )
   {
     if (!isUnlocked(getCurrentTick())) {
       return (0, 0, true);
     }
-    return doGetReward(holder);
+    (allocated, since, keep) = doGetReward(holder);
+    allocated = _popDelayed(holder, allocated);
+
+    if (holder != _excessTarget) {
+      return (allocated, since, keep);
+    }
+
+    (uint256 allocated2, uint32 since2, ) = doGetReward(address(this));
+    allocated2 = _popDelayed(address(this), allocated2);
+
+    return (allocated + allocated2, since2 > since ? since2 : since, true);
   }
 
   function internalCalcReward(address holder, uint32 at) internal view override returns (uint256, uint32) {
-    return doCalcRewardAt(holder, at);
+    (uint256 allocated, uint32 since) = doCalcRewardAt(holder, at);
+    allocated += _delayed[holder];
+
+    if (holder != _excessTarget) {
+      return (allocated, since);
+    }
+
+    (uint256 allocated2, uint32 since2) = doCalcRewardAt(address(this), at);
+    allocated2 += _delayed[address(this)];
+
+    return (allocated + allocated2, since2 > since ? since2 : since);
   }
 
   function calcRewardFor(address holder, uint32 at)

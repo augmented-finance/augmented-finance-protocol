@@ -9,16 +9,16 @@ import { getPermitFreezerRewardPool, getMockRewardFreezer } from '../../helpers/
 
 import { PermitFreezerRewardPool, RewardFreezer } from '../../types';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
+
 import { currentTick, mineTicks, revertSnapshot, takeSnapshot } from './utils';
-import { getSigners } from '../../helpers/misc-utils';
 import { _TypedDataEncoder } from '@ethersproject/hash';
-import { buildRewardClaimPermitParams, encodeTypeHash } from '../../helpers/contracts-helpers';
-import { keccak256 } from '@ethersproject/keccak256';
 import { toUtf8Bytes } from '@ethersproject/strings';
 import { hexlify, splitSignature } from '@ethersproject/bytes';
 import { WAD, ZERO_ADDRESS } from '../../helpers/constants';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { tEthereumAddress } from '../../helpers/types';
+import { getSigners } from '../../helpers/misc-utils';
+import { buildRewardClaimPermitParams, encodeTypeHash } from '../../helpers/contracts-helpers';
 
 chai.use(solidity);
 const { expect } = chai;
