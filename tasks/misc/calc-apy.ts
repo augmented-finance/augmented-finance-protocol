@@ -3,7 +3,7 @@ import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import { getMarketAddressController, hasMarketAddressController } from '../../helpers/contracts-getters';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { falsyOrZeroAddress, getFirstSigner } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 import { eNetwork, ICommonConfiguration } from '../../helpers/types';
 
 task('augmented:calc-apy', 'Calculates current APYs')

@@ -1,20 +1,15 @@
-import { task } from 'hardhat/config';
-import { loadPoolConfig, ConfigNames, getWethAddress } from '../../helpers/configuration';
+import { loadPoolConfig, getWethAddress } from '../../helpers/configuration';
 import { deployWETHGateway } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
 import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
-import { addFullStep } from '../helpers/full-steps';
-
-addFullStep(4, 'Deploy WETH Gateway', 'full-deploy-weth-gateway');
+import { deployTask } from '../helpers/deploy-steps';
 
 const CONTRACT_NAME = 'WETHGateway';
 
-task(`full-deploy-weth-gateway`, `Deploys ${CONTRACT_NAME}`)
-  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .addFlag('verify', `Verify ${CONTRACT_NAME} contract via Etherscan API.`)
-  .setAction(async ({ verify, pool }, localBRE) => {
+deployTask(`full:deploy-weth-gateway`, `Deploy WETH Gateway`, __dirname).setAction(
+  async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
@@ -41,4 +36,5 @@ task(`full-deploy-weth-gateway`, `Deploys ${CONTRACT_NAME}`)
     }
 
     console.log(`${CONTRACT_NAME}:`, wgAddress);
-  });
+  }
+);

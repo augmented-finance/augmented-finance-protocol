@@ -1,6 +1,5 @@
-import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
+import { loadPoolConfig } from '../../helpers/configuration';
 import {
   deployTokenWeightedRewardPoolImpl,
   deployTeamRewardPool,
@@ -31,10 +30,8 @@ import { oneWad, ZERO_ADDRESS } from '../../helpers/constants';
 import { transpose } from 'underscore';
 import { getDeployAccessController, setAndGetAddressAsProxyWithInit } from '../../helpers/deploy-helpers';
 import { MarketAccessController, RewardBooster, RewardConfigurator } from '../../types';
-import { addFullStep } from '../helpers/full-steps';
+import { deployTask } from '../helpers/deploy-steps';
 import { getUniAgfEth } from '../../helpers/init-helpers';
-
-addFullStep(10, 'Deploy reward pools', 'full:init-reward-pools');
 
 interface poolInitParams {
   provider: tEthereumAddress;
@@ -45,237 +42,234 @@ interface poolInitParams {
   boostFactor: BigNumber;
 }
 
-task(`full:init-reward-pools`, `Deploys reward pools`)
-  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .addFlag('verify', `Verify contracts via Etherscan API.`)
-  .setAction(async ({ verify, pool }, localBRE) => {
-    await localBRE.run('set-DRE');
-    const network = <eNetwork>localBRE.network.name;
-    const poolConfig = loadPoolConfig(pool);
+deployTask(`full:init-reward-pools`, `Deploy reward pools`, __dirname).setAction(async ({ verify, pool }, localBRE) => {
+  await localBRE.run('set-DRE');
+  const network = <eNetwork>localBRE.network.name;
+  const poolConfig = loadPoolConfig(pool);
 
-    const [freshStart, continuation, addressProvider] = await getDeployAccessController();
+  const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-    const {
-      ReserveAssets,
-      RewardParams,
-      Names,
-      Dependencies,
-      AGF: { UniV2EthPair },
-    } = poolConfig as ICommonConfiguration;
+  const {
+    ReserveAssets,
+    RewardParams,
+    Names,
+    Dependencies,
+    AGF: { UniV2EthPair },
+  } = poolConfig as ICommonConfiguration;
 
-    const reserveAssets = getParamPerNetwork(ReserveAssets, network);
-    const stakeConfigurator = await getStakeConfiguratorImpl(
-      await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
-    );
+  const reserveAssets = getParamPerNetwork(ReserveAssets, network);
+  const stakeConfigurator = await getStakeConfiguratorImpl(
+    await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
+  );
 
-    const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
-    const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
+  const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
+  const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
 
-    const knownReserves: {
-      baseSymbol: string;
-      tokens: tEthereumAddress[];
-      shares: (IRewardPoolParams | undefined)[];
-    }[] = [];
+  const knownReserves: {
+    baseSymbol: string;
+    tokens: tEthereumAddress[];
+    shares: (IRewardPoolParams | undefined)[];
+  }[] = [];
 
-    for (const [sym, opt] of Object.entries(rewardParams.TokenPools)) {
-      if (opt == undefined) {
-        continue;
-      }
-      const tp: ITokenRewardPoolParams = opt;
+  for (const [sym, opt] of Object.entries(rewardParams.TokenPools)) {
+    if (opt == undefined) {
+      continue;
+    }
+    const tp: ITokenRewardPoolParams = opt;
 
-      const asset = reserveAssets[sym];
-      if (falsyOrZeroAddress(asset)) {
-        console.log('Reward asset (underlying) is missing:', sym);
-        continue;
-      }
-
-      const rd = await lendingPool.getReserveData(asset);
-      if (falsyOrZeroAddress(rd.depositTokenAddress)) {
-        console.log('Reserve is missing for asset (underlying):', sym);
-        continue;
-      }
-
-      const info = {
-        baseSymbol: sym,
-        tokens: [rd.depositTokenAddress, rd.variableDebtTokenAddress, rd.stableDebtTokenAddress],
-        shares: [tp.Share.deposit, tp.Share.vDebt, tp.Share.sDebt],
-      };
-      if (tp.Share.stake != undefined) {
-        info.tokens.push(await stakeConfigurator.stakeTokenOf(rd.depositTokenAddress));
-        info.shares.push(tp.Share.stake);
-      }
-      knownReserves.push(info);
+    const asset = reserveAssets[sym];
+    if (falsyOrZeroAddress(asset)) {
+      console.log('Reward asset (underlying) is missing:', sym);
+      continue;
     }
 
-    if (UniV2EthPair?.StakeToken?.RewardShare) {
-      const dependencies = getParamPerNetwork(Dependencies, network);
-      const lpPairAddr = await getUniAgfEth(addressProvider, dependencies.UniswapV2Router);
+    const rd = await lendingPool.getReserveData(asset);
+    if (falsyOrZeroAddress(rd.depositTokenAddress)) {
+      console.log('Reserve is missing for asset (underlying):', sym);
+      continue;
+    }
 
-      if (!falsyOrZeroAddress(lpPairAddr)) {
-        knownReserves.push({
-          baseSymbol: UniV2EthPair.Symbol,
-          tokens: ['', '', '', await stakeConfigurator.stakeTokenOf(lpPairAddr)],
-          shares: [undefined, undefined, undefined, UniV2EthPair.StakeToken.RewardShare],
+    const info = {
+      baseSymbol: sym,
+      tokens: [rd.depositTokenAddress, rd.variableDebtTokenAddress, rd.stableDebtTokenAddress],
+      shares: [tp.Share.deposit, tp.Share.vDebt, tp.Share.sDebt],
+    };
+    if (tp.Share.stake != undefined) {
+      info.tokens.push(await stakeConfigurator.stakeTokenOf(rd.depositTokenAddress));
+      info.shares.push(tp.Share.stake);
+    }
+    knownReserves.push(info);
+  }
+
+  if (UniV2EthPair?.StakeToken?.RewardShare) {
+    const dependencies = getParamPerNetwork(Dependencies, network);
+    const lpPairAddr = await getUniAgfEth(addressProvider, dependencies.UniswapV2Router);
+
+    if (!falsyOrZeroAddress(lpPairAddr)) {
+      knownReserves.push({
+        baseSymbol: UniV2EthPair.Symbol,
+        tokens: ['', '', '', await stakeConfigurator.stakeTokenOf(lpPairAddr)],
+        shares: [undefined, undefined, undefined, UniV2EthPair.StakeToken.RewardShare],
+      });
+    }
+  }
+
+  let prepParams: poolInitParams[] = [];
+  let prepNames: string[] = [];
+  let prepProviders: tEthereumAddress[] = [];
+
+  {
+    const subTypePrefixes: string[] = [
+      Names.DepositSymbolPrefix,
+      Names.VariableDebtSymbolPrefix,
+      Names.StableDebtSymbolPrefix,
+      Names.StakeSymbolPrefix,
+    ];
+
+    // Put the most frequently used token types at the beginning
+    for (let subType of [0, 1, 3, 2]) {
+      // Deposit, Variable, Stake, Stable
+      for (const knownReserve of knownReserves) {
+        const token = knownReserve.tokens[subType];
+        const share = knownReserve.shares[subType];
+        if (share == undefined || falsyOrZeroAddress(token)) {
+          continue;
+        }
+        const tokenSymbol = subTypePrefixes[subType] + Names.SymbolPrefix + knownReserve.baseSymbol;
+        prepNames.push(tokenSymbol);
+        prepProviders.push(token);
+        prepParams.push({
+          provider: token,
+          baselinePercentage: BigNumber.from(share.BasePoints),
+          poolName: tokenSymbol,
+          initialRate: BigNumber.from(0),
+          boostFactor: BigNumber.from(share!.BoostFactor),
+          impl: '',
         });
       }
     }
+  }
 
-    let prepParams: poolInitParams[] = [];
-    let prepNames: string[] = [];
-    let prepProviders: tEthereumAddress[] = [];
+  const rewardController = await getRewardBooster(await addressProvider.getAddress(AccessFlags.REWARD_CONTROLLER));
+  const configurator = await getRewardConfiguratorProxy(
+    await addressProvider.getAddress(AccessFlags.REWARD_CONFIGURATOR)
+  );
 
-    {
-      const subTypePrefixes: string[] = [
-        Names.DepositSymbolPrefix,
-        Names.VariableDebtSymbolPrefix,
-        Names.StableDebtSymbolPrefix,
-        Names.StakeSymbolPrefix,
-      ];
+  const { pools, controllers, baselinePcts } = await configurator.getRewardedTokenParams(prepProviders);
 
-      // Put the most frequently used token types at the beginning
-      for (let subType of [0, 1, 3, 2]) {
-        // Deposit, Variable, Stake, Stable
-        for (const knownReserve of knownReserves) {
-          const token = knownReserve.tokens[subType];
-          const share = knownReserve.shares[subType];
-          if (share == undefined || falsyOrZeroAddress(token)) {
-            continue;
-          }
-          const tokenSymbol = subTypePrefixes[subType] + Names.SymbolPrefix + knownReserve.baseSymbol;
-          prepNames.push(tokenSymbol);
-          prepProviders.push(token);
-          prepParams.push({
-            provider: token,
-            baselinePercentage: BigNumber.from(share.BasePoints),
-            poolName: tokenSymbol,
-            initialRate: BigNumber.from(0),
-            boostFactor: BigNumber.from(share!.BoostFactor),
-            impl: '',
-          });
-        }
+  let initParams: poolInitParams[] = [];
+  let initNames: string[] = [];
+
+  let poolImplAddr: tEthereumAddress = ZERO_ADDRESS;
+
+  for (let i = 0; i < prepParams.length; i++) {
+    let poolParams = prepParams[i];
+    if (falsyOrZeroAddress(pools[i])) {
+      // a separate pool should be created and connected
+      if (falsyOrZeroAddress(poolImplAddr)) {
+        const poolImpl = await deployTokenWeightedRewardPoolImpl(verify, continuation);
+        poolImplAddr = poolImpl.address;
       }
+      poolParams.impl = poolImplAddr;
+    } else if (falsyOrZeroAddress(controllers[i])) {
+      // a self-pool should be initialized, but not created
+      poolParams.impl = ZERO_ADDRESS;
+    } else {
+      console.log('Token has an active reward pool already:', prepNames[i], pools[i]);
+      continue;
     }
+    initParams.push(poolParams);
+    initNames.push(prepNames[i]);
+  }
 
-    const rewardController = await getRewardBooster(await addressProvider.getAddress(AccessFlags.REWARD_CONTROLLER));
-    const configurator = await getRewardConfiguratorProxy(
-      await addressProvider.getAddress(AccessFlags.REWARD_CONFIGURATOR)
+  let totalShare = 0;
+  let newPoolsOffset = 0;
+  const newNames: string[] = [];
+  if (!freshStart || continuation) {
+    const totals = await configurator.getPoolTotals(true);
+    // console.log('Existing pool totals: ', totals);
+    totalShare += totals.totalBaselinePercentage.toNumber();
+    newPoolsOffset = totals.listCount.toNumber();
+  }
+  if (freshStart && newPoolsOffset <= 1) {
+    newPoolsOffset = 0;
+    newNames.push(Names.RewardStakeTokenSymbol);
+  }
+
+  const [extraNames, extraShare] = await deployExtraPools(
+    addressProvider,
+    freshStart,
+    continuation,
+    rewardParams,
+    configurator,
+    rewardController.address,
+    verify
+  );
+  totalShare += extraShare;
+
+  for (const params of initParams) {
+    totalShare += params.baselinePercentage.toNumber();
+  }
+
+  console.log(`Total reward share: ${(0.0 + totalShare) / 100.0}%`);
+  if (totalShare > 10000) {
+    throw `excessive total reward share`;
+  }
+
+  // CHUNK CONFIGURATION
+  const initChunks = 4;
+
+  const chunkedParams = chunk(initParams, initChunks);
+  const chunkedNames = chunk(initNames, initChunks);
+
+  console.log(`- Reward pools initialization with ${chunkedParams.length} txs`);
+  for (let chunkIndex = 0; chunkIndex < chunkedParams.length; chunkIndex++) {
+    const param = chunkedParams[chunkIndex];
+    // console.log(param);
+    const tx3 = await mustWaitTx(
+      configurator.batchInitRewardPools(param, {
+        gasLimit: 5000000,
+      })
     );
 
-    const { pools, controllers, baselinePcts } = await configurator.getRewardedTokenParams(prepProviders);
+    console.log(`  - Pool(s) ready for: ${chunkedNames[chunkIndex].join(', ')}`);
+    console.log('    * gasUsed', tx3.gasUsed.toString());
+  }
 
-    let initParams: poolInitParams[] = [];
-    let initNames: string[] = [];
+  const activePools = await configurator.list();
 
-    let poolImplAddr: tEthereumAddress = ZERO_ADDRESS;
-
-    for (let i = 0; i < prepParams.length; i++) {
-      let poolParams = prepParams[i];
-      if (falsyOrZeroAddress(pools[i])) {
-        // a separate pool should be created and connected
-        if (falsyOrZeroAddress(poolImplAddr)) {
-          const poolImpl = await deployTokenWeightedRewardPoolImpl(verify, continuation);
-          poolImplAddr = poolImpl.address;
-        }
-        poolParams.impl = poolImplAddr;
-      } else if (falsyOrZeroAddress(controllers[i])) {
-        // a self-pool should be initialized, but not created
-        poolParams.impl = ZERO_ADDRESS;
-      } else {
-        console.log('Token has an active reward pool already:', prepNames[i], pools[i]);
+  if (verify) {
+    console.log('Collecting verification data for reward pools');
+    for (let i = 0; i < initParams.length; i++) {
+      const params = initParams[i];
+      if (falsyOrZeroAddress(params.impl)) {
         continue;
       }
-      initParams.push(poolParams);
-      initNames.push(prepNames[i]);
+      const proxyAddr = activePools[activePools.length - (initParams.length - i)]; // new pools are at the end of all pools
+      const implAddr = params.impl;
+      console.log('\t', params.poolName, proxyAddr, implAddr);
+
+      const v = await getIInitializableRewardPool(proxyAddr);
+      const data = v.interface.encodeFunctionData('initializeRewardPool', [
+        {
+          controller: configurator.address,
+          poolName: params.poolName,
+          baselinePercentage: params.baselinePercentage,
+        },
+      ]);
+      await addProxyToJsonDb('REWARD_POOL_' + params.poolName, proxyAddr, implAddr, 'rewardPool', [
+        configurator.address,
+        implAddr,
+        data,
+      ]);
     }
+  }
 
-    let totalShare = 0;
-    let newPoolsOffset = 0;
-    const newNames: string[] = [];
-    if (!freshStart || continuation) {
-      const totals = await configurator.getPoolTotals(true);
-      // console.log('Existing pool totals: ', totals);
-      totalShare += totals.totalBaselinePercentage.toNumber();
-      newPoolsOffset = totals.listCount.toNumber();
-    }
-    if (freshStart && newPoolsOffset <= 1) {
-      newPoolsOffset = 0;
-      newNames.push(Names.RewardStakeTokenSymbol);
-    }
+  newNames.push(...extraNames);
+  newNames.push(...initNames);
 
-    const [extraNames, extraShare] = await deployExtraPools(
-      addressProvider,
-      freshStart,
-      continuation,
-      rewardParams,
-      configurator,
-      rewardController.address,
-      verify
-    );
-    totalShare += extraShare;
-
-    for (const params of initParams) {
-      totalShare += params.baselinePercentage.toNumber();
-    }
-
-    console.log(`Total reward share: ${(0.0 + totalShare) / 100.0}%`);
-    if (totalShare > 10000) {
-      throw `excessive total reward share`;
-    }
-
-    // CHUNK CONFIGURATION
-    const initChunks = 4;
-
-    const chunkedParams = chunk(initParams, initChunks);
-    const chunkedNames = chunk(initNames, initChunks);
-
-    console.log(`- Reward pools initialization with ${chunkedParams.length} txs`);
-    for (let chunkIndex = 0; chunkIndex < chunkedParams.length; chunkIndex++) {
-      const param = chunkedParams[chunkIndex];
-      // console.log(param);
-      const tx3 = await mustWaitTx(
-        configurator.batchInitRewardPools(param, {
-          gasLimit: 5000000,
-        })
-      );
-
-      console.log(`  - Pool(s) ready for: ${chunkedNames[chunkIndex].join(', ')}`);
-      console.log('    * gasUsed', tx3.gasUsed.toString());
-    }
-
-    const activePools = await configurator.list();
-
-    if (verify) {
-      console.log('Collecting verification data for reward pools');
-      for (let i = 0; i < initParams.length; i++) {
-        const params = initParams[i];
-        if (falsyOrZeroAddress(params.impl)) {
-          continue;
-        }
-        const proxyAddr = activePools[activePools.length - (initParams.length - i)]; // new pools are at the end of all pools
-        const implAddr = params.impl;
-        console.log('\t', params.poolName, proxyAddr, implAddr);
-
-        const v = await getIInitializableRewardPool(proxyAddr);
-        const data = v.interface.encodeFunctionData('initializeRewardPool', [
-          {
-            controller: configurator.address,
-            poolName: params.poolName,
-            baselinePercentage: params.baselinePercentage,
-          },
-        ]);
-        await addProxyToJsonDb('REWARD_POOL_' + params.poolName, proxyAddr, implAddr, 'rewardPool', [
-          configurator.address,
-          implAddr,
-          data,
-        ]);
-      }
-    }
-
-    newNames.push(...extraNames);
-    newNames.push(...initNames);
-
-    await updateRates(rewardController, activePools, rewardParams.InitialRateWad, newNames, newPoolsOffset);
-  });
+  await updateRates(rewardController, activePools, rewardParams.InitialRateWad, newNames, newPoolsOffset);
+});
 
 const updateRates = async (
   rewardController: RewardBooster,
