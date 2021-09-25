@@ -389,17 +389,13 @@ export const CommonsConfig: ICommonConfiguration = {
       TotalWad: 1e6,
       BoostFactor: 0,
       MeltDownAt: new Date('2022-04-01'),
-      Providers: [ 
-        '0x9745B2357ae7494de2852C1dfDBBB1dAD621896E',
-      ],
+      Providers: [],
     },
     RetroPool: {
       TotalWad: 1e5,
       BoostFactor: 0,
       MeltDownAt: new Date('2021-11-11'),
-      Providers: [ 
-        '0x9745B2357ae7494de2852C1dfDBBB1dAD621896E',
-      ],
+      Providers: [],
     },
     TeamPool: {
       BasePoints: 1000,
