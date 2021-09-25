@@ -12,7 +12,7 @@ import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { currentTick, mineTicks, revertSnapshot, takeSnapshot } from './utils';
 import { getSigners } from '../../helpers/misc-utils';
 import { _TypedDataEncoder } from '@ethersproject/hash';
-import { buildRewardClaimPermitParams } from '../../helpers/contracts-helpers';
+import { buildRewardClaimPermitParams, encodeTypeHash } from '../../helpers/contracts-helpers';
 import { keccak256 } from '@ethersproject/keccak256';
 import { toUtf8Bytes } from '@ethersproject/strings';
 import { hexlify, splitSignature } from '@ethersproject/bytes';
@@ -78,9 +78,7 @@ describe('Rewards by permit test suite', () => {
     const params = buildRewardClaimPermitParams(domainParams);
 
     expect(await pool.DOMAIN_SEPARATOR()).eq(_TypedDataEncoder.hashDomain(params.domain));
-
-    const encoder = _TypedDataEncoder.from(params.types);
-    expect(await pool.CLAIM_TYPEHASH()).eq(keccak256(toUtf8Bytes(encoder.encodeType(params.primaryType))));
+    expect(await pool.CLAIM_TYPEHASH()).eq(encodeTypeHash(params.primaryType, params.types));
   });
 
   const claimReward = async (user: tEthereumAddress, amount: BigNumberish, expiry?: number, nonce?: BigNumber) => {
@@ -92,7 +90,7 @@ describe('Rewards by permit test suite', () => {
       deadline: (await currentTick()) + (expiry || 10),
     });
 
-    const signature = await deployer._signTypedData(params.domain, params.types, params.message);
+    const signature = await deployer._signTypedData(params.domain, params.types, params.message!);
     const { v, r, s } = splitSignature(signature);
 
     const m = params.message;
@@ -154,7 +152,7 @@ describe('Rewards by permit test suite', () => {
       deadline: (await currentTick()) + 10,
     });
 
-    const signature = await deployer._signTypedData(params.domain, params.types, params.message);
+    const signature = await deployer._signTypedData(params.domain, params.types, params.message!);
     const { v, r, s } = splitSignature(signature);
 
     const m = params.message;

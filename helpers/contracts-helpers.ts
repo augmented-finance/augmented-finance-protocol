@@ -17,6 +17,10 @@ import { MintableERC20 } from '../types/MintableERC20';
 import { Artifact } from 'hardhat/types';
 import { getIErc20Detailed } from './contracts-getters';
 import { usingTenderly } from './tenderly-utils';
+import { keccak256 } from '@ethersproject/keccak256';
+import { toUtf8Bytes } from '@ethersproject/strings';
+import { _TypedDataEncoder } from '@ethersproject/hash';
+import { TypedDataField } from '@ethersproject/abstract-signer';
 
 export type MockTokenMap = { [symbol: string]: MintableERC20 };
 
@@ -285,6 +289,11 @@ export const buildRewardClaimPermitParams = (
   },
   message: message,
 });
+
+export const encodeTypeHash = (typeName: string, types: Record<string, Array<TypedDataField>>) => {
+  const encoder = _TypedDataEncoder.from(types);
+  return keccak256(toUtf8Bytes(encoder.encodeType(typeName)));
+};
 
 export const getSignatureFromTypedData = (
   privateKey: string,
