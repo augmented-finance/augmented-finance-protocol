@@ -15,7 +15,7 @@ abstract contract BasePermitRewardPool is ControlledRewardPool {
     keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
 
   /// @dev spender => next valid nonce to submit with permit()
-  mapping(address => uint256) public _nonces;
+  mapping(address => uint256) internal _nonces;
 
   string private _rewardPoolName;
 

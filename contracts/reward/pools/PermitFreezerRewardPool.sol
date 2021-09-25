@@ -56,7 +56,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
   }
 
   function internalCheckNonce(uint256 currentValidNonce, uint256 deadline) internal view override returns (uint256) {
-    require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
+    require(block.timestamp <= deadline, 'INVALID_TIME');
     return currentValidNonce + 1;
   }
 
@@ -98,13 +98,19 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     override
     returns (
       uint256 amount,
-      uint256,
+      uint256 frozen,
       uint32 since
     )
   {
     require(at >= uint32(block.timestamp));
     (amount, since) = internalCalcReward(holder, at);
-    return (amount, internalGetFrozenReward(holder), since);
+    frozen = internalGetFrozenReward(holder);
+    if (amount >= frozen) {
+      return (amount, 0, since);
+    }
+    unchecked {
+      return (amount, frozen - amount, since);
+    }
   }
 
   function internalUpdateFunds(uint256 value) internal override {
