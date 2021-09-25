@@ -23,10 +23,10 @@ export type MockTokenMap = { [symbol: string]: MintableERC20 };
 export const registerContractInJsonDb = async (contractId: string, contractInstance: Contract) =>
   addContractToJsonDb(contractId, contractInstance, true);
 
-export const getEthersSigners = async (): Promise<Signer[]> => await Promise.all(await (<any>DRE).ethers.getSigners());
+export const getEthersSigners = async (): Promise<Signer[]> => await (<any>DRE).ethers.getSigners();
 
 export const getEthersSignersAddresses = async (): Promise<tEthereumAddress[]> =>
-  await Promise.all((await (<any>DRE).ethers.getSigners()).map((signer) => signer.getAddress()));
+  (await (<any>DRE).ethers.getSigners()).map((signer) => signer.getAddress());
 
 export const getCurrentBlock = async () => {
   return (<any>DRE).ethers.provider.getBlockNumber();
@@ -250,6 +250,40 @@ export const buildPermitParams = (
     nonce,
     deadline,
   },
+});
+
+export const buildRewardClaimPermitParams = (
+  domain: {
+    name: string;
+    revision: string;
+    chainId: number;
+    contract: tEthereumAddress;
+  },
+  message?: {
+    provider: tEthereumAddress;
+    spender: tEthereumAddress;
+    value: BigNumberish;
+    nonce: BigNumberish;
+    deadline: number;
+  }
+) => ({
+  types: {
+    ClaimReward: [
+      { name: 'provider', type: 'address' },
+      { name: 'spender', type: 'address' },
+      { name: 'value', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' },
+      { name: 'deadline', type: 'uint256' },
+    ],
+  },
+  primaryType: 'ClaimReward' as const,
+  domain: {
+    name: domain.name,
+    version: domain.revision,
+    chainId: domain.chainId,
+    verifyingContract: domain.contract,
+  },
+  message: message,
 });
 
 export const getSignatureFromTypedData = (

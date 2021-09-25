@@ -2,27 +2,42 @@ import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import rawBRE, { ethers } from 'hardhat';
+import { BUIDLEREVM_CHAINID } from '../../helpers/buidler-constants';
+import rawBRE from 'hardhat';
 
-import { getMockAgfToken, getPermitFreezerRewardPool, getMockRewardFreezer } from '../../helpers/contracts-getters';
+import { getPermitFreezerRewardPool, getMockRewardFreezer } from '../../helpers/contracts-getters';
 
-import { MockAgfToken, RewardFreezer } from '../../types';
-import { ONE_ADDRESS } from '../../helpers/constants';
+import { PermitFreezerRewardPool, RewardFreezer } from '../../types';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
-import { revertSnapshot, takeSnapshot } from './utils';
+import { currentTick, mineTicks, revertSnapshot, takeSnapshot } from './utils';
+import { getSigners } from '../../helpers/misc-utils';
+import { _TypedDataEncoder } from '@ethersproject/hash';
+import { buildRewardClaimPermitParams } from '../../helpers/contracts-helpers';
+import { keccak256 } from '@ethersproject/keccak256';
+import { toUtf8Bytes } from '@ethersproject/strings';
+import { hexlify, splitSignature } from '@ethersproject/bytes';
+import { WAD, ZERO_ADDRESS } from '../../helpers/constants';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
+import { tEthereumAddress } from '../../helpers/types';
 
 chai.use(solidity);
 const { expect } = chai;
 
 // makeSuite('Rewards test suite', (testEnv: TestEnv) => {
-describe('Rewards test suite', () => {
+describe('Rewards by permit test suite', () => {
   let deployer: SignerWithAddress;
   let user: SignerWithAddress;
   let user2: SignerWithAddress;
-  let otherUsers: SignerWithAddress[];
 
   let rewardCtl: RewardFreezer;
-  let agf: MockAgfToken;
+  let pool: PermitFreezerRewardPool;
+
+  let domainParams = {
+    name: '',
+    revision: '',
+    chainId: 0,
+    contract: '',
+  };
 
   let blkBeforeDeploy;
 
@@ -30,22 +45,23 @@ describe('Rewards test suite', () => {
     await rawBRE.run('set-DRE');
     await rawBRE.run('augmented:test-local', CFG);
 
-    [deployer, user, user2, ...otherUsers] = await ethers.getSigners();
+    [deployer, user, user2] = await getSigners();
 
     // TODO each test below needs a separate freezer
     rewardCtl = await getMockRewardFreezer();
     expect(rewardCtl.address).to.properAddress;
-
-    const freezer = await getPermitFreezerRewardPool();
-    // deployer.address is used instead of a token contract
-    // await rewardCtl.addRewardProvider(
-    //   freezer.address,
-    //   deployer.address,
-    //   ONE_ADDRESS
-    // );
     await rewardCtl.setFreezePercentage(0);
 
-    agf = await getMockAgfToken();
+    pool = await getPermitFreezerRewardPool();
+    await pool.addRewardProvider(deployer.address, ZERO_ADDRESS);
+    await pool.setFreezePercentage(10000); // 100%
+
+    domainParams = {
+      name: await pool.getPoolName(),
+      revision: '1',
+      chainId: rawBRE.network.config.chainId || BUIDLEREVM_CHAINID,
+      contract: pool.address,
+    };
   });
 
   beforeEach(async () => {
@@ -56,42 +72,130 @@ describe('Rewards test suite', () => {
     await revertSnapshot(blkBeforeDeploy);
   });
 
-  it.skip('Should claim reward', async () => {
-    const freezer = await getPermitFreezerRewardPool();
+  it('Checks the domain separator and claim format', async () => {
+    expect(await pool.EIP712_REVISION()).to.be.equal(hexlify(toUtf8Bytes(domainParams.revision)));
 
-    expect(await agf.balanceOf(user.address)).to.eq(0);
+    const params = buildRewardClaimPermitParams(domainParams);
 
-    await freezer.handleBalanceUpdate(ONE_ADDRESS, user.address, 0, 2000, 100000); // block 10
-    await (await rewardCtl.connect(user).claimReward()).wait(1); // block 11
-    expect(await agf.balanceOf(user.address)).to.eq(2000);
+    expect(await pool.DOMAIN_SEPARATOR()).eq(_TypedDataEncoder.hashDomain(params.domain));
 
-    await expect(rewardCtl.connect(user).claimReward())
-      .to.emit(rewardCtl, 'RewardsClaimed')
-      .withArgs(user.address, user.address, 2000); // block 12
-    expect(await agf.balanceOf(user.address)).to.eq(4000);
+    const encoder = _TypedDataEncoder.from(params.types);
+    expect(await pool.CLAIM_TYPEHASH()).eq(keccak256(toUtf8Bytes(encoder.encodeType(params.primaryType))));
+  });
 
-    await rewardCtl.setFreezePercentage(5000); // set 50% // block 13
+  const claimReward = async (user: tEthereumAddress, amount: BigNumberish, expiry?: number, nonce?: BigNumber) => {
+    const params = buildRewardClaimPermitParams(domainParams, {
+      provider: deployer.address,
+      spender: user,
+      value: amount,
+      nonce: nonce || (await pool.nonces(user)),
+      deadline: (await currentTick()) + (expiry || 10),
+    });
 
-    await (await rewardCtl.connect(user).claimReward()).wait(1); // block 14
-    // +50% of 4k for blocks 13-14, ttl frozen 2k
-    expect(await agf.balanceOf(user.address)).to.eq(6000);
+    const signature = await deployer._signTypedData(params.domain, params.types, params.message);
+    const { v, r, s } = splitSignature(signature);
 
-    await (await rewardCtl.connect(user).claimReward()).wait(1); // block 15
-    expect(await agf.balanceOf(user.address)).to.eq(7000); // +50% of 2k for block 14, ttl frozen 3k
+    const m = params.message;
+    return await pool.claimRewardByPermit(m.provider, m.spender, m.value, m.deadline, v, r, s);
+  };
 
-    await (await rewardCtl.connect(user).claimReward()).wait(1); // block 16
-    expect(await agf.balanceOf(user.address)).to.eq(8000); // +50% of 2k for block 15, ttl frozen 4k
+  it('Should claim reward without freeze', async () => {
+    // expect(await agf.balanceOf(user.address)).to.eq(0);
+    await pool.setFreezePercentage(0);
 
-    // immediate meltdown
-    await (await rewardCtl.setMeltDownAt(1)).wait(1); // block 18
-    // 9000: +50% of 2k for block 18, ttl frozen 5k
+    {
+      const rewards = await rewardCtl.claimableReward(user.address);
+      expect(rewards.claimable.add(rewards.extra)).to.eq(0);
+    }
 
-    await (await freezer.handleBalanceUpdate(ONE_ADDRESS, user.address, 2000, 10000, 100000)).wait(1); // block 19
-    // 11000: +2k for block 19, ttl ex-frozen 5k
+    await claimReward(user.address, WAD);
 
-    await (await rewardCtl.connect(user).claimReward()).wait(1); // block 20
-    expect(await agf.balanceOf(user.address)).to.eq(26000); // = 10k for block 20 + 11000 + ex-frozen 5k
+    {
+      const rewards = await rewardCtl.claimableReward(user.address);
+      expect(rewards.claimable).to.eq(WAD);
+      expect(rewards.extra).to.eq(0);
+    }
+  });
 
-    // todo gradual meltdown
+  it('Should claim reward with freeze', async () => {
+    {
+      const rewards = await rewardCtl.claimableReward(user.address);
+      expect(rewards.claimable.add(rewards.extra)).to.eq(0);
+    }
+
+    await claimReward(user.address, WAD);
+
+    {
+      const rewards = await rewardCtl.claimableReward(user.address);
+      expect(rewards.claimable).to.eq(0);
+      expect(rewards.extra).to.eq(WAD);
+    }
+  });
+
+  it('Should not claim twice for the same nonce', async () => {
+    const nonce = await pool.nonces(user.address);
+    await claimReward(user.address, WAD, 100, nonce);
+    expect(await pool.nonces(user.address)).gt(nonce);
+
+    await expect(claimReward(user.address, WAD, 100, nonce)).to.be.revertedWith('INVALID_SIGNATURE');
+  });
+
+  it('Should not claim past deadline', async () => {
+    await expect(claimReward(user.address, WAD, -1)).to.be.revertedWith('INVALID_TIME');
+    await claimReward(user.address, WAD, 1);
+  });
+
+  it('Should not claim by another user, value or deadline', async () => {
+    const params = buildRewardClaimPermitParams(domainParams, {
+      provider: deployer.address,
+      spender: user.address,
+      value: WAD,
+      nonce: await pool.nonces(user.address),
+      deadline: (await currentTick()) + 10,
+    });
+
+    const signature = await deployer._signTypedData(params.domain, params.types, params.message);
+    const { v, r, s } = splitSignature(signature);
+
+    const m = params.message;
+
+    await expect(pool.claimRewardByPermit(user2.address, m.spender, m.value, m.deadline, v, r, s)).to.be.revertedWith(
+      'INVALID_PROVIDER'
+    );
+    await expect(pool.claimRewardByPermit(m.provider, user2.address, m.value, m.deadline, v, r, s)).to.be.revertedWith(
+      'INVALID_SIGNATURE'
+    );
+    await expect(pool.claimRewardByPermit(m.provider, user2.address, 1, m.deadline, v, r, s)).to.be.revertedWith(
+      'INVALID_SIGNATURE'
+    );
+    await expect(
+      pool.claimRewardByPermit(m.provider, m.spender, m.value, (await currentTick()) + 10000, v, r, s)
+    ).to.be.revertedWith('INVALID_SIGNATURE');
+  });
+
+  it('Should claim reward gradually', async () => {
+    {
+      const rewards = await rewardCtl.claimableReward(user.address);
+      expect(rewards.claimable.add(rewards.extra)).to.eq(0);
+    }
+
+    await pool.setMeltDownAt((await currentTick()) + 100);
+    const startedAt = (await currentTick()) + 1;
+    await claimReward(user.address, 100);
+
+    for (const delta of [1, 5, 10, 23]) {
+      await mineTicks(delta);
+      const rewards = await rewardCtl.claimableReward(user.address);
+
+      expect(rewards.claimable).eq((await currentTick()) - startedAt);
+      expect(rewards.claimable.add(rewards.extra)).to.eq(100);
+    }
+    await mineTicks(100);
+
+    {
+      const rewards = await rewardCtl.claimableReward(user.address);
+      expect(rewards.claimable).eq(100);
+      expect(rewards.extra).to.eq(0);
+    }
   });
 });
