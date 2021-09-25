@@ -1,5 +1,5 @@
-import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
-import { BytesLike, splitSignature } from '@ethersproject/bytes';
+import { BigNumber } from '@ethersproject/bignumber';
+import { splitSignature } from '@ethersproject/bytes';
 import { _TypedDataEncoder } from '@ethersproject/hash';
 import { formatEther, parseEther } from '@ethersproject/units';
 import { Wallet } from '@ethersproject/wallet';
@@ -29,8 +29,9 @@ task('augmented:sign-reward-permits', 'Sings permits for reward pools')
   .addOptionalParam('limit', 'Limit for total balances', undefined, types.int)
   .addOptionalParam('deadline', 'Expiry date for claims', '2025-01-01', types.string)
   .addFlag('files', 'Force file names mode')
+  .addFlag('encode', 'Encode call data')
   .addVariadicPositionalParam('args', 'Address-balance pairs or file names')
-  .setAction(async ({ ctl, pk, pool: poolName, files, args, limit, out, deadline: deadlineStr }, DRE) => {
+  .setAction(async ({ ctl, pk, pool: poolName, files, args, limit, out, deadline: deadlineStr, encode }, DRE) => {
     try {
       await DRE.run('set-DRE');
 
@@ -85,7 +86,6 @@ task('augmented:sign-reward-permits', 'Sings permits for reward pools')
         console.error(err);
         throw 'Reward pool is not a compatible claim permit pool: ' + poolName + ', ' + poolAddr;
       }
-      console.log('Reward pool: ' + poolName + ', ' + poolAddr);
 
       const findSeparator = (s: string): number => {
         let pos = s.indexOf(';');
@@ -192,6 +192,7 @@ task('augmented:sign-reward-permits', 'Sings permits for reward pools')
         deadline = (date.getTime() / 1000) | 0;
       }
 
+      console.log('\n=========================================================');
       for (const [spender, value] of uniqueAddrs) {
         const params = buildRewardClaimPermitParams(domainParams, {
           provider: signer.address,
@@ -207,21 +208,26 @@ task('augmented:sign-reward-permits', 'Sings permits for reward pools')
         const { nonce, ...woNonce } = params.message!;
         const p = { ...woNonce, v, r, s };
 
-        const encoded = pool.interface.encodeFunctionData('claimRewardByPermit', [
-          p.provider,
-          p.spender,
-          p.value,
-          p.deadline,
-          p.v,
-          p.r,
-          p.s,
-        ]);
-        console.log(spender, p, '\nEncoded', encoded, '\n');
+        if (encode) {
+          const encoded = pool.interface.encodeFunctionData('claimRewardByPermit', [
+            p.provider,
+            p.spender,
+            p.value,
+            p.deadline,
+            p.v,
+            p.r,
+            p.s,
+          ]);
+          console.log(`\n${spender}: ${encoded}`);
+        } else {
+          console.log(p, ',');
+        }
       }
 
       console.log('\n=========================================================');
       console.log('Total count:', uniqueAddrs.size);
       console.log('Total value:', formatEther(totalAmount));
+      console.log('Reward pool:', poolName, poolAddr);
       console.log('Provider address:', signer.address);
     } catch (error) {
       console.error(error);
