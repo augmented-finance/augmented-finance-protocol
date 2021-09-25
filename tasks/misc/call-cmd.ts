@@ -1,11 +1,8 @@
 import { task, types } from 'hardhat/config';
 import { exit } from 'process';
-import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { ZERO_ADDRESS } from '../../helpers/constants';
-import { getMarketAddressController, hasMarketAddressController } from '../../helpers/contracts-getters';
-import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { falsyOrZeroAddress } from '../../helpers/misc-utils';
-import { eNetwork, ICommonConfiguration, tEthereumAddress } from '../../helpers/types';
+import { eNetwork } from '../../helpers/types';
+import { getDefaultMarketAddressController } from '../helpers/utils';
 
 task('augmented:call-cmd', 'Invokes a configuration command')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
@@ -46,17 +43,6 @@ task('augmented:encode-cmd', 'Encodes a configuration command')
     }
   });
 
-const getDefaultAccessControllerAddr = async (network: eNetwork) => {
-  if (hasMarketAddressController()) {
-    return (await getMarketAddressController()).address;
-  }
-
-  const POOL_NAME = ConfigNames.Augmented;
-  const poolConfig = loadPoolConfig(POOL_NAME);
-  const { AddressProvider } = poolConfig as ICommonConfiguration;
-  return getParamPerNetwork(AddressProvider, network);
-};
-
 const prepareArgs = async (
   network: eNetwork,
   ctl: string,
@@ -69,9 +55,7 @@ const prepareArgs = async (
   roles: string[];
   args: any[];
 }> => {
-  if (falsyOrZeroAddress(ctl)) {
-    ctl = await getDefaultAccessControllerAddr(network);
-  }
+  ctl = await getDefaultMarketAddressController(network, ctl);
 
   if (cmd === undefined && args.length > 0) {
     cmd = args[0];

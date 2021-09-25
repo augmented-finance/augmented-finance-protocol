@@ -58,7 +58,7 @@ const addStep = (
     // stepCatalog.set(deployType, steps);
   }
 
-  console.log('Deploy step registered:', deployType, steps.length + 1, stepName, '=>', taskName);
+  // console.log('Deploy step registered:', deployType, steps.length + 1, stepName, '=>', taskName);
   steps.push({ stepName, taskName, paramsFn: paramsFn || defaultParams });
 };
 

@@ -13,6 +13,7 @@ abstract contract ERC20PermitBase is IERC20WithPermit {
     keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
 
   /// @dev owner => next valid nonce to submit with permit()
+  /// keep public for backward compatibility
   mapping(address => uint256) public _nonces;
 
   constructor() {

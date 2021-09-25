@@ -17,16 +17,20 @@ import { MintableERC20 } from '../types/MintableERC20';
 import { Artifact } from 'hardhat/types';
 import { getIErc20Detailed } from './contracts-getters';
 import { usingTenderly } from './tenderly-utils';
+import { keccak256 } from '@ethersproject/keccak256';
+import { toUtf8Bytes } from '@ethersproject/strings';
+import { _TypedDataEncoder } from '@ethersproject/hash';
+import { TypedDataField } from '@ethersproject/abstract-signer';
 
 export type MockTokenMap = { [symbol: string]: MintableERC20 };
 
 export const registerContractInJsonDb = async (contractId: string, contractInstance: Contract) =>
   addContractToJsonDb(contractId, contractInstance, true);
 
-export const getEthersSigners = async (): Promise<Signer[]> => await Promise.all(await (<any>DRE).ethers.getSigners());
+export const getEthersSigners = async (): Promise<Signer[]> => await (<any>DRE).ethers.getSigners();
 
 export const getEthersSignersAddresses = async (): Promise<tEthereumAddress[]> =>
-  await Promise.all((await (<any>DRE).ethers.getSigners()).map((signer) => signer.getAddress()));
+  (await (<any>DRE).ethers.getSigners()).map((signer) => signer.getAddress());
 
 export const getCurrentBlock = async () => {
   return (<any>DRE).ethers.provider.getBlockNumber();
@@ -251,6 +255,45 @@ export const buildPermitParams = (
     deadline,
   },
 });
+
+export const buildRewardClaimPermitParams = (
+  domain: {
+    name: string;
+    revision: string;
+    chainId: number;
+    contract: tEthereumAddress;
+  },
+  message?: {
+    provider: tEthereumAddress;
+    spender: tEthereumAddress;
+    value: BigNumberish;
+    nonce: BigNumberish;
+    deadline: number;
+  }
+) => ({
+  types: {
+    ClaimReward: [
+      { name: 'provider', type: 'address' },
+      { name: 'spender', type: 'address' },
+      { name: 'value', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' },
+      { name: 'deadline', type: 'uint256' },
+    ],
+  },
+  primaryType: 'ClaimReward' as const,
+  domain: {
+    name: domain.name,
+    version: domain.revision,
+    chainId: domain.chainId,
+    verifyingContract: domain.contract,
+  },
+  message: message,
+});
+
+export const encodeTypeHash = (typeName: string, types: Record<string, Array<TypedDataField>>) => {
+  const encoder = _TypedDataEncoder.from(types);
+  return keccak256(toUtf8Bytes(encoder.encodeType(typeName)));
+};
 
 export const getSignatureFromTypedData = (
   privateKey: string,
