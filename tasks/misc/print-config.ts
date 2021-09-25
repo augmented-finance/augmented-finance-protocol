@@ -7,18 +7,14 @@ import {
   getAddressesProviderRegistry,
 } from '../../helpers/contracts-getters';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { DRE } from '../../helpers/misc-utils';
 import { eEthereumNetwork, eNetwork, ePolygonNetwork } from '../../helpers/types';
 
-task('print-config', 'Inits the DRE, to have access to all the plugins')
+task('print-config')
   .addParam('dataProvider', 'Address of ProtocolDataProvider')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ pool, dataProvider }, localBRE) => {
     await localBRE.run('set-DRE');
-    const network =
-      process.env.MAINNET_FORK === 'true'
-        ? eEthereumNetwork.main
-        : (localBRE.network.name as eNetwork);
+    const network = process.env.MAINNET_FORK === 'true' ? eEthereumNetwork.main : (localBRE.network.name as eNetwork);
     const poolConfig = loadPoolConfig(pool);
 
     const providerRegistryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
@@ -46,7 +42,6 @@ task('print-config', 'Inits the DRE, to have access to all the plugins')
     console.log('Emergency Admin(s):', await activeGrantees(AccessFlags.EMERGENCY_ADMIN));
 
     console.log('Price Oracle', await addressProvider.getPriceOracle());
-    console.log('Lending Rate Oracle', await addressProvider.getLendingRateOracle());
     console.log('Lending Pool Data Provider', dataProvider);
     const protocolDataProvider = await getProtocolDataProvider(dataProvider);
 
@@ -63,9 +58,7 @@ task('print-config', 'Inits the DRE, to have access to all the plugins')
       'isFrozen',
     ];
     const tokensFields = ['depositToken', 'stableDebtToken', 'variableDebtToken'];
-    for (const [symbol, address] of Object.entries(
-      getParamPerNetwork(poolConfig.ReserveAssets, network)
-    )) {
+    for (const [symbol, address] of Object.entries(getParamPerNetwork(poolConfig.ReserveAssets, network))) {
       console.log(`- ${symbol} asset config`);
       console.log(`  - reserve address: ${address}`);
 
