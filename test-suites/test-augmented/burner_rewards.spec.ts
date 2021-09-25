@@ -2,7 +2,7 @@ import chai from 'chai';
 
 import { solidity } from 'ethereum-waffle';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import rawBRE, { ethers } from 'hardhat';
+import rawBRE from 'hardhat';
 
 import { getMockAgfToken, getPermitFreezerRewardPool, getMockRewardFreezer } from '../../helpers/contracts-getters';
 
@@ -10,6 +10,7 @@ import { MockAgfToken, RewardFreezer } from '../../types';
 import { ONE_ADDRESS } from '../../helpers/constants';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { revertSnapshot, takeSnapshot } from './utils';
+import { getSigners } from '../../helpers/misc-utils';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -30,7 +31,7 @@ describe('Rewards test suite', () => {
     await rawBRE.run('set-DRE');
     await rawBRE.run('augmented:test-local', CFG);
 
-    [deployer, user, user2, ...otherUsers] = await ethers.getSigners();
+    [deployer, user, user2, ...otherUsers] = await getSigners();
 
     // TODO each test below needs a separate freezer
     rewardCtl = await getMockRewardFreezer();
