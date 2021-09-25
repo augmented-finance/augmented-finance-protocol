@@ -1,20 +1,15 @@
-import { task } from 'hardhat/config';
-import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
+import { loadPoolConfig } from '../../helpers/configuration';
 import { deployStakeConfiguratorImpl } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
 import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
-import { addFullStep } from '../helpers/full-steps';
-
-addFullStep(7, 'Deploy stake configurator', 'full:deploy-stake-configurator');
+import { deployTask } from '../helpers/deploy-steps';
 
 const CONTRACT_NAME = 'StakeConfigurator';
 
-task(`full:deploy-stake-configurator`, `Deploys ${CONTRACT_NAME}`)
-  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .addFlag('verify', `Verify ${CONTRACT_NAME} contract via Etherscan API.`)
-  .setAction(async ({ verify, pool }, localBRE) => {
+deployTask(`full:deploy-stake-configurator`, `Deploy stake configurator`, __dirname).setAction(
+  async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
@@ -37,4 +32,5 @@ task(`full:deploy-stake-configurator`, `Deploys ${CONTRACT_NAME}`)
     }
 
     console.log(`${CONTRACT_NAME}:`, stakeConfiguratorAddr);
-  });
+  }
+);

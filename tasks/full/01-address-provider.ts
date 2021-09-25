@@ -1,25 +1,20 @@
-import { task } from 'hardhat/config';
 import { getParamPerNetwork, registerAndVerify } from '../../helpers/contracts-helpers';
 import {
   deployAddressesProviderRegistry,
   deployMarketAccessControllerNoSave,
 } from '../../helpers/contracts-deployments';
 import { eContractid, eNetwork } from '../../helpers/types';
-import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
+import { loadPoolConfig } from '../../helpers/configuration';
 import { falsyOrZeroAddress, getFirstSigner, getSigner, mustWaitTx, waitForTx, waitTx } from '../../helpers/misc-utils';
 import { getAddressesProviderRegistry } from '../../helpers/contracts-getters';
 import { AddressesProviderRegistry, MarketAccessController } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
 import { setPreDeployAccessController } from '../../helpers/deploy-helpers';
 import { BigNumber } from 'ethers';
-import { addFullStep } from '../helpers/full-steps';
+import { deployTask } from '../helpers/deploy-steps';
 
-addFullStep(1, 'Deploy address provider registry', 'full:deploy-address-provider');
-
-task('full:deploy-address-provider', 'Deploys address provider and registry')
-  .addFlag('verify', 'Verify contracts at Etherscan')
-  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .setAction(async ({ verify, pool }, DRE) => {
+deployTask('full:deploy-address-provider', 'Deploy address provider and registry', __dirname).setAction(
+  async ({ verify, pool }, DRE) => {
     await DRE.run('set-DRE');
 
     const network = <eNetwork>DRE.network.name;
@@ -156,4 +151,5 @@ task('full:deploy-address-provider', 'Deploys address provider and registry')
           AccessFlags.ORACLE_ADMIN
       )
     );
-  });
+  }
+);

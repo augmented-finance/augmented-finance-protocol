@@ -1,6 +1,5 @@
-import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
+import { loadPoolConfig } from '../../helpers/configuration';
 import {
   deployDepositStakeTokenImpl,
   deployPriceFeedUniEthPair,
@@ -20,15 +19,11 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumberish } from 'ethers';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { WAD, ZERO_ADDRESS } from '../../helpers/constants';
-import { addFullStep } from '../helpers/full-steps';
+import { deployTask } from '../helpers/deploy-steps';
 import { getUniAgfEth } from '../../helpers/init-helpers';
 
-addFullStep(9, 'Deploy and initialize stake tokens', 'full:init-stake-tokens');
-
-task(`full:init-stake-tokens`, `Deploys stake tokens`)
-  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .addFlag('verify', `Verify contracts via Etherscan API.`)
-  .setAction(async ({ verify, pool }, localBRE) => {
+deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dirname).setAction(
+  async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
     const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
@@ -330,4 +325,5 @@ task(`full:init-stake-tokens`, `Deploys stake tokens`)
         );
       }
     }
-  });
+  }
+);

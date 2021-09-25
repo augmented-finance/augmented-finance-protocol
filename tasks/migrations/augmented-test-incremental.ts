@@ -9,7 +9,7 @@ import {
 } from '../../helpers/misc-utils';
 import { exit } from 'process';
 import { tEthereumAddress } from '../../helpers/types';
-import { getFullSteps } from '../helpers/full-steps';
+import { getDeploySteps } from '../helpers/deploy-steps';
 
 task('augmented:test-incremental', 'Test incremental deploy').setAction(async ({}, DRE) => {
   const POOL_NAME = ConfigNames.Augmented;
@@ -29,7 +29,7 @@ task('augmented:test-incremental', 'Test incremental deploy').setAction(async ({
     let stop = false;
     const trackVerify = false;
 
-    const steps = await getFullSteps({
+    const steps = await getDeploySteps('full', {
       pool: POOL_NAME,
       verify: trackVerify,
     });

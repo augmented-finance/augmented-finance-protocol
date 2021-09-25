@@ -10,7 +10,7 @@ import {
 import { usingTenderly } from '../../helpers/tenderly-utils';
 import { exit } from 'process';
 import { BigNumber } from 'ethers';
-import { getFullSteps } from '../helpers/full-steps';
+import { getDeploySteps } from '../helpers/deploy-steps';
 
 task('augmented:mainnet', 'Deploy enviroment')
   .addFlag('incremental', 'Incremental deployment')
@@ -50,7 +50,7 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('Deployment started\n');
       const trackVerify = true;
 
-      for (const step of await getFullSteps({
+      for (const step of await getDeploySteps('full', {
         pool: POOL_NAME,
         verify: trackVerify,
       })) {

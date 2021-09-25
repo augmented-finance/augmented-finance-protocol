@@ -1,4 +1,3 @@
-import { task } from 'hardhat/config';
 import {
   deployFlashLiquidationAdapter,
   deployProtocolDataProvider,
@@ -7,7 +6,7 @@ import {
 } from '../../helpers/contracts-deployments';
 import { AccessFlags } from '../../helpers/access-flags';
 import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
-import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
+import { loadPoolConfig } from '../../helpers/configuration';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { getLendingPoolConfiguratorProxy } from '../../helpers/contracts-getters';
 import { eNetwork, ICommonConfiguration, tEthereumAddress } from '../../helpers/types';
@@ -15,14 +14,10 @@ import { LendingPoolConfigurator, MarketAccessController } from '../../types';
 import { Contract } from '@ethersproject/contracts';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { addFullStep } from '../helpers/full-steps';
+import { deployTask } from '../helpers/deploy-steps';
 
-addFullStep(5, 'Deploy auxiliary contracts', 'full:aux-contracts');
-
-task('full:aux-contracts', 'Deploys auxiliary contracts (UI data provider, adapters etc)')
-  .addFlag('verify', 'Verify contracts at Etherscan')
-  .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .setAction(async ({ verify, pool }, DRE: HardhatRuntimeEnvironment) => {
+deployTask('full:aux-contracts', 'Deploy auxiliary contracts', __dirname).setAction(
+  async ({ verify, pool }, DRE: HardhatRuntimeEnvironment) => {
     await DRE.run('set-DRE');
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
@@ -42,7 +37,8 @@ task('full:aux-contracts', 'Deploys auxiliary contracts (UI data provider, adapt
     console.log('Data helper:', dhAddress);
 
     await deployAllFlashloanAdapters(addressProvider, dependencies.UniswapV2Router, verify);
-  });
+  }
+);
 
 const deployAllFlashloanAdapters = async (
   addressProvider: MarketAccessController,
