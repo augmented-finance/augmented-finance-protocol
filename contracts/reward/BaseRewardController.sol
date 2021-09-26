@@ -54,7 +54,11 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     _poolDesc[address(pool)] = _poolList.length;
     _baselineMask |= poolMask;
 
-    pool.attachedToRewardController(); // access check
+    uint256 allocateReward = pool.attachedToRewardController(); // also double-check access
+    if (allocateReward > 0) {
+      require(allocateReward <= uint256(type(int256).max), 'excessive preallocation');
+      _rewardMinter.allocateReward(address(pool), int256(allocateReward));
+    }
 
     emit RewardPoolAdded(address(pool), poolMask);
   }
@@ -73,6 +77,12 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
 
     uint256 poolMask = 1 << idx;
     _ignoreMask |= poolMask;
+
+    uint256 unallocateReward = pool.detachedFromRewardController();
+    if (unallocateReward > 0) {
+      require(unallocateReward <= uint256(type(int256).max), 'excessive deallocation');
+      _rewardMinter.allocateReward(address(pool), -int256(unallocateReward));
+    }
 
     internalOnPoolRemoved(pool);
 
@@ -124,6 +134,9 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
   function updateBaseline(uint256 baseline) public override onlyRateAdmin returns (uint256 totalRate) {
     (totalRate, _baselineMask) = internalUpdateBaseline(baseline, _baselineMask);
     require(totalRate <= baseline, Errors.RW_BASELINE_EXCEEDED);
+
+    _rewardMinter.streamReward(address(this), totalRate);
+
     emit BaselineUpdated(baseline, totalRate, _baselineMask);
     return totalRate;
   }
@@ -338,8 +351,7 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     uint256 amount,
     bool serviceAccount
   ) internal {
-    serviceAccount;
-    _rewardMinter.mintReward(mintTo, amount);
+    _rewardMinter.mintReward(mintTo, amount, serviceAccount);
   }
 
   function internalClaimAndMintReward(address holder, uint256 mask)

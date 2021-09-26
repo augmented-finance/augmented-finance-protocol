@@ -4,10 +4,13 @@ pragma solidity ^0.8.4;
 import '../interfaces/IRewardMinter.sol';
 import '../access/AccessFlags.sol';
 import '../access/MarketAccessBitmask.sol';
+import '../access/AccessHelper.sol';
 import '../access/interfaces/IMarketAccessController.sol';
 import '../tools/tokens/ERC20BaseWithPermit.sol';
 
 abstract contract RewardToken is ERC20BaseWithPermit, MarketAccessBitmask, IRewardMinter {
+  using AccessHelper for IMarketAccessController;
+
   uint256 internal constant MAX_SUPPLY = 10**8;
 
   uint256 private _accTotal;
@@ -26,27 +29,31 @@ abstract contract RewardToken is ERC20BaseWithPermit, MarketAccessBitmask, IRewa
     return _accTotal + (block.timestamp - _lastRateAt) * _lastRate;
   }
 
-  function mintReward(address account, uint256 amount)
-    external
-    virtual
-    override
-    aclAnyOf(AccessFlags.REWARD_CONTROLLER)
-  {
+  modifier onlyRewardControllder() virtual {
+    _remoteAcl.requireAnyOf(msg.sender, AccessFlags.REWARD_CONTROLLER, Errors.CALLER_NOT_REWARD_CONTROLLER);
+    _;
+  }
+
+  function mintReward(
+    address account,
+    uint256 amount,
+    bool
+  ) external override onlyRewardControllder {
     _mint(account, amount);
     require(super.totalSupply() <= MAX_SUPPLY, 'MINT_OVER_TOTAL_SUPPLY');
   }
 
-  function allocateReward(address provider, uint256 amount) external override aclAnyOf(AccessFlags.REWARD_CONTROLLER) {
-    _accTotal += amount;
+  function allocateReward(address provider, int256 amount) external override onlyRewardControllder {
+    if (amount > 0) {
+      _accTotal += uint256(amount);
+    } else {
+      _accTotal -= uint256(-amount);
+    }
 
     emit RewardAllocated(provider, amount);
   }
 
-  function streamReward(address provider, uint256 ratePerSecond)
-    external
-    override
-    aclAnyOf(AccessFlags.REWARD_CONTROLLER)
-  {
+  function streamReward(address provider, uint256 ratePerSecond) external override onlyRewardControllder {
     if (_lastRate == ratePerSecond) {
       return;
     }

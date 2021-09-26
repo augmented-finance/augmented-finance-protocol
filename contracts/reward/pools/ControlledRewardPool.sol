@@ -170,8 +170,17 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   function internalCalcReward(address holder, uint32 at) internal view virtual returns (uint256, uint32);
 
-  function attachedToRewardController() external override onlyController {
+  function attachedToRewardController() external override onlyController returns (uint256) {
     internalAttachedToRewardController();
+    return internalGetPreAllocatedLimit();
+  }
+
+  function detachedFromRewardController() external override onlyController returns (uint256) {
+    return internalGetPreAllocatedLimit();
+  }
+
+  function internalGetPreAllocatedLimit() internal virtual returns (uint256) {
+    return 0;
   }
 
   function internalAttachedToRewardController() internal virtual {}

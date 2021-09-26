@@ -3,12 +3,16 @@ pragma solidity ^0.8.4;
 
 interface IRewardMinter {
   /// @dev mints a reward
-  function mintReward(address holder, uint256 amount) external;
+  function mintReward(
+    address account,
+    uint256 amount,
+    bool serviceAccount
+  ) external;
 
-  event RewardAllocated(address provider, uint256 amount);
+  event RewardAllocated(address provider, int256 amount);
 
   /// @dev lumpsum allocation (not mint) of reward
-  function allocateReward(address provider, uint256 amount) external;
+  function allocateReward(address provider, int256 amount) external;
 
   event RewardMaxRateUpdated(address provider, uint256 ratePerSecond);
 

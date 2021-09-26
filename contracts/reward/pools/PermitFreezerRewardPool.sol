@@ -34,6 +34,10 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     internalSetMeltDownAt(at);
   }
 
+  function internalGetPreAllocatedLimit() internal view override returns (uint256) {
+    return _rewardLimit;
+  }
+
   function availableReward() public view override returns (uint256) {
     return _rewardLimit;
   }

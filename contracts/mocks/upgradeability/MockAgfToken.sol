@@ -13,7 +13,7 @@ contract MockAgfToken is AGFTokenV1 {
     return super.getRevision() + 1;
   }
 
-  function mintReward(address account, uint256 amount) external override {
-    _mint(account, amount);
+  modifier onlyRewardControllder() override {
+    _;
   }
 }
