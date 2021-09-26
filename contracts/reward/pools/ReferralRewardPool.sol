@@ -7,19 +7,14 @@ import '../calcs/CalcLinearRewardAccum.sol';
 import './BasePermitRewardPool.sol';
 
 contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcLinearRewardAccum {
-  uint256 private _claimLimit;
-
   event RewardClaimedByPermit(address indexed provider, address indexed spender, uint256 value, uint256 since);
-  event ClaimLimitUpdated(uint256 limit);
 
   constructor(
     IRewardController controller,
     uint256 initialRate,
     uint16 baselinePercentage,
     string memory rewardPoolName
-  ) ControlledRewardPool(controller, initialRate, baselinePercentage) BasePermitRewardPool(rewardPoolName) {
-    internalSetClaimLimit(type(uint256).max);
-  }
+  ) ControlledRewardPool(controller, initialRate, baselinePercentage) BasePermitRewardPool(rewardPoolName) {}
 
   function getClaimTypeHash() internal pure override returns (bytes32) {
     return
@@ -40,7 +35,6 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
   ) external notPaused {
     uint256 currentValidNonce = _nonces[spender];
     require(issuedAt > currentValidNonce, 'EXPIRED_ISSUANCE');
-    require(value <= _claimLimit, 'EXCESSIVE_VALUE');
     require(uint32(issuedAt) == issuedAt);
 
     bytes32 encodedHash = keccak256(
@@ -63,19 +57,6 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
 
   function availableReward() public view override returns (uint256) {
     return doCalcReward();
-  }
-
-  function claimLimit() public view returns (uint256) {
-    return _claimLimit;
-  }
-
-  function setClaimLimit(uint256 value) external onlyRateAdmin {
-    internalSetClaimLimit(value);
-  }
-
-  function internalSetClaimLimit(uint256 value) internal {
-    _claimLimit = value;
-    emit ClaimLimitUpdated(value);
   }
 
   function registerShortCode(uint32 shortRefCode, address to) external onlyRefAdmin {

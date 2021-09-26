@@ -64,7 +64,7 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRewardAccum {
   }
 
   function internalCalcReward(address holder, uint32 at) internal view virtual override returns (uint256, uint32) {
-    if (holder == _treasury) {
+    if (holder != address(0) && holder == _treasury) {
       return (doCalcRewardAt(at), at);
     }
     return (0, 0);

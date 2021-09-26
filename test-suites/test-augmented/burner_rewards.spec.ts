@@ -14,9 +14,9 @@ import { currentTick, mineTicks, revertSnapshot, takeSnapshot } from './utils';
 import { _TypedDataEncoder } from '@ethersproject/hash';
 import { toUtf8Bytes } from '@ethersproject/strings';
 import { hexlify, splitSignature } from '@ethersproject/bytes';
-import { WAD, ZERO_ADDRESS } from '../../helpers/constants';
+import { HALF_WAD, WAD, ZERO_ADDRESS } from '../../helpers/constants';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
-import { tEthereumAddress } from '../../helpers/types';
+import { ProtocolErrors, tEthereumAddress } from '../../helpers/types';
 import { getSigners } from '../../helpers/misc-utils';
 import { buildRewardClaimPermitParams, encodeTypeHash } from '../../helpers/contracts-helpers';
 
@@ -105,9 +105,7 @@ describe('Rewards by permit test suite', () => {
       const rewards = await rewardCtl.claimableReward(user.address);
       expect(rewards.claimable.add(rewards.extra)).to.eq(0);
     }
-
     await claimReward(user.address, WAD);
-
     {
       const rewards = await rewardCtl.claimableReward(user.address);
       expect(rewards.claimable).to.eq(WAD);
@@ -120,14 +118,46 @@ describe('Rewards by permit test suite', () => {
       const rewards = await rewardCtl.claimableReward(user.address);
       expect(rewards.claimable.add(rewards.extra)).to.eq(0);
     }
-
     await claimReward(user.address, WAD);
-
     {
       const rewards = await rewardCtl.claimableReward(user.address);
       expect(rewards.claimable).to.eq(0);
       expect(rewards.extra).to.eq(WAD);
     }
+  });
+
+  it('Should handle multiple claims and reduce limit', async () => {
+    const initialLimit = await pool.availableReward();
+    {
+      const rewards = await rewardCtl.claimableReward(user.address);
+      expect(rewards.claimable.add(rewards.extra)).to.eq(0);
+    }
+    await claimReward(user.address, HALF_WAD);
+    {
+      const rewards = await rewardCtl.claimableReward(user.address);
+      expect(rewards.claimable).to.eq(0);
+      expect(rewards.extra).to.eq(HALF_WAD);
+      expect(initialLimit.sub(HALF_WAD)).eq(await pool.availableReward());
+    }
+    await claimReward(user.address, HALF_WAD);
+    {
+      const rewards = await rewardCtl.claimableReward(user.address);
+      expect(rewards.claimable).to.eq(0);
+      expect(rewards.extra).to.eq(WAD);
+      expect(initialLimit.sub(WAD)).eq(await pool.availableReward());
+    }
+  });
+
+  it('Should claim whole limit', async () => {
+    await claimReward(user.address, await pool.availableReward());
+    expect(0).eq(await pool.availableReward());
+    await expect(claimReward(user.address, 1)).to.be.revertedWith(ProtocolErrors.VL_INSUFFICIENT_REWARD_AVAILABLE);
+  });
+
+  it('Should not claim above the limit', async () => {
+    await expect(claimReward(user.address, (await pool.availableReward()).add(1))).to.be.revertedWith(
+      ProtocolErrors.VL_INSUFFICIENT_REWARD_AVAILABLE
+    );
   });
 
   it('Should not claim twice for the same nonce', async () => {

@@ -37,7 +37,9 @@ interface IManagedRewardPool is IEmergencyAccess {
 
   function getRewardController() external view returns (address);
 
-  function attachedToRewardController() external;
+  function attachedToRewardController() external returns (uint256 allocateReward);
+
+  function detachedFromRewardController() external returns (uint256 deallocateReward);
 
   event RateUpdated(uint256 rate);
   event BaselinePercentageUpdated(uint16);
