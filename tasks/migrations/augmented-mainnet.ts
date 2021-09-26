@@ -16,9 +16,10 @@ task('augmented:mainnet', 'Deploy enviroment')
   .addFlag('incremental', 'Incremental deployment')
   .addFlag('secure', 'Renounce credentials on errors')
   .addFlag('strict', 'Fail on warnings')
+  .addFlag('ignoreCalc', 'Ignore APY calc during smoke test')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addOptionalParam('skip', 'Skip steps with less or equal index', 0, types.int)
-  .setAction(async ({ incremental, secure, strict, verify, skip: skipN }, DRE) => {
+  .setAction(async ({ incremental, secure, strict, verify, skip: skipN, ignoreCalc }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
     const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
     await DRE.run('set-DRE');
@@ -82,7 +83,7 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('\n======================================================================');
       console.log('98 Smoke tests');
       console.log('======================================================================\n');
-      await DRE.run('full:smoke-test', { pool: POOL_NAME });
+      await DRE.run('full:smoke-test', { pool: POOL_NAME, ignoreCalc });
 
       {
         const [entryMap, instanceCount, multiCount] = printContracts((await getFirstSigner()).address);

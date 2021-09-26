@@ -9,7 +9,8 @@ import { USD_ADDRESS } from '../../helpers/constants';
 
 task('full:smoke-test', 'Does smoke tests of the deployed contracts')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
-  .setAction(async ({ pool }, DRE) => {
+  .addFlag('ignoreCalc')
+  .setAction(async ({ pool, ignoreCalc }, DRE) => {
     await DRE.run('set-DRE');
 
     const network = <eNetwork>DRE.network.name;
@@ -138,8 +139,10 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
       await checkReserve(`#${i}`, reserveList[i]);
     }
 
-    console.log('\nCheck calc-apy');
-    await DRE.run('helper:calc-apy', { ctl: addressProvider.address, user: userAddr, quiet: true });
+    if (!ignoreCalc) {
+      console.log('\nCheck calc-apy');
+      await DRE.run('helper:calc-apy', { ctl: addressProvider.address, user: userAddr, quiet: true });
+    }
 
     console.log('');
   });
