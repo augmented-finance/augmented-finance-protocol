@@ -338,7 +338,8 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     uint256 amount,
     bool serviceAccount
   ) internal {
-    _rewardMinter.mintReward(mintTo, amount, serviceAccount);
+    serviceAccount;
+    _rewardMinter.mintReward(mintTo, amount);
   }
 
   function internalClaimAndMintReward(address holder, uint256 mask)
