@@ -17,7 +17,6 @@ contract ReferralRewardPoolV1 is IInitializableRewardPool, ReferralRewardPool, V
 
   function initializeRewardPool(InitRewardPoolData memory data) public override initializer(POOL_REVISION) {
     super._initialize(data.controller, 0, data.baselinePercentage, data.poolName);
-    internalSetClaimLimit(type(uint256).max);
   }
 
   function initializedRewardPoolWith() external view override returns (InitRewardPoolData memory) {
