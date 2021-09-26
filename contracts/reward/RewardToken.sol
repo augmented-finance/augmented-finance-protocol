@@ -38,7 +38,7 @@ abstract contract RewardToken is ERC20BaseWithPermit, MarketAccessBitmask, IRewa
     address account,
     uint256 amount,
     bool
-  ) external override onlyRewardControllder {
+  ) external virtual override onlyRewardControllder {
     _mint(account, amount);
     require(super.totalSupply() <= MAX_SUPPLY, 'MINT_OVER_TOTAL_SUPPLY');
   }
