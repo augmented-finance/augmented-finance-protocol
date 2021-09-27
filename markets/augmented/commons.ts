@@ -456,7 +456,7 @@ export const CommonsConfig: ICommonConfiguration = {
     BurnersPool: {
       TotalWad: 1e6,
       BoostFactor: 0,
-      MeltDownAt: new Date('2022-06-24'),
+      MeltDownAt: new Date('2022-04-15'),
       Providers: [],
     },
     RetroPool: {
