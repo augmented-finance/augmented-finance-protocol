@@ -1,10 +1,13 @@
-import { subtask, task, types } from 'hardhat/config';
+import { subtask, types } from 'hardhat/config';
 import { AccessFlags } from '../../helpers/access-flags';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getAddressesProviderRegistry,
+  getIManagedRewardPool,
   getMarketAddressController,
   getOracleRouter,
+  getProtocolDataProvider,
+  getRewardConfiguratorProxy,
 } from '../../helpers/contracts-getters';
 import {
   falsyOrZeroAddress,
@@ -12,7 +15,6 @@ import {
   getFirstSigner,
   getFromJsonDb,
   getInstanceFromJsonDb,
-  getInstancesFromJsonDb,
   waitTx,
 } from '../../helpers/misc-utils';
 import { getContractGetterById } from '../../helpers/contracts-mapper';
@@ -58,32 +60,27 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
     }
     const ac = await getMarketAddressController(ctl);
 
+    const makeCallParams = (args: any[]) => ({
+      useStatic: staticCall,
+      compatible: compatible,
+      encode: encode,
+      args: args || [],
+      waitTxFlag: waitTx,
+      gasLimit: gasLimit,
+    });
+
     const dotPos = (<string>cmd).indexOf('.');
     if (dotPos >= 0) {
-      await callFunc(network, ac, roles, cmd, {
-        useStatic: staticCall,
-        compatible: compatible,
-        encode: encode,
-        args: args || [],
-        waitTxFlag: waitTx,
-        gasLimit: gasLimit,
-      });
+      await callQualifiedFunc(network, ac, roles, cmd, makeCallParams(args));
       return;
     }
 
-    const call = async (cmd: string, args: any[], role: number | undefined) => {
+    const call = async (cmd: string, args: any[], role?: number) => {
       console.log('Call alias:', cmd, args);
-      await callFunc(network, ac, role === undefined ? [] : [role], cmd, {
-        useStatic: staticCall,
-        compatible: compatible,
-        encode: encode,
-        args: args || [],
-        waitTxFlag: waitTx,
-        gasLimit: gasLimit,
-      });
+      await callQualifiedFunc(network, ac, role === undefined ? [] : [role], cmd, makeCallParams(args));
     };
 
-    const callName = (typeId: eContractid, instanceId: AccessFlags | string, funcName: string) =>
+    const qualifiedName = (typeId: eContractid, instanceId: AccessFlags | string, funcName: string) =>
       typeId + '@' + (typeof instanceId === 'string' ? instanceId : AccessFlags[instanceId]) + '.' + funcName;
 
     const cmdAliases: {
@@ -95,31 +92,70 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
           };
     } = {
       setCooldownForAll: {
-        cmd: callName(eContractid.StakeConfiguratorImpl, AccessFlags.STAKE_CONFIGURATOR, 'setCooldownForAll'),
+        cmd: qualifiedName(eContractid.StakeConfiguratorImpl, AccessFlags.STAKE_CONFIGURATOR, 'setCooldownForAll'),
         role: AccessFlags.STAKE_ADMIN,
       },
-      getPrice: {
-        cmd: callName(eContractid.OracleRouter, AccessFlags.PRICE_ORACLE, 'getAssetPrice'),
-      },
-      getPriceSource: {
-        cmd: callName(eContractid.OracleRouter, AccessFlags.PRICE_ORACLE, 'getSourceOfAsset'),
-      },
+
+      getPrice: async () =>
+        await call(
+          qualifiedName(
+            eContractid.OracleRouter,
+            AccessFlags.PRICE_ORACLE,
+            args.length > 1 ? 'getAssetsPrices' : 'getAssetPrice'
+          ),
+          args.length > 1 ? [await findPriceTokens(ac, args)] : await findPriceTokens(ac, args)
+        ),
+
+      getPriceSource: async () =>
+        await call(
+          qualifiedName(
+            eContractid.OracleRouter,
+            AccessFlags.PRICE_ORACLE,
+            args.length > 1 ? 'getAssetSources' : 'getSourceOfAsset'
+          ),
+          args.length > 1 ? [await findPriceTokens(ac, args)] : await findPriceTokens(ac, args)
+        ),
+
       setPriceSource: async () =>
         await call(
-          callName(eContractid.OracleRouter, AccessFlags.PRICE_ORACLE, 'setAssetSources'),
-          [[args[0]], [args[1]]],
+          qualifiedName(eContractid.OracleRouter, AccessFlags.PRICE_ORACLE, 'setAssetSources'),
+          [[await findPriceToken(ac, args[0], true)], [args[1]]],
           AccessFlags.ORACLE_ADMIN
         ),
+
       setStaticPrice: async () => {
         const oracle = await getOracleRouter(await ac.getPriceOracle());
         await call(
-          callName(eContractid.StaticPriceOracle, await oracle.getFallbackOracle(), 'setAssetPrice'),
-          args,
+          qualifiedName(eContractid.StaticPriceOracle, await oracle.getFallbackOracle(), 'setAssetPrice'),
+          [await findPriceToken(ac, args[0], true), args[1]],
           AccessFlags.ORACLE_ADMIN
         );
       },
+
       getPrices: async () =>
-        await call(callName(eContractid.OracleRouter, AccessFlags.PRICE_ORACLE, 'getAssetsPrices'), [[...args]], 0),
+        await call(
+          qualifiedName(eContractid.OracleRouter, AccessFlags.PRICE_ORACLE, 'getAssetsPrices'),
+          [[...args]],
+          0
+        ),
+
+      addRewardProvider: async () => {
+        const rc = await getRewardConfiguratorProxy(await ac.getAddress(AccessFlags.REWARD_CONFIGURATOR));
+        const [poolAddr] = await rc.getNamedRewardPools([args[0]]);
+        if (falsyOrZeroAddress(poolAddr)) {
+          throw new Error('Unknown pool name: ' + args[0]);
+        }
+
+        const pool = await getIManagedRewardPool(poolAddr);
+        // pool.addRewardProvider(args[1], args[2] || ZERO_ADDRESS)
+        await callContract(
+          ac,
+          [AccessFlags.REWARD_CONFIG_ADMIN],
+          pool,
+          'addRewardProvider',
+          makeCallParams([args[1], args[2] || ZERO_ADDRESS])
+        );
+      },
     };
 
     const fullCmd = cmdAliases[cmd];
@@ -132,7 +168,7 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
     }
   });
 
-const callFunc = async (
+const callQualifiedFunc = async (
   network: eNetwork,
   ac: MarketAccessController,
   roles: (number | string)[],
@@ -311,4 +347,64 @@ const callContract = async (
     const tx = await ac.callWithRoles(acArgs);
     await handleResult(tx);
   }
+};
+
+const findPriceTokens = async (ac: MarketAccessController, names: string[]) => {
+  let tokens: undefined | any[] = undefined;
+  const getTokens = async () => {
+    if (tokens === undefined) {
+      const dp = await getProtocolDataProvider(await ac.getAddress(AccessFlags.DATA_HELPER));
+      const list = await dp.getAllTokenDescriptions(true);
+      tokens = list.tokens.slice(0, list.tokenCount.toNumber());
+    }
+    return tokens!;
+  };
+
+  const result: string[] = [];
+  for (const name of names) {
+    result.push(await _findPriceToken(getTokens, name, false));
+  }
+  return result;
+};
+
+const findPriceToken = async (ac: MarketAccessController, name: string, warn: boolean) => {
+  return await _findPriceToken(
+    async () => {
+      const dp = await getProtocolDataProvider(await ac.getAddress(AccessFlags.DATA_HELPER));
+      const list = await dp.getAllTokenDescriptions(true);
+      return list.tokens.slice(0, list.tokenCount.toNumber());
+    },
+    name,
+    warn
+  );
+};
+
+const _findPriceToken = async (tokensFn: () => Promise<any[]>, name: string, warn: boolean) => {
+  name = name.toString();
+  if (!name || !falsyOrZeroAddress(name)) {
+    return name;
+  }
+  const tokens = await tokensFn();
+  const n = name.toLowerCase();
+  const matched = tokens.filter((value) => value.tokenSymbol.toLowerCase() == n);
+  if (matched.length == 0) {
+    throw new Error('Unknown token name: ' + name);
+  } else if (matched.length > 1) {
+    throw new Error('Ambigous token name: ' + name);
+  }
+
+  const priceKey: string = matched[0].priceToken;
+  if (falsyOrZeroAddress(priceKey)) {
+    throw new Error('Token has no pricing token: ' + name);
+  }
+
+  const sharedPriceList = tokens.filter((value) => value.priceToken == priceKey);
+  if (warn && sharedPriceList.length > 1) {
+    console.log(
+      'WARNING! Same price is used for: ',
+      sharedPriceList.map((value) => value.tokenSymbol)
+    );
+  }
+
+  return priceKey;
 };
