@@ -261,6 +261,9 @@ export const getVerifiedFromJsonDb = async (address: string) => {
   return (await db.get(`${currentNetwork}.verified.${address}`).value()) as boolean;
 };
 
+export const getInstanceFromJsonDb = (addr: tEthereumAddress) =>
+  <DbInstanceEntry>getDb().get(`${DRE.network.name}.instance.${addr}`).value();
+
 export const getInstancesFromJsonDb = () =>
   Object.entries<DbInstanceEntry>(getDb().get(`${DRE.network.name}.instance`).value() || []);
 

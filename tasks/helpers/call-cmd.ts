@@ -6,7 +6,15 @@ import {
   getMarketAddressController,
   getOracleRouter,
 } from '../../helpers/contracts-getters';
-import { falsyOrZeroAddress, getFirstSigner, getFromJsonDb, waitTx } from '../../helpers/misc-utils';
+import {
+  falsyOrZeroAddress,
+  getExternalsFromJsonDb,
+  getFirstSigner,
+  getFromJsonDb,
+  getInstanceFromJsonDb,
+  getInstancesFromJsonDb,
+  waitTx,
+} from '../../helpers/misc-utils';
 import { getContractGetterById } from '../../helpers/contracts-mapper';
 import { Contract, ContractTransaction } from '@ethersproject/contracts';
 import { MarketAccessController } from '../../types';
@@ -165,14 +173,35 @@ const findObject = async (network: eNetwork, ac: MarketAccessController, objName
   const bracketPos = objName.indexOf('@');
   if (bracketPos < 0) {
     const objEntry = getFromJsonDb(objName);
-    if (objEntry === undefined) {
+    if (objEntry !== undefined) {
+      const [id, fn] = getContractGetterById(objName);
+      if (fn === undefined) {
+        throw new Error('Unsupported type name: ' + objName);
+      }
+      return await fn(objEntry.address);
+    }
+
+    const found = getExternalsFromJsonDb().filter((value) => {
+      const [addr, desc] = value;
+      return desc.id == objName && !falsyOrZeroAddress(desc.verify?.impl);
+    });
+
+    if (found.length == 0) {
       throw new Error('Unknown object name: ' + objName);
+    } else if (found.length > 1) {
+      throw new Error('Ambigous object name: ' + objName + ', ' + found);
     }
-    const [id, fn] = getContractGetterById(objName);
+    const [addr, desc] = found[0];
+    const inst = getInstanceFromJsonDb(desc.verify!.impl!);
+    if (inst == undefined) {
+      throw new Error('Unknown impl address: ' + objName);
+    }
+
+    const [id, fn] = getContractGetterById(inst.id);
     if (fn === undefined) {
-      throw new Error('Unsupported type name: ' + objName);
+      throw new Error('Unsupported type name: ' + inst.id);
     }
-    return await fn(objEntry.address);
+    return await fn(addr);
   }
 
   const typeName = objName.substring(0, bracketPos);
