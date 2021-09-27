@@ -251,7 +251,15 @@ export interface iAssetBase<T> {
   LINK: T;
 
   ADAI: T;
+  AUSDC: T;
+  AUSDT: T;
+  AWBTC: T;
+  AWETH: T;
+
   CDAI: T;
+  CUSDC: T;
+  CUSDT: T;
+  CWBTC: T;
   CETH: T;
 }
 
@@ -265,7 +273,14 @@ const tokenSymbols: iAssetBase<string> = {
   AAVE: '',
   LINK: '',
   ADAI: '',
+  AUSDC: '',
+  AUSDT: '',
+  AWBTC: '',
+  AWETH: '',
   CDAI: '',
+  CUSDC: '',
+  CUSDT: '',
+  CWBTC: '',
   CETH: '',
 };
 

@@ -1,6 +1,6 @@
 import { IAugmentedConfiguration, eEthereumNetwork, IReserveParams, IReserveBorrowParams, ITestConfiguration } from '../../helpers/types';
 import { CommonsConfig } from './commons';
-import { strategyAAVE, strategyADAI, strategyCDAI, strategyCETH, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
+import { strategyAAVE, strategyADAI, strategyAUSDC, strategyAUSDT, strategyAWBTC, strategyAWETH, strategyCDAI, strategyCETH, strategyCUSDC, strategyCUSDT, strategyCWBTC, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
 
 // ----------------
 // POOL--SPECIFIC PARAMS
@@ -34,8 +34,17 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
       USDT: strategyUSDT,
       WBTC: strategyWBTC,
       WETH: strategyWETH,
+
       ADAI: strategyADAI,
+      AUSDC: strategyAUSDC,
+      AUSDT: strategyAUSDT,
+      AWBTC: strategyAWBTC,
+      AWETH: strategyAWETH,
+
       CDAI: strategyCDAI,
+      CUSDC: strategyCUSDC,
+      CUSDT: strategyCUSDT,
+      CWBTC: strategyCWBTC,
       CETH: strategyCETH,
     },
   };

@@ -41,6 +41,41 @@ const tokenRewardPoolParamsUSDx: ITokenRewardPoolParams = {
   }
 }
 
+const tokenRewardPoolParamsExternal: ITokenRewardPoolParams = {
+  Share: {
+    deposit: {
+      BasePoints: 50,
+      BoostFactor: 30000, // 3x
+    },
+    vDebt: {
+      BasePoints: 50,
+      BoostFactor: 30000, // 3x
+    },
+    stake: {
+      BasePoints: 50,
+      BoostFactor: 30000, // 3x
+    },
+  }
+}
+
+const tokenRewardPoolParamsExtUSDx: ITokenRewardPoolParams = {
+  Share: {
+    deposit: {
+      BasePoints: 25,
+      BoostFactor: 30000, // 3x
+    },
+    vDebt: {
+      BasePoints: 25,
+      BoostFactor: 30000, // 3x
+    },
+    stake: {
+      BasePoints: 25,
+      BoostFactor: 30000, // 3x
+    },
+  }
+}
+
+
 // ----------------
 // PROTOCOL GLOBAL PARAMS
 // ----------------
@@ -150,11 +185,14 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.hardhat]: {},
     [eEthereumNetwork.docker]: {},
     [eEthereumNetwork.kovan]: {
+      DAI: '0x22B58f1EbEDfCA50feF632bD73368b2FdA96D541',
+      USDC: '0x64EaC61A2DFda2c3Fa04eED49AA33D021AeC8838',
+      USDT: '0x0bF499444525a23E7Bb61997539725cA2e928138',
+      WBTC: '0xF7904a295A029a3aBDFFB6F12755974a958C7C25',
+
       AAVE: '0xd04647B7CB523bb9f26730E9B6dE1174db7591Ad',
       BAT: '0x0e4fcEC26c9f85c3D714370c98f43C4E02Fc35Ae',
       BUSD: '0xbF7A18ea5DE0501f7559144e702b29c55b055CcB',
-      DAI: '0x22B58f1EbEDfCA50feF632bD73368b2FdA96D541',
-      ADAI: '0x22B58f1EbEDfCA50feF632bD73368b2FdA96D541',
       ENJ: '0xfaDbe2ee798889F02d1d39eDaD98Eff4c7fe95D4',
       KNC: '0xb8E8130d244CFd13a75D6B9Aee029B1C33c808A7',
       LINK: '0x3Af8C569ab77af5230596Acf0E8c2F9351d24C38',
@@ -165,18 +203,18 @@ export const CommonsConfig: ICommonConfiguration = {
       SUSD: '0xb343e7a1aF578FA35632435243D814e7497622f7',
       TUSD: '0x7aeCF1c19661d12E962b69eBC8f6b2E63a55C660',
       UNI: '0x17756515f112429471F86f98D5052aCB6C47f6ee',
-      USDC: '0x64EaC61A2DFda2c3Fa04eED49AA33D021AeC8838',
-      USDT: '0x0bF499444525a23E7Bb61997539725cA2e928138',
-      WBTC: '0xF7904a295A029a3aBDFFB6F12755974a958C7C25',
       YFI: '0xC5d1B1DEb2992738C0273408ac43e1e906086B6C',
       ZRX: '0xBc3f28Ccc21E9b5856E81E6372aFf57307E2E883',
       USD: '0x9326BFA02ADD2366b30bacB125260Af641031331',
     },
     [eEthereumNetwork.ropsten]: {
+      DAI: '0x64b8e49baded7bfb2fd5a9235b2440c0ee02971b',
+      USDC: '0xe1480303dde539e2c241bdc527649f37c9cbef7d',
+      USDT: '0xc08fe0c4d97ccda6b40649c6da621761b628c288',
+      WBTC: '0x5b8B87A0abA4be247e660B0e0143bB30Cdf566AF',
+
       BAT: '0xafd8186c962daf599f171b8600f3e19af7b52c92',
       BUSD: '0x0A32D96Ff131cd5c3E0E5AAB645BF009Eda61564',
-      DAI: '0x64b8e49baded7bfb2fd5a9235b2440c0ee02971b',
-      ADAI: '0x64b8e49baded7bfb2fd5a9235b2440c0ee02971b',
       KNC: '0x19d97ceb36624a31d827032d8216dd2eb15e9845',
       LINK: '0xb8c99b98913bE2ca4899CdcaF33a3e519C20EeEc',
       MANA: '0xDab909dedB72573c626481fC98CEE1152b81DEC2',
@@ -184,25 +222,24 @@ export const CommonsConfig: ICommonConfiguration = {
       SNX: '0xA95674a8Ed9aa9D2E445eb0024a9aa05ab44f6bf',
       SUSD: '0xe054b4aee7ac7645642dd52f1c892ff0128c98f0',
       TUSD: '0x523ac85618df56e940534443125ef16daf785620',
-      USDC: '0xe1480303dde539e2c241bdc527649f37c9cbef7d',
-      USDT: '0xc08fe0c4d97ccda6b40649c6da621761b628c288',
-      WBTC: '0x5b8B87A0abA4be247e660B0e0143bB30Cdf566AF',
       ZRX: '0x1d0052e4ae5b4ae4563cbac50edc3627ca0460d7',
       USD: '0x8468b2bDCE073A157E560AA4D9CcF6dB1DB98507',
     },
     [eEthereumNetwork.rinkeby]: {
       DAI: '0x74825DbC8BF76CC4e9494d0ecB210f676Efa001D',
-      ADAI: '0x74825DbC8BF76CC4e9494d0ecB210f676Efa001D',
       USDC: '0xdCA36F27cbC4E38aE16C4E9f99D39b42337F6dcf',
       WBTC: '0x2431452A0010a43878bF198e170F6319Af6d27F4',
       USD: '0x8A753747A1Fa494EC906cE90E9f37563A8AF630e',
     },
     [eEthereumNetwork.main]: {
+      DAI: '0x773616E4d11A78F511299002da57A0a94577F1f4',
+      USDC: '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
+      USDT: '0xEe9F2375b4bdF6387aa8265dD4FB8F16512A1d46',
+      WBTC: '0xdeb288F737066589598e9214E782fa5A8eD689e8',
+
       AAVE: '0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012',
       BAT: '0x0d16d4528239e9ee52fa531af613AcdB23D88c94',
       BUSD: '0x614715d2Af89E6EC99A233818275142cE88d1Cfd',
-      DAI: '0x773616E4d11A78F511299002da57A0a94577F1f4',
-      ADAI: '0x773616E4d11A78F511299002da57A0a94577F1f4',
       ENJ: '0x24D9aB51950F3d62E9144fdC2f3135DAA6Ce8D1B',
       KNC: '0x656c0544eF4C98A6a98491833A89204Abb045d6b',
       LINK: '0xDC530D9457755926550b59e8ECcdaE7624181557',
@@ -213,19 +250,19 @@ export const CommonsConfig: ICommonConfiguration = {
       SUSD: '0x8e0b7e6062272B5eF4524250bFFF8e5Bd3497757',
       TUSD: '0x3886BA987236181D98F2401c507Fb8BeA7871dF2',
       UNI: '0xD6aA3D25116d8dA79Ea0246c4826EB951872e02e',
-      USDC: '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
-      USDT: '0xEe9F2375b4bdF6387aa8265dD4FB8F16512A1d46',
-      WBTC: '0xdeb288F737066589598e9214E782fa5A8eD689e8',
       YFI: '0x7c5d4F8345e66f68099581Db340cd65B078C41f4',
       ZRX: '0x2Da4983a622a8498bb1a21FaE9D8F6C664939962',
       USD: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
     },
     [eEthereumNetwork.tenderlyMain]: {
+      DAI: '0x773616E4d11A78F511299002da57A0a94577F1f4',
+      USDC: '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
+      USDT: '0xEe9F2375b4bdF6387aa8265dD4FB8F16512A1d46',
+      WBTC: '0xdeb288F737066589598e9214E782fa5A8eD689e8',
+
       AAVE: '0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012',
       BAT: '0x0d16d4528239e9ee52fa531af613AcdB23D88c94',
       BUSD: '0x614715d2Af89E6EC99A233818275142cE88d1Cfd',
-      DAI: '0x773616E4d11A78F511299002da57A0a94577F1f4',
-      ADAI: '0x773616E4d11A78F511299002da57A0a94577F1f4',
       ENJ: '0x24D9aB51950F3d62E9144fdC2f3135DAA6Ce8D1B',
       KNC: '0x656c0544eF4C98A6a98491833A89204Abb045d6b',
       LINK: '0xDC530D9457755926550b59e8ECcdaE7624181557',
@@ -236,9 +273,6 @@ export const CommonsConfig: ICommonConfiguration = {
       SUSD: '0x8e0b7e6062272B5eF4524250bFFF8e5Bd3497757',
       TUSD: '0x3886BA987236181D98F2401c507Fb8BeA7871dF2',
       UNI: '0xD6aA3D25116d8dA79Ea0246c4826EB951872e02e',
-      USDC: '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
-      USDT: '0xEe9F2375b4bdF6387aa8265dD4FB8F16512A1d46',
-      WBTC: '0xdeb288F737066589598e9214E782fa5A8eD689e8',
       YFI: '0x7c5d4F8345e66f68099581Db340cd65B078C41f4',
       ZRX: '0x2Da4983a622a8498bb1a21FaE9D8F6C664939962',
       USD: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
@@ -268,9 +302,20 @@ export const CommonsConfig: ICommonConfiguration = {
       USDT: '0x13512979ADE267AB5100878E2e0f485B568328a4',
       WBTC: '0xD1B98B6607330172f1D991521145A22BCe793277',
       WETH: '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
-      CETH: '0x41b5844f4680a8c38fbb695b7f9cfd1f64474a72',
+
+      // https://aave.github.io/aave-addresses/kovan.json
+      ADAI: '0xdCf0aF9e59C002FA3AA091a46196b37530FD48a8',
+      // AUSDC: '0xe12AFeC5aa12Cf614678f9bFeeB98cA9Bb95b5B0',
+      // AUSDT: '0xFF3c8bc103682FA918c954E84F5056aB4DD5189d',
+      // AWBTC: '0x62538022242513971478fcC7Fb27ae304AB5C29F',
+      // AWETH: '0x87b1f4cf9BD63f7BBD3eE1aD04E8F52540349347',
+
+      // https://compound.finance/docs#networks
       CDAI: '0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad',
-      ADAI: '0xdcf0af9e59c002fa3aa091a46196b37530fd48a8',
+      CETH: '0x41b5844f4680a8c38fbb695b7f9cfd1f64474a72',
+      // CUSDC: '0x4a92e71227d294f041bd82dd8f78591b75140d63',
+      // CUSDT: '0x3f0a0ea2f86bae6362cf9799b523ba06647da018',
+      // CWBTC: '0xa1faa15655b0e7b6b6470ed3d096390e6ad93abb',
     },
     [eEthereumNetwork.ropsten]: {
       DAI: '0xf80A32A835F79D7787E8a8ee5721D0fEaFd78108',
@@ -287,15 +332,26 @@ export const CommonsConfig: ICommonConfiguration = {
     },
     [eEthereumNetwork.main]: {
       AAVE: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
-      DAI: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+      DAI: '0x6B175474E89094C44Da98b954EedeAC495271d0F', 
       LINK: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
-      USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-      USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-      WBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+      USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 
+      USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7', 
+      WBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 
       WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-      ADAI: '0x028171bca77440897b824ca71d1c56cac55b68a3',
-      CDAI: '0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643',
+
+      // https://docs.aave.com/developers/deployed-contracts/deployed-contracts
+      ADAI: '0x028171bCA77440897B824Ca71D1c56caC55b68A3',
+      AUSDC: '0xBcca60bB61934080951369a648Fb03DF4F96263C',
+      AUSDT: '0x3Ed3B47Dd13EC9a98b44e6204A523E766B225811',
+      AWBTC: '0x9ff58f4fFB29fA2266Ab25e75e2A8b3503311656',
+      AWETH: '0x030bA81f1c18d280636F32af80b9AAd02Cf0854e',
+
+      // https://compound.finance/docs#networks
+      CDAI: '0x5d3a536e4d6dbd6114cc1ead35777bab948e3643',
       CETH: '0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5',
+      CUSDC: '0x39aa39c021dfbae8fac545936693ac917d5e7563',
+      CUSDT: '0xf650c3d88d12db855b8bf7d11be6c55a4e07dcc9',
+      CWBTC: '0xc11b1268c1a384e55c48c2391d8d480264a3a7f4',
     },
     [eEthereumNetwork.tenderlyMain]: {
       AAVE: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
@@ -337,7 +393,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.hardhat]: [],
     [eEthereumNetwork.docker]: [],
     [eEthereumNetwork.kovan]: [],
-    [eEthereumNetwork.main]: [LPFeature.LIQUIDATION, LPFeature.FLASHLOAN, LPFeature.FLASHLOAN_DEPOSIT, LPFeature.FLASHLOAN_BORROW],
+    [eEthereumNetwork.main]: [LPFeature.FLASHLOAN, LPFeature.FLASHLOAN_DEPOSIT, LPFeature.FLASHLOAN_BORROW],
     [eEthereumNetwork.tenderlyMain]: [],
   },
 
@@ -376,6 +432,18 @@ export const CommonsConfig: ICommonConfiguration = {
       USDT:  tokenRewardPoolParamsDefault,
       WBTC:  tokenRewardPoolParamsUSDx,
       WETH:  tokenRewardPoolParamsUSDx,
+
+      ADAI:   tokenRewardPoolParamsExternal,
+      AUSDC:  tokenRewardPoolParamsExternal,
+      AUSDT:  tokenRewardPoolParamsExternal,
+      AWBTC:  tokenRewardPoolParamsExtUSDx,
+      AWETH:  tokenRewardPoolParamsExtUSDx,
+
+      CDAI:   tokenRewardPoolParamsExternal,
+      CUSDC:  tokenRewardPoolParamsExternal,
+      CUSDT:  tokenRewardPoolParamsExternal,
+      CWBTC:  tokenRewardPoolParamsExtUSDx,
+      CETH:  tokenRewardPoolParamsExtUSDx,
     },
     ReferralPool: {
       BasePoints: 100,
@@ -388,13 +456,13 @@ export const CommonsConfig: ICommonConfiguration = {
     BurnersPool: {
       TotalWad: 1e6,
       BoostFactor: 0,
-      MeltDownAt: new Date('2022-04-01'),
+      MeltDownAt: new Date('2022-06-24'),
       Providers: [],
     },
     RetroPool: {
-      TotalWad: 1e5,
+      TotalWad: 120000,
       BoostFactor: 0,
-      MeltDownAt: new Date('2021-11-11'),
+      MeltDownAt: new Date('2021-11-12'),
       Providers: [],
     },
     TeamPool: {
@@ -418,7 +486,15 @@ export const CommonsConfig: ICommonConfiguration = {
     AllAssetsInitialPrices: {
       ...MOCK_CHAINLINK_AGGREGATORS_PRICES,
       ADAI: MOCK_CHAINLINK_AGGREGATORS_PRICES.DAI,
+      AUSDC: MOCK_CHAINLINK_AGGREGATORS_PRICES.USDC,
+      AUSDT: MOCK_CHAINLINK_AGGREGATORS_PRICES.USDT,
+      AWBTC: MOCK_CHAINLINK_AGGREGATORS_PRICES.WBTC,
+      AWETH: MOCK_CHAINLINK_AGGREGATORS_PRICES.WETH,
+
       CDAI: MOCK_CHAINLINK_AGGREGATORS_PRICES.DAI,
+      CUSDC: MOCK_CHAINLINK_AGGREGATORS_PRICES.USDC,
+      CUSDT: MOCK_CHAINLINK_AGGREGATORS_PRICES.USDT,
+      CWBTC: MOCK_CHAINLINK_AGGREGATORS_PRICES.WBTC,
       CETH: MOCK_CHAINLINK_AGGREGATORS_PRICES.WETH,
     },
     UnderlyingMappings: {
