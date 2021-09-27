@@ -1,6 +1,12 @@
 import { oneRay, ZERO_ADDRESS, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames, ONE_ADDRESS } from '../../helpers/constants';
 import { ICommonConfiguration, eEthereumNetwork, StakeMode, LPFeature, ITokenRewardPoolParams } from '../../helpers/types';
 
+const emergencyAdmins = [
+  '0x8331Bd35089090249675D023804FC52b7FD18184',
+  '0xE1FbbaBbd21764061734424d3F4f5e2C11101E96',
+  '0x511EfaE41B0eA33Da847d16e13655009d0aB3Ed7',
+];
+
 const tokenRewardPoolParamsDefault: ITokenRewardPoolParams = {
   Share: {
     deposit: {
@@ -73,16 +79,10 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.hardhat]: [],
     [eEthereumNetwork.docker]: [],
     [eEthereumNetwork.coverage]: [],
-    [eEthereumNetwork.kovan]: [
-      '0x8331Bd35089090249675D023804FC52b7FD18184',
-      '0xE1FbbaBbd21764061734424d3F4f5e2C11101E96',
-    ],
+    [eEthereumNetwork.kovan]: emergencyAdmins,
     [eEthereumNetwork.ropsten]: [],
     [eEthereumNetwork.rinkeby]: [],
-    [eEthereumNetwork.main]: [
-      '0x8331Bd35089090249675D023804FC52b7FD18184',
-      '0xE1FbbaBbd21764061734424d3F4f5e2C11101E96',
-    ],
+    [eEthereumNetwork.main]: emergencyAdmins,
     [eEthereumNetwork.tenderlyMain]: [],
   },
   ProviderRegistry: {
