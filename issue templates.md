@@ -17,11 +17,14 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
+**Link to Etherscan**
+If applicable, add the link to Etherscan transaction.
+
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
 **Build (please complete the following information):**
- - OS: [e.g. Fedora]
+ - Browser: [e.g. Google Chrome]
  - Version [e.g. 0.1.0]
 
 **Additional context**
