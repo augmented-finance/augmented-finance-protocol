@@ -3,38 +3,6 @@ import { eContractid, IInterestRateStrategyParams, IReserveParams } from '../../
 
 const ray = (n: number) => oneRay.multipliedBy(n).toFixed();
 
-// // BUSD SUSD
-// export const rateStrategyStableOne: IInterestRateStrategyParams = {
-//   name: 'rateStrategyStableOne',
-//   optimalUtilizationRate: new BigNumber(0.8).multipliedBy(oneRay).toFixed(),
-//   baseVariableBorrowRate: new BigNumber(0).multipliedBy(oneRay).toFixed(),
-//   variableRateSlope1: new BigNumber(0.04).multipliedBy(oneRay).toFixed(),
-//   variableRateSlope2: new BigNumber(1).multipliedBy(oneRay).toFixed(),
-//   stableRateSlope1: '0',
-//   stableRateSlope2: '0',
-// };
-
-// // SNX
-// export const rateStrategyVolatileThree: IInterestRateStrategyParams = {
-//   name: 'rateStrategyVolatileThree',
-//   optimalUtilizationRate: new BigNumber(0.65).multipliedBy(oneRay).toFixed(),
-//   baseVariableBorrowRate: new BigNumber(0).multipliedBy(oneRay).toFixed(),
-//   variableRateSlope1: new BigNumber(0.08).multipliedBy(oneRay).toFixed(),
-//   variableRateSlope2: new BigNumber(3).multipliedBy(oneRay).toFixed(),
-//   stableRateSlope1: new BigNumber(0.1).multipliedBy(oneRay).toFixed(),
-//   stableRateSlope2: new BigNumber(3).multipliedBy(oneRay).toFixed(),
-// }
-
-// export const rateStrategyVolatileFour: IInterestRateStrategyParams = {
-//   name: 'rateStrategyVolatileFour',
-//   optimalUtilizationRate: new BigNumber(0.45).multipliedBy(oneRay).toFixed(),
-//   baseVariableBorrowRate: '0',
-//   variableRateSlope1: new BigNumber(0.07).multipliedBy(oneRay).toFixed(),
-//   variableRateSlope2: new BigNumber(3).multipliedBy(oneRay).toFixed(),
-//   stableRateSlope1: '0',
-//   stableRateSlope2: '0',
-// }
-
 const strategies = {
   AAVE: <IInterestRateStrategyParams> {
     name: 'rateStrategyAAVE',
@@ -46,17 +14,16 @@ const strategies = {
     stableRateSlope2: '0',
   },
   
-  // BAT ENJ LINK MANA MKR REN YFI ZRX
-  volatile1: <IInterestRateStrategyParams>{
-    name: 'rateStrategyVolatileOne',
-    optimalUtilizationRate: ray(0.45),
+  // BUSD SUSD
+  stable1: <IInterestRateStrategyParams> {
+    name: 'rateStrategyStableOne',
+    optimalUtilizationRate: ray(0.8),
     baseVariableBorrowRate: ray(0),
-    variableRateSlope1: ray(0.07),
-    variableRateSlope2: ray(3),
-    stableRateSlope1: ray(0.1),
-    stableRateSlope2: ray(3),
+    variableRateSlope1: ray(0.04),
+    variableRateSlope2: ray(1),
+    stableRateSlope1: '0',
+    stableRateSlope2: '0',
   },
-  
   // DAI
   stable2: <IInterestRateStrategyParams>{
     name: 'rateStrategyStableTwo',
@@ -77,6 +44,18 @@ const strategies = {
     stableRateSlope1: ray(0.02),
     stableRateSlope2: ray(0.60),
   },
+
+  // BAT ENJ LINK MANA MKR REN YFI ZRX
+  volatile1: <IInterestRateStrategyParams>{
+    name: 'rateStrategyVolatileOne',
+    optimalUtilizationRate: ray(0.45),
+    baseVariableBorrowRate: ray(0),
+    variableRateSlope1: ray(0.07),
+    variableRateSlope2: ray(3),
+    stableRateSlope1: ray(0.1),
+    stableRateSlope2: ray(3),
+  },
+  
   // WBTC
   volatile2: <IInterestRateStrategyParams>{
     name: 'rateStrategyVolatileTwo',
@@ -87,6 +66,28 @@ const strategies = {
     stableRateSlope1: ray(0.1),
     stableRateSlope2: ray(3),
   },
+
+  // SNX
+  volatile3: <IInterestRateStrategyParams>{
+    name: 'rateStrategyVolatileThree',
+    optimalUtilizationRate: ray(0.65),
+    baseVariableBorrowRate: ray(0),
+    variableRateSlope1: ray(0.08),
+    variableRateSlope2: ray(3),
+    stableRateSlope1: ray(0.1),
+    stableRateSlope2: ray(3),
+  },
+
+  volatile4: <IInterestRateStrategyParams>{
+    name: 'rateStrategyVolatileFour',
+    optimalUtilizationRate: ray(0.45),
+    baseVariableBorrowRate: '0',
+    variableRateSlope1: ray(0.07),
+    variableRateSlope2: ray(3),
+    stableRateSlope1: '0',
+    stableRateSlope2: '0',
+  },
+
   // WETH
   WETH: <IInterestRateStrategyParams>{
     name: 'rateStrategyWETH',
@@ -185,7 +186,7 @@ const base = {
   },
 }
 
-export const TestStrategies = {
+export const TestReserves = {
   ...base,
   // ADAI: externalAsset(base.DAI, externalReserveAAVE, 2000),
   // AUSDC: externalAsset(base.USDC, externalReserveAAVE, 2000),
@@ -199,3 +200,5 @@ export const TestStrategies = {
   // CWBTC: externalAsset(base.WBTC, externalReserveCOMP, 2000, 8),
   // CETH: externalAsset(base.WETH, externalReserveCETH, 2000, 8),
 }
+
+export const TestStrategies = strategies;

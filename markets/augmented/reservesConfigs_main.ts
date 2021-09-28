@@ -117,7 +117,7 @@ const base = {
   },
 }
 
-export const MainnetStrategies = {
+export const MainnetReserves = {
   ...base,
   ADAI: externalAsset(base.DAI, externalReserveAAVE, 2000),
   AUSDC: externalAsset(base.USDC, externalReserveAAVE, 2000),

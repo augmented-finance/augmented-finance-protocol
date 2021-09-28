@@ -1,7 +1,7 @@
 import { IAugmentedConfiguration, eEthereumNetwork, IReserveParams, IReserveBorrowParams, ITestConfiguration } from '../../helpers/types';
 import { CommonsConfig } from './commons';
-import { TestStrategies } from './reservesConfigs';
-import { MainnetStrategies } from './reservesConfigs_main';
+import { TestReserves } from './reservesConfigs';
+import { MainnetReserves } from './reservesConfigs_main';
 
 // ----------------
 // POOL--SPECIFIC PARAMS
@@ -11,7 +11,7 @@ export const TestConfig: ITestConfiguration = {
   ...CommonsConfig,
   ProviderId: 1,
   MarketId: 'Augmented test market',
-  ReservesConfig: { ...TestStrategies },
+  ReservesConfig: { ...TestReserves },
 }
 
 export const AugmentedConfig: IAugmentedConfiguration = (() => {
@@ -21,7 +21,7 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
   let cfg: IAugmentedConfiguration = {...src,
     MarketId: 'Augmented genesis market',
     ProviderId: 0, // force autonumbering
-    ReservesConfig: { ...MainnetStrategies },
+    ReservesConfig: { ...MainnetReserves },
   };
 
   const defRates = {

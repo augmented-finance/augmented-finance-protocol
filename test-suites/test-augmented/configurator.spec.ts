@@ -2,11 +2,13 @@ import { TestEnv, makeSuite } from './helpers/make-suite';
 import { APPROVAL_AMOUNT_LENDING_POOL, RAY } from '../../helpers/constants';
 import { convertToCurrencyDecimals } from '../../helpers/contracts-helpers';
 import { ProtocolErrors } from '../../helpers/types';
-import { strategyWETH } from '../../markets/augmented/reservesConfigs';
+import { TestReserves } from '../../markets/augmented/reservesConfigs';
 
 const { expect } = require('chai');
 
 makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
+  const strategyWETH = TestReserves.WETH;
+
   const {
     CALLER_NOT_POOL_ADMIN,
     LPC_RESERVE_LIQUIDITY_NOT_0,
@@ -22,9 +24,9 @@ makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
 
     const invalidReserveFactor = 65536;
 
-    await expect(
-      configurator.setReserveFactor(weth.address, invalidReserveFactor)
-    ).to.be.revertedWith(RC_INVALID_RESERVE_FACTOR);
+    await expect(configurator.setReserveFactor(weth.address, invalidReserveFactor)).to.be.revertedWith(
+      RC_INVALID_RESERVE_FACTOR
+    );
   });
 
   it('Deactivates the ETH reserve', async () => {
@@ -257,9 +259,7 @@ makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
   it('Check the onlyPoolAdmin on configureReserveAsCollateral ', async () => {
     const { configurator, users, weth } = testEnv;
     await expect(
-      configurator
-        .connect(users[2].signer)
-        .configureReserveAsCollateral(weth.address, '7500', '8000', '10500'),
+      configurator.connect(users[2].signer).configureReserveAsCollateral(weth.address, '7500', '8000', '10500'),
       CALLER_NOT_POOL_ADMIN
     ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
   });
@@ -378,9 +378,8 @@ makeSuite('LendingPoolConfigurator', (testEnv: TestEnv) => {
     //user 1 deposits 1000 DAI
     await pool.deposit(dai.address, amountDAItoDeposit, userAddress, '0');
 
-    await expect(
-      configurator.deactivateReserve(dai.address),
+    await expect(configurator.deactivateReserve(dai.address), LPC_RESERVE_LIQUIDITY_NOT_0).to.be.revertedWith(
       LPC_RESERVE_LIQUIDITY_NOT_0
-    ).to.be.revertedWith(LPC_RESERVE_LIQUIDITY_NOT_0);
+    );
   });
 });
