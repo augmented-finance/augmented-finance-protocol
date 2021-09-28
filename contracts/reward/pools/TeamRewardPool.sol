@@ -39,6 +39,10 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return 'TeamPool';
   }
 
+  function getExcessTarget() external view returns (address) {
+    return _excessTarget;
+  }
+
   function setExcessTarget(address target) external onlyTeamManagerOrConfigurator {
     require(target != address(this));
     _excessTarget = target;
