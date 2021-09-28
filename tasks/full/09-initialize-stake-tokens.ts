@@ -152,6 +152,9 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
       });
     }
 
+    const po = await getOracleRouter(await addressProvider.getAddress(AccessFlags.PRICE_ORACLE));
+    const wethAddr = await po.WETH();
+
     if (UniV2EthPair?.StakeToken) {
       const lpPairAddr = await getUniAgfEth(addressProvider, dependencies.UniswapV2Router);
 
@@ -187,7 +190,7 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
         listPricingAssets.push('');
         listStakedTokens.push(lpPairAddr);
         listSpecialFeeds.push(async () => {
-          const feed = await deployPriceFeedUniEthPair(symbol, [lpPairAddr], verify);
+          const feed = await deployPriceFeedUniEthPair(symbol, [lpPairAddr, wethAddr], verify);
           console.log('\tUni ETH-pair price feed:', symbol, feed.address);
           return feed.address;
         });
@@ -251,8 +254,6 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
     }
 
     if (listStakedTokens.length > 0) {
-      const po = await getOracleRouter(await addressProvider.getAddress(AccessFlags.PRICE_ORACLE));
-
       const staticTokens: string[] = [];
       const staticPrices: string[] = [];
       const priceTokens: string[] = [];
