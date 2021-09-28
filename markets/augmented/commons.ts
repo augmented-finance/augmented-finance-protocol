@@ -470,7 +470,10 @@ export const CommonsConfig: ICommonConfiguration = {
       [eEthereumNetwork.coverage]: {},
       [eEthereumNetwork.hardhat]: {},
       [eEthereumNetwork.kovan]: {
-        '0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa': '0xFf795577d9AC8bD7D90Ee22b6C1703490b6512FD'
+        '0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa': '0xFf795577d9AC8bD7D90Ee22b6C1703490b6512FD', // cDAI -> our.DAI
+        '0xb7a4f3e9097c08da09517b5ab877f7a917224ede': '0xe22da380ee6B445bb8273C81944ADEB6E8450422', // cUSDT -> our.USDT
+        '0x07de306FF27a2B630B1141956844eB1552B956B5': '0x13512979ADE267AB5100878E2e0f485B568328a4', // cUSDC -> our.USDC
+        '0xd3A691C852CDB01E281545A27064741F0B7f6825': '0xD1B98B6607330172f1D991521145A22BCe793277', // cWBTC -> our.WBTC
       },
       [eEthereumNetwork.ropsten]: {},
       [eEthereumNetwork.docker]: {},

@@ -16,10 +16,10 @@ task('augmented:mainnet', 'Deploy enviroment')
   .addFlag('incremental', 'Incremental deployment')
   .addFlag('secure', 'Renounce credentials on errors')
   .addFlag('strict', 'Fail on warnings')
-  .addFlag('ignoreCalc', 'Ignore APY calc during smoke test')
+  .addFlag('ignorecalc', 'Ignore APY calc during smoke test')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addOptionalParam('skip', 'Skip steps with less or equal index', 0, types.int)
-  .setAction(async ({ incremental, secure, strict, verify, skip: skipN, ignoreCalc }, DRE) => {
+  .setAction(async ({ incremental, secure, strict, verify, skip: skipN, ignorecalc: ignoreCalc }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
     const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
     await DRE.run('set-DRE');
