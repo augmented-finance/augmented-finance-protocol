@@ -10,9 +10,16 @@ contract PriceFeedUniEthPair is IPriceFeed {
 
   address private _token;
   uint32 private _lastUpdatedAt;
+  bool private _take1;
 
-  constructor(address token) {
+  constructor(address token, address weth) {
     _token = token;
+    if (IUniswapV2Pair(_token).token1() == weth) {
+      _take1 = true;
+    } else {
+      require(IUniswapV2Pair(_token).token0() == weth);
+    }
+
     updatePrice();
   }
 
@@ -36,6 +43,9 @@ contract PriceFeedUniEthPair is IPriceFeed {
 
   function currentPrice() private view returns (uint256, uint32) {
     (uint112 reserve0, uint112 reserve1, uint32 timestamp) = IUniswapV2Pair(_token).getReserves();
+    if (_take1) {
+      (reserve0, reserve1) = (reserve1, reserve0);
+    }
     uint256 supply = IUniswapV2Pair(_token).totalSupply();
     if (supply == 0 || reserve0 == 0) {
       return (0, timestamp);
@@ -43,7 +53,7 @@ contract PriceFeedUniEthPair is IPriceFeed {
     if (reserve1 > 0) {
       reserve0 <<= 1;
     }
-    return (reserve0 / supply, timestamp);
+    return ((reserve0 * 1 ether) / supply, timestamp); // UniPair is always 18 decimals => 1 ether
   }
 
   function latestAnswer() external view override returns (int256) {
