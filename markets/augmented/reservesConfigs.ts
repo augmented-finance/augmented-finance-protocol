@@ -38,14 +38,14 @@ export const strategyLINK: IReserveParams = {
 
 export const strategyDAI: IReserveParams = {
   strategy: rateStrategyStableTwo,
-  baseLTVAsCollateral: 7500,
-  liquidationThreshold: 8000,
+  baseLTVAsCollateral: 8000,
+  liquidationThreshold: 8500,
   liquidationBonus: 10500,
   borrowingEnabled: true,
   stableBorrowRateEnabled: true,
   reserveDecimals: 18,
   depositTokenImpl: eContractid.DepositTokenImpl,
-  reserveFactor: 1000
+  reserveFactor: 500
 };
 
 export const strategyUSDC: IReserveParams = {
@@ -57,7 +57,7 @@ export const strategyUSDC: IReserveParams = {
   stableBorrowRateEnabled: true,
   reserveDecimals: 6,
   depositTokenImpl: eContractid.DepositTokenImpl,
-  reserveFactor: 1000
+  reserveFactor: 500
 };
 
 export const strategyUSDT: IReserveParams = {
@@ -69,31 +69,31 @@ export const strategyUSDT: IReserveParams = {
   stableBorrowRateEnabled: true,
   reserveDecimals: 6,
   depositTokenImpl: eContractid.DepositTokenImpl,
-  reserveFactor: 1000
+  reserveFactor: 500
 };
 
 export const strategyWBTC: IReserveParams = {
   strategy: rateStrategyVolatileTwo,
-  baseLTVAsCollateral: 7000,
-  liquidationThreshold: 7500,
+  baseLTVAsCollateral: 8000,
+  liquidationThreshold: 8500,
   liquidationBonus: 11000,
   borrowingEnabled: true,
   stableBorrowRateEnabled: true,
   reserveDecimals: 8,
   depositTokenImpl: eContractid.DepositTokenImpl,
-  reserveFactor: 2000
+  reserveFactor: 500
 };
 
 export const strategyWETH: IReserveParams = {
   strategy: rateStrategyWETH,
   baseLTVAsCollateral: 8000,
-  liquidationThreshold: 8250,
+  liquidationThreshold: 8500,
   liquidationBonus: 10500,
   borrowingEnabled: true,
   stableBorrowRateEnabled: true,
   reserveDecimals: 18,
   depositTokenImpl: eContractid.DepositTokenImpl,
-  reserveFactor: 1000
+  reserveFactor: 500
 };
 
 const externalAsset = (template: IReserveParams, strategy: IInterestRateStrategyParams, ltvDelta: number, decimals?: number) => {
