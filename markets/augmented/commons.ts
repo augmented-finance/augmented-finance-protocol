@@ -438,7 +438,7 @@ export const CommonsConfig: ICommonConfiguration = {
     },
     TeamPool: {
       BasePoints: 1000,
-      UnlockAt: new Date('2022-01-01'),
+      UnlockAt: new Date('2021-11-15'),
       Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
       Members: {}
     }
