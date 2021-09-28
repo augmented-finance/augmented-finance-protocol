@@ -1,6 +1,7 @@
 import { IAugmentedConfiguration, eEthereumNetwork, IReserveParams, IReserveBorrowParams, ITestConfiguration } from '../../helpers/types';
 import { CommonsConfig } from './commons';
-import { strategyAAVE, strategyADAI, strategyAUSDC, strategyAUSDT, strategyAWBTC, strategyAWETH, strategyCDAI, strategyCETH, strategyCUSDC, strategyCUSDT, strategyCWBTC, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
+import { TestStrategies } from './reservesConfigs';
+import { MainnetStrategies } from './reservesConfigs_main';
 
 // ----------------
 // POOL--SPECIFIC PARAMS
@@ -10,15 +11,7 @@ export const TestConfig: ITestConfiguration = {
   ...CommonsConfig,
   ProviderId: 1,
   MarketId: 'Augmented test market',
-  ReservesConfig: {
-    AAVE: strategyAAVE,
-    LINK: strategyLINK,
-    DAI: strategyDAI,
-    USDC: strategyUSDC,
-    USDT: strategyUSDT,
-    WBTC: strategyWBTC,
-    WETH: strategyWETH,
-  },
+  ReservesConfig: { ...TestStrategies },
 }
 
 export const AugmentedConfig: IAugmentedConfiguration = (() => {
@@ -28,32 +21,8 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
   let cfg: IAugmentedConfiguration = {...src,
     MarketId: 'Augmented genesis market',
     ProviderId: 0, // force autonumbering
-    ReservesConfig: {
-      DAI: strategyDAI,
-      USDC: strategyUSDC,
-      USDT: strategyUSDT,
-      WBTC: strategyWBTC,
-      WETH: strategyWETH,
-
-      ADAI: strategyADAI,
-      AUSDC: strategyAUSDC,
-      AUSDT: strategyAUSDT,
-      AWBTC: strategyAWBTC,
-      AWETH: strategyAWETH,
-
-      CDAI: strategyCDAI,
-      CUSDC: strategyCUSDC,
-      CUSDT: strategyCUSDT,
-      CWBTC: strategyCWBTC,
-      CETH: strategyCETH,
-    },
+    ReservesConfig: { ...MainnetStrategies },
   };
-
-  for (let k of Object.keys(cfg.ReservesConfig)) {
-    cfg.ReservesConfig[k] = {...cfg.ReservesConfig[k],
-      stableBorrowRateEnabled: false
-    };
-  }
 
   const defRates = {
     AAVE: 0.13308194,
@@ -79,5 +48,3 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
 
   return cfg;
 })();
-
-// export default AugmentedConfig;
