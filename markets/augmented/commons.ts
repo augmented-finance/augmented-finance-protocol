@@ -236,6 +236,7 @@ export const CommonsConfig: ICommonConfiguration = {
       USDC: '0x986b5E1e1755e3C2440e960477f25201B0a8bbD4',
       USDT: '0xEe9F2375b4bdF6387aa8265dD4FB8F16512A1d46',
       WBTC: '0xdeb288F737066589598e9214E782fa5A8eD689e8',
+      USD: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
 
       AAVE: '0x6Df09E975c830ECae5bd4eD9d90f3A95a4f88012',
       BAT: '0x0d16d4528239e9ee52fa531af613AcdB23D88c94',
@@ -252,7 +253,6 @@ export const CommonsConfig: ICommonConfiguration = {
       UNI: '0xD6aA3D25116d8dA79Ea0246c4826EB951872e02e',
       YFI: '0x7c5d4F8345e66f68099581Db340cd65B078C41f4',
       ZRX: '0x2Da4983a622a8498bb1a21FaE9D8F6C664939962',
-      USD: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
     },
     [eEthereumNetwork.tenderlyMain]: {
       DAI: '0x773616E4d11A78F511299002da57A0a94577F1f4',
@@ -399,8 +399,8 @@ export const CommonsConfig: ICommonConfiguration = {
 
   StakeParams: {
     MaxSlashBP: 3000, // 30%
-    CooldownPeriod: 2 * DAY,
-    UnstakePeriod: DAY,
+    CooldownPeriod: 10 * DAY,
+    UnstakePeriod: 2 * DAY,
     StakeToken: {
       DAI:  StakeMode.stakeAg,
       USDC: StakeMode.stakeAg,
@@ -411,7 +411,7 @@ export const CommonsConfig: ICommonConfiguration = {
   },
 
   AGF: {
-    DefaultPriceEth: 10.0/3000.0,
+    DefaultPriceEth: 10.0/2919.23, // at 28 Sep 2021
     UniV2EthPair: {
       Symbol: 'UniV2ETHAGF',
       StakeToken: {
