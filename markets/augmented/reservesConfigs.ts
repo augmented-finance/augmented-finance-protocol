@@ -38,14 +38,14 @@ export const strategyLINK: IReserveParams = {
 
 export const strategyDAI: IReserveParams = {
   strategy: rateStrategyStableTwo,
-  baseLTVAsCollateral: 8000,
-  liquidationThreshold: 8500,
+  baseLTVAsCollateral: 7500,
+  liquidationThreshold: 8000,
   liquidationBonus: 10500,
   borrowingEnabled: true,
   stableBorrowRateEnabled: true,
   reserveDecimals: 18,
   depositTokenImpl: eContractid.DepositTokenImpl,
-  reserveFactor: 500
+  reserveFactor: 1000
 };
 
 export const strategyUSDC: IReserveParams = {
@@ -57,7 +57,7 @@ export const strategyUSDC: IReserveParams = {
   stableBorrowRateEnabled: true,
   reserveDecimals: 6,
   depositTokenImpl: eContractid.DepositTokenImpl,
-  reserveFactor: 500
+  reserveFactor: 1000
 };
 
 export const strategyUSDT: IReserveParams = {
@@ -69,38 +69,38 @@ export const strategyUSDT: IReserveParams = {
   stableBorrowRateEnabled: true,
   reserveDecimals: 6,
   depositTokenImpl: eContractid.DepositTokenImpl,
-  reserveFactor: 500
+  reserveFactor: 1000
 };
 
 export const strategyWBTC: IReserveParams = {
   strategy: rateStrategyVolatileTwo,
-  baseLTVAsCollateral: 8000,
-  liquidationThreshold: 8500,
+  baseLTVAsCollateral: 7000,
+  liquidationThreshold: 7500,
   liquidationBonus: 11000,
   borrowingEnabled: true,
   stableBorrowRateEnabled: true,
   reserveDecimals: 8,
   depositTokenImpl: eContractid.DepositTokenImpl,
-  reserveFactor: 500
+  reserveFactor: 2000
 };
 
 export const strategyWETH: IReserveParams = {
   strategy: rateStrategyWETH,
   baseLTVAsCollateral: 8000,
-  liquidationThreshold: 8500,
+  liquidationThreshold: 8250,
   liquidationBonus: 10500,
   borrowingEnabled: true,
   stableBorrowRateEnabled: true,
   reserveDecimals: 18,
   depositTokenImpl: eContractid.DepositTokenImpl,
-  reserveFactor: 500
+  reserveFactor: 1000
 };
 
 const externalAsset = (template: IReserveParams, strategy: IInterestRateStrategyParams, ltvDelta: number, decimals?: number) => {
   const result: IReserveParams = {
     strategy: strategy,
     baseLTVAsCollateral: template.baseLTVAsCollateral - ltvDelta,
-    liquidationThreshold: template.liquidationThreshold,
+    liquidationThreshold: template.liquidationThreshold - ltvDelta,
     liquidationBonus: template.liquidationBonus + ((ltvDelta / 2)|0),
     borrowingEnabled: false,
     stableBorrowRateEnabled: false,

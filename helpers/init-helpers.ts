@@ -403,7 +403,7 @@ export const configureReservesByHelper = async (
   const chunkedSymbols = chunk(symbols, enableChunks);
   const chunkedInputParams = chunk(inputParams, enableChunks);
 
-  console.log(`- Configure reserves with ${chunkedInputParams.length} txs`);
+  console.log(`- Configure reserves with ${chunkedInputParams.length} tx(s)`);
   for (let chunkIndex = 0; chunkIndex < chunkedInputParams.length; chunkIndex++) {
     const tx3 = await waitForTx(
       await configurator.configureReserves(chunkedInputParams[chunkIndex], {
