@@ -40,10 +40,12 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
     address fallbackOracle,
     address weth
   ) MarketAccessBitmask(acl) {
-    _setFallbackOracle(fallbackOracle);
-    _setAssetsSources(assets, sources);
     WETH = weth;
+    _assetsSources[weth] = IPriceFeed(address(this));
     emit WethSet(weth);
+
+    _setFallbackOracle(fallbackOracle);
+    _setAssetSources(assets, sources, weth);
   }
 
   /// @notice External function called by the Aave governance to set or replace sources of assets
@@ -53,7 +55,7 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
     external
     aclHas(AccessFlags.ORACLE_ADMIN)
   {
-    _setAssetsSources(assets, sources);
+    _setAssetSources(assets, sources, WETH);
   }
 
   /// @notice Sets the fallbackOracle
@@ -65,9 +67,15 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
   /// @notice Internal function to set the sources for each asset
   /// @param assets The addresses of the assets
   /// @param sources The address of the source of each asset
-  function _setAssetsSources(address[] memory assets, address[] memory sources) internal {
+  function _setAssetSources(
+    address[] memory assets,
+    address[] memory sources,
+    address weth
+  ) internal {
     require(assets.length == sources.length, 'INCONSISTENT_PARAMS_LENGTH');
     for (uint256 i = 0; i < assets.length; i++) {
+      require(sources[i] != address(this), 'ILLEGAL_SOURCE');
+      require(assets[i] != weth, 'ILLEGAL_ASSET');
       _assetsSources[assets[i]] = IPriceFeed(sources[i]);
 
       // This event MUST happen before source's events
@@ -87,12 +95,11 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
   /// @notice Gets an asset price by address
   /// @param asset The asset address
   function getAssetPrice(address asset) public view override returns (uint256) {
-    if (asset == WETH) {
-      return 1 ether;
-    }
-
     IPriceFeed source = _assetsSources[asset];
     if (address(source) != address(0)) {
+      if (address(source) == address(this)) {
+        return 1 ether;
+      }
       int256 price = source.latestAnswer();
       if (price > 0) {
         return uint256(price);
@@ -121,14 +128,15 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
   /// @notice Gets the address of the source for an asset address
   /// @param asset The address of the asset
   /// @return address The address of the source
-  function getSourceOfAsset(address asset) external view returns (address) {
-    return address(_assetsSources[asset]);
+  function getSourceOfAsset(address asset) public view returns (address) {
+    address source = address(_assetsSources[asset]);
+    return source == address(this) ? address(0) : source;
   }
 
   function getAssetSources(address[] calldata assets) external view returns (address[] memory result) {
     result = new address[](assets.length);
     for (uint256 i = 0; i < assets.length; i++) {
-      result[i] = address(_assetsSources[assets[i]]);
+      result[i] = getSourceOfAsset(assets[i]);
     }
     return result;
   }
@@ -144,7 +152,11 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
   }
 
   function _updateAssetSource(IPriceFeed source) private {
-    if (source != IPriceFeed(address(0)) && source.latestRound() == type(uint256).max) {
+    if (
+      source != IPriceFeed(address(0)) &&
+      source != IPriceFeed(address(this)) &&
+      source.latestRound() == type(uint256).max
+    ) {
       source.updatePrice();
     }
   }

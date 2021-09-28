@@ -1029,7 +1029,11 @@ export const deployPriceFeedCompoundEth = async (name: string, args: [token: tEt
     verify
   );
 
-export const deployPriceFeedUniEthPair = async (name: string, args: [token: tEthereumAddress], verify?: boolean) =>
+export const deployPriceFeedUniEthPair = async (
+  name: string,
+  args: [token: tEthereumAddress, weth: tEthereumAddress],
+  verify?: boolean
+) =>
   withSaveAndVerify(
     await new PriceFeedUniEthPairFactory(await getFirstSigner()).deploy(...args),
     eContractid.PriceFeedUniEthPair + '-' + name,
