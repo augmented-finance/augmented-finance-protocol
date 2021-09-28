@@ -1,5 +1,6 @@
-import { oneRay, MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames } from '../../helpers/constants';
+import { MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames } from '../../helpers/constants';
 import { ICommonConfiguration, eEthereumNetwork, StakeMode, LPFeature, ITokenRewardPoolParams } from '../../helpers/types';
+import { MainnetStableBaseRates } from './reservesConfigs_main';
 
 const emergencyAdmins = [
   '0x8331Bd35089090249675D023804FC52b7FD18184',
@@ -7,7 +8,7 @@ const emergencyAdmins = [
   '0x511EfaE41B0eA33Da847d16e13655009d0aB3Ed7',
 ];
 
-const tokenRewardPoolParamsDefault: ITokenRewardPoolParams = {
+const tokenRewardStable: ITokenRewardPoolParams = {
   Share: {
     deposit: {
       BasePoints: 200,
@@ -24,7 +25,7 @@ const tokenRewardPoolParamsDefault: ITokenRewardPoolParams = {
   }
 }
 
-const tokenRewardPoolParamsUSDx: ITokenRewardPoolParams = {
+const tokenRewardVolatile: ITokenRewardPoolParams = {
   Share: {
     deposit: {
       BasePoints: 100,
@@ -41,36 +42,20 @@ const tokenRewardPoolParamsUSDx: ITokenRewardPoolParams = {
   }
 }
 
-const tokenRewardPoolParamsExternal: ITokenRewardPoolParams = {
+const tokenRewardStableExt: ITokenRewardPoolParams = {
   Share: {
     deposit: {
-      BasePoints: 50,
-      BoostFactor: 30000, // 3x
-    },
-    vDebt: {
-      BasePoints: 50,
-      BoostFactor: 30000, // 3x
-    },
-    stake: {
-      BasePoints: 50,
-      BoostFactor: 30000, // 3x
+      BasePoints: 100,
+      BoostFactor: 0,
     },
   }
 }
 
-const tokenRewardPoolParamsExtUSDx: ITokenRewardPoolParams = {
+const tokenRewardVolatileExt: ITokenRewardPoolParams = {
   Share: {
     deposit: {
-      BasePoints: 25,
-      BoostFactor: 30000, // 3x
-    },
-    vDebt: {
-      BasePoints: 25,
-      BoostFactor: 30000, // 3x
-    },
-    stake: {
-      BasePoints: 25,
-      BoostFactor: 30000, // 3x
+      BasePoints: 50,
+      BoostFactor: 0,
     },
   }
 }
@@ -84,31 +69,6 @@ export const CommonsConfig: ICommonConfiguration = {
   MarketId: 'Commons',
   Names: DefaultTokenNames,
   ProviderId: 0, // Overriden in index.ts
-
-  // ----------------
-  // COMMON PROTOCOL PARAMS ACROSS POOLS AND NETWORKS
-  // ----------------
-
-  LendingRateOracleRates: {
-    WETH: {
-      borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    },
-    DAI: {
-      borrowRate: oneRay.multipliedBy(0.039).toFixed(),
-    },
-    USDC: {
-      borrowRate: oneRay.multipliedBy(0.039).toFixed(),
-    },
-    USDT: {
-      borrowRate: oneRay.multipliedBy(0.035).toFixed(),
-    },
-    WBTC: {
-      borrowRate: oneRay.multipliedBy(0.03).toFixed(),
-    },
-  },
-  // ----------------
-  // COMMON PROTOCOL ADDRESSES ACROSS POOLS
-  // ----------------
 
   EmergencyAdmins: {
     [eEthereumNetwork.hardhat]: [],
@@ -386,6 +346,8 @@ export const CommonsConfig: ICommonConfiguration = {
 
   ReservesConfig: {},
 
+  LendingRateOracleRates: MainnetStableBaseRates,
+
   LendingDisableFeatures: {
     [eEthereumNetwork.ropsten]: [],
     [eEthereumNetwork.rinkeby]: [],
@@ -416,7 +378,7 @@ export const CommonsConfig: ICommonConfiguration = {
       Symbol: 'UniV2ETHAGF',
       StakeToken: {
         RewardShare: {
-          BasePoints: 400,
+          BasePoints: 1000,
           BoostFactor: 30000, // 3x
         }
       },
@@ -425,25 +387,34 @@ export const CommonsConfig: ICommonConfiguration = {
 
   RewardParams: {
     Autolock: 12, // 12 weeks auto-prolongate
-    InitialRateWad: 2.12,
+    InitialRateWad: {
+      [eEthereumNetwork.ropsten]: 1,
+      [eEthereumNetwork.rinkeby]: 1,
+      [eEthereumNetwork.coverage]: 1,
+      [eEthereumNetwork.hardhat]: 1,
+      [eEthereumNetwork.docker]: 1,
+      [eEthereumNetwork.kovan]: 1,
+      [eEthereumNetwork.main]: 0,
+      [eEthereumNetwork.tenderlyMain]: 1,
+    },
     TokenPools: {
-      DAI:   tokenRewardPoolParamsDefault,
-      USDC:  tokenRewardPoolParamsDefault,
-      USDT:  tokenRewardPoolParamsDefault,
-      WBTC:  tokenRewardPoolParamsUSDx,
-      WETH:  tokenRewardPoolParamsUSDx,
+      DAI:   tokenRewardStable,
+      USDC:  tokenRewardStable,
+      USDT:  tokenRewardStable,
+      WBTC:  tokenRewardVolatile,
+      WETH:  tokenRewardVolatile,
 
-      ADAI:   tokenRewardPoolParamsExternal,
-      AUSDC:  tokenRewardPoolParamsExternal,
-      AUSDT:  tokenRewardPoolParamsExternal,
-      AWBTC:  tokenRewardPoolParamsExtUSDx,
-      AWETH:  tokenRewardPoolParamsExtUSDx,
+      ADAI:   tokenRewardStableExt,
+      AUSDC:  tokenRewardStableExt,
+      AUSDT:  tokenRewardStableExt,
+      AWBTC:  tokenRewardVolatileExt,
+      AWETH:  tokenRewardVolatileExt,
 
-      CDAI:   tokenRewardPoolParamsExternal,
-      CUSDC:  tokenRewardPoolParamsExternal,
-      CUSDT:  tokenRewardPoolParamsExternal,
-      CWBTC:  tokenRewardPoolParamsExtUSDx,
-      CETH:  tokenRewardPoolParamsExtUSDx,
+      CDAI:   tokenRewardStableExt,
+      CUSDC:  tokenRewardStableExt,
+      CUSDT:  tokenRewardStableExt,
+      CWBTC:  tokenRewardVolatileExt,
+      CETH:   tokenRewardVolatileExt,
     },
     ReferralPool: {
       BasePoints: 100,
@@ -469,9 +440,7 @@ export const CommonsConfig: ICommonConfiguration = {
       BasePoints: 1000,
       UnlockAt: new Date('2022-01-01'),
       Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
-      Members: {
-        '0x0000000000000000000000000000000000000001': 5000
-      }
+      Members: {}
     }
   },
 

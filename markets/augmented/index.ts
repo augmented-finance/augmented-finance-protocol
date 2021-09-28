@@ -1,7 +1,7 @@
-import { IAugmentedConfiguration, eEthereumNetwork, IReserveParams, IReserveBorrowParams, ITestConfiguration } from '../../helpers/types';
+import { IAugmentedConfiguration, eEthereumNetwork, ITestConfiguration } from '../../helpers/types';
 import { CommonsConfig } from './commons';
-import { TestReserves } from './reservesConfigs';
-import { MainnetReserves } from './reservesConfigs_main';
+import { TestReserves, TestStableBaseRates } from './reservesConfigs';
+import { MainnetReserves, MainnetStableBaseRates } from './reservesConfigs_main';
 
 // ----------------
 // POOL--SPECIFIC PARAMS
@@ -11,7 +11,8 @@ export const TestConfig: ITestConfiguration = {
   ...CommonsConfig,
   ProviderId: 1,
   MarketId: 'Augmented test market',
-  ReservesConfig: { ...TestReserves },
+  ReservesConfig: TestReserves,
+  LendingRateOracleRates: TestStableBaseRates,
 }
 
 export const AugmentedConfig: IAugmentedConfiguration = (() => {
@@ -21,7 +22,8 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
   let cfg: IAugmentedConfiguration = {...src,
     MarketId: 'Augmented genesis market',
     ProviderId: 0, // force autonumbering
-    ReservesConfig: { ...MainnetReserves },
+    ReservesConfig: MainnetReserves,
+    LendingRateOracleRates: MainnetStableBaseRates,
   };
 
   const defRates = {
@@ -44,6 +46,7 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
   }
   if (MAINNET_FORK) {
     cfg.LendingDisableFeatures[eEthereumNetwork.main] = [];
+    cfg.RewardParams.InitialRateWad[eEthereumNetwork.main] = 1;
   }
 
   return cfg;

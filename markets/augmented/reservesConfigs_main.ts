@@ -1,5 +1,5 @@
 import { oneRay } from '../../helpers/constants';
-import { eContractid, IInterestRateStrategyParams, IReserveParams } from '../../helpers/types';
+import { eContractid, IInterestRateStrategyParams, IMarketRates, IReserveParams } from '../../helpers/types';
 
 import {
   externalReserveAAVE,
@@ -9,46 +9,55 @@ import {
 } from './rateStrategies';
 
 const ray = (n: number) => oneRay.multipliedBy(n).toFixed();
+const stableRate = (base: number) : IMarketRates => ({ borrowRate: ray(base) });
+
+export const MainnetStableBaseRates = {
+  USDC: stableRate(0.03),
+  USDT: stableRate(0.03),
+  DAI: stableRate(0.03),
+  WBTC: stableRate(0.0225),
+  WETH: stableRate(0.0225),
+}
 
 const strategies = {
-  // DAI
-  stable2: <IInterestRateStrategyParams>{
-    name: 'rateStrategyStableTwo',
-    optimalUtilizationRate: ray(0.8),
-    baseVariableBorrowRate: ray(0),
-    variableRateSlope1: ray(0.04),
-    variableRateSlope2: ray(0.75),
-    stableRateSlope1: ray(0.02),
-    stableRateSlope2: ray(0.75),
-  },  
   // USDC USDT
   stable3: <IInterestRateStrategyParams>{
     name: 'rateStrategyStableThree',
     optimalUtilizationRate: ray(0.9),
     baseVariableBorrowRate: ray(0),
-    variableRateSlope1: ray(0.04),
+    variableRateSlope1: ray(0.03),
     variableRateSlope2: ray(0.60),
-    stableRateSlope1: ray(0.02),
+    stableRateSlope1: ray(0.015),
     stableRateSlope2: ray(0.60),
   },
+  // DAI
+  stable2: <IInterestRateStrategyParams>{
+    name: 'rateStrategyStableTwo',
+    optimalUtilizationRate: ray(0.9),
+    baseVariableBorrowRate: ray(0),
+    variableRateSlope1: ray(0.03),
+    variableRateSlope2: ray(0.75),
+    stableRateSlope1: ray(0.015),
+    stableRateSlope2: ray(0.75),
+  },  
   // WBTC
   volatile2: <IInterestRateStrategyParams>{
     name: 'rateStrategyVolatileTwo',
-    optimalUtilizationRate: ray(0.65),
+    optimalUtilizationRate: ray(0.75),
     baseVariableBorrowRate: ray(0),
-    variableRateSlope1: ray(0.08),
+    variableRateSlope1: ray(0.06),
     variableRateSlope2: ray(3),
-    stableRateSlope1: ray(0.1),
+    stableRateSlope1: ray(0.075),
     stableRateSlope2: ray(3),
   },
   // WETH
   WETH: <IInterestRateStrategyParams>{
     name: 'rateStrategyWETH',
-    optimalUtilizationRate: ray(0.65),
+    optimalUtilizationRate: ray(0.75),
     baseVariableBorrowRate: ray(0),
-    variableRateSlope1: ray(0.08),
+    variableRateSlope1: ray(0.06),
     variableRateSlope2: ray(1),
-    stableRateSlope1: ray(0.1),
+    stableRateSlope1: ray(0.075),
     stableRateSlope2: ray(1),
   },  
 }

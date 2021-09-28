@@ -1,7 +1,16 @@
 import { oneRay } from '../../helpers/constants';
-import { eContractid, IInterestRateStrategyParams, IReserveParams } from '../../helpers/types';
+import { eContractid, IInterestRateStrategyParams, IMarketRates, IReserveParams } from '../../helpers/types';
 
 const ray = (n: number) => oneRay.multipliedBy(n).toFixed();
+const stableRate = (base: number) : IMarketRates => ({ borrowRate: ray(base) });
+
+export const TestStableBaseRates = {
+  USDC: stableRate(0.039),
+  USDT: stableRate(0.035),
+  DAI: stableRate(0.039),
+  WBTC: stableRate(0.03),
+  WETH: stableRate(0.03),
+}
 
 const strategies = {
   AAVE: <IInterestRateStrategyParams> {

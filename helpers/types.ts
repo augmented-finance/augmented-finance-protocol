@@ -462,7 +462,7 @@ export interface ITokenNames {
 
 export interface IRewardParams {
   Autolock: 'disable' | 'stop' | number;
-  InitialRateWad: number;
+  InitialRateWad: iParamsPerNetwork<number>;
   TokenPools: iAugmentedPoolAssetsOpt<ITokenRewardPoolParams>;
   TeamPool: ITeamPool;
   ReferralPool: IBasicRewardPool;
