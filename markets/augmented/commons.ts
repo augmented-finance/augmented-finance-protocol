@@ -81,7 +81,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.tenderlyMain]: [],
   },
   ProviderRegistry: {
-    [eEthereumNetwork.kovan]: '0xa904174e4e6e1ad3FCDf27583544521dcaE16284', //'0x96B2E8707222fD25ce79a998cd47ea8C23E40d14', // '0xFFfdda318F1FE4f048c99E5C6C03C14434B35FA0', // 0xe28BdBF3C2440C97aBA7250ED1bb9F20559E351a
+    [eEthereumNetwork.kovan]: '', // '0xa904174e4e6e1ad3FCDf27583544521dcaE16284', //'0x96B2E8707222fD25ce79a998cd47ea8C23E40d14', // '0xFFfdda318F1FE4f048c99E5C6C03C14434B35FA0', // 0xe28BdBF3C2440C97aBA7250ED1bb9F20559E351a
     [eEthereumNetwork.ropsten]: '', // '0x2931bAf940EE995E563BB27BCc7B60Aa8F9af298',
     [eEthereumNetwork.rinkeby]: '',
     [eEthereumNetwork.main]: '',
@@ -265,17 +265,17 @@ export const CommonsConfig: ICommonConfiguration = {
 
       // https://aave.github.io/aave-addresses/kovan.json
       ADAI: '0xdCf0aF9e59C002FA3AA091a46196b37530FD48a8',
-      // AUSDC: '0xe12AFeC5aa12Cf614678f9bFeeB98cA9Bb95b5B0',
-      // AUSDT: '0xFF3c8bc103682FA918c954E84F5056aB4DD5189d',
-      // AWBTC: '0x62538022242513971478fcC7Fb27ae304AB5C29F',
-      // AWETH: '0x87b1f4cf9BD63f7BBD3eE1aD04E8F52540349347',
+      AUSDC: '0xe12AFeC5aa12Cf614678f9bFeeB98cA9Bb95b5B0',
+      AUSDT: '0xFF3c8bc103682FA918c954E84F5056aB4DD5189d',
+      AWBTC: '0x62538022242513971478fcC7Fb27ae304AB5C29F',
+      AWETH: '0x87b1f4cf9BD63f7BBD3eE1aD04E8F52540349347',
 
       // https://compound.finance/docs#networks
       CDAI: '0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad',
       CETH: '0x41b5844f4680a8c38fbb695b7f9cfd1f64474a72',
-      // CUSDC: '0x4a92e71227d294f041bd82dd8f78591b75140d63',
-      // CUSDT: '0x3f0a0ea2f86bae6362cf9799b523ba06647da018',
-      // CWBTC: '0xa1faa15655b0e7b6b6470ed3d096390e6ad93abb',
+      CUSDC: '0x4a92e71227d294f041bd82dd8f78591b75140d63',
+      CUSDT: '0x3f0a0ea2f86bae6362cf9799b523ba06647da018',
+      CWBTC: '0xa1faa15655b0e7b6b6470ed3d096390e6ad93abb',
     },
     [eEthereumNetwork.ropsten]: {
       DAI: '0xf80A32A835F79D7787E8a8ee5721D0fEaFd78108',
