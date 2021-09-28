@@ -450,7 +450,7 @@ contract AccessController is SafeOwnable, IManagedAccessController {
     for (uint256 i = 0; i < params.length; i++) {
       (bool restoreMask, ) = _beforeDirectCallWithRoles(params[i].accessFlags, callHelper);
 
-      address callAddr = params[i].callFlag != 0 ? getAddress(params[i].callFlag) : params[i].callAddr;
+      address callAddr = params[i].callAddr == address(0) ? getAddress(params[i].callFlag) : params[i].callAddr;
       results[i] = AccessCallHelper(callHelper).doCall(callAddr, params[i].callData);
 
       if (restoreMask) {
