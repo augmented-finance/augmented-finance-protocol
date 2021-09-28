@@ -11,15 +11,15 @@ const emergencyAdmins = [
 const tokenRewardStable: ITokenRewardPoolParams = {
   Share: {
     deposit: {
-      BasePoints: 200,
+      BasePoints: 400,
       BoostFactor: 30000, // 3x
     },
     vDebt: {
-      BasePoints: 200,
+      BasePoints: 100,
       BoostFactor: 30000, // 3x
     },
     stake: {
-      BasePoints: 400,
+      BasePoints: 300,
       BoostFactor: 30000, // 3x
     },
   }
@@ -28,15 +28,15 @@ const tokenRewardStable: ITokenRewardPoolParams = {
 const tokenRewardVolatile: ITokenRewardPoolParams = {
   Share: {
     deposit: {
-      BasePoints: 100,
+      BasePoints: 200,
       BoostFactor: 30000, // 3x
     },
     vDebt: {
-      BasePoints: 100,
+      BasePoints: 50,
       BoostFactor: 30000, // 3x
     },
     stake: {
-      BasePoints: 200,
+      BasePoints: 150,
       BoostFactor: 30000, // 3x
     },
   }
@@ -378,7 +378,7 @@ export const CommonsConfig: ICommonConfiguration = {
       Symbol: 'UniV2ETHAGF',
       StakeToken: {
         RewardShare: {
-          BasePoints: 1000,
+          BasePoints: 1400,
           BoostFactor: 30000, // 3x
         }
       },
