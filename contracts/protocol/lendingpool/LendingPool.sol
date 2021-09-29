@@ -425,4 +425,15 @@ contract LendingPool is LendingPoolBase, ILendingPool, Delegator, ILendingPoolFo
       }
     }
   }
+
+  function setReservePaused(address asset, bool paused) external override {
+    DataTypes.ReserveData storage reserve = _reserves[asset];
+    if (msg.sender != reserve.depositTokenAddress) {
+      _onlyEmergencyAdmin();
+      require(reserve.depositTokenAddress != address(0), Errors.VL_UNKNOWN_RESERVE);
+    }
+    DataTypes.ReserveConfigurationMap memory config = reserve.configuration;
+    config.setFrozen(paused);
+    reserve.configuration = config;
+  }
 }

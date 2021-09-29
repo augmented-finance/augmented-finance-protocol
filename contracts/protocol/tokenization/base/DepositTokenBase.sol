@@ -280,4 +280,9 @@ abstract contract DepositTokenBase is SubBalanceBase, ERC20PermitBase, ERC20Allo
   function _getPermitDomainName() internal view override returns (bytes memory) {
     return bytes(super.name());
   }
+
+  function internalPause(bool paused) internal override {
+    super.internalPause(paused);
+    _pool.setReservePaused(_underlyingAsset, paused);
+  }
 }

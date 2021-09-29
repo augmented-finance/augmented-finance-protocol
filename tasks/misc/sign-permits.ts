@@ -23,7 +23,7 @@ import { getDefaultMarketAddressController } from '../helpers/utils';
 
 task('augmented:sign-reward-permits', 'Sings permits for reward pools')
   .addOptionalParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
-  .addOptionalParam('pk', 'PK or mnemonic for signer', '', types.string)
+  .addOptionalParam('sk', 'SK (private key) or mnemonic for signer', '', types.string)
   .addParam('pool', 'Name or address of a permit reward pool', undefined, types.string)
   .addOptionalParam('out', 'File name for output', undefined, types.string)
   .addOptionalParam('limit', 'Limit for total balances', undefined, types.int)
@@ -32,7 +32,7 @@ task('augmented:sign-reward-permits', 'Sings permits for reward pools')
   .addFlag('encode', 'Encode call data')
   .addVariadicPositionalParam('args', 'Address-balance pairs or file names')
   .setAction(
-    async ({ ctl, pk, pool: poolName, files, args, limit, out: outFile, deadline: deadlineStr, encode }, DRE) => {
+    async ({ ctl, sk, pool: poolName, files, args, limit, out: outFile, deadline: deadlineStr, encode }, DRE) => {
       try {
         await DRE.run('set-DRE');
 
@@ -43,9 +43,9 @@ task('augmented:sign-reward-permits', 'Sings permits for reward pools')
         console.log('\nController:', ctl);
         const ac = await getMarketAccessController(ctl);
 
-        const newPK = pk == 'new';
-        const signer = createWallet(newPK ? '' : pk);
-        if (newPK) {
+        const newSK = sk == 'new';
+        const signer = createWallet(newSK ? '' : sk);
+        if (newSK) {
           console.log('\nMenomic:\n', signer.mnemonic);
           console.log();
         }
@@ -261,15 +261,15 @@ task('augmented:sign-reward-permits', 'Sings permits for reward pools')
     }
   );
 
-const createWallet = (pk: string) => {
-  if (pk == '') {
+const createWallet = (sk: string) => {
+  if (sk == '') {
     return Wallet.createRandom();
   }
 
-  if (isHexPrefixed(pk)) {
-    return new Wallet(pk);
+  if (isHexPrefixed(sk)) {
+    return new Wallet(sk);
   }
-  return Wallet.fromMnemonic(pk);
+  return Wallet.fromMnemonic(sk);
 };
 
 const unquote = (s: string): string => {

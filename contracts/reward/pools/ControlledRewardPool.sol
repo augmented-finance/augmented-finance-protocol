@@ -13,7 +13,6 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   IRewardController private _controller;
 
-  uint256 private _pausedRate;
   uint16 private _baselinePercentage;
   bool private _paused;
 
@@ -70,20 +69,19 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return _baselinePercentage;
   }
 
-  function _setBaselinePercentage(uint16 factor) internal virtual {
+  function _mustHaveController() private view {
     require(address(_controller) != address(0), 'controller is required');
+  }
+
+  function _setBaselinePercentage(uint16 factor) internal virtual {
+    _mustHaveController();
     require(factor <= PercentageMath.ONE, 'illegal value');
     _baselinePercentage = factor;
     emit BaselinePercentageUpdated(factor);
   }
 
   function _setRate(uint256 rate) internal {
-    require(address(_controller) != address(0), 'controller is required');
-
-    if (isPaused()) {
-      _pausedRate = rate;
-      return;
-    }
+    _mustHaveController();
     internalSetRate(rate);
     emit RateUpdated(rate);
   }
@@ -108,14 +106,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return _paused;
   }
 
-  function internalPause(bool paused) internal virtual {
-    if (paused) {
-      _pausedRate = internalGetRate();
-      internalSetRate(0);
-      return;
-    }
-    internalSetRate(_pausedRate);
-  }
+  function internalPause(bool paused) internal virtual {}
 
   function getRewardController() public view override returns (address) {
     return address(_controller);

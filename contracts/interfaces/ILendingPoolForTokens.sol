@@ -33,4 +33,6 @@ interface ILendingPoolForTokens {
   function getReserveData(address asset) external view returns (DataTypes.ReserveData memory);
 
   function getReservesList() external view returns (address[] memory);
+
+  function setReservePaused(address asset, bool paused) external;
 }

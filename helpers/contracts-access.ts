@@ -170,6 +170,8 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
       setUserUseReserveAsCollateral: true,
       swapBorrowRateMode: true,
       setLendingPoolExtension: ProtocolErrors.CALLER_NOT_POOL_ADMIN,
+      setPaused: ProtocolErrors.CALLER_NOT_EMERGENCY_ADMIN,
+      setReservePaused: ProtocolErrors.CALLER_NOT_EMERGENCY_ADMIN,
       initialize: 'already initialized',
     },
     implOverride: {
