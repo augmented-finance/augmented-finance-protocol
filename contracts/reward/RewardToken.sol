@@ -11,7 +11,8 @@ import '../tools/tokens/ERC20BaseWithPermit.sol';
 abstract contract RewardToken is ERC20BaseWithPermit, MarketAccessBitmask, IRewardMinter {
   using AccessHelper for IMarketAccessController;
 
-  uint256 internal constant MAX_SUPPLY = 10**8;
+  uint8 internal constant DECIMALS = 18;
+  uint256 internal constant MAX_SUPPLY = (10**8) * (10**DECIMALS);
 
   uint256 private _accTotal;
   uint224 private _lastRate;
