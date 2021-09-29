@@ -440,7 +440,9 @@ export const CommonsConfig: ICommonConfiguration = {
       BasePoints: 1000,
       UnlockAt: new Date('2021-11-15'),
       Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
-      Members: {}
+      Members: {
+        '0x9029AdeFCdafcEce55a0bC0583B2F10E4F35D8f9': 500,
+      }
     }
   },
 
