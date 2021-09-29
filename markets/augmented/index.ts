@@ -1,6 +1,7 @@
-import { IAugmentedConfiguration, eEthereumNetwork, IReserveParams, IReserveBorrowParams, ITestConfiguration } from '../../helpers/types';
+import { IAugmentedConfiguration, eEthereumNetwork, ITestConfiguration } from '../../helpers/types';
 import { CommonsConfig } from './commons';
-import { strategyAAVE, strategyADAI, strategyCDAI, strategyCETH, strategyDAI, strategyLINK, strategyUSDC, strategyUSDT, strategyWBTC, strategyWETH } from './reservesConfigs';
+import { TestReserves, TestStableBaseRates } from './reservesConfigs';
+import { MainnetReserves, MainnetStableBaseRates } from './reservesConfigs_main';
 
 // ----------------
 // POOL--SPECIFIC PARAMS
@@ -10,15 +11,8 @@ export const TestConfig: ITestConfiguration = {
   ...CommonsConfig,
   ProviderId: 1,
   MarketId: 'Augmented test market',
-  ReservesConfig: {
-    AAVE: strategyAAVE,
-    LINK: strategyLINK,
-    DAI: strategyDAI,
-    USDC: strategyUSDC,
-    USDT: strategyUSDT,
-    WBTC: strategyWBTC,
-    WETH: strategyWETH,
-  },
+  ReservesConfig: TestReserves,
+  LendingRateOracleRates: TestStableBaseRates,
 }
 
 export const AugmentedConfig: IAugmentedConfiguration = (() => {
@@ -28,23 +22,9 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
   let cfg: IAugmentedConfiguration = {...src,
     MarketId: 'Augmented genesis market',
     ProviderId: 0, // force autonumbering
-    ReservesConfig: {
-      DAI: strategyDAI,
-      USDC: strategyUSDC,
-      USDT: strategyUSDT,
-      WBTC: strategyWBTC,
-      WETH: strategyWETH,
-      ADAI: strategyADAI,
-      CDAI: strategyCDAI,
-      CETH: strategyCETH,
-    },
+    ReservesConfig: MainnetReserves,
+    LendingRateOracleRates: MainnetStableBaseRates,
   };
-
-  for (let k of Object.keys(cfg.ReservesConfig)) {
-    cfg.ReservesConfig[k] = {...cfg.ReservesConfig[k],
-      stableBorrowRateEnabled: false
-    };
-  }
 
   const defRates = {
     AAVE: 0.13308194,
@@ -66,9 +46,8 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
   }
   if (MAINNET_FORK) {
     cfg.LendingDisableFeatures[eEthereumNetwork.main] = [];
+    cfg.RewardParams.InitialRateWad[eEthereumNetwork.main] = 1;
   }
 
   return cfg;
 })();
-
-// export default AugmentedConfig;

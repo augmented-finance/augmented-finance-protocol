@@ -2,6 +2,7 @@ import { eContractid, IInterestRateStrategyParams, IReserveParams, ITokenNames, 
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
 import { addProxyToJsonDb, chunk, falsyOrZeroAddress, mustWaitTx, waitForTx } from './misc-utils';
 import {
+  getIChainlinkAggregator,
   getIInitializablePoolToken,
   getIReserveDelegatedStrategy,
   getIUniswapV2Factory,
@@ -9,6 +10,7 @@ import {
   getLendingPoolConfiguratorProxy,
   getLendingPoolProxy,
   getOracleRouter,
+  getStaticPriceOracle,
   getWETHGateway,
 } from './contracts-getters';
 import { AccessFlags } from './access-flags';
@@ -92,7 +94,7 @@ export const initReservesByHelper = async (
 
   if (skipExistingAssets) {
     const reserves = await lendingPool.getReservesList();
-    reserves.forEach((addr) => existingAssets.add(addr.toUpperCase()));
+    reserves.forEach((addr) => existingAssets.add(addr.toLowerCase()));
     console.log('Existing assets:', existingAssets);
   }
 
@@ -111,7 +113,7 @@ export const initReservesByHelper = async (
       continue;
     }
 
-    if (existingAssets.has(tokenAddress.toUpperCase())) {
+    if (existingAssets.has(tokenAddress.toLowerCase())) {
       console.log(`Asset ${symbol} already exists`);
       continue;
     }
@@ -401,7 +403,7 @@ export const configureReservesByHelper = async (
   const chunkedSymbols = chunk(symbols, enableChunks);
   const chunkedInputParams = chunk(inputParams, enableChunks);
 
-  console.log(`- Configure reserves with ${chunkedInputParams.length} txs`);
+  console.log(`- Configure reserves with ${chunkedInputParams.length} tx(s)`);
   for (let chunkIndex = 0; chunkIndex < chunkedInputParams.length; chunkIndex++) {
     const tx3 = await waitForTx(
       await configurator.configureReserves(chunkedInputParams[chunkIndex], {
@@ -416,13 +418,13 @@ export const configureReservesByHelper = async (
 interface StrategyFactoryInfo {
   external: boolean;
   deployFn: (ac: MarketAccessController, verify: boolean) => Promise<Contract>;
-  staticUnderlying?: boolean;
+  optionalUnderlying?: boolean;
   feedFactoryFn?: (
     name: string,
     asset: tEthereumAddress,
     underlyingSource: tEthereumAddress,
     verify: boolean
-  ) => Promise<Contract>;
+  ) => Promise<Contract | string>;
 }
 
 const getStrategyFactory = (strategy: IInterestRateStrategyParams): StrategyFactoryInfo | undefined => {
@@ -449,15 +451,29 @@ const getStrategyFactory = (strategy: IInterestRateStrategyParams): StrategyFact
   if (strategy.strategyImpl == eContractid.DelegatedStrategyAave) {
     return {
       external: true,
+      optionalUnderlying: true,
+
       deployFn: async (ac: MarketAccessController, verify: boolean) =>
         await deployDelegatedStrategyAave([strategy.name], verify),
+
+      feedFactoryFn: async (
+        name: string,
+        asset: tEthereumAddress,
+        underlyingSource: tEthereumAddress,
+        verify: boolean
+      ) => {
+        if (!falsyOrZeroAddress(underlyingSource)) {
+          return await getIChainlinkAggregator(underlyingSource);
+        }
+        return '';
+      },
     };
   }
 
   if (strategy.strategyImpl == eContractid.DelegatedStrategyCompoundErc20) {
     return {
       external: true,
-      staticUnderlying: false,
+      optionalUnderlying: false,
 
       feedFactoryFn: async (
         name: string,
@@ -466,7 +482,7 @@ const getStrategyFactory = (strategy: IInterestRateStrategyParams): StrategyFact
         verify: boolean
       ) => {
         if (falsyOrZeroAddress(underlyingSource)) {
-          throw 'Unknown underlying price feed for: ' + name;
+          throw 'Unknown underlying price feed: ' + name;
         }
         return await deployPriceFeedCompoundErc20(name, [asset, underlyingSource], verify);
       },
@@ -479,7 +495,7 @@ const getStrategyFactory = (strategy: IInterestRateStrategyParams): StrategyFact
   if (strategy.strategyImpl == eContractid.DelegatedStrategyCompoundEth) {
     return {
       external: true,
-      staticUnderlying: true,
+      optionalUnderlying: true,
 
       feedFactoryFn: async (name: string, asset: tEthereumAddress, s: tEthereumAddress, verify: boolean) =>
         await deployPriceFeedCompoundEth(name, [asset], verify),
@@ -513,7 +529,7 @@ export const initReservePriceFeeds = async (
 
   const existingAssets = new Set<string>();
   const reserves = await lendingPool.getReservesList();
-  reserves.forEach((addr) => existingAssets.add(addr.toUpperCase()));
+  reserves.forEach((addr) => existingAssets.add(addr.toLowerCase()));
 
   const assets: tEthereumAddress[] = [];
   const names: string[] = [];
@@ -524,7 +540,7 @@ export const initReservePriceFeeds = async (
     if (falsyOrZeroAddress(tokenAddress)) {
       continue;
     }
-    if (!existingAssets.has(tokenAddress.toUpperCase())) {
+    if (!existingAssets.has(tokenAddress.toLowerCase())) {
       continue;
     }
 
@@ -552,9 +568,9 @@ export const initReservePriceFeeds = async (
   const remaps = new Map<string, string>();
 
   for (const [k, v] of Object.entries(remappings)) {
-    remaps.set(k.toLocaleLowerCase(), v);
+    remaps.set(k.toLowerCase(), v);
   }
-  console.log('Found ', remaps.size, 'remapping(s)');
+  console.log('Found', remaps.size, 'remapping(s)');
 
   for (let i = 0; i < assets.length; i++) {
     if (!falsyOrZeroAddress(sources[i])) {
@@ -565,7 +581,7 @@ export const initReservePriceFeeds = async (
     const rd = await lendingPool.getReserveData(assets[i]);
     const strategy = await getIReserveDelegatedStrategy(rd.strategy);
     const underlying = await strategy.getUnderlying(assets[i]);
-    const remapped = remaps.get(underlying.toLocaleLowerCase());
+    const remapped = remaps.get(underlying.toLowerCase());
     if (falsyOrZeroAddress(remapped)) {
       underlyings.push(underlying);
     } else {
@@ -583,6 +599,9 @@ export const initReservePriceFeeds = async (
 
   const underlyingSources = await po.getAssetSources(underlyings);
 
+  const staticAssets: tEthereumAddress[] = [];
+  const staticPrices: tEthereumAddress[] = [];
+
   const feedAssets: tEthereumAddress[] = [];
   const feeds: tEthereumAddress[] = [];
 
@@ -592,24 +611,38 @@ export const initReservePriceFeeds = async (
     const symbol = names[idx];
     const factoryInfo = factories[idx];
 
-    if (!factoryInfo.staticUnderlying && falsyOrZeroAddress(underlyingSources[i])) {
-      console.error('\tUnknown underlying price feed for:', symbol, underlyings[i]);
+    if (!factoryInfo.optionalUnderlying && falsyOrZeroAddress(underlyingSources[i])) {
+      console.error('\tUnknown underlying price feed:', symbol, underlyings[i]);
       continue;
     }
 
     console.log('\tDeploying derived price feed:', symbol, asset, underlyingSources[i]);
-    const feedContract = await factoryInfo.feedFactoryFn!(symbol, asset, underlyingSources[i], verify);
+    const feed = await factoryInfo.feedFactoryFn!(symbol, asset, underlyingSources[i], verify);
 
-    feedAssets.push(asset);
-    feeds.push(feedContract.address);
+    if (typeof feed == 'string') {
+      staticAssets.push(asset);
+      if (feed != '') {
+        staticPrices.push(feed);
+      } else {
+        const staticPrice = await po.getAssetPrice(underlyings[i]);
+        staticPrices.push(staticPrice.toString());
+      }
+    } else {
+      feedAssets.push(asset);
+      feeds.push(feed.address);
+    }
   }
 
-  console.log('Set ', feeds.length, 'derived price feed(s) as price sources');
-  if (feeds.length == 0) {
-    return;
+  if (feeds.length > 0) {
+    console.log('Set ', feeds.length, 'derived price feed(s) as price sources');
+    await mustWaitTx(po.setAssetSources(feedAssets, feeds, { gasLimit: 1000000 }));
   }
 
-  await mustWaitTx(po.setAssetSources(feedAssets, feeds, { gasLimit: 1000000 }));
+  if (staticAssets.length > 0) {
+    const so = await getStaticPriceOracle(await po.getFallbackOracle());
+    console.log('Set ', staticAssets.length, 'derived static price(s) as price sources');
+    await mustWaitTx(so.setAssetPrices(staticAssets, staticPrices, { gasLimit: 1000000 }));
+  }
 };
 
 export const getUniAgfEth = async (
@@ -651,7 +684,7 @@ export const deployUniAgfEth = async (
 
   const uniswapRouter = await getIUniswapV2Router02(uniswapAddr!);
   const uniWeth = await uniswapRouter.WETH();
-  if (weth.toLocaleLowerCase() != uniWeth.toLocaleLowerCase()) {
+  if (weth.toLowerCase() != uniWeth.toLowerCase()) {
     throw 'WETH address mismatched with Uniswap: ' + weth + ', ' + uniWeth;
   }
 

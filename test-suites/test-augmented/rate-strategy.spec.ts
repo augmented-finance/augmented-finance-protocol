@@ -3,16 +3,17 @@ import { deployMockReserveInterestRateStrategy } from '../../helpers/contracts-d
 
 import { APPROVAL_AMOUNT_LENDING_POOL, PERCENTAGE_FACTOR, RAY } from '../../helpers/constants';
 
-import { rateStrategyStableOne } from '../../markets/augmented/rateStrategies';
-
-import { strategyDAI } from '../../markets/augmented/reservesConfigs';
 import { DepositToken, DefaultReserveInterestRateStrategy, MintableERC20 } from '../../types';
 import BigNumber from 'bignumber.js';
 import './helpers/utils/math';
+import { TestReserves, TestStrategies } from '../../markets/augmented/reservesConfigs';
 
 const { expect } = require('chai');
 
 makeSuite('Interest rate strategy tests', (testEnv: TestEnv) => {
+  const strategyDAI = TestReserves.DAI;
+  const rateStrategyStableOne = TestStrategies.stable1;
+
   let strategyInstance: DefaultReserveInterestRateStrategy;
   let dai: MintableERC20;
   let aDai: DepositToken;
