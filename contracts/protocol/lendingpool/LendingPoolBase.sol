@@ -4,10 +4,11 @@ pragma solidity ^0.8.4;
 import '../../access/interfaces/IMarketAccessController.sol';
 import '../../access/AccessHelper.sol';
 import '../../access/AccessFlags.sol';
+import '../../interfaces/IEmergencyAccess.sol';
 import '../../tools/Errors.sol';
 import './LendingPoolStorage.sol';
 
-abstract contract LendingPoolBase is LendingPoolStorage {
+abstract contract LendingPoolBase is IEmergencyAccess, LendingPoolStorage {
   using AccessHelper for IMarketAccessController;
 
   function _whenNotPaused() private view {
@@ -79,5 +80,19 @@ abstract contract LendingPoolBase is LendingPoolStorage {
     _nestedCalls++;
     _;
     _nestedCalls--;
+  }
+
+  function _onlyEmergencyAdmin() internal view {
+    _addressesProvider.requireAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN, Errors.CALLER_NOT_EMERGENCY_ADMIN);
+  }
+
+  function setPaused(bool val) external override {
+    _onlyEmergencyAdmin();
+    _paused = val;
+    emit EmergencyPaused(msg.sender, val);
+  }
+
+  function isPaused() external view override returns (bool) {
+    return _paused;
   }
 }
