@@ -606,16 +606,6 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     _reserves[asset].configuration.data = configuration;
   }
 
-  function setPaused(bool val) external override {
-    _addressesProvider.requireAnyOf(msg.sender, AccessFlags.EMERGENCY_ADMIN, Errors.CALLER_NOT_EMERGENCY_ADMIN);
-    _paused = val;
-    emit EmergencyPaused(msg.sender, val);
-  }
-
-  function isPaused() external view override returns (bool) {
-    return _paused;
-  }
-
   function setFlashLoanPremium(uint16 premium) external onlyConfiguratorOrAdmin {
     require(premium <= PercentageMath.ONE && premium > 0, Errors.LP_INVALID_PERCENTAGE);
     _flashLoanPremiumPct = premium;
