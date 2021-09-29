@@ -65,6 +65,7 @@ deployTask(`full:init-reward-pools`, `Deploy reward pools`, __dirname).setAction
 
   const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
   const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
+  const initialRateWad = getParamPerNetwork(rewardParams.InitialRateWad, network);
 
   const knownReserves: {
     baseSymbol: string;
@@ -269,7 +270,7 @@ deployTask(`full:init-reward-pools`, `Deploy reward pools`, __dirname).setAction
   newNames.push(...extraNames);
   newNames.push(...initNames);
 
-  await updateRates(rewardController, activePools, rewardParams.InitialRateWad, newNames, newPoolsOffset);
+  await updateRates(rewardController, activePools, initialRateWad, newNames, newPoolsOffset);
 });
 
 const updateRates = async (
@@ -350,7 +351,7 @@ const deployExtraPools = async (
     let memberShares: number[] = [];
 
     const members = Object.entries(params.Members);
-    if (members) {
+    if (members.length > 0) {
       [memberAddresses, memberShares] = transpose(members);
     }
 
