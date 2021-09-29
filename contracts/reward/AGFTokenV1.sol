@@ -8,7 +8,6 @@ import './interfaces/IInitializableRewardToken.sol';
 contract AGFTokenV1 is RewardToken, VersionedInitializable, IInitializableRewardToken {
   string private constant NAME = 'Augmented Finance Reward Token';
   string private constant SYMBOL = 'AGF';
-  uint8 private constant DECIMALS = 18;
 
   uint256 private constant TOKEN_REVISION = 1;
 
@@ -38,6 +37,7 @@ contract AGFTokenV1 is RewardToken, VersionedInitializable, IInitializableReward
     string memory symbol,
     uint8 decimals
   ) private {
+    require(decimals == DECIMALS, 'UNSUPPORTED_DECIMALS');
     _remoteAcl = remoteAcl;
     super._initializeERC20(name, symbol, decimals);
     super._initializeDomainSeparator();
