@@ -89,25 +89,6 @@ describe('Team rewards suite', () => {
     await expect(pool.setUnlockedAt(await currentTick())).to.be.revertedWith('lockup is finished');
   });
 
-  it('can pause/unpause pool, sets rate to zero', async () => {
-    await pool.setPaused(true);
-    await pool.updateTeamMember(member1.address, PERC_100);
-
-    await mineToTicks(REWARD_UNLOCKED_AT + 1);
-    await rewardController.connect(member1).claimReward();
-    expect(await agf.balanceOf(member1.address)).to.eq(0);
-    await pool.setPaused(false);
-
-    const startedAt = await currentTick();
-    await mineTicks(1);
-
-    await rewardController.connect(member1).claimReward();
-
-    const ticksTotal = (await currentTick()) - startedAt;
-    const expectedReward = (await pool.getRate()).mul(ticksTotal);
-    expect(await agf.balanceOf(member1.address)).eq(expectedReward);
-  });
-
   it('a member with 100% share claims all', async () => {
     const userShare = PERC_100;
 
