@@ -43,12 +43,15 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return _excessTarget;
   }
 
+  event ExcessTargetUpdated(address indexed target);
+
   function setExcessTarget(address target) external onlyTeamManagerOrConfigurator {
     require(target != address(this));
     _excessTarget = target;
     if (target != address(0)) {
       internalAllocateReward(target, 0, uint32(block.timestamp), AllocationMode.SetPull);
     }
+    emit ExcessTargetUpdated(target);
   }
 
   function internalGetRate() internal view override returns (uint256) {
@@ -112,6 +115,8 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     _updateTeamExcess();
   }
 
+  event TeamMemberShareUpdated(address indexed member, uint16 memberSharePct);
+
   function _updateTeamMember(address member, uint16 memberSharePct) private {
     require(member != address(0), 'member is required');
     require(member != address(this), 'member is invalid');
@@ -120,6 +125,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     uint256 newTotalShare = (uint256(_totalShare) + memberSharePct) - getRewardEntry(member).rewardBase;
     require(newTotalShare <= PercentageMath.ONE, 'team total share exceeds 100%');
     _totalShare = uint16(newTotalShare);
+    emit TeamMemberShareUpdated(member, memberSharePct);
 
     (uint256 allocated, uint32 since, AllocationMode mode) = doUpdateRewardBalance(member, memberSharePct);
 
@@ -146,24 +152,32 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
   }
 
   function _updateTeamExcess() private {
-    (uint256 allocated, , ) = doUpdateRewardBalance(address(this), PercentageMath.ONE - _totalShare);
+    uint256 excess = PercentageMath.ONE - _totalShare;
+    (uint256 allocated, , ) = doUpdateRewardBalance(address(this), excess);
     if (allocated > 0) {
       _delayed[address(this)] += allocated;
     }
+    emit TeamMemberShareUpdated(address(0), uint16(excess));
   }
 
-  function setTeamManager(address member) external onlyTeamManagerOrConfigurator {
-    _teamManager = member;
+  event TeamManagerUpdated(address indexed manager);
+
+  function setTeamManager(address manager) external onlyTeamManagerOrConfigurator {
+    _teamManager = manager;
+    emit TeamManagerUpdated(manager);
   }
 
   function getTeamManager() external view returns (address) {
     return _teamManager;
   }
 
+  event UnlockedAtUpdated(uint32 at);
+
   function setUnlockedAt(uint32 at) external onlyConfigAdmin {
     require(at > 0, 'unlockAt is required');
     require(_lockupTill == 0 || _lockupTill >= getCurrentTick(), 'lockup is finished');
     _lockupTill = at;
+    emit UnlockedAtUpdated(at);
   }
 
   function getUnlockedAt() external view returns (uint32) {

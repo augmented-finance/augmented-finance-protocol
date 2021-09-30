@@ -11,6 +11,8 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
   uint256 private _rewardLimit;
 
   event RewardClaimedByPermit(address indexed provider, address indexed spender, uint256 value, uint256 nonce);
+  event MeltDownAtUpdated(uint32 at);
+  event RewardLimitUpdated(uint256 limit);
 
   constructor(
     IRewardController controller,
@@ -20,6 +22,8 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
   ) ControlledRewardPool(controller, 0, 0) BasePermitRewardPool(rewardPoolName) {
     _rewardLimit = rewardLimit;
     internalSetMeltDownAt(meltDownAt);
+    emit MeltDownAtUpdated(meltDownAt);
+    emit RewardLimitUpdated(rewardLimit);
   }
 
   function getClaimTypeHash() internal pure override returns (bytes32) {
@@ -32,6 +36,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
 
   function setMeltDownAt(uint32 at) external onlyConfigAdmin {
     internalSetMeltDownAt(at);
+    emit MeltDownAtUpdated(at);
   }
 
   function internalGetPreAllocatedLimit() internal view override returns (uint256) {
@@ -118,7 +123,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
   }
 
   function internalUpdateFunds(uint256 value) internal override {
-    _rewardLimit = SafeMath.sub(_rewardLimit, value, Errors.VL_INSUFFICIENT_REWARD_AVAILABLE);
+    emit RewardLimitUpdated(_rewardLimit = SafeMath.sub(_rewardLimit, value, Errors.VL_INSUFFICIENT_REWARD_AVAILABLE));
   }
 
   function _setBaselinePercentage(uint16) internal pure override {
