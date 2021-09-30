@@ -9,6 +9,6 @@ task('augmented:calc-apy', 'Calculates current APYs')
   .setAction(async ({ ctl, user: userAddr }, DRE) => {
     await DRE.run('set-DRE');
 
-    ctl = getDefaultMarketAddressController(<eNetwork>DRE.network.name, ctl);
+    ctl = await getDefaultMarketAddressController(<eNetwork>DRE.network.name, ctl);
     await DRE.run('helper:calc-apy', { ctl, user: userAddr });
   });
