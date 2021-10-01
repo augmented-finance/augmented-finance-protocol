@@ -107,6 +107,7 @@ contract RewardedTokenLocker is
 
   function internalGetReward(address holder)
     internal
+    virtual
     override
     returns (
       uint256 amount,
