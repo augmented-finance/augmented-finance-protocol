@@ -171,6 +171,7 @@ abstract contract RewardedStakeBase is
     super.internalSetRewardEntryCustom(to, toCooldown);
 
     emit Staked(from, to, underlyingAmount, referral);
+    emit Transfer(address(0), to, stakeAmount);
     return stakeAmount;
   }
 
@@ -233,6 +234,7 @@ abstract contract RewardedStakeBase is
     internalTransferUnderlyingTo(from, to, underlyingAmount, index);
 
     emit Redeemed(from, to, stakeAmount, underlyingAmount);
+    emit Transfer(from, address(0), stakeAmount);
     return (stakeAmount, underlyingAmount);
   }
 
