@@ -21,7 +21,7 @@ import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 import { eNetwork } from '../../helpers/types';
 import { getDefaultMarketAddressController } from '../helpers/utils';
 
-task('augmented:sign-reward-permits', 'Sings permits for reward pools')
+task('sign-reward-permits', 'Sings permits for reward pools')
   .addOptionalParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
   .addOptionalParam('sk', 'SK (private key) or mnemonic for signer', '', types.string)
   .addParam('pool', 'Name or address of a permit reward pool', undefined, types.string)

@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import low from 'lowdb';
 import FileSync from 'lowdb/adapters/FileSync';
-import { Contract, Wallet, ContractTransaction, Signer } from 'ethers';
+import { Contract, Wallet, ContractTransaction } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from './types';
 import { isAddress } from 'ethers/lib/utils';
@@ -120,9 +120,10 @@ export const getTenderlyDashboardLink = () => {
   }/fork/${tenderlyNetwork.getFork()}/simulation/${tenderlyNetwork.getHead()}`;
 };
 
-export const getFirstSigner = async () => (await getSigners())[0];
+export const getFirstSigner = async (dre?: HardhatRuntimeEnvironment) => (await getSigners(dre))[0];
 export const getSignerAddress = async (n: number) => (await getSigners())[n].address;
-export const getSigners = async () => (await (<any>DRE).ethers.getSigners()) as SignerWithAddress[];
+export const getSigners = async (dre?: HardhatRuntimeEnvironment) =>
+  (await (<any>(dre || DRE)).ethers.getSigners()) as SignerWithAddress[];
 export const getSignerN = async (n: number) => (await getSigners())[n];
 
 export const getContractFactory = async (abi: any[], bytecode: string) =>

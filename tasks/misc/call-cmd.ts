@@ -4,7 +4,7 @@ import { ZERO_ADDRESS } from '../../helpers/constants';
 import { eNetwork } from '../../helpers/types';
 import { getDefaultMarketAddressController } from '../helpers/utils';
 
-task('augmented:call-cmd', 'Invokes a configuration command')
+task('call-cmd', 'Invokes a configuration command')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
   .addOptionalParam('cmd', 'Name of command', undefined, types.string)
   .addFlag('static', 'Make this call as static')
@@ -25,7 +25,7 @@ task('augmented:call-cmd', 'Invokes a configuration command')
     }
   });
 
-task('augmented:encode-cmd', 'Encodes a configuration command')
+task('encode-cmd', 'Encodes a configuration command')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
   .addOptionalParam('cmd', 'Name of command', undefined, types.string)
   .addOptionalParam('roles', 'Roles required', '', types.string)
