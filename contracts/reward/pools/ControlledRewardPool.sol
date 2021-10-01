@@ -112,7 +112,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     return address(_controller);
   }
 
-  function claimRewardFor(address holder, uint256 limit)
+  function claimRewardFor(address holder)
     external
     override
     onlyController
@@ -122,7 +122,26 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
       bool
     )
   {
-    return internalGetReward(holder, limit);
+    return internalGetReward(holder);
+  }
+
+  function claimRewardWithLimitFor(
+    address holder,
+    uint256 baseAmount,
+    uint256 limit,
+    uint16 minPct
+  )
+    external
+    override
+    onlyController
+    returns (
+      uint256 newLimit,
+      uint256 amount,
+      uint32 since,
+      bool keepPull
+    )
+  {
+    return internalGetRewardWithLimit(holder, baseAmount, limit, minPct);
   }
 
   function calcRewardFor(address holder, uint32 at)
@@ -150,7 +169,30 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     _controller.allocatedByPool(holder, allocated, since, mode);
   }
 
-  function internalGetReward(address holder, uint256 limit)
+  function internalGetRewardWithLimit(
+    address holder,
+    uint256 baseAmount,
+    uint256 limit,
+    uint16 minBoostPct
+  )
+    internal
+    virtual
+    returns (
+      uint256,
+      uint256 amount,
+      uint32 since,
+      bool keepPull
+    )
+  {
+    (amount, since, keepPull) = internalGetReward(holder);
+    amount += baseAmount;
+    if (minBoostPct > 0) {
+      limit += PercentageMath.percentMul(amount, minBoostPct);
+    }
+    return (limit, amount, since, keepPull);
+  }
+
+  function internalGetReward(address holder)
     internal
     virtual
     returns (

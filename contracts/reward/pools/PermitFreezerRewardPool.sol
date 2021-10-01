@@ -69,7 +69,7 @@ contract PermitFreezerRewardPool is BasePermitRewardPool, CalcLinearFreezer {
     return currentValidNonce + 1;
   }
 
-  function internalGetReward(address holder, uint256)
+  function internalGetReward(address holder)
     internal
     override
     returns (

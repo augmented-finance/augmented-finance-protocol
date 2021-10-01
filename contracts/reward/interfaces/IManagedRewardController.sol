@@ -28,7 +28,13 @@ interface IManagedRewardController is IEmergencyAccess, IRewardController {
 }
 
 interface IManagedRewardBooster is IManagedRewardController {
+  event BoostFactorSet(address indexed pool, uint256 mask, uint32 pctFactor);
+
   function setBoostFactor(address pool, uint32 pctFactor) external;
+
+  event MinBoostUpdated(uint16 minBoostPct);
+
+  function setMinBoost(uint16 minBoostPct) external;
 
   function setUpdateBoostPoolRate(bool) external;
 
@@ -37,8 +43,6 @@ interface IManagedRewardBooster is IManagedRewardController {
   function getBoostPool() external view returns (address pool, uint256 mask);
 
   function setBoostExcessTarget(address target, bool mintExcess) external;
-
-  event BoostFactorSet(address indexed pool, uint256 mask, uint32 pctFactor);
 }
 
 interface IUntypedRewardControllerPools {

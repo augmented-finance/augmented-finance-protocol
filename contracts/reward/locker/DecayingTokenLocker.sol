@@ -73,10 +73,47 @@ contract DecayingTokenLocker is RewardedTokenLocker {
     return (amount, since);
   }
 
-  function internalGetReward(address holder, uint256 limit)
+  function internalGetReward(address holder)
     internal
-    virtual
     override
+    returns (
+      uint256 amount,
+      uint32 since,
+      bool keepPull
+    )
+  {
+    return _getRewardWithLimit(holder, type(uint256).max);
+  }
+
+  function internalGetRewardWithLimit(
+    address holder,
+    uint256 baseAmount,
+    uint256 limit,
+    uint16 minBoostPct
+  )
+    internal
+    override
+    returns (
+      uint256, // newLimit,
+      uint256 amount,
+      uint32 since,
+      bool keepPull
+    )
+  {
+    (amount, since, keepPull) = _getRewardWithLimit(holder, type(uint256).max);
+    amount += baseAmount;
+    if (minBoostPct > 0) {
+      limit += PercentageMath.percentMul(amount, minBoostPct);
+    }
+    if (amount <= limit) {
+      return (limit, amount, since, keepPull);
+    }
+    internalAddExcess(amount - limit, since);
+    return (limit, limit, since, keepPull);
+  }
+
+  function _getRewardWithLimit(address holder, uint256 limit)
+    private
     returns (
       uint256 amount,
       uint32 since,

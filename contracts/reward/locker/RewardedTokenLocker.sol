@@ -105,11 +105,29 @@ contract RewardedTokenLocker is
     return doCalcRewardAt(holder, current);
   }
 
-  function internalGetReward(address holder, uint256 limit)
+  function internalGetReward(address holder)
+    internal
+    override
+    returns (
+      uint256 amount,
+      uint32 since,
+      bool keepPull
+    )
+  {
+    (, amount, since, keepPull) = internalGetRewardWithLimit(holder, 0, type(uint256).max, 0);
+  }
+
+  function internalGetRewardWithLimit(
+    address holder,
+    uint256 baseAmount,
+    uint256 limit,
+    uint16 minBoostPct
+  )
     internal
     virtual
     override
     returns (
+      uint256, // newLimit,
       uint256 amount,
       uint32 since,
       bool keepPull
@@ -119,7 +137,7 @@ contract RewardedTokenLocker is
 
     (, uint32 expiry) = expiryOf(holder);
     if (expiry == 0) {
-      return (0, 0, false);
+      return (0, 0, 0, false);
     }
     uint32 current = getCurrentTick();
     if (current < expiry) {
@@ -130,11 +148,20 @@ contract RewardedTokenLocker is
       keepPull = false;
     }
 
-    if (amount > limit) {
-      internalAddExcess(amount - limit, since);
-      return (limit, since, keepPull);
+    amount += baseAmount;
+    if (amount <= limit) {
+      return (limit, amount, since, keepPull);
     }
-    return (amount, since, keepPull);
+
+    if (minBoostPct > 0) {
+      limit += PercentageMath.percentMul(amount, minBoostPct);
+      if (amount <= limit) {
+        return (limit, amount, since, keepPull);
+      }
+    }
+
+    internalAddExcess(amount - limit, since);
+    return (limit, limit, since, keepPull);
   }
 
   function internalGetRate() internal view override returns (uint256) {

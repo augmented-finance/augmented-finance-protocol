@@ -20,6 +20,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
   uint256 private _boostPoolMask;
 
   address private _boostExcessDelegate;
+  uint16 private _minBoostPct;
   bool private _mintExcess;
   bool private _updateBoostPool;
 
@@ -56,6 +57,12 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
 
   function setUpdateBoostPoolRate(bool updateBoostPool) external override onlyConfigAdmin {
     _updateBoostPool = updateBoostPool;
+  }
+
+  function setMinBoost(uint16 minBoostPct) external override onlyConfigOrRateAdmin {
+    require(minBoostPct <= PercentageMath.ONE, 'min boost is too high');
+    _minBoostPct = minBoostPct;
+    emit MinBoostUpdated(minBoostPct);
   }
 
   function internalUpdateBaseline(uint256 baseline, uint256 baselineMask)
@@ -129,7 +136,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
       }
 
       IManagedRewardPool pool = getPool(i);
-      (uint256 amount_, , bool keepPull) = pool.claimRewardFor(holder, type(uint256).max);
+      (uint256 amount_, , bool keepPull) = pool.claimRewardFor(holder);
       if (!keepPull) {
         internalUnsetPull(holder, mask);
       }
@@ -149,25 +156,25 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
 
     uint32 boostSince;
     if (_boostPool != IManagedRewardPool(address(0))) {
-      uint256 boost_;
-
       if (_mintExcess || _boostExcessDelegate != address(_boostPool)) {
-        (boost_, boostSince, ) = _boostPool.claimRewardFor(holder, type(uint256).max);
+        uint256 boost_;
+        (boost_, boostSince, ) = _boostPool.claimRewardFor(holder);
+        boostAmount += boost_;
       } else {
-        uint256 boostLimit_;
-        if (boostLimit > boostAmount) {
-          boostLimit_ = boostLimit - boostAmount;
-        }
-        (boost_, boostSince, ) = _boostPool.claimRewardFor(holder, boostLimit_);
+        (boostLimit, boostAmount, boostSince, ) = _boostPool.claimRewardWithLimitFor(
+          holder,
+          boostAmount,
+          boostLimit,
+          _minBoostPct
+        );
       }
-
-      boostAmount += boost_;
     }
 
     if (boostAmount <= boostLimit) {
       claimableAmount += boostAmount;
     } else {
       claimableAmount += boostLimit;
+      // boostSince is not exactly correct for the whole boostAmount, but it is ok here
       internalStoreBoostExcess(boostAmount - boostLimit, boostSince);
     }
 
@@ -206,6 +213,8 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
       delayedAmount += extra_;
       boostAmount += boost_;
     }
+
+    boostLimit += PercentageMath.percentMul(boostAmount, _minBoostPct);
 
     if (boostAmount <= boostLimit) {
       claimableAmount += boostAmount;

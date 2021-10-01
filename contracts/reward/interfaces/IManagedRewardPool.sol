@@ -14,9 +14,23 @@ interface IManagedRewardPool is IEmergencyAccess {
 
   function getPoolName() external view returns (string memory);
 
-  function claimRewardFor(address holder, uint256 limit)
+  function claimRewardFor(address holder)
     external
     returns (
+      uint256 amount,
+      uint32 since,
+      bool keepPull
+    );
+
+  function claimRewardWithLimitFor(
+    address holder,
+    uint256 baseAmount,
+    uint256 limit,
+    uint16 minPct
+  )
+    external
+    returns (
+      uint256 newLimit,
       uint256 amount,
       uint32 since,
       bool keepPull

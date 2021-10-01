@@ -188,7 +188,7 @@ contract TeamRewardPool is ControlledRewardPool, CalcLinearUnweightedReward {
     return uint32(block.timestamp);
   }
 
-  function internalGetReward(address holder, uint256)
+  function internalGetReward(address holder)
     internal
     override
     returns (
