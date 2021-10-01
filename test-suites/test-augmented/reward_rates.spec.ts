@@ -149,7 +149,10 @@ describe('Reward rates suite', () => {
     const perPoolReward2 = tickCount * defaultRate + tickCount2 * defaultRate2;
 
     for (const pool of pools) {
-      expect((await pool.calcRewardFor(root.address, tick2)).amount).eq(perPoolReward2); // one tick less, as this has to be before claimReward
+      const reward = await pool.calcRewardFor(root.address, tick2);
+      // const name = await pool.getPoolName();
+      // console.log(name);
+      expect(reward.amount).eq(perPoolReward2); // one tick less, as this has to be before claimReward
     }
 
     await rewardController.claimReward();

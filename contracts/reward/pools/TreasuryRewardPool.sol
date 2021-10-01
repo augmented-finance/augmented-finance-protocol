@@ -58,7 +58,7 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRewardAccum {
     )
   {
     if (holder != address(0) && holder == _treasury) {
-      return (doGetAllReward(0), uint32(block.timestamp), true);
+      return (doGetAllReward(type(uint256).max), uint32(block.timestamp), true);
     }
     return (0, 0, false);
   }
