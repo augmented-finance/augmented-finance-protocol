@@ -1,8 +1,14 @@
 import { task } from 'hardhat/config';
 import { eNetwork, tEthereumAddress } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
-import { falsyOrZeroAddress, getFirstSigner } from '../../helpers/misc-utils';
-import { getLendingPoolProxy, getOracleRouter, getProtocolDataProvider } from '../../helpers/contracts-getters';
+import { falsyOrZeroAddress, getFirstSigner, waitTx } from '../../helpers/misc-utils';
+import {
+  getIErc20Detailed,
+  getLendingPoolProxy,
+  getOracleRouter,
+  getProtocolDataProvider,
+  getTreasuryProxy,
+} from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { USD_ADDRESS } from '../../helpers/constants';
@@ -65,7 +71,8 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
       });
     }
 
-    const userAddr = (await getFirstSigner()).address;
+    const deployer = await getFirstSigner();
+    const userAddr = deployer.address;
 
     {
       console.log('\nCheck getAllTokens');
@@ -137,6 +144,17 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
 
       let i = reserveList.length - 1;
       await checkReserve(`#${i}`, reserveList[i]);
+    }
+
+    {
+      const agf = await getIErc20Detailed(await addressProvider.getAddress(AccessFlags.REWARD_TOKEN));
+      const treasury = await getTreasuryProxy(await addressProvider.getAddress(AccessFlags.TREASURY));
+      const balance = await agf.balanceOf(treasury.address);
+      console.log('Found', balance.div(1e15).toNumber() / 1e3, ' AGF in the treasury');
+      if (balance.gt(0)) {
+        await waitTx(treasury.transferToken(agf.address, deployer.address, balance));
+        console.log('Transferred from treasury to deployer: ', deployer.address);
+      }
     }
 
     if (!ignoreCalc) {
