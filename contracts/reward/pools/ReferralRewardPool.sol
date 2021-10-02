@@ -82,7 +82,7 @@ contract ReferralRewardPool is BasePermitRewardPool, BaseReferralRegistry, CalcL
     return uint32(block.timestamp);
   }
 
-  function internalGetReward(address, uint256)
+  function internalGetReward(address)
     internal
     virtual
     override

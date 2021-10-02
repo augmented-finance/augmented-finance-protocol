@@ -47,7 +47,7 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRewardAccum {
     return uint32(block.timestamp);
   }
 
-  function internalGetReward(address holder, uint256 limit)
+  function internalGetReward(address holder)
     internal
     virtual
     override
@@ -58,7 +58,7 @@ contract TreasuryRewardPool is ControlledRewardPool, CalcLinearRewardAccum {
     )
   {
     if (holder != address(0) && holder == _treasury) {
-      return (doGetAllReward(limit), uint32(block.timestamp), true);
+      return (doGetAllReward(type(uint256).max), uint32(block.timestamp), true);
     }
     return (0, 0, false);
   }

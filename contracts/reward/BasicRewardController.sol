@@ -26,7 +26,7 @@ abstract contract BasicRewardController is BaseRewardController {
         continue;
       }
 
-      (uint256 amount_, uint32 since_, bool keepPull) = getPool(i).claimRewardFor(holder, type(uint256).max);
+      (uint256 amount_, uint32 since_, bool keepPull) = getPool(i).claimRewardFor(holder);
       if (!keepPull) {
         internalUnsetPull(holder, mask);
       }
