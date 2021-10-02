@@ -43,9 +43,11 @@ contract AGFTokenV1 is RewardToken, VersionedInitializable, IInitializableReward
     super._initializeERC20(name, symbol, decimals);
     super._initializeDomainSeparator();
 
-    address treasury = remoteAcl.getAddress(AccessFlags.TREASURY);
-    if (treasury != address(0)) {
-      _allocateAndMint(treasury, TREASURY_MINT * (10**DECIMALS));
+    if (address(remoteAcl) != address(0)) {
+      address treasury = remoteAcl.getAddress(AccessFlags.TREASURY);
+      if (treasury != address(0)) {
+        _allocateAndMint(treasury, TREASURY_MINT * (10**DECIMALS));
+      }
     }
   }
 }
