@@ -30,10 +30,10 @@ interface IManagedRewardPool is IEmergencyAccess {
   )
     external
     returns (
-      uint256 newLimit,
       uint256 amount,
       uint32 since,
-      bool keepPull
+      bool keepPull,
+      uint256 newLimit
     );
 
   function calcRewardFor(address holder, uint32 at)

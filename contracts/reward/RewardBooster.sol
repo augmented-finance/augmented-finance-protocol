@@ -161,7 +161,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
         (boost_, boostSince, ) = _boostPool.claimRewardFor(holder);
         boostAmount += boost_;
       } else {
-        (boostLimit, boostAmount, boostSince, ) = _boostPool.claimRewardWithLimitFor(
+        (boostAmount, boostSince, , boostLimit) = _boostPool.claimRewardWithLimitFor(
           holder,
           boostAmount,
           boostLimit,

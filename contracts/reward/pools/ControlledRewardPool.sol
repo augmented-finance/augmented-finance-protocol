@@ -135,10 +135,10 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     override
     onlyController
     returns (
-      uint256 newLimit,
       uint256 amount,
       uint32 since,
-      bool keepPull
+      bool keepPull,
+      uint256 newLimit
     )
   {
     return internalGetRewardWithLimit(holder, baseAmount, limit, minPct);
@@ -178,10 +178,10 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     internal
     virtual
     returns (
-      uint256,
       uint256 amount,
       uint32 since,
-      bool keepPull
+      bool keepPull,
+      uint256
     )
   {
     (amount, since, keepPull) = internalGetReward(holder);
@@ -189,7 +189,7 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
     if (minBoostPct > 0) {
       limit += PercentageMath.percentMul(amount, minBoostPct);
     }
-    return (limit, amount, since, keepPull);
+    return (amount, since, keepPull, limit);
   }
 
   function internalGetReward(address holder)
