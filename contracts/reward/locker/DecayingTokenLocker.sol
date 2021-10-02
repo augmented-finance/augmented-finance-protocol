@@ -100,16 +100,20 @@ contract DecayingTokenLocker is RewardedTokenLocker {
       bool keepPull
     )
   {
-    (amount, since, keepPull) = _getRewardWithLimit(holder, type(uint256).max);
-    amount += baseAmount;
-    if (minBoostPct > 0) {
+    if (minBoostPct == 0) {
+      (amount, since, keepPull) = _getRewardWithLimit(holder, limit > baseAmount ? limit - baseAmount : 0);
+      amount += baseAmount;
+    } else {
+      (amount, since, keepPull) = _getRewardWithLimit(holder, type(uint256).max);
+      amount += baseAmount;
       limit += PercentageMath.percentMul(amount, minBoostPct);
+      if (amount > limit) {
+        internalAddExcess(amount - limit, since);
+        amount = limit;
+      }
     }
-    if (amount <= limit) {
-      return (limit, amount, since, keepPull);
-    }
-    internalAddExcess(amount - limit, since);
-    return (limit, limit, since, keepPull);
+
+    return (limit, amount, since, keepPull);
   }
 
   function _getRewardWithLimit(address holder, uint256 limit)
