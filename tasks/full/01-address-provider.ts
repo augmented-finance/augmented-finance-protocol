@@ -148,7 +148,8 @@ deployTask('full:deploy-address-provider', 'Deploy address provider and registry
           AccessFlags.STAKE_ADMIN |
           AccessFlags.REWARD_CONFIG_ADMIN |
           AccessFlags.REWARD_RATE_ADMIN |
-          AccessFlags.ORACLE_ADMIN
+          AccessFlags.ORACLE_ADMIN |
+          AccessFlags.TREASURY_ADMIN
       )
     );
   }
