@@ -352,6 +352,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
 
       if (pool == _boostPool) {
         r.allocations[n].rewardType = RewardType.BoostReward;
+        r.allocations[n].factor = _minBoostPct;
         r.maxBoost = _boostRewards[holder] + amount_;
       } else {
         r.allocations[n].rewardType = RewardType.WorkReward;
@@ -365,6 +366,8 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
 
       n++;
     }
+
+    r.boostLimit += PercentageMath.percentMul(r.maxBoost, _minBoostPct);
 
     if (r.maxBoost <= r.boostLimit) {
       r.amountClaimable += r.maxBoost;
