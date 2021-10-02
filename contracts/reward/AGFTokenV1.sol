@@ -10,6 +10,7 @@ contract AGFTokenV1 is RewardToken, VersionedInitializable, IInitializableReward
   string private constant SYMBOL = 'AGF';
 
   uint256 private constant TOKEN_REVISION = 1;
+  uint256 private constant TREASURY_MINT = 1000;
 
   constructor() ERC20BaseWithPermit(NAME, SYMBOL, DECIMALS) MarketAccessBitmask(IMarketAccessController(address(0))) {}
 
@@ -41,5 +42,10 @@ contract AGFTokenV1 is RewardToken, VersionedInitializable, IInitializableReward
     _remoteAcl = remoteAcl;
     super._initializeERC20(name, symbol, decimals);
     super._initializeDomainSeparator();
+
+    address treasury = remoteAcl.getAddress(AccessFlags.TREASURY);
+    if (treasury != address(0)) {
+      _allocateAndMint(treasury, TREASURY_MINT * (10**DECIMALS));
+    }
   }
 }

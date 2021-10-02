@@ -40,8 +40,19 @@ abstract contract RewardToken is ERC20BaseWithPermit, MarketAccessBitmask, IRewa
     uint256 amount,
     bool
   ) external virtual override onlyRewardControllder {
+    _mintReward(account, amount);
+  }
+
+  function _mintReward(address account, uint256 amount) private {
     _mint(account, amount);
     require(super.totalSupply() <= MAX_SUPPLY, 'MINT_OVER_TOTAL_SUPPLY');
+  }
+
+  function _allocateAndMint(address account, uint256 amount) internal {
+    require(amount <= uint256(type(int256).max));
+    _accTotal += amount;
+    _mintReward(account, amount);
+    emit RewardAllocated(account, int256(amount));
   }
 
   function allocateReward(address provider, int256 amount) external override onlyRewardControllder {
