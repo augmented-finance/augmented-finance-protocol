@@ -25,6 +25,13 @@ task('augmented:mainnet', 'Deploy enviroment')
     await DRE.run('set-DRE');
 
     const deployer = await getFirstSigner();
+    // if (MAINNET_FORK) {
+    //   await DRE.ethers.provider.send("hardhat_setBalance", [
+    //     deployer.address,
+    //     "0x56BC75E2D63100000", // 10^20
+    //   ]);
+    // }
+
     const startBalance: BigNumber = await deployer.getBalance();
     let spentOnPluck: BigNumber = BigNumber.from(0);
 

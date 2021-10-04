@@ -76,7 +76,7 @@ const _verifyProxy = async (proxyAddr: string, implAddr: string) => {
   //  console.log(`Verifying ${proxyName}...`)
   const networkName = DRE.network.name;
   const apiKey = (<any>DRE.config).etherscan.apiKey!;
-  const apiSubdomain = networkName === 'mainnet' ? 'api' : `api-${networkName}`;
+  const apiSubdomain = networkName === 'main' ? 'api' : `api-${networkName}`;
   const baseUrl = `https://${apiSubdomain}.etherscan.io/api?module=contract`;
 
   let guid: string;

@@ -21,8 +21,6 @@ task('full:access-test', 'Tests access to mutable functions of the deployed cont
     // const poolConfig = loadPoolConfig(pool);
     switch (network) {
       case eEthereumNetwork.kovan:
-      case eEthereumNetwork.main:
-      case eEthereumNetwork.tenderlyMain:
         console.log('Access test is not supported for:', network);
         return;
     }

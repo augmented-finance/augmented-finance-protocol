@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { eNetwork, tEthereumAddress } from '../../helpers/types';
+import { eEthereumNetwork, eNetwork, tEthereumAddress } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { falsyOrZeroAddress, getFirstSigner, waitTx } from '../../helpers/misc-utils';
 import {
@@ -151,7 +151,7 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
       const treasury = await getTreasuryProxy(await addressProvider.getAddress(AccessFlags.TREASURY));
       const balance = await agf.balanceOf(treasury.address);
       console.log('Found', balance.div(1e15).toNumber() / 1e3, ' AGF in the treasury');
-      if (balance.gt(0)) {
+      if (balance.gt(0) && network != eEthereumNetwork.main) {
         await waitTx(treasury.transferToken(agf.address, deployer.address, balance));
         console.log('Transferred from treasury to deployer: ', deployer.address);
       }
