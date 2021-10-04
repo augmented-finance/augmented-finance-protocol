@@ -4,7 +4,7 @@ import { _TypedDataEncoder } from '@ethersproject/hash';
 import { formatEther, parseEther } from '@ethersproject/units';
 import { Wallet } from '@ethersproject/wallet';
 import { isHexPrefixed } from 'ethjs-util';
-import { createReadStream, createWriteStream, openSync } from 'fs';
+import { createReadStream, createWriteStream } from 'fs';
 import { task, types } from 'hardhat/config';
 import { exit } from 'process';
 import { createInterface } from 'readline';
@@ -129,10 +129,14 @@ task('sign-reward-permits', 'Sings permits for reward pools')
 
           let amount: BigNumber;
           try {
-            amount = parseEther(s.substring(pos + 1).trim());
+            let vs = s.substring(pos + 1).trim();
+            const sPos = vs.indexOf(' ');
+            if (sPos > 0) {
+              vs = vs.substring(0, sPos);
+            }
+            amount = parseEther(vs);
           } catch (err) {
-            console.error(err);
-            console.log('\tInvalid amount for spender:', addr);
+            console.log('\tInvalid amount for spender:', addr, err.message);
             errorCount++;
             return;
           }
@@ -157,7 +161,7 @@ task('sign-reward-permits', 'Sings permits for reward pools')
                 lineNo++;
                 const s = line.trim();
                 if (s !== '') {
-                  console.log(`${fileNo} / ${files.length} / ${lineNo}`);
+                  console.log(`${fileNo} / ${args.length} / ${lineNo}`);
                   parseEntry(s);
                 }
               }
@@ -184,6 +188,8 @@ task('sign-reward-permits', 'Sings permits for reward pools')
 
         if (limit != undefined && totalAmount.gt(oneEther.multipliedBy(limit!).toFixed())) {
           throw 'Total value exceeds limit: ' + formatEther(totalAmount) + ' > ' + limit;
+        } else {
+          console.log('Total value:', formatEther(totalAmount));
         }
 
         let deadline = 0;
@@ -193,11 +199,13 @@ task('sign-reward-permits', 'Sings permits for reward pools')
           deadline = (date.getTime() / 1000) | 0;
         }
 
-        const writeOutput = async (out: Console) => {
+        const writeOutput = async (out: Console, fileOut: boolean) => {
           if (!encode) {
             out.log('[');
           }
+          let lineNo = 0;
           for (const [spender, value] of uniqueAddrs) {
+            lineNo++;
             const params = buildRewardClaimPermitParams(domainParams, {
               provider: signer.address,
               spender: spender,
@@ -205,6 +213,9 @@ task('sign-reward-permits', 'Sings permits for reward pools')
               nonce: (await pool.nonces(spender)).toString(),
               deadline: deadline,
             });
+            if (fileOut) {
+              console.log('Out:', lineNo, '/', uniqueAddrs.size);
+            }
 
             const signature = await signer._signTypedData(params.domain, params.types, params.message!);
             const { v, r, s } = splitSignature(signature);
@@ -234,11 +245,11 @@ task('sign-reward-permits', 'Sings permits for reward pools')
 
         if (outFile === undefined) {
           console.log('\n=========================================================');
-          await writeOutput(console);
+          await writeOutput(console, false);
         } else {
           const ws = createWriteStream(outFile);
           const writeAndClose = async () => {
-            await writeOutput(new console.Console(ws));
+            await writeOutput(new console.Console(ws), true);
             ws.end();
 
             return new Promise(function (resolve, reject) {
@@ -251,7 +262,7 @@ task('sign-reward-permits', 'Sings permits for reward pools')
 
         console.log('\n=========================================================');
         console.log('Total count:', uniqueAddrs.size);
-        console.log('Total value:', formatEther(totalAmount));
+        console.log('Total value:', formatEther(totalAmount), totalAmount.toString());
         console.log('Reward pool:', poolName, poolAddr);
         console.log('Provider address:', signer.address);
       } catch (error) {
