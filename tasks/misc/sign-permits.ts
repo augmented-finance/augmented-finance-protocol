@@ -94,6 +94,9 @@ task('sign-reward-permits', 'Sings permits for reward pools')
             pos = s.indexOf(':');
             if (pos < 0) {
               pos = s.indexOf('=');
+              if (pos < 0) {
+                pos = s.indexOf(',');
+              }
             }
           }
           return pos;
