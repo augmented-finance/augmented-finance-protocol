@@ -7,6 +7,7 @@ task('verify-samples', 'Deploy samples for verification').setAction(async ({}, D
   await DRE.run('set-DRE');
 
   const deployer = await getFirstSigner();
+  console.log('Deployer: ', deployer.address);
 
   await cleanupJsonDb(DRE.network.name);
   await DRE.run('helper:deploy-samples');

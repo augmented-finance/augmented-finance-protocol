@@ -3,7 +3,8 @@ pragma solidity ^0.8.4;
 
 enum SourceType {
   AggregatorOrStatic,
-  UniswapV2Pair
+  UniswapV2Pair,
+  UniswapV2PairToken
 }
 
 interface IPriceOracleEvents {

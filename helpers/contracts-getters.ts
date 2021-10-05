@@ -52,6 +52,7 @@ import {
   MockDepositStakeTokenFactory,
   DepositStakeTokenFactory,
   PriceFeedUniEthPairFactory,
+  PriceFeedUniEthTokenFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -493,5 +494,11 @@ export const getPriceFeedCompoundErc20 = async (address?: tEthereumAddress) =>
 export const getPriceFeedUniEthPair = async (address?: tEthereumAddress) =>
   PriceFeedUniEthPairFactory.connect(
     address || (await getAddr(eContractid.PriceFeedUniEthPair)),
+    await getFirstSigner()
+  );
+
+export const getPriceFeedUniEthToken = async (address?: tEthereumAddress) =>
+  PriceFeedUniEthTokenFactory.connect(
+    address || (await getAddr(eContractid.PriceFeedUniEthToken)),
     await getFirstSigner()
   );
