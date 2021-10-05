@@ -29,6 +29,7 @@ import {
   getPriceFeedCompoundErc20,
   getPriceFeedCompoundEth,
   getPriceFeedUniEthPair,
+  getPriceFeedUniEthToken,
   getProtocolDataProvider,
   getReferralRewardPoolImpl,
   getRewardBooster,
@@ -89,6 +90,7 @@ const CONTRACT_GETTERS: Omit<Record<eContractid, ContractGetterFn>, ignoredKeys>
   [eContractid.PriceFeedCompoundEth]: getPriceFeedCompoundEth,
   [eContractid.PriceFeedCompoundErc20]: getPriceFeedCompoundErc20,
   [eContractid.PriceFeedUniEthPair]: getPriceFeedUniEthPair,
+  [eContractid.PriceFeedUniEthToken]: getPriceFeedUniEthToken,
 
   [eContractid.DelegatedStrategyAave]: getDelegatedStrategyAave,
   [eContractid.DelegatedStrategyCompoundErc20]: getDelegatedStrategyCompoundErc20,

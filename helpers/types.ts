@@ -81,6 +81,7 @@ export enum eContractid {
   PriceFeedCompoundEth = 'PriceFeedCompoundEth',
   PriceFeedCompoundErc20 = 'PriceFeedCompoundErc20',
   PriceFeedUniEthPair = 'PriceFeedUniEthPair',
+  PriceFeedUniEthToken = 'PriceFeedUniEthToken',
 
   MockTreasuryRewardPool = 'MockTreasuryRewardPool',
   MockRewardFreezer = 'MockRewardFreezer',
