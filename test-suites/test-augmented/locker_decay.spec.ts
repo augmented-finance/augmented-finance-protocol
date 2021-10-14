@@ -10,7 +10,8 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { currentTick, mineToTicks, mineTicks, revertSnapshot, takeSnapshot, alignTicks } from './utils';
 import { CFG } from '../../tasks/migrations/defaultTestDeployConfig';
 import { BigNumber } from 'ethers';
-import { MAX_LOCKER_PERIOD, RAY, DAY, WEEK, HALF_RAY } from '../../helpers/constants';
+import { MAX_LOCKER_PERIOD, RAY, DAY, WEEK, HALF_RAY, PERC_100 } from '../../helpers/constants';
+import { ProtocolErrors } from '../../helpers/types';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -415,5 +416,174 @@ describe('Token decaying locker suite', () => {
     await rewardController.connect(user1).claimReward();
 
     expect(await AGF.balanceOf(user1.address)).eq(balance);
+  });
+
+  it('user1 gets no boost without work', async () => {
+    await rewardController.setBoostPool(xAGF.address);
+
+    const defaultPeriod = WEEK * 4;
+    const rateBase = await xAGF.getRate();
+    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod, 0);
+    const lockTick = await currentTick();
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    await mineToTicks(lockInfo.availableSince);
+
+    let reward = await rewardController.claimableReward(user1.address);
+    expect(reward.claimable).eq(0);
+    expect(reward.extra).eq(0);
+  });
+
+  it.skip('user1 gets min boost without work, ignore excess', async () => {
+    await rewardController.setBoostPool(xAGF.address);
+
+    const defaultPeriod = WEEK * 4;
+    const rateBase = await xAGF.getRate();
+    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod, 0);
+    const lockTick = await currentTick();
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    await mineToTicks(lockInfo.availableSince);
+    const expectedBalance = rateBase.mul(lockInfo.availableSince - lockTick);
+
+    {
+      await rewardController.setMinBoost(PERC_100 / 10);
+      const reward = await rewardController.claimableReward(user1.address);
+      expect(reward.extra).eq(0);
+      expect(expectedBalance.div(10).sub(reward.claimable)).lte(1);
+    }
+
+    {
+      await rewardController.setMinBoost(PERC_100);
+
+      const reward = await rewardController.claimableReward(user1.address);
+      expect(reward.extra).eq(0);
+      expect(expectedBalance.sub(reward.claimable)).lte(1);
+    }
+  });
+
+  it('user1 claims 100% min boost without work, reuse 0% excess', async () => {
+    await rewardController.setBoostPool(xAGF.address);
+    await rewardController.setUpdateBoostPoolRate(true);
+    await rewardController.setBoostExcessTarget(xAGF.address, false);
+
+    const defaultPeriod = WEEK * 4;
+    const rateBase = await xAGF.getRate();
+    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod, 0);
+    const lockTick = await currentTick();
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    await mineToTicks(lockInfo.availableSince);
+    const expectedBalance = rateBase.mul(lockInfo.availableSince - lockTick);
+
+    await rewardController.setMinBoost(PERC_100);
+
+    {
+      const reward = await rewardController.claimableReward(user1.address);
+      expect(reward.extra).eq(0);
+      expect(expectedBalance.sub(reward.claimable)).lte(1);
+    }
+
+    await rewardController.connect(user1).claimReward();
+
+    {
+      const balance = await AGF.balanceOf(user1.address);
+      expect(expectedBalance.sub(balance)).lte(rateBase);
+    }
+
+    // There will be no reward generated direcly because of 0 rate
+    // But recycled excess can also provide some rewards
+    await rewardController.updateBaseline(0);
+
+    await xAGF.connect(user1).redeem(user1.address);
+    await AGF.connect(user1).approve(xAGF.address, defaultStkAmount);
+    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod + WEEK * 2, 0);
+    await mineTicks(defaultPeriod + WEEK * 3); // a bit more, just to make sure
+
+    {
+      // nothing was recycled
+      const reward = await rewardController.claimableReward(user1.address);
+      expect(reward.extra).eq(0);
+      expect(reward.claimable).eq(0);
+    }
+
+    await rewardController.connect(user1).claimReward();
+    {
+      const balance = await AGF.balanceOf(user1.address);
+      expect(expectedBalance.sub(balance)).lte(rateBase);
+    }
+  });
+
+  it('user1 claims 10% min boost without work, reuse 90% excess', async () => {
+    await alignTicks(WEEK);
+
+    await rewardController.setBoostPool(xAGF.address);
+    await rewardController.setUpdateBoostPoolRate(true);
+    await rewardController.setBoostExcessTarget(xAGF.address, false);
+
+    const defaultPeriod = WEEK * 4;
+    const rateBase = await xAGF.getRate();
+    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod, 0);
+    const lockTick = await currentTick();
+    const lockInfo = await xAGF.balanceOfUnderlyingAndExpiry(user1.address);
+
+    await mineToTicks(lockInfo.availableSince);
+
+    const wholeExpectedBalance = rateBase.mul(lockInfo.availableSince - lockTick);
+    const expectedBalance = wholeExpectedBalance.div(10);
+    const recycledBalance = wholeExpectedBalance.sub(expectedBalance);
+
+    await rewardController.setMinBoost(PERC_100 / 10);
+    {
+      const reward = await rewardController.claimableReward(user1.address);
+      expect(reward.extra).eq(0);
+      expect(expectedBalance.sub(reward.claimable)).lte(1);
+    }
+
+    await rewardController.connect(user1).claimReward();
+    const claimTick = await currentTick();
+
+    const balance = await AGF.balanceOf(user1.address);
+    expect(expectedBalance.sub(balance)).lte(rateBase);
+
+    // There will be no reward generated direcly because of 0 rate
+    // But recycled excess can also provide some rewards
+    await rewardController.updateBaseline(0);
+    // To collect all recycled
+    await rewardController.setMinBoost(PERC_100);
+
+    await xAGF.connect(user1).redeem(user1.address);
+    await AGF.connect(user1).approve(xAGF.address, defaultStkAmount);
+    await xAGF.connect(user1).lock(defaultStkAmount, defaultPeriod * 2, 0);
+
+    // Some of recycled rewards are lost during operations / ticks made in-between
+    const possibleLoss = rateBase.mul((await currentTick()) - claimTick);
+
+    await mineTicks(defaultPeriod * 3); // a bit more, just to make sure to callect the most of recycled excess
+
+    // this is to make sure that claimableReward calculations are ok
+    // as excess calc is tricky
+    await xAGF.update(0);
+    {
+      const reward = await rewardController.claimableReward(user1.address);
+      expect(reward.extra).eq(0);
+      expect(recycledBalance.sub(reward.claimable)).lte(possibleLoss);
+    }
+
+    await rewardController.connect(user1).claimReward();
+    {
+      const balance = await AGF.balanceOf(user1.address);
+      expect(wholeExpectedBalance.sub(balance)).lte(possibleLoss);
+    }
+  });
+
+  it('should be able to set zero rate with a boost pool attached', async () => {
+    await rewardController.setBoostPool(xAGF.address);
+
+    await expect(rewardController.updateBaseline(0)).to.be.revertedWith(ProtocolErrors.RW_BASELINE_EXCEEDED);
+    await rewardController.setUpdateBoostPoolRate(true);
+
+    await rewardController.updateBaseline(0);
+    await rewardController.updateBaseline(1e9);
   });
 });
