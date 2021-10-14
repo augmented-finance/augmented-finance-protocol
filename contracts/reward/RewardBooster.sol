@@ -71,7 +71,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     returns (uint256 totalRate, uint256)
   {
     if (_boostPoolMask == 0 || !_updateBoostPool) {
-      return super.internalUpdateBaseline(baseline, baselineMask);
+      return super.internalUpdateBaseline(baseline, baselineMask | _boostPoolMask);
     }
 
     (totalRate, baselineMask) = super.internalUpdateBaseline(baseline, baselineMask & ~_boostPoolMask);
@@ -160,6 +160,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
         uint256 boost_;
         (boost_, boostSince, ) = _boostPool.claimRewardFor(holder);
         boostAmount += boost_;
+        boostLimit += PercentageMath.percentMul(boostAmount, _minBoostPct);
       } else {
         (boostAmount, boostSince, , boostLimit) = _boostPool.claimRewardWithLimitFor(
           holder,

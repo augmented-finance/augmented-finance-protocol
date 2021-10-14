@@ -434,7 +434,7 @@ describe('Token decaying locker suite', () => {
     expect(reward.extra).eq(0);
   });
 
-  it.skip('user1 gets min boost without work, ignore excess', async () => {
+  it('user1 gets min boost without work, ignore excess', async () => {
     await rewardController.setBoostPool(xAGF.address);
 
     const defaultPeriod = WEEK * 4;
