@@ -241,7 +241,14 @@ task('sign-reward-permits', 'Sings permits for reward pools')
               ]);
               out.log(`${spender}: ${encoded};`);
             } else {
-              out.log(lineNo > 1 ? ',' : ' ', JSON.stringify(p));
+              out.log(
+                lineNo > 1 ? ',' : ' ',
+                JSON.stringify({
+                  pool: pool.address,
+                  nonce: nonce,
+                  permit: p,
+                })
+              );
             }
           }
           if (!encode) {
