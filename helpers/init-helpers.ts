@@ -405,8 +405,8 @@ export const configureReservesByHelper = async (
 
   console.log(`- Configure reserves with ${chunkedInputParams.length} tx(s)`);
   for (let chunkIndex = 0; chunkIndex < chunkedInputParams.length; chunkIndex++) {
-    const tx3 = await waitForTx(
-      await configurator.configureReserves(chunkedInputParams[chunkIndex], {
+    const tx3 = await mustWaitTx(
+      configurator.configureReserves(chunkedInputParams[chunkIndex], {
         gasLimit: 5000000,
       })
     );

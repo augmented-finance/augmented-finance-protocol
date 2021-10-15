@@ -18,7 +18,10 @@ task('augmented:test-local-decay', 'Deploy Augmented test contracts').setAction(
   // emergency admin + liquidity admin
   await ac.grantRoles(
     root.address,
-    AccessFlags.REWARD_CONFIG_ADMIN | AccessFlags.STAKE_ADMIN | AccessFlags.EMERGENCY_ADMIN
+    AccessFlags.REWARD_CONFIG_ADMIN |
+      AccessFlags.STAKE_ADMIN |
+      AccessFlags.EMERGENCY_ADMIN |
+      AccessFlags.REWARD_RATE_ADMIN
   );
   await ac.grantAnyRoles(slasher.address, AccessFlags.LIQUIDITY_CONTROLLER);
 

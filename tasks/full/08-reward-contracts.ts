@@ -114,6 +114,11 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
       }
     }
 
+    if (RewardParams.MinBoostBP > 0) {
+      console.log('\tMin boost: ', RewardParams.MinBoostBP / 100, '%');
+      await waitTx(booster.setMinBoost(RewardParams.MinBoostBP));
+    }
+
     // xAGF token is always updated
     let xagfAddr = freshStart && continuation ? await addressProvider.getAddress(AccessFlags.REWARD_STAKE_TOKEN) : '';
 
