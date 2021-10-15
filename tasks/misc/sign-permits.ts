@@ -113,6 +113,9 @@ task('sign-reward-permits', 'Sings permits for reward pools')
             errorCount++;
             return;
           }
+          if (pos === 0) {
+            return;
+          }
 
           let addr = s.substring(0, pos).trim();
           if (!isHexPrefixed(addr)) {
@@ -238,7 +241,14 @@ task('sign-reward-permits', 'Sings permits for reward pools')
               ]);
               out.log(`${spender}: ${encoded};`);
             } else {
-              out.log(p, ',');
+              out.log(
+                lineNo > 1 ? ',' : ' ',
+                JSON.stringify({
+                  pool: pool.address,
+                  nonce: nonce,
+                  permit: p,
+                })
+              );
             }
           }
           if (!encode) {
