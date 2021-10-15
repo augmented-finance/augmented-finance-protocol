@@ -71,7 +71,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     returns (uint256 totalRate, uint256)
   {
     if (_boostPoolMask == 0 || !_updateBoostPool) {
-      return super.internalUpdateBaseline(baseline, baselineMask | _boostPoolMask);
+      return super.internalUpdateBaseline(baseline, baselineMask);
     }
 
     (totalRate, baselineMask) = super.internalUpdateBaseline(baseline, baselineMask & ~_boostPoolMask);
