@@ -117,7 +117,7 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
 
   /// @notice Gets a list of prices from a list of assets addresses
   /// @param assets The list of assets addresses
-  function getAssetsPrices(address[] calldata assets) external view returns (uint256[] memory) {
+  function getAssetsPrices(address[] calldata assets) external view override returns (uint256[] memory) {
     uint256[] memory prices = new uint256[](assets.length);
     for (uint256 i = 0; i < assets.length; i++) {
       prices[i] = getAssetPrice(assets[i]);
