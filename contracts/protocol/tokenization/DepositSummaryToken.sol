@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import '../../tools/Errors.sol';
-import './interfaces/PoolTokenConfig.sol';
+import '../../interfaces/IRewardedToken.sol';
 import '../../tools/tokens/ERC20NoTransferBase.sol';
 import '../../tools/tokens/ERC20DetailsBase.sol';
 import '../../tools/tokens/IERC20Detailed.sol';
@@ -41,8 +41,8 @@ contract DepositSummaryToken is ERC20NoTransferBase, ERC20DetailsBase, MarketAcc
     for (uint256 i = assets.length; i > 0; ) {
       i--;
       DataTypes.ReserveData memory reserve = lp.getReserveData(assets[i]);
-      IERC20Detailed depositToken = IERC20Detailed(reserve.depositTokenAddress);
-      total += (prices[i] * depositToken.balanceOf(account)) / (10**depositToken.decimals());
+      address token = reserve.depositTokenAddress;
+      total += (prices[i] * IRewardedToken(token).rewardedBalanceOf(account)) / (10**IERC20Detailed(token).decimals());
     }
     return total;
   }
@@ -52,8 +52,8 @@ contract DepositSummaryToken is ERC20NoTransferBase, ERC20DetailsBase, MarketAcc
     for (uint256 i = assets.length; i > 0; ) {
       i--;
       DataTypes.ReserveData memory reserve = lp.getReserveData(assets[i]);
-      IERC20Detailed depositToken = IERC20Detailed(reserve.depositTokenAddress);
-      total += (prices[i] * depositToken.totalSupply()) / (10**depositToken.decimals());
+      IERC20Detailed token = IERC20Detailed(reserve.depositTokenAddress);
+      total += (prices[i] * token.totalSupply()) / (10**token.decimals());
     }
     return total;
   }
@@ -63,10 +63,8 @@ contract DepositSummaryToken is ERC20NoTransferBase, ERC20DetailsBase, MarketAcc
     for (uint256 i = assets.length; i > 0; ) {
       i--;
       DataTypes.ReserveData memory reserve = lp.getReserveData(assets[i]);
-      address depositToken = reserve.depositTokenAddress;
-      total +=
-        (prices[i] * IERC20Detailed(assets[i]).balanceOf(depositToken)) /
-        (10**IERC20Detailed(depositToken).decimals());
+      address token = reserve.depositTokenAddress;
+      total += (prices[i] * IERC20Detailed(assets[i]).balanceOf(token)) / (10**IERC20Detailed(token).decimals());
     }
     return total;
   }
