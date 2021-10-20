@@ -13,6 +13,7 @@ contract AGFTokenV2 is AGFTokenV1, IRoamingToken {
   uint256 private constant TOKEN_REVISION = 2;
 
   int256 private _roamingSupply;
+  uint256 private _sequence;
 
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
@@ -35,7 +36,7 @@ contract AGFTokenV2 is AGFTokenV1, IRoamingToken {
     _burn(sender, amount);
     _roamingSupply -= int256(amount);
 
-    result = RoamingData(amount, allocatedSupply(), chainId, block.timestamp, block.number);
+    result = RoamingData(amount, allocatedSupply(), chainId, ++_sequence);
     emit BurnedToRoaming(sender, amount, result);
     return result;
   }

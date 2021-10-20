@@ -6,8 +6,7 @@ interface IRoamingToken {
     uint256 amount;
     uint256 allocatedSupply;
     uint256 fromChainId;
-    uint256 timestamp;
-    uint256 blockNumber;
+    uint256 sequence;
   }
 
   event BurnedToRoaming(address indexed sender, uint256 amount, RoamingData data);
