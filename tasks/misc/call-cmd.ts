@@ -2,23 +2,27 @@ import { task, types } from 'hardhat/config';
 import { exit } from 'process';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import { eNetwork } from '../../helpers/types';
+import { ICallCommand } from '../helpers/call-cmd';
 import { getDefaultMarketAddressController } from '../helpers/utils';
 
 task('call-cmd', 'Invokes a configuration command')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
-  .addOptionalParam('cmd', 'Name of command', undefined, types.string)
   .addFlag('static', 'Make this call as static')
-  .addFlag('compatible', 'Use backward compatible mode')
-  .addOptionalParam('roles', 'Roles required', '', types.string)
-  .addOptionalParam('gasLimit', 'Gas limit', undefined, types.int)
+  .addFlag('waittx', 'Wait for tx to complete')
+  .addOptionalParam('roles', 'Role(s) for the call', '', types.string)
+  .addOptionalParam('gaslimit', 'Gas limit', undefined, types.int)
   .addOptionalVariadicPositionalParam('args', 'Command arguments')
-  .setAction(async ({ ctl, cmd, roles, static: staticCall, compatible, gasLimit, args }, DRE) => {
+  .setAction(async ({ ctl, waittx, roles, static: staticCall, gaslimit: gasLimit, args }, DRE) => {
     try {
       await DRE.run('set-DRE');
 
-      const prep = await prepareArgs(<eNetwork>DRE.network.name, ctl, cmd, roles, args);
+      const prep = await prepareArgs(<eNetwork>DRE.network.name, ctl, roles, args);
 
-      await DRE.run('helper:call-cmd', { ...prep, static: staticCall, compatible, gasLimit });
+      await DRE.run('helper:call-cmd', {
+        mode: staticCall ? 'static' : waittx ? 'waitTx' : 'call',
+        ...prep,
+        gaslimit: gasLimit,
+      });
     } catch (err) {
       console.error(err);
       exit(1);
@@ -27,16 +31,15 @@ task('call-cmd', 'Invokes a configuration command')
 
 task('encode-cmd', 'Encodes a configuration command')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
-  .addOptionalParam('cmd', 'Name of command', undefined, types.string)
-  .addOptionalParam('roles', 'Roles required', '', types.string)
+  .addOptionalParam('roles', 'Role(s) for the call', '', types.string)
   .addOptionalVariadicPositionalParam('args', 'Command arguments')
-  .setAction(async ({ ctl, cmd, roles, args }, DRE) => {
+  .setAction(async ({ ctl, roles, args }, DRE) => {
     try {
       await DRE.run('set-DRE');
 
-      const prep = await prepareArgs(<eNetwork>DRE.network.name, ctl, cmd, roles, args);
+      const prep = await prepareArgs(<eNetwork>DRE.network.name, ctl, roles, args);
 
-      await DRE.run('helper:call-cmd', { ...prep, encode: true });
+      await DRE.run('helper:call-cmd', { mode: 'encode', ...prep });
     } catch (err) {
       console.error(err);
       exit(1);
@@ -46,23 +49,45 @@ task('encode-cmd', 'Encodes a configuration command')
 const prepareArgs = async (
   network: eNetwork,
   ctl: string,
-  cmd: string,
   roles: string,
-  args: any[]
+  args: string[]
 ): Promise<{
   ctl: string;
-  cmd: string;
-  roles: string[];
-  args: any[];
+  cmds: ICallCommand[];
 }> => {
   ctl = await getDefaultMarketAddressController(network, ctl);
-
-  if (cmd === undefined && args.length > 0) {
-    cmd = args[0];
-    args = args.slice(1);
-  }
+  const cmds: ICallCommand[] = [];
+  const separator = '///';
 
   const roleList: string[] = roles === '' ? [] : roles[0] !== '[' ? [roles] : JSON.parse(roles);
 
-  return { ctl, cmd, roles: roleList, args };
+  args.push(separator);
+  let j = 0;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] != separator || i == j) {
+      continue;
+    }
+    let cmd = args[j] || '';
+    let roles = [...roleList];
+
+    while (true) {
+      const pos = cmd.indexOf('/');
+      if (pos < 0) {
+        break;
+      }
+      roles.push(cmd.substring(0, pos));
+      cmd = cmd.substring(pos + 1);
+    }
+
+    cmds.push({
+      roles,
+      cmd,
+      args: args.slice(j + 1, i),
+    });
+    j = i + 1;
+  }
+
+  console.log(cmds);
+
+  return { ctl, cmds };
 };
