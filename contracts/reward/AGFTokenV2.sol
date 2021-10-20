@@ -19,37 +19,33 @@ contract AGFTokenV2 is AGFTokenV1, IRoamingToken {
     return TOKEN_REVISION;
   }
 
-  function burnToRoaming(address sender, uint256 amount)
-    external
-    override
-    aclHas(AccessFlags.REWARD_BRIDGE)
-    returns (RoamingData memory result)
-  {
+  function burnToRoaming(
+    address sender,
+    uint256 amount,
+    uint256 toNetworkId
+  ) external override aclHas(AccessFlags.REWARD_BRIDGE) returns (RoamingData memory result) {
     require(amount > 0 && amount <= uint256(type(int256).max), 'INVALID_AMOUNT');
-
-    uint256 chainId;
-    // solhint-disable-next-line no-inline-assembly
-    assembly {
-      chainId := chainid()
-    }
 
     _burn(sender, amount);
     _roamingSupply -= int256(amount);
 
-    result = RoamingData(amount, allocatedSupply(), chainId, ++_sequence);
-    emit BurnedToRoaming(sender, amount, result);
+    result = RoamingData(allocatedSupply(), ++_sequence);
+    emit BurnedToRoaming(sender, amount, toNetworkId, result);
     return result;
   }
 
-  function mintFromRoaming(address receiver, RoamingData calldata data)
-    external
-    override
-    aclHas(AccessFlags.REWARD_BRIDGE)
-  {
-    require(data.amount > 0 && data.amount <= uint256(type(int256).max), 'INVALID_AMOUNT');
-    _mintReward(receiver, data.amount);
-    _roamingSupply += int256(data.amount);
-    emit MintedFromRoaming(receiver, data.amount, data);
+  function mintFromRoaming(
+    address receiver,
+    uint256 amount,
+    uint256 fromNetworkId,
+    RoamingData calldata data
+  ) external override aclHas(AccessFlags.REWARD_BRIDGE) {
+    require(amount > 0 && amount <= uint256(type(int256).max), 'INVALID_AMOUNT');
+
+    _mintReward(receiver, amount);
+    _roamingSupply += int256(amount);
+
+    emit MintedFromRoaming(receiver, amount, fromNetworkId, data);
   }
 
   function roamingSupply() external view override returns (int256) {
