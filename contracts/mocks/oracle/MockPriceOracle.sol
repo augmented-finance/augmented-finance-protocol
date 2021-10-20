@@ -11,6 +11,15 @@ contract MockPriceOracle is IPriceOracle {
     return prices[_asset];
   }
 
+  function getAssetsPrices(address[] calldata assets) external view override returns (uint256[] memory result) {
+    result = new uint256[](assets.length);
+    for (uint256 i = assets.length; i > 0; ) {
+      i--;
+      result[i] = prices[assets[i]];
+    }
+    return result;
+  }
+
   function setAssetPrice(address _asset, uint256 _price) external {
     prices[_asset] = _price;
     emit AssetPriceUpdated(_asset, _price, block.timestamp);
