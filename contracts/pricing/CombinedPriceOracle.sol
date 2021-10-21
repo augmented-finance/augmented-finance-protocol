@@ -50,6 +50,14 @@ contract CombinedPriceOracle is IManagedCombinedPriceOracle {
     _;
   }
 
+  function getQuoteAsset() public view returns (address) {
+    return _quote;
+  }
+
+  function getQuoteAssetAndUnit() public view returns (address, uint256) {
+    return (_quote, _statics[_quote].staticPrice);
+  }
+
   function getAssetPrice(address asset) public view override returns (uint256 v) {
     if ((v = _getAssetPrice(asset)) != 0) {
       return v;
