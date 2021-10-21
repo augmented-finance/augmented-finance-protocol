@@ -20,8 +20,6 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
   using SafeERC20 for IERC20;
 
   event WethSet(address indexed weth);
-  event AssetSourceUpdated(address indexed asset, address indexed source);
-  event FallbackOracleUpdated(address indexed fallbackOracle);
 
   mapping(address => IPriceFeed) private _assetsSources;
   IPriceOracleGetter private _fallbackOracle;
