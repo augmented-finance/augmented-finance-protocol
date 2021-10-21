@@ -312,7 +312,7 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
 
   function explainReward(address holder, uint32 at) external view override returns (RewardExplained memory) {
     require(at >= uint32(block.timestamp));
-    return internalExplainReward(holder, claimableMask(holder, 0), at);
+    return internalExplainReward(holder, super.claimableMask(holder, 0), at);
   }
 
   function internalExplainReward(
@@ -387,6 +387,9 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     super.internalSetPull(holder, mask, mode);
     if (mode == AllocationMode.SetPullSpecial) {
       super.internalCancelAutolock(holder);
+    }
+    if (_workRewards[holder].claimedAt == 0) {
+      _workRewards[holder].claimedAt = uint32(block.timestamp);
     }
   }
 }

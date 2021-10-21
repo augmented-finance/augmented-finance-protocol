@@ -317,6 +317,9 @@ export const getMockDecayingTokenLocker = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getDecayingTokenLockerProxy = async (address: tEthereumAddress) =>
+  DecayingTokenLockerFactory.connect(address, await getFirstSigner());
+
 export const getTeamRewardPool = async (address?: tEthereumAddress) =>
   TeamRewardPoolFactory.connect(address || (await getAddr(eContractid.TeamRewardPool)), await getFirstSigner());
 

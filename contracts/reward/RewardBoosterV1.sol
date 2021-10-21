@@ -7,7 +7,7 @@ import '../interfaces/IRewardMinter.sol';
 import './RewardBooster.sol';
 
 contract RewardBoosterV1 is RewardBooster, VersionedInitializable {
-  uint256 private constant CONTRACT_REVISION = 1;
+  uint256 private constant CONTRACT_REVISION = 2; // incremented due to bugfix
 
   constructor() RewardBooster(IMarketAccessController(address(0)), IRewardMinter(address(0))) {}
 

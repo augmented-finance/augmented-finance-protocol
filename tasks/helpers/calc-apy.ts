@@ -9,7 +9,7 @@ import {
   getProtocolDataProvider,
   getRewardConfiguratorProxy,
 } from '../../helpers/contracts-getters';
-import { falsyOrZeroAddress } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, getSignerN } from '../../helpers/misc-utils';
 import { tEthereumAddress } from '../../helpers/types';
 
 enum TokenType {
@@ -30,7 +30,9 @@ subtask('helper:calc-apy', 'Calculates current APYs')
     if (falsyOrZeroAddress(ctl)) {
       throw new Error('Unknown MarketAddressController');
     }
-    if (falsyOrZeroAddress(userAddr)) {
+    if (userAddr.length == 1) {
+      userAddr = (await getSignerN(userAddr)).address;
+    } else if (falsyOrZeroAddress(userAddr)) {
       userAddr = ZERO_ADDRESS;
     }
 
@@ -216,6 +218,7 @@ subtask('helper:calc-apy', 'Calculates current APYs')
     }
 
     const agfPrice = priceInfo.get(agfToken.priceToken)!;
+    const xagfAddr = xagfToken.token.toLowerCase();
     {
       console.log('\nRewards and boosts');
 
@@ -224,8 +227,6 @@ subtask('helper:calc-apy', 'Calculates current APYs')
       let boostRate = BigNumber.from(0);
       const totalDecimals = basePriceDecimals;
       const totalExp = powerOf10(totalDecimals);
-
-      const xagfAddr = xagfToken.token.toLowerCase();
 
       poolInfo.forEach((value, key) => {
         if (value.poolToken === '') {
@@ -237,7 +238,6 @@ subtask('helper:calc-apy', 'Calculates current APYs')
         totalRate = totalRate.add(annualRate);
         if (value.poolToken == xagfAddr) {
           boostRate = boostRate.add(annualRate);
-          return;
         }
         const token = tokenInfo.get(value.poolToken)!;
 
@@ -252,7 +252,7 @@ subtask('helper:calc-apy', 'Calculates current APYs')
           return;
         }
 
-        const tokenPrice = priceInfo.get(token.priceToken)!;
+        const tokenPrice = value.poolToken == xagfAddr ? agfPrice : priceInfo.get(token.priceToken)!;
         if (tokenPrice == undefined) {
           console.log('\t', value.poolName, 'unknown price', token.priceToken);
           return;
@@ -325,23 +325,31 @@ subtask('helper:calc-apy', 'Calculates current APYs')
         // TODO use rewardedBalanceOf() for pool and stake tokens
         const allBalances = await dp.batchBalanceOf([userAddr], tokenAddrList, tokenTypeList, 0);
 
-        for (let i = allBalances.length; i > 0; i--) {
-          const tokenBalances = allBalances[i - 1];
-          if (tokenBalances.rewardedBalance.eq(0)) {
+        for (let i = allBalances.length; i > 0; ) {
+          i--;
+          const tokenBalances = allBalances[i];
+          const tokenKey = tokenAddrList[i].toLowerCase();
+          const token = tokenInfo.get(tokenKey)!;
+
+          let rewardedBalance = tokenBalances.rewardedBalance;
+          if (rewardedBalance.eq(0) && tokenTypeList[i] == 0 + TokenType.RewardStake) {
+            rewardedBalance = tokenBalances.underlyingBalance;
+          }
+          if (rewardedBalance.eq(0)) {
             continue;
           }
 
-          const tokenKey = tokenAddrList[i - 1].toLowerCase();
-          const token = tokenInfo.get(tokenKey)!;
-          const balanceV = formatFixed(tokenBalances.rewardedBalance, token.decimals, 4);
-          if (falsyOrZeroAddress(token.priceToken)) {
-            console.log('\t', token.tokenSymbol, '\t', balanceV);
+          const balanceV = formatFixed(tokenBalances.balance, token.decimals, 4);
+          const rewardedV = formatFixed(rewardedBalance, token.decimals, 4);
+          const price = tokenKey == xagfAddr ? agfPrice : priceInfo.get(token.priceToken)!;
+          if (price === undefined) {
+            console.log('\t', token.tokenSymbol, '\t', balanceV, '/', rewardedV);
             continue;
           }
-          const price = priceInfo.get(token.priceToken)!;
-          const balanceValue = tokenBalances.rewardedBalance.mul(price.price);
-          rewardedBalanceValues.set(tokenKey, balanceValue);
-          totalValue = totalValue.add(balanceValue.mul(totalExp).div(powerOf10(price.decimals + token.decimals)));
+
+          const rewardedValue = rewardedBalance.mul(price.price);
+          rewardedBalanceValues.set(tokenKey, rewardedValue);
+          totalValue = totalValue.add(rewardedValue.mul(totalExp).div(powerOf10(price.decimals + token.decimals)));
 
           const priceV = formatFixed(
             price.price.mul(currencyPrice.price).div(BigNumber.from(10).pow(currencyPrice.decimals)),
@@ -349,11 +357,23 @@ subtask('helper:calc-apy', 'Calculates current APYs')
             6
           );
           const totalV = formatFixed(
-            balanceValue.mul(currencyPrice.price),
+            rewardedValue.mul(currencyPrice.price),
             token.decimals + price.decimals + currencyPrice.decimals,
             4
           );
-          console.log('\t', token.tokenSymbol, '\t', balanceV, '\t;\t', totalV, '\t@', priceV, priceCurrencyName);
+          console.log(
+            '\t',
+            token.tokenSymbol,
+            '\t',
+            balanceV,
+            '/',
+            rewardedV,
+            '\t;\t',
+            totalV,
+            '\t@',
+            priceV,
+            priceCurrencyName
+          );
         }
       }
 
@@ -397,24 +417,26 @@ subtask('helper:calc-apy', 'Calculates current APYs')
         }
       }
 
+      let minBoostBP = 0;
       console.log('\tRewards by pools:');
       for (const poolAlloc of explained.allocations) {
         const pool = poolInfo.get(poolAlloc.pool.toLowerCase())!;
-        const duration = explainedAt - poolAlloc.since;
-        const allocRate = perAnnum(poolAlloc.amount).div(duration);
         const tokenKey = pool.poolToken.toLowerCase();
-
-        if (poolAlloc.rewardType == 1 /* BoostReward */) {
+        const balanceValue = rewardedBalanceValues.get(tokenKey) || BigNumber.from(0);
+        if (balanceValue.eq(0)) {
           continue;
         }
 
         const token = tokenInfo.get(tokenKey)!;
-        const tokenPrice = priceInfo.get(token.priceToken)!;
-        const balanceValue = rewardedBalanceValues.get(tokenKey)!;
-        if (balanceValue == undefined || balanceValue!.eq(0)) {
-          continue;
+        const tokenPrice = tokenKey == xagfAddr ? agfPrice : priceInfo.get(token.priceToken)!;
+
+        let _allocAmount = poolAlloc.amount;
+        if (poolAlloc.rewardType == 1 /* BoostReward */) {
+          minBoostBP += poolAlloc.factor;
+          _allocAmount = _allocAmount.mul(poolAlloc.factor).div(10000);
         }
 
+        const allocRate = perAnnum(_allocAmount).div(explainedAt - poolAlloc.since);
         console.log(
           '\t',
           pool.poolName,
@@ -437,9 +459,11 @@ subtask('helper:calc-apy', 'Calculates current APYs')
 
       const boostDuration = explainedAt - explained.latestClaimAt;
       if (boostDuration > 0 && totalValue.gt(0)) {
+        const adjustment = explained.maxBoost.mul(minBoostBP).div(10000);
+
         const formatBoostAPY = (v: BigNumber) =>
           formatFixed(
-            perAnnum(v)
+            perAnnum(v.sub(adjustment))
               .mul(agfPrice.price)
               .mul(10 ** 4) // keep precision for 4 digits => 100.00%
               .div(totalValue)
