@@ -39,10 +39,12 @@ contract CombinedPriceOracle is IManagedCombinedPriceOracle {
 
     for (uint256 i = assets.length; i > 0; ) {
       i--;
-      _setPriceSource(assets[i], quote, Source(bytes20(sources[i].source), 0, sources[i].sourceType));
-      if (sources[i].staticPrice != 0) {
-        _setStaticPrice(assets[i], quote, sources[i].staticPrice);
-      }
+      _setPriceSource(
+        assets[i],
+        quote,
+        Source(bytes20(sources[i].source), 0, sources[i].sourceType),
+        sources[i].staticPrice
+      );
     }
   }
 
@@ -72,7 +74,7 @@ contract CombinedPriceOracle is IManagedCombinedPriceOracle {
   function _getAssetPrice(address asset) private view returns (uint256 v) {
     Source memory src = _sources[asset];
     if (src.addr != 0) {
-      if (src.sourceType == PriceSourceType.Chainlink || src.sourceType == PriceSourceType.ChainlinkWithUpdate) {
+      if (src.sourceType <= PriceSourceType.ChainlinkWithUpdate) {
         v = _getAssetPriceChainlink(address(src.addr));
       } else if (src.sourceType == PriceSourceType.UniV2EthPair) {
         v = _getAssetPriceUniV2EthPair(address(src.addr), src.flags);
@@ -126,10 +128,12 @@ contract CombinedPriceOracle is IManagedCombinedPriceOracle {
     address quote = _quote;
     for (uint256 i = assets.length; i > 0; ) {
       i--;
-      _setPriceSource(assets[i], quote, Source(bytes20(sources[i].source), 0, sources[i].sourceType));
-      if (sources[i].staticPrice != 0) {
-        _setStaticPrice(assets[i], quote, sources[i].staticPrice);
-      }
+      _setPriceSource(
+        assets[i],
+        quote,
+        Source(bytes20(sources[i].source), 0, sources[i].sourceType),
+        sources[i].staticPrice
+      );
     }
   }
 
@@ -141,21 +145,33 @@ contract CombinedPriceOracle is IManagedCombinedPriceOracle {
     }
   }
 
+  uint256 private constant KEEP_PRICE = type(uint256).max;
+
   function _setPriceSource(
     address asset,
     address quote,
-    Source memory src
+    Source memory src,
+    uint256 staticPrice
   ) private {
     require(asset != quote);
+    require(address(src.addr) != address(this), 'ILLEGAL_SOURCE');
+
     if (src.sourceType != PriceSourceType.Chainlink) {
       require(src.addr != 0);
     }
     _sources[asset] = src;
     emit AssetSourceUpdated(asset, address(src.addr));
-    if (src.addr == 0) {
-      emit AssetPriceUpdated(asset, _statics[asset].staticPrice, block.timestamp);
-    } else {
+    if (src.addr != 0) {
       _updateAssetSource(src);
+    }
+    if (staticPrice != KEEP_PRICE) {
+      require(staticPrice <= type(uint128).max);
+      _statics[asset].staticPrice = uint128(staticPrice);
+    } else {
+      staticPrice = _statics[asset].staticPrice;
+    }
+    if (src.addr == 0) {
+      emit AssetPriceUpdated(asset, staticPrice, block.timestamp);
     }
   }
 
@@ -194,6 +210,20 @@ contract CombinedPriceOracle is IManagedCombinedPriceOracle {
   }
 
   /// @dev backward compatibility
+  function setAssetSources(address[] calldata assets, address[] calldata sources) external onlyOracleAdmin {
+    require(assets.length == sources.length, 'PARAMS_LENGTH');
+    address quote = _quote;
+    for (uint256 i = assets.length; i > 0; ) {
+      i--;
+      PriceSourceType st = PriceSourceType.Chainlink;
+      if (sources[i] != address(0) && IPriceFeed(sources[i]).latestRound() == type(uint256).max) {
+        st = PriceSourceType.ChainlinkWithUpdate;
+      }
+      _setPriceSource(assets[i], quote, Source(bytes20(sources[i]), 0, st), KEEP_PRICE);
+    }
+  }
+
+  /// @dev backward compatibility
   function getAssetsPrices(address[] calldata assets) external view override returns (uint256[] memory) {
     return getAssetPrices(assets);
   }
@@ -220,7 +250,7 @@ contract CombinedPriceOracle is IManagedCombinedPriceOracle {
 
   /// @dev backward compatibility
   function setAssetPrices(address[] calldata assets, uint256[] calldata prices) external onlyOracleAdmin {
-    require(assets.length == prices.length, 'length mismatch');
+    require(assets.length == prices.length, 'PARAMS_LENGTH');
     address quote = _quote;
     for (uint256 i = assets.length; i > 0; ) {
       i--;
