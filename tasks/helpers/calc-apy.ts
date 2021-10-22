@@ -457,7 +457,9 @@ subtask('helper:calc-apy', 'Calculates current APYs')
         );
       }
 
-      const boostDuration = explainedAt - explained.latestClaimAt;
+      const protocolStartedAt = (new Date('2021-10-02').getTime() / 1000) | 0;
+
+      const boostDuration = explainedAt - (explained.latestClaimAt > 0 ? explained.latestClaimAt : protocolStartedAt);
       if (boostDuration > 0 && totalValue.gt(0)) {
         const adjustment = explained.maxBoost.mul(minBoostBP).div(10000);
 
