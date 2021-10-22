@@ -1,7 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { subtask, types } from 'hardhat/config';
 import { AccessFlags } from '../../helpers/access-flags';
-import { DAY, RAY, USD_ADDRESS, ZERO_ADDRESS } from '../../helpers/constants';
+import { DAY, MAX_LOCKER_WEEKS, RAY, USD_ADDRESS, ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getIErc20Detailed,
   getMarketAddressController,
@@ -219,6 +219,7 @@ subtask('helper:calc-apy', 'Calculates current APYs')
 
     const agfPrice = priceInfo.get(agfToken.priceToken)!;
     const xagfAddr = xagfToken.token.toLowerCase();
+
     {
       console.log('\nRewards and boosts');
 
@@ -309,6 +310,8 @@ subtask('helper:calc-apy', 'Calculates current APYs')
       );
     }
 
+    let xagfBalance = BigNumber.from(0);
+
     if (!falsyOrZeroAddress(userAddr)) {
       console.log('\nBalances of user:', userAddr);
 
@@ -333,6 +336,7 @@ subtask('helper:calc-apy', 'Calculates current APYs')
 
           let rewardedBalance = tokenBalances.rewardedBalance;
           if (rewardedBalance.eq(0) && tokenTypeList[i] == 0 + TokenType.RewardStake) {
+            xagfBalance = tokenBalances.balance;
             rewardedBalance = tokenBalances.underlyingBalance;
           }
           if (rewardedBalance.eq(0)) {
@@ -396,28 +400,8 @@ subtask('helper:calc-apy', 'Calculates current APYs')
         ? [explained.maxBoost, explained.boostLimit]
         : [explained.boostLimit, explained.maxBoost];
 
-      const boostDifference = boostAlloc.eq(0)
-        ? boostMax.mul(0)
-        : boostMax
-            .mul(10 ** 4)
-            .div(boostAlloc)
-            .toNumber() /
-          10 ** 2;
-
-      const adviceTolerance = 120; // %
-      if (boostDifference > adviceTolerance) {
-        if (explained.boostLimit.gt(boostAlloc)) {
-          console.log('\n\tGet upto', boostDifference, '% more boost rewards by locking AGF\n');
-        } else if (explained.maxBoost.gt(boostAlloc)) {
-          console.log(
-            '\n\tGet upto',
-            boostDifference,
-            '% more boost rewards by making more deposits, borrows or stakes\n'
-          );
-        }
-      }
-
       let minBoostBP = 0;
+
       console.log('\tRewards by pools:');
       for (const poolAlloc of explained.allocations) {
         const pool = poolInfo.get(poolAlloc.pool.toLowerCase())!;
@@ -457,15 +441,15 @@ subtask('helper:calc-apy', 'Calculates current APYs')
         );
       }
 
-      const protocolStartedAt = (new Date('2021-10-02').getTime() / 1000) | 0;
-
+      const protocolStartedAt = new Date('2021-10-02').getTime() / 1000;
       const boostDuration = explainedAt - (explained.latestClaimAt > 0 ? explained.latestClaimAt : protocolStartedAt);
+
       if (boostDuration > 0 && totalValue.gt(0)) {
         const adjustment = explained.maxBoost.mul(minBoostBP).div(10000);
 
         const formatBoostAPY = (v: BigNumber) =>
           formatFixed(
-            perAnnum(v.sub(adjustment))
+            perAnnum(v)
               .mul(agfPrice.price)
               .mul(10 ** 4) // keep precision for 4 digits => 100.00%
               .div(totalValue)
@@ -474,8 +458,68 @@ subtask('helper:calc-apy', 'Calculates current APYs')
             2
           );
 
-        console.log('\tCurrent boost APY:', formatBoostAPY(boostAlloc), '%');
-        console.log('\tMax boost APY:', formatBoostAPY(boostMax), '%');
+        console.log('\tCurrent boost APY:', formatBoostAPY(boostAlloc.sub(adjustment)), '%');
+        console.log('\tMax boost APY:', formatBoostAPY(boostMax.sub(adjustment)), '%');
+
+        {
+          const boostDifference = boostAlloc.eq(0)
+            ? boostMax.mul(0)
+            : boostMax
+                .mul(10 ** 4)
+                .div(boostAlloc)
+                .toNumber() /
+              10 ** 2;
+
+          const recommendedBoost = 400; // %
+          const recommendedBoostDuration = 52; // weeks
+
+          const adviceTolerance = 120; // %
+          if (boostDifference > adviceTolerance) {
+            if (explained.boostLimit.gt(boostAlloc)) {
+              console.log('\n\tGet upto', boostDifference, '% more boost rewards by locking AGF\n');
+
+              let boostTarget = explained.maxBoost.mul(recommendedBoost).div(100);
+
+              if (boostTarget.gt(explained.boostLimit)) {
+                if (minBoostBP > 0) {
+                  const workLimit = explained.boostLimit.sub(adjustment);
+                  const maxTarget = workLimit.mul(10000 + minBoostBP).div(10000);
+                  if (boostTarget.gt(maxTarget)) {
+                    boostTarget = maxTarget;
+                  }
+                } else {
+                  boostTarget = explained.boostLimit;
+                }
+              }
+              const boostTargetPct = boostTarget.mul(100).div(explained.maxBoost).toNumber();
+              if (boostTargetPct >= adviceTolerance) {
+                const moreAGF = xagfBalance
+                  .mul(boostTargetPct - 100)
+                  .div(100)
+                  .mul(MAX_LOCKER_WEEKS * 2 + 1)
+                  .div(recommendedBoostDuration);
+
+                console.log(
+                  '\tGet',
+                  boostTargetPct,
+                  '% increase of boost rewards over',
+                  recommendedBoostDuration,
+                  'week(s) by locking',
+                  formatFixed(moreAGF, agfToken.decimals, 4),
+                  'AGF for',
+                  recommendedBoostDuration,
+                  'week(s)\n'
+                );
+              }
+            } else if (explained.maxBoost.gt(boostAlloc)) {
+              console.log(
+                '\n\tGet upto',
+                boostDifference,
+                '% more boost rewards by making more deposits, borrows or stakes\n'
+              );
+            }
+          }
+        }
       }
     }
   });
