@@ -27,6 +27,7 @@ const HARDFORK = 'istanbul';
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || '';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
+const MNEMONIC_MAIN = process.env.MNEMONIC_MAIN || MNEMONIC;
 const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
 const COINMARKETCAP_KEY = process.env.COINMARKETCAP_KEY || '';
 
@@ -46,7 +47,7 @@ if (!SKIP_LOAD) {
 
 require(`${path.join(__dirname, 'tasks/misc')}/set-bre.ts`);
 
-const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
+const getCommonNetworkConfig = (networkName: eNetwork, networkId: number, mnemonic?: string) => ({
   url: NETWORKS_RPC_URL[networkName],
   hardfork: HARDFORK,
   blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
@@ -54,7 +55,7 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
   gasPrice: NETWORKS_DEFAULT_GAS[networkName],
   chainId: networkId,
   accounts: {
-    mnemonic: MNEMONIC,
+    mnemonic: mnemonic || MNEMONIC,
     path: MNEMONIC_PATH,
     initialIndex: 0,
     count: 20,
@@ -123,7 +124,7 @@ const buidlerConfig: HardhatUserConfig = {
     kovan: getCommonNetworkConfig(eEthereumNetwork.kovan, 42),
     ropsten: getCommonNetworkConfig(eEthereumNetwork.ropsten, 3),
     rinkeby: getCommonNetworkConfig(eEthereumNetwork.rinkeby, 4),
-    main: getCommonNetworkConfig(eEthereumNetwork.main, 1),
+    main: getCommonNetworkConfig(eEthereumNetwork.main, 1, MAINNET_FORK ? MNEMONIC : MNEMONIC_MAIN),
     tenderlyMain: getCommonNetworkConfig(eEthereumNetwork.tenderlyMain, 3030),
     // matic: getCommonNetworkConfig(ePolygonNetwork.matic, 137),
     // mumbai: getCommonNetworkConfig(ePolygonNetwork.mumbai, 80001),
