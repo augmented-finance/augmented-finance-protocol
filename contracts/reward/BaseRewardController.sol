@@ -235,6 +235,14 @@ abstract contract BaseRewardController is IRewardCollector, MarketAccessBitmask,
     _memberOf[msg.sender] = claimableMask(msg.sender, includeMask);
   }
 
+  function setClaimablePoolsFor(address[] calldata accounts, uint256 includeMask) external onlyConfigAdmin {
+    for (uint256 i = accounts.length; i > 0; ) {
+      i--;
+      address account = accounts[i];
+      _memberOf[account] = claimableMask(account, includeMask);
+    }
+  }
+
   function allocatedByPool(
     address holder,
     uint256 allocated,
