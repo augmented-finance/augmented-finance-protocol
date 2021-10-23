@@ -170,7 +170,7 @@ abstract contract RewardedStakeBase is
     super.doIncrementTotalSupply(stakeAmount);
     super.internalSetRewardEntryCustom(to, toCooldown);
 
-    if (amount > 0 || (mode != AllocationMode.Push && super.getRewardController() != address(0))) {
+    if ((amount > 0 || mode != AllocationMode.Push) && getRewardController() != address(0)) {
       super.internalAllocateReward(to, amount, since, mode);
     }
 
@@ -229,10 +229,14 @@ abstract contract RewardedStakeBase is
       }
     }
 
-    super.doDecrementRewardBalance(from, stakeAmount, 0);
+    (uint256 amount, uint32 since, AllocationMode mode) = super.doDecrementRewardBalance(from, stakeAmount, 0);
     super.doDecrementTotalSupply(stakeAmount);
     if (oldBalance == stakeAmount && cooldownFrom != 0) {
       super.internalSetRewardEntryCustom(from, 0);
+    }
+
+    if ((amount > 0 || mode != AllocationMode.Push) && getRewardController() != address(0)) {
+      super.internalAllocateReward(to, amount, since, mode);
     }
 
     internalTransferUnderlyingTo(from, to, underlyingAmount, index);
