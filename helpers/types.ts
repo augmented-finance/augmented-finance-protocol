@@ -49,6 +49,8 @@ export enum eContractid {
   TeamRewardPool = 'TeamRewardPool',
   PermitFreezerRewardPool = 'PermitFreezerRewardPool',
 
+  ProxyAdmin = 'ProxyAdmin',
+
   DepositTokenImpl = 'DepositTokenImpl',
   DelegationAwareDepositTokenImpl = 'DelegationAwareDepositTokenImpl',
   StableDebtTokenImpl = 'StableDebtTokenImpl',

@@ -155,9 +155,6 @@ export const addContractToJsonDb = async (
   verifyArgs?: any[]
 ) => {
   const currentNetwork = DRE.network.name;
-  const db = getDb();
-  // const deployer = contractInstance.deployTransaction.from;
-
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
   if (MAINNET_FORK || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
     console.log(`*** ${contractId} ***\n`);
@@ -171,6 +168,18 @@ export const addContractToJsonDb = async (
     console.log();
   }
 
+  await addContractAddrToJsonDb(contractId, contractInstance.address, register, verifyArgs);
+};
+
+export const addContractAddrToJsonDb = async (
+  contractId: string,
+  contractAddr: string,
+  register: boolean,
+  verifyArgs?: any[]
+) => {
+  const currentNetwork = DRE.network.name;
+  const db = getDb();
+
   let logEntry: DbInstanceEntry = {
     id: contractId,
   };
@@ -181,16 +190,16 @@ export const addContractToJsonDb = async (
     };
   }
 
-  await db.set(`${currentNetwork}.instance.${contractInstance.address}`, logEntry).write();
+  db.set(`${currentNetwork}.instance.${contractAddr}`, logEntry).write();
 
   if (register) {
     const node = `${currentNetwork}.named.${contractId}`;
     const count = (await db.get(node).value())?.count || 0;
     let namedEntry: DbNamedEntry = {
-      address: contractInstance.address,
+      address: contractAddr,
       count: count + 1,
     };
-    await db.set(`${currentNetwork}.named.${contractId}`, namedEntry).write();
+    db.set(`${currentNetwork}.named.${contractId}`, namedEntry).write();
   }
 };
 

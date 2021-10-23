@@ -48,9 +48,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     address[] memory reserveList = pool.getReservesList();
 
     address[] memory stakeList;
+    uint256 stakeListSep;
     IStakeConfigurator stakeCfg = IStakeConfigurator(_getAddress(AccessFlags.STAKE_CONFIGURATOR));
     if (address(stakeCfg) != address(0)) {
-      stakeList = stakeCfg.list();
+      (stakeList, stakeListSep) = stakeCfg.listAll();
     }
 
     tokenCount = 2 + stakeList.length + reserveList.length * 3;
@@ -97,24 +98,18 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       token = reserveList[i];
       DataTypes.ReserveData memory reserveData = pool.getReserveData(token);
       (bool isActive, bool isFrozen, bool canBorrow, bool canBorrowStable) = reserveData.configuration.getFlagsMemory();
-
-      canBorrow = isActive && canBorrow;
-      canBorrowStable = canBorrowStable && canBorrow;
-
       uint8 decimals = reserveData.configuration.getDecimalsMemory();
+      canBorrow = isActive && canBorrow;
 
       if (includeAssets) {
-        address underlying;
-        if (reserveData.configuration.isExternalStrategyMemory()) {
-          underlying = IUnderlyingStrategy(reserveData.strategy).getUnderlying(token);
-        }
-
         tokens[tokenCount] = TokenDescription(
           token,
           token,
           address(0),
           IERC20Detailed(token).symbol(),
-          underlying,
+          reserveData.configuration.isExternalStrategyMemory()
+            ? IUnderlyingStrategy(reserveData.strategy).getUnderlying(token)
+            : address(0),
           decimals,
           TokenType.PoolAsset,
           true,
@@ -123,30 +118,22 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
         tokenCount++;
       }
 
-      address subToken = reserveData.depositTokenAddress;
-      tokens[tokenCount] = TokenDescription(
-        subToken,
-        token,
-        IRewardedToken(subToken).getIncentivesController(),
-        IERC20Detailed(subToken).symbol(),
-        token,
-        decimals,
+      tokens[tokenCount] = _poolTokenData(
         TokenType.Deposit,
+        token,
+        reserveData.depositTokenAddress,
+        decimals,
         isActive,
         isFrozen
       );
       tokenCount++;
 
       if (reserveData.variableDebtTokenAddress != address(0)) {
-        subToken = reserveData.variableDebtTokenAddress;
-        tokens[tokenCount] = TokenDescription(
-          subToken,
-          token,
-          IRewardedToken(subToken).getIncentivesController(),
-          IERC20Detailed(subToken).symbol(),
-          token,
-          decimals,
+        tokens[tokenCount] = _poolTokenData(
           TokenType.VariableDebt,
+          token,
+          reserveData.variableDebtTokenAddress,
+          decimals,
           canBorrow,
           isFrozen
         );
@@ -154,16 +141,12 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
       }
 
       if (reserveData.stableDebtTokenAddress != address(0)) {
-        subToken = reserveData.stableDebtTokenAddress;
-        tokens[tokenCount] = TokenDescription(
-          subToken,
-          token,
-          IRewardedToken(subToken).getIncentivesController(),
-          IERC20Detailed(subToken).symbol(),
-          token,
-          decimals,
+        tokens[tokenCount] = _poolTokenData(
           TokenType.StableDebt,
-          canBorrowStable,
+          token,
+          reserveData.stableDebtTokenAddress,
+          decimals,
+          canBorrowStable && canBorrow,
           isFrozen
         );
         tokenCount++;
@@ -171,23 +154,52 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     }
 
     for (uint256 i = 0; i < stakeList.length; i++) {
-      token = stakeList[i];
-      address underlying = IDerivedToken(token).UNDERLYING_ASSET_ADDRESS();
-      tokens[tokenCount] = TokenDescription(
+      if (stakeList[i] == address(0)) {
+        continue;
+      }
+      tokens[tokenCount] = _stakeTokenData(stakeList[i], i < stakeListSep);
+      tokenCount++;
+    }
+
+    return (tokens, tokenCount);
+  }
+
+  function _poolTokenData(
+    TokenType tokenType,
+    address token,
+    address subToken,
+    uint8 decimals,
+    bool active,
+    bool frozen
+  ) private view returns (TokenDescription memory) {
+    return
+      TokenDescription(
+        subToken,
+        token,
+        IRewardedToken(subToken).getIncentivesController(),
+        IERC20Detailed(subToken).symbol(),
+        token,
+        decimals,
+        tokenType,
+        active,
+        frozen
+      );
+  }
+
+  function _stakeTokenData(address token, bool hidden) private view returns (TokenDescription memory) {
+    address underlying = IDerivedToken(token).UNDERLYING_ASSET_ADDRESS();
+    return
+      TokenDescription(
         token,
         underlying,
         IRewardedToken(token).getIncentivesController(),
         IERC20Detailed(token).symbol(),
         underlying,
         IERC20Detailed(token).decimals(),
-        TokenType.Stake,
+        hidden ? TokenType.HiddenStake : TokenType.Stake,
         true,
         false
       );
-      tokenCount++;
-    }
-
-    return (tokens, tokenCount);
   }
 
   function getAllTokens(bool includeAssets)
@@ -204,9 +216,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     address[] memory reserveList = pool.getReservesList();
 
     address[] memory stakeList;
+    uint256 stakeListSep;
     IStakeConfigurator stakeCfg = IStakeConfigurator(_getAddress(AccessFlags.STAKE_CONFIGURATOR));
     if (address(stakeCfg) != address(0)) {
-      stakeList = stakeCfg.list();
+      (stakeList, stakeListSep) = stakeCfg.listAll();
     }
 
     tokenCount = 2 + stakeList.length + reserveList.length * 3;
@@ -231,14 +244,10 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     }
 
     for (uint256 i = 0; i < reserveList.length; i++) {
-      address token = reserveList[i];
-      DataTypes.ReserveData memory reserveData = pool.getReserveData(token);
-      (bool isActive, , bool canBorrow, bool canBorrowStable) = reserveData.configuration.getFlagsMemory();
-      canBorrow = isActive && canBorrow;
-      canBorrowStable = canBorrowStable && canBorrow;
+      DataTypes.ReserveData memory reserveData = pool.getReserveData(reserveList[i]);
 
       if (includeAssets) {
-        tokens[tokenCount] = token;
+        tokens[tokenCount] = reserveList[i];
         tokenTypes[tokenCount] = TokenType.PoolAsset;
         tokenCount++;
       }
@@ -262,7 +271,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
 
     for (uint256 i = 0; i < stakeList.length; i++) {
       tokens[tokenCount] = stakeList[i];
-      tokenTypes[tokenCount] = TokenType.Stake;
+      tokenTypes[tokenCount] = i < stakeListSep ? TokenType.HiddenStake : TokenType.Stake;
       tokenCount++;
     }
 
@@ -510,7 +519,7 @@ contract ProtocolDataProvider is IUiPoolDataProvider {
     TokenType tokenType
   ) public view returns (TokenBalance memory r) {
     if (tokenType >= TokenType.Stake) {
-      if (tokenType == TokenType.Stake) {
+      if (tokenType == TokenType.Stake || tokenType == TokenType.HiddenStake) {
         (r.balance, r.unstakeWindowStart, r.unstakeWindowEnd) = IStakeToken(token).balanceAndCooldownOf(user);
         r.underlyingBalance = IStakeToken(token).balanceOfUnderlying(user);
         r.rewardedBalance = IStakeToken(token).rewardedBalanceOf(user);

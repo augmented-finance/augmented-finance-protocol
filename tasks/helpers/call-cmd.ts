@@ -9,6 +9,7 @@ import {
   getPermitFreezerRewardPool,
   getProtocolDataProvider,
   getRewardConfiguratorProxy,
+  getStakeConfiguratorImpl,
 } from '../../helpers/contracts-getters';
 import {
   falsyOrZeroAddress,
@@ -151,6 +152,7 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
       tx = await ac.callWithRoles(prepareCallWithRolesArgs(), { gasLimit });
     }
 
+    console.log('Tx hash:', tx.hash);
     if (waitTxFlag) {
       console.log('Gas used:', (await tx.wait(1)).gasUsed.toString());
     }
@@ -258,8 +260,6 @@ const parseCommand = async (
       }
 
       console.log('Meltdown date:', timestamp == 0 ? 'never' : new Date(timestamp * 1000));
-
-      // pool.setMeltDownAt(timestamp);
       await callContract(ac, [AccessFlags.REWARD_CONFIG_ADMIN], pool, 'setMeltDownAt', [timestamp], callParams);
     },
 
@@ -284,6 +284,34 @@ const parseCommand = async (
         [codes, owners],
         AccessFlags.REFERRAL_ADMIN
       );
+    },
+
+    setClaimablePools: async () =>
+      await call(
+        qualifiedName(eContractid.RewardBoosterImpl, AccessFlags.REWARD_CONTROLLER, 'setClaimablePoolsFor'),
+        [args.slice(1), args[0]],
+        AccessFlags.REWARD_CONFIG_ADMIN
+      ),
+
+    upgradeRewardPool: async () =>
+      await call(
+        qualifiedName(eContractid.RewardConfiguratorImpl, AccessFlags.REWARD_CONFIGURATOR, 'updateRewardPool'),
+        [{ pool: await getRewardPoolByName(ac, args[0]), impl: args[1] }],
+        AccessFlags.REWARD_CONFIG_ADMIN
+      ),
+
+    upgradeStakeToken: async () => {
+      const token = await findToken(ac, args[0]);
+      const sc = await getStakeConfiguratorImpl(await ac.getAddress(AccessFlags.STAKE_CONFIGURATOR));
+      const data = await sc.dataOf(token);
+      const fnArgs = {
+        token: token,
+        stakeTokenImpl: args[1],
+        stkTokenName: data.stkTokenName,
+        stkTokenSymbol: data.stkTokenSymbol,
+      };
+
+      await callContract(ac, [AccessFlags.STAKE_ADMIN], sc, 'updateStakeToken', [fnArgs], callParams);
     },
   };
 
@@ -419,30 +447,35 @@ const callContract = async (
   callParams.applyCall(accessFlags, contract, fnFrag.name, isStatic, args);
 };
 
-const findPriceTokens = async (ac: MarketAccessController, names: string[], warn?: boolean) => {
-  let tokens: undefined | any[] = undefined;
-  const getTokens = async () => {
-    if (tokens === undefined) {
-      const dp = await getProtocolDataProvider(await ac.getAddress(AccessFlags.DATA_HELPER));
-      const list = await dp.getAllTokenDescriptions(true);
-      tokens = list.tokens.slice(0, list.tokenCount.toNumber());
-    }
-    return tokens!;
-  };
+let tokenList: undefined | any[] = undefined;
+const _getTokenList = async (ac: MarketAccessController) => {
+  if (tokenList === undefined) {
+    const dp = await getProtocolDataProvider(await ac.getAddress(AccessFlags.DATA_HELPER));
+    const list = await dp.getAllTokenDescriptions(true);
+    tokenList = list.tokens.slice(0, list.tokenCount.toNumber());
+  }
+  return tokenList!;
+};
 
+const findPriceTokens = async (ac: MarketAccessController, names: string[], warn?: boolean) => {
   const result: string[] = [];
   for (const name of names) {
-    result.push(await _findPriceToken(getTokens, name, warn === true));
+    result.push(await _findPriceToken(ac, _getTokenList, name, warn === true));
   }
   return result;
 };
 
-const _findPriceToken = async (tokensFn: () => Promise<any[]>, name: string, warn: boolean) => {
+const _findPriceToken = async (
+  ac: MarketAccessController,
+  tokensFn: (ac: MarketAccessController) => Promise<any[]>,
+  name: string,
+  warn: boolean
+) => {
   name = name.toString();
   if (!name || !falsyOrZeroAddress(name)) {
     return name;
   }
-  const tokens = await tokensFn();
+  const tokens = await tokensFn(ac);
   const n = name.toLowerCase();
   const matched = tokens.filter((value) => value.tokenSymbol.toLowerCase() == n);
   if (matched.length == 0) {
@@ -467,34 +500,70 @@ const _findPriceToken = async (tokensFn: () => Promise<any[]>, name: string, war
   return priceKey;
 };
 
+const findToken = async (ac: MarketAccessController, name: string) => {
+  return await _findToken(ac, _getTokenList, name);
+};
+
+const _findToken = async (
+  ac: MarketAccessController,
+  tokensFn: (ac: MarketAccessController) => Promise<any[]>,
+  name: string
+) => {
+  name = name.toString();
+  if (!name || !falsyOrZeroAddress(name)) {
+    return name;
+  }
+  const tokens = await tokensFn(ac);
+  const n = name.toLowerCase();
+  const matched = tokens.filter((value) => value.tokenSymbol.toLowerCase() == n);
+  if (matched.length == 0) {
+    throw new Error('Unknown token name: ' + name);
+  } else if (matched.length > 1) {
+    throw new Error('Ambigous token name: ' + name);
+  }
+
+  if (falsyOrZeroAddress(matched[0].token)) {
+    throw new Error('Token has no address: ' + name);
+  }
+
+  return <string>matched[0].token;
+};
+
+const poolsByNames = new Map<string, tEthereumAddress>();
+
+const getRewardPoolByName = async (ac: MarketAccessController, name: string) => {
+  if (poolsByNames.size == 0) {
+    const rc = await getRewardConfiguratorProxy(await ac.getAddress(AccessFlags.REWARD_CONFIGURATOR));
+
+    const list = await rc.list();
+    await Promise.all(
+      list.map(async (value) => {
+        const pool = await getIManagedRewardPool(value);
+        const name = await pool.getPoolName();
+        const key = name.toLowerCase();
+        if (poolsByNames.has(key)) {
+          console.log('WARNING! Duplicate pool name: ', name, value, poolsByNames.get(key));
+          return;
+        }
+        poolsByNames.set(key, value);
+      })
+    );
+  }
+  const addr = poolsByNames.get(name.toLowerCase());
+  if (falsyOrZeroAddress(addr)) {
+    console.log(poolsByNames);
+    throw new Error('Unknown pool name: ' + name);
+  }
+  return addr;
+};
+
 const preparePoolNamesAndShares = async (ac: MarketAccessController, args: any[]) => {
-  const rc = await getRewardConfiguratorProxy(await ac.getAddress(AccessFlags.REWARD_CONFIGURATOR));
-
-  const byNames = new Map<string, tEthereumAddress>();
-
   const pools: string[] = [];
   const shares: number[] = [];
   for (let i = 0; i < args.length; i += 2) {
     let addr = args[i].toString();
     if (falsyOrZeroAddress(addr)) {
-      if (byNames.size == 0) {
-        const list = await rc.list();
-        await Promise.all(
-          list.map(async (value) => {
-            const pool = await getIManagedRewardPool(value);
-            const name = await pool.getPoolName();
-            const key = name.toLowerCase();
-            if (byNames.has(key)) {
-              console.log('WARNING! Duplicate pool name: ', name, value, byNames.get(key));
-              return;
-            }
-            byNames.set(key, value);
-          })
-        );
-        console.log(byNames);
-      }
-      addr = byNames.get(addr.toLowerCase());
-
+      addr = await getRewardPoolByName(ac, addr);
       if (falsyOrZeroAddress(addr)) {
         throw new Error('Unknown pool name: ' + args[i]);
       }

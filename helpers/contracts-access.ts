@@ -117,6 +117,12 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
     },
   },
 
+  [eContractid.ProxyAdmin]: {
+    functions: {
+      upgradeAndCall: 'ProxyOwner: caller is not the owner',
+    },
+  },
+
   [eContractid.UniswapLiquiditySwapAdapter]: uniswapAdapter,
   [eContractid.UniswapRepayAdapter]: uniswapAdapter,
   [eContractid.FlashLiquidationAdapter]: uniswapAdapter,

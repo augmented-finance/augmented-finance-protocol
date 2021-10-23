@@ -31,6 +31,7 @@ import {
   getPriceFeedUniEthPair,
   getPriceFeedUniEthToken,
   getProtocolDataProvider,
+  getProxyAdmin,
   getReferralRewardPoolImpl,
   getRewardBooster,
   getRewardConfiguratorProxy,
@@ -62,6 +63,8 @@ const CONTRACT_GETTERS: Omit<Record<eContractid, ContractGetterFn>, ignoredKeys>
   [eContractid.OracleRouter]: getOracleRouter,
   [eContractid.ProtocolDataProvider]: getProtocolDataProvider,
   [eContractid.WETHGateway]: getWETHGateway,
+
+  [eContractid.ProxyAdmin]: getProxyAdmin,
 
   [eContractid.TeamRewardPool]: getTeamRewardPool,
   [eContractid.PermitFreezerRewardPool]: getPermitFreezerRewardPool,

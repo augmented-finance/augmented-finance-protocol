@@ -41,11 +41,11 @@ interface IStakeConfigurator {
 
   function list() external view returns (address[] memory tokens);
 
+  function listAll() external view returns (address[] memory tokens, uint256 genCount);
+
   function dataOf(address stakeToken) external view returns (StakeTokenData memory data);
 
   function stakeTokenOf(address underlying) external view returns (address);
-
-  function getStakeTokensData() external view returns (StakeTokenData[] memory dataList, uint256 count);
 
   function setCooldownForAll(uint32 cooldownPeriod, uint32 unstakePeriod) external;
 }

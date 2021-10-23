@@ -53,6 +53,7 @@ import {
   DepositStakeTokenFactory,
   PriceFeedUniEthPairFactory,
   PriceFeedUniEthTokenFactory,
+  ProxyAdminFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -397,6 +398,9 @@ export const getAGTokenByName = async (name: string): Promise<DepositToken> => {
 
 export const getStakeConfiguratorImpl = async (address: tEthereumAddress) =>
   StakeConfiguratorFactory.connect(address, await getFirstSigner());
+
+export const getProxyAdmin = async (address: tEthereumAddress) =>
+  ProxyAdminFactory.connect(address, await getFirstSigner());
 
 export const getStakeTokenImpl = async (address: tEthereumAddress) =>
   StakeTokenFactory.connect(address, await getFirstSigner());

@@ -114,7 +114,8 @@ interface IUiPoolDataProvider {
     StableDebt,
     Stake,
     Reward,
-    RewardStake
+    RewardStake,
+    HiddenStake
   }
 
   struct TokenDescription {

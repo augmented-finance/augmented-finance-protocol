@@ -386,7 +386,7 @@ export const CommonsConfig: ICommonConfiguration = {
   },
 
   RewardParams: {
-    Autolock: 12, // 12 weeks auto-prolongate
+    Autolock: 4, // 4 weeks auto-prolongate
     MinBoostBP: 1000, // 10%
     InitialRateWad: {
       [eEthereumNetwork.ropsten]: 1,
