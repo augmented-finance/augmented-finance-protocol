@@ -420,7 +420,8 @@ subtask('helper:calc-apy', 'Calculates current APYs')
           _allocAmount = _allocAmount.mul(poolAlloc.factor).div(10000);
         }
 
-        const allocRate = perAnnum(_allocAmount).div(explainedAt - poolAlloc.since);
+        const allocPeriod = explainedAt - poolAlloc.since;
+        const allocRate = perAnnum(_allocAmount).div(allocPeriod);
         console.log(
           '\t',
           pool.poolName,
@@ -437,7 +438,10 @@ subtask('helper:calc-apy', 'Calculates current APYs')
             agfToken.decimals + agfPrice.decimals + 4 - (token.decimals + tokenPrice.decimals) - 2,
             2
           ),
-          '%'
+          '%\tSince:',
+          allocPeriod,
+          's\tReward:',
+          formatFixed(_allocAmount, agfToken.decimals, 4)
         );
       }
 
