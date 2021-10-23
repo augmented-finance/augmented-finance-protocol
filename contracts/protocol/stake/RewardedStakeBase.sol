@@ -170,8 +170,8 @@ abstract contract RewardedStakeBase is
     super.doIncrementTotalSupply(stakeAmount);
     super.internalSetRewardEntryCustom(to, toCooldown);
 
-    if (amount > 0 || mode != AllocationMode.Push) {
-      internalAllocateReward(to, amount, since, mode);
+    if (amount > 0 || (mode != AllocationMode.Push && super.getRewardController() != address(0))) {
+      super.internalAllocateReward(to, amount, since, mode);
     }
 
     emit Staked(from, to, underlyingAmount, referral);
