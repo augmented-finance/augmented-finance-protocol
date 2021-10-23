@@ -113,7 +113,7 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
     console.log('\nCaller', await ac.signer.getAddress());
 
     if (mode == 'static' || (allStatic && allFlags == 0)) {
-      if (contractCalls.length == 1) {
+      if (contractCalls.length == 1 && allFlags == 0) {
         const cc = contractCalls[0];
         console.log(`Calling as static`, cc.contract.address);
         const result = await cc.contract.callStatic[cc.fnName](...cc.args);
