@@ -632,7 +632,10 @@ export const deployMockDepositToken = async (
   return instance;
 };
 
-export const deployMockAgfToken = async (args: [tEthereumAddress, string, string], verify?: boolean) => {
+export const deployMockAgfToken = async (
+  args: [remoteAcl: tEthereumAddress, name: string, symbol: string],
+  verify?: boolean
+) => {
   const instance = await withSaveAndVerify(
     await new MockAgfTokenFactory(await getFirstSigner()).deploy(),
     eContractid.MockAgfToken,

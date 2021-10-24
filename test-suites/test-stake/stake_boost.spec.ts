@@ -23,7 +23,7 @@ import {
 } from '../../types';
 import { applyDepositPlanAndClaimAll, TestInfo } from '../test_utils';
 import { min } from 'underscore';
-import { MAX_UINT_AMOUNT, WAD, ZERO_ADDRESS } from '../../helpers/constants';
+import { MAX_UINT_AMOUNT, ZERO_ADDRESS } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
