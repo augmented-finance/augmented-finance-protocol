@@ -64,6 +64,7 @@ import {
   MockTreasuryRewardPoolFactory,
   PriceFeedUniEthPairFactory,
   PriceFeedUniEthTokenFactory,
+  MockStakeTokenFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -982,6 +983,14 @@ export const deployMockDepositStakeToken = async (
 
   return instance;
 };
+
+export const deployMockStakeToken = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await new MockStakeTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.MockStakeToken,
+    [],
+    verify
+  );
 
 export const deployDelegatedStrategyAave = async (args: [name: string], verify?: boolean) =>
   withSaveAndVerify(

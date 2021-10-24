@@ -24,7 +24,6 @@ contract RewardConfigurator is MarketAccessBitmask, VersionedInitializable, IRew
     return CONFIGURATOR_REVISION;
   }
 
-  // ProxyAdmin internal immutable _proxies;
   mapping(string => address) private _namedPools;
 
   ProxyAdmin private _proxies;

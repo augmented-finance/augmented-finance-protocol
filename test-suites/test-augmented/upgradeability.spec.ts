@@ -9,6 +9,8 @@ import {
   getMockStableDebtToken,
   getMockVariableDebtToken,
   getStableDebtToken,
+  getStakeConfiguratorImpl,
+  getStakeTokenImpl,
   getVariableDebtToken,
 } from '../../helpers/contracts-getters';
 import {
@@ -18,6 +20,9 @@ import {
   deployMockAgfToken,
   deployLendingPoolImpl,
   deployAGFTokenV1Impl,
+  deployStakeTokenImpl,
+  deployStakeConfiguratorImpl,
+  deployMockStakeToken,
 } from '../../helpers/contracts-deployments';
 import { AccessFlags } from '../../helpers/access-flags';
 import { falsyOrZeroAddress } from '../../helpers/misc-utils';
@@ -262,5 +267,68 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       expect(revision).lt(rev);
       expect(newRevision).eq(rev);
     }
+  });
+
+  it('Update stake token implementation', async () => {
+    const { dai, addressesProvider, deployer } = testEnv;
+
+    await addressesProvider.grantRoles(deployer.address, AccessFlags.STAKE_ADMIN);
+
+    let scAddr = await addressesProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR);
+    if (falsyOrZeroAddress(scAddr)) {
+      const impl = await deployStakeConfiguratorImpl(false, false);
+      await addressesProvider.setAddressAsProxy(AccessFlags.STAKE_CONFIGURATOR, impl.address);
+      scAddr = await addressesProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR);
+    }
+    const sc = await getStakeConfiguratorImpl(scAddr);
+    const stakeImpl = await deployStakeTokenImpl(false, false);
+
+    const initParams = {
+      stakeTokenImpl: stakeImpl.address,
+      stakedToken: dai.address,
+      strategy: ZERO_ADDRESS,
+      stkTokenName: 'Test stake token',
+      stkTokenSymbol: 'xagTEST',
+      cooldownPeriod: 1,
+      unstakePeriod: 7200,
+      stkTokenDecimals: 18,
+      maxSlashable: 3000,
+      depositStake: false,
+    };
+
+    await sc.batchInitStakeTokens([initParams]);
+    const stake = await getStakeTokenImpl(await sc.stakeTokenOf(dai.address));
+
+    expect(await sc.implementationOf(stake.address)).eq(stakeImpl.address);
+
+    expect(await stake.name()).eq(initParams.stkTokenName);
+    expect(await stake.symbol()).eq(initParams.stkTokenSymbol);
+    const revision = await stake.REVISION();
+    const domainSep = await stake.DOMAIN_SEPARATOR();
+
+    const impl2 = await deployMockStakeToken();
+    const newRevision = await impl2.REVISION();
+    expect(revision).not.eq(newRevision);
+
+    const updParam = {
+      token: stake.address,
+      stakeTokenImpl: impl2.address,
+      stkTokenName: 'Test 2 name',
+      stkTokenSymbol: 'xag2TEST',
+    };
+    await sc.updateStakeToken(updParam);
+
+    expect(18).eq(await stake.decimals());
+    expect(domainSep).eq(await stake.DOMAIN_SEPARATOR());
+    {
+      const rev = await stake.REVISION();
+      expect(revision).lt(rev);
+      expect(newRevision).eq(rev);
+    }
+
+    expect(await sc.implementationOf(stake.address)).eq(impl2.address);
+
+    expect(updParam.stkTokenName).eq(await stake.name());
+    expect(updParam.stkTokenSymbol).eq(await stake.symbol());
   });
 });

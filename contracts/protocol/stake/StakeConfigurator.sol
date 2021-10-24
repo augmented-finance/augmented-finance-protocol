@@ -22,7 +22,6 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
   uint256 private _entryCount;
   mapping(address => uint256) private _underlyings;
 
-  // ProxyAdmin internal immutable _proxies;
   ProxyAdmin private _proxies;
   uint256 private _legacyCount;
 

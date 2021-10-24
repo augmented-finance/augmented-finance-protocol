@@ -19,10 +19,14 @@ contract StakeToken is RewardedStakeBase, VersionedInitializable {
     StakeTokenConfig calldata params,
     string calldata name,
     string calldata symbol
-  ) external virtual override initializer(TOKEN_REVISION) {
-    super._initializeERC20(name, symbol, params.stakedTokenDecimals);
-    super._initializeToken(params);
-    super._initializeDomainSeparator();
+  ) external virtual override initializerRunAlways(TOKEN_REVISION) {
+    if (isRevisionInitialized(TOKEN_REVISION)) {
+      super._initializeERC20(name, symbol, decimals());
+    } else {
+      super._initializeERC20(name, symbol, params.stakedTokenDecimals);
+      super._initializeToken(params);
+      super._initializeDomainSeparator();
+    }
     emit Initialized(params, name, symbol);
   }
 
