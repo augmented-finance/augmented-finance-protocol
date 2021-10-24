@@ -16,7 +16,7 @@ import './interfaces/StakeTokenConfig.sol';
 import './interfaces/IManagedStakeToken.sol';
 
 contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStakeConfigurator {
-  uint256 private constant CONFIGURATOR_REVISION = 2;
+  uint256 private constant CONFIGURATOR_REVISION = 3;
 
   mapping(uint256 => address) private _entries;
   uint256 private _entryCount;
@@ -88,15 +88,31 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
 
   function removeStakeTokenByUnderlying(address underlying) public aclHas(AccessFlags.STAKE_ADMIN) returns (bool) {
     require(underlying != address(0), 'unknown underlying');
-    uint256 i = _underlyings[underlying];
-    if (i == 0) {
+    return _removeStakeToken(_underlyings[underlying], underlying);
+  }
+
+  function removeStakeToken(uint256 index) public aclHas(AccessFlags.STAKE_ADMIN) returns (bool) {
+    return _removeStakeToken(index + 1, address(0));
+  }
+
+  function removeUnderlyings(address[] calldata underlyings) public aclHas(AccessFlags.STAKE_ADMIN) {
+    for (uint256 i = underlyings.length; i > 0; ) {
+      i--;
+      _underlyings[underlyings[i]] = 0;
+    }
+  }
+
+  function _removeStakeToken(uint256 i, address underlying) private returns (bool) {
+    if (i == 0 || _entries[i] == address(0)) {
       return false;
     }
 
     emit StakeTokenRemoved(_entries[i], underlying);
 
     delete (_entries[i]);
-    delete (_underlyings[underlying]);
+    if (underlying == address(0)) {
+      delete (_underlyings[underlying]);
+    }
     return true;
   }
 
