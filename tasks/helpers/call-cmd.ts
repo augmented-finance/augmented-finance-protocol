@@ -4,6 +4,7 @@ import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getAddressesProviderRegistry,
   getIManagedRewardPool,
+  getIRevision,
   getMarketAddressController,
   getOracleRouter,
   getPermitFreezerRewardPool,
@@ -26,6 +27,7 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { isHexPrefixed } from 'ethjs-util';
 import { parseUnits } from '@ethersproject/units';
 import { stringifyArgs } from '../../helpers/etherscan-verification';
+import { BigNumber } from 'ethers';
 
 interface ICallParams {
   applyCall: (accessFlags: number, contract: Contract, fnName: string, isStatic: boolean, args: any[]) => void;
@@ -501,13 +503,25 @@ const _findPriceToken = async (
 };
 
 const findToken = async (ac: MarketAccessController, name: string) => {
-  return await _findToken(ac, _getTokenList, name);
+  return await _findToken(ac, _getTokenList, name, false);
 };
+
+enum TokenType {
+  PoolAsset,
+  Deposit,
+  VariableDebt,
+  StableDebt,
+  Stake,
+  Reward,
+  RewardStake,
+  HiddenStake,
+}
 
 const _findToken = async (
   ac: MarketAccessController,
   tokensFn: (ac: MarketAccessController) => Promise<any[]>,
-  name: string
+  name: string,
+  useHidden: boolean
 ) => {
   name = name.toString();
   if (!name || !falsyOrZeroAddress(name)) {
@@ -515,7 +529,9 @@ const _findToken = async (
   }
   const tokens = await tokensFn(ac);
   const n = name.toLowerCase();
-  const matched = tokens.filter((value) => value.tokenSymbol.toLowerCase() == n);
+  const matched = tokens.filter(
+    (value) => value.tokenSymbol.toLowerCase() == n && (useHidden || value.tokenType != 0 + TokenType.HiddenStake)
+  );
   if (matched.length == 0) {
     throw new Error('Unknown token name: ' + name);
   } else if (matched.length > 1) {
@@ -538,14 +554,22 @@ const getRewardPoolByName = async (ac: MarketAccessController, name: string) => 
     const list = await rc.list();
     await Promise.all(
       list.map(async (value) => {
-        const pool = await getIManagedRewardPool(value);
-        const name = await pool.getPoolName();
-        const key = name.toLowerCase();
-        if (poolsByNames.has(key)) {
-          console.log('WARNING! Duplicate pool name: ', name, value, poolsByNames.get(key));
+        if (falsyOrZeroAddress(value)) {
           return;
         }
-        poolsByNames.set(key, value);
+        const pool = await getIManagedRewardPool(value);
+        const name = await pool.getPoolName();
+        let key = name.toLowerCase();
+        try {
+          const rev = await (await getIRevision(value)).REVISION();
+          key = key + '-' + rev.toString();
+        } catch {}
+        const found = poolsByNames.get(key);
+        if (found === undefined) {
+          poolsByNames.set(key, value);
+          return;
+        }
+        console.log('WARNING! Duplicate pool name: ', name, value, found);
       })
     );
   }

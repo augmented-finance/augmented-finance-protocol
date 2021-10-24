@@ -78,6 +78,7 @@ import { IInitializableRewardTokenFactory } from '../types/IInitializableRewardT
 import { IUniswapV2Router02Factory } from '../types/IUniswapV2Router02Factory';
 import { IUniswapV2FactoryFactory } from '../types/IUniswapV2FactoryFactory';
 import { IUniswapV2PairFactory } from '../types/IUniswapV2PairFactory';
+import { IRevisionFactory } from '../types/IRevisionFactory';
 
 const getAddr = async (id: eContractid) => {
   const entry = await getFromJsonDb(id);
@@ -413,6 +414,9 @@ export const getAGFTokenV1Impl = async (address: tEthereumAddress) =>
 
 export const getIManagedRewardPool = async (address: tEthereumAddress) =>
   IManagedRewardPoolFactory.connect(address, await getFirstSigner());
+
+export const getIRevision = async (address: tEthereumAddress) =>
+  IRevisionFactory.connect(address, await getFirstSigner());
 
 export const getILendingPoolAaveCompatible = async (address: tEthereumAddress) =>
   ILendingPoolAaveCompatibleFactory.connect(address, await getFirstSigner());

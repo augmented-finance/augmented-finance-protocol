@@ -20,6 +20,7 @@ enum TokenType {
   Stake,
   Reward,
   RewardStake,
+  HiddenStake,
 }
 
 subtask('helper:calc-apy', 'Calculates current APYs')
