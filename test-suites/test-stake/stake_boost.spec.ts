@@ -23,7 +23,7 @@ import {
 } from '../../types';
 import { applyDepositPlanAndClaimAll, TestInfo } from '../test_utils';
 import { min } from 'underscore';
-import { ZERO_ADDRESS } from '../../helpers/constants';
+import { MAX_UINT_AMOUNT, WAD, ZERO_ADDRESS } from '../../helpers/constants';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -79,7 +79,6 @@ describe('Staking with boosting', () => {
     const bp2 = await rb.getBoostPool();
     expect(bp2.pool).eq(ZERO_ADDRESS);
     expect(bp2.mask).eq(0);
-    expect((await rb.getBoostPool()).pool).eq(ZERO_ADDRESS);
 
     expect(bp1.mask).eq(await rb.getPoolMask(rpAGF.address));
 
@@ -91,6 +90,86 @@ describe('Staking with boosting', () => {
     await rb.setBoostPool(rpAGF.address);
     expect((await rb.getBoostPool()).pool).eq(rpAGF.address);
     expect(await rb.getBoostFactor(rpAGF.address)).eq(0);
+  });
+
+  it('can remove boost pool', async () => {
+    {
+      const pools = await rb.getPools();
+      expect(0).eq(pools.ignoreMask);
+      expect([rpAGDAI.address, rpUSDC.address, rpAGF.address]).eql(pools[0]);
+    }
+
+    const bp1 = await rb.getBoostPool();
+    expect(bp1.pool).eq(rpAGF.address);
+    expect(bp1.mask).eq(await rb.getPoolMask(rpAGF.address));
+
+    await rb.removeRewardPool(rpAGF.address);
+
+    const bp2 = await rb.getBoostPool();
+    expect(bp2.pool).eq(ZERO_ADDRESS);
+    expect(bp2.mask).eq(0);
+
+    expect(0).eq(await rb.getPoolMask(rpAGF.address));
+
+    {
+      const pools = await rb.getPools();
+      expect(4).eq(pools.ignoreMask);
+      expect([rpAGDAI.address, rpUSDC.address, ZERO_ADDRESS]).eql(pools[0]);
+    }
+  });
+
+  it('can remove then add a pool, keep the boost pool', async () => {
+    {
+      const pools = await rb.getPools();
+      expect(0).eq(pools.ignoreMask);
+      expect([rpAGDAI.address, rpUSDC.address, rpAGF.address]).eql(pools[0]);
+    }
+
+    {
+      const bp1 = await rb.getBoostPool();
+      expect(bp1.pool).eq(rpAGF.address);
+      expect(bp1.mask).eq(await rb.getPoolMask(rpAGF.address));
+    }
+
+    await rb.removeRewardPool(rpUSDC.address);
+
+    {
+      const bp1 = await rb.getBoostPool();
+      expect(bp1.pool).eq(rpAGF.address);
+      expect(bp1.mask).eq(await rb.getPoolMask(rpAGF.address));
+    }
+
+    expect(0).eq(await rb.getPoolMask(rpUSDC.address));
+
+    {
+      const pools = await rb.getPools();
+      expect(2).eq(pools.ignoreMask);
+      expect([rpAGDAI.address, ZERO_ADDRESS, rpAGF.address]).eql(pools[0]);
+    }
+
+    await rb.addRewardPool(rpUSDC.address);
+
+    {
+      const bp1 = await rb.getBoostPool();
+      expect(bp1.pool).eq(rpAGF.address);
+      expect(bp1.mask).eq(await rb.getPoolMask(rpAGF.address));
+    }
+
+    expect(8).eq(await rb.getPoolMask(rpUSDC.address));
+
+    {
+      const pools = await rb.getPools();
+      expect(2).eq(pools.ignoreMask);
+      expect([rpAGDAI.address, ZERO_ADDRESS, rpAGF.address, rpUSDC.address]).eql(pools[0]);
+    }
+
+    expect(0).eq(await rb.claimablePools(user1.address));
+    await rb.setClaimablePoolsFor([user1.address], 65535);
+    expect(9).eq(await rb.claimablePools(user1.address)); // the removed pool and the boost pools are excluded
+
+    await rb.connect(user1).claimReward(); // sanity check
+    expect(0).eq(await rb.claimablePools(user1.address)); // there was nothing to claim from any pool
+    await rb.claimRewardTo(user1.address, MAX_UINT_AMOUNT); // sanity check
   });
 
   it('no boost or rewards', async () => {
