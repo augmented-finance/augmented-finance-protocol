@@ -75,7 +75,12 @@ abstract contract ControlledRewardPool is IManagedRewardPool {
 
   function _setBaselinePercentage(uint16 factor) internal virtual {
     _mustHaveController();
-    require(factor <= PercentageMath.ONE, 'illegal value');
+    if (factor == 0) {
+      // ATTN! This line was added after mainnet deploy and is NOT present in the original pools
+      _setRate(0);
+    } else {
+      require(factor <= PercentageMath.ONE, 'illegal value');
+    }
     _baselinePercentage = factor;
     emit BaselinePercentageUpdated(factor);
   }
