@@ -2,7 +2,13 @@ import { BigNumber } from 'ethers';
 import { task } from 'hardhat/config';
 import { AccessFlags } from '../../helpers/access-flags';
 import { WAD, ZERO_ADDRESS } from '../../helpers/constants';
-import { deployDepositStakeTokenImpl, deployStakeTokenImpl } from '../../helpers/contracts-deployments';
+import {
+  deployDepositStakeTokenImpl,
+  deployProtocolDataProvider,
+  deployRewardConfiguratorImpl,
+  deployStakeConfiguratorImpl,
+  deployStakeTokenImpl,
+} from '../../helpers/contracts-deployments';
 import {
   getLendingPoolProxy,
   getMarketAccessController,
@@ -198,6 +204,37 @@ const deployFreshStakes = async (ac: MarketAccessController) => {
   );
 
   await mustWaitTx(rc.updateBaseline(WAD));
+};
+
+const deployImpls = async (ac: MarketAccessController) => {
+  {
+    const impl = await deployRewardConfiguratorImpl(true, false);
+    console.log('RewardConfiguratorImpl', impl.address);
+    // const tx = await ac.setAddressAsProxy(AccessFlags.REWARD_CONFIGURATOR, impl.address);
+    // console.log(tx.hash);
+  }
+  {
+    const impl = await deployStakeConfiguratorImpl(true, false);
+    console.log('StakeConfiguratorImpl', impl.address);
+    // const tx = await ac.setAddressAsProxy(AccessFlags.STAKE_CONFIGURATOR, impl.address);
+    // console.log(tx.hash);
+  }
+  {
+    const impl = await deployProtocolDataProvider(ac.address, true);
+    console.log('ProtocolDataProvider', impl.address);
+    // const tx = await ac.setAddress(AccessFlags.DATA_HELPER, impl.address);
+    // console.log(tx.hash);
+  }
+
+  {
+    const impl = await deployDepositStakeTokenImpl(true, false);
+    console.log('DepositStakeTokenImpl', impl.address);
+  }
+
+  {
+    const impl = await deployStakeTokenImpl(true, false);
+    console.log('StakeTokenImpl', impl.address);
+  }
 };
 
 const deployUni = async () => {
