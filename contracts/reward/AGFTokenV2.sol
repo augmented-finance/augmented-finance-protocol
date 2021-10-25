@@ -19,33 +19,38 @@ contract AGFTokenV2 is AGFTokenV1, IRoamingToken {
     return TOKEN_REVISION;
   }
 
+  // struct RoamingData {
+  //   uint256 allocatedSupply;
+  //   uint256 sequence;
+  // }
+
   function burnToRoaming(
     address sender,
     uint256 amount,
     uint256 toNetworkId
-  ) external override aclHas(AccessFlags.REWARD_BRIDGE) returns (RoamingData memory result) {
+  ) external override aclHas(AccessFlags.REWARD_BRIDGE) returns (bytes memory roamingData) {
     require(amount > 0 && amount <= uint256(type(int256).max), 'INVALID_AMOUNT');
 
     _burn(sender, amount);
     _roamingSupply -= int256(amount);
 
-    result = RoamingData(allocatedSupply(), ++_sequence);
-    emit BurnedToRoaming(sender, amount, toNetworkId, result);
-    return result;
+    // result = RoamingData(allocatedSupply(), ++_sequence);
+    emit BurnedToRoaming(sender, amount, toNetworkId, roamingData);
+    return roamingData;
   }
 
   function mintFromRoaming(
     address receiver,
     uint256 amount,
     uint256 fromNetworkId,
-    RoamingData calldata data
+    bytes calldata roamingData
   ) external override aclHas(AccessFlags.REWARD_BRIDGE) {
     require(amount > 0 && amount <= uint256(type(int256).max), 'INVALID_AMOUNT');
 
     _mintReward(receiver, amount);
     _roamingSupply += int256(amount);
 
-    emit MintedFromRoaming(receiver, amount, fromNetworkId, data);
+    emit MintedFromRoaming(receiver, amount, fromNetworkId, roamingData);
   }
 
   function roamingSupply() external view override returns (int256) {
