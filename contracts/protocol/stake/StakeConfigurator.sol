@@ -16,17 +16,16 @@ import './interfaces/StakeTokenConfig.sol';
 import './interfaces/IManagedStakeToken.sol';
 
 contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStakeConfigurator {
-  uint256 private constant CONFIGURATOR_REVISION = 1;
+  uint256 private constant CONFIGURATOR_REVISION = 3;
 
   mapping(uint256 => address) private _entries;
   uint256 private _entryCount;
   mapping(address => uint256) private _underlyings;
 
-  ProxyAdmin internal immutable _proxies;
+  ProxyAdmin private _proxies;
+  uint256 private _legacyCount;
 
-  constructor() MarketAccessBitmask(IMarketAccessController(address(0))) {
-    _proxies = new ProxyAdmin();
-  }
+  constructor() MarketAccessBitmask(IMarketAccessController(address(0))) {}
 
   function getRevision() internal pure virtual override returns (uint256) {
     return CONFIGURATOR_REVISION;
@@ -35,19 +34,32 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
   // This initializer is invoked by AccessController.setAddressAsImpl
   function initialize(address addressesProvider) external initializer(CONFIGURATOR_REVISION) {
     _remoteAcl = IMarketAccessController(addressesProvider);
+    if (address(_proxies) == address(0)) {
+      _proxies = new ProxyAdmin();
+      _legacyCount = _entryCount;
+    }
   }
 
-  function getProxyAdmin() external view returns (address) {
+  function getProxyAdmin() public view returns (address) {
     return address(_proxies);
   }
 
   function list() public view override returns (address[] memory tokens) {
-    if (_entryCount == 0) {
+    return _list(_legacyCount);
+  }
+
+  function listAll() public view override returns (address[] memory tokens, uint256 genCount) {
+    return (_list(0), _legacyCount);
+  }
+
+  function _list(uint256 base) internal view returns (address[] memory tokens) {
+    if (_entryCount <= base) {
       return tokens;
     }
-    tokens = new address[](_entryCount);
-    for (uint256 i = 1; i <= _entryCount; i++) {
-      tokens[i - 1] = _entries[i];
+    tokens = new address[](_entryCount - base);
+    base++;
+    for (uint256 i = 0; i < tokens.length; i++) {
+      tokens[i] = _entries[i + base];
     }
     return tokens;
   }
@@ -68,22 +80,6 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
     return data;
   }
 
-  function getStakeTokensData() public view override returns (StakeTokenData[] memory dataList, uint256 count) {
-    if (_entryCount == 0) {
-      return (dataList, 0);
-    }
-    dataList = new StakeTokenData[](_entryCount);
-    for (uint256 i = 1; i <= _entryCount; i++) {
-      address token = _entries[i];
-      if (token == address(0)) {
-        continue;
-      }
-      dataList[count] = dataOf(token);
-      count++;
-    }
-    return (dataList, count);
-  }
-
   function addStakeToken(address token) public aclHas(AccessFlags.STAKE_ADMIN) {
     require(token != address(0), 'unknown token');
     _addStakeToken(token, IDerivedToken(token).UNDERLYING_ASSET_ADDRESS());
@@ -91,15 +87,31 @@ contract StakeConfigurator is MarketAccessBitmask, VersionedInitializable, IStak
 
   function removeStakeTokenByUnderlying(address underlying) public aclHas(AccessFlags.STAKE_ADMIN) returns (bool) {
     require(underlying != address(0), 'unknown underlying');
-    uint256 i = _underlyings[underlying];
-    if (i == 0) {
+    return _removeStakeToken(_underlyings[underlying], underlying);
+  }
+
+  function removeStakeToken(uint256 index) public aclHas(AccessFlags.STAKE_ADMIN) returns (bool) {
+    return _removeStakeToken(index + 1, address(0));
+  }
+
+  function removeUnderlyings(address[] calldata underlyings) public aclHas(AccessFlags.STAKE_ADMIN) {
+    for (uint256 i = underlyings.length; i > 0; ) {
+      i--;
+      _underlyings[underlyings[i]] = 0;
+    }
+  }
+
+  function _removeStakeToken(uint256 i, address underlying) private returns (bool) {
+    if (i == 0 || _entries[i] == address(0)) {
       return false;
     }
 
     emit StakeTokenRemoved(_entries[i], underlying);
 
     delete (_entries[i]);
-    delete (_underlyings[underlying]);
+    if (underlying == address(0)) {
+      delete (_underlyings[underlying]);
+    }
     return true;
   }
 

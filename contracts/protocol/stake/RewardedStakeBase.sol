@@ -166,13 +166,28 @@ abstract contract RewardedStakeBase is
 
     internalTransferUnderlyingFrom(from, underlyingAmount, index);
 
-    super.doIncrementRewardBalance(to, stakeAmount);
-    super.doIncrementTotalSupply(stakeAmount);
-    super.internalSetRewardEntryCustom(to, toCooldown);
+    {
+      (uint256 rewardAmount, uint32 since, AllocationMode mode) = super.doIncrementRewardBalance(to, stakeAmount);
+      super.doIncrementTotalSupply(stakeAmount);
+      super.internalSetRewardEntryCustom(to, toCooldown);
+
+      _applyAllocatedReward(to, rewardAmount, since, mode);
+    }
 
     emit Staked(from, to, underlyingAmount, referral);
     emit Transfer(address(0), to, stakeAmount);
     return stakeAmount;
+  }
+
+  function _applyAllocatedReward(
+    address holder,
+    uint256 amount,
+    uint32 since,
+    AllocationMode mode
+  ) private {
+    if ((amount > 0 || mode != AllocationMode.Push) && getRewardController() != address(0)) {
+      super.internalAllocateReward(holder, amount, since, mode);
+    }
   }
 
   function internalBalanceAndCooldownOf(address holder) internal view returns (uint256, uint32) {
@@ -202,7 +217,7 @@ abstract contract RewardedStakeBase is
 
   function internalRedeem(
     address from,
-    address to,
+    address receiver,
     uint256 stakeAmount,
     uint256 underlyingAmount
   ) internal notPausedCustom(Errors.STK_PAUSED) returns (uint256, uint256) {
@@ -225,15 +240,20 @@ abstract contract RewardedStakeBase is
       }
     }
 
-    super.doDecrementRewardBalance(from, stakeAmount, 0);
-    super.doDecrementTotalSupply(stakeAmount);
-    if (oldBalance == stakeAmount && cooldownFrom != 0) {
-      super.internalSetRewardEntryCustom(from, 0);
+    {
+      (uint256 rewardAmount, uint32 since, AllocationMode mode) = super.doDecrementRewardBalance(from, stakeAmount, 0);
+      super.doDecrementTotalSupply(stakeAmount);
+
+      if (oldBalance == stakeAmount && cooldownFrom != 0) {
+        super.internalSetRewardEntryCustom(from, 0);
+      }
+
+      _applyAllocatedReward(from, rewardAmount, since, mode);
     }
 
-    internalTransferUnderlyingTo(from, to, underlyingAmount, index);
+    internalTransferUnderlyingTo(from, receiver, underlyingAmount, index);
 
-    emit Redeemed(from, to, stakeAmount, underlyingAmount);
+    emit Redeemed(from, receiver, stakeAmount, underlyingAmount);
     emit Transfer(from, address(0), stakeAmount);
     return (stakeAmount, underlyingAmount);
   }
@@ -347,18 +367,26 @@ abstract contract RewardedStakeBase is
   ) internal virtual override {
     (uint256 balanceFrom, uint32 cooldownFrom) = internalBalanceAndCooldownOf(from);
 
-    super.doDecrementRewardBalance(from, amount, 0);
-    // if cooldown was set and whole balance of sender was transferred - clear cooldown
-    if (balanceFrom == amount && cooldownFrom != 0) {
-      super.internalSetRewardEntryCustom(from, 0);
+    {
+      (uint256 rewardAmount, uint32 since, AllocationMode mode) = super.doDecrementRewardBalance(from, amount, 0);
+
+      // if cooldown was set and whole balance of sender was transferred - clear cooldown
+      if (balanceFrom == amount && cooldownFrom != 0) {
+        super.internalSetRewardEntryCustom(from, 0);
+      }
+
+      _applyAllocatedReward(from, rewardAmount, since, mode);
     }
 
     (uint256 balanceTo, uint32 cooldownTo) = internalBalanceAndCooldownOf(to);
     uint32 newCooldownTo = getNextCooldown(cooldownFrom, amount, balanceTo, cooldownTo);
 
-    super.doIncrementRewardBalance(to, amount);
-    if (newCooldownTo != cooldownTo) {
-      super.internalSetRewardEntryCustom(to, newCooldownTo);
+    {
+      (uint256 rewardAmount, uint32 since, AllocationMode mode) = super.doIncrementRewardBalance(to, amount);
+      if (newCooldownTo != cooldownTo) {
+        super.internalSetRewardEntryCustom(to, newCooldownTo);
+      }
+      _applyAllocatedReward(to, rewardAmount, since, mode);
     }
   }
 

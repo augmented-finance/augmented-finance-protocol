@@ -6,7 +6,7 @@ import './interfaces/StakeTokenConfig.sol';
 import '../../tools/upgradeability/VersionedInitializable.sol';
 
 contract DepositStakeToken is DepositStakeBase, VersionedInitializable {
-  uint256 private constant TOKEN_REVISION = 1;
+  uint256 private constant TOKEN_REVISION = 2;
 
   constructor()
     ERC20DetailsBase('', '', 0)

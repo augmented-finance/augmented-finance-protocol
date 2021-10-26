@@ -17,27 +17,25 @@ import '../interfaces/IRewardedToken.sol';
 import './pools/TeamRewardPool.sol';
 import '../tools/upgradeability/IProxy.sol';
 
-contract RewardConfigurator is
-  MarketAccessBitmask(IMarketAccessController(address(0))),
-  VersionedInitializable,
-  IRewardConfigurator
-{
-  uint256 private constant CONFIGURATOR_REVISION = 1;
+contract RewardConfigurator is MarketAccessBitmask, VersionedInitializable, IRewardConfigurator {
+  uint256 private constant CONFIGURATOR_REVISION = 2;
 
   function getRevision() internal pure virtual override returns (uint256) {
     return CONFIGURATOR_REVISION;
   }
 
-  ProxyAdmin internal immutable _proxies;
   mapping(string => address) private _namedPools;
 
-  constructor() {
-    _proxies = new ProxyAdmin();
-  }
+  ProxyAdmin private _proxies;
+
+  constructor() MarketAccessBitmask(IMarketAccessController(address(0))) {}
 
   // This initializer is invoked by AccessController.setAddressAsImpl
   function initialize(address addressesProvider) external initializer(CONFIGURATOR_REVISION) {
     _remoteAcl = IMarketAccessController(addressesProvider);
+    if (address(_proxies) == address(0)) {
+      _proxies = new ProxyAdmin();
+    }
   }
 
   function getDefaultController() public view returns (IManagedRewardController) {
@@ -46,7 +44,7 @@ contract RewardConfigurator is
     return IManagedRewardController(ctl);
   }
 
-  function getProxyAdmin() external view returns (address) {
+  function getProxyAdmin() public view returns (address) {
     return address(_proxies);
   }
 

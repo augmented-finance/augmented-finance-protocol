@@ -1,10 +1,11 @@
 import { loadPoolConfig } from '../../helpers/configuration';
 import { deployStakeConfiguratorImpl } from '../../helpers/contracts-deployments';
-import { eNetwork } from '../../helpers/types';
-import { falsyOrZeroAddress } from '../../helpers/misc-utils';
+import { eContractid, eNetwork } from '../../helpers/types';
+import { addContractAddrToJsonDb, addNamedToJsonDb, falsyOrZeroAddress } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
 import { deployTask } from '../helpers/deploy-steps';
+import { getProxyAdmin, getStakeConfiguratorImpl } from '../../helpers/contracts-getters';
 
 const CONTRACT_NAME = 'StakeConfigurator';
 
@@ -29,6 +30,29 @@ deployTask(`full:deploy-stake-configurator`, `Deploy stake configurator`, __dirn
         AccessFlags.STAKE_CONFIGURATOR,
         impl.address
       );
+
+      {
+        console.log(`Check proxy admin`);
+        const sc = await getStakeConfiguratorImpl(stakeConfiguratorAddr);
+        const pa = await sc.getProxyAdmin();
+        if (falsyOrZeroAddress(pa)) {
+          throw new Error('Missing proxy admin');
+        } else {
+          const padm = await getProxyAdmin(pa);
+          const owner = await padm.owner();
+          if (owner != sc.address) {
+            throw new Error(`Invalid proxy admin owner: ${owner}, ${sc.address}`);
+          }
+          if (verify) {
+            await addContractAddrToJsonDb(
+              eContractid.ProxyAdmin + '-' + eContractid.StakeConfiguratorImpl,
+              pa,
+              false,
+              []
+            );
+          }
+        }
+      }
     }
 
     console.log(`${CONTRACT_NAME}:`, stakeConfiguratorAddr);

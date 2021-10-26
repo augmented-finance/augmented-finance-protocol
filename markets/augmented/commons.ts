@@ -361,8 +361,8 @@ export const CommonsConfig: ICommonConfiguration = {
 
   StakeParams: {
     MaxSlashBP: 3000, // 30%
-    CooldownPeriod: 10 * DAY,
-    UnstakePeriod: 2 * DAY,
+    CooldownPeriod: 7 * DAY,
+    UnstakePeriod: 7 * DAY,
     StakeToken: {
       DAI:  StakeMode.stakeAg,
       USDC: StakeMode.stakeAg,
@@ -386,7 +386,7 @@ export const CommonsConfig: ICommonConfiguration = {
   },
 
   RewardParams: {
-    Autolock: 12, // 12 weeks auto-prolongate
+    Autolock: 4, // 4 weeks auto-prolongate
     MinBoostBP: 1000, // 10%
     InitialRateWad: {
       [eEthereumNetwork.ropsten]: 1,
