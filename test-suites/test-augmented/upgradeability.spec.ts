@@ -3,11 +3,14 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ProtocolErrors } from '../../helpers/types';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../../helpers/constants';
 import {
+  getAGFTokenV1Impl,
   getDepositToken,
   getMockLendingPoolImpl,
   getMockStableDebtToken,
   getMockVariableDebtToken,
   getStableDebtToken,
+  getStakeConfiguratorImpl,
+  getStakeTokenImpl,
   getVariableDebtToken,
 } from '../../helpers/contracts-getters';
 import {
@@ -15,14 +18,18 @@ import {
   deployMockStableDebtToken,
   deployMockVariableDebtToken,
   deployMockAgfToken,
-  deployMockStakedAgfToken,
   deployLendingPoolImpl,
+  deployAGFTokenV1Impl,
+  deployStakeTokenImpl,
+  deployStakeConfiguratorImpl,
+  deployMockStakeToken,
 } from '../../helpers/contracts-deployments';
+import { AccessFlags } from '../../helpers/access-flags';
+import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 
 makeSuite('Upgradeability', (testEnv: TestEnv) => {
   const { CALLER_NOT_POOL_ADMIN } = ProtocolErrors;
-  let newAgfTokenAddress: string;
-  let newATokenAddress: string;
+  let newDepositTokenAddress: string;
   let newStableTokenAddress: string;
   let newVariableTokenAddress: string;
 
@@ -53,12 +60,9 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       '0x10',
     ]);
 
-    const agfTokenInstance = await deployMockAgfToken([ZERO_ADDRESS, 'Reward token updated', 'AGF']);
-
-    newATokenAddress = depositTokenInstance.address;
+    newDepositTokenAddress = depositTokenInstance.address;
     newVariableTokenAddress = variableDebtTokenInstance.address;
     newStableTokenAddress = stableDebtTokenInstance.address;
-    newAgfTokenAddress = agfTokenInstance.address;
   });
 
   it('Tries to initialize lendingPool implemention', async () => {
@@ -78,10 +82,10 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     await expect(pool.reInitialize(addressesProvider.address)).to.be.revertedWith('already initialized');
   });
 
-  it('Tries to update the DAI agToken implementation with a different address than the lendingPoolManager', async () => {
+  it('Tries to update agDAI implementation by an aunthorized caller', async () => {
     const { dai, configurator, users } = testEnv;
 
-    const newImpl = await getDepositToken(newATokenAddress);
+    const newImpl = await getDepositToken(newDepositTokenAddress);
     const name = await newImpl.name();
     const symbol = await newImpl.symbol();
 
@@ -99,7 +103,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       incentivesController: ZERO_ADDRESS,
       name: name,
       symbol: symbol,
-      implementation: newATokenAddress,
+      implementation: newDepositTokenAddress,
       params: '0x10',
     };
     await expect(
@@ -107,10 +111,10 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
   });
 
-  it('Upgrades the DAI Atoken implementation ', async () => {
+  it('Update agDAI implementation ', async () => {
     const { dai, configurator, aDai } = testEnv;
 
-    const newImpl = await getDepositToken(newATokenAddress);
+    const newImpl = await getDepositToken(newDepositTokenAddress);
     const name = await newImpl.name();
     const symbol = await newImpl.symbol();
     const revision = await newImpl.REVISION();
@@ -127,7 +131,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       incentivesController: ZERO_ADDRESS,
       name: name,
       symbol: symbol,
-      implementation: newATokenAddress,
+      implementation: newDepositTokenAddress,
       params: '0x10',
     };
     await configurator.updateDepositToken(updateDepositTokenInputParams);
@@ -137,24 +141,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     expect(await aDai.DOMAIN_SEPARATOR()).eq(domainSep);
   });
 
-  it.skip('Upgrades the AGF Atoken implementation ', async () => {
-    // TODO
-    // const { agf } = testEnv;
-    // const newImpl = await getAgfToken(newAgfTokenAddress);
-    // const name = await newImpl.name();
-    // const symbol = await newImpl.symbol();
-    // const revision = await newImpl.REVISION();
-    // const domainSep = await agf.DOMAIN_SEPARATOR();
-    // expect(name).not.eq(await agf.name());
-    // expect(newImpl.DOMAIN_SEPARATOR()).not.eq(domainSep);
-    // expect(revision).not.eq(await agf.REVISION());
-    // // todo upgrade token
-    // expect(await agf.name()).to.be.eq(name, 'Invalid token name');
-    // expect(await agf.REVISION()).eq(revision);
-    // expect(await agf.DOMAIN_SEPARATOR()).eq(domainSep);
-  });
-
-  it('Tries to update the DAI Stable debt token implementation with a different address than the lendingPoolManager', async () => {
+  it('Tries to update agsDAI (stable debt) implementation by an aunthorized caller', async () => {
     const { dai, configurator, users } = testEnv;
 
     const newImpl = await getStableDebtToken(newStableTokenAddress);
@@ -176,7 +163,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     );
   });
 
-  it('Upgrades the DAI stable debt token implementation ', async () => {
+  it('Update agsDAI (stable debt) implementation ', async () => {
     const { dai, configurator, pool, helpersContract } = testEnv;
 
     const newImpl = await getStableDebtToken(newStableTokenAddress);
@@ -201,7 +188,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     expect(await debtToken.name()).to.be.eq(name, 'Invalid token name');
   });
 
-  it('Tries to update the DAI variable debt token implementation with a different address than the lendingPoolManager', async () => {
+  it('Tries to update agvDAI (variable debt) implementation by an aunthorized caller', async () => {
     const { dai, configurator, users } = testEnv;
 
     const newImpl = await getVariableDebtToken(newVariableTokenAddress);
@@ -223,7 +210,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
   });
 
-  it('Upgrades the DAI variable debt token implementation ', async () => {
+  it('Update agvDAI (variable debt) implementation ', async () => {
     const { dai, configurator, pool, helpersContract } = testEnv;
 
     const newImpl = await getVariableDebtToken(newVariableTokenAddress);
@@ -239,7 +226,7 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
       implementation: newVariableTokenAddress,
       params: '0x10',
     };
-    //const name = await (await getDepositToken(newATokenAddress)).name();
+    //const name = await (await getDepositToken(newDepositTokenAddress)).name();
 
     await configurator.updateVariableDebtToken(updateDebtTokenInput);
 
@@ -247,5 +234,101 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
 
     const debtToken = await getMockVariableDebtToken(variableDebtTokenAddress);
     expect(await debtToken.name()).to.be.eq(name, 'Invalid token name');
+  });
+
+  it('Update AGF token implementation', async () => {
+    const { addressesProvider } = testEnv;
+    let agfAddr = await addressesProvider.getAddress(AccessFlags.REWARD_TOKEN);
+    if (falsyOrZeroAddress(agfAddr)) {
+      const agfImpl = await deployAGFTokenV1Impl(false, false);
+      await addressesProvider.setAddressAsProxy(AccessFlags.REWARD_TOKEN, agfImpl.address);
+      agfAddr = await addressesProvider.getAddress(AccessFlags.REWARD_TOKEN);
+    }
+
+    const agf = await getAGFTokenV1Impl(agfAddr);
+    // const newImpl = await getAgfToken(newAgfTokenAddress);
+    const name = await agf.name();
+    const symbol = await agf.symbol();
+    const revision = await agf.REVISION();
+    const domainSep = await agf.DOMAIN_SEPARATOR();
+
+    const newAgfImpl = await deployMockAgfToken([addressesProvider.address, 'Reward token updated', 'AGFv2']);
+    const newRevision = await newAgfImpl.REVISION();
+    expect(revision).not.eq(newRevision);
+
+    await addressesProvider.setAddressAsProxy(AccessFlags.REWARD_TOKEN, newAgfImpl.address);
+
+    expect(name).eq(await agf.name());
+    expect(symbol).eq(await agf.symbol());
+    expect(18).eq(await agf.decimals());
+    expect(domainSep).eq(await agf.DOMAIN_SEPARATOR());
+    {
+      const rev = await agf.REVISION();
+      expect(revision).lt(rev);
+      expect(newRevision).eq(rev);
+    }
+  });
+
+  it('Update stake token implementation', async () => {
+    const { dai, addressesProvider, deployer } = testEnv;
+
+    await addressesProvider.grantRoles(deployer.address, AccessFlags.STAKE_ADMIN);
+
+    let scAddr = await addressesProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR);
+    if (falsyOrZeroAddress(scAddr)) {
+      const impl = await deployStakeConfiguratorImpl(false, false);
+      await addressesProvider.setAddressAsProxy(AccessFlags.STAKE_CONFIGURATOR, impl.address);
+      scAddr = await addressesProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR);
+    }
+    const sc = await getStakeConfiguratorImpl(scAddr);
+    const stakeImpl = await deployStakeTokenImpl(false, false);
+
+    const initParams = {
+      stakeTokenImpl: stakeImpl.address,
+      stakedToken: dai.address,
+      strategy: ZERO_ADDRESS,
+      stkTokenName: 'Test stake token',
+      stkTokenSymbol: 'xagTEST',
+      cooldownPeriod: 1,
+      unstakePeriod: 7200,
+      stkTokenDecimals: 18,
+      maxSlashable: 3000,
+      depositStake: false,
+    };
+
+    await sc.batchInitStakeTokens([initParams]);
+    const stake = await getStakeTokenImpl(await sc.stakeTokenOf(dai.address));
+
+    expect(await sc.implementationOf(stake.address)).eq(stakeImpl.address);
+
+    expect(await stake.name()).eq(initParams.stkTokenName);
+    expect(await stake.symbol()).eq(initParams.stkTokenSymbol);
+    const revision = await stake.REVISION();
+    const domainSep = await stake.DOMAIN_SEPARATOR();
+
+    const impl2 = await deployMockStakeToken();
+    const newRevision = await impl2.REVISION();
+    expect(revision).not.eq(newRevision);
+
+    const updParam = {
+      token: stake.address,
+      stakeTokenImpl: impl2.address,
+      stkTokenName: 'Test 2 name',
+      stkTokenSymbol: 'xag2TEST',
+    };
+    await sc.updateStakeToken(updParam);
+
+    expect(18).eq(await stake.decimals());
+    expect(domainSep).eq(await stake.DOMAIN_SEPARATOR());
+    {
+      const rev = await stake.REVISION();
+      expect(revision).lt(rev);
+      expect(newRevision).eq(rev);
+    }
+
+    expect(await sc.implementationOf(stake.address)).eq(impl2.address);
+
+    expect(updParam.stkTokenName).eq(await stake.name());
+    expect(updParam.stkTokenSymbol).eq(await stake.symbol());
   });
 });

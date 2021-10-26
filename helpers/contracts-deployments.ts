@@ -64,6 +64,7 @@ import {
   MockTreasuryRewardPoolFactory,
   PriceFeedUniEthPairFactory,
   PriceFeedUniEthTokenFactory,
+  MockStakeTokenFactory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -632,7 +633,10 @@ export const deployMockDepositToken = async (
   return instance;
 };
 
-export const deployMockAgfToken = async (args: [tEthereumAddress, string, string], verify?: boolean) => {
+export const deployMockAgfToken = async (
+  args: [remoteAcl: tEthereumAddress, name: string, symbol: string],
+  verify?: boolean
+) => {
   const instance = await withSaveAndVerify(
     await new MockAgfTokenFactory(await getFirstSigner()).deploy(),
     eContractid.MockAgfToken,
@@ -832,7 +836,7 @@ export const deployNamedPermitFreezerRewardPool = async (
   );
 
 export const deployTokenWeightedRewardPoolAGFBoosted = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish],
+  args: [controller: tEthereumAddress, initialRate: BigNumberish, baselinePercentage: BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -843,7 +847,7 @@ export const deployTokenWeightedRewardPoolAGFBoosted = async (
   );
 
 export const deployTokenWeightedRewardPoolAGFSeparate = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish],
+  args: [controller: tEthereumAddress, initialRate: BigNumberish, baselinePercentage: BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -854,7 +858,7 @@ export const deployTokenWeightedRewardPoolAGFSeparate = async (
   );
 
 export const deployTokenWeightedRewardPoolAG = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish],
+  args: [controller: tEthereumAddress, initialRate: BigNumberish, baselinePercentage: BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -865,7 +869,7 @@ export const deployTokenWeightedRewardPoolAG = async (
   );
 
 export const deployTokenWeightedRewardPoolAGBoosted = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish],
+  args: [controller: tEthereumAddress, initialRate: BigNumberish, baselinePercentage: BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -876,7 +880,7 @@ export const deployTokenWeightedRewardPoolAGBoosted = async (
   );
 
 export const deployTokenWeightedRewardPoolAGUSDCBoosted = async (
-  args: [tEthereumAddress, BigNumberish, BigNumberish],
+  args: [controller: tEthereumAddress, initialRate: BigNumberish, baselinePercentage: BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -979,6 +983,14 @@ export const deployMockDepositStakeToken = async (
 
   return instance;
 };
+
+export const deployMockStakeToken = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await new MockStakeTokenFactory(await getFirstSigner()).deploy(),
+    eContractid.MockStakeToken,
+    [],
+    verify
+  );
 
 export const deployDelegatedStrategyAave = async (args: [name: string], verify?: boolean) =>
   withSaveAndVerify(

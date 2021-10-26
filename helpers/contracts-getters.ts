@@ -53,6 +53,7 @@ import {
   DepositStakeTokenFactory,
   PriceFeedUniEthPairFactory,
   PriceFeedUniEthTokenFactory,
+  ProxyAdminFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -77,6 +78,7 @@ import { IInitializableRewardTokenFactory } from '../types/IInitializableRewardT
 import { IUniswapV2Router02Factory } from '../types/IUniswapV2Router02Factory';
 import { IUniswapV2FactoryFactory } from '../types/IUniswapV2FactoryFactory';
 import { IUniswapV2PairFactory } from '../types/IUniswapV2PairFactory';
+import { IRevisionFactory } from '../types/IRevisionFactory';
 
 const getAddr = async (id: eContractid) => {
   const entry = await getFromJsonDb(id);
@@ -317,6 +319,9 @@ export const getMockDecayingTokenLocker = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getDecayingTokenLockerProxy = async (address: tEthereumAddress) =>
+  DecayingTokenLockerFactory.connect(address, await getFirstSigner());
+
 export const getTeamRewardPool = async (address?: tEthereumAddress) =>
   TeamRewardPoolFactory.connect(address || (await getAddr(eContractid.TeamRewardPool)), await getFirstSigner());
 
@@ -395,6 +400,9 @@ export const getAGTokenByName = async (name: string): Promise<DepositToken> => {
 export const getStakeConfiguratorImpl = async (address: tEthereumAddress) =>
   StakeConfiguratorFactory.connect(address, await getFirstSigner());
 
+export const getProxyAdmin = async (address: tEthereumAddress) =>
+  ProxyAdminFactory.connect(address, await getFirstSigner());
+
 export const getStakeTokenImpl = async (address: tEthereumAddress) =>
   StakeTokenFactory.connect(address, await getFirstSigner());
 
@@ -406,6 +414,9 @@ export const getAGFTokenV1Impl = async (address: tEthereumAddress) =>
 
 export const getIManagedRewardPool = async (address: tEthereumAddress) =>
   IManagedRewardPoolFactory.connect(address, await getFirstSigner());
+
+export const getIRevision = async (address: tEthereumAddress) =>
+  IRevisionFactory.connect(address, await getFirstSigner());
 
 export const getILendingPoolAaveCompatible = async (address: tEthereumAddress) =>
   ILendingPoolAaveCompatibleFactory.connect(address, await getFirstSigner());
