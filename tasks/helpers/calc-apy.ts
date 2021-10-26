@@ -4,6 +4,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { DAY, MAX_LOCKER_WEEKS, RAY, USD_ADDRESS, ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getIErc20Detailed,
+  getIRevision,
   getMarketAddressController,
   getOracleRouter,
   getProtocolDataProvider,
@@ -11,6 +12,7 @@ import {
 } from '../../helpers/contracts-getters';
 import { falsyOrZeroAddress, getSignerN } from '../../helpers/misc-utils';
 import { tEthereumAddress } from '../../helpers/types';
+import { promiseAllBatch } from './utils';
 
 enum TokenType {
   PoolAsset,
@@ -20,6 +22,7 @@ enum TokenType {
   Stake,
   Reward,
   RewardStake,
+  HiddenStake,
 }
 
 subtask('helper:calc-apy', 'Calculates current APYs')
@@ -146,11 +149,22 @@ subtask('helper:calc-apy', 'Calculates current APYs')
             }
             throw new Error(`Unknown pool of ${token}`);
           }
-          pool.poolName = token.tokenSymbol + 'Pool';
+
+          let name = token.tokenSymbol;
+          try {
+            const rev = await (await getIRevision(token.rewardPool)).callStatic.REVISION();
+            name += '-' + rev.toString();
+          } catch (error) {
+            if ((<string>error.message).indexOf('UNPREDICTABLE_GAS_LIMIT') < 0) {
+              throw error;
+            }
+          }
+
+          pool.poolName = name + ' Pool';
           pool.poolToken = key;
         }
       }
-      Promise.all(requests);
+      await promiseAllBatch(requests);
 
       console.log('Found', tokenInfo.size, 'token(s)');
     }
@@ -420,7 +434,8 @@ subtask('helper:calc-apy', 'Calculates current APYs')
           _allocAmount = _allocAmount.mul(poolAlloc.factor).div(10000);
         }
 
-        const allocRate = perAnnum(_allocAmount).div(explainedAt - poolAlloc.since);
+        const allocPeriod = explainedAt - poolAlloc.since;
+        const allocRate = perAnnum(_allocAmount).div(allocPeriod);
         console.log(
           '\t',
           pool.poolName,
@@ -437,7 +452,10 @@ subtask('helper:calc-apy', 'Calculates current APYs')
             agfToken.decimals + agfPrice.decimals + 4 - (token.decimals + tokenPrice.decimals) - 2,
             2
           ),
-          '%'
+          '%\tSince:',
+          allocPeriod,
+          's\tReward:',
+          formatFixed(_allocAmount, agfToken.decimals, 4)
         );
       }
 

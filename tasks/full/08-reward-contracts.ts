@@ -5,16 +5,17 @@ import {
   deployRewardConfiguratorImpl,
   deployXAGFTokenV1Impl,
 } from '../../helpers/contracts-deployments';
-import { eNetwork, ICommonConfiguration } from '../../helpers/types';
+import { eContractid, eNetwork, ICommonConfiguration } from '../../helpers/types';
 import {
   getAGFTokenV1Impl,
   getOracleRouter,
+  getProxyAdmin,
   getRewardBooster,
   getRewardConfiguratorProxy,
   getStaticPriceOracle,
   getXAGFTokenV1Impl,
 } from '../../helpers/contracts-getters';
-import { falsyOrZeroAddress, waitTx, mustWaitTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, waitTx, mustWaitTx, addContractAddrToJsonDb } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import {
   getDeployAccessController,
@@ -53,6 +54,29 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
       configuratorAddr = await setAndGetAddressAsProxy(addressProvider, AccessFlags.REWARD_CONFIGURATOR, impl.address);
     }
     const configurator = await getRewardConfiguratorProxy(configuratorAddr);
+
+    {
+      console.log(`Check proxy admin`);
+      const sc = configurator;
+      const pa = await sc.getProxyAdmin();
+      if (falsyOrZeroAddress(pa)) {
+        throw new Error('Missing proxy admin');
+      } else {
+        const padm = await getProxyAdmin(pa);
+        const owner = await padm.owner();
+        if (owner != sc.address) {
+          throw new Error(`Invalid proxy admin owner: ${owner}, ${sc.address}`);
+        }
+        if (verify) {
+          await addContractAddrToJsonDb(
+            eContractid.ProxyAdmin + '-' + eContractid.StakeConfiguratorImpl,
+            pa,
+            false,
+            []
+          );
+        }
+      }
+    }
 
     // AGF token is always updated
     let agfAddr = freshStart && continuation ? await addressProvider.getAddress(AccessFlags.REWARD_TOKEN) : '';

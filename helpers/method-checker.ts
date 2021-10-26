@@ -146,6 +146,7 @@ const _verifyMutableAccess = async (
 
       // VM Exception while processing transaction: reverted with reason string '90'
       const prefixReasonStr = "VM Exception while processing transaction: reverted with reason string '";
+      const prefixReasonStr2 = 'VM Exception while processing transaction: revert with reason "';
       const prefixNoReason = 'Transaction reverted without a reason string';
       const prefixReverted = 'Transaction reverted: ';
 
@@ -161,6 +162,9 @@ const _verifyMutableAccess = async (
         handleError(error, reason, false);
       } else {
         reason = substringAfter(message, prefixReasonStr, true);
+        if (reason === undefined) {
+          reason = substringAfter(message, prefixReasonStr2, true);
+        }
         // console.log('3', reason);
         handleError(error, reason, true);
       }

@@ -31,6 +31,7 @@ import {
   getPriceFeedUniEthPair,
   getPriceFeedUniEthToken,
   getProtocolDataProvider,
+  getProxyAdmin,
   getReferralRewardPoolImpl,
   getRewardBooster,
   getRewardConfiguratorProxy,
@@ -62,6 +63,8 @@ const CONTRACT_GETTERS: Omit<Record<eContractid, ContractGetterFn>, ignoredKeys>
   [eContractid.OracleRouter]: getOracleRouter,
   [eContractid.ProtocolDataProvider]: getProtocolDataProvider,
   [eContractid.WETHGateway]: getWETHGateway,
+
+  [eContractid.ProxyAdmin]: getProxyAdmin,
 
   [eContractid.TeamRewardPool]: getTeamRewardPool,
   [eContractid.PermitFreezerRewardPool]: getPermitFreezerRewardPool,
@@ -132,6 +135,7 @@ type ignoredKeys =
   | eContractid.MockVariableDebtToken
   | eContractid.MockDefaultReserveInterestRateStrategy
   | eContractid.MockTreasuryRewardPool
+  | eContractid.MockStakeToken
   | eContractid.ValidationLogic
   | eContractid.ReserveLogic
   | eContractid.GenericLogic;

@@ -4,11 +4,14 @@ import { ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getAddressesProviderRegistry,
   getIManagedRewardPool,
+  getIRevision,
   getMarketAddressController,
   getOracleRouter,
   getPermitFreezerRewardPool,
   getProtocolDataProvider,
+  getRewardBooster,
   getRewardConfiguratorProxy,
+  getStakeConfiguratorImpl,
 } from '../../helpers/contracts-getters';
 import {
   falsyOrZeroAddress,
@@ -25,6 +28,7 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { isHexPrefixed } from 'ethjs-util';
 import { parseUnits } from '@ethersproject/units';
 import { stringifyArgs } from '../../helpers/etherscan-verification';
+import { promiseAllBatch } from './utils';
 
 interface ICallParams {
   applyCall: (accessFlags: number, contract: Contract, fnName: string, isStatic: boolean, args: any[]) => void;
@@ -40,8 +44,9 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
   .addParam('mode', 'Call mode: call, waitTx, encode, static', 'call', types.string)
   .addOptionalParam('gaslimit', 'Gas limit', undefined, types.int)
+  .addOptionalParam('gasprice', 'Gas price', undefined, types.int)
   .addParam('cmds', 'Commands', [], types.any)
-  .setAction(async ({ ctl, mode, cmds, gaslimit: gasLimit }, DRE) => {
+  .setAction(async ({ ctl, mode, cmds, gaslimit: gasLimit, gasprice: gasPrice }, DRE) => {
     const network = <eNetwork>DRE.network.name;
 
     if (falsyOrZeroAddress(ctl)) {
@@ -112,6 +117,8 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
     }
     console.log('\nCaller', await ac.signer.getAddress());
 
+    const overrides = { gasLimit, gasPrice };
+
     if (mode == 'static' || (allStatic && allFlags == 0)) {
       if (contractCalls.length == 1 && allFlags == 0) {
         const cc = contractCalls[0];
@@ -120,7 +127,7 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
         console.log(`Result: `, stringifyArgs(result));
       } else {
         console.log(`Calling as static batch (${contractCalls.length})`, ac.address);
-        const encodedResult = await ac.callStatic.callWithRoles(prepareCallWithRolesArgs(), { gasLimit });
+        const encodedResult = await ac.callStatic.callWithRoles(prepareCallWithRolesArgs(), overrides);
         for (let i = 0; i < contractCalls.length; i++) {
           const cc = contractCalls[i];
           const result = cc.contract.interface.decodeFunctionResult(cc.fnName, encodedResult[i]);
@@ -145,12 +152,13 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
     if (contractCalls.length == 1 && allFlags == 0) {
       const cc = contractCalls[0];
       console.log(`Calling`, cc.contract.address);
-      tx = await cc.contract.functions[cc.fnName](...cc.args, { gasLimit });
+      tx = await cc.contract.functions[cc.fnName](...cc.args, overrides);
     } else {
       console.log(`Calling as batch`, ac.address);
-      tx = await ac.callWithRoles(prepareCallWithRolesArgs(), { gasLimit });
+      tx = await ac.callWithRoles(prepareCallWithRolesArgs(), overrides);
     }
 
+    console.log('Tx hash:', tx.hash);
     if (waitTxFlag) {
       console.log('Gas used:', (await tx.wait(1)).gasUsed.toString());
     }
@@ -258,8 +266,6 @@ const parseCommand = async (
       }
 
       console.log('Meltdown date:', timestamp == 0 ? 'never' : new Date(timestamp * 1000));
-
-      // pool.setMeltDownAt(timestamp);
       await callContract(ac, [AccessFlags.REWARD_CONFIG_ADMIN], pool, 'setMeltDownAt', [timestamp], callParams);
     },
 
@@ -270,12 +276,67 @@ const parseCommand = async (
         AccessFlags.REWARD_RATE_ADMIN
       ),
 
-    setMintRateAndShares: async () =>
+    // setMintRateAndShares: async () =>
+    //   await call(
+    //     qualifiedName(eContractid.RewardBoosterImpl, AccessFlags.REWARD_CONTROLLER, 'setBaselinePercentagesAndRate'),
+    //     [...(await preparePoolNamesAndShares(ac, args.slice(1))), prepareMintRate(args[0])],
+    //     AccessFlags.REWARD_RATE_ADMIN
+    //   ),
+
+    setMintRateAndShares: async () => {
+      const mintRate = prepareMintRate(args[0]);
+
+      const [pools, values] = await preparePoolNamesAndShares(ac, args.slice(1));
+      const updPools: string[] = [];
+      const updValues: number[] = [];
+
+      await promiseAllBatch(
+        pools.map(async (pool, index) => {
+          const p = await getIManagedRewardPool(pool);
+          const pct = await p.getBaselinePercentage();
+          if (pct == values[index]) {
+            console.log('\tSkip, same rate for:', args[1 + index * 2]);
+          } else {
+            updPools.push(pool);
+            updValues.push(values[index]);
+          }
+        })
+      );
+
+      if (updPools.length == 0) {
+        console.log('Nothing to update');
+        return;
+      }
+
       await call(
         qualifiedName(eContractid.RewardBoosterImpl, AccessFlags.REWARD_CONTROLLER, 'setBaselinePercentagesAndRate'),
-        [...(await preparePoolNamesAndShares(ac, args.slice(1))), prepareMintRate(args[0])],
+        [updPools, updValues, mintRate],
         AccessFlags.REWARD_RATE_ADMIN
-      ),
+      );
+    },
+
+    setBoostFactors: async () => {
+      const [pools, values] = await preparePoolNamesAndFactors(ac, args);
+      const rc = await getRewardBooster(await ac.getAddress(AccessFlags.REWARD_CONTROLLER));
+
+      await promiseAllBatch(
+        pools.map(async (pool, index) => {
+          const f = await rc.callStatic.getBoostFactor(pool);
+          if (f == values[index]) {
+            console.log('\tSkip, same factor for:', args[index * 2]);
+          } else {
+            await callContract(
+              ac,
+              [AccessFlags.REWARD_RATE_ADMIN],
+              rc,
+              'setBoostFactor',
+              [pool, values[index]],
+              callParams
+            );
+          }
+        })
+      );
+    },
 
     registerRefCode: async () => {
       const [codes, owners] = splitArray(2, args);
@@ -284,6 +345,34 @@ const parseCommand = async (
         [codes, owners],
         AccessFlags.REFERRAL_ADMIN
       );
+    },
+
+    setClaimablePools: async () =>
+      await call(
+        qualifiedName(eContractid.RewardBoosterImpl, AccessFlags.REWARD_CONTROLLER, 'setClaimablePoolsFor'),
+        [args.slice(1), args[0]],
+        AccessFlags.REWARD_CONFIG_ADMIN
+      ),
+
+    upgradeRewardPool: async () =>
+      await call(
+        qualifiedName(eContractid.RewardConfiguratorImpl, AccessFlags.REWARD_CONFIGURATOR, 'updateRewardPool'),
+        [{ pool: await getRewardPoolByName(ac, args[0]), impl: args[1] }],
+        AccessFlags.REWARD_CONFIG_ADMIN
+      ),
+
+    upgradeStakeToken: async () => {
+      const token = await findToken(ac, args[0]);
+      const sc = await getStakeConfiguratorImpl(await ac.getAddress(AccessFlags.STAKE_CONFIGURATOR));
+      const data = await sc.dataOf(token);
+      const fnArgs = {
+        token: token,
+        stakeTokenImpl: args[1],
+        stkTokenName: data.stkTokenName,
+        stkTokenSymbol: data.stkTokenSymbol,
+      };
+
+      await callContract(ac, [AccessFlags.STAKE_ADMIN], sc, 'updateStakeToken', [fnArgs], callParams);
     },
   };
 
@@ -419,30 +508,35 @@ const callContract = async (
   callParams.applyCall(accessFlags, contract, fnFrag.name, isStatic, args);
 };
 
-const findPriceTokens = async (ac: MarketAccessController, names: string[], warn?: boolean) => {
-  let tokens: undefined | any[] = undefined;
-  const getTokens = async () => {
-    if (tokens === undefined) {
-      const dp = await getProtocolDataProvider(await ac.getAddress(AccessFlags.DATA_HELPER));
-      const list = await dp.getAllTokenDescriptions(true);
-      tokens = list.tokens.slice(0, list.tokenCount.toNumber());
-    }
-    return tokens!;
-  };
+let tokenList: undefined | any[] = undefined;
+const _getTokenList = async (ac: MarketAccessController) => {
+  if (tokenList === undefined) {
+    const dp = await getProtocolDataProvider(await ac.getAddress(AccessFlags.DATA_HELPER));
+    const list = await dp.getAllTokenDescriptions(true);
+    tokenList = list.tokens.slice(0, list.tokenCount.toNumber());
+  }
+  return tokenList!;
+};
 
+const findPriceTokens = async (ac: MarketAccessController, names: string[], warn?: boolean) => {
   const result: string[] = [];
   for (const name of names) {
-    result.push(await _findPriceToken(getTokens, name, warn === true));
+    result.push(await _findPriceToken(ac, _getTokenList, name, warn === true));
   }
   return result;
 };
 
-const _findPriceToken = async (tokensFn: () => Promise<any[]>, name: string, warn: boolean) => {
+const _findPriceToken = async (
+  ac: MarketAccessController,
+  tokensFn: (ac: MarketAccessController) => Promise<any[]>,
+  name: string,
+  warn: boolean
+) => {
   name = name.toString();
   if (!name || !falsyOrZeroAddress(name)) {
     return name;
   }
-  const tokens = await tokensFn();
+  const tokens = await tokensFn(ac);
   const n = name.toLowerCase();
   const matched = tokens.filter((value) => value.tokenSymbol.toLowerCase() == n);
   if (matched.length == 0) {
@@ -467,42 +561,119 @@ const _findPriceToken = async (tokensFn: () => Promise<any[]>, name: string, war
   return priceKey;
 };
 
-const preparePoolNamesAndShares = async (ac: MarketAccessController, args: any[]) => {
+const findToken = async (ac: MarketAccessController, name: string) => {
+  return await _findToken(ac, _getTokenList, name, false);
+};
+
+enum TokenType {
+  PoolAsset,
+  Deposit,
+  VariableDebt,
+  StableDebt,
+  Stake,
+  Reward,
+  RewardStake,
+  HiddenStake,
+}
+
+const _findToken = async (
+  ac: MarketAccessController,
+  tokensFn: (ac: MarketAccessController) => Promise<any[]>,
+  name: string,
+  useHidden: boolean
+) => {
+  name = name.toString();
+  if (!name || !falsyOrZeroAddress(name)) {
+    return name;
+  }
+  const tokens = await tokensFn(ac);
+  const n = name.toLowerCase();
+  const matched = tokens.filter(
+    (value) => value.tokenSymbol.toLowerCase() == n && (useHidden || value.tokenType != 0 + TokenType.HiddenStake)
+  );
+  if (matched.length == 0) {
+    throw new Error('Unknown token name: ' + name);
+  } else if (matched.length > 1) {
+    throw new Error('Ambigous token name: ' + name);
+  }
+
+  if (falsyOrZeroAddress(matched[0].token)) {
+    throw new Error('Token has no address: ' + name);
+  }
+
+  return <string>matched[0].token;
+};
+
+const poolsByNames = new Map<string, tEthereumAddress>();
+
+const getRewardPoolByName = async (ac: MarketAccessController, name: string) => {
+  if (poolsByNames.size == 0) {
+    const rc = await getRewardConfiguratorProxy(await ac.getAddress(AccessFlags.REWARD_CONFIGURATOR));
+
+    const list = await rc.list();
+    await promiseAllBatch(
+      list.map(async (value) => {
+        if (falsyOrZeroAddress(value)) {
+          return;
+        }
+        const pool = await getIManagedRewardPool(value);
+        const name = await pool.callStatic.getPoolName();
+        let key = name.toLowerCase();
+        try {
+          const rev = await (await getIRevision(value)).callStatic.REVISION();
+          key = key + '-' + rev.toString();
+        } catch (error) {
+          if ((<string>error.message).indexOf('UNPREDICTABLE_GAS_LIMIT') < 0) {
+            throw error;
+          }
+        }
+        const found = poolsByNames.get(key);
+        if (found === undefined) {
+          poolsByNames.set(key, value);
+          return;
+        }
+        console.log('WARNING! Duplicate pool name: ', name, value, found);
+      })
+    );
+  }
+  const addr = poolsByNames.get(name.toLowerCase());
+  if (falsyOrZeroAddress(addr)) {
+    console.log(poolsByNames);
+    throw new Error('Unknown pool name: ' + name);
+  }
+  return addr;
+};
+
+const preparePoolNamesAndShares = async (ac: MarketAccessController, args: any[]) =>
+  _preparePoolNamesAndValues(ac, args, (v: string) => {
+    return preparePercentage(v, true);
+  });
+
+const preparePoolNamesAndFactors = async (ac: MarketAccessController, args: any[]) =>
+  _preparePoolNamesAndValues(ac, args, (v: string) => {
+    return parseInt(v) * 10000;
+  });
+
+const _preparePoolNamesAndValues = async <T>(
+  ac: MarketAccessController,
+  args: any[],
+  valueFn: (v: any) => T
+): Promise<[pools: string[], values: T[]]> => {
   const rc = await getRewardConfiguratorProxy(await ac.getAddress(AccessFlags.REWARD_CONFIGURATOR));
-
-  const byNames = new Map<string, tEthereumAddress>();
-
   const pools: string[] = [];
-  const shares: number[] = [];
+  const values: T[] = [];
   for (let i = 0; i < args.length; i += 2) {
     let addr = args[i].toString();
     if (falsyOrZeroAddress(addr)) {
-      if (byNames.size == 0) {
-        const list = await rc.list();
-        await Promise.all(
-          list.map(async (value) => {
-            const pool = await getIManagedRewardPool(value);
-            const name = await pool.getPoolName();
-            const key = name.toLowerCase();
-            if (byNames.has(key)) {
-              console.log('WARNING! Duplicate pool name: ', name, value, byNames.get(key));
-              return;
-            }
-            byNames.set(key, value);
-          })
-        );
-        console.log(byNames);
-      }
-      addr = byNames.get(addr.toLowerCase());
-
+      addr = await getRewardPoolByName(ac, addr);
       if (falsyOrZeroAddress(addr)) {
         throw new Error('Unknown pool name: ' + args[i]);
       }
     }
     pools.push(addr);
-    shares.push(preparePercentage(args[i + 1], true));
+    values.push(valueFn(args[i + 1]));
   }
-  return [pools, shares];
+  return [pools, values];
 };
 
 const preparePercentage = (value: string, strict: boolean) => {

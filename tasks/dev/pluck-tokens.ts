@@ -3,9 +3,17 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
 import { falsyOrZeroAddress, getFirstSigner, mustWaitTx } from '../../helpers/misc-utils';
 import { eNetwork } from '../../helpers/types';
-import { getIErc20Detailed, getLendingPoolProxy, getMarketAddressController } from '../../helpers/contracts-getters';
+import {
+  getDepositStakeTokenImpl,
+  getIErc20Detailed,
+  getLendingPoolProxy,
+  getMarketAddressController,
+  getStakeConfiguratorImpl,
+  getStakeTokenImpl,
+} from '../../helpers/contracts-getters';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { BigNumber } from 'ethers';
+import { AccessFlags } from '../../helpers/access-flags';
 
 task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
@@ -29,6 +37,7 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
 
     const addressProvider = await getMarketAddressController();
     const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
+    const stakeCfg = await getStakeConfiguratorImpl(await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR));
 
     if (falsyOrZeroAddress(receiver)) {
       receiver = deployer.address;
@@ -100,6 +109,17 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
           );
           console.log(`\t\tDeposit ${tokenName} gas: ${tx.gasUsed.toNumber()}`);
           hasDeposits = true;
+
+          const stakeAddr = await stakeCfg.stakeTokenOf(rd.depositTokenAddress);
+          if (!falsyOrZeroAddress(stakeAddr)) {
+            const depositToken = await getIErc20Detailed(rd.depositTokenAddress);
+            const amount = deposit.div(2);
+            await depositToken.approve(stakeAddr, amount);
+            const stake = await getDepositStakeTokenImpl(stakeAddr);
+
+            const tx = await mustWaitTx(stake.stake(deployer.address, amount, 0));
+            console.log(`\t\tStake ${tokenName} gas: ${tx.gasUsed.toNumber()}`);
+          }
         }
       }
 
