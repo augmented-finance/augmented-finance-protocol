@@ -4,6 +4,7 @@ import { AccessFlags } from '../../helpers/access-flags';
 import { DAY, MAX_LOCKER_WEEKS, RAY, USD_ADDRESS, ZERO_ADDRESS } from '../../helpers/constants';
 import {
   getIErc20Detailed,
+  getIRevision,
   getMarketAddressController,
   getOracleRouter,
   getProtocolDataProvider,
@@ -11,6 +12,7 @@ import {
 } from '../../helpers/contracts-getters';
 import { falsyOrZeroAddress, getSignerN } from '../../helpers/misc-utils';
 import { tEthereumAddress } from '../../helpers/types';
+import { promiseAllBatch } from './utils';
 
 enum TokenType {
   PoolAsset,
@@ -147,11 +149,22 @@ subtask('helper:calc-apy', 'Calculates current APYs')
             }
             throw new Error(`Unknown pool of ${token}`);
           }
-          pool.poolName = token.tokenSymbol + 'Pool';
+
+          let name = token.tokenSymbol;
+          try {
+            const rev = await (await getIRevision(token.rewardPool)).callStatic.REVISION();
+            name += '-' + rev.toString();
+          } catch (error) {
+            if ((<string>error.message).indexOf('UNPREDICTABLE_GAS_LIMIT') < 0) {
+              throw error;
+            }
+          }
+
+          pool.poolName = name + ' Pool';
           pool.poolToken = key;
         }
       }
-      Promise.all(requests);
+      await promiseAllBatch(requests);
 
       console.log('Found', tokenInfo.size, 'token(s)');
     }

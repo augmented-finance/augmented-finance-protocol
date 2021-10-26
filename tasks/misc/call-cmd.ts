@@ -11,8 +11,9 @@ task('call-cmd', 'Invokes a configuration command')
   .addFlag('waittx', 'Wait for tx to complete')
   .addOptionalParam('roles', 'Role(s) for the call', '', types.string)
   .addOptionalParam('gaslimit', 'Gas limit', undefined, types.int)
+  .addOptionalParam('gasprice', 'Gas price', undefined, types.int)
   .addOptionalVariadicPositionalParam('args', 'Command arguments')
-  .setAction(async ({ ctl, waittx, roles, static: staticCall, gaslimit: gasLimit, args }, DRE) => {
+  .setAction(async ({ ctl, waittx, roles, static: staticCall, gaslimit: gasLimit, gasprice: gasPrice, args }, DRE) => {
     try {
       await DRE.run('set-DRE');
 
@@ -22,6 +23,7 @@ task('call-cmd', 'Invokes a configuration command')
         mode: staticCall ? 'static' : waittx ? 'waitTx' : 'call',
         ...prep,
         gaslimit: gasLimit,
+        gasprice: gasPrice,
       });
     } catch (err) {
       console.error(err);
