@@ -29,11 +29,6 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
   address private immutable _quote;
   uint256 private immutable _quoteValue;
 
-  /// @notice Constructor
-  /// @param assets The addresses of the assets
-  /// @param sources The address of the source of each asset
-  /// @param fallbackOracle The address of the fallback oracle to use if the data of an
-  ///        aggregator is not consistent
   constructor(
     IMarketAccessController acl,
     address[] memory assets,
@@ -50,7 +45,6 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
     _setAssetSources(assets, sources);
   }
 
-  /// @notice External function called by the Aave governance to set or replace sources of assets
   /// @param assets The addresses of the assets
   /// @param sources The address of the source of each asset
   function setAssetSources(address[] calldata assets, address[] calldata sources)
@@ -60,15 +54,11 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
     _setAssetSources(assets, sources);
   }
 
-  /// @notice Sets the fallbackOracle
   /// @param fallbackOracle The address of the fallbackOracle
   function setFallbackOracle(address fallbackOracle) external aclHas(AccessFlags.ORACLE_ADMIN) {
     _setFallbackOracle(fallbackOracle);
   }
 
-  /// @notice Internal function to set the sources for each asset
-  /// @param assets The addresses of the assets
-  /// @param sources The address of the source of each asset
   function _setAssetSources(address[] memory assets, address[] memory sources) internal {
     require(assets.length == sources.length, 'INCONSISTENT_PARAMS_LENGTH');
     for (uint256 i = 0; i < assets.length; i++) {
@@ -82,8 +72,6 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
     }
   }
 
-  /// @notice Internal function to set the fallbackOracle
-  /// @param fallbackOracle The address of the fallbackOracle
   function _setFallbackOracle(address fallbackOracle) internal {
     _fallbackOracle = IPriceOracleGetter(fallbackOracle);
     emit FallbackOracleUpdated(fallbackOracle);
