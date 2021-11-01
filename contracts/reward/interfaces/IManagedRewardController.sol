@@ -34,6 +34,8 @@ interface IManagedRewardBooster is IManagedRewardController {
 
   event MinBoostUpdated(uint16 minBoostPct);
 
+  function getMinBoost() external view returns (uint16 minBoostPct);
+
   function setMinBoost(uint16 minBoostPct) external;
 
   function setUpdateBoostPoolRate(bool) external;
