@@ -19,14 +19,14 @@ import '../access/AccessFlags.sol';
 contract OracleRouter is IPriceOracle, MarketAccessBitmask {
   using SafeERC20 for IERC20;
 
-  event WethSet(address indexed weth);
+  // event WethSet(address indexed weth);
   event AssetSourceUpdated(address indexed asset, address indexed source);
   event FallbackOracleUpdated(address indexed fallbackOracle);
 
   mapping(address => IPriceFeed) private _assetsSources;
   IPriceOracleGetter private _fallbackOracle;
   // solhint-disable-next-line var-name-mixedcase
-  address public immutable WETH;
+  address private immutable WETH;
 
   /// @notice Constructor
   /// @param assets The addresses of the assets
@@ -42,7 +42,7 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
   ) MarketAccessBitmask(acl) {
     WETH = weth;
     _assetsSources[weth] = IPriceFeed(address(this));
-    emit WethSet(weth);
+    // emit WethSet(weth);
 
     _setFallbackOracle(fallbackOracle);
     _setAssetSources(assets, sources, weth);
