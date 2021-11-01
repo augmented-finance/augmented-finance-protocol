@@ -1,5 +1,4 @@
 import rawBRE from 'hardhat';
-import { MockContract } from 'ethereum-waffle';
 import { getEthersSigners, registerContractInJsonDb } from '../../helpers/contracts-helpers';
 import {
   deployMarketAccessController,
@@ -23,7 +22,6 @@ import {
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
 import { DefaultTokenSymbols, tEthereumAddress } from '../../helpers/types';
-import { MintableERC20 } from '../../types';
 import { ConfigNames, getReservesTestConfig, loadPoolConfig } from '../../helpers/configuration';
 import { initializeMakeSuite } from './helpers/make-suite';
 
@@ -35,10 +33,10 @@ import {
 import { DRE, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
 import { getLendingPoolProxy, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
-import { WETH9Mocked } from '../../types';
 import { AccessFlags } from '../../helpers/access-flags';
 import { TestConfig } from '../../markets/augmented';
 import _ from 'lodash';
+import { WAD } from '../../helpers/constants';
 
 const deployConfig = TestConfig;
 const MOCK_USD_PRICE_IN_WEI = deployConfig.Mocks.MockUsdPriceInWei;
@@ -136,7 +134,14 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
 
   const [tokens, aggregators] = getTokenAggregatorPairs(allTokenAddresses, allAggregatorsAddresses);
 
-  await deployOracleRouter([addressProvider.address, tokens, aggregators, fallbackOracle.address, mockTokens.WETH]);
+  await deployOracleRouter([
+    addressProvider.address,
+    tokens,
+    aggregators,
+    fallbackOracle.address,
+    mockTokens.WETH,
+    WAD,
+  ]);
 
   const lendingRateOracle = await deployLendingRateOracle([addressProvider.address]);
 

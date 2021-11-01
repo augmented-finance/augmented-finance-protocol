@@ -394,7 +394,6 @@ export interface ICommonConfiguration {
   AddressProvider: iParamsPerNetwork<tEthereumAddress>;
   AddressProviderOwner: iParamsPerNetwork<tEthereumAddress>;
 
-  OracleRouter: iParamsPerNetwork<tEthereumAddress>;
   FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
   ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
 

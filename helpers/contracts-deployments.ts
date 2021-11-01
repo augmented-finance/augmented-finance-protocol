@@ -1,4 +1,4 @@
-import { BigNumberish, Contract } from 'ethers';
+import { BigNumber, BigNumberish, Contract } from 'ethers';
 import { DRE, getContractFactory, getFirstSigner } from './misc-utils';
 import { tEthereumAddress, eContractid, tStringTokenSmallUnits, PoolConfiguration, DefaultTokenSymbols } from './types';
 import { MockContract } from 'ethereum-waffle';
@@ -226,7 +226,14 @@ export const deployMockAggregator = async (price: tStringTokenSmallUnits, verify
   );
 
 export const deployOracleRouter = async (
-  args: [tEthereumAddress, tEthereumAddress[], tEthereumAddress[], tEthereumAddress, tEthereumAddress],
+  args: [
+    acl: string,
+    assets: string[],
+    sources: string[],
+    fallbackOracle: string,
+    quoteToken: string,
+    quoteValue: BigNumberish
+  ],
   verify?: boolean
 ) =>
   withSaveAndVerify(
