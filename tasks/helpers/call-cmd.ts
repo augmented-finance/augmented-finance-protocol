@@ -45,8 +45,9 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
   .addParam('mode', 'Call mode: call, waitTx, encode, static', 'call', types.string)
   .addOptionalParam('gaslimit', 'Gas limit', undefined, types.int)
   .addOptionalParam('gasprice', 'Gas price', undefined, types.int)
+  .addOptionalParam('nonce', 'Nonce', undefined, types.int)
   .addParam('cmds', 'Commands', [], types.any)
-  .setAction(async ({ ctl, mode, cmds, gaslimit: gasLimit, gasprice: gasPrice }, DRE) => {
+  .setAction(async ({ ctl, mode, cmds, gaslimit: gasLimit, gasprice: gasPrice, nonce }, DRE) => {
     const network = <eNetwork>DRE.network.name;
 
     if (falsyOrZeroAddress(ctl)) {
@@ -117,7 +118,7 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
     }
     console.log('\nCaller', await ac.signer.getAddress());
 
-    const overrides = { gasLimit, gasPrice };
+    const overrides = { gasLimit, gasPrice, nonce };
 
     if (mode == 'static' || (allStatic && allFlags == 0)) {
       if (contractCalls.length == 1 && allFlags == 0) {

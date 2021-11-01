@@ -43,4 +43,5 @@ library AccessFlags {
   // these roles can be assigned to multiple addresses
 
   uint256 public constant TRUSTED_FLASHLOAN = 1 << 66;
+  uint256 public constant REWARD_BRIDGE = 1 << 67;
 }

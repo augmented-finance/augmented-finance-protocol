@@ -12,24 +12,28 @@ task('call-cmd', 'Invokes a configuration command')
   .addOptionalParam('roles', 'Role(s) for the call', '', types.string)
   .addOptionalParam('gaslimit', 'Gas limit', undefined, types.int)
   .addOptionalParam('gasprice', 'Gas price', undefined, types.int)
+  .addOptionalParam('nonce', 'Nonce', undefined, types.int)
   .addOptionalVariadicPositionalParam('args', 'Command arguments')
-  .setAction(async ({ ctl, waittx, roles, static: staticCall, gaslimit: gasLimit, gasprice: gasPrice, args }, DRE) => {
-    try {
-      await DRE.run('set-DRE');
+  .setAction(
+    async ({ ctl, waittx, roles, static: staticCall, gaslimit: gasLimit, gasprice: gasPrice, nonce, args }, DRE) => {
+      try {
+        await DRE.run('set-DRE');
 
-      const prep = await prepareArgs(<eNetwork>DRE.network.name, ctl, roles, args);
+        const prep = await prepareArgs(<eNetwork>DRE.network.name, ctl, roles, args);
 
-      await DRE.run('helper:call-cmd', {
-        mode: staticCall ? 'static' : waittx ? 'waitTx' : 'call',
-        ...prep,
-        gaslimit: gasLimit,
-        gasprice: gasPrice,
-      });
-    } catch (err) {
-      console.error(err);
-      exit(1);
+        await DRE.run('helper:call-cmd', {
+          mode: staticCall ? 'static' : waittx ? 'waitTx' : 'call',
+          ...prep,
+          gaslimit: gasLimit,
+          gasprice: gasPrice,
+          nonce,
+        });
+      } catch (err) {
+        console.error(err);
+        exit(1);
+      }
     }
-  });
+  );
 
 task('encode-cmd', 'Encodes a configuration command')
   .addParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)

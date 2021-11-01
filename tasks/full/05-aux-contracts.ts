@@ -45,23 +45,25 @@ const deployAllFlashloanAdapters = async (
   uniswapAddr: tEthereumAddress | undefined,
   verify: boolean
 ) => {
+  if (falsyOrZeroAddress(uniswapAddr)) {
+    return;
+  }
+
   const configurator = await getLendingPoolConfiguratorProxy(
     await addressProvider.getAddress(AccessFlags.LENDING_POOL_CONFIGURATOR)
   );
 
-  if (!falsyOrZeroAddress(uniswapAddr)) {
-    await deployFlashloanAdapters(
-      addressProvider,
-      configurator,
-      {
-        UniswapLiquiditySwapAdapter: deployUniswapLiquiditySwapAdapter,
-        UniswapRepayAdapter: deployUniswapRepayAdapter,
-        UniswapLiquidationAdapter: deployFlashLiquidationAdapter,
-      },
-      [addressProvider.address, uniswapAddr!],
-      verify
-    );
-  }
+  await deployFlashloanAdapters(
+    addressProvider,
+    configurator,
+    {
+      UniswapLiquiditySwapAdapter: deployUniswapLiquiditySwapAdapter,
+      UniswapRepayAdapter: deployUniswapRepayAdapter,
+      UniswapLiquidationAdapter: deployFlashLiquidationAdapter,
+    },
+    [addressProvider.address, uniswapAddr!],
+    verify
+  );
 };
 
 const deployFlashloanAdapters = async <T>(

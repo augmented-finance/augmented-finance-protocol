@@ -43,7 +43,7 @@ abstract contract RewardToken is ERC20BaseWithPermit, MarketAccessBitmask, IRewa
     _mintReward(account, amount);
   }
 
-  function _mintReward(address account, uint256 amount) private {
+  function _mintReward(address account, uint256 amount) internal {
     _mint(account, amount);
     require(super.totalSupply() <= MAX_SUPPLY, 'MINT_OVER_TOTAL_SUPPLY');
   }
