@@ -31,8 +31,8 @@ task('augmented:mainnet', 'Deploy enviroment')
     //     "0x56BC75E2D63100000", // 10^20
     //   ]);
     // }
-
     const startBalance: BigNumber = await deployer.getBalance();
+    const deployerAddress = await deployer.getAddress();
     let spentOnPluck: BigNumber = BigNumber.from(0);
 
     let renounce = false;
@@ -40,6 +40,7 @@ task('augmented:mainnet', 'Deploy enviroment')
 
     try {
       await cleanupUiConfig();
+      console.log('Deployer address:', deployerAddress);
       console.log('Deployer start balance: ', startBalance.div(1e12).toNumber() / 1e6);
 
       if (incremental) {
