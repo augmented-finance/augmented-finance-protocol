@@ -301,7 +301,7 @@ export const CommonsConfig: ICommonConfiguration = {
       CETH: '0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5',
       CUSDC: '0x39aa39c021dfbae8fac545936693ac917d5e7563',
       CUSDT: '0xf650c3d88d12db855b8bf7d11be6c55a4e07dcc9',
-      CWBTC: '0xc11b1268c1a384e55c48c2391d8d480264a3a7f4',
+      CWBTC: '0xccf4429db6322d5c611ee964527d42e5d685dd6a', // cWBTC2
     },
     [eEthereumNetwork.tenderlyMain]: {
       AAVE: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
