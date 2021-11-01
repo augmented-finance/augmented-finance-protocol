@@ -59,6 +59,10 @@ contract RewardBooster is IManagedRewardBooster, IRewardExplainer, BaseRewardCon
     _updateBoostPool = updateBoostPool;
   }
 
+  function getMinBoost() external view override returns (uint16) {
+    return _minBoostPct;
+  }
+
   function setMinBoost(uint16 minBoostPct) external override onlyConfigOrRateAdmin {
     require(minBoostPct <= PercentageMath.ONE, 'min boost is too high');
     _minBoostPct = minBoostPct;

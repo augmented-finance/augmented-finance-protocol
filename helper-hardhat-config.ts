@@ -33,14 +33,16 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [ePolygonNetwork.matic]: 'https://rpc-mainnet.matic.network',
 };
 
+const gasPrice = (def: number) => (process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : def) * GWEI;
+
 export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork<number> = {
-  [eEthereumNetwork.kovan]: 1 * GWEI,
-  [eEthereumNetwork.ropsten]: 10 * GWEI,
-  [eEthereumNetwork.rinkeby]: 1 * GWEI,
-  [eEthereumNetwork.main]: 65 * GWEI,
-  [eEthereumNetwork.coverage]: 65 * GWEI,
-  [eEthereumNetwork.hardhat]: 65 * GWEI,
+  [eEthereumNetwork.kovan]: gasPrice(1),
+  [eEthereumNetwork.ropsten]: gasPrice(10),
+  [eEthereumNetwork.rinkeby]: gasPrice(1),
+  [eEthereumNetwork.main]: gasPrice(65),
+  [eEthereumNetwork.coverage]: gasPrice(65),
+  [eEthereumNetwork.hardhat]: gasPrice(65),
   [eEthereumNetwork.tenderlyMain]: 0.01 * GWEI,
-  [ePolygonNetwork.mumbai]: 1 * GWEI,
-  [ePolygonNetwork.matic]: 2 * GWEI,
+  [ePolygonNetwork.mumbai]: gasPrice(1),
+  [ePolygonNetwork.matic]: gasPrice(2),
 };
