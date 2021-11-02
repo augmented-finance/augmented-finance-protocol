@@ -1,4 +1,4 @@
-import BigNumber from 'bignumber.js';
+import { BigNumber } from 'ethers';
 
 export interface SymbolMap<T> {
   [symbol: string]: T;
@@ -238,9 +238,7 @@ export enum ProtocolErrors {
 
 export type tEthereumAddress = string;
 export type tStringTokenBigUnits = string; // 1 ETH, or 10e6 USDC or 10e18 DAI
-export type tBigNumberTokenBigUnits = BigNumber;
 export type tStringTokenSmallUnits = string; // 1 wei, or 1 basic unit of USDC, or 1 basic unit of DAI
-export type tBigNumberTokenSmallUnits = BigNumber;
 
 export interface iAssetCommon<T> {
   [key: string]: T;
@@ -382,6 +380,11 @@ export interface IMocksConfig {
   UnderlyingMappings: iParamsPerNetwork<iAssetCommon<tEthereumAddress>>;
 }
 
+export interface IPriceOracleConfig {
+  QuoteToken: tEthereumAddress;
+  QuoteValue: BigNumber;
+}
+
 export interface ICommonConfiguration {
   MarketId: string;
   ProviderId: number;
@@ -394,6 +397,7 @@ export interface ICommonConfiguration {
   AddressProvider: iParamsPerNetwork<tEthereumAddress>;
   AddressProviderOwner: iParamsPerNetwork<tEthereumAddress>;
 
+  PriceOracle: iParamsPerNetwork<IPriceOracleConfig | 'WETH'>;
   FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
   ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
 

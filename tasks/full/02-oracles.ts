@@ -21,10 +21,12 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
   const {
     Mocks: { UsdAddress },
     ReserveAssets,
+    PriceOracle,
     FallbackOracle,
     ChainlinkAggregator,
     AGF: { DefaultPriceEth: AgfDefaultPriceEth },
   } = poolConfig as ICommonConfiguration;
+  const priceOracle = getParamPerNetwork(PriceOracle, network);
   const fallbackOracle = getParamPerNetwork(FallbackOracle, network);
   const reserveAssets = getParamPerNetwork(ReserveAssets, network);
   const chainlinkAggregators = getParamPerNetwork(ChainlinkAggregator, network);
@@ -121,14 +123,31 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
 
     console.log('Deploying PriceOracle');
     console.log('\tPrice aggregators for tokens: ', aggregatorTokens);
-    const wethAddr = await getWethAddress(poolConfig);
-    const oracleRouter = await deployOracleRouter(
-      [addressProvider.address, aggregatorTokens, aggregators, fallbackOracleAddress, wethAddr, WAD],
-      verify
-    );
+    {
+      let quoteToken = '';
+      let quoteValue = '';
+      if (priceOracle === 'WETH') {
+        quoteToken = await getWethAddress(poolConfig);
+        quoteValue = WAD;
+      } else {
+        quoteToken = priceOracle.QuoteToken;
+        if (priceOracle.QuoteValue.eq(0)) {
+          throw new Error('zero quote value');
+        }
+        quoteValue = priceOracle.QuoteValue.toString();
+      }
+      if (falsyOrZeroAddress(quoteToken)) {
+        throw new Error('unknonw quote token: ' + quoteToken);
+      }
 
-    await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address));
-    poAddress = oracleRouter.address;
+      const oracleRouter = await deployOracleRouter(
+        [addressProvider.address, aggregatorTokens, aggregators, fallbackOracleAddress, quoteToken, quoteValue],
+        verify
+      );
+
+      await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address));
+      poAddress = oracleRouter.address;
+    }
   }
   console.log('PriceOracle: ', poAddress);
 });
