@@ -348,6 +348,14 @@ const parseCommand = async (
       );
     },
 
+    transferFromTreasury: async () => {
+      await call(
+        qualifiedName(eContractid.TreasuryImpl, AccessFlags.TREASURY, 'transferToken'),
+        [findPriceTokens(ac, [args[0]])[0], args[2], args[1]],
+        AccessFlags.REFERRAL_ADMIN
+      );
+    },
+
     setClaimablePools: async () =>
       await call(
         qualifiedName(eContractid.RewardBoosterImpl, AccessFlags.REWARD_CONTROLLER, 'setClaimablePoolsFor'),
