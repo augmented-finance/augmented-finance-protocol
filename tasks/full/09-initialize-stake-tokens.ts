@@ -5,7 +5,7 @@ import {
   deployPriceFeedUniEthPair,
   deployStakeTokenImpl,
 } from '../../helpers/contracts-deployments';
-import { eNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../../helpers/types';
+import { eNetwork, ePolygonNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../../helpers/types';
 import {
   getIErc20Detailed,
   getIInitializableStakeToken,
@@ -210,9 +210,12 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
       for (let chunkIndex = 0; chunkIndex < chunkedParams.length; chunkIndex++) {
         const param = chunkedParams[chunkIndex];
         console.log(param);
+        const gasEstimated = Object.values(ePolygonNetwork).includes(<ePolygonNetwork>network)
+          ? await stakeConfigurator.estimateGas.batchInitStakeTokens(param)
+          : 4000000;
         const tx3 = await mustWaitTx(
           stakeConfigurator.batchInitStakeTokens(param, {
-            gasLimit: 4000000,
+            gasLimit: gasEstimated,
           })
         );
 
