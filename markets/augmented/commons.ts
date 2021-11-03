@@ -284,6 +284,32 @@ export const CommonsConfig: ICommonConfiguration = {
       USDT: '0xEca2605f0BCF2BA5966372C99837b1F182d3D620', // ...
       WBNB: '0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526',  // BNB/USD
     },
+    [eEthereumNetwork.bsc_testnet]: {
+      DAI: '0x0630521aC362bc7A19a4eE44b57cE72Ea34AD01c',
+      LINK: '0x351Ff08FF5077d6E8704A4763836Fe187f074380',
+      USD: '0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526',
+    },
+    [eEthereumNetwork.bsc]: {},
+    [eEthereumNetwork.avalanche_testnet]: {
+      USD: '0x5498BB86BC934c8D34FDA08E81D444153d0D06aD',
+    },
+    [eEthereumNetwork.avalanche]: {},
+    [eEthereumNetwork.fantom_testnet]: {
+      USD: '0xe04676B9A9A2973BCb0D1478b5E1E9098BBB7f3D',
+    },
+    [eEthereumNetwork.fantom]: {},
+    [ePolygonNetwork.matic]: {},
+    [ePolygonNetwork.mumbai]: {
+      USD: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada',
+    },
+    [ePolygonNetwork.arbitrum_testnet]: {
+      USD: '0x5f0423B1a6935dc5596e7A24d98532b67A0AeFd8',
+    },
+    [ePolygonNetwork.arbitrum]: {},
+    [ePolygonNetwork.optimistic_testnet]: {
+      USD: '0xCb7895bDC70A1a1Dce69b689FD7e43A627475A06',
+    },
+    [ePolygonNetwork.optimistic]: {},
   },
 
   ReserveAssetsOpt: {
