@@ -14,6 +14,12 @@ export enum eEthereumNetwork {
   coverage = 'coverage',
   hardhat = 'hardhat',
   tenderlyMain = 'tenderlyMain',
+  bsc_testnet = 'bsc_testnet',
+  bsc = 'bsc',
+  avalanche_testnet = 'avalanche_testnet',
+  avalanche = 'avalanche',
+  fantom_testnet = 'fantom_testnet',
+  fantom = 'fantom',
 }
 
 export enum eOtherNetwork {
@@ -24,6 +30,10 @@ export enum eOtherNetwork {
 export enum ePolygonNetwork {
   matic = 'matic',
   mumbai = 'mumbai',
+  arbitrum_testnet = 'arbitrum_testnet',
+  arbitrum = 'arbitrum',
+  optimistic_testnet = 'optimistic_testnet',
+  optimistic = 'optimistic',
 }
 
 export enum EthereumNetworkNames {
@@ -33,6 +43,12 @@ export enum EthereumNetworkNames {
   main = 'main',
   matic = 'matic',
   mumbai = 'mumbai',
+  bsc = 'bsc',
+  bsc_mainnet = 'bsc_mainnet',
+  avalanche_testnet = 'avalanche_testnet',
+  avalanche = 'avalanche',
+  fantom_testnet = 'fantom_testnet',
+  fantom = 'fantom',
 }
 
 export enum eContractid {
@@ -52,7 +68,6 @@ export enum eContractid {
 
   TeamRewardPool = 'TeamRewardPool',
   PermitFreezerRewardPool = 'PermitFreezerRewardPool',
-
   ProxyAdmin = 'ProxyAdmin',
 
   DepositTokenImpl = 'DepositTokenImpl',
@@ -378,11 +393,21 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.main]: T;
   [eEthereumNetwork.hardhat]: T;
   [eEthereumNetwork.tenderlyMain]: T;
+  [eEthereumNetwork.bsc_testnet]: T;
+  [eEthereumNetwork.bsc]: T;
+  [eEthereumNetwork.avalanche_testnet]: T;
+  [eEthereumNetwork.avalanche]: T;
+  [eEthereumNetwork.fantom_testnet]: T;
+  [eEthereumNetwork.fantom]: T;
 }
 
 export interface iPolygonParamsPerNetwork<T> {
   [ePolygonNetwork.matic]: T;
   [ePolygonNetwork.mumbai]: T;
+  [ePolygonNetwork.arbitrum_testnet]: T;
+  [ePolygonNetwork.arbitrum]: T;
+  [ePolygonNetwork.optimistic_testnet]: T;
+  [ePolygonNetwork.optimistic]: T;
 }
 
 export interface iParamsPerOtherNetwork<T> {
