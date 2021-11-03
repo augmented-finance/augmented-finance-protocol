@@ -1,4 +1,4 @@
-import { loadPoolConfig, getWethAddress } from '../../helpers/configuration';
+import { loadPoolConfig } from '../../helpers/configuration';
 import { deployWETHGateway } from '../../helpers/contracts-deployments';
 import { eNetwork } from '../../helpers/types';
 import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
