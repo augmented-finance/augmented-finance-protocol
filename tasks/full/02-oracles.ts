@@ -8,11 +8,12 @@ import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracle
 import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress } from '../../helpers/types';
 import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import { loadPoolConfig, getWethAddress, getLendingRateOracles } from '../../helpers/configuration';
-import { getIChainlinkAggregator, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
+import { getIChainlinkAggregator, getIErc20Detailed, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 import { oneEther, WAD, ZERO_ADDRESS } from '../../helpers/constants';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { deployTask } from '../helpers/deploy-steps';
+import { BigNumber } from 'ethers';
 
 deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async ({ verify, pool }, DRE) => {
   await DRE.run('set-DRE');
@@ -126,9 +127,17 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
     {
       let quoteToken = '';
       let quoteValue = '';
-      if (priceOracle === 'WETH') {
-        quoteToken = await getWethAddress(poolConfig);
-        quoteValue = WAD;
+
+      if (typeof priceOracle == 'string') {
+        quoteToken = reserveAssets[priceOracle];
+        if (priceOracle == 'WETH' || priceOracle == 'ETH') {
+          quoteValue = WAD;
+        } else if (!falsyOrZeroAddress(quoteToken)) {
+          const token = await getIErc20Detailed(quoteToken);
+          const decimals = await token.decimals();
+          console.log(`\tPrice oracle quote: ${priceOracle}, 10^${decimals}`);
+          quoteValue = BigNumber.from(10).pow(decimals).toString();
+        }
       } else {
         quoteToken = priceOracle.QuoteToken;
         if (priceOracle.QuoteValue.eq(0)) {
@@ -137,7 +146,7 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
         quoteValue = priceOracle.QuoteValue.toString();
       }
       if (falsyOrZeroAddress(quoteToken)) {
-        throw new Error('unknonw quote token: ' + quoteToken);
+        throw new Error('unknown quote token: ' + priceOracle);
       }
 
       const oracleRouter = await deployOracleRouter(

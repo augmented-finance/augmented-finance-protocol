@@ -397,7 +397,7 @@ export interface ICommonConfiguration {
   AddressProvider: iParamsPerNetwork<tEthereumAddress>;
   AddressProviderOwner: iParamsPerNetwork<tEthereumAddress>;
 
-  PriceOracle: iParamsPerNetwork<IPriceOracleConfig | 'WETH'>;
+  PriceOracle: iParamsPerNetwork<IPriceOracleConfig | string>;
   FallbackOracle: iParamsPerNetwork<tEthereumAddress | IPrices>;
   ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
 
