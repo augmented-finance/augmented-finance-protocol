@@ -393,12 +393,6 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.main]: T;
   [eEthereumNetwork.hardhat]: T;
   [eEthereumNetwork.tenderlyMain]: T;
-  [eEthereumNetwork.bsc_testnet]: T;
-  [eEthereumNetwork.bsc]: T;
-  [eEthereumNetwork.avalanche_testnet]: T;
-  [eEthereumNetwork.avalanche]: T;
-  [eEthereumNetwork.fantom_testnet]: T;
-  [eEthereumNetwork.fantom]: T;
 }
 
 export interface iPolygonParamsPerNetwork<T> {
