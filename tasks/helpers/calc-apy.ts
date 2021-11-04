@@ -51,10 +51,6 @@ subtask('helper:calc-apy', 'Calculates current APYs')
       }
     >();
 
-    const priceCurrency = USD_ADDRESS;
-    const priceCurrencyName = 'USD';
-    const basePriceDecimals = 18; // all prices are nominated in ETH, hence decimals = 18
-
     const addresses = await dp.getAddresses();
 
     if (!quiet) {
@@ -62,6 +58,35 @@ subtask('helper:calc-apy', 'Calculates current APYs')
       console.log('Data Helper:', dp.address);
       console.log('Addresses:', addresses);
     }
+
+    const priceCurrency = USD_ADDRESS;
+    const priceCurrencyName = 'USD';
+    const priceCurrencyDecimals = 8;
+
+    const basePriceDecimals = await (async () => {
+      const po = await getOracleRouter(addresses.priceOracle);
+      let quoteValue = '';
+      let quoteToken = '';
+      try {
+        const quote = await po.getQuoteAndValue();
+        quoteToken = quote[0];
+        quoteValue = quote[1].toString();
+      } catch (err) {
+        // all prices are nominated in ETH, hence decimals = 18
+        console.log('Price quote: WETH');
+        return 18;
+      }
+      if (
+        quoteValue.length > 0 &&
+        BigNumber.from(10)
+          .pow(quoteValue.length - 1)
+          .eq(quoteValue)
+      ) {
+        console.log('Price quote: decimals =', quoteValue.length - 1, quoteToken);
+        return quoteValue.length - 1;
+      }
+      throw new Error('unsupported quote value: ' + quoteValue);
+    })();
 
     {
       const rw = await getRewardConfiguratorProxy(addresses.rewardConfigurator);
@@ -175,7 +200,7 @@ subtask('helper:calc-apy', 'Calculates current APYs')
     {
       priceInfo.set(priceCurrency, {
         tokenName: priceCurrencyName,
-        decimals: 8,
+        decimals: priceCurrencyDecimals,
         price: BigNumber.from(0),
       });
 
