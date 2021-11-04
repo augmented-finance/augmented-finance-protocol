@@ -45,6 +45,14 @@ contract OracleRouter is IPriceOracle, MarketAccessBitmask {
     _setAssetSources(assets, sources);
   }
 
+  function getQuote() public view returns (address) {
+    return _quote;
+  }
+
+  function getQuoteAndValue() public view returns (address, uint256) {
+    return (_quote, getAssetPrice(_quote));
+  }
+
   /// @param assets The addresses of the assets
   /// @param sources The address of the source of each asset
   function setAssetSources(address[] calldata assets, address[] calldata sources)
