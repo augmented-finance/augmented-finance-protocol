@@ -29,7 +29,7 @@ import {
   deployVariableDebtTokenImpl,
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
-import { MarketAccessController, OracleRouter } from '../types';
+import { MarketAccessController } from '../types';
 import { Contract } from '@ethersproject/contracts';
 import { waitForAddressFn } from './deploy-helpers';
 

@@ -8,11 +8,12 @@ import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracle
 import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress } from '../../helpers/types';
 import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import { loadPoolConfig, getWethAddress, getLendingRateOracles } from '../../helpers/configuration';
-import { getIChainlinkAggregator, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
+import { getIChainlinkAggregator, getIErc20Detailed, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
-import { oneEther, ZERO_ADDRESS } from '../../helpers/constants';
+import { oneEther, WAD, ZERO_ADDRESS } from '../../helpers/constants';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { deployTask } from '../helpers/deploy-steps';
+import { BigNumber } from 'ethers';
 
 deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async ({ verify, pool }, DRE) => {
   await DRE.run('set-DRE');
@@ -21,12 +22,12 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
   const {
     Mocks: { UsdAddress },
     ReserveAssets,
-    OracleRouter,
+    PriceOracle,
     FallbackOracle,
     ChainlinkAggregator,
     AGF: { DefaultPriceEth: AgfDefaultPriceEth },
   } = poolConfig as ICommonConfiguration;
-  const oracleRouter = getParamPerNetwork(OracleRouter, network);
+  const priceOracle = getParamPerNetwork(PriceOracle, network);
   const fallbackOracle = getParamPerNetwork(FallbackOracle, network);
   const reserveAssets = getParamPerNetwork(ReserveAssets, network);
   const chainlinkAggregators = getParamPerNetwork(ChainlinkAggregator, network);
@@ -41,7 +42,7 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
   const newOracles = freshStart && !continuation;
 
   let lroAddress = '';
-  let poAddress = oracleRouter;
+  let poAddress = '';
 
   const [aggregatorTokens, aggregators] = getTokenAggregatorPairs(tokensToWatch, chainlinkAggregators);
 
@@ -123,13 +124,39 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
 
     console.log('Deploying PriceOracle');
     console.log('\tPrice aggregators for tokens: ', aggregatorTokens);
-    const oracleRouter = await deployOracleRouter(
-      [addressProvider.address, aggregatorTokens, aggregators, fallbackOracleAddress, await getWethAddress(poolConfig)],
-      verify
-    );
+    {
+      let quoteToken = '';
+      let quoteValue = '';
 
-    await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address));
-    poAddress = oracleRouter.address;
+      if (typeof priceOracle == 'string') {
+        quoteToken = reserveAssets[priceOracle];
+        if (priceOracle == 'WETH' || priceOracle == 'ETH') {
+          quoteValue = WAD;
+        } else if (!falsyOrZeroAddress(quoteToken)) {
+          const token = await getIErc20Detailed(quoteToken);
+          const decimals = await token.decimals();
+          console.log(`\tPrice oracle quote: ${priceOracle}, 10^${decimals}`);
+          quoteValue = BigNumber.from(10).pow(decimals).toString();
+        }
+      } else {
+        quoteToken = priceOracle.QuoteToken;
+        if (priceOracle.QuoteValue.eq(0)) {
+          throw new Error('zero quote value');
+        }
+        quoteValue = priceOracle.QuoteValue.toString();
+      }
+      if (falsyOrZeroAddress(quoteToken)) {
+        throw new Error('unknown quote token: ' + priceOracle);
+      }
+
+      const oracleRouter = await deployOracleRouter(
+        [addressProvider.address, aggregatorTokens, aggregators, fallbackOracleAddress, quoteToken, quoteValue],
+        verify
+      );
+
+      await mustWaitTx(addressProvider.setAddress(AccessFlags.PRICE_ORACLE, oracleRouter.address));
+      poAddress = oracleRouter.address;
+    }
   }
   console.log('PriceOracle: ', poAddress);
 });

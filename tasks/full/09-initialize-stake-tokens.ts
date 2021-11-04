@@ -13,6 +13,7 @@ import {
   getOracleRouter,
   getStakeConfiguratorImpl,
   getStaticPriceOracle,
+  getWETHGateway,
 } from '../../helpers/contracts-getters';
 import { addProxyToJsonDb, chunk, falsyOrZeroAddress, mustWaitTx, waitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
@@ -152,8 +153,9 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
       });
     }
 
+    const wg = await getWETHGateway(await addressProvider.getAddress(AccessFlags.WETH_GATEWAY));
+    const wethAddr = await wg.getWETHAddress();
     const po = await getOracleRouter(await addressProvider.getAddress(AccessFlags.PRICE_ORACLE));
-    const wethAddr = await po.WETH();
 
     if (UniV2EthPair?.StakeToken) {
       const lpPairAddr = await getUniAgfEth(addressProvider, dependencies.UniswapV2Router);

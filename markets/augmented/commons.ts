@@ -120,16 +120,18 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.docker]: '',
     [eEthereumNetwork.tenderlyMain]: '',
   },
-  OracleRouter: {
-    [eEthereumNetwork.coverage]: '',
-    [eEthereumNetwork.hardhat]: '',
-    [eEthereumNetwork.docker]: '',
-    [eEthereumNetwork.kovan]: '',
-    [eEthereumNetwork.ropsten]: '',
-    [eEthereumNetwork.rinkeby]: '',
-    [eEthereumNetwork.main]: '',
-    [eEthereumNetwork.tenderlyMain]: '',
+  
+  PriceOracle: {
+    [eEthereumNetwork.coverage]: 'WETH',
+    [eEthereumNetwork.hardhat]: 'WETH',
+    [eEthereumNetwork.docker]: 'WETH',
+    [eEthereumNetwork.kovan]: 'WETH',
+    [eEthereumNetwork.ropsten]: 'WETH',
+    [eEthereumNetwork.rinkeby]: 'WETH',
+    [eEthereumNetwork.main]: 'WETH',
+    [eEthereumNetwork.tenderlyMain]: 'WETH',
   },
+  
   FallbackOracle: {
     [eEthereumNetwork.coverage]: '',
     [eEthereumNetwork.hardhat]: '',
