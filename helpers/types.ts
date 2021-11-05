@@ -473,11 +473,12 @@ export interface IRewardParams {
   MinBoostBP: number;
   InitialRateWad: iParamsPerNetwork<number>;
   TokenPools: iAugmentedPoolAssetsOpt<ITokenRewardPoolParams>;
-  TeamPool: ITeamPool;
-  ReferralPool: IBasicRewardPool;
   TreasuryPool: IBasicRewardPool;
-  BurnersPool: IPermiRewardPool;
-  RetroPool: IPermiRewardPool;
+
+  TeamPool?: ITeamPool;
+  ReferralPool?: IBasicRewardPool;
+  BurnersPool?: IPermiRewardPool;
+  RetroPool?: IPermiRewardPool;
 }
 
 export interface ITeamPool {
@@ -549,5 +550,6 @@ export interface IAgfLPParams {
 }
 
 export interface IDependencies {
+  WrappedNative?: string;
   UniswapV2Router?: tEthereumAddress;
 }

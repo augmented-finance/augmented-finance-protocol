@@ -328,22 +328,34 @@ export const CommonsConfig: ICommonConfiguration = {
 
   Dependencies: {
     [eEthereumNetwork.kovan]: {
+      WrappedNative: 'WETH',
       UniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
     },
     [eEthereumNetwork.ropsten]: {
+      WrappedNative: 'WETH',
       UniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
     },
     [eEthereumNetwork.rinkeby]: {
+      WrappedNative: 'WETH',
       UniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
     },
     [eEthereumNetwork.main]: {
+      WrappedNative: 'WETH',
       UniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
     },
 
-    [eEthereumNetwork.coverage]: {},
-    [eEthereumNetwork.hardhat]: {},
-    [eEthereumNetwork.docker]: {},
-    [eEthereumNetwork.tenderlyMain]: {},
+    [eEthereumNetwork.coverage]: {
+      WrappedNative: 'WETH',
+    },
+    [eEthereumNetwork.hardhat]: {
+      WrappedNative: 'WETH',
+    },
+    [eEthereumNetwork.docker]: {
+      WrappedNative: 'WETH',
+    },
+    [eEthereumNetwork.tenderlyMain]: {
+      WrappedNative: 'WETH',
+    },
   },
 
   ReservesConfig: {},
