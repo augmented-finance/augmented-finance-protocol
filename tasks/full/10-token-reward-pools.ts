@@ -328,7 +328,7 @@ const deployExtraPools = async (
   const extraNames: string[] = [];
 
   if (!freshStart || continuation) {
-    const allNames = [teamPoolName, refPoolName, burnPoolName, treasuryPoolName];
+    const allNames = [teamPoolName, refPoolName, burnPoolName, retroPoolName, treasuryPoolName];
     const allNamed = await configurator.getNamedRewardPools(allNames);
     for (let i = 0; i < allNamed.length; i++) {
       if (!falsyOrZeroAddress(allNamed[i])) {
