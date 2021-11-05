@@ -338,7 +338,7 @@ const deployExtraPools = async (
     console.log('Known named pools: ', knownNamedPools);
   }
 
-  if (!knownNamedPools.has(teamPoolName)) {
+  if (rewardParams.TeamPool && !knownNamedPools.has(teamPoolName)) {
     const poolName = teamPoolName;
     const params = rewardParams.TeamPool;
 
@@ -371,7 +371,7 @@ const deployExtraPools = async (
   const poolNames: string[] = [];
   const poolFactors: number[] = [];
 
-  if (!knownNamedPools.has(refPoolName)) {
+  if (rewardParams.ReferralPool && !knownNamedPools.has(refPoolName)) {
     const poolName = refPoolName;
     const params = rewardParams.ReferralPool;
 
@@ -398,7 +398,7 @@ const deployExtraPools = async (
     poolFactors.push(params.BoostFactor);
   }
 
-  if (!knownNamedPools.has(treasuryPoolName)) {
+  if (rewardParams.TreasuryPool && !knownNamedPools.has(treasuryPoolName)) {
     const poolName = treasuryPoolName;
     const params = rewardParams.TreasuryPool;
 
@@ -413,8 +413,8 @@ const deployExtraPools = async (
     poolFactors.push(params.BoostFactor);
   }
 
-  const deployPermitPool = async (poolName: string, params: IPermiRewardPool) => {
-    if (rewardParams.BurnersPool.TotalWad == 0 || knownNamedPools.has(burnPoolName)) {
+  const deployPermitPool = async (poolName: string, params?: IPermiRewardPool) => {
+    if (!params || params.TotalWad == 0 || knownNamedPools.has(poolName)) {
       return;
     }
 
