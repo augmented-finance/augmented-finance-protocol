@@ -6,7 +6,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from './types';
 import { isAddress } from 'ethers/lib/utils';
 import { isZeroAddress } from 'ethereumjs-util';
-import { stringifyArgs } from './etherscan-verification';
+import { stringifyArgs } from './contract-verification';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 const getDb = () => low(new FileSync('./deployed-contracts.json'));
