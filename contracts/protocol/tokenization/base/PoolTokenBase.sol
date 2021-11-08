@@ -83,6 +83,11 @@ abstract contract PoolTokenBase is
     return address(_pool);
   }
 
+  /// @dev BEP-20 compatibility
+  function getOwner() external view returns (address) {
+    return address(_remoteAcl);
+  }
+
   function setIncentivesController(address hook) external override onlyRewardConfiguratorOrAdmin {
     internalSetIncentivesController(hook);
   }

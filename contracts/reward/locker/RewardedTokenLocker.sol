@@ -88,6 +88,11 @@ contract RewardedTokenLocker is
     return getStakeBalance(account);
   }
 
+  /// @dev BEP-20 compatibility
+  function getOwner() external view returns (address) {
+    return address(getAccessController());
+  }
+
   function internalCalcReward(address holder, uint32 current)
     internal
     view
