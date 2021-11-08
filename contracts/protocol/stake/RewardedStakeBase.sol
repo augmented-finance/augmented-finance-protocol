@@ -61,6 +61,11 @@ abstract contract RewardedStakeBase is
     return _remoteAcl;
   }
 
+  /// @dev BEP-20 compatibility
+  function getOwner() external view returns (address) {
+    return address(_remoteAcl);
+  }
+
   function _notSupported() private pure {
     revert('UNSUPPORTED');
   }

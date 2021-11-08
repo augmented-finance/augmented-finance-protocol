@@ -18,6 +18,11 @@ abstract contract RewardToken is ERC20BaseWithPermit, MarketAccessBitmask, IRewa
   uint224 private _lastRate;
   uint32 private _lastRateAt;
 
+  /// @dev BEP-20 compatibility
+  function getOwner() external view returns (address) {
+    return address(_remoteAcl);
+  }
+
   function totalSupply() public pure override returns (uint256) {
     return MAX_SUPPLY;
   }
