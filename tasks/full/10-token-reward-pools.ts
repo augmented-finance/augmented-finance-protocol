@@ -15,6 +15,7 @@ import {
   IRewardPoolParams,
   IRewardParams,
   IPermiRewardPool,
+  IRewardPools,
 } from '../../helpers/types';
 import {
   getLendingPoolProxy,
@@ -64,8 +65,8 @@ deployTask(`full:init-reward-pools`, `Deploy reward pools`, __dirname).setAction
   );
 
   const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
-  const rewardParams = RewardParams; // getParamPerNetwork(RewardParams, network);
-  const initialRateWad = getParamPerNetwork(rewardParams.InitialRateWad, network);
+  const rewardParams = getParamPerNetwork(RewardParams.RewardPools, network);
+  const initialRateWad = rewardParams.InitialRateWad;
 
   const knownReserves: {
     baseSymbol: string;
@@ -312,7 +313,7 @@ const deployExtraPools = async (
   addressProvider: MarketAccessController,
   freshStart: boolean,
   continuation: boolean,
-  rewardParams: IRewardParams,
+  rewardParams: IRewardPools,
   configurator: RewardConfigurator,
   rewardCtlAddress: tEthereumAddress,
   verify: boolean

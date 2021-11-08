@@ -46,7 +46,7 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
   }
   if (MAINNET_FORK) {
     cfg.LendingDisableFeatures[eEthereumNetwork.main] = [];
-    cfg.RewardParams.InitialRateWad[eEthereumNetwork.main] = 1;
+    cfg.RewardParams.RewardPools[eEthereumNetwork.main].InitialRateWad = 1;
   }
 
   return cfg;
