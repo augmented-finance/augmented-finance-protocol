@@ -58,7 +58,7 @@ const _verifyContract = async (
 
   try {
     await DRE.run('verify:verify', params);
-  } catch (error) {
+  } catch (error: any) {
     if (error.message === 'Contract source code already verified') {
       return [true, ''];
     }
@@ -71,7 +71,7 @@ const _verifyContract = async (
 export const verifyProxy = async (proxyAddr: string, implAddr: string): Promise<[ok: boolean, errMsg: string]> => {
   try {
     await _verifyProxy(proxyAddr, implAddr);
-  } catch (error) {
+  } catch (error: any) {
     return [false, error.message];
   }
 

@@ -179,7 +179,7 @@ subtask('helper:calc-apy', 'Calculates current APYs')
           try {
             const rev = await (await getIRevision(token.rewardPool)).callStatic.REVISION();
             name += '-' + rev.toString();
-          } catch (error) {
+          } catch (error: any) {
             if ((<string>error.message).indexOf('UNPREDICTABLE_GAS_LIMIT') < 0) {
               throw error;
             }

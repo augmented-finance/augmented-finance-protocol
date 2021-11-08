@@ -126,7 +126,7 @@ const _verifyMutableAccess = async (
       await contract.callStatic[fnName](...args, {
         gasLimit: estimateGas ? (await contract.estimateGas[fnName](...args)).add(100000) : undefined,
       });
-    } catch (error) {
+    } catch (error: any) {
       const message: string = error.message;
 
       if (error.method === 'estimateGas') {

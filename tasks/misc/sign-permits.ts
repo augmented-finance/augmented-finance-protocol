@@ -141,7 +141,7 @@ task('sign-reward-permits', 'Sign permits for reward pools')
               vs = vs.substring(0, sPos);
             }
             amount = parseEther(vs);
-          } catch (err) {
+          } catch (err: any) {
             console.log('\tInvalid amount for spender:', addr, err.message);
             errorCount++;
             return;

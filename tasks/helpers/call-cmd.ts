@@ -631,7 +631,7 @@ const getRewardPoolByName = async (ac: MarketAccessController, name: string) => 
         try {
           const rev = await (await getIRevision(value)).callStatic.REVISION();
           key = key + '-' + rev.toString();
-        } catch (error) {
+        } catch (error: any) {
           if ((<string>error.message).indexOf('UNPREDICTABLE_GAS_LIMIT') < 0) {
             throw error;
           }
