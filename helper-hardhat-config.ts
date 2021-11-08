@@ -39,7 +39,7 @@ export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork<number> = {
   [eEthereumNetwork.kovan]: gasPrice(1),
   [eEthereumNetwork.ropsten]: gasPrice(10),
   [eEthereumNetwork.rinkeby]: gasPrice(1),
-  [eEthereumNetwork.main]: gasPrice(65),
+  [eEthereumNetwork.main]: gasPrice(85),
   [eEthereumNetwork.coverage]: gasPrice(65),
   [eEthereumNetwork.hardhat]: gasPrice(65),
   [eEthereumNetwork.tenderlyMain]: 0.01 * GWEI,

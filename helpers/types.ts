@@ -468,17 +468,21 @@ export interface ITokenNames {
   RewardStakeTokenSymbol: string;
 }
 
-export interface IRewardParams {
-  Autolock: 'disable' | 'stop' | number;
-  MinBoostBP: number;
-  InitialRateWad: iParamsPerNetwork<number>;
+export interface IRewardPools {
+  InitialRateWad: number;
   TokenPools: iAugmentedPoolAssetsOpt<ITokenRewardPoolParams>;
-  TreasuryPool: IBasicRewardPool;
 
+  TreasuryPool?: IBasicRewardPool;
   TeamPool?: ITeamPool;
   ReferralPool?: IBasicRewardPool;
   BurnersPool?: IPermiRewardPool;
   RetroPool?: IPermiRewardPool;
+}
+
+export interface IRewardParams {
+  Autolock: 'disable' | 'stop' | number;
+  MinBoostBP: number;
+  RewardPools: iParamsPerNetwork<IRewardPools>;
 }
 
 export interface ITeamPool {

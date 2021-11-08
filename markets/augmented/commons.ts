@@ -1,5 +1,5 @@
 import { MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames } from '../../helpers/constants';
-import { ICommonConfiguration, eEthereumNetwork, StakeMode, LPFeature, ITokenRewardPoolParams } from '../../helpers/types';
+import { ICommonConfiguration, eEthereumNetwork, StakeMode, LPFeature, ITokenRewardPoolParams, IRewardPools } from '../../helpers/types';
 import { MainnetStableBaseRates } from './reservesConfigs_main';
 
 const emergencyAdmins = [
@@ -60,6 +60,61 @@ const tokenRewardVolatileExt: ITokenRewardPoolParams = {
   }
 }
 
+const rewardPoolsEthMain: IRewardPools = {
+  InitialRateWad: 0,
+  TokenPools: {
+    DAI:   tokenRewardStable,
+    USDC:  tokenRewardStable,
+    USDT:  tokenRewardStable,
+    WBTC:  tokenRewardVolatile,
+    WETH:  tokenRewardVolatile,
+
+    ADAI:   tokenRewardStableExt,
+    AUSDC:  tokenRewardStableExt,
+    AUSDT:  tokenRewardStableExt,
+    AWBTC:  tokenRewardVolatileExt,
+    AWETH:  tokenRewardVolatileExt,
+
+    CDAI:   tokenRewardStableExt,
+    CUSDC:  tokenRewardStableExt,
+    CUSDT:  tokenRewardStableExt,
+    CWBTC:  tokenRewardVolatileExt,
+    CETH:   tokenRewardVolatileExt,
+  },
+  ReferralPool: {
+    BasePoints: 100,
+    BoostFactor: 0,
+  },
+  TreasuryPool: {
+    BasePoints: 1000,
+    BoostFactor: 0,
+  },
+  BurnersPool: {
+    TotalWad: 1e6,
+    BoostFactor: 0,
+    MeltDownAt: new Date('2022-04-15'),
+    Providers: [],
+  },
+  RetroPool: {
+    TotalWad: 120000,
+    BoostFactor: 0,
+    MeltDownAt: new Date('2021-11-12'),
+    Providers: [],
+  },
+  TeamPool: {
+    BasePoints: 1000,
+    UnlockAt: new Date('2021-11-15'),
+    Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
+    Members: {
+      '0x9029AdeFCdafcEce55a0bC0583B2F10E4F35D8f9': 500,
+    }
+  }
+}
+
+const rewardPoolsEthTest: IRewardPools = {
+  ...rewardPoolsEthMain,
+  InitialRateWad: 1,
+}
 
 // ----------------
 // PROTOCOL GLOBAL PARAMS
@@ -402,63 +457,17 @@ export const CommonsConfig: ICommonConfiguration = {
   RewardParams: {
     Autolock: 4, // 4 weeks auto-prolongate
     MinBoostBP: 1000, // 10%
-    InitialRateWad: {
-      [eEthereumNetwork.ropsten]: 1,
-      [eEthereumNetwork.rinkeby]: 1,
-      [eEthereumNetwork.coverage]: 1,
-      [eEthereumNetwork.hardhat]: 1,
-      [eEthereumNetwork.docker]: 1,
-      [eEthereumNetwork.kovan]: 1,
-      [eEthereumNetwork.main]: 0,
-      [eEthereumNetwork.tenderlyMain]: 1,
-    },
-    TokenPools: {
-      DAI:   tokenRewardStable,
-      USDC:  tokenRewardStable,
-      USDT:  tokenRewardStable,
-      WBTC:  tokenRewardVolatile,
-      WETH:  tokenRewardVolatile,
+    RewardPools: {
+      [eEthereumNetwork.main]: rewardPoolsEthMain,
 
-      ADAI:   tokenRewardStableExt,
-      AUSDC:  tokenRewardStableExt,
-      AUSDT:  tokenRewardStableExt,
-      AWBTC:  tokenRewardVolatileExt,
-      AWETH:  tokenRewardVolatileExt,
-
-      CDAI:   tokenRewardStableExt,
-      CUSDC:  tokenRewardStableExt,
-      CUSDT:  tokenRewardStableExt,
-      CWBTC:  tokenRewardVolatileExt,
-      CETH:   tokenRewardVolatileExt,
+      [eEthereumNetwork.ropsten]: rewardPoolsEthTest,
+      [eEthereumNetwork.rinkeby]: rewardPoolsEthTest,
+      [eEthereumNetwork.coverage]: rewardPoolsEthTest,
+      [eEthereumNetwork.hardhat]: rewardPoolsEthTest,
+      [eEthereumNetwork.docker]: rewardPoolsEthTest,
+      [eEthereumNetwork.kovan]: rewardPoolsEthTest,
+      [eEthereumNetwork.tenderlyMain]: rewardPoolsEthTest,
     },
-    ReferralPool: {
-      BasePoints: 100,
-      BoostFactor: 0,
-    },
-    TreasuryPool: {
-      BasePoints: 1000,
-      BoostFactor: 0,
-    },
-    BurnersPool: {
-      TotalWad: 1e6,
-      BoostFactor: 0,
-      MeltDownAt: new Date('2022-04-15'),
-      Providers: [],
-    },
-    RetroPool: {
-      TotalWad: 120000,
-      BoostFactor: 0,
-      MeltDownAt: new Date('2021-11-12'),
-      Providers: [],
-    },
-    TeamPool: {
-      BasePoints: 1000,
-      UnlockAt: new Date('2021-11-15'),
-      Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
-      Members: {
-        '0x9029AdeFCdafcEce55a0bC0583B2F10E4F35D8f9': 500,
-      }
-    }
   },
 
   // ----------------
