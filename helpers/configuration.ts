@@ -28,7 +28,7 @@ export const getReservesTestConfig = (): iAssetCommon<IReserveParams> => TestCon
 
 export const getWethAddress = async (config: ICommonConfiguration) => {
   const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  const wethAddress = getParamPerNetwork(config.ReserveAssets, <eNetwork>currentNetwork).WETH;
+  const wethAddress = getParamPerNetwork(config.ReserveAssets, <eNetwork>currentNetwork)?.WETH;
   if (falsyOrZeroAddress(wethAddress)) {
     throw 'WETH address is required';
   }
@@ -37,7 +37,7 @@ export const getWethAddress = async (config: ICommonConfiguration) => {
 
 export const getOrCreateWethAddress = async (config: ICommonConfiguration) => {
   const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  const wethAddress = getParamPerNetwork(config.ReserveAssets, <eNetwork>currentNetwork).WETH;
+  const wethAddress = getParamPerNetwork(config.ReserveAssets, <eNetwork>currentNetwork)?.WETH;
   if (!falsyOrZeroAddress(wethAddress)) {
     return wethAddress;
   }

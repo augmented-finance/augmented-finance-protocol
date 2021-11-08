@@ -4,7 +4,7 @@ export interface SymbolMap<T> {
   [symbol: string]: T;
 }
 
-export type eNetwork = eEthereumNetwork | ePolygonNetwork;
+export type eNetwork = eEthereumNetwork | ePolygonNetwork | eOtherNetwork;
 
 export enum eEthereumNetwork {
   kovan = 'kovan',
@@ -15,6 +15,11 @@ export enum eEthereumNetwork {
   hardhat = 'hardhat',
   docker = 'docker',
   tenderlyMain = 'tenderlyMain',
+}
+
+export enum eOtherNetwork {
+  bsc = 'bsc',
+  bsc_testnet = 'bsc_testnet',
 }
 
 export enum ePolygonNetwork {
@@ -343,7 +348,10 @@ export interface IMarketRates {
   borrowRate: string;
 }
 
-export type iParamsPerNetwork<T> = iEthereumParamsPerNetwork<T> | iPolygonParamsPerNetwork<T>;
+export type iParamsPerNetwork<T> =
+  | iEthereumParamsPerNetwork<T>
+  | iPolygonParamsPerNetwork<T>
+  | iParamsPerOtherNetwork<T>;
 
 export interface iParamsPerNetworkAll<T> extends iEthereumParamsPerNetwork<T>, iPolygonParamsPerNetwork<T> {}
 
@@ -361,6 +369,11 @@ export interface iEthereumParamsPerNetwork<T> {
 export interface iPolygonParamsPerNetwork<T> {
   [ePolygonNetwork.matic]: T;
   [ePolygonNetwork.mumbai]: T;
+}
+
+export interface iParamsPerOtherNetwork<T> {
+  [eOtherNetwork.bsc]: T;
+  [eOtherNetwork.bsc_testnet]: T;
 }
 
 export enum RateMode {
