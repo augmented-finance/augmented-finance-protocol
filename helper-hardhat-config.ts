@@ -30,9 +30,8 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.coverage]: 'http://localhost:8555',
   [eEthereumNetwork.hardhat]: 'http://localhost:8545',
   [eEthereumNetwork.tenderlyMain]: `https://rpc.tenderly.co/fork/${TENDERLY_FORK_ID}`,
-  [ePolygonNetwork.mumbai]: 'https://rpc-mumbai.maticvigil.com',
-  [ePolygonNetwork.matic]: 'https://rpc-mainnet.matic.network',
-
+  // [ePolygonNetwork.mumbai]: 'https://rpc-mumbai.maticvigil.com',
+  // [ePolygonNetwork.matic]: 'https://rpc-mainnet.matic.network',
   [eOtherNetwork.bsc]: 'https://bsc-dataseed.binance.org/',
   [eOtherNetwork.bsc_testnet]: 'https://data-seed-prebsc-1-s2.binance.org:8545/',
 };
@@ -47,8 +46,8 @@ export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork<number> = {
   [eEthereumNetwork.coverage]: gasPrice(65),
   [eEthereumNetwork.hardhat]: gasPrice(65),
   [eEthereumNetwork.tenderlyMain]: 0.01 * GWEI,
-  [ePolygonNetwork.mumbai]: gasPrice(1),
-  [ePolygonNetwork.matic]: gasPrice(2),
+  // [ePolygonNetwork.mumbai]: gasPrice(1),
+  // [ePolygonNetwork.matic]: gasPrice(2),
 
   [eOtherNetwork.bsc_testnet]: gasPrice(10),
   [eOtherNetwork.bsc]: gasPrice(1),

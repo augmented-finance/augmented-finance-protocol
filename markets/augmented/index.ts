@@ -1,6 +1,7 @@
-import { IAugmentedConfiguration, eEthereumNetwork, ITestConfiguration } from '../../helpers/types';
+import { IEthereumConfiguration, eEthereumNetwork, ITestConfiguration, IBinanceConfiguration } from '../../helpers/types';
 import { CommonsConfig } from './commons';
 import { TestReserves, TestStableBaseRates } from './reservesConfigs';
+import { BscReserves } from './reservesConfigs_bsc';
 import { MainnetReserves, MainnetStableBaseRates } from './reservesConfigs_main';
 
 // ----------------
@@ -15,13 +16,11 @@ export const TestConfig: ITestConfiguration = {
   LendingRateOracleRates: TestStableBaseRates,
 }
 
-export const AugmentedConfig: IAugmentedConfiguration = (() => {
+export const AugmentedConfig: IEthereumConfiguration = (() => {
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
 
   const src = CommonsConfig;
-  let cfg: IAugmentedConfiguration = {...src,
-    MarketId: 'Augmented genesis market',
-    ProviderId: 0, // force autonumbering
+  let cfg: IEthereumConfiguration = {...src,
     ReservesConfig: MainnetReserves,
     LendingRateOracleRates: MainnetStableBaseRates,
   };
@@ -50,4 +49,12 @@ export const AugmentedConfig: IAugmentedConfiguration = (() => {
   }
 
   return cfg;
+})();
+
+export const BinanceConfig: IBinanceConfiguration = (() => {
+  const src = CommonsConfig;
+  return {...src,
+    ReservesConfig: BscReserves,
+    LendingRateOracleRates: MainnetStableBaseRates,
+  };
 })();
