@@ -1,4 +1,4 @@
-import { tEthereumAddress, IMarketRates, iAssetBase, iAssetAggregatorBase, SymbolMap } from './types';
+import { tEthereumAddress, IMarketRates, iAssetBase, iAssetAggregatorBase, SymbolMap, AllOpt } from './types';
 
 import { LendingRateOracle } from '../types/LendingRateOracle';
 import { MockAggregator } from '../types/MockAggregator';
@@ -44,7 +44,7 @@ export const setInitialMarketRatesInRatesOracleByHelper = async (
 };
 
 export const setInitialAssetPricesInOracle = async (
-  prices: iAssetBase<tEthereumAddress>,
+  prices: SymbolMap<tEthereumAddress>,
   assetsAddresses: { [key: string]: tEthereumAddress },
   priceOracleInstance: MockPriceOracle
 ) => {
@@ -79,7 +79,7 @@ export const deployMockAggregators = async (initialPrices: SymbolMap<string>, ve
   return aggregators;
 };
 
-export const deployAllMockAggregators = async (initialPrices: iAssetAggregatorBase<string>, verify?: boolean) => {
+export const deployAllMockAggregators = async (initialPrices: SymbolMap<string>, verify?: boolean) => {
   const aggregators: { [tokenSymbol: string]: MockAggregator } = {};
   for (const tokenContractName of Object.keys(initialPrices)) {
     if (tokenContractName !== 'ETH') {
