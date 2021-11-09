@@ -1,13 +1,13 @@
 import { loadPoolConfig } from '../../helpers/configuration';
 import {
-  deployAGFTokenV1Impl,
+  deployAGFTokenImpl,
   deployRewardBoosterV1Impl,
   deployRewardConfiguratorImpl,
   deployXAGFTokenV1Impl,
 } from '../../helpers/contracts-deployments';
 import { eContractid, eNetwork, ICommonConfiguration } from '../../helpers/types';
 import {
-  getAGFTokenV1Impl,
+  getAGFTokenImpl,
   getOracleRouter,
   getProxyAdmin,
   getRewardBooster,
@@ -85,7 +85,7 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
     if (falsyOrZeroAddress(agfAddr)) {
       console.log('Deploying AGF token');
       const initData = await configurator.buildRewardTokenInitData(Names.RewardTokenName, Names.RewardTokenSymbol, 18);
-      const impl = await deployAGFTokenV1Impl(verify, continuation);
+      const impl = await deployAGFTokenImpl(verify, continuation);
       console.log('Deployed AGF token implementation:', impl.address);
       agfAddr = await setAndGetAddressAsProxyWithInit(
         addressProvider,
@@ -95,7 +95,7 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
       );
       console.log('AGF token:', agfAddr);
 
-      const agf = await getAGFTokenV1Impl(agfAddr);
+      const agf = await getAGFTokenImpl(agfAddr);
       console.log('\t', await agf.name(), await agf.symbol(), await agf.decimals());
       newAgfToken = true;
     } else {

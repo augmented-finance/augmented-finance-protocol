@@ -18,5 +18,5 @@ interface IRoamingToken {
     bytes calldata roamingData
   ) external;
 
-  function roamingSupply() external view returns (int256);
+  // function roamingSupply() external view returns (int256);
 }

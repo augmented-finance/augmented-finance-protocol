@@ -54,6 +54,7 @@ import {
   PriceFeedUniEthPairFactory,
   PriceFeedUniEthTokenFactory,
   ProxyAdminFactory,
+  AGFTokenV2Factory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -409,8 +410,8 @@ export const getStakeTokenImpl = async (address: tEthereumAddress) =>
 export const getXAGFTokenV1Impl = async (address: tEthereumAddress) =>
   XAGFTokenV1Factory.connect(address, await getFirstSigner());
 
-export const getAGFTokenV1Impl = async (address: tEthereumAddress) =>
-  AGFTokenV1Factory.connect(address, await getFirstSigner());
+export const getAGFTokenImpl = async (address: tEthereumAddress) =>
+  AGFTokenV2Factory.connect(address, await getFirstSigner());
 
 export const getIManagedRewardPool = async (address: tEthereumAddress) =>
   IManagedRewardPoolFactory.connect(address, await getFirstSigner());

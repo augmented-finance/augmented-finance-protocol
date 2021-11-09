@@ -3,7 +3,7 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ProtocolErrors } from '../../helpers/types';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../../helpers/constants';
 import {
-  getAGFTokenV1Impl,
+  getAGFTokenImpl,
   getDepositToken,
   getMockLendingPoolImpl,
   getMockStableDebtToken,
@@ -19,7 +19,7 @@ import {
   deployMockVariableDebtToken,
   deployMockAgfToken,
   deployLendingPoolImpl,
-  deployAGFTokenV1Impl,
+  deployAGFTokenImpl,
   deployStakeTokenImpl,
   deployStakeConfiguratorImpl,
   deployMockStakeToken,
@@ -240,19 +240,19 @@ makeSuite('Upgradeability', (testEnv: TestEnv) => {
     const { addressesProvider } = testEnv;
     let agfAddr = await addressesProvider.getAddress(AccessFlags.REWARD_TOKEN);
     if (falsyOrZeroAddress(agfAddr)) {
-      const agfImpl = await deployAGFTokenV1Impl(false, false);
+      const agfImpl = await deployAGFTokenImpl(false, false);
       await addressesProvider.setAddressAsProxy(AccessFlags.REWARD_TOKEN, agfImpl.address);
       agfAddr = await addressesProvider.getAddress(AccessFlags.REWARD_TOKEN);
     }
 
-    const agf = await getAGFTokenV1Impl(agfAddr);
+    const agf = await getAGFTokenImpl(agfAddr);
     // const newImpl = await getAgfToken(newAgfTokenAddress);
     const name = await agf.name();
     const symbol = await agf.symbol();
     const revision = await agf.REVISION();
     const domainSep = await agf.DOMAIN_SEPARATOR();
 
-    const newAgfImpl = await deployMockAgfToken([addressesProvider.address, 'Reward token updated', 'AGFv2']);
+    const newAgfImpl = await deployMockAgfToken([addressesProvider.address, 'Reward token updated', 'AGFv3']);
     const newRevision = await newAgfImpl.REVISION();
     expect(revision).not.eq(newRevision);
 

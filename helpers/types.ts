@@ -68,7 +68,7 @@ export enum eContractid {
   RewardConfiguratorImpl = 'RewardConfiguratorImpl',
   TokenWeightedRewardPoolImpl = 'TokenWeightedRewardPoolImpl',
   XAGFTokenV1Impl = 'XAGFTokenV1Impl',
-  AGFTokenV1Impl = 'AGFTokenV1Impl',
+  AGFTokenImpl = 'AGFTokenImpl',
   ReferralRewardPoolV1Impl = 'ReferralRewardPoolV1Impl',
   RewardBoosterImpl = 'RewardBoosterImpl',
   TreasuryRewardPool = 'TreasuryRewardPool',

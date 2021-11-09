@@ -12,8 +12,8 @@ import './AGFTokenV1.sol';
 contract AGFTokenV2 is AGFTokenV1, IRoamingToken {
   uint256 private constant TOKEN_REVISION = 2;
 
-  int256 private _roamingSupply;
-  uint256 private _sequence;
+  // int256 private _roamingSupply;
+  // uint256 private _sequence;
 
   function getRevision() internal pure virtual override returns (uint256) {
     return TOKEN_REVISION;
@@ -32,7 +32,7 @@ contract AGFTokenV2 is AGFTokenV1, IRoamingToken {
     require(amount > 0 && amount <= uint256(type(int256).max), 'INVALID_AMOUNT');
 
     _burn(sender, amount);
-    _roamingSupply -= int256(amount);
+    // _roamingSupply -= int256(amount);
 
     // result = RoamingData(allocatedSupply(), ++_sequence);
     emit BurnedToRoaming(sender, amount, toNetworkId, roamingData);
@@ -48,12 +48,12 @@ contract AGFTokenV2 is AGFTokenV1, IRoamingToken {
     require(amount > 0 && amount <= uint256(type(int256).max), 'INVALID_AMOUNT');
 
     _mintReward(receiver, amount);
-    _roamingSupply += int256(amount);
+    // _roamingSupply += int256(amount);
 
     emit MintedFromRoaming(receiver, amount, fromNetworkId, roamingData);
   }
 
-  function roamingSupply() external view override returns (int256) {
-    return _roamingSupply;
-  }
+  // function roamingSupply() external view override returns (int256) {
+  //   return _roamingSupply;
+  // }
 }
