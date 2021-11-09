@@ -230,12 +230,10 @@ export const initReservesByHelper = async (
     for (let chunkIndex = 0; chunkIndex < chunkedInitInputParams.length; chunkIndex++) {
       const param = chunkedInitInputParams[chunkIndex];
       console.log(param);
-      let gasEstimated = Object.values(ePolygonNetwork).includes(<ePolygonNetwork>DRE.network.name)
-        ? await configurator.estimateGas.batchInitReserve(param)
-        : 5000000;
+
       const tx3 = await waitForTx(
         await configurator.batchInitReserve(param, {
-          gasLimit: gasEstimated,
+          gasLimit: Object.values(ePolygonNetwork).includes(<ePolygonNetwork>DRE.network.name) ? 5000000 : 5000000,
         })
       );
 

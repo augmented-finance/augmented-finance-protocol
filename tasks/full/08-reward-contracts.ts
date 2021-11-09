@@ -175,12 +175,9 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
     }
 
     if (freshStart && (!continuation || falsyOrZeroAddress((await booster.getBoostPool()).pool))) {
-      const gasEstimated = Object.values(ePolygonNetwork).includes(<ePolygonNetwork>network)
-        ? await configurator.estimateGas.configureRewardBoost(xagfAddr, true, xagfAddr, false)
-        : 2000000;
       await mustWaitTx(
         configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false, {
-          gasLimit: gasEstimated,
+          gasLimit: Object.values(ePolygonNetwork).includes(<ePolygonNetwork>network) ? undefined : 2000000,
         })
       );
       console.log('Boost pool: ', xagfAddr);
