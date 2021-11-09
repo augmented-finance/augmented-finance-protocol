@@ -428,8 +428,6 @@ export interface ICommonConfiguration {
   FallbackOracle: iParamsPerNetworkOpt<tEthereumAddress | IPrices>;
   ChainlinkAggregator: iParamsPerNetwork<ITokenAddress>;
 
-  LendingRateOracleRates: iAssetsWithoutUSDOpt<IMarketRates>;
-
   EmergencyAdmins: iParamsPerNetworkOpt<tEthereumAddress[]>;
 
   ReserveAssets: iParamsPerNetwork<SymbolMap<tEthereumAddress>>;
@@ -438,9 +436,8 @@ export interface ICommonConfiguration {
 
   Dependencies: iParamsPerNetwork<IDependencies>;
 
-  ReservesConfig: {
-    [key: string]: IReserveParams;
-  };
+  ReservesConfig: iParamsPerNetwork<SymbolMap<IReserveParams>>;
+  LendingRateOracleRates: iParamsPerNetwork<SymbolMap<IMarketRates>>;
 
   StakeParams: IStakeParams;
 
@@ -451,23 +448,11 @@ export interface ICommonConfiguration {
   AGF: IAgfParams;
 }
 
-export interface ITestConfiguration extends ICommonConfiguration {
-  ReservesConfig: iTestPoolAssets<IReserveParams>;
-}
-
-export interface IEthereumConfiguration extends ICommonConfiguration {
-  ReservesConfig: iEthereumPoolAssets<IReserveParams>;
-}
-
-export interface IBinanceConfiguration extends ICommonConfiguration {
-  ReservesConfig: iBinancePoolAssets<IReserveParams>;
-}
-
 export interface ITokenAddress {
   [token: string]: tEthereumAddress;
 }
 
-export type PoolConfiguration = ICommonConfiguration | IEthereumConfiguration | IBinanceConfiguration;
+export type PoolConfiguration = ICommonConfiguration;
 
 export interface IStakeParams {
   MaxSlashBP: number;

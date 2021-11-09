@@ -74,6 +74,7 @@
     "verify:ropsten": "npm run hardhat:ropsten -- verify:verify-all-contracts",
     "verify:kovan": "npm run hardhat:kovan -- verify:verify-all-contracts",
     "verify:rinkeby": "npm run hardhat:rinkeby -- verify:verify-all-contracts",
+    "verify:bsc-test": "npm run hardhat:bsc-test -- verify:verify-all-contracts",
     "prettier:check": "npx prettier -c 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'",
     "prettier:write": "prettier --write 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'"
   },

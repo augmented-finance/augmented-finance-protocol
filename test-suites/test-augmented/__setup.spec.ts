@@ -21,7 +21,7 @@ import {
   deployMockLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
 import { Signer } from 'ethers';
-import { DefaultTokenSymbols, tEthereumAddress } from '../../helpers/types';
+import { DefaultTokenSymbols, eEthereumNetwork, tEthereumAddress } from '../../helpers/types';
 import { ConfigNames, getReservesTestConfig, loadPoolConfig } from '../../helpers/configuration';
 import { initializeMakeSuite } from './helpers/make-suite';
 
@@ -43,7 +43,7 @@ const MOCK_USD_PRICE_IN_WEI = deployConfig.Mocks.MockUsdPriceInWei;
 const ALL_ASSETS_INITIAL_PRICES = deployConfig.Mocks.AllAssetsInitialPrices;
 const USD_ADDRESS = deployConfig.Mocks.UsdAddress;
 const MOCK_CHAINLINK_AGGREGATORS_PRICES = deployConfig.Mocks.AllAssetsInitialPrices;
-const LENDING_RATE_ORACLE_RATES = deployConfig.LendingRateOracleRates;
+const LENDING_RATE_ORACLE_RATES = deployConfig.LendingRateOracleRates[eEthereumNetwork.hardhat];
 
 const deployAllMockTokens = async (deployer: Signer) => {
   const tokens: { [symbol: string]: tEthereumAddress } = {};

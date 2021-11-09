@@ -18,9 +18,10 @@ deployTask('full:initialize-derived-feeds', 'Initialize derived feeds', __dirnam
 
     const reserveAssets = getParamPerNetwork(ReserveAssets, network);
     const underlyingMappings = getParamPerNetwork(UnderlyingMappings, network);
+    const reservesConfig = getParamPerNetwork(ReservesConfig, network);
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-    await initReservePriceFeeds(addressProvider, ReservesConfig, reserveAssets, underlyingMappings, verify);
+    await initReservePriceFeeds(addressProvider, reservesConfig, reserveAssets, underlyingMappings, verify);
   }
 );

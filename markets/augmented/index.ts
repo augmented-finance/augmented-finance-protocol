@@ -1,29 +1,32 @@
-import { IEthereumConfiguration, eEthereumNetwork, ITestConfiguration, IBinanceConfiguration } from '../../helpers/types';
+import { eEthereumNetwork, ICommonConfiguration } from '../../helpers/types';
 import { CommonsConfig } from './commons';
 import { TestReserves, TestStableBaseRates } from './reservesConfigs';
-import { BscReserves } from './reservesConfigs_bsc';
-import { MainnetReserves, MainnetStableBaseRates } from './reservesConfigs_main';
 
 // ----------------
 // POOL--SPECIFIC PARAMS
 // ----------------
 
-export const TestConfig: ITestConfiguration = {
+export const TestConfig: ICommonConfiguration = {
   ...CommonsConfig,
   ProviderId: 1,
   MarketId: 'Augmented test market',
-  ReservesConfig: TestReserves,
-  LendingRateOracleRates: TestStableBaseRates,
+  ReservesConfig: {
+    ...CommonsConfig.ReservesConfig,
+    [eEthereumNetwork.main]: TestReserves,
+    [eEthereumNetwork.hardhat]: TestReserves,
+  },
+  LendingRateOracleRates: {
+    ...CommonsConfig.LendingRateOracleRates,
+    [eEthereumNetwork.main]: TestStableBaseRates,
+    [eEthereumNetwork.hardhat]: TestStableBaseRates,
+  },
 }
 
-export const AugmentedConfig: IEthereumConfiguration = (() => {
+export const AugmentedConfig: ICommonConfiguration = (() => {
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
 
   const src = CommonsConfig;
-  let cfg: IEthereumConfiguration = {...src,
-    ReservesConfig: MainnetReserves,
-    LendingRateOracleRates: MainnetStableBaseRates,
-  };
+  let cfg: ICommonConfiguration = {...src};
 
   const defRates = {
     AAVE: 0.13308194,
@@ -49,12 +52,4 @@ export const AugmentedConfig: IEthereumConfiguration = (() => {
   }
 
   return cfg;
-})();
-
-export const BinanceConfig: IBinanceConfiguration = (() => {
-  const src = CommonsConfig;
-  return {...src,
-    ReservesConfig: BscReserves,
-    LendingRateOracleRates: MainnetStableBaseRates,
-  };
 })();

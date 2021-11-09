@@ -1,7 +1,8 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames, USD_ADDRESS } from '../../helpers/constants';
 import { ICommonConfiguration, eEthereumNetwork, StakeMode, LPFeature, ITokenRewardPoolParams, IRewardPools, eOtherNetwork, IPriceOracleConfig } from '../../helpers/types';
-import { MainnetStableBaseRates } from './reservesConfigs_main';
+import { BscReserves, BscStableBaseRates } from './reservesConfigs_bsc';
+import { MainnetReserves, MainnetStableBaseRates } from './reservesConfigs_main';
 
 const emergencyAdmins = [
   '0x8331Bd35089090249675D023804FC52b7FD18184',
@@ -123,8 +124,8 @@ const rewardPoolsBscMain: IRewardPools = {
     DAI:   tokenRewardStable,
     USDC:  tokenRewardStable,
     USDT:  tokenRewardStable,
-    // WBTC:  tokenRewardVolatile,
-    // WETH:  tokenRewardVolatile,
+    WBTC:  tokenRewardVolatile,
+    WBNB:  tokenRewardVolatile,
   },
 }
 
@@ -281,7 +282,7 @@ export const CommonsConfig: ICommonConfiguration = {
       DAI: '0xE4eE17114774713d2De0eC0f035d4F7665fc025D',  // DAI/USD
       USDC: '0x90c069C4538adAc136E051052E14c1cD799C41B7', // ...
       USDT: '0xEca2605f0BCF2BA5966372C99837b1F182d3D620', // ...
-      USD: '0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526',  // BNB/USD
+      WBNB: '0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526',  // BNB/USD
     },
   },
 
@@ -409,13 +410,35 @@ export const CommonsConfig: ICommonConfiguration = {
     },
     [eOtherNetwork.bsc_testnet]: {
       WrappedNative: 'WBNB',
-      UniswapV2Router: '0x10ED43C718714eb63d5aA57B78B54704E256024E', // PancakeSwap
+      UniswapV2Router: '0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3', // https://pancake.kiemtienonline360.com/#/swap
     },
   },
 
-  ReservesConfig: {},
+  ReservesConfig: {
+    [eEthereumNetwork.ropsten]: MainnetReserves,
+    [eEthereumNetwork.rinkeby]: MainnetReserves,
+    [eEthereumNetwork.coverage]: MainnetReserves,
+    [eEthereumNetwork.hardhat]: MainnetReserves,
+    [eEthereumNetwork.kovan]: MainnetReserves,
+    [eEthereumNetwork.main]: MainnetReserves,
+    [eEthereumNetwork.tenderlyMain]: MainnetReserves,
 
-  LendingRateOracleRates: MainnetStableBaseRates,
+    [eOtherNetwork.bsc]: BscReserves,
+    [eOtherNetwork.bsc_testnet]: BscReserves,
+  },
+
+  LendingRateOracleRates: {
+    [eEthereumNetwork.ropsten]: MainnetStableBaseRates,
+    [eEthereumNetwork.rinkeby]: MainnetStableBaseRates,
+    [eEthereumNetwork.coverage]: MainnetStableBaseRates,
+    [eEthereumNetwork.hardhat]: MainnetStableBaseRates,
+    [eEthereumNetwork.kovan]: MainnetStableBaseRates,
+    [eEthereumNetwork.main]: MainnetStableBaseRates,
+    [eEthereumNetwork.tenderlyMain]: MainnetStableBaseRates,
+
+    [eOtherNetwork.bsc]: BscStableBaseRates,
+    [eOtherNetwork.bsc_testnet]: BscStableBaseRates,
+  },
 
   LendingDisableFeatures: {
     [eEthereumNetwork.ropsten]: [],

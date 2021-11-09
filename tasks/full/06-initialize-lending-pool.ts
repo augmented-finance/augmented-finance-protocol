@@ -21,6 +21,7 @@ deployTask('full:initialize-lending-pool', 'Initialize lending pool and configur
       throw 'Reserve assets are undefined. Check configuration.';
     }
     const reserveAssetsOpt = getParamPerNetwork(ReserveAssetsOpt, network);
+    const reservesConfig = getParamPerNetwork(ReservesConfig, network);
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
@@ -41,7 +42,7 @@ deployTask('full:initialize-lending-pool', 'Initialize lending pool and configur
     // asset initialization is skipped for existing assets
     await initReservesByHelper(
       addressProvider,
-      ReservesConfig,
+      reservesConfig,
       reserveAssetsOpt,
       reserveAssets,
       Names,
@@ -50,6 +51,6 @@ deployTask('full:initialize-lending-pool', 'Initialize lending pool and configur
       verify
     );
     // but configuration will be always applied
-    await configureReservesByHelper(addressProvider, ReservesConfig, reserveAssets, testHelpers);
+    await configureReservesByHelper(addressProvider, reservesConfig, reserveAssets, testHelpers);
   }
 );
