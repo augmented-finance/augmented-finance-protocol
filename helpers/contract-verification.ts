@@ -81,8 +81,7 @@ export const verifyProxy = async (proxyAddr: string, implAddr: string): Promise<
 
 const _verifyProxy = async (proxyAddr: string, implAddr: string) => {
   //  console.log(`Verifying ${proxyName}...`)
-  const networkName = DRE.network.name;
-  const endpoints = await getEtherscanEndpoints(<EthereumProvider>(<any>getDefaultProvider(networkName)), networkName);
+  const endpoints = await getEtherscanEndpoints(DRE.network.provider, DRE.network.name);
   const apiKey = (<any>DRE.config).etherscan.apiKey!;
   // const apiSubdomain = networkName === 'main' ? 'api' : `api-${networkName}`;
   // const baseUrl = `https://${apiSubdomain}.etherscan.io/api?module=contract`;
@@ -92,9 +91,9 @@ const _verifyProxy = async (proxyAddr: string, implAddr: string) => {
   {
     const optionsVerify: AxiosRequestConfig = {
       method: 'POST',
+      url: baseUrl + `&action=verifyproxycontract&apikey=${apiKey}`,
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       data: qs.stringify({ address: proxyAddr, expectedimplementation: implAddr }),
-      url: baseUrl + `&action=verifyproxycontract&apikey=${apiKey}`,
     };
     const result = await axios(optionsVerify);
     const response = new EtherscanResponse(result.data);
