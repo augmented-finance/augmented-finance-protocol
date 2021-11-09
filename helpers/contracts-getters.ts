@@ -191,14 +191,16 @@ export const getTokenAggregatorPairs = (
   allAssetsAddresses: {
     [tokenSymbol: string]: tEthereumAddress;
   },
-  aggregatorAddresses: { [tokenSymbol: string]: tEthereumAddress }
+  aggregatorAddresses: { [tokenSymbol: string]: tEthereumAddress },
+  wrappedNative: string
 ): [string[], string[]] => {
   console.log(allAssetsAddresses);
   console.log(aggregatorAddresses);
   if (aggregatorAddresses == undefined) {
     return [[], []];
   }
-  const { ETH, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
+  const { ETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
+  delete assetsAddressesWithoutEth[wrappedNative];
   console.log(assetsAddressesWithoutEth);
 
   const assets: string[] = [];
