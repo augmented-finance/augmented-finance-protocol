@@ -258,7 +258,7 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
   },
 
   [eContractid.AGFTokenImpl]: {
-    reasons: [ProtocolErrors.RW_NOT_REWARD_CONTROLLER],
+    reasons: [ProtocolErrors.RW_NOT_REWARD_CONTROLLER, ProtocolErrors.TXT_ACCESS_RESTRICTED],
     functions: {
       ...erc20.functions,
 
