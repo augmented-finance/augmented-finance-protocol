@@ -3,7 +3,7 @@ import fs from 'fs';
 import { HardhatUserConfig } from 'hardhat/types';
 // @ts-ignore
 import { accounts } from './test-wallets.js';
-import { eEthereumNetwork, eNetwork, ePolygonNetwork } from './helpers/types';
+import { eEthereumNetwork, eNetwork, eOtherNetwork, ePolygonNetwork } from './helpers/types';
 import { BUIDLEREVM_CHAINID, COVERAGE_CHAINID } from './helpers/buidler-constants';
 import { NETWORKS_RPC_URL, NETWORKS_DEFAULT_GAS } from './helper-hardhat-config';
 
@@ -128,6 +128,9 @@ const buidlerConfig: HardhatUserConfig = {
     tenderlyMain: getCommonNetworkConfig(eEthereumNetwork.tenderlyMain, 3030),
     // matic: getCommonNetworkConfig(ePolygonNetwork.matic, 137),
     // mumbai: getCommonNetworkConfig(ePolygonNetwork.mumbai, 80001),
+    bsc_testnet: getCommonNetworkConfig(eOtherNetwork.bsc_testnet, 97),
+    bsc: getCommonNetworkConfig(eOtherNetwork.bsc, 56),
+     
     hardhat: {
       hardfork: 'istanbul',
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
@@ -142,29 +145,29 @@ const buidlerConfig: HardhatUserConfig = {
       })),
       forking: mainnetFork,
     },
-    docker: {
-      url: 'http://hardhat-node:8545',
-      chainId: BUIDLEREVM_CHAINID,
-    },
-    buidlerevm_docker: {
-      hardfork: 'istanbul',
-      blockGasLimit: 9500000,
-      gas: 9500000,
-      gasPrice: 8000000000,
-      chainId: BUIDLEREVM_CHAINID,
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
-      url: 'http://localhost:8545',
-    },
-    ganache: {
-      url: 'http://ganache:8545',
-      accounts: {
-        mnemonic: 'fox sight canyon orphan hotel grow hedgehog build bless august weather swarm',
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 20,
-      },
-    },
+    // docker: {
+    //   url: 'http://hardhat-node:8545',
+    //   chainId: BUIDLEREVM_CHAINID,
+    // },
+    // buidlerevm_docker: {
+    //   hardfork: 'istanbul',
+    //   blockGasLimit: 9500000,
+    //   gas: 9500000,
+    //   gasPrice: 8000000000,
+    //   chainId: BUIDLEREVM_CHAINID,
+    //   throwOnTransactionFailures: true,
+    //   throwOnCallFailures: true,
+    //   url: 'http://localhost:8545',
+    // },
+    // ganache: {
+    //   url: 'http://ganache:8545',
+    //   accounts: {
+    //     mnemonic: 'fox sight canyon orphan hotel grow hedgehog build bless august weather swarm',
+    //     path: "m/44'/60'/0'/0",
+    //     initialIndex: 0,
+    //     count: 20,
+    //   },
+    // },
   },
 };
 

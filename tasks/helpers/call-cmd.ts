@@ -27,7 +27,7 @@ import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { isHexPrefixed } from 'ethjs-util';
 import { parseUnits } from '@ethersproject/units';
-import { stringifyArgs } from '../../helpers/etherscan-verification';
+import { stringifyArgs } from '../../helpers/contract-verification';
 import { promiseAllBatch } from './utils';
 
 interface ICallParams {

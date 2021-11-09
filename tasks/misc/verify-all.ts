@@ -1,6 +1,6 @@
 import { task, types } from 'hardhat/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { verifyContractStringified, verifyProxy } from '../../helpers/etherscan-verification';
+import { verifyContractStringified, verifyProxy } from '../../helpers/contract-verification';
 import {
   DbInstanceEntry,
   falsyOrZeroAddress,

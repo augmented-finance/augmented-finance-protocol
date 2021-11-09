@@ -121,7 +121,7 @@ deployTask('full:deploy-address-provider', 'Deploy address provider and registry
     }
 
     const emergencyAdmins = getParamPerNetwork(poolConfig.EmergencyAdmins, network);
-    if (emergencyAdmins.length > 0) {
+    if (emergencyAdmins && emergencyAdmins.length > 0) {
       console.log('Assign', emergencyAdmins.length, 'emergency admin(s)');
       const knowEAs = new Set<string>();
       if (!newAddressProvider) {

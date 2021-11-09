@@ -13,6 +13,7 @@ import {
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { ONE_YEAR, USD_ADDRESS } from '../../helpers/constants';
+import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 
 task('full:smoke-test', 'Does smoke tests of the deployed contracts')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
@@ -22,6 +23,7 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
 
     const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
+    const rewardPools = getParamPerNetwork(poolConfig.RewardParams.RewardPools, network);
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
@@ -42,7 +44,13 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
       const addresses = await dataHelper.getAddresses();
       let hasZeros = false;
       for (const [name, addr] of Object.entries(addresses)) {
+        if (name.length <= 2) {
+          continue;
+        }
         if (falsyOrZeroAddress(addr)) {
+          if (name == 'referralRegistry' && !rewardPools.ReferralPool) {
+            continue;
+          }
           console.log('Unexpected zero address: ', name);
           hasZeros = true;
         }

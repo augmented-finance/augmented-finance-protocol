@@ -8,10 +8,8 @@ import {
   tStringTokenSmallUnits,
   eEthereumNetwork,
   iParamsPerNetwork,
-  ePolygonNetwork,
   eNetwork,
-  iEthereumParamsPerNetwork,
-  iPolygonParamsPerNetwork,
+  iParamsPerNetworkOpt,
 } from './types';
 import { MintableERC20 } from '../types/MintableERC20';
 import { Artifact } from 'hardhat/types';
@@ -167,37 +165,12 @@ export const linkBytecode = (artifact: Artifact, libraries: any) => {
   return bytecode;
 };
 
-export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T>, network: eNetwork) => {
-  const { main, ropsten, rinkeby, kovan, hardhat, docker, coverage, tenderlyMain } =
-    param as iEthereumParamsPerNetwork<T>;
-  const { matic, mumbai } = param as iPolygonParamsPerNetwork<T>;
+export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T> | iParamsPerNetworkOpt<T>, network: eNetwork): T => {
   const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
   if (MAINNET_FORK) {
-    return main;
+    return param[eEthereumNetwork.main]!;
   }
-
-  switch (network) {
-    case eEthereumNetwork.coverage:
-      return coverage;
-    case eEthereumNetwork.hardhat:
-      return hardhat;
-    case eEthereumNetwork.docker:
-      return docker;
-    case eEthereumNetwork.kovan:
-      return kovan;
-    case eEthereumNetwork.ropsten:
-      return ropsten;
-    case eEthereumNetwork.rinkeby:
-      return rinkeby;
-    case eEthereumNetwork.main:
-      return main;
-    case eEthereumNetwork.tenderlyMain:
-      return tenderlyMain;
-    case ePolygonNetwork.matic:
-      return matic;
-    case ePolygonNetwork.mumbai:
-      return mumbai;
-  }
+  return param[network];
 };
 
 export const convertToCurrencyDecimals = async (tokenAddress: tEthereumAddress, amount: string) => {

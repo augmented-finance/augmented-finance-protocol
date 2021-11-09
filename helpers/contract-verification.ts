@@ -4,8 +4,9 @@ import { Libraries } from '@nomiclabs/hardhat-etherscan/src/solc/libraries';
 import axios, { AxiosRequestConfig } from 'axios';
 import qs from 'qs';
 import { BigNumber as BigNumber2 } from '@ethersproject/bignumber';
-
-export const SUPPORTED_ETHERSCAN_NETWORKS = ['main', 'ropsten', 'kovan'];
+import { getEtherscanEndpoints } from '@nomiclabs/hardhat-etherscan/dist/src/network/prober';
+import { getDefaultProvider } from '@ethersproject/providers';
+import { EthereumProvider } from 'hardhat/types';
 
 export const stringifyArgs = (args: any) =>
   JSON.stringify(args, (key, value) => {
@@ -81,9 +82,11 @@ export const verifyProxy = async (proxyAddr: string, implAddr: string): Promise<
 const _verifyProxy = async (proxyAddr: string, implAddr: string) => {
   //  console.log(`Verifying ${proxyName}...`)
   const networkName = DRE.network.name;
+  const endpoints = await getEtherscanEndpoints(<EthereumProvider>(<any>getDefaultProvider(networkName)), networkName);
   const apiKey = (<any>DRE.config).etherscan.apiKey!;
-  const apiSubdomain = networkName === 'main' ? 'api' : `api-${networkName}`;
-  const baseUrl = `https://${apiSubdomain}.etherscan.io/api?module=contract`;
+  // const apiSubdomain = networkName === 'main' ? 'api' : `api-${networkName}`;
+  // const baseUrl = `https://${apiSubdomain}.etherscan.io/api?module=contract`;
+  const baseUrl = `${endpoints.apiURL}?module=contract`;
 
   let guid: string;
   {

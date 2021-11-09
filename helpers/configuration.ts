@@ -1,4 +1,12 @@
-import { IReserveParams, PoolConfiguration, ICommonConfiguration, eNetwork, iAssetCommon } from './types';
+import {
+  IReserveParams,
+  PoolConfiguration,
+  ICommonConfiguration,
+  eNetwork,
+  iAssetCommon,
+  SymbolMap,
+  eEthereumNetwork,
+} from './types';
 import { DRE, falsyOrZeroAddress, filterMapBy } from './misc-utils';
 import { getParamPerNetwork } from './contracts-helpers';
 import { deployWETHMocked } from './contracts-deployments';
@@ -24,11 +32,12 @@ export const loadPoolConfig = (configName: ConfigNames): PoolConfiguration => {
 // PROTOCOL PARAMS PER POOL
 // ----------------
 
-export const getReservesTestConfig = (): iAssetCommon<IReserveParams> => TestConfig.ReservesConfig;
+export const getReservesTestConfig = (): SymbolMap<IReserveParams> =>
+  TestConfig.ReservesConfig[eEthereumNetwork.hardhat];
 
 export const getWethAddress = async (config: ICommonConfiguration) => {
   const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  const wethAddress = getParamPerNetwork(config.ReserveAssets, <eNetwork>currentNetwork).WETH;
+  const wethAddress = getParamPerNetwork(config.ReserveAssets, <eNetwork>currentNetwork)?.WETH;
   if (falsyOrZeroAddress(wethAddress)) {
     throw 'WETH address is required';
   }
@@ -37,7 +46,7 @@ export const getWethAddress = async (config: ICommonConfiguration) => {
 
 export const getOrCreateWethAddress = async (config: ICommonConfiguration) => {
   const currentNetwork = process.env.MAINNET_FORK === 'true' ? 'main' : DRE.network.name;
-  const wethAddress = getParamPerNetwork(config.ReserveAssets, <eNetwork>currentNetwork).WETH;
+  const wethAddress = getParamPerNetwork(config.ReserveAssets, <eNetwork>currentNetwork)?.WETH;
   if (!falsyOrZeroAddress(wethAddress)) {
     return wethAddress;
   }

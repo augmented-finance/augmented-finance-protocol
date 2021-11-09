@@ -79,7 +79,7 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
       } else if (!AgfDefaultPriceEth) {
         fallbackOracleAddress = ZERO_ADDRESS;
       }
-    } else {
+    } else if (fallbackOracle !== undefined) {
       for (const [tokenSymbol, tokenPrice] of Object.entries(fallbackOracle)) {
         const tokenAddress = tokensToWatch[tokenSymbol];
         if (falsyOrZeroAddress(tokenAddress)) {

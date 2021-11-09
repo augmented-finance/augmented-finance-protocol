@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, Contract } from 'ethers';
+import { BigNumberish, Contract } from 'ethers';
 import { DRE, getContractFactory, getFirstSigner } from './misc-utils';
 import { tEthereumAddress, eContractid, tStringTokenSmallUnits, PoolConfiguration, DefaultTokenSymbols } from './types';
 import { MockContract } from 'ethereum-waffle';
@@ -14,7 +14,6 @@ import {
   XAGFTokenV1Factory,
   ProtocolDataProviderFactory,
   DepositTokenFactory,
-  AGFTokenV1Factory,
   OracleRouterFactory,
   DefaultReserveInterestRateStrategyFactory,
   DelegationAwareDepositTokenFactory,
@@ -65,6 +64,7 @@ import {
   PriceFeedUniEthPairFactory,
   PriceFeedUniEthTokenFactory,
   MockStakeTokenFactory,
+  AGFTokenV2Factory,
 } from '../types';
 import {
   withSaveAndVerify,
@@ -953,8 +953,8 @@ export const deployRewardConfiguratorImpl = async (verify: boolean, once: boolea
 export const deployXAGFTokenV1Impl = async (verify: boolean, once: boolean) =>
   withSaveAndVerifyOnce(new XAGFTokenV1Factory(await getFirstSigner()), eContractid.XAGFTokenV1Impl, verify, once);
 
-export const deployAGFTokenV1Impl = async (verify: boolean, once: boolean) =>
-  withSaveAndVerifyOnce(new AGFTokenV1Factory(await getFirstSigner()), eContractid.AGFTokenV1Impl, verify, once);
+export const deployAGFTokenImpl = async (verify: boolean, once: boolean) =>
+  withSaveAndVerifyOnce(new AGFTokenV2Factory(await getFirstSigner()), eContractid.AGFTokenImpl, verify, once);
 
 export const deployTokenWeightedRewardPoolImpl = async (verify: boolean, once: boolean) =>
   withSaveAndVerifyOnce(

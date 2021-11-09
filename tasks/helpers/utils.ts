@@ -4,7 +4,7 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { chunk, falsyOrZeroAddress } from '../../helpers/misc-utils';
 import { eNetwork, ICommonConfiguration, tEthereumAddress } from '../../helpers/types';
 
-export const getDefaultMarketAddressController = async (network: eNetwork, ctl?: tEthereumAddress) => {
+export const getDefaultMarketAddressController = async (network: eNetwork, ctl?: tEthereumAddress): Promise<string> => {
   if (!falsyOrZeroAddress(ctl)) {
     return ctl!;
   }
@@ -14,7 +14,7 @@ export const getDefaultMarketAddressController = async (network: eNetwork, ctl?:
   const POOL_NAME = ConfigNames.Augmented;
   const poolConfig = loadPoolConfig(POOL_NAME);
   const { AddressProvider } = poolConfig as ICommonConfiguration;
-  return getParamPerNetwork(AddressProvider, network);
+  return getParamPerNetwork(AddressProvider, network)!;
 };
 
 let asyncBatch = 0;

@@ -1,7 +1,7 @@
 import { Contract } from '@ethersproject/contracts';
 import {
   getAddressesProviderRegistry,
-  getAGFTokenV1Impl,
+  getAGFTokenImpl,
   getDefaultReserveInterestRateStrategy,
   getDelegatedStrategyAave,
   getDelegatedStrategyCompoundErc20,
@@ -82,7 +82,7 @@ const CONTRACT_GETTERS: Omit<Record<eContractid, ContractGetterFn>, ignoredKeys>
   [eContractid.RewardConfiguratorImpl]: getRewardConfiguratorProxy,
   [eContractid.TokenWeightedRewardPoolImpl]: getTokenWeightedRewardPool,
   [eContractid.XAGFTokenV1Impl]: getXAGFTokenV1Impl,
-  [eContractid.AGFTokenV1Impl]: getAGFTokenV1Impl,
+  [eContractid.AGFTokenImpl]: getAGFTokenImpl,
   [eContractid.ReferralRewardPoolV1Impl]: getReferralRewardPoolImpl,
   [eContractid.RewardBoosterImpl]: getRewardBooster,
   [eContractid.DepositStakeTokenImpl]: getDepositStakeTokenImpl,

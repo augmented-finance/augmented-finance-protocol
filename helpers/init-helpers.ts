@@ -567,8 +567,10 @@ export const initReservePriceFeeds = async (
   const underlyings: tEthereumAddress[] = [];
   const remaps = new Map<string, string>();
 
-  for (const [k, v] of Object.entries(remappings)) {
-    remaps.set(k.toLowerCase(), v);
+  if (remappings !== undefined) {
+    for (const [k, v] of Object.entries(remappings)) {
+      remaps.set(k.toLowerCase(), v);
+    }
   }
   console.log('Found', remaps.size, 'remapping(s)');
 
