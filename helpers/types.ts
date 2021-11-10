@@ -14,17 +14,15 @@ export enum eEthereumNetwork {
   coverage = 'coverage',
   hardhat = 'hardhat',
   tenderlyMain = 'tenderlyMain',
-  bsc_testnet = 'bsc_testnet',
-  bsc = 'bsc',
-  avalanche_testnet = 'avalanche_testnet',
-  avalanche = 'avalanche',
-  fantom_testnet = 'fantom_testnet',
-  fantom = 'fantom',
 }
 
 export enum eOtherNetwork {
   bsc = 'bsc',
   bsc_testnet = 'bsc_testnet',
+  avalanche_testnet = 'avalanche_testnet',
+  avalanche = 'avalanche',
+  fantom_testnet = 'fantom_testnet',
+  fantom = 'fantom',
 }
 
 export enum ePolygonNetwork {
@@ -34,21 +32,6 @@ export enum ePolygonNetwork {
   arbitrum = 'arbitrum',
   optimistic_testnet = 'optimistic_testnet',
   optimistic = 'optimistic',
-}
-
-export enum EthereumNetworkNames {
-  kovan = 'kovan',
-  ropsten = 'ropsten',
-  rinkeby = 'rinkeby',
-  main = 'main',
-  matic = 'matic',
-  mumbai = 'mumbai',
-  bsc = 'bsc',
-  bsc_mainnet = 'bsc_mainnet',
-  avalanche_testnet = 'avalanche_testnet',
-  avalanche = 'avalanche',
-  fantom_testnet = 'fantom_testnet',
-  fantom = 'fantom',
 }
 
 export enum eContractid {
@@ -285,6 +268,10 @@ export interface iAssetBase<T> {
   CETH: T;
 
   WBNB: T;
+
+  WAVAX: T;
+
+  WFTM: T;
 }
 
 const tokenSymbols: iAssetBase<string> = {
@@ -308,6 +295,10 @@ const tokenSymbols: iAssetBase<string> = {
   CETH: '',
 
   WBNB: '',
+
+  WAVAX: '',
+
+  WFTM: '',
 };
 
 type testAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC' | 'AAVE' | 'LINK';
@@ -315,6 +306,12 @@ type testOnlyAssets = 'AAVE' | 'LINK';
 
 type bscOnlyAssets = 'WBNB';
 type bscAssets = 'DAI' | 'USDT' | 'USDC' | bscOnlyAssets;
+
+type avalancheOnlyAssets = 'WAVAX';
+type avalancheAssets = 'USDT' | avalancheOnlyAssets;
+
+type fantomOnlyAssets = 'WFTM';
+type fantomAssets = 'USDT' | fantomOnlyAssets;
 
 export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, 'USD'>;
 export type iAssetsWithoutUSDOpt<T> = OmitOpt<iAssetBase<T>, 'USD'>;
@@ -336,6 +333,8 @@ export type OmitOpt<T, K extends keyof any> = PickOpt<T, Exclude<keyof T, K>>;
 export type iTestPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, testAssets>;
 export type iEthereumPoolAssets<T> = Omit<iAssetsWithoutUSD<T>, testOnlyAssets | bscOnlyAssets>;
 export type iBinancePoolAssets<T> = Pick<iAssetsWithoutUSD<T>, bscAssets>;
+export type iAvalanchePoolAssets<T> = Pick<iAssetsWithoutUSD<T>, avalancheAssets>;
+export type iFantomPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, fantomAssets>;
 
 export type iAssetAggregatorBase<T> = iAssetBase<T>;
 
@@ -378,7 +377,8 @@ export type iParamsPerNetworkOpt<T> = AllOpt<iParamsPerNetwork<T>>;
 
 export interface iParamsPerNetworkAll<T>
   extends iEthereumParamsPerNetwork<T>,
-    /* iPolygonParamsPerNetwork<T>, */ iParamsPerOtherNetwork<T> {}
+    iPolygonParamsPerNetwork<T>,
+    iParamsPerOtherNetwork<T> {}
 
 export type iParamsPerNetworkGroup<T> =
   | iEthereumParamsPerNetwork<T>
@@ -407,6 +407,10 @@ export interface iPolygonParamsPerNetwork<T> {
 export interface iParamsPerOtherNetwork<T> {
   [eOtherNetwork.bsc]: T;
   [eOtherNetwork.bsc_testnet]: T;
+  [eOtherNetwork.avalanche]: T;
+  [eOtherNetwork.avalanche_testnet]: T;
+  [eOtherNetwork.fantom]: T;
+  [eOtherNetwork.fantom_testnet]: T;
 }
 
 export enum RateMode {
