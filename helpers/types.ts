@@ -34,6 +34,15 @@ export enum ePolygonNetwork {
   optimistic = 'optimistic',
 }
 
+export enum EthereumNetworkNames {
+  kovan = 'kovan',
+  ropsten = 'ropsten',
+  rinkeby = 'rinkeby',
+  main = 'main',
+  matic = 'matic',
+  mumbai = 'mumbai',
+}
+
 export enum eContractid {
   MarketAccessController = 'MarketAccessController',
   PreDeployedMarketAccessController = '~MarketAccessController',
@@ -51,6 +60,7 @@ export enum eContractid {
 
   TeamRewardPool = 'TeamRewardPool',
   PermitFreezerRewardPool = 'PermitFreezerRewardPool',
+
   ProxyAdmin = 'ProxyAdmin',
 
   DepositTokenImpl = 'DepositTokenImpl',
@@ -272,6 +282,8 @@ export interface iAssetBase<T> {
   WAVAX: T;
 
   WFTM: T;
+
+  WMATIC: T;
 }
 
 const tokenSymbols: iAssetBase<string> = {
@@ -299,6 +311,8 @@ const tokenSymbols: iAssetBase<string> = {
   WAVAX: '',
 
   WFTM: '',
+
+  WMATIC: '',
 };
 
 type testAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC' | 'AAVE' | 'LINK';
@@ -312,6 +326,8 @@ type avalancheAssets = 'USDT' | avalancheOnlyAssets;
 
 type fantomOnlyAssets = 'WFTM';
 type fantomAssets = 'USDT' | fantomOnlyAssets;
+
+type optimisticAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC';
 
 export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, 'USD'>;
 export type iAssetsWithoutUSDOpt<T> = OmitOpt<iAssetBase<T>, 'USD'>;
@@ -335,6 +351,7 @@ export type iEthereumPoolAssets<T> = Omit<iAssetsWithoutUSD<T>, testOnlyAssets |
 export type iBinancePoolAssets<T> = Pick<iAssetsWithoutUSD<T>, bscAssets>;
 export type iAvalanchePoolAssets<T> = Pick<iAssetsWithoutUSD<T>, avalancheAssets>;
 export type iFantomPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, fantomAssets>;
+export type iOptimisticPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, optimisticAssets>;
 
 export type iAssetAggregatorBase<T> = iAssetBase<T>;
 
