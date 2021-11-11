@@ -373,7 +373,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.bsc_testnet]: {
       DAI: '0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867', 
       USDC: '0x64544969ed7ebf5f083679233325356ebe738930', // '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d', 
-      USDT: '0x7ef95a0fee0dd31b22626fa2e10ee6a223f8a684', 
+      USDT: '0x337610d27c682e347c9cd60bd4b3b107c9d34ddd', // '0x7ef95a0fee0dd31b22626fa2e10ee6a223f8a684'
       WBNB: '0xae13d989dac2f0debff460ac112a837c89baa7cd',
     },
   },
