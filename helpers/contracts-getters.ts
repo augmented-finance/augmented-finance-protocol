@@ -62,7 +62,7 @@ import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 
 import { MockTokenMap } from './contracts-helpers';
 import { falsyOrZeroAddress, getFirstSigner, getFromJsonDb, hasInJsonDb } from './misc-utils';
-import { DefaultTokenSymbols, eContractid, PoolConfiguration, tEthereumAddress } from './types';
+import { DefaultTokenSymbols, eContractid, IPriceOracleConfig, PoolConfiguration, tEthereumAddress } from './types';
 import { ILendingPoolAaveCompatibleFactory } from '../types/ILendingPoolAaveCompatibleFactory';
 import { IManagedLendingPoolFactory } from '../types/IManagedLendingPoolFactory';
 import { IAaveLendingPoolFactory } from '../types/IAaveLendingPoolFactory';
@@ -192,21 +192,26 @@ export const getTokenAggregatorPairs = (
     [tokenSymbol: string]: tEthereumAddress;
   },
   aggregatorAddresses: { [tokenSymbol: string]: tEthereumAddress },
-  wrappedNative: string
+  quoteCurrency: string | IPriceOracleConfig
 ): [string[], string[]] => {
   console.log(allAssetsAddresses);
   console.log(aggregatorAddresses);
   if (aggregatorAddresses == undefined) {
     return [[], []];
   }
-  const { ETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
-  delete assetsAddressesWithoutEth[wrappedNative];
-  console.log(assetsAddressesWithoutEth);
+  const { ETH, ...assetsWithoutQuoteCurrency } = allAssetsAddresses; //WETH
+  if (typeof quoteCurrency == 'string') {
+    delete assetsWithoutQuoteCurrency[quoteCurrency];
+  } else if (quoteCurrency !== undefined) {
+    delete assetsWithoutQuoteCurrency[quoteCurrency.QuoteName];
+  }
+
+  console.log(assetsWithoutQuoteCurrency);
 
   const assets: string[] = [];
   const aggregators: string[] = [];
 
-  for (const [tokenSymbol, tokenAddress] of Object.entries(assetsAddressesWithoutEth)) {
+  for (const [tokenSymbol, tokenAddress] of Object.entries(assetsWithoutQuoteCurrency)) {
     if (falsyOrZeroAddress(tokenAddress)) {
       continue;
     }

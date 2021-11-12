@@ -48,7 +48,7 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
   const [aggregatorTokens, aggregators] = getTokenAggregatorPairs(
     tokensToWatch,
     chainlinkAggregators,
-    dependencies.WrappedNative
+    PriceOracle[network]
   );
 
   if (!newOracles) {

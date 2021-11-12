@@ -448,6 +448,7 @@ export interface IMocksConfig {
 }
 
 export interface IPriceOracleConfig {
+  QuoteName: string;
   QuoteToken: tEthereumAddress;
   QuoteValue: BigNumber;
 }

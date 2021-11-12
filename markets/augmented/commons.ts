@@ -130,7 +130,7 @@ const rewardPoolsBscMain: IRewardPools = {
     DAI:   tokenRewardStable,
     USDC:  tokenRewardStable,
     USDT:  tokenRewardStable,
-    WBTC:  tokenRewardVolatile,
+    //WBTC:  tokenRewardVolatile,
     WBNB:  tokenRewardVolatile,
   },
 }
@@ -189,6 +189,7 @@ const rewardPoolsPolygonMain: IRewardPools = {
 }
 
 const USD_QUOTE: IPriceOracleConfig = {
+  QuoteName: 'USD',
   QuoteToken: USD_ADDRESS,
   QuoteValue: BigNumber.from(1e8),
 }
