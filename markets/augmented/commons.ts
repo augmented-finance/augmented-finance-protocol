@@ -7,6 +7,8 @@ import { FantomReserves, FantomStableBaseRates } from './reservesConfigs_fantom'
 import { OptimisticReserves, OptimisticStableBaseRates } from './reservesConfigs_optimistic';
 
 import { MainnetReserves, MainnetStableBaseRates } from './reservesConfigs_main';
+import { PolygonReserves, PolygonStableBaseRates } from './reservesConfigs_polygon';
+import { ArbitrumReserves, ArbitrumStableBaseRates } from './reservesConfigs_arbitrum';
 
 const emergencyAdmins = [
   '0x8331Bd35089090249675D023804FC52b7FD18184',
@@ -154,6 +156,28 @@ const rewardPoolsAvalancheMain: IRewardPools = {
 }
 
 const rewardPoolsOptimisticMain: IRewardPools = {
+  InitialRateWad: 0,
+  TokenPools: {
+    DAI:   tokenRewardStable,
+    USDC:  tokenRewardStable,
+    USDT:  tokenRewardStable,
+    WBTC:  tokenRewardVolatile,
+    WETH:  tokenRewardVolatile,
+  },
+}
+
+const rewardPoolsArbitrumMain: IRewardPools = {
+  InitialRateWad: 0,
+  TokenPools: {
+    DAI:   tokenRewardStable,
+    USDC:  tokenRewardStable,
+    USDT:  tokenRewardStable,
+    WBTC:  tokenRewardVolatile,
+    WETH:  tokenRewardVolatile,
+  },
+}
+
+const rewardPoolsPolygonMain: IRewardPools = {
   InitialRateWad: 0,
   TokenPools: {
     DAI:   tokenRewardStable,
@@ -347,7 +371,12 @@ export const CommonsConfig: ICommonConfiguration = {
 
     [ePolygonNetwork.arbitrum]: {},
     [ePolygonNetwork.arbitrum_testnet]: {
-      WETH: '',
+      WBTC: '0x0c9973e7a27d00e656B9f153348dA46CaD70d03d',
+      DAI: '0xcAE7d280828cf4a0869b26341155E4E9b864C7b2',
+      WETH: '0x5f0423B1a6935dc5596e7A24d98532b67A0AeFd8',
+      LINK: '0x52C9Eb2Cc68555357221CAe1e5f2dD956bC194E5',
+      USDC: '0xe020609A0C31f4F96dCBB8DF9882218952dD95c4',
+      USDT: '0xb1Ac85E779d05C2901812d812210F6dE144b2df0',
     },
     [ePolygonNetwork.optimistic]: {},
     [ePolygonNetwork.optimistic_testnet]: {
@@ -359,10 +388,15 @@ export const CommonsConfig: ICommonConfiguration = {
       USDC: '0xb50cBeeFBCE78cDe83F184B275b5E80c4f01006A',
       USDT: '0x4Dab1Dc2409A037d80316F2379Ac767A477C4236',
     },
-    [ePolygonNetwork.matic]: {
-    },
+    [ePolygonNetwork.matic]: {},
     [ePolygonNetwork.mumbai]: {
-      WMATIC: '',
+      WMATIC: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada',
+      WBTC: '0x007A22900a3B98143368Bd5906f8E17e9867581b',
+      DAI: '0x0FCAa9c899EC5A91eBc3D5Dd869De833b06fB046',
+      WETH: '0x0715A7794a1dc8e42615F059dD6e406A6594651A',
+      LINK: '0x12162c3E810393dEC01362aBf156D7ecf6159528',
+      USDC: '0x572dDec9087154dC5dfBB1546Bb62713147e0Ab0',
+      USDT: '0x92C09849638959196E976289418e5973CC96d645',
     },
 
     
@@ -491,21 +525,32 @@ export const CommonsConfig: ICommonConfiguration = {
 
     [ePolygonNetwork.arbitrum]: {},
     [ePolygonNetwork.arbitrum_testnet]: {
-      WETH: '',
+      WBTC: '0x10b1aB71b9708b23A3f31Ccf829293980d37e46E',
+      DAI: '0x41ec55d7455427d2a7a8b573f89cb4646e3731bd',
+      WETH: '0xd530f42ec6a5df88a82d51534fc6623e0721d6d3',
+      LINK: '0xcf80b05e51c018cf213d5358b6c099770c094432', //
+      USDC: '0x0ab3f01c2f3a5e16a2573e6feef1bee2dec262f4',
+      USDT: '0x9a163588e2db2a449655d5f04aaa7f0fc12dc3cb',
     },
     [ePolygonNetwork.optimistic]: {},
     [ePolygonNetwork.optimistic_testnet]: {
-      AAVE: '0x1bf1dc53dd56779496facdd153eb1340cd9d8c1b',
-      WBTC: '0x94b008aa00579c1307b0ef2c499ad98a8ce58e58',
-      DAI: '0x8b4e5ab8c90af4fbcb8a71a86bdc340d9151c96d',
-      WETH: '0xe4140b67dd27834b8a685987cbd09a264d59a06f',
-      LINK: '0x5c62e1dbad0e9911b3aacee90551485de20b8c97',
-      USDC: '0x1147b3f6eca313a5b3c2aa3fb85928104a5787d3',
-      USDT: '0x7f5c764cbc14f9669b88837ca1490cca17c31607',
+      AAVE: '0x2a6cdb470bfc3635a32798cfd4ea912c703ef293', //
+      WBTC: '0x2382a8f65b9120e554d1836a504808ac864e169d',
+      DAI: '0xd2a0ee155d20770d0a916f44d4fc0cd1ffc88fff',
+      WETH: '0xa6770233d8381cb053de51c3989a8c0befd3ff28',
+      LINK: '0x83db01411e8c5b0bcaa0850e7fd90bdf7e180205', //
+      USDC: '0x4bec326fe1bef34c4858a1de3906c7f52a95a682',
+      USDT: '0x03f2922448261fb9920b5afd0c339a9086f4881e',
     },
     [ePolygonNetwork.matic]: {},
     [ePolygonNetwork.mumbai]: {
-      WMATIC: '',
+      WMATIC: '0xF45444171435d0aCB08a8af493837eF18e86EE27',
+      WBTC: '0xc9276ECa6798A14f64eC33a526b547DAd50bDa2F',
+      DAI: '0x639cB7b21ee2161DF9c882483C9D55c90c20Ca3e',
+      WETH: '0x7aE20397Ca327721F013BB9e140C707F82871b56',
+      LINK: '0x7ec62b6fC19174255335C8f4346E0C2fcf870a6B',
+      USDC: '0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9',
+      USDT: '0xF8744C0bD8C7adeA522d6DDE2298b17284A79D1b',
     },
   },
 
@@ -569,10 +614,10 @@ export const CommonsConfig: ICommonConfiguration = {
       WrappedNative: 'WETH',
     },
     [ePolygonNetwork.matic]: {
-      WrappedNative: 'WETH',
+      WrappedNative: 'WMATIC',
     },
     [ePolygonNetwork.mumbai]: {
-      WrappedNative: 'WETH',
+      WrappedNative: 'WMATIC',
     },
   },
 
@@ -587,17 +632,17 @@ export const CommonsConfig: ICommonConfiguration = {
 
     [eOtherNetwork.bsc]: BscReserves,
     [eOtherNetwork.bsc_testnet]: BscReserves,
-    [eOtherNetwork.fantom]: FantomReserves, //TODO: make other reserves
+    [eOtherNetwork.fantom]: FantomReserves, 
     [eOtherNetwork.fantom_testnet]: FantomReserves,
     [eOtherNetwork.avalanche]: AvalancheReserves,
     [eOtherNetwork.avalanche_testnet]: AvalancheReserves,
 
-    [ePolygonNetwork.arbitrum]: OptimisticReserves, //temp
-    [ePolygonNetwork.arbitrum_testnet]: OptimisticReserves, //temp
+    [ePolygonNetwork.arbitrum]: ArbitrumReserves, 
+    [ePolygonNetwork.arbitrum_testnet]: ArbitrumReserves, 
     [ePolygonNetwork.optimistic]: OptimisticReserves,
     [ePolygonNetwork.optimistic_testnet]: OptimisticReserves,
-    [ePolygonNetwork.matic]: OptimisticReserves, //temp
-    [ePolygonNetwork.mumbai]: OptimisticReserves, //temp
+    [ePolygonNetwork.matic]: PolygonReserves, 
+    [ePolygonNetwork.mumbai]: PolygonReserves, 
   },
 
   LendingRateOracleRates: {
@@ -616,12 +661,12 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.avalanche]: AvalancheStableBaseRates,
     [eOtherNetwork.avalanche_testnet]: AvalancheStableBaseRates,
 
-    [ePolygonNetwork.arbitrum]: OptimisticStableBaseRates, //temp
-    [ePolygonNetwork.arbitrum_testnet]: OptimisticStableBaseRates, //temp
+    [ePolygonNetwork.arbitrum]: ArbitrumStableBaseRates, 
+    [ePolygonNetwork.arbitrum_testnet]: ArbitrumStableBaseRates, 
     [ePolygonNetwork.optimistic]: OptimisticStableBaseRates,
     [ePolygonNetwork.optimistic_testnet]: OptimisticStableBaseRates,
-    [ePolygonNetwork.matic]: OptimisticStableBaseRates, //temp
-    [ePolygonNetwork.mumbai]: OptimisticStableBaseRates, //temp
+    [ePolygonNetwork.matic]: PolygonStableBaseRates, 
+    [ePolygonNetwork.mumbai]: PolygonStableBaseRates, 
   },
 
   LendingDisableFeatures: {
@@ -709,7 +754,7 @@ export const CommonsConfig: ICommonConfiguration = {
         InitialRateWad: 1,
       },
 
-      [ePolygonNetwork.arbitrum]: rewardPoolsOptimisticMain, //temp
+      [ePolygonNetwork.arbitrum]: rewardPoolsArbitrumMain, //temp
       [ePolygonNetwork.arbitrum_testnet]: {
         ...rewardPoolsOptimisticMain, //temp
         InitialRateWad: 1,
@@ -719,9 +764,9 @@ export const CommonsConfig: ICommonConfiguration = {
         ...rewardPoolsOptimisticMain,
         InitialRateWad: 1,
       },
-      [ePolygonNetwork.matic]: rewardPoolsOptimisticMain,  //temp
+      [ePolygonNetwork.matic]: rewardPoolsPolygonMain,  //temp
       [ePolygonNetwork.mumbai]: {
-        ...rewardPoolsOptimisticMain, //temp
+        ...rewardPoolsPolygonMain, //temp
         InitialRateWad: 1,
       },
     },

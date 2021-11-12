@@ -1,11 +1,19 @@
 import { MainnetReserves, MainnetStableBaseRates } from './reservesConfigs_main';
 
 export const PolygonStableBaseRates = {
+  WBTC: MainnetStableBaseRates.WBTC,
+  DAI: MainnetStableBaseRates.DAI,
+  WMATIC: MainnetStableBaseRates.WETH,
+  WETH: MainnetStableBaseRates.WETH,
+  USDC: MainnetStableBaseRates.USDC,
   USDT: MainnetStableBaseRates.USDT,
-  WAVAX: MainnetStableBaseRates.WETH,
 }
 
 export const PolygonReserves = {
+  WBTC: MainnetReserves.WBTC,
+  DAI: MainnetReserves.DAI,
+  WMATIC: MainnetReserves.WETH,
+  WETH: MainnetReserves.WETH,
+  USDC: MainnetReserves.USDC,
   USDT: MainnetReserves.USDT,
-  WAVAX: MainnetReserves.WETH,
 }
