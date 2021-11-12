@@ -127,6 +127,7 @@ const rewardPoolsBscMain: IRewardPools = {
     WBTC:  tokenRewardVolatile,
     WBNB:  tokenRewardVolatile,
   },
+  TreasuryPool: rewardPoolsEthMain.TreasuryPool,
 }
 
 const USD_QUOTE: IPriceOracleConfig = {
