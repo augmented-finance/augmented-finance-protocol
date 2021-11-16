@@ -80,6 +80,7 @@ import { IUniswapV2Router02Factory } from '../types/IUniswapV2Router02Factory';
 import { IUniswapV2FactoryFactory } from '../types/IUniswapV2FactoryFactory';
 import { IUniswapV2PairFactory } from '../types/IUniswapV2PairFactory';
 import { IRevisionFactory } from '../types/IRevisionFactory';
+import _ from 'lodash';
 
 const getAddr = async (id: eContractid) => {
   const entry = await getFromJsonDb(id);
@@ -199,11 +200,15 @@ export const getTokenAggregatorPairs = (
   if (aggregatorAddresses == undefined) {
     return [[], []];
   }
-  const { ETH, ...assetsWithoutQuoteCurrency } = allAssetsAddresses; //WETH
+  let assetsWithoutQuoteCurrency: {
+    [tokenSymbol: string]: tEthereumAddress;
+  };
   if (typeof quoteCurrency == 'string') {
-    delete assetsWithoutQuoteCurrency[quoteCurrency];
+    assetsWithoutQuoteCurrency = _.omit(allAssetsAddresses, quoteCurrency);
   } else if (quoteCurrency !== undefined) {
-    delete assetsWithoutQuoteCurrency[quoteCurrency.QuoteName];
+    assetsWithoutQuoteCurrency = _.omit(allAssetsAddresses, quoteCurrency.QuoteName);
+  } else {
+    throw 'Quote Currency is undefined';
   }
 
   console.log(assetsWithoutQuoteCurrency);
