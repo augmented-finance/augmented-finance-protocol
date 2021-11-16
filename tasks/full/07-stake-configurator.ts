@@ -47,7 +47,7 @@ deployTask(`full:deploy-stake-configurator`, `Deploy stake configurator`, __dirn
             await addContractAddrToJsonDb(
               eContractid.ProxyAdmin + '-' + eContractid.StakeConfiguratorImpl,
               pa,
-              false,
+              true,
               []
             );
           }

@@ -69,9 +69,9 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
         }
         if (verify) {
           await addContractAddrToJsonDb(
-            eContractid.ProxyAdmin + '-' + eContractid.StakeConfiguratorImpl,
+            eContractid.ProxyAdmin + '-' + eContractid.RewardConfiguratorImpl,
             pa,
-            false,
+            true,
             []
           );
         }
@@ -175,11 +175,7 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
     }
 
     if (freshStart && (!continuation || falsyOrZeroAddress((await booster.getBoostPool()).pool))) {
-      await mustWaitTx(
-        configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false, {
-          gasLimit: Object.values(ePolygonNetwork).includes(<ePolygonNetwork>network) ? undefined : 2000000,
-        })
-      );
+      await mustWaitTx(configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false));
       console.log('Boost pool: ', xagfAddr);
     }
   }
