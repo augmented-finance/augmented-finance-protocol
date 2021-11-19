@@ -233,7 +233,7 @@ export const initReservesByHelper = async (
 
       const tx3 = await waitForTx(
         await configurator.batchInitReserve(param, {
-          gasLimit: Object.values(ePolygonNetwork).includes(<ePolygonNetwork>DRE.network.name) ? 5000000 : 5000000,
+          gasLimit: Object.values(ePolygonNetwork).includes(<ePolygonNetwork>DRE.network.name) ? undefined : 5000000,
         })
       );
 
