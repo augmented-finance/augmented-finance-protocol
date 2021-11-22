@@ -270,6 +270,35 @@ export interface iAssetBase<T> {
   CETH: T;
 
   WBNB: T;
+  BTCB: T;
+  BCH: T;
+  ETH: T;
+  BETH: T;
+  BUSD: T;
+  TUSD: T;
+  DOT: T;
+  SXP: T;
+  XRP: T;
+  ADA: T;
+  TRX: T;
+  LTC: T;
+  DOGE: T;
+  MATIC: T;
+  FIL: T;
+  INJ: T;
+  CHR: T;
+  REEF: T;
+  TWT: T;
+  LINA: T;
+  CAKE: T;
+  XVS: T;
+  ALPACA: T;
+  UNI: T;
+  SUSHI: T;
+  BIFI: T;
+  AUTO: T;
+  DODO: T;
+  ALPHA: T;
 }
 
 const tokenSymbols: iAssetBase<string> = {
@@ -293,6 +322,35 @@ const tokenSymbols: iAssetBase<string> = {
   CETH: '',
 
   WBNB: '',
+  BTCB: '',
+  BCH: '',
+  ETH: '',
+  BETH: '',
+  BUSD: '',
+  TUSD: '',
+  DOT: '',
+  SXP: '',
+  XRP: '',
+  ADA: '',
+  TRX: '',
+  LTC: '',
+  DOGE: '',
+  MATIC: '',
+  FIL: '',
+  INJ: '',
+  CHR: '',
+  REEF: '',
+  TWT: '',
+  LINA: '',
+  CAKE: '',
+  XVS: '',
+  ALPACA: '',
+  UNI: '',
+  SUSHI: '',
+  BIFI: '',
+  AUTO: '',
+  DODO: '',
+  ALPHA: '',
 };
 
 type testAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC' | 'AAVE' | 'LINK';
