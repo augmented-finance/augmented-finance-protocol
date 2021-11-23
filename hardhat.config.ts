@@ -24,12 +24,19 @@ const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
 const DEFAULT_BLOCK_GAS_LIMIT = 7000000;
 const DEFAULT_GAS_MUL = 2;
 const HARDFORK = 'istanbul';
-const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || '';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
-const MNEMONIC_MAIN = process.env.MNEMONIC_MAIN || MNEMONIC;
 const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-const COINMARKETCAP_KEY = process.env.COINMARKETCAP_KEY || '';
+
+const KEY_SEL = process.env.KEY_SEL || '';
+
+const keySelector = (keyName: string) => {
+  return (KEY_SEL != '' ? process.env[`${keyName}_${KEY_SEL}`]: undefined) || process.env[keyName];
+}
+
+const ETHERSCAN_KEY = keySelector('ETHERSCAN_KEY') || '';
+const COINMARKETCAP_KEY = keySelector('COINMARKETCAP_KEY') || '';
+const MNEMONIC_MAIN = keySelector('MNEMONIC_MAIN') || MNEMONIC;
 
 // Prevent to load scripts before compilation and typechain
 if (!SKIP_LOAD) {
