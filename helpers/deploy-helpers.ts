@@ -42,7 +42,7 @@ const initEncoder = new ethers.utils.Interface(['function initialize(address)'])
 export const setAndGetAddressAsProxy = async (ac: AccessController, id: AccessFlags, addr: tEthereumAddress) => {
   waitForTx(
     await ac.setAddressAsProxy(id, addr, {
-      gasLimit: Object.values(ePolygonNetwork).includes(<ePolygonNetwork>DRE.network.name) ? undefined : 2000000,
+      gasLimit: Object.values(ePolygonNetwork).includes(<ePolygonNetwork>DRE.network.name) ? undefined : 2000000, //3kk
     })
   );
   const proxyAddr = await waitForAddress(ac, id);
@@ -59,7 +59,7 @@ export const setAndGetAddressAsProxyWithInit = async (
 ) => {
   waitForTx(
     await ac.setAddressAsProxyWithInit(id, addr, data, {
-      gasLimit: Object.values(ePolygonNetwork).includes(<ePolygonNetwork>DRE.network.name) ? undefined : 2000000,
+      gasLimit: Object.values(ePolygonNetwork).includes(<ePolygonNetwork>DRE.network.name) ? undefined : 2000000, //5kk
     })
   );
   const proxyAddr = await waitForAddress(ac, id);
