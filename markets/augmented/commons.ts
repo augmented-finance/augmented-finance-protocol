@@ -14,6 +14,7 @@ const emergencyAdmins = [
   '0x8331Bd35089090249675D023804FC52b7FD18184',
   '0xE1FbbaBbd21764061734424d3F4f5e2C11101E96',
   '0x511EfaE41B0eA33Da847d16e13655009d0aB3Ed7',
+  '0x165576822b178b40D615F69d965Ef45c25e23ef9'
 ];
 
 const tokenRewardStable: ITokenRewardPoolParams = {
@@ -208,6 +209,11 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.main]: emergencyAdmins,
     [eOtherNetwork.bsc]: emergencyAdmins,
     [eOtherNetwork.bsc_testnet]: emergencyAdmins,
+    [eOtherNetwork.fantom_testnet]: emergencyAdmins,
+    [eOtherNetwork.avalanche_testnet]: emergencyAdmins,
+    [ePolygonNetwork.mumbai]: emergencyAdmins,
+    [ePolygonNetwork.arbitrum_testnet]: emergencyAdmins,
+    [ePolygonNetwork.optimistic_testnet]: emergencyAdmins,
   },
   ProviderRegistry: {
     [eEthereumNetwork.kovan]: '', // '0xa904174e4e6e1ad3FCDf27583544521dcaE16284', //'0x96B2E8707222fD25ce79a998cd47ea8C23E40d14', // '0xFFfdda318F1FE4f048c99E5C6C03C14434B35FA0', // 0xe28BdBF3C2440C97aBA7250ED1bb9F20559E351a
