@@ -48,3 +48,27 @@ export const externalAsset = (template: IReserveParams, strategy: IInterestRateS
   };
   return result;
 }
+
+export const assetReserve = (
+  strategy: IInterestRateStrategyParams,
+  baseLTVAsCollateral: number,
+  liquidationThreshold: number,
+  liquidationBonus: number,
+  reserveDecimals: number,
+  reserveFactor: number,
+  borrowingEnabled: boolean = true,
+  stableBorrowRateEnabled: boolean = false,
+  depositTokenImpl: eContractid = eContractid.DepositTokenImpl,
+): IReserveParams => {
+  return <IReserveParams>{
+    strategy,
+    baseLTVAsCollateral,
+    liquidationThreshold,
+    liquidationBonus,
+    reserveDecimals, 
+    reserveFactor,
+    borrowingEnabled,
+    stableBorrowRateEnabled,
+    depositTokenImpl,
+  }
+}
