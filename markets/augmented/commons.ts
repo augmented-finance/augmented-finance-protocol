@@ -438,9 +438,7 @@ export const CommonsConfig: ICommonConfiguration = {
       LINK: '0x12162c3E810393dEC01362aBf156D7ecf6159528',
       USDC: '0x572dDec9087154dC5dfBB1546Bb62713147e0Ab0',
       USDT: '0x92C09849638959196E976289418e5973CC96d645',
-    },
-
-    
+    },    
   },
 
   ReserveAssetsOpt: {
@@ -732,6 +730,7 @@ export const CommonsConfig: ICommonConfiguration = {
 
     [eOtherNetwork.bsc]: BscStableBaseRates,
     [eOtherNetwork.bsc_testnet]: BscStableBaseRates,
+
     [eOtherNetwork.fantom]: FantomStableBaseRates,
     [eOtherNetwork.fantom_testnet]: FantomStableBaseRates,
     [eOtherNetwork.avalanche]: AvalancheStableBaseRates,
@@ -773,19 +772,48 @@ export const CommonsConfig: ICommonConfiguration = {
     CooldownPeriod: 7 * DAY,
     UnstakePeriod: 7 * DAY,
     StakeToken: {
-      DAI:  StakeMode.stakeAg,
-      USDC: StakeMode.stakeAg,
-      USDT: StakeMode.stakeAg,
       WBTC: StakeMode.stakeAg,
       WETH: StakeMode.stakeAg,
       
-      WBNB: StakeMode.stakeAg,
-
       WAVAX: StakeMode.stakeAg,
-
       WFTM: StakeMode.stakeAg,
-
       WMATIC: StakeMode.stakeAg,
+
+      WBNB : StakeMode.stakeAg,
+      BTCB : StakeMode.stakeAg,
+      BCH : StakeMode.stakeAg,
+      ETH : StakeMode.stakeAg,
+      BETH : StakeMode.stakeAg,
+      USDT : StakeMode.stakeAg,
+      BUSD : StakeMode.stakeAg,
+      USDC : StakeMode.stakeAg,
+      DAI : StakeMode.stakeAg,
+      TUSD : StakeMode.stakeAg,
+      DOT : StakeMode.stakeAg,
+      SXP : StakeMode.stakeAg,
+      XRP : StakeMode.stakeAg,
+      ADA : StakeMode.stakeAg,
+      TRX : StakeMode.stakeAg,
+      LINK : StakeMode.stakeAg,
+      LTC : StakeMode.stakeAg,
+      DOGE : StakeMode.stakeAg,
+      MATIC : StakeMode.stakeAg,
+      FIL : StakeMode.stakeAg,
+      INJ : StakeMode.stakeAg,
+      CHR : StakeMode.stakeAg,
+      REEF : StakeMode.stakeAg,
+      TWT : StakeMode.stakeAg,
+      LINA : StakeMode.stakeAg,
+      CAKE : StakeMode.stakeAg,
+      XVS : StakeMode.stakeAg,
+      ALPACA : StakeMode.stakeAg,
+      UNI : StakeMode.stakeAg,
+      SUSHI : StakeMode.stakeAg,
+      AAVE : StakeMode.stakeAg,
+      BIFI : StakeMode.stakeAg,
+      AUTO : StakeMode.stakeAg,
+      DODO : StakeMode.stakeAg,
+      ALPHA : StakeMode.stakeAg,
     }
   },
 
