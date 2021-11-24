@@ -22,9 +22,23 @@
     "hardhat:tenderly-main": "hardhat --network tenderlyMain",
     "hardhat:ropsten": "hardhat --network ropsten",
     "hardhat:main": "hardhat --network main",
-    "hardhat:mumbai": "hardhat --network mumbai",
-    "hardhat:matic": "hardhat --network matic",
+    "hardhat:mumbai": "KEY_SEL=POL hardhat --network mumbai",
+    "hardhat:matic": "KEY_SEL=POL hardhat --network matic",
     "hardhat:bsc-test": "KEY_SEL=BSC hardhat --network bsc_testnet",
+    "hardhat:bsc": "KEY_SEL=BSC hardhat --network bsc",
+    
+    "hardhat:avalanche": "KEY_SEL=AVA hardhat --network avalanche",
+    "hardhat:ava-test": "KEY_SEL=AVA hardhat --network avalanche_testnet",
+
+    "hardhat:fantom": "KEY_SEL=FNT hardhat --network fantom",
+    "hardhat:fnt-test": "KEY_SEL=FNT hardhat --network fantom_testnet",
+
+    "hardhat:arbitrum": "KEY_SEL=ARB hardhat --network arbitrum",
+    "hardhat:arb-test": "KEY_SEL=ARB hardhat --network arbitrum_testnet",
+
+    "hardhat:optimistic": "KEY_SEL=OPT hardhat --network optimistic",
+    "hardhat:opt-test": "KEY_SEL=OPT hardhat --network optimistic_testnet",
+
     "compile": "SKIP_LOAD=true TS_NODE_TRANSPILE_ONLY=1 hardhat compile",
     "test": "TS_NODE_TRANSPILE_ONLY=1 hardhat test ./test-suites/test-augmented/*.spec.ts",
     "test-fork": "TS_NODE_TRANSPILE_ONLY=1 MAINNET_FORK=true hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented-fork/*.spec.ts",
@@ -69,12 +83,46 @@
     "deploy:ropsten": "npm run compile && npm run hardhat:ropsten -- augmented:mainnet",
     "deploy:kovan": "npm run compile && npm run hardhat:kovan -- augmented:mainnet",
     "deploy:rinkeby": "npm run compile && npm run hardhat:rinkeby -- augmented:mainnet",
+    "deploy:bsc": "npm run compile && npm run hardhat:bsc -- augmented:mainnet",
     "deploy:bsc-test": "npm run compile && npm run hardhat:bsc-test -- augmented:mainnet",
+
+    "deploy:avalanche": "npm run compile && npm run hardhat:avalanche -- augmented:mainnet",
+    "deploy:ava-test": "npm run compile && npm run hardhat:ava-test -- augmented:mainnet",
+
+    "deploy:fantom": "npm run compile && npm run hardhat:fantom -- augmented:mainnet",
+    "deploy:fnt-test": "npm run compile && npm run hardhat:fnt-test -- augmented:mainnet",
+
+    "deploy:arbitrum": "npm run compile && npm run hardhat:arbitrum -- augmented:mainnet",
+    "deploy:arb-test": "npm run compile && npm run hardhat:arb-test -- augmented:mainnet",
+
+    "deploy:optimistic": "npm run compile && npm run hardhat:optimistic -- augmented:mainnet",
+    "deploy:opt-test": "npm run compile && npm run hardhat:opt-test -- augmented:mainnet",
+
+    "deploy:matic": "npm run compile && npm run hardhat:matic -- augmented:mainnet",
+    "deploy:mumbai": "npm run compile && npm run hardhat:mumbai -- augmented:mainnet",
+
     "verify:main": "npm run hardhat:main -- verify:verify-all-contracts",
     "verify:ropsten": "npm run hardhat:ropsten -- verify:verify-all-contracts",
     "verify:kovan": "npm run hardhat:kovan -- verify:verify-all-contracts",
     "verify:rinkeby": "npm run hardhat:rinkeby -- verify:verify-all-contracts",
+    "verify:bsc": "npm run hardhat:bsc -- verify:verify-all-contracts",
     "verify:bsc-test": "npm run hardhat:bsc-test -- verify:verify-all-contracts",
+
+    "verify:avalanche": "npm run hardhat:avalanche -- verify:verify-all-contracts",
+    "verify:ava-test": "npm run hardhat:ava-test -- verify:verify-all-contracts",
+
+    "verify:fantom": "npm run hardhat:fantom -- verify:verify-all-contracts",
+    "verify:fnt-test": "npm run hardhat:fnt-test -- verify:verify-all-contracts",
+
+    "verify:arbitrum": "npm run hardhat:arbitrum -- verify:verify-all-contracts",
+    "verify:arb-test": "npm run hardhat:arb-test -- verify:verify-all-contracts",
+
+    "verify:optimistic": "npm run hardhat:optimistic -- verify:verify-all-contracts",
+    "verify:opt-test": "npm run hardhat:opt-test -- verify:verify-all-contracts",
+
+    "verify:matic": "npm run hardhat:matic -- verify:verify-all-contracts",
+    "verify:mumbai": "npm run hardhat:mumbai -- verify:verify-all-contracts",
+
     "prettier:check": "npx prettier -c 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'",
     "prettier:write": "prettier --write 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/**/*.ts'  'test-suites/test-augmented/**/*.ts'"
   },
