@@ -1,6 +1,14 @@
-import { eContractid, IInterestRateStrategyParams, IReserveParams, ITokenNames, tEthereumAddress } from './types';
+import {
+  autoGas,
+  eContractid,
+  ePolygonNetwork,
+  IInterestRateStrategyParams,
+  IReserveParams,
+  ITokenNames,
+  tEthereumAddress,
+} from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
-import { addProxyToJsonDb, chunk, falsyOrZeroAddress, mustWaitTx, waitForTx } from './misc-utils';
+import { addProxyToJsonDb, chunk, DRE, falsyOrZeroAddress, mustWaitTx, waitForTx } from './misc-utils';
 import {
   getIChainlinkAggregator,
   getIInitializablePoolToken,
@@ -223,9 +231,10 @@ export const initReservesByHelper = async (
     for (let chunkIndex = 0; chunkIndex < chunkedInitInputParams.length; chunkIndex++) {
       const param = chunkedInitInputParams[chunkIndex];
       console.log(param);
+
       const tx3 = await waitForTx(
         await configurator.batchInitReserve(param, {
-          gasLimit: 5000000,
+          gasLimit: autoGas(DRE.network.name, 5000000),
         })
       );
 

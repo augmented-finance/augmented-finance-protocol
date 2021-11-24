@@ -7,7 +7,7 @@ import {
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
 import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress } from '../../helpers/types';
 import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
-import { loadPoolConfig, getWethAddress, getLendingRateOracles } from '../../helpers/configuration';
+import { loadPoolConfig, getLendingRateOracles } from '../../helpers/configuration';
 import { getIChainlinkAggregator, getIErc20Detailed, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 import { oneEther, WAD, ZERO_ADDRESS } from '../../helpers/constants';

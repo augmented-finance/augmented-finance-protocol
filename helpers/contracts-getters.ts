@@ -38,7 +38,6 @@ import {
   RewardConfiguratorFactory,
   MockPriceOracleFactory,
   XAGFTokenV1Factory,
-  AGFTokenV1Factory,
   TreasuryFactory,
   ReferralRewardPoolFactory,
   MockLendingPoolFactory,
@@ -198,13 +197,11 @@ export const getTokenAggregatorPairs = (
   if (aggregatorAddresses == undefined) {
     return [[], []];
   }
-  const { ETH, WETH, ...assetsAddressesWithoutEth } = allAssetsAddresses;
-  console.log(assetsAddressesWithoutEth);
 
   const assets: string[] = [];
   const aggregators: string[] = [];
 
-  for (const [tokenSymbol, tokenAddress] of Object.entries(assetsAddressesWithoutEth)) {
+  for (const [tokenSymbol, tokenAddress] of Object.entries(allAssetsAddresses)) {
     if (falsyOrZeroAddress(tokenAddress)) {
       continue;
     }

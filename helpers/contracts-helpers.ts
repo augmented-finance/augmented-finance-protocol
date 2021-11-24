@@ -170,7 +170,7 @@ export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T> | iParamsPerNe
   if (MAINNET_FORK) {
     return param[eEthereumNetwork.main]!;
   }
-  return param[network];
+  return param[network]!;
 };
 
 export const convertToCurrencyDecimals = async (tokenAddress: tEthereumAddress, amount: string) => {

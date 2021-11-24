@@ -5,7 +5,7 @@ import {
   deployPriceFeedUniEthPair,
   deployStakeTokenImpl,
 } from '../../helpers/contracts-deployments';
-import { eNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../../helpers/types';
+import { autoGas, eNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../../helpers/types';
 import {
   getIErc20Detailed,
   getIInitializableStakeToken,
@@ -212,7 +212,7 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
         console.log(param);
         const tx3 = await mustWaitTx(
           stakeConfigurator.batchInitStakeTokens(param, {
-            gasLimit: 4000000,
+            gasLimit: autoGas(network, 4000000),
           })
         );
 
