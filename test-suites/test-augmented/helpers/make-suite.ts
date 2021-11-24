@@ -70,7 +70,7 @@ export interface TestEnv {
   flashLiquidationAdapter: FlashLiquidationAdapter;
 }
 
-let buidlerevmSnapshotId: string = '0x1';
+let buidlerevmSnapshotId = '0x1';
 const setBuidlerevmSnapshotId = (id: string) => {
   buidlerevmSnapshotId = id;
 };
@@ -191,12 +191,14 @@ const revertHead = async () => {
   await evmRevert(buidlerevmSnapshotId);
 };
 
-export function makeSuite(name: string, tests: (testEnv: TestEnv) => void) {
+export function makeSuite(name: string, tests: (testEnv: TestEnv) => void): void {
   describe(name, () => {
     before(async () => {
       await setSnapshot();
     });
+
     tests(testEnv);
+
     after(async () => {
       await revertHead();
     });

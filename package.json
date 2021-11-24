@@ -59,6 +59,7 @@
     "test-pausable-augmented": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/pausable-augmented.spec.ts",
     "test-reward-rates": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/reward_rates.spec.ts",
     "test-compatibility": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/compatibility.spec.ts",
+    "test-calculate-apy": "MAINNET_FORK=false TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-apy-calculation/*.spec.ts",
     "test:main:check-list": "MAINNET_FORK=true TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/mainnet/check-list.spec.ts",
     "coverage": "TS_NODE_TRANSPILE_ONLY=1 hardhat compile --force && TS_NODE_TRANSPILE_ONLY=1 hardhat coverage --network coverage --testfiles \"test-suites/test-augmented/*.spec.ts\"",
     "test-deploy:fork": "MAINNET_FORK=true hardhat augmented:mainnet",
