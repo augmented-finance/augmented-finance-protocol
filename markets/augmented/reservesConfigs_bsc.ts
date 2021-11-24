@@ -2,7 +2,9 @@ import { oneRay } from '../../helpers/constants';
 import { IInterestRateStrategyParams, IMarketRates } from '../../helpers/types';
 import { assetReserve } from './rateStrategies';
 
+const ray = (n: number) => oneRay.multipliedBy(n).toFixed();
 const stableRate = (base: number) : IMarketRates => ({ borrowRate: ray(base) });
+
 export const BscStableBaseRates = {
   WBNB: stableRate(0.03),
   BTCB: stableRate(0.03),
@@ -41,7 +43,6 @@ export const BscStableBaseRates = {
   ALPHA: stableRate(0.05),
 }
 
-const ray = (n: number) => oneRay.multipliedBy(n).toFixed();
 const strategies = {
   S_80_0_8_200_10_200: <IInterestRateStrategyParams>{
     name: 'S_80_0_8_200_10_200',
