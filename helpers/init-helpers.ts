@@ -1,4 +1,5 @@
 import {
+  autoGas,
   eContractid,
   ePolygonNetwork,
   IInterestRateStrategyParams,
@@ -233,7 +234,7 @@ export const initReservesByHelper = async (
 
       const tx3 = await waitForTx(
         await configurator.batchInitReserve(param, {
-          gasLimit: Object.values(ePolygonNetwork).includes(<ePolygonNetwork>DRE.network.name) ? undefined : 5000000,
+          gasLimit: autoGas(DRE.network.name, 5000000),
         })
       );
 

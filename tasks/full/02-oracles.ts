@@ -45,11 +45,7 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
   let lroAddress = '';
   let poAddress = '';
 
-  const [aggregatorTokens, aggregators] = getTokenAggregatorPairs(
-    tokensToWatch,
-    chainlinkAggregators,
-    PriceOracle[network]
-  );
+  const [aggregatorTokens, aggregators] = getTokenAggregatorPairs(tokensToWatch, chainlinkAggregators);
 
   if (!newOracles) {
     lroAddress = await addressProvider.getLendingRateOracle();

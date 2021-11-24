@@ -14,7 +14,6 @@ const emergencyAdmins = [
   '0x8331Bd35089090249675D023804FC52b7FD18184',
   '0xE1FbbaBbd21764061734424d3F4f5e2C11101E96',
   '0x511EfaE41B0eA33Da847d16e13655009d0aB3Ed7',
-  '0x165576822b178b40D615F69d965Ef45c25e23ef9'
 ];
 
 const tokenRewardStable: ITokenRewardPoolParams = {
@@ -191,7 +190,6 @@ const rewardPoolsPolygonMain: IRewardPools = {
 }
 
 const USD_QUOTE: IPriceOracleConfig = {
-  QuoteName: 'USD',
   QuoteToken: USD_ADDRESS,
   QuoteValue: BigNumber.from(1e8),
 }

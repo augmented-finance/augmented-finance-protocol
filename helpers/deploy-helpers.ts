@@ -8,7 +8,7 @@ import {
   hasPreDeployedAddressController,
 } from './contracts-getters';
 import { falsyOrZeroAddress, addNamedToJsonDb, sleep, waitForTx, addProxyToJsonDb, DRE } from './misc-utils';
-import { eContractid, ePolygonNetwork, tEthereumAddress } from './types';
+import { autoGas, eContractid, tEthereumAddress } from './types';
 
 export const getDeployAccessController = async (): Promise<[boolean, boolean, MarketAccessController]> => {
   if (hasPreDeployedAddressController()) {
@@ -42,7 +42,7 @@ const initEncoder = new ethers.utils.Interface(['function initialize(address)'])
 export const setAndGetAddressAsProxy = async (ac: AccessController, id: AccessFlags, addr: tEthereumAddress) => {
   waitForTx(
     await ac.setAddressAsProxy(id, addr, {
-      gasLimit: Object.values(ePolygonNetwork).includes(<ePolygonNetwork>DRE.network.name) ? undefined : 2000000, //3kk
+      gasLimit: autoGas(DRE.network.name, 1000000),
     })
   );
   const proxyAddr = await waitForAddress(ac, id);
@@ -59,7 +59,7 @@ export const setAndGetAddressAsProxyWithInit = async (
 ) => {
   waitForTx(
     await ac.setAddressAsProxyWithInit(id, addr, data, {
-      gasLimit: Object.values(ePolygonNetwork).includes(<ePolygonNetwork>DRE.network.name) ? undefined : 2000000, //5kk
+      gasLimit: autoGas(DRE.network.name, 2000000),
     })
   );
   const proxyAddr = await waitForAddress(ac, id);

@@ -192,31 +192,18 @@ export const getTokenAggregatorPairs = (
   allAssetsAddresses: {
     [tokenSymbol: string]: tEthereumAddress;
   },
-  aggregatorAddresses: { [tokenSymbol: string]: tEthereumAddress },
-  quoteCurrency: string | IPriceOracleConfig
+  aggregatorAddresses: { [tokenSymbol: string]: tEthereumAddress }
 ): [string[], string[]] => {
   console.log(allAssetsAddresses);
   console.log(aggregatorAddresses);
   if (aggregatorAddresses == undefined) {
     return [[], []];
   }
-  let assetsWithoutQuoteCurrency: {
-    [tokenSymbol: string]: tEthereumAddress;
-  };
-  if (typeof quoteCurrency == 'string') {
-    assetsWithoutQuoteCurrency = _.omit(allAssetsAddresses, quoteCurrency);
-  } else if (quoteCurrency !== undefined) {
-    assetsWithoutQuoteCurrency = _.omit(allAssetsAddresses, quoteCurrency.QuoteName);
-  } else {
-    throw 'Quote Currency is undefined';
-  }
-
-  console.log(assetsWithoutQuoteCurrency);
 
   const assets: string[] = [];
   const aggregators: string[] = [];
 
-  for (const [tokenSymbol, tokenAddress] of Object.entries(assetsWithoutQuoteCurrency)) {
+  for (const [tokenSymbol, tokenAddress] of Object.entries(allAssetsAddresses)) {
     if (falsyOrZeroAddress(tokenAddress)) {
       continue;
     }

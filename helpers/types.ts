@@ -34,6 +34,18 @@ export enum ePolygonNetwork {
   optimistic = 'optimistic',
 }
 
+export const isPolygonNetwork = (name: string) => {
+  return ePolygonNetwork[name] !== undefined;
+};
+
+export const isAutoGasNetwork = (name: string) => {
+  return isPolygonNetwork(name);
+};
+
+export const autoGas = (name: string, n: number) => {
+  return isAutoGasNetwork(name) ? undefined : n;
+};
+
 export enum EthereumNetworkNames {
   kovan = 'kovan',
   ropsten = 'ropsten',
@@ -502,7 +514,6 @@ export interface IMocksConfig {
 }
 
 export interface IPriceOracleConfig {
-  QuoteName: string;
   QuoteToken: tEthereumAddress;
   QuoteValue: BigNumber;
 }
