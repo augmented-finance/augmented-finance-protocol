@@ -21,7 +21,7 @@ Augmented Finance is on a mission to help everyone achieve and secure financial 
 |Protocol Users | 69% |
 |Referral Rewards | 1% |
 |Dev Fund | 10% |
-|Ecosystem Fund | 10% |
+|Ecosystem Fund | 20% |
 
 **Augmented Finance’s tokenomics** is engineered to benefit the protocol's users, increase the protocol’s total value locked (TVL), and bolster the protocol's resilience through all market cycles.
 
