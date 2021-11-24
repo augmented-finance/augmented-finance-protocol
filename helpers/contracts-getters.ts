@@ -38,7 +38,6 @@ import {
   RewardConfiguratorFactory,
   MockPriceOracleFactory,
   XAGFTokenV1Factory,
-  AGFTokenV1Factory,
   TreasuryFactory,
   ReferralRewardPoolFactory,
   MockLendingPoolFactory,
@@ -62,7 +61,7 @@ import { IERC20DetailedFactory } from '../types/IERC20DetailedFactory';
 
 import { MockTokenMap } from './contracts-helpers';
 import { falsyOrZeroAddress, getFirstSigner, getFromJsonDb, hasInJsonDb } from './misc-utils';
-import { DefaultTokenSymbols, eContractid, IPriceOracleConfig, PoolConfiguration, tEthereumAddress } from './types';
+import { DefaultTokenSymbols, eContractid, PoolConfiguration, tEthereumAddress } from './types';
 import { ILendingPoolAaveCompatibleFactory } from '../types/ILendingPoolAaveCompatibleFactory';
 import { IManagedLendingPoolFactory } from '../types/IManagedLendingPoolFactory';
 import { IAaveLendingPoolFactory } from '../types/IAaveLendingPoolFactory';
@@ -80,7 +79,6 @@ import { IUniswapV2Router02Factory } from '../types/IUniswapV2Router02Factory';
 import { IUniswapV2FactoryFactory } from '../types/IUniswapV2FactoryFactory';
 import { IUniswapV2PairFactory } from '../types/IUniswapV2PairFactory';
 import { IRevisionFactory } from '../types/IRevisionFactory';
-import _ from 'lodash';
 
 const getAddr = async (id: eContractid) => {
   const entry = await getFromJsonDb(id);

@@ -31,7 +31,6 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
   const fallbackOracle = getParamPerNetwork(FallbackOracle, network);
   const reserveAssets = getParamPerNetwork(ReserveAssets, network);
   const chainlinkAggregators = getParamPerNetwork(ChainlinkAggregator, network);
-  const dependencies = getParamPerNetwork(poolConfig.Dependencies, network);
 
   const tokensToWatch: SymbolMap<string> = {
     ...reserveAssets,

@@ -5,7 +5,7 @@ import {
   deployRewardConfiguratorImpl,
   deployXAGFTokenV1Impl,
 } from '../../helpers/contracts-deployments';
-import { eContractid, eNetwork, ePolygonNetwork, ICommonConfiguration } from '../../helpers/types';
+import { autoGas, eContractid, eNetwork, ICommonConfiguration } from '../../helpers/types';
 import {
   getAGFTokenImpl,
   getOracleRouter,
@@ -175,7 +175,11 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
     }
 
     if (freshStart && (!continuation || falsyOrZeroAddress((await booster.getBoostPool()).pool))) {
-      await mustWaitTx(configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false));
+      await mustWaitTx(
+        configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false, {
+          gasLimit: autoGas(localBRE.network.name, 2000000),
+        })
+      );
       console.log('Boost pool: ', xagfAddr);
     }
   }
