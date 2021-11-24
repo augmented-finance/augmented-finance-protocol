@@ -19,11 +19,19 @@ export enum eEthereumNetwork {
 export enum eOtherNetwork {
   bsc = 'bsc',
   bsc_testnet = 'bsc_testnet',
+  avalanche_testnet = 'avalanche_testnet',
+  avalanche = 'avalanche',
+  fantom_testnet = 'fantom_testnet',
+  fantom = 'fantom',
 }
 
 export enum ePolygonNetwork {
   matic = 'matic',
   mumbai = 'mumbai',
+  arbitrum_testnet = 'arbitrum_testnet',
+  arbitrum = 'arbitrum',
+  optimistic_testnet = 'optimistic_testnet',
+  optimistic = 'optimistic',
 }
 
 export enum EthereumNetworkNames {
@@ -270,6 +278,12 @@ export interface iAssetBase<T> {
   CETH: T;
 
   WBNB: T;
+
+  WAVAX: T;
+
+  WFTM: T;
+
+  WMATIC: T;
 }
 
 const tokenSymbols: iAssetBase<string> = {
@@ -293,6 +307,12 @@ const tokenSymbols: iAssetBase<string> = {
   CETH: '',
 
   WBNB: '',
+
+  WAVAX: '',
+
+  WFTM: '',
+
+  WMATIC: '',
 };
 
 type testAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC' | 'AAVE' | 'LINK';
@@ -300,6 +320,14 @@ type testOnlyAssets = 'AAVE' | 'LINK';
 
 type bscOnlyAssets = 'WBNB';
 type bscAssets = 'DAI' | 'USDT' | 'USDC' | bscOnlyAssets;
+
+type avalancheOnlyAssets = 'WAVAX';
+type avalancheAssets = 'USDT' | avalancheOnlyAssets;
+
+type fantomOnlyAssets = 'WFTM';
+type fantomAssets = 'USDT' | fantomOnlyAssets;
+
+type optimisticAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC';
 
 export type iAssetsWithoutUSD<T> = Omit<iAssetBase<T>, 'USD'>;
 export type iAssetsWithoutUSDOpt<T> = OmitOpt<iAssetBase<T>, 'USD'>;
@@ -321,6 +349,9 @@ export type OmitOpt<T, K extends keyof any> = PickOpt<T, Exclude<keyof T, K>>;
 export type iTestPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, testAssets>;
 export type iEthereumPoolAssets<T> = Omit<iAssetsWithoutUSD<T>, testOnlyAssets | bscOnlyAssets>;
 export type iBinancePoolAssets<T> = Pick<iAssetsWithoutUSD<T>, bscAssets>;
+export type iAvalanchePoolAssets<T> = Pick<iAssetsWithoutUSD<T>, avalancheAssets>;
+export type iFantomPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, fantomAssets>;
+export type iOptimisticPoolAssets<T> = Pick<iAssetsWithoutUSD<T>, optimisticAssets>;
 
 export type iAssetAggregatorBase<T> = iAssetBase<T>;
 
@@ -363,7 +394,8 @@ export type iParamsPerNetworkOpt<T> = AllOpt<iParamsPerNetwork<T>>;
 
 export interface iParamsPerNetworkAll<T>
   extends iEthereumParamsPerNetwork<T>,
-    /* iPolygonParamsPerNetwork<T>, */ iParamsPerOtherNetwork<T> {}
+    iPolygonParamsPerNetwork<T>,
+    iParamsPerOtherNetwork<T> {}
 
 export type iParamsPerNetworkGroup<T> =
   | iEthereumParamsPerNetwork<T>
@@ -383,11 +415,19 @@ export interface iEthereumParamsPerNetwork<T> {
 export interface iPolygonParamsPerNetwork<T> {
   [ePolygonNetwork.matic]: T;
   [ePolygonNetwork.mumbai]: T;
+  [ePolygonNetwork.arbitrum_testnet]: T;
+  [ePolygonNetwork.arbitrum]: T;
+  [ePolygonNetwork.optimistic_testnet]: T;
+  [ePolygonNetwork.optimistic]: T;
 }
 
 export interface iParamsPerOtherNetwork<T> {
   [eOtherNetwork.bsc]: T;
   [eOtherNetwork.bsc_testnet]: T;
+  [eOtherNetwork.avalanche]: T;
+  [eOtherNetwork.avalanche_testnet]: T;
+  [eOtherNetwork.fantom]: T;
+  [eOtherNetwork.fantom_testnet]: T;
 }
 
 export enum RateMode {
@@ -408,6 +448,7 @@ export interface IMocksConfig {
 }
 
 export interface IPriceOracleConfig {
+  QuoteName: string;
   QuoteToken: tEthereumAddress;
   QuoteValue: BigNumber;
 }
@@ -570,6 +611,6 @@ export interface IAgfLPParams {
 }
 
 export interface IDependencies {
-  WrappedNative?: string;
+  WrappedNative: string;
   UniswapV2Router?: tEthereumAddress;
 }

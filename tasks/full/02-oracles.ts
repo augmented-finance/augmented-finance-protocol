@@ -7,7 +7,7 @@ import {
 import { setInitialMarketRatesInRatesOracleByHelper } from '../../helpers/oracles-helpers';
 import { ICommonConfiguration, eNetwork, SymbolMap, tEthereumAddress } from '../../helpers/types';
 import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
-import { loadPoolConfig, getWethAddress, getLendingRateOracles } from '../../helpers/configuration';
+import { loadPoolConfig, getLendingRateOracles } from '../../helpers/configuration';
 import { getIChainlinkAggregator, getIErc20Detailed, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
 import { oneEther, WAD, ZERO_ADDRESS } from '../../helpers/constants';
@@ -31,6 +31,7 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
   const fallbackOracle = getParamPerNetwork(FallbackOracle, network);
   const reserveAssets = getParamPerNetwork(ReserveAssets, network);
   const chainlinkAggregators = getParamPerNetwork(ChainlinkAggregator, network);
+  const dependencies = getParamPerNetwork(poolConfig.Dependencies, network);
 
   const tokensToWatch: SymbolMap<string> = {
     ...reserveAssets,
@@ -44,7 +45,11 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
   let lroAddress = '';
   let poAddress = '';
 
-  const [aggregatorTokens, aggregators] = getTokenAggregatorPairs(tokensToWatch, chainlinkAggregators);
+  const [aggregatorTokens, aggregators] = getTokenAggregatorPairs(
+    tokensToWatch,
+    chainlinkAggregators,
+    PriceOracle[network]
+  );
 
   if (!newOracles) {
     lroAddress = await addressProvider.getLendingRateOracle();

@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { eEthereumNetwork, eNetwork } from '../../helpers/types';
+import { eEthereumNetwork, eNetwork, ePolygonNetwork } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import {
   getExternalsFromJsonDb,
@@ -21,6 +21,9 @@ task('full:access-test', 'Tests access to mutable functions of the deployed cont
     // const poolConfig = loadPoolConfig(pool);
     switch (network) {
       case eEthereumNetwork.kovan:
+        console.log('Access test is not supported for:', network);
+        return;
+      case ePolygonNetwork.arbitrum_testnet:
         console.log('Access test is not supported for:', network);
         return;
     }
