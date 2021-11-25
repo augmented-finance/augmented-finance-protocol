@@ -5,7 +5,7 @@ import { HardhatUserConfig } from 'hardhat/types';
 import { accounts } from './test-wallets.js';
 import { eEthereumNetwork, eNetwork, eOtherNetwork, ePolygonNetwork } from './helpers/types';
 import { BUIDLEREVM_CHAINID, COVERAGE_CHAINID } from './helpers/buidler-constants';
-import { NETWORKS_RPC_URL, NETWORKS_DEFAULT_GAS } from './helper-hardhat-config';
+import { NETWORKS_RPC_URL, NETWORKS_DEFAULT_GAS, FORK_RPC_URL } from './helper-hardhat-config';
 
 require('dotenv').config();
 
@@ -80,22 +80,23 @@ const mainnetFork = () => {
   if (!url) {
     throw new Error('Unknown network to fork: ' + FORK);
   }
-  if (FORK == eOtherNetwork.bsc) {
-    console.log('===========================================================');
-    console.log('===========================================================');
-    console.log('WARNING!  Forking of BSC requires a special workaround');
+  if (FORK_RPC_URL[FORK]) {
+    url = FORK_RPC_URL[FORK];
+  } else if (FORK == eOtherNetwork.bsc) {
+    console.log('==================================================================================');
+    console.log('==================================================================================');
+    console.log('WARNING!  Forking of BSC requires a 3rd party provider or a special workaround');
     console.log('See here: https://github.com/nomiclabs/hardhat/issues/1236');
-    console.log('===========================================================');
-    console.log('===========================================================');
+    console.log('==================================================================================');
+    console.log('==================================================================================');
   }
 
   const blockNumbers = {
     [eEthereumNetwork.main]: 13283829, // 12914827
   }
-  let blockNumber = blockNumbers[FORK];
 
   return {
-    blockNumber: blockNumber,
+    blockNumber: blockNumbers[FORK],
     url: url,
   }
 };

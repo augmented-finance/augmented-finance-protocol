@@ -12,7 +12,6 @@ import { usingTenderly } from '../../helpers/tenderly-utils';
 import { exit } from 'process';
 import { BigNumber } from 'ethers';
 import { getDeploySteps } from '../helpers/deploy-steps';
-import { workaroundForBSCFork } from '../helpers/bsc-fork';
 
 task('augmented:mainnet', 'Deploy enviroment')
   .addFlag('incremental', 'Incremental deployment')
@@ -25,7 +24,7 @@ task('augmented:mainnet', 'Deploy enviroment')
     const POOL_NAME = ConfigNames.Augmented;
     await DRE.run('set-DRE');
 
-    await workaroundForBSCFork();
+    // await workaroundForBSCFork();
 
     const deployer = await getFirstSigner();
     // if (isForkNetwork()) {
