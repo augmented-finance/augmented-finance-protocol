@@ -5,7 +5,7 @@ import {
   deployRewardConfiguratorImpl,
   deployXAGFTokenV1Impl,
 } from '../../helpers/contracts-deployments';
-import { autoGas, eContractid, eNetwork, ICommonConfiguration } from '../../helpers/types';
+import { eContractid, ICommonConfiguration } from '../../helpers/types';
 import {
   getAGFTokenImpl,
   getOracleRouter,
@@ -15,7 +15,7 @@ import {
   getStaticPriceOracle,
   getXAGFTokenV1Impl,
 } from '../../helpers/contracts-getters';
-import { falsyOrZeroAddress, waitTx, mustWaitTx, addContractAddrToJsonDb } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, waitTx, mustWaitTx, addContractAddrToJsonDb, autoGas } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import {
   getDeployAccessController,
@@ -32,7 +32,6 @@ import { deployUniAgfEth } from '../../helpers/init-helpers';
 deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAGF tokens`, __dirname).setAction(
   async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
-    const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
     const {
       Names,
@@ -107,7 +106,7 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
     }
 
     if (UniV2EthPair) {
-      const dependencies = getParamPerNetwork(Dependencies, network);
+      const dependencies = getParamPerNetwork(Dependencies);
       await deployUniAgfEth(addressProvider, agfAddr, dependencies.UniswapV2Router, newAgfToken);
     }
 
@@ -177,7 +176,7 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
     if (freshStart && (!continuation || falsyOrZeroAddress((await booster.getBoostPool()).pool))) {
       await mustWaitTx(
         configurator.configureRewardBoost(xagfAddr, true, xagfAddr, false, {
-          gasLimit: autoGas(localBRE.network.name, 2000000),
+          gasLimit: autoGas(2000000),
         })
       );
       console.log('Boost pool: ', xagfAddr);

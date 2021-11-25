@@ -20,7 +20,6 @@ task('external:deploy-new-asset', 'Deploy new reserve(s)')
   .addFlag('verify', 'Verify contracts at Etherscan')
   .addOptionalVariadicPositionalParam('symbols', `Asset symbol(s)`)
   .setAction(async ({ verify, symbols }, localBRE) => {
-    const network = localBRE.network.name;
     throw 'not implemented';
     //     if (!isSymbolValid(symbol, network as eEthereumNetwork)) {
     //       throw new Error(
@@ -34,7 +33,6 @@ task('external:deploy-new-asset', 'Deploy new reserve(s)')
     //     }
     //     setDRE(localBRE);
     //     const strategyParams = reserveConfigs['strategy' + symbol];
-    //     const reserveAssetAddress = cfg.ReserveAssets[localBRE.network.name][symbol];
     //     const deployDepositToken = chooseDepositTokenDeployment(strategyParams.depositTokenImpl);
     //     const addressProvider = await getMarketAddressController(LENDING_POOL_ADDRESS_PROVIDER[network]);
     //     const poolAddress = await addressProvider.getLendingPool();

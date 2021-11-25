@@ -30,7 +30,7 @@ import {
   deployAllMockAggregators,
   setInitialMarketRatesInRatesOracleByHelper,
 } from '../../helpers/oracles-helpers';
-import { DRE, waitForTx } from '../../helpers/misc-utils';
+import { DRE, isForkNetwork, waitForTx } from '../../helpers/misc-utils';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
 import { getLendingPoolProxy, getTokenAggregatorPairs } from '../../helpers/contracts-getters';
 import { AccessFlags } from '../../helpers/access-flags';
@@ -199,7 +199,7 @@ before(async () => {
   await rawBRE.run('set-DRE');
   const [deployer, secondaryWallet] = await getEthersSigners();
 
-  if (process.env.MAINNET_FORK === 'true') {
+  if (isForkNetwork()) {
     await rawBRE.run('augmented:mainnet');
   } else {
     console.log('-> Deploying test environment...');

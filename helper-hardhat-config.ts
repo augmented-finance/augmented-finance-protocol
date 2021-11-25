@@ -4,6 +4,7 @@ import {
   eOtherNetwork,
   ePolygonNetwork,
   iParamsPerNetwork,
+  iParamsPerNetworkOpt,
 } from './helpers/types';
 
 require('dotenv').config();
@@ -11,6 +12,7 @@ require('dotenv').config();
 const INFURA_KEY = process.env.INFURA_KEY || '';
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
 const TENDERLY_FORK_ID = process.env.TENDERLY_FORK_ID || '';
+const BSC_GETBLOCK_KEY = process.env.BSC_GETBLOCK_KEY || '';
 
 const GWEI = 1000 * 1000 * 1000;
 
@@ -43,6 +45,10 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [ePolygonNetwork.mumbai]: 'https://rpc-mumbai.maticvigil.com',
   [ePolygonNetwork.matic]: 'https://rpc-mainnet.matic.network',
 };
+
+export const FORK_RPC_URL: iParamsPerNetworkOpt<string> = {
+  [eOtherNetwork.bsc]: BSC_GETBLOCK_KEY ? 'https://bsc.getblock.io/mainnet/?api_key=' + BSC_GETBLOCK_KEY : undefined,
+}
 
 const gasPrice = (def: number) => (process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : def) * GWEI;
 

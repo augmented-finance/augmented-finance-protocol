@@ -3,7 +3,7 @@ import low from 'lowdb';
 import FileSync from 'lowdb/adapters/FileSync';
 import { Contract, Wallet, ContractTransaction } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { tEthereumAddress } from './types';
+import { eNetwork, isAutoGasNetwork, tEthereumAddress } from './types';
 import { isAddress } from 'ethers/lib/utils';
 import { isZeroAddress } from 'ethereumjs-util';
 import { stringifyArgs } from './contract-verification';
@@ -17,6 +17,28 @@ export let DRE: HardhatRuntimeEnvironment;
 
 export const setDRE = (_DRE: HardhatRuntimeEnvironment) => {
   DRE = _DRE;
+};
+
+export const isForkNetwork = (): boolean => {
+  return process.env.FORK ? true : false;
+};
+
+export const getNetworkName = (x?: string | HardhatRuntimeEnvironment): eNetwork => {
+  const FORK = process.env.FORK;
+  if (FORK) {
+    return <eNetwork>FORK;
+  }
+  if (typeof x === 'string') {
+    return <eNetwork>x;
+  }
+  if (x === undefined) {
+    return <eNetwork>DRE.network.name;
+  }
+  return <eNetwork>x.network.name;
+};
+
+export const autoGas = (n: number, name?: string) => {
+  return isAutoGasNetwork(name ?? DRE.network.name) ? undefined : n;
 };
 
 export const sleep = (milliseconds: number) => {
@@ -155,8 +177,7 @@ export const addContractToJsonDb = async (
   verifyArgs?: any[]
 ) => {
   const currentNetwork = DRE.network.name;
-  const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-  if (MAINNET_FORK || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
+  if (isForkNetwork() || (currentNetwork !== 'hardhat' && !currentNetwork.includes('coverage'))) {
     console.log(`*** ${contractId} ***\n`);
     console.log(`Network: ${currentNetwork}`);
     console.log(`tx: ${contractInstance.deployTransaction.hash}`);

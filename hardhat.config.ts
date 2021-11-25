@@ -5,7 +5,7 @@ import { HardhatUserConfig } from 'hardhat/types';
 import { accounts } from './test-wallets.js';
 import { eEthereumNetwork, eNetwork, eOtherNetwork, ePolygonNetwork } from './helpers/types';
 import { BUIDLEREVM_CHAINID, COVERAGE_CHAINID } from './helpers/buidler-constants';
-import { NETWORKS_RPC_URL, NETWORKS_DEFAULT_GAS } from './helper-hardhat-config';
+import { NETWORKS_RPC_URL, NETWORKS_DEFAULT_GAS, FORK_RPC_URL } from './helper-hardhat-config';
 
 require('dotenv').config();
 
@@ -26,7 +26,8 @@ const DEFAULT_GAS_MUL = 2;
 const HARDFORK = 'istanbul';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
-const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+const FORK = process.env.FORK;
+const IS_FORK = FORK ? true : false;
 
 const KEY_SEL = process.env.KEY_SEL || '';
 
@@ -36,7 +37,7 @@ const keySelector = (keyName: string) => {
 
 const ETHERSCAN_KEY = keySelector('ETHERSCAN_KEY') || '';
 const COINMARKETCAP_KEY = keySelector('COINMARKETCAP_KEY') || '';
-const MNEMONIC_MAIN = keySelector('MNEMONIC_MAIN') || MNEMONIC;
+const MNEMONIC_MAIN = IS_FORK ? MNEMONIC : keySelector('MNEMONIC_MAIN') || MNEMONIC;
 
 // Prevent to load scripts before compilation and typechain
 if (!SKIP_LOAD) {
@@ -69,13 +70,36 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number, mnemon
   },
 });
 
-const mainnetFork = MAINNET_FORK
-  ? {
-      blockNumber: 13283829,
-      // blockNumber: 12914827,
-      url: NETWORKS_RPC_URL['main'],
-    }
-  : undefined;
+
+
+const mainnetFork = () => {
+  if (!FORK) {
+    return undefined;
+  }
+  let url = NETWORKS_RPC_URL[FORK];
+  if (!url) {
+    throw new Error('Unknown network to fork: ' + FORK);
+  }
+  if (FORK_RPC_URL[FORK]) {
+    url = FORK_RPC_URL[FORK];
+  } else if (FORK == eOtherNetwork.bsc) {
+    console.log('==================================================================================');
+    console.log('==================================================================================');
+    console.log('WARNING!  Forking of BSC requires a 3rd party provider or a special workaround');
+    console.log('See here: https://github.com/nomiclabs/hardhat/issues/1236');
+    console.log('==================================================================================');
+    console.log('==================================================================================');
+  }
+
+  const blockNumbers = {
+    [eEthereumNetwork.main]: 13283829, // 12914827
+  }
+
+  return {
+    blockNumber: blockNumbers[FORK],
+    url: url,
+  }
+};
 
 const buidlerConfig: HardhatUserConfig = {
   abiExporter: {
@@ -96,14 +120,14 @@ const buidlerConfig: HardhatUserConfig = {
         version: '0.6.12',
         settings: {
           optimizer: { enabled: true, runs: 200 },
-          evmVersion: 'istanbul',
+          evmVersion: HARDFORK,
         },
       },
       {
         version: '0.8.4',
         settings: {
           optimizer: { enabled: true, runs: 200 },
-          evmVersion: 'istanbul',
+          evmVersion: HARDFORK,
         },
       },
     ],
@@ -131,7 +155,7 @@ const buidlerConfig: HardhatUserConfig = {
     kovan: getCommonNetworkConfig(eEthereumNetwork.kovan, 42),
     ropsten: getCommonNetworkConfig(eEthereumNetwork.ropsten, 3),
     rinkeby: getCommonNetworkConfig(eEthereumNetwork.rinkeby, 4),
-    main: getCommonNetworkConfig(eEthereumNetwork.main, 1, MAINNET_FORK ? MNEMONIC : MNEMONIC_MAIN),
+    main: getCommonNetworkConfig(eEthereumNetwork.main, 1, MNEMONIC_MAIN),
     tenderlyMain: getCommonNetworkConfig(eEthereumNetwork.tenderlyMain, 3030),
     bsc_testnet: getCommonNetworkConfig(eOtherNetwork.bsc_testnet, 97),
     bsc: getCommonNetworkConfig(eOtherNetwork.bsc, 56, MNEMONIC_MAIN),
@@ -146,7 +170,7 @@ const buidlerConfig: HardhatUserConfig = {
     matic: getCommonNetworkConfig(ePolygonNetwork.matic, 137, MNEMONIC_MAIN),
     mumbai: getCommonNetworkConfig(ePolygonNetwork.mumbai, 80001),
     hardhat: {
-      hardfork: 'istanbul',
+      hardfork: HARDFORK,
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
       gas: DEFAULT_BLOCK_GAS_LIMIT,
       gasPrice: 8000000000,
@@ -157,7 +181,7 @@ const buidlerConfig: HardhatUserConfig = {
         privateKey: secretKey,
         balance,
       })),
-      forking: mainnetFork,
+      forking: mainnetFork(),
     },
     // docker: {
     //   url: 'http://hardhat-node:8545',

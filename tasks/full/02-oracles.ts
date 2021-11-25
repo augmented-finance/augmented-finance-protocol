@@ -17,7 +17,6 @@ import { BigNumber } from 'ethers';
 
 deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async ({ verify, pool }, DRE) => {
   await DRE.run('set-DRE');
-  const network = <eNetwork>DRE.network.name;
   const poolConfig = loadPoolConfig(pool);
   const {
     Mocks: { UsdAddress },
@@ -27,10 +26,10 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
     ChainlinkAggregator,
     AGF: { DefaultPriceEth: AgfDefaultPriceEth },
   } = poolConfig as ICommonConfiguration;
-  const priceOracle = getParamPerNetwork(PriceOracle, network);
-  const fallbackOracle = getParamPerNetwork(FallbackOracle, network);
-  const reserveAssets = getParamPerNetwork(ReserveAssets, network);
-  const chainlinkAggregators = getParamPerNetwork(ChainlinkAggregator, network);
+  const priceOracle = getParamPerNetwork(PriceOracle);
+  const fallbackOracle = getParamPerNetwork(FallbackOracle);
+  const reserveAssets = getParamPerNetwork(ReserveAssets);
+  const chainlinkAggregators = getParamPerNetwork(ChainlinkAggregator);
 
   const tokensToWatch: SymbolMap<string> = {
     ...reserveAssets,
@@ -111,9 +110,9 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
         const getter = await getIChainlinkAggregator(aggregators[i]);
         try {
           await getter.latestAnswer();
-          console.error('\tGot price from ', getter.address, 'for', aggregatorTokens[i]);
-        } catch {
-          console.error('\tFailed to get price from ', getter.address, 'for', aggregatorTokens[i]);
+          console.error('\tGot price from', getter.address, 'for', aggregatorTokens[i]);
+        } catch (err) {
+          console.error('\tFailed to get price from', getter.address, 'for', aggregatorTokens[i], '\n', err);
           hasErrors = true;
         }
       }

@@ -10,10 +10,9 @@ import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 deployTask(`full:deploy-weth-gateway`, `Deploy native currency gateway`, __dirname).setAction(
   async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
-    const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const dependencies = getParamPerNetwork(poolConfig.Dependencies, network);
-    const reserveAssets = getParamPerNetwork(poolConfig.ReserveAssets, network);
+    const dependencies = getParamPerNetwork(poolConfig.Dependencies);
+    const reserveAssets = getParamPerNetwork(poolConfig.ReserveAssets);
 
     if (!dependencies.WrappedNative) {
       console.log(`Native currency gateway skipped`);

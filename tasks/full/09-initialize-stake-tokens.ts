@@ -5,7 +5,7 @@ import {
   deployPriceFeedUniEthPair,
   deployStakeTokenImpl,
 } from '../../helpers/contracts-deployments';
-import { autoGas, eNetwork, ICommonConfiguration, StakeMode, tEthereumAddress } from '../../helpers/types';
+import { ICommonConfiguration, StakeMode, tEthereumAddress } from '../../helpers/types';
 import {
   getIErc20Detailed,
   getIInitializableStakeToken,
@@ -15,7 +15,7 @@ import {
   getStaticPriceOracle,
   getWETHGateway,
 } from '../../helpers/contracts-getters';
-import { addProxyToJsonDb, chunk, falsyOrZeroAddress, mustWaitTx, waitTx } from '../../helpers/misc-utils';
+import { addProxyToJsonDb, autoGas, chunk, falsyOrZeroAddress, mustWaitTx, waitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { BigNumberish } from 'ethers';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
@@ -26,7 +26,6 @@ import { getUniAgfEth } from '../../helpers/init-helpers';
 deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dirname).setAction(
   async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
-    const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
@@ -37,13 +36,13 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
       Dependencies,
       AGF: { UniV2EthPair },
     } = poolConfig as ICommonConfiguration;
-    const dependencies = getParamPerNetwork(Dependencies, network);
+    const dependencies = getParamPerNetwork(Dependencies);
 
     const stakeConfigurator = await getStakeConfiguratorImpl(
       await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
     );
 
-    const reserveAssets = getParamPerNetwork(ReserveAssets, network);
+    const reserveAssets = getParamPerNetwork(ReserveAssets);
     const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
     let initParams: {
       stakeTokenImpl: string;
@@ -211,7 +210,7 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
         console.log(param);
         const tx3 = await mustWaitTx(
           stakeConfigurator.batchInitStakeTokens(param, {
-            gasLimit: autoGas(network, 4000000),
+            gasLimit: autoGas(4000000),
           })
         );
 

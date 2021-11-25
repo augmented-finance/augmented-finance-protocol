@@ -2,15 +2,8 @@ import { Contract, Signer, utils, ethers, BigNumberish, Overrides } from 'ethers
 import { signTypedData_v4 } from 'eth-sig-util';
 import { fromRpcSig, ECDSASignature } from 'ethereumjs-util';
 import BigNumber from 'bignumber.js';
-import { DRE, falsyOrZeroAddress, getFromJsonDb, addContractToJsonDb, waitForTx } from './misc-utils';
-import {
-  tEthereumAddress,
-  tStringTokenSmallUnits,
-  eEthereumNetwork,
-  iParamsPerNetwork,
-  eNetwork,
-  iParamsPerNetworkOpt,
-} from './types';
+import { DRE, falsyOrZeroAddress, getFromJsonDb, addContractToJsonDb, waitForTx, getNetworkName } from './misc-utils';
+import { tEthereumAddress, tStringTokenSmallUnits, iParamsPerNetwork, eNetwork, iParamsPerNetworkOpt } from './types';
 import { MintableERC20 } from '../types/MintableERC20';
 import { Artifact } from 'hardhat/types';
 import { getIErc20Detailed } from './contracts-getters';
@@ -165,12 +158,8 @@ export const linkBytecode = (artifact: Artifact, libraries: any) => {
   return bytecode;
 };
 
-export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T> | iParamsPerNetworkOpt<T>, network: eNetwork): T => {
-  const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-  if (MAINNET_FORK) {
-    return param[eEthereumNetwork.main]!;
-  }
-  return param[network]!;
+export const getParamPerNetwork = <T>(param: iParamsPerNetwork<T> | iParamsPerNetworkOpt<T>, network?: eNetwork): T => {
+  return param[getNetworkName(network)]!;
 };
 
 export const convertToCurrencyDecimals = async (tokenAddress: tEthereumAddress, amount: string) => {

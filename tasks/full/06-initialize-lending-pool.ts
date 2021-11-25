@@ -1,7 +1,7 @@
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { deployTreasuryImpl } from '../../helpers/contracts-deployments';
 import { loadPoolConfig } from '../../helpers/configuration';
-import { eNetwork, ICommonConfiguration } from '../../helpers/types';
+import { ICommonConfiguration } from '../../helpers/types';
 import { initReservesByHelper, configureReservesByHelper } from '../../helpers/init-helpers';
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
 import { AccessFlags } from '../../helpers/access-flags';
@@ -12,16 +12,15 @@ import { deployTask } from '../helpers/deploy-steps';
 deployTask('full:initialize-lending-pool', 'Initialize lending pool and configure reserves', __dirname).setAction(
   async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
-    const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
     const { Names, ReserveAssets, ReserveAssetsOpt, ReservesConfig } = poolConfig as ICommonConfiguration;
 
-    const reserveAssets = getParamPerNetwork(ReserveAssets, network);
+    const reserveAssets = getParamPerNetwork(ReserveAssets);
     if (!reserveAssets) {
       throw 'Reserve assets are undefined. Check configuration.';
     }
-    const reserveAssetsOpt = getParamPerNetwork(ReserveAssetsOpt, network);
-    const reservesConfig = getParamPerNetwork(ReservesConfig, network);
+    const reserveAssetsOpt = getParamPerNetwork(ReserveAssetsOpt);
+    const reservesConfig = getParamPerNetwork(ReservesConfig);
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 

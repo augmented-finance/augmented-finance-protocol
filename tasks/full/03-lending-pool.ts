@@ -3,7 +3,7 @@ import {
   deployLendingPoolConfiguratorImpl,
   deployLendingPoolImpl,
 } from '../../helpers/contracts-deployments';
-import { eNetwork, ICommonConfiguration, LPFeature } from '../../helpers/types';
+import { ICommonConfiguration, LPFeature } from '../../helpers/types';
 import { falsyOrZeroAddress, getFirstSigner, waitTx } from '../../helpers/misc-utils';
 import { getIManagedLendingPool, getLendingPoolProxy } from '../../helpers/contracts-getters';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
@@ -16,10 +16,9 @@ import { deployTask } from '../helpers/deploy-steps';
 deployTask('full:deploy-lending-pool', 'Deploy lending pool', __dirname).setAction(
   async ({ verify, pool }, DRE: HardhatRuntimeEnvironment) => {
     await DRE.run('set-DRE');
-    const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
     const { LendingDisableFeatures } = poolConfig as ICommonConfiguration;
-    const disableFeatures = getParamPerNetwork(LendingDisableFeatures, network);
+    const disableFeatures = getParamPerNetwork(LendingDisableFeatures);
 
     const deployer = await getFirstSigner();
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();

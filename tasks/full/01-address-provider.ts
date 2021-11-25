@@ -3,7 +3,7 @@ import {
   deployAddressesProviderRegistry,
   deployMarketAccessControllerNoSave,
 } from '../../helpers/contracts-deployments';
-import { eContractid, eNetwork } from '../../helpers/types';
+import { eContractid } from '../../helpers/types';
 import { loadPoolConfig } from '../../helpers/configuration';
 import { falsyOrZeroAddress, getFirstSigner, getSigner, mustWaitTx, waitForTx, waitTx } from '../../helpers/misc-utils';
 import { getAddressesProviderRegistry } from '../../helpers/contracts-getters';
@@ -17,7 +17,6 @@ deployTask('full:deploy-address-provider', 'Deploy address provider and registry
   async ({ verify, pool }, DRE) => {
     await DRE.run('set-DRE');
 
-    const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
     const { MarketId } = poolConfig;
     let ProviderId = BigNumber.from(poolConfig.ProviderId);
@@ -25,7 +24,7 @@ deployTask('full:deploy-address-provider', 'Deploy address provider and registry
     const deployer = await getFirstSigner();
 
     const [continuation, existingProvider] = await setPreDeployAccessController(
-      getParamPerNetwork(poolConfig.AddressProvider, network)
+      getParamPerNetwork(poolConfig.AddressProvider)
     );
 
     if (existingProvider != undefined && !continuation) {
@@ -33,8 +32,8 @@ deployTask('full:deploy-address-provider', 'Deploy address provider and registry
       return;
     }
 
-    const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
-    const registryOwner = getParamPerNetwork(poolConfig.ProviderRegistryOwner, network);
+    const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry);
+    const registryOwner = getParamPerNetwork(poolConfig.ProviderRegistryOwner);
 
     let registry: AddressesProviderRegistry;
     let newRegistry = false;
@@ -100,7 +99,7 @@ deployTask('full:deploy-address-provider', 'Deploy address provider and registry
 
       await waitTx(addressProvider.setTemporaryAdmin(deployer.address, 1000));
 
-      const providerOwner = getParamPerNetwork(poolConfig.AddressProviderOwner, network);
+      const providerOwner = getParamPerNetwork(poolConfig.AddressProviderOwner);
       if (!falsyOrZeroAddress(providerOwner)) {
         await waitTx(addressProvider.transferOwnership(providerOwner!));
         console.log('Provider ownership transferred to:', providerOwner);
@@ -120,7 +119,7 @@ deployTask('full:deploy-address-provider', 'Deploy address provider and registry
       throw 'deployment was already finished';
     }
 
-    const emergencyAdmins = getParamPerNetwork(poolConfig.EmergencyAdmins, network);
+    const emergencyAdmins = getParamPerNetwork(poolConfig.EmergencyAdmins);
     if (emergencyAdmins && emergencyAdmins.length > 0) {
       console.log('Assign', emergencyAdmins.length, 'emergency admin(s)');
       const knowEAs = new Set<string>();

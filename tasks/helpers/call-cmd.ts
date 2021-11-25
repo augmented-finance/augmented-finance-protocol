@@ -18,6 +18,7 @@ import {
   getExternalsFromJsonDb,
   getFromJsonDb,
   getInstanceFromJsonDb,
+  getNetworkName,
 } from '../../helpers/misc-utils';
 import { getContractGetterById } from '../../helpers/contracts-mapper';
 import { Contract, ContractTransaction } from '@ethersproject/contracts';
@@ -48,8 +49,6 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
   .addOptionalParam('nonce', 'Nonce', undefined, types.int)
   .addParam('cmds', 'Commands', [], types.any)
   .setAction(async ({ ctl, mode, cmds, gaslimit: gasLimit, gasprice: gasPrice, nonce }, DRE) => {
-    const network = <eNetwork>DRE.network.name;
-
     if (falsyOrZeroAddress(ctl)) {
       throw new Error('Unknown MarketAddressController');
     }
@@ -75,6 +74,7 @@ subtask('helper:call-cmd', 'Invokes a configuration command')
       },
     };
 
+    const network = getNetworkName(DRE);
     for (const cmdEntry of <ICallCommand[]>cmds) {
       await parseCommand(network, ac, callParams, cmdEntry.roles, cmdEntry.cmd, cmdEntry.args || []);
     }

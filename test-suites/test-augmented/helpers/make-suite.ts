@@ -1,4 +1,4 @@
-import { evmRevert, evmSnapshot, DRE, falsyOrZeroAddress } from '../../../helpers/misc-utils';
+import { evmRevert, evmSnapshot, DRE, falsyOrZeroAddress, isForkNetwork } from '../../../helpers/misc-utils';
 import { Signer } from 'ethers';
 import {
   getMarketAddressController,
@@ -111,10 +111,8 @@ export async function initializeMakeSuite() {
   }
   testEnv.deployer = deployer;
 
-  if (process.env.MAINNET_FORK === 'true') {
-    testEnv.registry = await getAddressesProviderRegistry(
-      getParamPerNetwork(TestConfig.ProviderRegistry, eEthereumNetwork.main)
-    );
+  if (isForkNetwork()) {
+    testEnv.registry = await getAddressesProviderRegistry(getParamPerNetwork(TestConfig.ProviderRegistry));
   } else {
     testEnv.registry = await getAddressesProviderRegistry();
   }

@@ -5,7 +5,7 @@ services:
     build: ./
     environment:
       ALCHEMY_KEY: ${ALCHEMY_KEY:?err}
-      MAINNET_FORK: "true"
+      FORK: "main"
     ports:
       - 8545:8545
     healthcheck:
@@ -14,7 +14,7 @@ services:
   augmented:
     build: ./
     environment:
-      MAINNET_FORK: "true"
+      FORK: "main"
     command: bash -c "yarn hardhat augmented:mainnet --network docker && cp ui-config.json /opt/www/ui-config.json"
     volumes:
       - www:/opt/www

@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
-import { eEthereumNetwork, eNetwork, tEthereumAddress } from '../../helpers/types';
+import { tEthereumAddress } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
-import { falsyOrZeroAddress, getFirstSigner, waitTx } from '../../helpers/misc-utils';
+import { falsyOrZeroAddress, getFirstSigner, isForkNetwork, waitTx } from '../../helpers/misc-utils';
 import {
   getDecayingTokenLockerProxy,
   getIErc20Detailed,
@@ -21,9 +21,8 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
   .setAction(async ({ pool, ignoreCalc }, DRE) => {
     await DRE.run('set-DRE');
 
-    const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const rewardPools = getParamPerNetwork(poolConfig.RewardParams.RewardPools, network);
+    const rewardPools = getParamPerNetwork(poolConfig.RewardParams.RewardPools);
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
@@ -160,7 +159,7 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
       const treasury = await getTreasuryProxy(await addressProvider.getAddress(AccessFlags.TREASURY));
       const balance = await agf.balanceOf(treasury.address);
       console.log('Found', balance.div(1e15).toNumber() / 1e3, ' AGF in the treasury');
-      if (balance.gt(0) && network == eEthereumNetwork.hardhat) {
+      if (balance.gt(0) && isForkNetwork()) {
         await waitTx(treasury.transferToken(agf.address, deployer.address, balance));
         console.log('Transferred from treasury to deployer: ', deployer.address);
 
