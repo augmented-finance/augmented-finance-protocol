@@ -524,9 +524,9 @@ export const deployAllMockTokens = async (verify?: boolean) => {
   const protoConfigData = getReservesTestConfig();
 
   for (const tokenSymbol of DefaultTokenSymbols) {
-    let decimals = '18';
+    const decimals = '18';
 
-    let configData = (<any>protoConfigData)[tokenSymbol];
+    const configData = (<any>protoConfigData)[tokenSymbol];
 
     tokens[tokenSymbol] = await deployMintableERC20(
       [tokenSymbol, tokenSymbol, configData ? configData.reserveDecimals : decimals],
@@ -1051,7 +1051,7 @@ export const deployPriceFeedCompoundEth = async (name: string, args: [token: tEt
 
 export const deployPriceFeedUniEthPair = async (
   name: string,
-  args: [token: tEthereumAddress, weth: tEthereumAddress],
+  args: [token: tEthereumAddress, basePrice: tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -1063,7 +1063,7 @@ export const deployPriceFeedUniEthPair = async (
 
 export const deployPriceFeedUniEthToken = async (
   name: string,
-  args: [token: tEthereumAddress, weth: tEthereumAddress],
+  args: [token: tEthereumAddress, basePrice: tEthereumAddress, quouteValue: BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(

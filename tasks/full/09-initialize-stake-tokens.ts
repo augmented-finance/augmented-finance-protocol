@@ -13,7 +13,6 @@ import {
   getOracleRouter,
   getStakeConfiguratorImpl,
   getStaticPriceOracle,
-  getWETHGateway,
 } from '../../helpers/contracts-getters';
 import { addProxyToJsonDb, autoGas, chunk, falsyOrZeroAddress, mustWaitTx, waitTx } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
@@ -44,7 +43,7 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
 
     const reserveAssets = getParamPerNetwork(ReserveAssets);
     const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
-    let initParams: {
+    const initParams: {
       stakeTokenImpl: string;
       stakedToken: string;
       strategy: string;
@@ -56,11 +55,13 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
       maxSlashable: BigNumberish;
       depositStake: boolean;
     }[] = [];
-    let initSymbols: string[] = [];
+    const initSymbols: string[] = [];
 
     const stakeParams = poolConfig.StakeParams;
     let stakeImplAddr: tEthereumAddress = '';
     let depositStakeImplAddr: tEthereumAddress = '';
+    const priceBaseSymbol = dependencies.AgfPair ?? dependencies.WrappedNative ?? 'WETH';
+    const pairPriceBaseToken = reserveAssets[priceBaseSymbol];
 
     const getStakeImplAddr = async () => {
       if (falsyOrZeroAddress(stakeImplAddr)) {
@@ -151,12 +152,10 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
       });
     }
 
-    const wg = await getWETHGateway(await addressProvider.getAddress(AccessFlags.WETH_GATEWAY));
-    const wethAddr = await wg.getWETHAddress();
     const po = await getOracleRouter(await addressProvider.getAddress(AccessFlags.PRICE_ORACLE));
 
     if (UniV2EthPair?.StakeToken) {
-      const lpPairAddr = await getUniAgfEth(addressProvider, dependencies.UniswapV2Router);
+      const lpPairAddr = await getUniAgfEth(addressProvider, dependencies.UniswapV2Router, pairPriceBaseToken);
 
       if (!falsyOrZeroAddress(lpPairAddr)) {
         const symbol = UniV2EthPair.Symbol;
@@ -190,7 +189,7 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
         listPricingAssets.push('');
         listStakedTokens.push(lpPairAddr);
         listSpecialFeeds.push(async () => {
-          const feed = await deployPriceFeedUniEthPair(symbol, [lpPairAddr, wethAddr], verify);
+          const feed = await deployPriceFeedUniEthPair(symbol, [lpPairAddr, pairPriceBaseToken], verify);
           console.log('\tUni ETH-pair price feed:', symbol, feed.address);
           return feed.address;
         });

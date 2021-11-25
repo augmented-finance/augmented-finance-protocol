@@ -1,6 +1,16 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { MOCK_CHAINLINK_AGGREGATORS_PRICES, DAY, DefaultTokenNames, USD_ADDRESS } from '../../helpers/constants';
-import { ICommonConfiguration, eEthereumNetwork, StakeMode, LPFeature, ITokenRewardPoolParams, IRewardPools, eOtherNetwork, IPriceOracleConfig, ePolygonNetwork } from '../../helpers/types';
+import {
+  ICommonConfiguration,
+  eEthereumNetwork,
+  StakeMode,
+  LPFeature,
+  ITokenRewardPoolParams,
+  IRewardPools,
+  eOtherNetwork,
+  IPriceOracleConfig,
+  ePolygonNetwork,
+} from '../../helpers/types';
 import { BscReserves, BscStableBaseRates } from './reservesConfigs_bsc';
 import { AvalancheReserves, AvalancheStableBaseRates } from './reservesConfigs_avalanche';
 import { FantomReserves, FantomStableBaseRates } from './reservesConfigs_fantom';
@@ -16,7 +26,12 @@ const emergencyAdmins = [
   '0x511EfaE41B0eA33Da847d16e13655009d0aB3Ed7',
 ];
 
-const tokenRewards = (depositBP: number, vDebtBP: number, sDebtBP: number, boostFactor: number = 30000): ITokenRewardPoolParams => ({
+const tokenRewards = (
+  depositBP: number,
+  vDebtBP: number,
+  sDebtBP: number,
+  boostFactor = 30000
+): ITokenRewardPoolParams => ({
   Share: {
     deposit: {
       BasePoints: depositBP,
@@ -30,11 +45,11 @@ const tokenRewards = (depositBP: number, vDebtBP: number, sDebtBP: number, boost
       BasePoints: sDebtBP,
       BoostFactor: boostFactor,
     },
-  }
-})
+  },
+});
 
-const tokenRewardStable = tokenRewards(400, 100, 300)
-const tokenRewardVolatile = tokenRewards(200, 50, 150)
+const tokenRewardStable = tokenRewards(400, 100, 300);
+const tokenRewardVolatile = tokenRewards(200, 50, 150);
 
 const tokenRewardStableExt: ITokenRewardPoolParams = {
   Share: {
@@ -42,8 +57,8 @@ const tokenRewardStableExt: ITokenRewardPoolParams = {
       BasePoints: 100,
       BoostFactor: 0,
     },
-  }
-}
+  },
+};
 
 const tokenRewardVolatileExt: ITokenRewardPoolParams = {
   Share: {
@@ -51,29 +66,29 @@ const tokenRewardVolatileExt: ITokenRewardPoolParams = {
       BasePoints: 50,
       BoostFactor: 0,
     },
-  }
-}
+  },
+};
 
 const rewardPoolsEthMain: IRewardPools = {
   InitialRateWad: 0,
   TokenPools: {
-    DAI:   tokenRewardStable,
-    USDC:  tokenRewardStable,
-    USDT:  tokenRewardStable,
-    WBTC:  tokenRewardVolatile,
-    WETH:  tokenRewardVolatile,
+    DAI: tokenRewardStable,
+    USDC: tokenRewardStable,
+    USDT: tokenRewardStable,
+    WBTC: tokenRewardVolatile,
+    WETH: tokenRewardVolatile,
 
-    ADAI:   tokenRewardStableExt,
-    AUSDC:  tokenRewardStableExt,
-    AUSDT:  tokenRewardStableExt,
-    AWBTC:  tokenRewardVolatileExt,
-    AWETH:  tokenRewardVolatileExt,
+    ADAI: tokenRewardStableExt,
+    AUSDC: tokenRewardStableExt,
+    AUSDT: tokenRewardStableExt,
+    AWBTC: tokenRewardVolatileExt,
+    AWETH: tokenRewardVolatileExt,
 
-    CDAI:   tokenRewardStableExt,
-    CUSDC:  tokenRewardStableExt,
-    CUSDT:  tokenRewardStableExt,
-    CWBTC:  tokenRewardVolatileExt,
-    CETH:   tokenRewardVolatileExt,
+    CDAI: tokenRewardStableExt,
+    CUSDC: tokenRewardStableExt,
+    CUSDT: tokenRewardStableExt,
+    CWBTC: tokenRewardVolatileExt,
+    CETH: tokenRewardVolatileExt,
   },
   ReferralPool: {
     BasePoints: 100,
@@ -101,14 +116,14 @@ const rewardPoolsEthMain: IRewardPools = {
     Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
     Members: {
       '0x9029AdeFCdafcEce55a0bC0583B2F10E4F35D8f9': 500,
-    }
-  }
-}
+    },
+  },
+};
 
 const rewardPoolsEthTest: IRewardPools = {
   ...rewardPoolsEthMain,
   InitialRateWad: 1,
-}
+};
 
 const rewardPoolsBscMain: IRewardPools = {
   InitialRateWad: 0.3858024691,
@@ -169,67 +184,67 @@ const rewardPoolsBscMain: IRewardPools = {
     Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
     Members: {
       '0x9029AdeFCdafcEce55a0bC0583B2F10E4F35D8f9': 500,
-    }
-  }
-}
+    },
+  },
+};
 
 const rewardPoolsFantomMain: IRewardPools = {
   InitialRateWad: 0,
   TokenPools: {
-    USDT:  tokenRewardStable,
-    WETH:  tokenRewardVolatile,
-    WBTC:  tokenRewardVolatile,
-    WFTM:  tokenRewardVolatile,
+    USDT: tokenRewardStable,
+    WETH: tokenRewardVolatile,
+    WBTC: tokenRewardVolatile,
+    WFTM: tokenRewardVolatile,
   },
-}
+};
 
 const rewardPoolsAvalancheMain: IRewardPools = {
   InitialRateWad: 0,
   TokenPools: {
-    DAI:   tokenRewardStable,
-    USDT:  tokenRewardStable,
-    WBTC:  tokenRewardVolatile,
-    WAVAX:  tokenRewardVolatile,
+    DAI: tokenRewardStable,
+    USDT: tokenRewardStable,
+    WBTC: tokenRewardVolatile,
+    WAVAX: tokenRewardVolatile,
   },
-}
+};
 
 const rewardPoolsOptimisticMain: IRewardPools = {
   InitialRateWad: 0,
   TokenPools: {
-    DAI:   tokenRewardStable,
-    USDC:  tokenRewardStable,
-    USDT:  tokenRewardStable,
-    WBTC:  tokenRewardVolatile,
-    WETH:  tokenRewardVolatile,
+    DAI: tokenRewardStable,
+    USDC: tokenRewardStable,
+    USDT: tokenRewardStable,
+    WBTC: tokenRewardVolatile,
+    WETH: tokenRewardVolatile,
   },
-}
+};
 
 const rewardPoolsArbitrumMain: IRewardPools = {
   InitialRateWad: 0,
   TokenPools: {
-    DAI:   tokenRewardStable,
-    USDC:  tokenRewardStable,
-    USDT:  tokenRewardStable,
-    WBTC:  tokenRewardVolatile,
-    WETH:  tokenRewardVolatile,
+    DAI: tokenRewardStable,
+    USDC: tokenRewardStable,
+    USDT: tokenRewardStable,
+    WBTC: tokenRewardVolatile,
+    WETH: tokenRewardVolatile,
   },
-}
+};
 
 const rewardPoolsPolygonMain: IRewardPools = {
   InitialRateWad: 0,
   TokenPools: {
-    DAI:   tokenRewardStable,
-    USDC:  tokenRewardStable,
-    USDT:  tokenRewardStable,
-    WBTC:  tokenRewardVolatile,
-    WETH:  tokenRewardVolatile,
+    DAI: tokenRewardStable,
+    USDC: tokenRewardStable,
+    USDT: tokenRewardStable,
+    WBTC: tokenRewardVolatile,
+    WETH: tokenRewardVolatile,
   },
-}
+};
 
 const USD_QUOTE: IPriceOracleConfig = {
   QuoteToken: USD_ADDRESS,
   QuoteValue: BigNumber.from(1e8),
-}
+};
 
 // ----------------
 // PROTOCOL GLOBAL PARAMS
@@ -260,12 +275,12 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.main]: '', // '0xCD73243E7D2254e9D919df41B26d0729b7D8A690' // Gnosis Safe
   },
   AddressProvider: {
-    [eEthereumNetwork.main]: '', // '0xc6f769A0c46cFFa57d91E87ED3Bc0cd338Ce6361' 
+    [eEthereumNetwork.main]: '', // '0xc6f769A0c46cFFa57d91E87ED3Bc0cd338Ce6361'
   },
   AddressProviderOwner: {
     [eEthereumNetwork.main]: '', // '0xCD73243E7D2254e9D919df41B26d0729b7D8A690' // Gnosis Safe
   },
-  
+
   PriceOracle: {
     [eEthereumNetwork.coverage]: 'WETH',
     [eEthereumNetwork.hardhat]: 'WETH',
@@ -287,7 +302,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [ePolygonNetwork.matic]: USD_QUOTE,
     [ePolygonNetwork.mumbai]: USD_QUOTE,
   },
-  
+
   FallbackOracle: {},
 
   ChainlinkAggregator: {
@@ -385,51 +400,51 @@ export const CommonsConfig: ICommonConfiguration = {
       YFI: '0x7c5d4F8345e66f68099581Db340cd65B078C41f4',
       ZRX: '0x2Da4983a622a8498bb1a21FaE9D8F6C664939962',
       USD: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419',
-    },    
+    },
     [eOtherNetwork.bsc]: {
       // https://docs.chain.link/docs/binance-smart-chain-addresses/
-      WBNB : '0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE',
-      BTCB : '0x264990fbd0A4796A3E3d8E37C4d5F87a3aCa5Ebf',
-      BCH : '0x43d80f616DAf0b0B42a928EeD32147dC59027D41',
-      ETH : '0x9ef1B8c0E4F7dc8bF5719Ea496883DC6401d5b2e',
-      BETH : '0x2A3796273d47c4eD363b361D3AEFb7F7E2A13782',
-      USDT : '0xB97Ad0E74fa7d920791E90258A6E2085088b4320',
-      BUSD : '0xcBb98864Ef56E9042e7d2efef76141f15731B82f',
-      USDC : '0x51597f405303C4377E36123cBc172b13269EA163',
-      DAI : '0x132d3C0B1D2cEa0BC552588063bdBb210FDeecfA',
-      TUSD : '0xa3334A9762090E827413A7495AfeCE76F41dFc06',
-      DOT : '0xC333eb0086309a16aa7c8308DfD32c8BBA0a2592',
-      SXP : '0xE188A9875af525d25334d75F3327863B2b8cd0F1',
-      XRP : '0x93A67D414896A280bF8FFB3b389fE3686E014fda',
-      ADA : '0xa767f745331D267c7751297D982b050c93985627',
-      TRX : '0xF4C5e535756D11994fCBB12Ba8adD0192D9b88be',
-      LINK : '0xca236E327F629f9Fc2c30A4E95775EbF0B89fac8',
-      LTC : '0x74E72F37A8c415c8f1a98Ed42E78Ff997435791D',
-      DOGE : '0x3AB0A0d137D4F946fBB19eecc6e92E64660231C8',
-      MATIC : '0x7CA57b0cA6367191c94C8914d7Df09A57655905f',
-      FIL : '0xE5dbFD9003bFf9dF5feB2f4F445Ca00fb121fb83',
-      INJ : '0x63A9133cd7c611d6049761038C16f238FddA71d7',
-      CHR : '0x1f771B2b1F3c3Db6C7A1d5F38961a49CEcD116dA',
-      REEF : '0x46f13472A4d4FeC9E07E8A00eE52f4Fa77810736',
-      TWT : '0x7E728dFA6bCa9023d9aBeE759fDF56BEAb8aC7aD',
-      LINA : '0x38393201952f2764E04B290af9df427217D56B41',
-      CAKE : '0xB6064eD41d4f67e353768aA239cA86f4F73665a1',
-      XVS : '0xBF63F430A79D4036A5900C19818aFf1fa710f206',
-      ALPACA : '0xe0073b60833249ffd1bb2af809112c2fbf221DF6',
-      UNI : '0xb57f259E7C24e56a1dA00F66b55A5640d9f9E7e4',
-      SUSHI : '0xa679C72a97B654CFfF58aB704de3BA15Cde89B07',
-      AAVE : '0xA8357BF572460fC40f4B0aCacbB2a6A61c89f475',
-      BIFI : '0xaB827b69daCd586A37E80A7d552a4395d576e645',
-      AUTO : '0x88E71E6520E5aC75f5338F5F0c9DeD9d4f692cDA',
-      DODO : '0x87701B15C08687341c2a847ca44eCfBc8d7873E1',
-      ALPHA : '0x7bC032A7C19B1BdCb981D892854d090cfB0f238E',
+      WBNB: '0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE',
+      BTCB: '0x264990fbd0A4796A3E3d8E37C4d5F87a3aCa5Ebf',
+      BCH: '0x43d80f616DAf0b0B42a928EeD32147dC59027D41',
+      ETH: '0x9ef1B8c0E4F7dc8bF5719Ea496883DC6401d5b2e',
+      BETH: '0x2A3796273d47c4eD363b361D3AEFb7F7E2A13782',
+      USDT: '0xB97Ad0E74fa7d920791E90258A6E2085088b4320',
+      BUSD: '0xcBb98864Ef56E9042e7d2efef76141f15731B82f',
+      USDC: '0x51597f405303C4377E36123cBc172b13269EA163',
+      DAI: '0x132d3C0B1D2cEa0BC552588063bdBb210FDeecfA',
+      TUSD: '0xa3334A9762090E827413A7495AfeCE76F41dFc06',
+      DOT: '0xC333eb0086309a16aa7c8308DfD32c8BBA0a2592',
+      SXP: '0xE188A9875af525d25334d75F3327863B2b8cd0F1',
+      XRP: '0x93A67D414896A280bF8FFB3b389fE3686E014fda',
+      ADA: '0xa767f745331D267c7751297D982b050c93985627',
+      TRX: '0xF4C5e535756D11994fCBB12Ba8adD0192D9b88be',
+      LINK: '0xca236E327F629f9Fc2c30A4E95775EbF0B89fac8',
+      LTC: '0x74E72F37A8c415c8f1a98Ed42E78Ff997435791D',
+      DOGE: '0x3AB0A0d137D4F946fBB19eecc6e92E64660231C8',
+      MATIC: '0x7CA57b0cA6367191c94C8914d7Df09A57655905f',
+      FIL: '0xE5dbFD9003bFf9dF5feB2f4F445Ca00fb121fb83',
+      INJ: '0x63A9133cd7c611d6049761038C16f238FddA71d7',
+      CHR: '0x1f771B2b1F3c3Db6C7A1d5F38961a49CEcD116dA',
+      REEF: '0x46f13472A4d4FeC9E07E8A00eE52f4Fa77810736',
+      TWT: '0x7E728dFA6bCa9023d9aBeE759fDF56BEAb8aC7aD',
+      LINA: '0x38393201952f2764E04B290af9df427217D56B41',
+      CAKE: '0xB6064eD41d4f67e353768aA239cA86f4F73665a1',
+      XVS: '0xBF63F430A79D4036A5900C19818aFf1fa710f206',
+      ALPACA: '0xe0073b60833249ffd1bb2af809112c2fbf221DF6',
+      UNI: '0xb57f259E7C24e56a1dA00F66b55A5640d9f9E7e4',
+      SUSHI: '0xa679C72a97B654CFfF58aB704de3BA15Cde89B07',
+      AAVE: '0xA8357BF572460fC40f4B0aCacbB2a6A61c89f475',
+      BIFI: '0xaB827b69daCd586A37E80A7d552a4395d576e645',
+      AUTO: '0x88E71E6520E5aC75f5338F5F0c9DeD9d4f692cDA',
+      DODO: '0x87701B15C08687341c2a847ca44eCfBc8d7873E1',
+      ALPHA: '0x7bC032A7C19B1BdCb981D892854d090cfB0f238E',
     },
     [eOtherNetwork.bsc_testnet]: {
       // https://docs.chain.link/docs/binance-smart-chain-addresses/
-      DAI: '0xE4eE17114774713d2De0eC0f035d4F7665fc025D',  // DAI/USD
+      DAI: '0xE4eE17114774713d2De0eC0f035d4F7665fc025D', // DAI/USD
       USDC: '0x90c069C4538adAc136E051052E14c1cD799C41B7', // ...
       USDT: '0xEca2605f0BCF2BA5966372C99837b1F182d3D620', // ...
-      WBNB: '0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526',  // BNB/USD
+      WBNB: '0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526', // BNB/USD
     },
     [eOtherNetwork.avalanche_testnet]: {
       WETH: '0x86d67c3D38D2bCeE722E601025C25a575021c6EA',
@@ -474,7 +489,7 @@ export const CommonsConfig: ICommonConfiguration = {
       LINK: '0x12162c3E810393dEC01362aBf156D7ecf6159528',
       USDC: '0x572dDec9087154dC5dfBB1546Bb62713147e0Ab0',
       USDT: '0x92C09849638959196E976289418e5973CC96d645',
-    },    
+    },
   },
 
   ReserveAssetsOpt: {
@@ -486,7 +501,6 @@ export const CommonsConfig: ICommonConfiguration = {
     [ePolygonNetwork.arbitrum_testnet]: true,
     [ePolygonNetwork.optimistic_testnet]: true,
     [ePolygonNetwork.mumbai]: true,
-
 
     [eEthereumNetwork.kovan]: false,
     [eEthereumNetwork.coverage]: false,
@@ -541,11 +555,11 @@ export const CommonsConfig: ICommonConfiguration = {
     },
     [eEthereumNetwork.main]: {
       AAVE: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
-      DAI: '0x6B175474E89094C44Da98b954EedeAC495271d0F', 
+      DAI: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
       LINK: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
-      USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 
-      USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7', 
-      WBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', 
+      USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+      USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+      WBTC: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
       WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
 
       // https://docs.aave.com/developers/deployed-contracts/deployed-contracts
@@ -573,60 +587,57 @@ export const CommonsConfig: ICommonConfiguration = {
     },
     [eOtherNetwork.bsc]: {
       // https://docs.chain.link/docs/binance-smart-chain-addresses/
-      WBNB : '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
-      BTCB : '0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c',
-      BCH : '0x8ff795a6f4d97e7887c79bea79aba5cc76444adf',
-      ETH : '0x2170ed0880ac9a755fd29b2688956bd959f933f8',
-      BETH : '0x250632378e573c6be1ac2f97fcdf00515d0aa91b',
-      USDT : '0x55d398326f99059ff775485246999027b3197955',
-      BUSD : '0xe9e7cea3dedca5984780bafc599bd69add087d56',
-      USDC : '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d',
-      DAI : '0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3',
-      TUSD : '0x14016e85a25aeb13065688cafb43044c2ef86784',
-      DOT : '0x7083609fce4d1d8dc0c979aab8c869ea2c873402',
-      SXP : '0x47bead2563dcbf3bf2c9407fea4dc236faba485a',
-      XRP : '0x1d2f0da169ceb9fc7b3144628db156f3f6c60dbe',
-      ADA : '0x3ee2200efb3400fabb9aacf31297cbdd1d435d47',
-      TRX : '0x85eac5ac2f758618dfa09bdbe0cf174e7d574d5b',
-      LINK : '0xf8a0bf9cf54bb92f17374d9e9a321e6a111a51bd',
-      LTC : '0x4338665cbb7b2485a8855a139b75d5e34ab0db94',
-      DOGE : '0xba2ae424d960c26247dd6c32edc70b295c744c43',
-      MATIC : '0xcc42724c6683b7e57334c4e856f4c9965ed682bd',
-      FIL : '0x0d8ce2a99bb6e3b7db580ed848240e4a0f9ae153',
-      INJ : '0xa2b726b1145a4773f68593cf171187d8ebe4d495',
-      CHR : '0xf9CeC8d50f6c8ad3Fb6dcCEC577e05aA32B224FE',
-      REEF : '0xf21768ccbc73ea5b6fd3c687208a7c2def2d966e',
-      TWT : '0x4b0f1812e5df2a09796481ff14017e6005508003',
-      LINA : '0x762539b45a1dcce3d36d080f74d1aed37844b878',
-      CAKE : '0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82',
-      XVS : '0xcf6bb5389c92bdda8a3747ddb454cb7a64626c63',
-      ALPACA : '0x8f0528ce5ef7b51152a59745befdd91d97091d2f',
-      UNI : '0xbf5140a22578168fd562dccf235e5d43a02ce9b1',
-      SUSHI : '0x947950BcC74888a40Ffa2593C5798F11Fc9124C4',
-      AAVE : '0xfb6115445bff7b52feb98650c87f44907e58f802',
-      BIFI : '0xCa3F508B8e4Dd382eE878A314789373D80A5190A',
-      AUTO : '0xa184088a740c695e156f91f5cc086a06bb78b827',
-      DODO : '0x67ee3cb086f8a16f34bee3ca72fad36f7db929e2',
-      ALPHA : '0xa1faa113cbe53436df28ff0aee54275c13b40975',    
+      WBNB: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+      BTCB: '0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c',
+      BCH: '0x8ff795a6f4d97e7887c79bea79aba5cc76444adf',
+      ETH: '0x2170ed0880ac9a755fd29b2688956bd959f933f8',
+      BETH: '0x250632378e573c6be1ac2f97fcdf00515d0aa91b',
+      USDT: '0x55d398326f99059ff775485246999027b3197955',
+      BUSD: '0xe9e7cea3dedca5984780bafc599bd69add087d56',
+      USDC: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d',
+      DAI: '0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3',
+      TUSD: '0x14016e85a25aeb13065688cafb43044c2ef86784',
+      DOT: '0x7083609fce4d1d8dc0c979aab8c869ea2c873402',
+      SXP: '0x47bead2563dcbf3bf2c9407fea4dc236faba485a',
+      XRP: '0x1d2f0da169ceb9fc7b3144628db156f3f6c60dbe',
+      ADA: '0x3ee2200efb3400fabb9aacf31297cbdd1d435d47',
+      TRX: '0x85eac5ac2f758618dfa09bdbe0cf174e7d574d5b',
+      LINK: '0xf8a0bf9cf54bb92f17374d9e9a321e6a111a51bd',
+      LTC: '0x4338665cbb7b2485a8855a139b75d5e34ab0db94',
+      DOGE: '0xba2ae424d960c26247dd6c32edc70b295c744c43',
+      MATIC: '0xcc42724c6683b7e57334c4e856f4c9965ed682bd',
+      FIL: '0x0d8ce2a99bb6e3b7db580ed848240e4a0f9ae153',
+      INJ: '0xa2b726b1145a4773f68593cf171187d8ebe4d495',
+      CHR: '0xf9CeC8d50f6c8ad3Fb6dcCEC577e05aA32B224FE',
+      REEF: '0xf21768ccbc73ea5b6fd3c687208a7c2def2d966e',
+      TWT: '0x4b0f1812e5df2a09796481ff14017e6005508003',
+      LINA: '0x762539b45a1dcce3d36d080f74d1aed37844b878',
+      CAKE: '0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82',
+      XVS: '0xcf6bb5389c92bdda8a3747ddb454cb7a64626c63',
+      ALPACA: '0x8f0528ce5ef7b51152a59745befdd91d97091d2f',
+      UNI: '0xbf5140a22578168fd562dccf235e5d43a02ce9b1',
+      SUSHI: '0x947950BcC74888a40Ffa2593C5798F11Fc9124C4',
+      AAVE: '0xfb6115445bff7b52feb98650c87f44907e58f802',
+      BIFI: '0xCa3F508B8e4Dd382eE878A314789373D80A5190A',
+      AUTO: '0xa184088a740c695e156f91f5cc086a06bb78b827',
+      DODO: '0x67ee3cb086f8a16f34bee3ca72fad36f7db929e2',
+      ALPHA: '0xa1faa113cbe53436df28ff0aee54275c13b40975',
     },
     [eOtherNetwork.bsc_testnet]: {
-      DAI: '0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867', 
-      USDC: '0x64544969ed7ebf5f083679233325356ebe738930', // '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d', 
+      DAI: '0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867',
+      USDC: '0x64544969ed7ebf5f083679233325356ebe738930', // '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d',
       USDT: '0x337610d27c682e347c9cd60bd4b3b107c9d34ddd', // '0x7ef95a0fee0dd31b22626fa2e10ee6a223f8a684'
       WBNB: '0xae13d989dac2f0debff460ac112a837c89baa7cd',
     },
-    [eOtherNetwork.fantom]:{
-
-    },
-    [eOtherNetwork.fantom_testnet]:{
+    [eOtherNetwork.fantom]: {},
+    [eOtherNetwork.fantom_testnet]: {
       USDT: '0xad280b60ca089625e9d38612710301852f879050',
       WFTM: '0x1957d5e8496628d755a4b2151bca03ecc379bdd6',
       WBTC: '0xa5afdcaad3e67261e2dee707476699ef968cf57c',
       WETH: '0x2d7cd0f70bd71c6bc382cfc752972f41f1f0acd6',
     },
-    [eOtherNetwork.avalanche]:{
-    },
-    [eOtherNetwork.avalanche_testnet]:{
+    [eOtherNetwork.avalanche]: {},
+    [eOtherNetwork.avalanche_testnet]: {
       WETH: '0xB767287A7143759f294CfB7b1Adbca1140F3de71',
       WAVAX: '0xd00ae08403B9bbb9124bB305C09058E32C39A48c',
       WBTC: '0x89b7F5fCf00AA31E9e152bC39AbA6c1Ce120A0ED',
@@ -667,67 +678,86 @@ export const CommonsConfig: ICommonConfiguration = {
   Dependencies: {
     [eEthereumNetwork.kovan]: {
       WrappedNative: 'WETH',
+      AgfPair: 'WETH',
       UniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
     },
     [eEthereumNetwork.ropsten]: {
       WrappedNative: 'WETH',
+      AgfPair: 'WETH',
       UniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
     },
     [eEthereumNetwork.rinkeby]: {
       WrappedNative: 'WETH',
+      AgfPair: 'WETH',
       UniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
     },
     [eEthereumNetwork.main]: {
       WrappedNative: 'WETH',
+      AgfPair: 'WETH',
       UniswapV2Router: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
     },
     [eEthereumNetwork.coverage]: {
       WrappedNative: 'WETH',
+      AgfPair: 'WETH',
     },
     [eEthereumNetwork.hardhat]: {
       WrappedNative: 'WETH',
+      AgfPair: 'WETH',
     },
     [eEthereumNetwork.tenderlyMain]: {
       WrappedNative: 'WETH',
+      AgfPair: 'WETH',
     },
     [eOtherNetwork.bsc]: {
       WrappedNative: 'WBNB',
+      AgfPair: 'BUSD',
       UniswapV2Router: '0x10ED43C718714eb63d5aA57B78B54704E256024E', // PancakeSwap
     },
     [eOtherNetwork.bsc_testnet]: {
       WrappedNative: 'WBNB',
+      AgfPair: 'USDC',
       UniswapV2Router: '0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3', // https://pancake.kiemtienonline360.com/#/swap
     },
     [eOtherNetwork.fantom]: {
       WrappedNative: 'WFTM',
+      AgfPair: 'WFTM',
     },
     [eOtherNetwork.fantom_testnet]: {
       WrappedNative: 'WFTM',
+      AgfPair: 'WFTM',
     },
     [eOtherNetwork.avalanche]: {
       WrappedNative: 'WAVAX',
+      AgfPair: 'WAVAX',
     },
     [eOtherNetwork.avalanche_testnet]: {
       WrappedNative: 'WAVAX',
+      AgfPair: 'WAVAX',
     },
 
     [ePolygonNetwork.arbitrum]: {
       WrappedNative: 'WETH',
+      AgfPair: 'WETH',
     },
     [ePolygonNetwork.arbitrum_testnet]: {
       WrappedNative: 'WETH',
+      AgfPair: 'WETH',
     },
     [ePolygonNetwork.optimistic]: {
       WrappedNative: 'WETH',
+      AgfPair: 'WETH',
     },
     [ePolygonNetwork.optimistic_testnet]: {
       WrappedNative: 'WETH',
+      AgfPair: 'WETH',
     },
     [ePolygonNetwork.matic]: {
       WrappedNative: 'WMATIC',
+      AgfPair: 'WMATIC',
     },
     [ePolygonNetwork.mumbai]: {
       WrappedNative: 'WMATIC',
+      AgfPair: 'WMATIC',
     },
   },
 
@@ -742,17 +772,17 @@ export const CommonsConfig: ICommonConfiguration = {
 
     [eOtherNetwork.bsc]: BscReserves,
     [eOtherNetwork.bsc_testnet]: BscReserves,
-    [eOtherNetwork.fantom]: FantomReserves, 
+    [eOtherNetwork.fantom]: FantomReserves,
     [eOtherNetwork.fantom_testnet]: FantomReserves,
     [eOtherNetwork.avalanche]: AvalancheReserves,
     [eOtherNetwork.avalanche_testnet]: AvalancheReserves,
 
-    [ePolygonNetwork.arbitrum]: ArbitrumReserves, 
-    [ePolygonNetwork.arbitrum_testnet]: ArbitrumReserves, 
+    [ePolygonNetwork.arbitrum]: ArbitrumReserves,
+    [ePolygonNetwork.arbitrum_testnet]: ArbitrumReserves,
     [ePolygonNetwork.optimistic]: OptimisticReserves,
     [ePolygonNetwork.optimistic_testnet]: OptimisticReserves,
-    [ePolygonNetwork.matic]: PolygonReserves, 
-    [ePolygonNetwork.mumbai]: PolygonReserves, 
+    [ePolygonNetwork.matic]: PolygonReserves,
+    [ePolygonNetwork.mumbai]: PolygonReserves,
   },
 
   LendingRateOracleRates: {
@@ -772,12 +802,12 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.avalanche]: AvalancheStableBaseRates,
     [eOtherNetwork.avalanche_testnet]: AvalancheStableBaseRates,
 
-    [ePolygonNetwork.arbitrum]: ArbitrumStableBaseRates, 
-    [ePolygonNetwork.arbitrum_testnet]: ArbitrumStableBaseRates, 
+    [ePolygonNetwork.arbitrum]: ArbitrumStableBaseRates,
+    [ePolygonNetwork.arbitrum_testnet]: ArbitrumStableBaseRates,
     [ePolygonNetwork.optimistic]: OptimisticStableBaseRates,
     [ePolygonNetwork.optimistic_testnet]: OptimisticStableBaseRates,
-    [ePolygonNetwork.matic]: PolygonStableBaseRates, 
-    [ePolygonNetwork.mumbai]: PolygonStableBaseRates, 
+    [ePolygonNetwork.matic]: PolygonStableBaseRates,
+    [ePolygonNetwork.mumbai]: PolygonStableBaseRates,
   },
 
   LendingDisableFeatures: {
@@ -810,60 +840,60 @@ export const CommonsConfig: ICommonConfiguration = {
     StakeToken: {
       WBTC: StakeMode.stakeAg,
       WETH: StakeMode.stakeAg,
-      
+
       WAVAX: StakeMode.stakeAg,
       WFTM: StakeMode.stakeAg,
       WMATIC: StakeMode.stakeAg,
 
-      WBNB : StakeMode.stakeAg,
-      BTCB : StakeMode.stakeAg,
-      BCH : StakeMode.stakeAg,
-      ETH : StakeMode.stakeAg,
-      BETH : StakeMode.stakeAg,
-      USDT : StakeMode.stakeAg,
-      BUSD : StakeMode.stakeAg,
-      USDC : StakeMode.stakeAg,
-      DAI : StakeMode.stakeAg,
-      TUSD : StakeMode.stakeAg,
-      DOT : StakeMode.stakeAg,
-      SXP : StakeMode.stakeAg,
-      XRP : StakeMode.stakeAg,
-      ADA : StakeMode.stakeAg,
-      TRX : StakeMode.stakeAg,
-      LINK : StakeMode.stakeAg,
-      LTC : StakeMode.stakeAg,
-      DOGE : StakeMode.stakeAg,
-      MATIC : StakeMode.stakeAg,
-      FIL : StakeMode.stakeAg,
-      INJ : StakeMode.stakeAg,
-      CHR : StakeMode.stakeAg,
-      REEF : StakeMode.stakeAg,
-      TWT : StakeMode.stakeAg,
-      LINA : StakeMode.stakeAg,
-      CAKE : StakeMode.stakeAg,
-      XVS : StakeMode.stakeAg,
-      ALPACA : StakeMode.stakeAg,
-      UNI : StakeMode.stakeAg,
-      SUSHI : StakeMode.stakeAg,
-      AAVE : StakeMode.stakeAg,
-      BIFI : StakeMode.stakeAg,
-      AUTO : StakeMode.stakeAg,
-      DODO : StakeMode.stakeAg,
-      ALPHA : StakeMode.stakeAg,
-    }
+      WBNB: StakeMode.stakeAg,
+      BTCB: StakeMode.stakeAg,
+      BCH: StakeMode.stakeAg,
+      ETH: StakeMode.stakeAg,
+      BETH: StakeMode.stakeAg,
+      USDT: StakeMode.stakeAg,
+      BUSD: StakeMode.stakeAg,
+      USDC: StakeMode.stakeAg,
+      DAI: StakeMode.stakeAg,
+      TUSD: StakeMode.stakeAg,
+      DOT: StakeMode.stakeAg,
+      SXP: StakeMode.stakeAg,
+      XRP: StakeMode.stakeAg,
+      ADA: StakeMode.stakeAg,
+      TRX: StakeMode.stakeAg,
+      LINK: StakeMode.stakeAg,
+      LTC: StakeMode.stakeAg,
+      DOGE: StakeMode.stakeAg,
+      MATIC: StakeMode.stakeAg,
+      FIL: StakeMode.stakeAg,
+      INJ: StakeMode.stakeAg,
+      CHR: StakeMode.stakeAg,
+      REEF: StakeMode.stakeAg,
+      TWT: StakeMode.stakeAg,
+      LINA: StakeMode.stakeAg,
+      CAKE: StakeMode.stakeAg,
+      XVS: StakeMode.stakeAg,
+      ALPACA: StakeMode.stakeAg,
+      UNI: StakeMode.stakeAg,
+      SUSHI: StakeMode.stakeAg,
+      AAVE: StakeMode.stakeAg,
+      BIFI: StakeMode.stakeAg,
+      AUTO: StakeMode.stakeAg,
+      DODO: StakeMode.stakeAg,
+      ALPHA: StakeMode.stakeAg,
+    },
   },
 
   AGF: {
-    DefaultPriceEth: 10.0/2919.23, // at 28 Sep 2021
+    DefaultPriceEth: 10.0 / 2919.23, // at 28 Sep 2021
     UniV2EthPair: {
       Symbol: 'UniV2ETHAGF',
       StakeToken: {
         RewardShare: {
           BasePoints: 1500,
           BoostFactor: 30000, // 3x
-        }
+        },
       },
-    }
+    },
   },
 
   RewardParams: {
@@ -904,7 +934,7 @@ export const CommonsConfig: ICommonConfiguration = {
         ...rewardPoolsOptimisticMain,
         InitialRateWad: 1,
       },
-      [ePolygonNetwork.matic]: rewardPoolsPolygonMain,  //temp
+      [ePolygonNetwork.matic]: rewardPoolsPolygonMain, //temp
       [ePolygonNetwork.mumbai]: {
         ...rewardPoolsPolygonMain, //temp
         InitialRateWad: 1,
@@ -941,7 +971,7 @@ export const CommonsConfig: ICommonConfiguration = {
         '0x07de306FF27a2B630B1141956844eB1552B956B5': '0x13512979ADE267AB5100878E2e0f485B568328a4', // cUSDC -> our.USDC
         '0xd3A691C852CDB01E281545A27064741F0B7f6825': '0xD1B98B6607330172f1D991521145A22BCe793277', // cWBTC -> our.WBTC
       },
-    }
+    },
   },
 
   ForkTest: {
@@ -958,5 +988,5 @@ export const CommonsConfig: ICommonConfiguration = {
     DonatePct: 20,
     DonateTo: '',
     AutoDepositPct: 30,
-  }
+  },
 };

@@ -668,5 +668,6 @@ export interface IAgfLPParams {
 
 export interface IDependencies {
   WrappedNative: string;
+  AgfPair: string;
   UniswapV2Router?: tEthereumAddress;
 }

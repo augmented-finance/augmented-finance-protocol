@@ -9,25 +9,31 @@ import '../interfaces/IPriceFeed.sol';
 contract PriceFeedUniEthToken is IPriceFeed {
   using WadRayMath for uint256;
 
-  IUniswapV2Pair private _token;
-  address private _underlying;
-  uint112 private _decimalMul;
-  uint32 private _lastUpdatedAt;
-  bool private _weth1;
+  IUniswapV2Pair private immutable _token;
+  address private immutable _underlying;
+  uint256 private immutable _decimalMul;
+  bool private immutable _baseAt1;
 
-  constructor(address token, address weth) {
+  uint32 private _lastUpdatedAt;
+
+  constructor(
+    address token,
+    address priceBase,
+    uint256 quoteValue
+  ) {
     _token = IUniswapV2Pair(token);
     (address t0, address t1) = (IUniswapV2Pair(token).token0(), IUniswapV2Pair(token).token1());
-    if (t1 == weth) {
-      _weth1 = true;
+    bool base1;
+    if (t1 == priceBase) {
+      base1 = true;
     } else {
-      require(t0 == weth);
+      require(t0 == priceBase);
       t0 = t1;
     }
-    _decimalMul = uint112(10)**IERC20Detailed(t0).decimals();
+    (uint256 decimals0, uint256 decimals1) = (IERC20Detailed(t0).decimals(), IERC20Detailed(t1).decimals());
+    _decimalMul = (quoteValue * 10**decimals1) / 10**decimals0;
     _underlying = t0;
-
-    updatePrice();
+    _baseAt1 = base1;
   }
 
   function updatePrice() public override {
@@ -51,10 +57,10 @@ contract PriceFeedUniEthToken is IPriceFeed {
   function currentPrice() private view returns (uint256, uint32) {
     (uint112 reserve0, uint112 reserve1, uint32 timestamp) = IUniswapV2Pair(_token).getReserves();
     uint256 value;
-    if (_weth1) {
-      value = reserve0 > 0 ? (uint256(reserve1) * uint256(_decimalMul)) / uint256(reserve0) : 0;
+    if (_baseAt1) {
+      value = reserve0 > 0 ? (uint256(reserve1) * _decimalMul) / uint256(reserve0) : 0;
     } else {
-      value = reserve1 > 0 ? (uint256(reserve0) * uint256(_decimalMul)) / uint256(reserve1) : 0;
+      value = reserve1 > 0 ? (uint256(reserve0) * _decimalMul) / uint256(reserve1) : 0;
     }
     return (value, timestamp);
   }

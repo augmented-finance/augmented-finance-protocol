@@ -106,6 +106,7 @@
     "verify:main": "npm run hardhat:main -- verify:verify-all-contracts",
     "verify:ropsten": "npm run hardhat:ropsten -- verify:verify-all-contracts",
     "verify:kovan": "npm run hardhat:kovan -- verify:verify-all-contracts",
+    
     "verify:rinkeby": "npm run hardhat:rinkeby -- verify:verify-all-contracts",
     "verify:bsc": "npm run hardhat:bsc -- verify:verify-all-contracts",
     "verify:bsc-test": "npm run hardhat:bsc-test -- verify:verify-all-contracts",

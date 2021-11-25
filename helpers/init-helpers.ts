@@ -87,7 +87,7 @@ export const initReservesByHelper = async (
     external: boolean;
   }
 
-  let strategyAddressesByName: Record<string, StrategyInfo> = {};
+  const strategyAddressesByName: Record<string, StrategyInfo> = {};
 
   const existingAssets = new Set<string>();
   const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
@@ -103,7 +103,7 @@ export const initReservesByHelper = async (
   let hasVariableDebt = false;
   let hasStableDebt = false;
 
-  for (let [symbol, params] of Object.entries(reservesParams)) {
+  for (const [symbol, params] of Object.entries(reservesParams)) {
     const tokenAddress = tokenAddresses[symbol];
     if (falsyOrZeroAddress(tokenAddress)) {
       console.log(`Asset ${symbol} is missing`);
@@ -536,7 +536,7 @@ export const initReservePriceFeeds = async (
   const names: string[] = [];
   const factories: StrategyFactoryInfo[] = [];
 
-  for (let [symbol, params] of Object.entries(reservesParams)) {
+  for (const [symbol, params] of Object.entries(reservesParams)) {
     const tokenAddress = tokenAddresses[symbol];
     if (falsyOrZeroAddress(tokenAddress)) {
       continue;
@@ -650,18 +650,18 @@ export const initReservePriceFeeds = async (
 
 export const getUniAgfEth = async (
   addressProvider: MarketAccessController,
-  uniswapAddr: undefined | tEthereumAddress
-) => {
+  uniswapAddr: undefined | tEthereumAddress,
+  pairBaseAddress: string
+): Promise<string> => {
   if (falsyOrZeroAddress(uniswapAddr)) {
     console.log('\tUniswap address is missing');
     return '';
   }
 
   const uniswapRouter = await getIUniswapV2Router02(uniswapAddr!);
-  const weth = await uniswapRouter.WETH();
   const uniswapFactory = await getIUniswapV2Factory(await uniswapRouter.factory());
   const agfAddr = await addressProvider.getAddress(AccessFlags.REWARD_TOKEN);
-  const lpPairAddr = await uniswapFactory.getPair(weth, agfAddr);
+  const lpPairAddr = await uniswapFactory.getPair(pairBaseAddress, agfAddr);
 
   if (falsyOrZeroAddress(lpPairAddr)) {
     console.log('\tUniswap Pair ETH-AGF not found');
@@ -674,7 +674,8 @@ export const deployUniAgfEth = async (
   ac: MarketAccessController,
   agfAddr: tEthereumAddress,
   uniswapAddr: tEthereumAddress | undefined,
-  newAgfToken: boolean
+  newAgfToken: boolean,
+  pairBaseAddress: string
 ) => {
   console.log('Deploy Uniswap Pair ETH-AGF');
   if (falsyOrZeroAddress(uniswapAddr)) {
@@ -692,11 +693,11 @@ export const deployUniAgfEth = async (
   }
 
   const uniswapFactory = await getIUniswapV2Factory(await uniswapRouter.factory());
-  let lpPair = newAgfToken ? '' : await uniswapFactory.getPair(weth, agfAddr);
+  let lpPair = newAgfToken ? '' : await uniswapFactory.getPair(pairBaseAddress, agfAddr);
   if (falsyOrZeroAddress(lpPair)) {
     console.log('\tCreating uniswap pair ETH-AGF');
-    await mustWaitTx(uniswapFactory.createPair(weth, agfAddr));
-    lpPair = await waitForAddressFn(async () => await uniswapFactory.getPair(weth, agfAddr), 'ETH-AGF');
+    await mustWaitTx(uniswapFactory.createPair(pairBaseAddress, agfAddr));
+    lpPair = await waitForAddressFn(async () => await uniswapFactory.getPair(pairBaseAddress, agfAddr), 'ETH-AGF');
   }
   console.log('Uniswap pair ETH-AGF: ', lpPair);
 };
