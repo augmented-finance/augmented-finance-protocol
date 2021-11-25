@@ -16,39 +16,25 @@ const emergencyAdmins = [
   '0x511EfaE41B0eA33Da847d16e13655009d0aB3Ed7',
 ];
 
-const tokenRewardStable: ITokenRewardPoolParams = {
+const tokenRewards = (depositBP: number, vDebtBP: number, sDebtBP: number, boostFactor: number = 30000): ITokenRewardPoolParams => ({
   Share: {
     deposit: {
-      BasePoints: 400,
-      BoostFactor: 30000, // 3x
+      BasePoints: depositBP,
+      BoostFactor: boostFactor,
     },
     vDebt: {
-      BasePoints: 100,
-      BoostFactor: 30000, // 3x
+      BasePoints: vDebtBP,
+      BoostFactor: boostFactor,
     },
     stake: {
-      BasePoints: 300,
-      BoostFactor: 30000, // 3x
+      BasePoints: sDebtBP,
+      BoostFactor: boostFactor,
     },
   }
-}
+})
 
-const tokenRewardVolatile: ITokenRewardPoolParams = {
-  Share: {
-    deposit: {
-      BasePoints: 200,
-      BoostFactor: 30000, // 3x
-    },
-    vDebt: {
-      BasePoints: 50,
-      BoostFactor: 30000, // 3x
-    },
-    stake: {
-      BasePoints: 150,
-      BoostFactor: 30000, // 3x
-    },
-  }
-}
+const tokenRewardStable = tokenRewards(400, 100, 300)
+const tokenRewardVolatile = tokenRewards(200, 50, 150)
 
 const tokenRewardStableExt: ITokenRewardPoolParams = {
   Share: {
@@ -125,15 +111,66 @@ const rewardPoolsEthTest: IRewardPools = {
 }
 
 const rewardPoolsBscMain: IRewardPools = {
-  InitialRateWad: 0,
+  InitialRateWad: 0.3858024691,
   TokenPools: {
-    DAI:   tokenRewardStable,
-    USDC:  tokenRewardStable,
-    USDT:  tokenRewardStable,
-    //WBTC:  tokenRewardVolatile,
-    WBNB:  tokenRewardVolatile,
+    WBNB: tokenRewards(200, 20, 10),
+    BTCB: tokenRewards(200, 20, 10),
+    BCH: tokenRewards(100, 10, 5),
+    ETH: tokenRewards(200, 20, 10),
+    BETH: tokenRewards(100, 10, 5),
+    USDT: tokenRewards(200, 20, 10),
+    BUSD: tokenRewards(200, 20, 10),
+    USDC: tokenRewards(200, 10, 5),
+    DAI: tokenRewards(200, 10, 5),
+    TUSD: tokenRewards(100, 10, 5),
+    DOT: tokenRewards(100, 10, 5),
+    XRP: tokenRewards(100, 10, 5),
+    ADA: tokenRewards(100, 10, 5),
+    LINK: tokenRewards(100, 10, 5),
+    MATIC: tokenRewards(100, 10, 5),
+    FIL: tokenRewards(75, 5, 5),
+    TRX: tokenRewards(75, 5, 5),
+    LTC: tokenRewards(75, 5, 5),
+    DOGE: tokenRewards(75, 5, 5),
+    SXP: tokenRewards(75, 5, 5),
+    INJ: tokenRewards(75, 5, 5),
+    CHR: tokenRewards(75, 5, 5),
+    REEF: tokenRewards(75, 5, 5),
+    TWT: tokenRewards(75, 5, 5),
+    LINA: tokenRewards(75, 5, 5),
+    CAKE: tokenRewards(75, 5, 5),
+    XVS: tokenRewards(75, 5, 5),
+    AAVE: tokenRewards(75, 5, 5),
+    UNI: tokenRewards(75, 5, 5),
+    SUSHI: tokenRewards(75, 5, 5),
+    ALPACA: tokenRewards(75, 5, 5),
+    BIFI: tokenRewards(75, 5, 5),
+    AUTO: tokenRewards(75, 5, 5),
+    DODO: tokenRewards(75, 5, 5),
+    ALPHA: tokenRewards(75, 5, 5),
   },
-  TreasuryPool: rewardPoolsEthMain.TreasuryPool,
+  ReferralPool: {
+    BasePoints: 100,
+    BoostFactor: 0,
+  },
+  TreasuryPool: {
+    BasePoints: 2000,
+    BoostFactor: 0,
+  },
+  RetroPool: {
+    TotalWad: 3000000,
+    BoostFactor: 0,
+    MeltDownAt: new Date('2021-11-01'),
+    Providers: [],
+  },
+  TeamPool: {
+    BasePoints: 1000,
+    UnlockAt: new Date('2021-11-15'),
+    Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
+    Members: {
+      '0x9029AdeFCdafcEce55a0bC0583B2F10E4F35D8f9': 500,
+    }
+  }
 }
 
 const rewardPoolsFantomMain: IRewardPools = {
@@ -249,7 +286,6 @@ export const CommonsConfig: ICommonConfiguration = {
     [ePolygonNetwork.optimistic_testnet]: USD_QUOTE,
     [ePolygonNetwork.matic]: USD_QUOTE,
     [ePolygonNetwork.mumbai]: USD_QUOTE,
-
   },
   
   FallbackOracle: {},
@@ -438,9 +474,7 @@ export const CommonsConfig: ICommonConfiguration = {
       LINK: '0x12162c3E810393dEC01362aBf156D7ecf6159528',
       USDC: '0x572dDec9087154dC5dfBB1546Bb62713147e0Ab0',
       USDT: '0x92C09849638959196E976289418e5973CC96d645',
-    },
-
-    
+    },    
   },
 
   ReserveAssetsOpt: {
@@ -732,6 +766,7 @@ export const CommonsConfig: ICommonConfiguration = {
 
     [eOtherNetwork.bsc]: BscStableBaseRates,
     [eOtherNetwork.bsc_testnet]: BscStableBaseRates,
+
     [eOtherNetwork.fantom]: FantomStableBaseRates,
     [eOtherNetwork.fantom_testnet]: FantomStableBaseRates,
     [eOtherNetwork.avalanche]: AvalancheStableBaseRates,
@@ -773,19 +808,48 @@ export const CommonsConfig: ICommonConfiguration = {
     CooldownPeriod: 7 * DAY,
     UnstakePeriod: 7 * DAY,
     StakeToken: {
-      DAI:  StakeMode.stakeAg,
-      USDC: StakeMode.stakeAg,
-      USDT: StakeMode.stakeAg,
       WBTC: StakeMode.stakeAg,
       WETH: StakeMode.stakeAg,
       
-      WBNB: StakeMode.stakeAg,
-
       WAVAX: StakeMode.stakeAg,
-
       WFTM: StakeMode.stakeAg,
-
       WMATIC: StakeMode.stakeAg,
+
+      WBNB : StakeMode.stakeAg,
+      BTCB : StakeMode.stakeAg,
+      BCH : StakeMode.stakeAg,
+      ETH : StakeMode.stakeAg,
+      BETH : StakeMode.stakeAg,
+      USDT : StakeMode.stakeAg,
+      BUSD : StakeMode.stakeAg,
+      USDC : StakeMode.stakeAg,
+      DAI : StakeMode.stakeAg,
+      TUSD : StakeMode.stakeAg,
+      DOT : StakeMode.stakeAg,
+      SXP : StakeMode.stakeAg,
+      XRP : StakeMode.stakeAg,
+      ADA : StakeMode.stakeAg,
+      TRX : StakeMode.stakeAg,
+      LINK : StakeMode.stakeAg,
+      LTC : StakeMode.stakeAg,
+      DOGE : StakeMode.stakeAg,
+      MATIC : StakeMode.stakeAg,
+      FIL : StakeMode.stakeAg,
+      INJ : StakeMode.stakeAg,
+      CHR : StakeMode.stakeAg,
+      REEF : StakeMode.stakeAg,
+      TWT : StakeMode.stakeAg,
+      LINA : StakeMode.stakeAg,
+      CAKE : StakeMode.stakeAg,
+      XVS : StakeMode.stakeAg,
+      ALPACA : StakeMode.stakeAg,
+      UNI : StakeMode.stakeAg,
+      SUSHI : StakeMode.stakeAg,
+      AAVE : StakeMode.stakeAg,
+      BIFI : StakeMode.stakeAg,
+      AUTO : StakeMode.stakeAg,
+      DODO : StakeMode.stakeAg,
+      ALPHA : StakeMode.stakeAg,
     }
   },
 
@@ -795,7 +859,7 @@ export const CommonsConfig: ICommonConfiguration = {
       Symbol: 'UniV2ETHAGF',
       StakeToken: {
         RewardShare: {
-          BasePoints: 1400,
+          BasePoints: 1500,
           BoostFactor: 30000, // 3x
         }
       },
@@ -804,7 +868,7 @@ export const CommonsConfig: ICommonConfiguration = {
 
   RewardParams: {
     Autolock: 4, // 4 weeks auto-prolongate
-    MinBoostBP: 1000, // 10%
+    MinBoostBP: 5000, // 50%
     RewardPools: {
       [eEthereumNetwork.main]: rewardPoolsEthMain,
 
