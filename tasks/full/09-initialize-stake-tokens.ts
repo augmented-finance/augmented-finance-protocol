@@ -90,14 +90,13 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
         continue;
       }
       const reserveAsset = reserveAssets[tokenName];
-      let asset = reserveAsset;
-      if (falsyOrZeroAddress(asset)) {
-        console.log(`Token ${tokenName} has an invalid address, skipping`);
+      if (reserveAsset === undefined) {
         continue;
       }
 
+      let asset = reserveAsset;
       if (falsyOrZeroAddress(asset)) {
-        console.log('Stake asset is missing:', tokenName, mode);
+        console.log(`Token ${tokenName} has an invalid address, skipping`);
         continue;
       }
 
