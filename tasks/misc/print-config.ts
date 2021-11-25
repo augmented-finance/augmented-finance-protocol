@@ -7,17 +7,15 @@ import {
   getAddressesProviderRegistry,
 } from '../../helpers/contracts-getters';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { eEthereumNetwork, eNetwork, ePolygonNetwork } from '../../helpers/types';
 
 task('print-config')
   .addParam('dataProvider', 'Address of ProtocolDataProvider')
   .addParam('pool', `Pool name to retrieve configuration, supported: ${Object.values(ConfigNames)}`)
   .setAction(async ({ pool, dataProvider }, localBRE) => {
     await localBRE.run('set-DRE');
-    const network = process.env.MAINNET_FORK === 'true' ? eEthereumNetwork.main : (localBRE.network.name as eNetwork);
     const poolConfig = loadPoolConfig(pool);
 
-    const providerRegistryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
+    const providerRegistryAddress = getParamPerNetwork(poolConfig.ProviderRegistry);
 
     const providerRegistry = await getAddressesProviderRegistry(providerRegistryAddress);
 
@@ -58,7 +56,7 @@ task('print-config')
       'isFrozen',
     ];
     const tokensFields = ['depositToken', 'stableDebtToken', 'variableDebtToken'];
-    for (const [symbol, address] of Object.entries(getParamPerNetwork(poolConfig.ReserveAssets, network))) {
+    for (const [symbol, address] of Object.entries(getParamPerNetwork(poolConfig.ReserveAssets))) {
       console.log(`- ${symbol} asset config`);
       console.log(`  - reserve address: ${address}`);
 

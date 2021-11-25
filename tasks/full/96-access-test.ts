@@ -1,13 +1,12 @@
 import { task } from 'hardhat/config';
-import { eEthereumNetwork, eNetwork, ePolygonNetwork } from '../../helpers/types';
-import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
+import { eEthereumNetwork, ePolygonNetwork } from '../../helpers/types';
+import { ConfigNames } from '../../helpers/configuration';
 import {
   getExternalsFromJsonDb,
   getFromJsonDbByAddr,
   getInstancesFromJsonDb,
   getSignerN,
 } from '../../helpers/misc-utils';
-import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { getContractGetterById } from '../../helpers/contracts-mapper';
 import { verifyContractMutableAccess, verifyProxyMutableAccess } from '../../helpers/method-checker';
 import { Contract, Signer } from 'ethers';
@@ -17,20 +16,14 @@ task('full:access-test', 'Tests access to mutable functions of the deployed cont
   .setAction(async ({ pool }, DRE) => {
     await DRE.run('set-DRE');
 
-    const network = <eNetwork>DRE.network.name;
-    // const poolConfig = loadPoolConfig(pool);
-    switch (network) {
+    switch (DRE.network.name) {
       case eEthereumNetwork.kovan:
-        console.log('Access test is not supported for:', network);
-        return;
       case ePolygonNetwork.arbitrum_testnet:
-        console.log('Access test is not supported for:', network);
+        console.log('Access test is not supported for:', DRE.network.name);
         return;
     }
 
-    // const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-    const estimateGas = true; // !MAINNET_FORK;
-    const [freshStart, continuation, addressProvider] = await getDeployAccessController();
+    const estimateGas = true; // !isForkNetwork();
 
     const checkAll = true;
     const user = (await getSignerN(1)) as Signer;

@@ -84,9 +84,5 @@ task('augmented:test-local', 'Deploy Augmented test contracts.')
 
       const basicLocker = await deployMockTokenLocker([rewardCtl.address, 1e6, 0, agfToken.address]);
       await waitForTx(await rewardCtl.addRewardPool(basicLocker.address));
-
-      if (process.env.MAINNET_FORK === 'true') {
-        // console.log(`#6 deploying: Migrator + Adapters`);
-      }
     }
   );

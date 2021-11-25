@@ -9,11 +9,9 @@ import {
 } from '../../helpers/contracts-deployments';
 import {
   tEthereumAddress,
-  eNetwork,
   ICommonConfiguration,
   ITokenRewardPoolParams,
   IRewardPoolParams,
-  IRewardParams,
   IPermiRewardPool,
   IRewardPools,
 } from '../../helpers/types';
@@ -46,7 +44,6 @@ interface poolInitParams {
 
 deployTask(`full:init-reward-pools`, `Deploy reward pools`, __dirname).setAction(async ({ verify, pool }, localBRE) => {
   await localBRE.run('set-DRE');
-  const network = <eNetwork>localBRE.network.name;
   const poolConfig = loadPoolConfig(pool);
 
   const [freshStart, continuation, addressProvider] = await getDeployAccessController();
@@ -59,13 +56,13 @@ deployTask(`full:init-reward-pools`, `Deploy reward pools`, __dirname).setAction
     AGF: { UniV2EthPair },
   } = poolConfig as ICommonConfiguration;
 
-  const reserveAssets = getParamPerNetwork(ReserveAssets, network);
+  const reserveAssets = getParamPerNetwork(ReserveAssets);
   const stakeConfigurator = await getStakeConfiguratorImpl(
     await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
   );
 
   const lendingPool = await getLendingPoolProxy(await addressProvider.getLendingPool());
-  const rewardParams = getParamPerNetwork(RewardParams.RewardPools, network);
+  const rewardParams = getParamPerNetwork(RewardParams.RewardPools);
   const initialRateWad = rewardParams.InitialRateWad;
 
   const knownReserves: {
@@ -105,7 +102,7 @@ deployTask(`full:init-reward-pools`, `Deploy reward pools`, __dirname).setAction
   }
 
   if (UniV2EthPair?.StakeToken?.RewardShare) {
-    const dependencies = getParamPerNetwork(Dependencies, network);
+    const dependencies = getParamPerNetwork(Dependencies);
     const lpPairAddr = await getUniAgfEth(addressProvider, dependencies.UniswapV2Router);
 
     if (!falsyOrZeroAddress(lpPairAddr)) {

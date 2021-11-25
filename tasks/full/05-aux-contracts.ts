@@ -9,7 +9,7 @@ import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import { loadPoolConfig } from '../../helpers/configuration';
 import { getDeployAccessController } from '../../helpers/deploy-helpers';
 import { getLendingPoolConfiguratorProxy } from '../../helpers/contracts-getters';
-import { eNetwork, ICommonConfiguration, tEthereumAddress } from '../../helpers/types';
+import { ICommonConfiguration, tEthereumAddress } from '../../helpers/types';
 import { LendingPoolConfigurator, MarketAccessController } from '../../types';
 import { Contract } from '@ethersproject/contracts';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
@@ -19,10 +19,9 @@ import { deployTask } from '../helpers/deploy-steps';
 deployTask('full:aux-contracts', 'Deploy auxiliary contracts', __dirname).setAction(
   async ({ verify, pool }, DRE: HardhatRuntimeEnvironment) => {
     await DRE.run('set-DRE');
-    const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
     const { Dependencies } = poolConfig as ICommonConfiguration;
-    const dependencies = getParamPerNetwork(Dependencies, network);
+    const dependencies = getParamPerNetwork(Dependencies);
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 

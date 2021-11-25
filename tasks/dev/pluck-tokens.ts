@@ -1,15 +1,13 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
 import { loadPoolConfig, ConfigNames } from '../../helpers/configuration';
-import { falsyOrZeroAddress, getFirstSigner, mustWaitTx } from '../../helpers/misc-utils';
-import { eNetwork } from '../../helpers/types';
+import { falsyOrZeroAddress, getFirstSigner, isForkNetwork, mustWaitTx } from '../../helpers/misc-utils';
 import {
   getDepositStakeTokenImpl,
   getIErc20Detailed,
   getLendingPoolProxy,
   getMarketAddressController,
   getStakeConfiguratorImpl,
-  getStakeTokenImpl,
 } from '../../helpers/contracts-getters';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { BigNumber } from 'ethers';
@@ -21,7 +19,10 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
   .setAction(async ({ pool, mustDeposit }, DRE) => {
     await DRE.run('set-DRE');
 
-    const network = <eNetwork>DRE.network.name;
+    if (!isForkNetwork()) {
+      throw new Error('Pluck can only be done on fork');
+    }
+
     const poolConfig = loadPoolConfig(pool);
 
     if (poolConfig.ForkTest.DonatePct == 0) {
@@ -29,8 +30,8 @@ task('dev:pluck-tokens', 'Pluck tokens from whales to deployer for tests')
     }
 
     const deployer = await getFirstSigner();
-    const donors = Object.entries(getParamPerNetwork(poolConfig.ForkTest.Donors, network));
-    const assets = getParamPerNetwork(poolConfig.ReserveAssets, network);
+    const donors = Object.entries(getParamPerNetwork(poolConfig.ForkTest.Donors) ?? []);
+    const assets = getParamPerNetwork(poolConfig.ReserveAssets);
     const donatePct = poolConfig.ForkTest.DonatePct;
     const depositPct = poolConfig.ForkTest.AutoDepositPct;
     let receiver = poolConfig.ForkTest.DonateTo;

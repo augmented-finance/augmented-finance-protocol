@@ -9,21 +9,23 @@ task(`set-DRE`, `Inits the DRE, to have access to all the plugins' objects`).set
   }
   if ((_DRE as HardhatRuntimeEnvironment).network.name.includes('tenderly') || process.env.TENDERLY === 'true') {
     console.log('- Setting up Tenderly provider');
+    const tenderlyNetwork = (<any>_DRE).tenderlyNetwork;
     if (process.env.TENDERLY_FORK_ID && process.env.TENDERLY_HEAD_ID) {
       console.log('- Connecting to a Tenderly Fork');
-      _DRE.tenderlyNetwork.setFork(process.env.TENDERLY_FORK_ID);
-      _DRE.tenderlyNetwork.setHead(process.env.TENDERLY_HEAD_ID);
+      tenderlyNetwork.setFork(process.env.TENDERLY_FORK_ID);
+      tenderlyNetwork.setHead(process.env.TENDERLY_HEAD_ID);
     } else {
       console.log('- Creating a new Tenderly Fork');
-      await _DRE.tenderlyNetwork.initializeFork();
+      await tenderlyNetwork.initializeFork();
     }
-    const provider = new _DRE.ethers.providers.Web3Provider(_DRE.tenderlyNetwork as any);
-    _DRE.ethers.provider = provider;
+    const ethers = (<any>_DRE).ethers;
+    const provider = new ethers.providers.Web3Provider(tenderlyNetwork as any);
+    ethers.provider = provider;
     console.log('- Initialized Tenderly fork:');
-    console.log('  - Fork: ', _DRE.tenderlyNetwork.getFork());
-    console.log('  - Head: ', _DRE.tenderlyNetwork.getHead());
-    console.log('  - First account:', await (await _DRE.ethers.getSigners())[0].getAddress());
-    console.log('  - Balance:', formatEther(await (await _DRE.ethers.getSigners())[0].getBalance()));
+    console.log('  - Fork: ', tenderlyNetwork.getFork());
+    console.log('  - Head: ', tenderlyNetwork.getHead());
+    console.log('  - First account:', await (await ethers.getSigners())[0].getAddress());
+    console.log('  - Balance:', formatEther(await (await ethers.getSigners())[0].getBalance()));
   }
 
   setDRE(_DRE);

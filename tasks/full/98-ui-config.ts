@@ -1,6 +1,5 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { eNetwork } from '../../helpers/types';
 import { ConfigNames, loadPoolConfig } from '../../helpers/configuration';
 import { falsyOrZeroAddress, writeUiConfig } from '../../helpers/misc-utils';
 import { getAddressesProviderRegistry } from '../../helpers/contracts-getters';
@@ -14,13 +13,11 @@ task('full:write-ui-config', 'Prepares UI config')
   .setAction(async ({ verify, pool }, DRE) => {
     await DRE.run('set-DRE');
 
-    const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
-    const { ProviderId, MarketId } = poolConfig;
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-    const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
+    const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry);
     let registry: AddressesProviderRegistry;
 
     if (falsyOrZeroAddress(registryAddress)) {
@@ -35,5 +32,5 @@ task('full:write-ui-config', 'Prepares UI config')
       return;
     }
 
-    writeUiConfig(network, registry.address, addressProvider.address, dataHelperAddress);
+    writeUiConfig(DRE.network.name, registry.address, addressProvider.address, dataHelperAddress);
   });

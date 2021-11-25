@@ -5,12 +5,14 @@ import {
   cleanupUiConfig,
   getFirstSigner,
   getTenderlyDashboardLink,
+  isForkNetwork,
   printContracts,
 } from '../../helpers/misc-utils';
 import { usingTenderly } from '../../helpers/tenderly-utils';
 import { exit } from 'process';
 import { BigNumber } from 'ethers';
 import { getDeploySteps } from '../helpers/deploy-steps';
+import { workaroundForBSCFork } from '../helpers/bsc-fork';
 
 task('augmented:mainnet', 'Deploy enviroment')
   .addFlag('incremental', 'Incremental deployment')
@@ -21,11 +23,12 @@ task('augmented:mainnet', 'Deploy enviroment')
   .addOptionalParam('skip', 'Skip steps with less or equal index', 0, types.int)
   .setAction(async ({ incremental, secure, strict, verify, skip: skipN, ignorecalc: ignoreCalc }, DRE) => {
     const POOL_NAME = ConfigNames.Augmented;
-    const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
     await DRE.run('set-DRE');
 
+    await workaroundForBSCFork();
+
     const deployer = await getFirstSigner();
-    // if (MAINNET_FORK) {
+    // if (isForkNetwork()) {
     //   await DRE.ethers.provider.send("hardhat_setBalance", [
     //     deployer.address,
     //     "0x56BC75E2D63100000", // 10^20
@@ -80,7 +83,7 @@ task('augmented:mainnet', 'Deploy enviroment')
       await DRE.run('full:access-test', { pool: POOL_NAME });
 
       const balanceBeforePluck = await deployer.getBalance();
-      if (MAINNET_FORK) {
+      if (isForkNetwork()) {
         console.log('\n======================================================================');
         console.log('97 Pluck');
         console.log('======================================================================\n');

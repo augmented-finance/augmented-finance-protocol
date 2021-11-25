@@ -1,3 +1,4 @@
+import { getNetworkName, isForkNetwork } from '../../helpers/misc-utils';
 import { eEthereumNetwork, ICommonConfiguration } from '../../helpers/types';
 import { CommonsConfig } from './commons';
 import { TestReserves, TestStableBaseRates } from './reservesConfigs';
@@ -23,8 +24,6 @@ export const TestConfig: ICommonConfiguration = {
 }
 
 export const AugmentedConfig: ICommonConfiguration = (() => {
-  const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-
   const src = CommonsConfig;
   let cfg: ICommonConfiguration = {...src};
 
@@ -46,9 +45,13 @@ export const AugmentedConfig: ICommonConfiguration = (() => {
       cfg.FallbackOracle[key] = defRates;
     }
   }
-  if (MAINNET_FORK) {
-    cfg.LendingDisableFeatures[eEthereumNetwork.main] = [];
-    cfg.RewardParams.RewardPools[eEthereumNetwork.main].InitialRateWad = 1;
+  if (isForkNetwork()) {
+    const network = getNetworkName();
+    cfg.LendingDisableFeatures[network] = [];
+    
+    if (cfg.RewardParams.RewardPools[network].InitialRateWad == 0) {
+      cfg.RewardParams.RewardPools[network].InitialRateWad = 1;
+    }
   }
 
   return cfg;

@@ -1,6 +1,6 @@
 import { loadPoolConfig } from '../../helpers/configuration';
 import { deployStakeConfiguratorImpl } from '../../helpers/contracts-deployments';
-import { eContractid, eNetwork } from '../../helpers/types';
+import { eContractid } from '../../helpers/types';
 import { addContractAddrToJsonDb, addNamedToJsonDb, falsyOrZeroAddress } from '../../helpers/misc-utils';
 import { AccessFlags } from '../../helpers/access-flags';
 import { getDeployAccessController, setAndGetAddressAsProxy } from '../../helpers/deploy-helpers';
@@ -12,7 +12,6 @@ const CONTRACT_NAME = 'StakeConfigurator';
 deployTask(`full:deploy-stake-configurator`, `Deploy stake configurator`, __dirname).setAction(
   async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
-    const network = <eNetwork>localBRE.network.name;
     const poolConfig = loadPoolConfig(pool);
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();

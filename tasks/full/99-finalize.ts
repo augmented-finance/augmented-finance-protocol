@@ -1,6 +1,5 @@
 import { task } from 'hardhat/config';
 import { getParamPerNetwork } from '../../helpers/contracts-helpers';
-import { eNetwork } from '../../helpers/types';
 import { loadPoolConfig } from '../../helpers/configuration';
 import { falsyOrZeroAddress, mustWaitTx } from '../../helpers/misc-utils';
 import {
@@ -17,7 +16,6 @@ task('full:deploy-finalize', 'Finalizes deployment and revokes temporary permiss
   .setAction(async ({ register, pool }, DRE) => {
     await DRE.run('set-DRE');
 
-    const network = <eNetwork>DRE.network.name;
     const poolConfig = loadPoolConfig(pool);
 
     const addressProvider = await getMarketAccessController();
@@ -28,7 +26,7 @@ task('full:deploy-finalize', 'Finalizes deployment and revokes temporary permiss
     if (hasAddressProviderRegistry()) {
       registry = await getAddressesProviderRegistry();
     } else {
-      const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry, network);
+      const registryAddress = getParamPerNetwork(poolConfig.ProviderRegistry);
       if (falsyOrZeroAddress(registryAddress)) {
         throw 'registry address is unknown';
       }

@@ -5,8 +5,6 @@ import axios, { AxiosRequestConfig } from 'axios';
 import qs from 'qs';
 import { BigNumber as BigNumber2 } from '@ethersproject/bignumber';
 import { getEtherscanEndpoints } from '@nomiclabs/hardhat-etherscan/dist/src/network/prober';
-import { getDefaultProvider } from '@ethersproject/providers';
-import { EthereumProvider } from 'hardhat/types';
 
 export const stringifyArgs = (args: any) =>
   JSON.stringify(args, (key, value) => {
@@ -47,8 +45,6 @@ const _verifyContract = async (
   constructorArguments: any[],
   libraries?: string
 ): Promise<[ok: boolean, err: string]> => {
-  const currentNetwork = DRE.network.name;
-
   let params: VerificationSubtaskArgs = {
     address,
     constructorArguments,

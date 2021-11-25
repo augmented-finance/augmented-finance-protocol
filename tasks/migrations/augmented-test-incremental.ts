@@ -5,6 +5,7 @@ import {
   cleanupUiConfig,
   getFirstSigner,
   getInstanceCountFromJsonDb,
+  isForkNetwork,
   printContracts,
 } from '../../helpers/misc-utils';
 import { exit } from 'process';
@@ -17,8 +18,7 @@ task('augmented:test-incremental', 'Test incremental deploy').setAction(async ({
   await cleanupJsonDb(DRE.network.name);
   await cleanupUiConfig();
 
-  const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-  if (!MAINNET_FORK) {
+  if (!isForkNetwork()) {
     console.log('Can only run on fork');
     exit(1);
   }

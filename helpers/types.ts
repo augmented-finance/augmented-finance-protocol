@@ -38,22 +38,13 @@ export const isPolygonNetwork = (name: string) => {
   return ePolygonNetwork[name] !== undefined;
 };
 
+export const isKnownNetworkName = (name: string) => {
+  return isPolygonNetwork(name) || eEthereumNetwork[name] !== undefined || eOtherNetwork[name] !== undefined;
+};
+
 export const isAutoGasNetwork = (name: string) => {
   return isPolygonNetwork(name);
 };
-
-export const autoGas = (name: string, n: number) => {
-  return isAutoGasNetwork(name) ? undefined : n;
-};
-
-export enum EthereumNetworkNames {
-  kovan = 'kovan',
-  ropsten = 'ropsten',
-  rinkeby = 'rinkeby',
-  main = 'main',
-  matic = 'matic',
-  mumbai = 'mumbai',
-}
 
 export enum eContractid {
   MarketAccessController = 'MarketAccessController',
