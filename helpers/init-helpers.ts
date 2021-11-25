@@ -54,7 +54,7 @@ export const initReservesByHelper = async (
   verify: boolean
 ) => {
   // CHUNK CONFIGURATION
-  const initChunks = 1;
+  const initChunks = 2;
 
   const reserveInfo: {
     tokenAddress: tEthereumAddress;
