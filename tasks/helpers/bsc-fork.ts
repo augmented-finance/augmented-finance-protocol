@@ -10,7 +10,7 @@ export const workaroundForBSCFork = async () => {
 
   const url = NETWORKS_RPC_URL[eOtherNetwork.bsc];
   const bscProvider = new ethers.providers.JsonRpcProvider(url);
-  let latestBlock = (await bscProvider.getBlockNumber()) + 5;
+  const latestBlock = (await bscProvider.getBlockNumber()) + 5;
 
   console.log('WARNING! Resetting HardHat to fork BSC at ', latestBlock);
   console.log('===========================================================\n');
