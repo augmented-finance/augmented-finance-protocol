@@ -85,6 +85,7 @@ export enum eContractid {
   TreasuryRewardPool = 'TreasuryRewardPool',
   DepositStakeTokenImpl = 'DepositStakeTokenImpl',
   MockDepositStakeToken = 'MockDepositStakeToken',
+  MockUniEthPair = 'MockUniEthPair',
 
   DelegatedStrategyAave = 'DelegatedStrategyAave',
   DelegatedStrategyCompoundErc20 = 'DelegatedStrategyCompoundErc20',

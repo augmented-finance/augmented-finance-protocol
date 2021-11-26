@@ -32,6 +32,7 @@ import {
   MockVariableDebtTokenFactory,
   MockUniswapV2Router02Factory,
   MockPriceOracleFactory,
+  MockUniEthPairFactory,
   ReserveLogicFactory,
   SelfdestructTransferFactory,
   StableDebtTokenFactory,
@@ -200,6 +201,17 @@ export const deployMockLendingPoolImpl = async (verify?: boolean) => {
     verify
   );
 };
+
+export const deployMockUniEthPair = async (
+  args: [token0: tEthereumAddress, token1: tEthereumAddress, reserve0: BigNumberish, reserve1: BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new MockUniEthPairFactory(/* libraries, */ await getFirstSigner()).deploy(...args),
+    eContractid.MockUniEthPair,
+    [],
+    verify
+  );
 
 export const deployMockPriceOracle = async (verify?: boolean) =>
   withSaveAndVerify(

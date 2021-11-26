@@ -49,6 +49,7 @@ import {
   getVariableDebtToken,
   getWETHGateway,
   getXAGFTokenV1Impl,
+  getMockUniEthPair,
 } from './contracts-getters';
 import { eContractid, tEthereumAddress } from './types';
 
@@ -102,6 +103,7 @@ const CONTRACT_GETTERS: Omit<Record<eContractid, ContractGetterFn>, ignoredKeys>
   [eContractid.UniswapLiquiditySwapAdapter]: getUniswapLiquiditySwapAdapter,
   [eContractid.UniswapRepayAdapter]: getUniswapRepayAdapter,
   [eContractid.FlashLiquidationAdapter]: getFlashLiquidationAdapter,
+  [eContractid.MockUniEthPair]: getMockUniEthPair,
 
   [eContractid.MockRewardFreezer]: getMockRewardFreezer,
   [eContractid.MockRewardBooster]: getMockRewardBooster,

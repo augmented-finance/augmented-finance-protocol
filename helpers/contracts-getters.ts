@@ -54,6 +54,7 @@ import {
   PriceFeedUniEthTokenFactory,
   ProxyAdminFactory,
   AGFTokenV2Factory,
+  MockUniEthPairFactory,
 } from '../types';
 import { IManagedRewardPoolFactory } from '../types/IManagedRewardPoolFactory';
 import { IRewardedTokenFactory } from '../types/IRewardedTokenFactory';
@@ -113,6 +114,9 @@ export const getLendingPoolProxy = async (address: tEthereumAddress) =>
 
 export const getMockPriceOracle = async (address: tEthereumAddress) =>
   MockPriceOracleFactory.connect(address, await getFirstSigner());
+
+export const getMockUniEthPair = async (address?: tEthereumAddress) =>
+  MockUniEthPairFactory.connect(address || (await getAddr(eContractid.MockUniEthPair)), await getFirstSigner());
 
 export const getDepositToken = async (address: tEthereumAddress) =>
   DepositTokenFactory.connect(address, await getFirstSigner());
