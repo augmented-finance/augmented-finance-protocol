@@ -32,6 +32,7 @@ import {
   MockVariableDebtTokenFactory,
   MockUniswapV2Router02Factory,
   MockPriceOracleFactory,
+  MockUniEthPairFactory,
   ReserveLogicFactory,
   SelfdestructTransferFactory,
   StableDebtTokenFactory,
@@ -200,6 +201,17 @@ export const deployMockLendingPoolImpl = async (verify?: boolean) => {
     verify
   );
 };
+
+export const deployMockUniEthPair = async (
+  args: [token0: tEthereumAddress, token1: tEthereumAddress, reserve0: BigNumberish, reserve1: BigNumberish],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await new MockUniEthPairFactory(/* libraries, */ await getFirstSigner()).deploy(...args),
+    eContractid.MockUniEthPair,
+    [],
+    verify
+  );
 
 export const deployMockPriceOracle = async (verify?: boolean) =>
   withSaveAndVerify(
@@ -524,9 +536,9 @@ export const deployAllMockTokens = async (verify?: boolean) => {
   const protoConfigData = getReservesTestConfig();
 
   for (const tokenSymbol of DefaultTokenSymbols) {
-    let decimals = '18';
+    const decimals = '18';
 
-    let configData = (<any>protoConfigData)[tokenSymbol];
+    const configData = (<any>protoConfigData)[tokenSymbol];
 
     tokens[tokenSymbol] = await deployMintableERC20(
       [tokenSymbol, tokenSymbol, configData ? configData.reserveDecimals : decimals],
@@ -1051,7 +1063,7 @@ export const deployPriceFeedCompoundEth = async (name: string, args: [token: tEt
 
 export const deployPriceFeedUniEthPair = async (
   name: string,
-  args: [token: tEthereumAddress, weth: tEthereumAddress],
+  args: [token: tEthereumAddress, basePrice: tEthereumAddress],
   verify?: boolean
 ) =>
   withSaveAndVerify(
@@ -1063,7 +1075,7 @@ export const deployPriceFeedUniEthPair = async (
 
 export const deployPriceFeedUniEthToken = async (
   name: string,
-  args: [token: tEthereumAddress, weth: tEthereumAddress],
+  args: [token: tEthereumAddress, basePrice: tEthereumAddress, quouteValue: BigNumberish],
   verify?: boolean
 ) =>
   withSaveAndVerify(

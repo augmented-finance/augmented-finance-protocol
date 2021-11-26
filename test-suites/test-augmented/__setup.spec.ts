@@ -59,7 +59,7 @@ const deployAllMockTokens = async (deployer: Signer) => {
     }
     let decimals = 18;
 
-    let configData = (<any>protoConfigData)[tokenSymbol];
+    const configData = (<any>protoConfigData)[tokenSymbol];
 
     if (!configData) {
       decimals = 18;

@@ -85,6 +85,7 @@ export enum eContractid {
   TreasuryRewardPool = 'TreasuryRewardPool',
   DepositStakeTokenImpl = 'DepositStakeTokenImpl',
   MockDepositStakeToken = 'MockDepositStakeToken',
+  MockUniEthPair = 'MockUniEthPair',
 
   DelegatedStrategyAave = 'DelegatedStrategyAave',
   DelegatedStrategyCompoundErc20 = 'DelegatedStrategyCompoundErc20',
@@ -668,5 +669,6 @@ export interface IAgfLPParams {
 
 export interface IDependencies {
   WrappedNative: string;
+  AgfPair: string;
   UniswapV2Router?: tEthereumAddress;
 }

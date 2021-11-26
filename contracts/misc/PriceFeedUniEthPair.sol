@@ -8,19 +8,19 @@ import '../interfaces/IPriceFeed.sol';
 contract PriceFeedUniEthPair is IPriceFeed {
   using WadRayMath for uint256;
 
-  address private _token;
+  address private immutable _token;
+  bool private immutable _baseAt1;
   uint32 private _lastUpdatedAt;
-  bool private _take1;
 
-  constructor(address token, address weth) {
-    _token = token;
-    if (IUniswapV2Pair(token).token1() == weth) {
-      _take1 = true;
+  constructor(address token, address priceBase) {
+    bool baseAt1;
+    if (IUniswapV2Pair(token).token1() == priceBase) {
+      baseAt1 = true;
     } else {
-      require(IUniswapV2Pair(token).token0() == weth);
+      require(IUniswapV2Pair(token).token0() == priceBase);
     }
-
-    updatePrice();
+    _token = token;
+    _baseAt1 = baseAt1;
   }
 
   function updatePrice() public override {
@@ -49,7 +49,7 @@ contract PriceFeedUniEthPair is IPriceFeed {
     }
 
     uint256 value;
-    if (_take1) {
+    if (_baseAt1) {
       value = reserve0 > 0 ? uint256(reserve1) * 2 : reserve1;
     } else {
       value = reserve1 > 0 ? uint256(reserve0) * 2 : reserve0;

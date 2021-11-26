@@ -355,6 +355,12 @@ const DEFAULT_EXCEPTIONS: { [name: string]: ContractAccessExceptions } = {
       updatePrice: true,
     },
   },
+
+  [eContractid.PriceFeedUniEthToken]: {
+    functions: {
+      updatePrice: true,
+    },
+  },
 };
 
 export const getContractAccessExceptions = (name: string): ContractAccessExceptions => {

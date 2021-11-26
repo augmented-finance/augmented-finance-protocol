@@ -103,7 +103,9 @@ deployTask(`full:init-reward-pools`, `Deploy reward pools`, __dirname).setAction
 
   if (UniV2EthPair?.StakeToken?.RewardShare) {
     const dependencies = getParamPerNetwork(Dependencies);
-    const lpPairAddr = await getUniAgfEth(addressProvider, dependencies.UniswapV2Router);
+    const priceBaseSymbol = dependencies.AgfPair ?? dependencies.WrappedNative ?? 'WETH';
+    const pairPriceBaseToken = reserveAssets[priceBaseSymbol];
+    const lpPairAddr = await getUniAgfEth(addressProvider, dependencies.UniswapV2Router, pairPriceBaseToken);
 
     if (!falsyOrZeroAddress(lpPairAddr)) {
       knownReserves.push({
@@ -114,9 +116,9 @@ deployTask(`full:init-reward-pools`, `Deploy reward pools`, __dirname).setAction
     }
   }
 
-  let prepParams: poolInitParams[] = [];
-  let prepNames: string[] = [];
-  let prepProviders: tEthereumAddress[] = [];
+  const prepParams: poolInitParams[] = [];
+  const prepNames: string[] = [];
+  const prepProviders: tEthereumAddress[] = [];
 
   {
     const subTypePrefixes: string[] = [
@@ -127,7 +129,7 @@ deployTask(`full:init-reward-pools`, `Deploy reward pools`, __dirname).setAction
     ];
 
     // Put the most frequently used token types at the beginning
-    for (let subType of [0, 1, 3, 2]) {
+    for (const subType of [0, 1, 3, 2]) {
       // Deposit, Variable, Stake, Stable
       for (const knownReserve of knownReserves) {
         const token = knownReserve.tokens[subType];
@@ -155,15 +157,15 @@ deployTask(`full:init-reward-pools`, `Deploy reward pools`, __dirname).setAction
     await addressProvider.getAddress(AccessFlags.REWARD_CONFIGURATOR)
   );
 
-  const { pools, controllers, baselinePcts } = await configurator.getRewardedTokenParams(prepProviders);
+  const { pools, controllers } = await configurator.getRewardedTokenParams(prepProviders);
 
-  let initParams: poolInitParams[] = [];
-  let initNames: string[] = [];
+  const initParams: poolInitParams[] = [];
+  const initNames: string[] = [];
 
   let poolImplAddr: tEthereumAddress = ZERO_ADDRESS;
 
   for (let i = 0; i < prepParams.length; i++) {
-    let poolParams = prepParams[i];
+    const poolParams = prepParams[i];
     if (falsyOrZeroAddress(pools[i])) {
       // a separate pool should be created and connected
       if (falsyOrZeroAddress(poolImplAddr)) {
@@ -322,7 +324,7 @@ const deployExtraPools = async (
   const retroPoolName = 'RetroPool';
   const treasuryPoolName = 'TreasuryPool'; // NB! it is constant in a contract
 
-  let totalShare: number = 0;
+  let totalShare = 0;
   const extraNames: string[] = [];
 
   if (!freshStart || continuation) {

@@ -37,10 +37,12 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
       Names,
       RewardParams,
       Dependencies,
+      ReserveAssets,
       AGF: { DefaultPriceEth: AgfDefaultPriceEth, UniV2EthPair },
     } = poolConfig as ICommonConfiguration;
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
+    const reserveAssets = getParamPerNetwork(ReserveAssets);
 
     // configurator is always updated
     let configuratorAddr =
@@ -107,7 +109,9 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
 
     if (UniV2EthPair) {
       const dependencies = getParamPerNetwork(Dependencies);
-      await deployUniAgfEth(addressProvider, agfAddr, dependencies.UniswapV2Router, newAgfToken);
+      const priceBaseSymbol = dependencies.AgfPair ?? dependencies.WrappedNative ?? 'WETH';
+      const pairPriceBaseToken = reserveAssets[priceBaseSymbol];
+      await deployUniAgfEth(addressProvider, agfAddr, dependencies.UniswapV2Router, newAgfToken, pairPriceBaseToken);
     }
 
     // Reward controller is not updated
@@ -199,7 +203,9 @@ const configureAgfPrice = async (
     try {
       price = await oracle.getAssetPrice(agfAddr);
       hasPrice = true;
-    } catch {}
+    } catch {
+      //
+    }
   }
   if (hasPrice) {
     console.log('AGF price found:', price.div(1e9).toNumber() / 1e9, 'ethers, (', price.toString(), ' wei)');
