@@ -34,7 +34,10 @@ contract PriceFeedUniEthToken is IPriceFeed {
       t0 = t1;
     }
 
-    _decimalMul = (quoteValue * 10**decimals1) / 10**decimals0;
+    uint256 decimalsWithCorrection = (quoteValue * 10**decimals1) / 10**decimals0;
+    require(decimalsWithCorrection > 0);
+
+    _decimalMul = decimalsWithCorrection;
     _underlying = t0;
     _baseAt1 = base1;
   }
