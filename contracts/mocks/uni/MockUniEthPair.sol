@@ -2,12 +2,6 @@
 pragma solidity ^0.8.4;
 
 interface IMockUniswapV2Pair {
-  function name() external pure returns (string memory);
-
-  function symbol() external pure returns (string memory);
-
-  function decimals() external pure returns (uint8);
-
   function token0() external view returns (address);
 
   function token1() external view returns (address);
@@ -23,10 +17,6 @@ interface IMockUniswapV2Pair {
 }
 
 contract MockUniEthPair is IMockUniswapV2Pair {
-  string private constant NAME = 'Mock Uni v2 pair';
-  string private constant SYMBOL = 'UNIV2MOCK';
-  uint8 private constant DECIMALS = 18;
-
   address private immutable _firstToken;
   address private immutable _secondToken;
 
@@ -43,18 +33,6 @@ contract MockUniEthPair is IMockUniswapV2Pair {
     _secondToken = secondToken;
     _reserve0 = reserve0;
     _reserve1 = reserve1;
-  }
-
-  function name() external pure override returns (string memory) {
-    return NAME;
-  }
-
-  function symbol() external pure override returns (string memory) {
-    return SYMBOL;
-  }
-
-  function decimals() external pure override returns (uint8) {
-    return DECIMALS;
   }
 
   function token0() external view override returns (address) {
