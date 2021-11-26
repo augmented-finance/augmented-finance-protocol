@@ -4,7 +4,7 @@ Deploy consists of two steps: contracts deployment and contracts verification on
 
 Make sure you complete all these steps and you'll successfully deploy and verify all the contracts.
 
-1. Make you have `.env` file with `INFURA_KEY` and `ETHERSCAN_KEY`.
+1. Make you have `.env` file with `INFURA_KEY`, `MNEMONIC` and `ETHERSCAN_KEY`.
 2. Make sure your deployer address has enough ETH to deploy contracts. Full deploy requires 120-150M of gas.
 3. `npm run deploy:{network}` where `network` is one of `rinkeby`, `ropsten`, `kovan`, `main`, `bsc-test`, `bsc` and `fork` (fork of the mainnet).
 4. `npm run verify:{network}` to verify contracts after the last deploy.
