@@ -73,6 +73,7 @@
     "test-pausable-augmented": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/pausable-augmented.spec.ts",
     "test-reward-rates": " TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/reward_rates.spec.ts",
     "test-compatibility": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/test-augmented/compatibility.spec.ts",
+    "test-contracts": "TS_NODE_TRANSPILE_ONLY=1 hardhat test test-suites/test-augmented/__setup.spec.ts test-suites/contracts/**/*.spec.ts",
     "coverage": "TS_NODE_TRANSPILE_ONLY=1 hardhat compile --force && TS_NODE_TRANSPILE_ONLY=1 hardhat coverage --network coverage --testfiles \"test-suites/test-augmented/*.spec.ts\"",
     "test-deploy:fork": "FORK=main hardhat augmented:mainnet",
     "test-deploy:fork:test-incremental": "FORK=main hardhat augmented:test-incremental",

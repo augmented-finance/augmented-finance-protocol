@@ -46,6 +46,7 @@ jobs:
       - attach_workspace:
           at: ~/
       - run: yarn run test
+      - run: yarn run test-contracts
   test_adapters:
     <<: *defaults
     description: Extra test sets
