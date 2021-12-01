@@ -28,8 +28,7 @@ contract PriceFeedUniEthToken is IPriceFeed {
     (address t0, address t1) = (IUniswapV2Pair(token).token0(), IUniswapV2Pair(token).token1());
     bool base1 = t1 == priceBase;
     (uint8 decimalsT0, uint8 decimalsT1) = (IERC20Detailed(t0).decimals(), IERC20Detailed(t1).decimals());
-    _decimals0 = base1 ? decimalsT0 : decimalsT1;
-    _decimals1 = base1 ? decimalsT1 : decimalsT0;
+    (_decimals0, _decimals1) = base1 ? (decimalsT0, decimalsT1) : (decimalsT1, decimalsT0);
 
     if (!base1) {
       require(t0 == priceBase);
