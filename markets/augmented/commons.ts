@@ -884,7 +884,7 @@ export const CommonsConfig: ICommonConfiguration = {
   },
 
   AGF: {
-    DefaultPriceEth: 10.0 / 2919.23, // at 28 Sep 2021
+    DefaultPriceEth: 0.000000000039,
     UniV2EthPair: {
       Symbol: 'UniV2ETHAGF',
       StakeToken: {
@@ -911,7 +911,7 @@ export const CommonsConfig: ICommonConfiguration = {
       [eOtherNetwork.bsc]: rewardPoolsBscMain,
       [eOtherNetwork.bsc_testnet]: {
         ...rewardPoolsBscMain,
-        InitialRateWad: 1,
+        InitialRateWad: 0.3858024691,
       },
       [eOtherNetwork.fantom]: rewardPoolsFantomMain,
       [eOtherNetwork.fantom_testnet]: {
