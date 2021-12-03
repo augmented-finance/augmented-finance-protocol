@@ -173,7 +173,7 @@ const rewardPoolsBscMain: IRewardPools = {
     BoostFactor: 0,
   },
   RetroPool: {
-    TotalWad: 3000000,
+    TotalWad: 7_500_000,
     BoostFactor: 0,
     MeltDownAt: new Date('2021-11-01'),
     Providers: [],
