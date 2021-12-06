@@ -94,4 +94,40 @@ describe('contracts/misc/PriceFeedUniEthToken.sol', () => {
     const result = await uniAGFPriceFeed.latestAnswer();
     expect(result).to.equal(BigNumber.from(10).pow(14));
   });
+
+  describe('edge cases', () => {
+    it('should return one', async () => {
+      const agUSDC = await getAGTokenByName('agUSDC');
+      const usdcAddress = await agUSDC.UNDERLYING_ASSET_ADDRESS();
+      await deployMockUniEthPair([agf.address, usdcAddress, 1, 1e4]);
+
+      const pair = await getMockUniEthPair();
+
+      const uniAGFPriceFeed = await deployPriceFeedUniEthToken(
+        'AGF-USDC',
+        [pair.address, usdcAddress, BigNumber.from(10).pow(8)],
+        false
+      );
+
+      const result = await uniAGFPriceFeed.latestAnswer();
+      expect(result).to.equal(1);
+    });
+
+    it('should return zero', async () => {
+      const agUSDC = await getAGTokenByName('agUSDC');
+      const usdcAddress = await agUSDC.UNDERLYING_ASSET_ADDRESS();
+      await deployMockUniEthPair([agf.address, usdcAddress, 1, 1]);
+
+      const pair = await getMockUniEthPair();
+
+      const uniAGFPriceFeed = await deployPriceFeedUniEthToken(
+        'AGF-USDC',
+        [pair.address, usdcAddress, BigNumber.from(10).pow(8)],
+        false
+      );
+
+      const result = await uniAGFPriceFeed.latestAnswer();
+      expect(result).to.equal(0);
+    });
+  });
 });
