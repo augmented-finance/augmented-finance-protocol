@@ -835,7 +835,7 @@ export const CommonsConfig: ICommonConfiguration = {
 
   StakeParams: {
     MaxSlashBP: 3000, // 30%
-    CooldownPeriod: 7 * DAY,
+    CooldownPeriod: DAY,
     UnstakePeriod: 7 * DAY,
     StakeToken: {
       WBTC: StakeMode.stakeAg,
