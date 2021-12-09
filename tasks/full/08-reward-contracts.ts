@@ -33,16 +33,11 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
   async ({ verify, pool }, localBRE) => {
     await localBRE.run('set-DRE');
     const poolConfig = loadPoolConfig(pool);
-    const {
-      Names,
-      RewardParams,
-      Dependencies,
-      ReserveAssets,
-      AGF: { DefaultPriceEth: AgfDefaultPriceEth, UniV2EthPair },
-    } = poolConfig as ICommonConfiguration;
+    const { Names, RewardParams, Dependencies, ReserveAssets, AGF } = poolConfig as ICommonConfiguration;
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
     const reserveAssets = getParamPerNetwork(ReserveAssets);
+    const { DefaultPriceEth: AgfDefaultPriceEth, UniV2EthPair } = getParamPerNetwork(AGF);
 
     // configurator is always updated
     let configuratorAddr =

@@ -29,13 +29,9 @@ deployTask(`full:init-stake-tokens`, `Deploy and initialize stake tokens`, __dir
 
     const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-    const {
-      ReserveAssets,
-      Names,
-      Dependencies,
-      AGF: { UniV2EthPair },
-    } = poolConfig as ICommonConfiguration;
+    const { ReserveAssets, Names, Dependencies, AGF } = poolConfig as ICommonConfiguration;
     const dependencies = getParamPerNetwork(Dependencies);
+    const { UniV2EthPair } = getParamPerNetwork(AGF);
 
     const stakeConfigurator = await getStakeConfiguratorImpl(
       await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)

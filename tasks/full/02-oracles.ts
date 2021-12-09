@@ -24,12 +24,13 @@ deployTask('full:deploy-oracles', 'Deploy oracles', __dirname).setAction(async (
     PriceOracle,
     FallbackOracle,
     ChainlinkAggregator,
-    AGF: { DefaultPriceEth: AgfDefaultPriceEth },
+    AGF,
   } = poolConfig as ICommonConfiguration;
   const priceOracle = getParamPerNetwork(PriceOracle);
   const fallbackOracle = getParamPerNetwork(FallbackOracle);
   const reserveAssets = getParamPerNetwork(ReserveAssets);
   const chainlinkAggregators = getParamPerNetwork(ChainlinkAggregator);
+  const { DefaultPriceEth: AgfDefaultPriceEth } = getParamPerNetwork(AGF);
 
   const tokensToWatch: SymbolMap<string> = {
     ...reserveAssets,

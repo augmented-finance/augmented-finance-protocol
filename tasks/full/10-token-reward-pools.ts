@@ -48,15 +48,10 @@ deployTask(`full:init-reward-pools`, `Deploy reward pools`, __dirname).setAction
 
   const [freshStart, continuation, addressProvider] = await getDeployAccessController();
 
-  const {
-    ReserveAssets,
-    RewardParams,
-    Names,
-    Dependencies,
-    AGF: { UniV2EthPair },
-  } = poolConfig as ICommonConfiguration;
+  const { ReserveAssets, RewardParams, Names, Dependencies, AGF } = poolConfig as ICommonConfiguration;
 
   const reserveAssets = getParamPerNetwork(ReserveAssets);
+  const { UniV2EthPair } = getParamPerNetwork(AGF);
   const stakeConfigurator = await getStakeConfiguratorImpl(
     await addressProvider.getAddress(AccessFlags.STAKE_CONFIGURATOR)
   );
