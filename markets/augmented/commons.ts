@@ -246,6 +246,45 @@ const USD_QUOTE: IPriceOracleConfig = {
   QuoteValue: BigNumber.from(1e8),
 };
 
+const AGF_CONFIG_MAIN = {
+  DefaultPriceEth: 0.000000000039,
+  UniV2EthPair: {
+    Symbol: 'UniV2ETHAGF',
+    StakeToken: {
+      RewardShare: {
+        BasePoints: 1500,
+        BoostFactor: 30000, // 3x
+      },
+    },
+  },
+};
+
+const AGF_CONFIG_BSC = {
+  DefaultPriceEth: 0.000000000039,
+  UniV2EthPair: {
+    Symbol: 'PancakeBUSDAGF',
+    StakeToken: {
+      RewardShare: {
+        BasePoints: 1500,
+        BoostFactor: 30000, // 3x
+      },
+    },
+  },
+};
+
+const AGF_CONFIG_EMPTY = {
+  DefaultPriceEth: 0,
+  UniV2EthPair: {
+    Symbol: '',
+    StakeToken: {
+      RewardShare: {
+        BasePoints: 0,
+        BoostFactor: 0,
+      },
+    },
+  },
+};
+
 // ----------------
 // PROTOCOL GLOBAL PARAMS
 // ----------------
@@ -835,7 +874,7 @@ export const CommonsConfig: ICommonConfiguration = {
 
   StakeParams: {
     MaxSlashBP: 3000, // 30%
-    CooldownPeriod: 7 * DAY,
+    CooldownPeriod: DAY,
     UnstakePeriod: 7 * DAY,
     StakeToken: {
       WBTC: StakeMode.stakeAg,
@@ -884,16 +923,26 @@ export const CommonsConfig: ICommonConfiguration = {
   },
 
   AGF: {
-    DefaultPriceEth: 0.000000000039,
-    UniV2EthPair: {
-      Symbol: 'UniV2ETHAGF',
-      StakeToken: {
-        RewardShare: {
-          BasePoints: 1500,
-          BoostFactor: 30000, // 3x
-        },
-      },
-    },
+    [eEthereumNetwork.ropsten]: AGF_CONFIG_MAIN,
+    [eEthereumNetwork.rinkeby]: AGF_CONFIG_MAIN,
+    [eEthereumNetwork.coverage]: AGF_CONFIG_MAIN,
+    [eEthereumNetwork.hardhat]: AGF_CONFIG_MAIN,
+    [eEthereumNetwork.kovan]: AGF_CONFIG_MAIN,
+    [eEthereumNetwork.main]: AGF_CONFIG_MAIN,
+    [eEthereumNetwork.tenderlyMain]: AGF_CONFIG_MAIN,
+    [eOtherNetwork.bsc]: AGF_CONFIG_BSC,
+    [eOtherNetwork.bsc_testnet]: AGF_CONFIG_BSC,
+    [eOtherNetwork.fantom]: AGF_CONFIG_EMPTY,
+    [eOtherNetwork.fantom_testnet]: AGF_CONFIG_EMPTY,
+    [eOtherNetwork.avalanche]: AGF_CONFIG_EMPTY,
+    [eOtherNetwork.avalanche_testnet]: AGF_CONFIG_EMPTY,
+
+    [ePolygonNetwork.arbitrum]: AGF_CONFIG_EMPTY,
+    [ePolygonNetwork.arbitrum_testnet]: AGF_CONFIG_EMPTY,
+    [ePolygonNetwork.optimistic]: AGF_CONFIG_EMPTY,
+    [ePolygonNetwork.optimistic_testnet]: AGF_CONFIG_EMPTY,
+    [ePolygonNetwork.matic]: AGF_CONFIG_EMPTY,
+    [ePolygonNetwork.mumbai]: AGF_CONFIG_EMPTY,
   },
 
   RewardParams: {

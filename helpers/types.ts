@@ -543,7 +543,7 @@ export interface ICommonConfiguration {
 
   ForkTest: IForkTest;
 
-  AGF: IAgfParams;
+  AGF: iParamsPerNetwork<IAgfParams>;
 }
 
 export interface ITokenAddress {
