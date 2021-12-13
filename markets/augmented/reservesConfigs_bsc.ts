@@ -3,7 +3,7 @@ import { IInterestRateStrategyParams, IMarketRates } from '../../helpers/types';
 import { assetReserve } from './rateStrategies';
 
 const ray = (n: number) => oneRay.multipliedBy(n).toFixed();
-const stableRate = (base: number) : IMarketRates => ({ borrowRate: ray(base) });
+const stableRate = (base: number): IMarketRates => ({ borrowRate: ray(base) });
 
 export const BscStableBaseRates = {
   WBNB: stableRate(0.03),
@@ -29,7 +29,7 @@ export const BscStableBaseRates = {
   INJ: stableRate(0.05),
   CHR: stableRate(0.05),
   REEF: stableRate(0.05),
-  TWT: stableRate(0.05),
+  // TWT: stableRate(0.05),
   LINA: stableRate(0.05),
   CAKE: stableRate(0.05),
   XVS: stableRate(0.05),
@@ -40,8 +40,8 @@ export const BscStableBaseRates = {
   BIFI: stableRate(0.05),
   AUTO: stableRate(0.05),
   DODO: stableRate(0.05),
-  ALPHA: stableRate(0.05),
-}
+  // ALPHA: stableRate(0.05),
+};
 
 const strategies = {
   S_80_0_8_200_10_200: <IInterestRateStrategyParams>{
@@ -49,47 +49,47 @@ const strategies = {
     optimalUtilizationRate: ray(0.8),
     baseVariableBorrowRate: ray(0),
     variableRateSlope1: ray(0.08),
-    variableRateSlope2: ray(2.00),
-    stableRateSlope1: ray(0.10),
-    stableRateSlope2: ray(2.00),
+    variableRateSlope2: ray(2.0),
+    stableRateSlope1: ray(0.1),
+    stableRateSlope2: ray(2.0),
   },
   S_80_0_8_200_15_200: <IInterestRateStrategyParams>{
     name: 'S_80_0_8_200_15_200',
     optimalUtilizationRate: ray(0.8),
     baseVariableBorrowRate: ray(0),
     variableRateSlope1: ray(0.08),
-    variableRateSlope2: ray(2.00),
+    variableRateSlope2: ray(2.0),
     stableRateSlope1: ray(0.15),
-    stableRateSlope2: ray(2.00),
+    stableRateSlope2: ray(2.0),
   },
   S_90_0_4_100_2_100: <IInterestRateStrategyParams>{
     name: 'S_90_0_4_100_2_100',
     optimalUtilizationRate: ray(0.9),
     baseVariableBorrowRate: ray(0),
     variableRateSlope1: ray(0.04),
-    variableRateSlope2: ray(1.00),
+    variableRateSlope2: ray(1.0),
     stableRateSlope1: ray(0.02),
-    stableRateSlope2: ray(1.00),
+    stableRateSlope2: ray(1.0),
   },
   S_70_0_15_300_15_300: <IInterestRateStrategyParams>{
     name: 'S_70_0_15_300_15_300',
     optimalUtilizationRate: ray(0.7),
     baseVariableBorrowRate: ray(0),
     variableRateSlope1: ray(0.15),
-    variableRateSlope2: ray(3.00),
+    variableRateSlope2: ray(3.0),
     stableRateSlope1: ray(0.15),
-    stableRateSlope2: ray(3.00),
+    stableRateSlope2: ray(3.0),
   },
   S_60_0_15_300_15_300: <IInterestRateStrategyParams>{
     name: 'S_60_0_15_300_15_300',
     optimalUtilizationRate: ray(0.6),
     baseVariableBorrowRate: ray(0),
     variableRateSlope1: ray(0.15),
-    variableRateSlope2: ray(3.00),
+    variableRateSlope2: ray(3.0),
     stableRateSlope1: ray(0.15),
-    stableRateSlope2: ray(3.00),
+    stableRateSlope2: ray(3.0),
   },
-}
+};
 
 export const BscReserves = {
   WBNB: assetReserve(strategies.S_80_0_8_200_10_200, 8000, 8500, 10500, 18, 500, true, false),
@@ -115,7 +115,7 @@ export const BscReserves = {
   INJ: assetReserve(strategies.S_60_0_15_300_15_300, 5000, 5500, 11000, 18, 500, true, false),
   CHR: assetReserve(strategies.S_60_0_15_300_15_300, 5000, 5500, 11000, 6, 500, true, false),
   REEF: assetReserve(strategies.S_60_0_15_300_15_300, 5000, 5500, 11000, 18, 500, true, false),
-  TWT: assetReserve(strategies.S_60_0_15_300_15_300, 5000, 5500, 11000, 18, 500, true, false),
+  // TWT: assetReserve(strategies.S_60_0_15_300_15_300, 5000, 5500, 11000, 18, 500, true, false),
   LINA: assetReserve(strategies.S_60_0_15_300_15_300, 5000, 5500, 11000, 18, 500, true, false),
   CAKE: assetReserve(strategies.S_70_0_15_300_15_300, 6000, 6500, 11000, 18, 500, true, false),
   XVS: assetReserve(strategies.S_70_0_15_300_15_300, 6000, 6500, 11000, 18, 500, true, false),
@@ -126,5 +126,5 @@ export const BscReserves = {
   BIFI: assetReserve(strategies.S_60_0_15_300_15_300, 5000, 5500, 11000, 18, 500, true, false),
   AUTO: assetReserve(strategies.S_60_0_15_300_15_300, 5000, 5500, 11000, 18, 500, true, false),
   DODO: assetReserve(strategies.S_60_0_15_300_15_300, 5000, 5500, 11000, 18, 500, true, false),
-  ALPHA: assetReserve(strategies.S_60_0_15_300_15_300, 5000, 5500, 11000, 18, 500, true, false),
-}
+  // ALPHA: assetReserve(strategies.S_60_0_15_300_15_300, 5000, 5500, 11000, 18, 500, true, false),
+};
