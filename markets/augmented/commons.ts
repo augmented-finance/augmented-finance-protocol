@@ -265,7 +265,7 @@ const AGF_CONFIG_BSC = {
     Symbol: 'PancakeBUSDAGF',
     StakeToken: {
       RewardShare: {
-        BasePoints: 1500,
+        BasePoints: 1670,
         BoostFactor: 30000, // 3x
       },
     },
