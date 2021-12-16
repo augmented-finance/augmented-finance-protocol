@@ -126,7 +126,7 @@ const rewardPoolsEthTest: IRewardPools = {
 };
 
 const rewardPoolsBscMain: IRewardPools = {
-  InitialRateWad: 0.3858024691,
+  InitialRateWad: 0, // 0.3858024691
   TokenPools: {
     WBNB: tokenRewards(200, 20, 10),
     BTCB: tokenRewards(200, 20, 10),
@@ -184,6 +184,11 @@ const rewardPoolsBscMain: IRewardPools = {
     Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
     Members: {
       '0x9029AdeFCdafcEce55a0bC0583B2F10E4F35D8f9': 500,
+      '0x9b2ca0B27415ab8ffA9d7FF2065C9bdE53462f46': 300,
+      '0x1Fbdc311eb546a92b54fD8919Fa7058e41822FA6': 100,
+      '0x5B305dF32a3122b27dC5a424744D36fb8DDeEfDA': 15,
+      '0x99eD15dd09b62a12d64FD99B4e4EeCda9C1Ab34d': 15,
+      '0xaaB1333f07305C41C3C6cd8e7626b075b48ee255': 30,
     },
   },
 };
