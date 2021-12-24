@@ -106,7 +106,14 @@ deployTask(`full:deploy-reward-contracts`, `Deploy reward contracts, AGF and xAG
       const dependencies = getParamPerNetwork(Dependencies);
       const priceBaseSymbol = dependencies.AgfPair ?? dependencies.WrappedNative ?? 'WETH';
       const pairPriceBaseToken = reserveAssets[priceBaseSymbol];
-      await deployUniAgfEth(addressProvider, agfAddr, dependencies.UniswapV2Router, newAgfToken, pairPriceBaseToken);
+      await deployUniAgfEth({
+        ac: addressProvider,
+        agfAddr,
+        uniswapAddr: dependencies.UniswapV2Router,
+        newAgfToken,
+        pairBaseAddress: pairPriceBaseToken,
+        nativeTokenSymbol: priceBaseSymbol,
+      });
     }
 
     // Reward controller is not updated

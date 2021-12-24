@@ -1,6 +1,17 @@
+import { Contract } from '@ethersproject/contracts';
+import { utils } from 'ethers';
+
 import { eContractid, IInterestRateStrategyParams, IReserveParams, ITokenNames, tEthereumAddress } from './types';
 import { ProtocolDataProvider } from '../types/ProtocolDataProvider';
-import { addProxyToJsonDb, autoGas, chunk, falsyOrZeroAddress, mustWaitTx, waitForTx } from './misc-utils';
+import {
+  addProxyToJsonDb,
+  autoGas,
+  chunk,
+  falsyOrZeroAddress,
+  getFirstSigner,
+  mustWaitTx,
+  waitForTx,
+} from './misc-utils';
 import {
   getIChainlinkAggregator,
   getIInitializablePoolToken,
@@ -30,7 +41,6 @@ import {
 } from './contracts-deployments';
 import { ZERO_ADDRESS } from './constants';
 import { MarketAccessController } from '../types';
-import { Contract } from '@ethersproject/contracts';
 import { waitForAddressFn } from './deploy-helpers';
 
 export const chooseDepositTokenDeployment = (id: eContractid) => {
@@ -670,13 +680,48 @@ export const getUniAgfEth = async (
   return lpPairAddr;
 };
 
-export const deployUniAgfEth = async (
-  ac: MarketAccessController,
-  agfAddr: tEthereumAddress,
-  uniswapAddr: tEthereumAddress | undefined,
-  newAgfToken: boolean,
-  pairBaseAddress: string
-) => {
+const getRouterAbi = (method: string) =>
+  [
+    {
+      type: 'function',
+      name: 'WETH',
+      stateMutability: 'pure',
+      inputs: [],
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    },
+    method !== 'WETH' && {
+      type: 'function',
+      name: method,
+      stateMutability: 'pure',
+      inputs: [],
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    },
+    {
+      type: 'function',
+      name: 'factory',
+      stateMutability: 'pure',
+      inputs: [],
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    },
+  ].filter(Boolean) as Omit<utils.Fragment, 'format' | '_isFragment'>[];
+
+interface DeployUniOptions {
+  ac: MarketAccessController;
+  agfAddr: tEthereumAddress;
+  uniswapAddr: tEthereumAddress | undefined;
+  newAgfToken: boolean;
+  pairBaseAddress: string;
+  nativeTokenSymbol: string;
+}
+
+export const deployUniAgfEth = async ({
+  ac,
+  agfAddr,
+  uniswapAddr,
+  newAgfToken,
+  pairBaseAddress,
+  nativeTokenSymbol,
+}: DeployUniOptions) => {
   console.log('Deploy Uniswap Pair ETH-AGF');
   if (falsyOrZeroAddress(uniswapAddr)) {
     console.log('\tUniswap address is missing');
@@ -686,8 +731,8 @@ export const deployUniAgfEth = async (
   const wethGw = await getWETHGateway(await ac.getAddress(AccessFlags.WETH_GATEWAY));
   const weth = await wethGw.getWETHAddress();
 
-  const uniswapRouter = await getIUniswapV2Router02(uniswapAddr!);
-  const uniWeth = await uniswapRouter.WETH().catch(() => weth);
+  const uniswapRouter = new Contract(uniswapAddr!, getRouterAbi(nativeTokenSymbol), await getFirstSigner());
+  const uniWeth = await uniswapRouter.WETH().catch(() => uniswapRouter[nativeTokenSymbol]());
   if (weth.toLowerCase() != uniWeth.toLowerCase()) {
     throw 'WETH address mismatched with Uniswap: ' + weth + ', ' + uniWeth;
   }
