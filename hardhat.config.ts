@@ -92,7 +92,7 @@ const FORK_URLS: Record<eNetwork, string> = {
 };
 
 const getForkConfig = (name: eNetwork) => ({
-  url: FORK_URLS[name],
+  url: FORK_URLS[name] || undefined,
   accounts: {
     mnemonic: MNEMONIC,
     path: MNEMONIC_PATH,
