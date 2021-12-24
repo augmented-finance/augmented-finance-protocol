@@ -687,7 +687,7 @@ export const deployUniAgfEth = async (
   const weth = await wethGw.getWETHAddress();
 
   const uniswapRouter = await getIUniswapV2Router02(uniswapAddr!);
-  const uniWeth = await uniswapRouter.WETH();
+  const uniWeth = await uniswapRouter.WETH().catch(() => weth);
   if (weth.toLowerCase() != uniWeth.toLowerCase()) {
     throw 'WETH address mismatched with Uniswap: ' + weth + ', ' + uniWeth;
   }

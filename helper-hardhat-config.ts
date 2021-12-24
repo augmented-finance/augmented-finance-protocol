@@ -1,4 +1,5 @@
-// @ts-ignore
+import dotenv from 'dotenv';
+
 import {
   eEthereumNetwork,
   eOtherNetwork,
@@ -7,7 +8,7 @@ import {
   iParamsPerNetworkOpt,
 } from './helpers/types';
 
-require('dotenv').config();
+dotenv.config();
 
 const INFURA_KEY = process.env.INFURA_KEY || '';
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
@@ -38,21 +39,21 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eOtherNetwork.avalanche]: 'https://api.avax.network/ext/bc/C/rpc',
   [eOtherNetwork.fantom_testnet]: 'https://rpc.testnet.fantom.network/',
   [eOtherNetwork.fantom]: 'https://rpcapi.fantom.network/',
-  [ePolygonNetwork.arbitrum_testnet]: "https://rinkeby.arbitrum.io/rpc",
-  [ePolygonNetwork.arbitrum]: "https://arb1.arbitrum.io/rpc",
-  [ePolygonNetwork.optimistic_testnet]: "https://kovan.optimism.io",
-  [ePolygonNetwork.optimistic]: "https://mainnet.optimism.io",
+  [ePolygonNetwork.arbitrum_testnet]: 'https://rinkeby.arbitrum.io/rpc',
+  [ePolygonNetwork.arbitrum]: 'https://arb1.arbitrum.io/rpc',
+  [ePolygonNetwork.optimistic_testnet]: 'https://kovan.optimism.io',
+  [ePolygonNetwork.optimistic]: 'https://mainnet.optimism.io',
   [ePolygonNetwork.mumbai]: 'https://rpc-mumbai.maticvigil.com',
   [ePolygonNetwork.matic]: 'https://rpc-mainnet.matic.network',
 };
 
 export const FORK_RPC_URL: iParamsPerNetworkOpt<string> = {
   [eOtherNetwork.bsc]: BSC_GETBLOCK_KEY ? 'https://bsc.getblock.io/mainnet/?api_key=' + BSC_GETBLOCK_KEY : undefined,
-}
+};
 
 const gasPrice = (def: number) => (process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : def) * GWEI;
 
-export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork< number | 'auto' > = {
+export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork<number | 'auto'> = {
   [eEthereumNetwork.kovan]: gasPrice(1),
   [eEthereumNetwork.ropsten]: gasPrice(10),
   [eEthereumNetwork.rinkeby]: gasPrice(1),
@@ -65,7 +66,7 @@ export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork< number | 'auto' > = {
   [eOtherNetwork.avalanche_testnet]: gasPrice(30),
   [eOtherNetwork.avalanche]: gasPrice(1),
   [eOtherNetwork.fantom_testnet]: gasPrice(10),
-  [eOtherNetwork.fantom]: gasPrice(1),  
+  [eOtherNetwork.fantom]: gasPrice(1),
   [ePolygonNetwork.arbitrum_testnet]: 'auto',
   [ePolygonNetwork.arbitrum]: 'auto',
   [ePolygonNetwork.optimistic_testnet]: 'auto',

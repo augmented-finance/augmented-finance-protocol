@@ -43,7 +43,8 @@ deployTask('full:initialize-derived-feeds', 'Initialize derived feeds', __dirnam
     const agfAddress = await addressProvider.getAddress(AccessFlags.REWARD_TOKEN);
     const source = await priceOracle.getSourceOfAsset(agfAddress);
 
-    if (falsyOrZeroAddress(source)) {
+    const canCreatePriceFeed = falsyOrZeroAddress(source) && lpPairAddress && pairPriceBaseToken;
+    if (canCreatePriceFeed) {
       const uniAGFPriceFeed = await deployPriceFeedUniEthToken(
         `AGF-${priceBaseSymbol}`,
         [

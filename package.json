@@ -26,6 +26,9 @@
     "hardhat:matic": "KEY_SEL=POL hardhat --network matic",
     "hardhat:bsc-test": "KEY_SEL=BSC hardhat --network bsc_testnet",
     "hardhat:bsc": "KEY_SEL=BSC hardhat --network bsc",
+    "hardhat:bsc:fork": "KEY_SEL=BSC_FORK hardhat --network bsc_fork",
+    "hardhat:avalanche:fork": "KEY_SEL=AVALANCHE_FORK hardhat --network avalanche_fork",
+    "hardhat:avalanche-test:fork": "KEY_SEL=AVALANCHE_TESTNET_FORK hardhat --network avalanche_testnet_fork",
     
     "hardhat:avalanche": "KEY_SEL=AVA hardhat --network avalanche",
     "hardhat:ava-test": "KEY_SEL=AVA hardhat --network avalanche_testnet",
@@ -81,6 +84,8 @@
     "deploy:fork": "npm run compile && FORK=main hardhat augmented:mainnet",
     "deploy:fork:bsc-test": "npm run compile && FORK=bsc_testnet hardhat augmented:mainnet",
     "deploy:fork:bsc": "npm run compile && FORK=bsc hardhat augmented:mainnet",
+    "deploy:fork:avalanche": "npm run compile && FORK=avalanche hardhat augmented:mainnet",
+    "deploy:fork:avalanche-test": "npm run compile && FORK=avalanche_testnet hardhat augmented:mainnet",
 
     "deploy:main": "npm run compile && npm run hardhat:main -- augmented:mainnet",
     "deploy:ropsten": "npm run compile && npm run hardhat:ropsten -- augmented:mainnet",
