@@ -26,7 +26,7 @@ const DEFAULT_GAS_MUL = 2;
 const HARDFORK = 'istanbul';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
-const BSC_FORK_URL = process.env.BSC_FORK_URL;
+const BSC_FORK_URL = process.env.BSC_FORK_URL || '';
 const FORK = process.env.FORK;
 const IS_FORK = FORK ? true : false;
 
@@ -92,7 +92,7 @@ const FORK_URLS: Record<eNetwork, string> = {
 };
 
 const getForkConfig = (name: eNetwork) => ({
-  url: FORK_URLS[name] || undefined,
+  url: FORK_URLS[name] ?? '',
   accounts: {
     mnemonic: MNEMONIC,
     path: MNEMONIC_PATH,
