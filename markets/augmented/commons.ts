@@ -206,9 +206,9 @@ const rewardPoolsFantomMain: IRewardPools = {
 const rewardPoolsAvalancheMain: IRewardPools = {
   InitialRateWad: 0,
   TokenPools: {
-    DAI: tokenRewardStable,
+    USDC: tokenRewardStable,
     USDT: tokenRewardStable,
-    WBTC: tokenRewardVolatile,
+    WETH: tokenRewardVolatile,
     WAVAX: tokenRewardVolatile,
   },
 };
@@ -277,6 +277,19 @@ const AGF_CONFIG_BSC = {
   },
 };
 
+const AGF_CONFIG_AVALANCHE = {
+  DefaultPriceEth: 0.000000000039,
+  UniV2EthPair: {
+    Symbol: 'TraderJoeAGFAVAX',
+    StakeToken: {
+      RewardShare: {
+        BasePoints: 1670,
+        BoostFactor: 30000, // 3x
+      },
+    },
+  },
+};
+
 const AGF_CONFIG_EMPTY = {
   DefaultPriceEth: 0,
   UniV2EthPair: {
@@ -306,6 +319,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.bsc_testnet]: emergencyAdmins,
     [eOtherNetwork.fantom_testnet]: emergencyAdmins,
     [eOtherNetwork.avalanche_testnet]: emergencyAdmins,
+    [eOtherNetwork.avalanche]: emergencyAdmins,
     [ePolygonNetwork.mumbai]: emergencyAdmins,
     [ePolygonNetwork.arbitrum_testnet]: emergencyAdmins,
     [ePolygonNetwork.optimistic_testnet]: emergencyAdmins,
@@ -496,7 +510,12 @@ export const CommonsConfig: ICommonConfiguration = {
       WBTC: '0x31CF013A08c6Ac228C94551d535d5BAfE19c602a',
       USDT: '0x7898AcCC83587C3C55116c5230C17a6Cd9C71bad',
     },
-    [eOtherNetwork.avalanche]: {},
+    [eOtherNetwork.avalanche]: {
+      WETH: '0x976B3D034E162d8bD72D6b9C989d545b839003b0',
+      WAVAX: '0x0A77230d17318075983913bC2145DB16C7366156',
+      USDT: '0xF096872672F44d6EBA71458D74fe67F9a77a23B9',
+      USDC: '0xEBE676ee90Fe1112671f19b6B7459bC678B67e8a',
+    },
     [eOtherNetwork.fantom_testnet]: {
       USDT: '0x9BB8A6dcD83E36726Cc230a97F1AF8a84ae5F128',
       WFTM: '0xe04676B9A9A2973BCb0D1478b5E1E9098BBB7f3D',
@@ -680,7 +699,12 @@ export const CommonsConfig: ICommonConfiguration = {
       WBTC: '0xa5afdcaad3e67261e2dee707476699ef968cf57c',
       WETH: '0x2d7cd0f70bd71c6bc382cfc752972f41f1f0acd6',
     },
-    [eOtherNetwork.avalanche]: {},
+    [eOtherNetwork.avalanche]: {
+      WETH: '0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab',
+      WAVAX: '0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7',
+      USDT: '0xc7198437980c041c805a1edcba50c1ce5db95118',
+      USDC: '0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664',
+    },
     [eOtherNetwork.avalanche_testnet]: {
       WETH: '0xB767287A7143759f294CfB7b1Adbca1140F3de71',
       WAVAX: '0xd00ae08403B9bbb9124bB305C09058E32C39A48c',
@@ -773,6 +797,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.avalanche]: {
       WrappedNative: 'WAVAX',
       AgfPair: 'WAVAX',
+      UniswapV2Router: '0x60aE616a2155Ee3d9A68541Ba4544862310933d4',
     },
     [eOtherNetwork.avalanche_testnet]: {
       WrappedNative: 'WAVAX',
@@ -939,8 +964,8 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.bsc_testnet]: AGF_CONFIG_BSC,
     [eOtherNetwork.fantom]: AGF_CONFIG_EMPTY,
     [eOtherNetwork.fantom_testnet]: AGF_CONFIG_EMPTY,
-    [eOtherNetwork.avalanche]: AGF_CONFIG_EMPTY,
-    [eOtherNetwork.avalanche_testnet]: AGF_CONFIG_EMPTY,
+    [eOtherNetwork.avalanche]: AGF_CONFIG_AVALANCHE,
+    [eOtherNetwork.avalanche_testnet]: AGF_CONFIG_AVALANCHE,
 
     [ePolygonNetwork.arbitrum]: AGF_CONFIG_EMPTY,
     [ePolygonNetwork.arbitrum_testnet]: AGF_CONFIG_EMPTY,
