@@ -184,11 +184,9 @@ const rewardPoolsBscMain: IRewardPools = {
     Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
     Members: {
       '0x9029AdeFCdafcEce55a0bC0583B2F10E4F35D8f9': 500,
-      '0x9b2ca0B27415ab8ffA9d7FF2065C9bdE53462f46': 300,
       '0x1Fbdc311eb546a92b54fD8919Fa7058e41822FA6': 100,
       '0x5B305dF32a3122b27dC5a424744D36fb8DDeEfDA': 15,
       '0x99eD15dd09b62a12d64FD99B4e4EeCda9C1Ab34d': 15,
-      '0xaaB1333f07305C41C3C6cd8e7626b075b48ee255': 30,
     },
   },
 };
@@ -204,12 +202,45 @@ const rewardPoolsFantomMain: IRewardPools = {
 };
 
 const rewardPoolsAvalancheMain: IRewardPools = {
-  InitialRateWad: 0,
+  InitialRateWad: 0.03858024691,
   TokenPools: {
-    USDC: tokenRewardStable,
-    USDT: tokenRewardStable,
-    WETH: tokenRewardVolatile,
-    WAVAX: tokenRewardVolatile,
+    WAVAX: tokenRewards(350, 50, 0),
+    WBTC: tokenRewards(350, 50, 0),
+    WETH: tokenRewards(350, 50, 0),
+    USDT: tokenRewards(350, 50, 0),
+    USDC: tokenRewards(350, 50, 0),
+    DAI: tokenRewards(350, 50, 0),
+    MIM: tokenRewards(350, 50, 0),
+    JOE: tokenRewards(175, 25, 0),
+    QI: tokenRewards(175, 25, 0),
+    SPELL: tokenRewards(175, 25, 0),
+    LINK: tokenRewards(175, 25, 0),
+    AAVE: tokenRewards(175, 25, 0),
+  },
+  ReferralPool: {
+    BasePoints: 100,
+    BoostFactor: 0,
+  },
+  TreasuryPool: {
+    BasePoints: 2000,
+    BoostFactor: 0,
+  },
+  RetroPool: {
+    TotalWad: 10_000_000,
+    BoostFactor: 0,
+    MeltDownAt: new Date('2021-11-01'),
+    Providers: [],
+  },
+  TeamPool: {
+    BasePoints: 1000,
+    UnlockAt: new Date('2021-11-15'),
+    Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
+    Members: {
+      '0x9029AdeFCdafcEce55a0bC0583B2F10E4F35D8f9': 500,
+      '0x1Fbdc311eb546a92b54fD8919Fa7058e41822FA6': 100,
+      '0x5B305dF32a3122b27dC5a424744D36fb8DDeEfDA': 15,
+      '0x99eD15dd09b62a12d64FD99B4e4EeCda9C1Ab34d': 15,
+    },
   },
 };
 
@@ -280,10 +311,10 @@ const AGF_CONFIG_BSC = {
 const AGF_CONFIG_AVALANCHE = {
   DefaultPriceEth: 0.000000000039,
   UniV2EthPair: {
-    Symbol: 'TraderJoeAGFAVAX',
+    Symbol: 'TraderJoeAVAXAGF',
     StakeToken: {
       RewardShare: {
-        BasePoints: 1670,
+        BasePoints: 2000,
         BoostFactor: 30000, // 3x
       },
     },
@@ -513,8 +544,16 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.avalanche]: {
       WETH: '0x976B3D034E162d8bD72D6b9C989d545b839003b0',
       WAVAX: '0x0A77230d17318075983913bC2145DB16C7366156',
-      USDT: '0xF096872672F44d6EBA71458D74fe67F9a77a23B9',
-      USDC: '0xEBE676ee90Fe1112671f19b6B7459bC678B67e8a',
+      USDT: '0xEBE676ee90Fe1112671f19b6B7459bC678B67e8a',
+      USDC: '0xF096872672F44d6EBA71458D74fe67F9a77a23B9',
+      DAI: '0x51D7180edA2260cc4F6e4EebB82FEF5c3c2B8300',
+      MIM: '0x54EdAB30a7134A16a54218AE64C73e1DAf48a8Fb',
+      WBTC: '0x2779D32d5166BAaa2B2b658333bA7e6Ec0C65743',
+      JOE: '0x02D35d3a8aC3e1626d3eE09A78Dd87286F5E8e3a',
+      QI: '0x36E039e6391A5E7A7267650979fdf613f659be5D',
+      SPELL: '0x4F3ddF9378a4865cf4f28BE51E10AECb83B7daeE',
+      LINK: '0x49ccd9ca821EfEab2b98c60dC60F518E765EDe9a',
+      AAVE: '0x3CA13391E9fb38a75330fb28f8cc2eB3D9ceceED',
     },
     [eOtherNetwork.fantom_testnet]: {
       USDT: '0x9BB8A6dcD83E36726Cc230a97F1AF8a84ae5F128',
@@ -704,6 +743,14 @@ export const CommonsConfig: ICommonConfiguration = {
       WAVAX: '0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7',
       USDT: '0xc7198437980c041c805a1edcba50c1ce5db95118',
       USDC: '0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664',
+      DAI: '0xd586e7f844cea2f87f50152665bcbc2c279d8d70',
+      MIM: '0x130966628846BFd36ff31a822705796e8cb8C18D',
+      WBTC: '0x50b7545627a5162f82a992c33b87adc75187b218',
+      JOE: '0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd',
+      QI: '0x8729438eb15e2c8b576fcc6aecda6a148776c0f5',
+      SPELL: '0xce1bffbd5374dac86a2893119683f4911a2f7814',
+      LINK: '0x5947bb275c521040051d82396192181b413227a3',
+      AAVE: '0x63a72806098bd3d9520cc43356dd78afe5d386d9',
     },
     [eOtherNetwork.avalanche_testnet]: {
       WETH: '0xB767287A7143759f294CfB7b1Adbca1140F3de71',
@@ -956,7 +1003,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.ropsten]: AGF_CONFIG_MAIN,
     [eEthereumNetwork.rinkeby]: AGF_CONFIG_MAIN,
     [eEthereumNetwork.coverage]: AGF_CONFIG_MAIN,
-    [eEthereumNetwork.hardhat]: AGF_CONFIG_MAIN,
+    [eEthereumNetwork.hardhat]: AGF_CONFIG_AVALANCHE,
     [eEthereumNetwork.kovan]: AGF_CONFIG_MAIN,
     [eEthereumNetwork.main]: AGF_CONFIG_MAIN,
     [eEthereumNetwork.tenderlyMain]: AGF_CONFIG_MAIN,

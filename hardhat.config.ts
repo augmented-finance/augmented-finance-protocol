@@ -72,7 +72,7 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number, mnemon
 const FORK_URLS: Record<eNetwork, string> = {
   [eOtherNetwork.bsc]: BSC_FORK_URL,
   [eOtherNetwork.bsc_testnet]: '',
-  [eOtherNetwork.avalanche]: '',
+  [eOtherNetwork.avalanche]: FORK_RPC_URL[eOtherNetwork.avalanche] || '',
   [eOtherNetwork.avalanche_testnet]: '',
   [eOtherNetwork.fantom]: '',
   [eOtherNetwork.fantom_testnet]: '',

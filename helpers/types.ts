@@ -315,6 +315,10 @@ export interface iAssetBase<T> {
   AUTO: T;
   DODO: T;
   ALPHA: T;
+  MIM: T;
+  JOE: T;
+  QI: T;
+  SPELL: T;
 }
 
 const tokenSymbols: iAssetBase<string> = {
@@ -371,6 +375,10 @@ const tokenSymbols: iAssetBase<string> = {
   AUTO: '',
   DODO: '',
   ALPHA: '',
+  MIM: '',
+  JOE: '',
+  QI: '',
+  SPELL: '',
 };
 
 type testAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC' | 'AAVE' | 'LINK';
