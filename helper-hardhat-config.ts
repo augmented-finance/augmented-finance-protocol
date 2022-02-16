@@ -13,7 +13,7 @@ dotenv.config();
 const INFURA_KEY = process.env.INFURA_KEY || '';
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
 const TENDERLY_FORK_ID = process.env.TENDERLY_FORK_ID || '';
-const BSC_GETBLOCK_KEY = process.env.BSC_GETBLOCK_KEY || '';
+const MORALIS_KEY = process.env.MORALIS_KEY || '';
 
 const GWEI = 1000 * 1000 * 1000;
 
@@ -36,7 +36,9 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eOtherNetwork.bsc_testnet]: 'https://data-seed-prebsc-1-s2.binance.org:8545/',
   [eOtherNetwork.bsc]: 'https://bsc-dataseed.binance.org/',
   [eOtherNetwork.avalanche_testnet]: 'https://api.avax-test.network/ext/bc/C/rpc',
-  [eOtherNetwork.avalanche]: 'https://api.avax.network/ext/bc/C/rpc',
+  [eOtherNetwork.avalanche]: MORALIS_KEY
+    ? `https://speedy-nodes-nyc.moralis.io/${MORALIS_KEY}/avalanche/mainnet`
+    : 'https://api.avax.network/ext/bc/C/rpc',
   [eOtherNetwork.fantom_testnet]: 'https://rpc.testnet.fantom.network/',
   [eOtherNetwork.fantom]: 'https://rpcapi.fantom.network/',
   [ePolygonNetwork.arbitrum_testnet]: 'https://rinkeby.arbitrum.io/rpc',
@@ -48,7 +50,12 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
 };
 
 export const FORK_RPC_URL: iParamsPerNetworkOpt<string> = {
-  [eOtherNetwork.bsc]: BSC_GETBLOCK_KEY ? 'https://bsc.getblock.io/mainnet/?api_key=' + BSC_GETBLOCK_KEY : undefined,
+  [eOtherNetwork.bsc]: MORALIS_KEY
+    ? `https://speedy-nodes-nyc.moralis.io/${MORALIS_KEY}/bsc/mainnet/archive`
+    : undefined,
+  [eOtherNetwork.avalanche]: MORALIS_KEY
+    ? `https://speedy-nodes-nyc.moralis.io/${MORALIS_KEY}/avalanche/mainnet`
+    : 'https://api.avax.network/ext/bc/C/rpc',
 };
 
 const gasPrice = (def: number) => (process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : def) * GWEI;
@@ -59,12 +66,12 @@ export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork<number | 'auto'> = {
   [eEthereumNetwork.rinkeby]: gasPrice(1),
   [eEthereumNetwork.main]: gasPrice(85),
   [eEthereumNetwork.coverage]: gasPrice(65),
-  [eEthereumNetwork.hardhat]: gasPrice(65),
+  [eEthereumNetwork.hardhat]: gasPrice(25),
   [eEthereumNetwork.tenderlyMain]: 0.01 * GWEI,
   [eOtherNetwork.bsc_testnet]: gasPrice(10),
   [eOtherNetwork.bsc]: gasPrice(1),
   [eOtherNetwork.avalanche_testnet]: gasPrice(30),
-  [eOtherNetwork.avalanche]: gasPrice(1),
+  [eOtherNetwork.avalanche]: gasPrice(25),
   [eOtherNetwork.fantom_testnet]: gasPrice(10),
   [eOtherNetwork.fantom]: gasPrice(1),
   [ePolygonNetwork.arbitrum_testnet]: 'auto',

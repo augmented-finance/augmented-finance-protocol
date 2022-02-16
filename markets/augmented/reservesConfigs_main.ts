@@ -1,15 +1,10 @@
 import { oneRay } from '../../helpers/constants';
 import { eContractid, IInterestRateStrategyParams, IMarketRates, IReserveParams } from '../../helpers/types';
 
-import {
-  externalReserveAAVE,
-  externalReserveCOMP,
-  externalReserveCETH,
-  externalAsset,
-} from './rateStrategies';
+import { externalReserveAAVE, externalReserveCOMP, externalReserveCETH, externalAsset } from './rateStrategies';
 
 const ray = (n: number) => oneRay.multipliedBy(n).toFixed();
-const stableRate = (base: number) : IMarketRates => ({ borrowRate: ray(base) });
+const stableRate = (base: number): IMarketRates => ({ borrowRate: ray(base) });
 
 export const MainnetStableBaseRates = {
   USDC: stableRate(0.03),
@@ -17,7 +12,7 @@ export const MainnetStableBaseRates = {
   DAI: stableRate(0.03),
   WBTC: stableRate(0.0225),
   WETH: stableRate(0.0225),
-}
+};
 
 const strategies = {
   // USDC USDT
@@ -39,7 +34,7 @@ const strategies = {
     variableRateSlope2: ray(0.75),
     stableRateSlope1: ray(0.015),
     stableRateSlope2: ray(0.75),
-  },  
+  },
   // WBTC
   volatile2: <IInterestRateStrategyParams>{
     name: 'rateStrategyVolatileTwo',
@@ -59,8 +54,8 @@ const strategies = {
     variableRateSlope2: ray(1),
     stableRateSlope1: ray(0.075),
     stableRateSlope2: ray(1),
-  },  
-}
+  },
+};
 
 const stableBorrowRateEnabled = false;
 
@@ -122,9 +117,9 @@ const base = {
     stableBorrowRateEnabled: stableBorrowRateEnabled,
     reserveDecimals: 18,
     depositTokenImpl: eContractid.DepositTokenImpl,
-    reserveFactor: 500
+    reserveFactor: 500,
   },
-}
+};
 
 export const MainnetReserves = {
   ...base,
@@ -133,10 +128,10 @@ export const MainnetReserves = {
   AUSDT: externalAsset(base.USDT, externalReserveAAVE, 2000),
   AWBTC: externalAsset(base.WBTC, externalReserveAAVE, 2000),
   AWETH: externalAsset(base.WETH, externalReserveAAVE, 2000),
-  
+
   CDAI: externalAsset(base.DAI, externalReserveCOMP, 2000, 8),
   CUSDC: externalAsset(base.USDC, externalReserveCOMP, 2000, 8),
   CUSDT: externalAsset(base.USDT, externalReserveCOMP, 2000, 8),
   CWBTC: externalAsset(base.WBTC, externalReserveCOMP, 2000, 8),
   CETH: externalAsset(base.WETH, externalReserveCETH, 2000, 8),
-}
+};
