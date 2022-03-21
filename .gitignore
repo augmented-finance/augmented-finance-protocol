@@ -25,3 +25,5 @@ typechain
 .npmrc
 yarn.lock
 ui-config.json
+
+.DS_Store

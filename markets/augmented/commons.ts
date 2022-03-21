@@ -231,6 +231,12 @@ const rewardPoolsAvalancheMain: IRewardPools = {
     MeltDownAt: new Date('2021-11-01'),
     Providers: [],
   },
+  AirdropPool: {
+    TotalWad: 2_500_000,
+    BoostFactor: 0,
+    MeltDownAt: new Date('2022-03-15'),
+    Providers: [],
+  },
   TeamPool: {
     BasePoints: 1000,
     UnlockAt: new Date('2021-11-15'),
@@ -951,7 +957,7 @@ export const CommonsConfig: ICommonConfiguration = {
 
   StakeParams: {
     MaxSlashBP: 3000, // 30%
-    CooldownPeriod: DAY,
+    CooldownPeriod: 1, // one second
     UnstakePeriod: 7 * DAY,
     StakeToken: {
       WBTC: StakeMode.stakeAg,

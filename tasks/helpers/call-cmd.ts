@@ -251,6 +251,14 @@ const parseCommand = async (
       );
     },
 
+    addNamedRewardPools: async () => {
+      await call(
+        qualifiedName(eContractid.RewardConfiguratorImpl, AccessFlags.REWARD_CONFIGURATOR, 'addNamedRewardPools'),
+        [['0x709fBDaBe8876438696d592bf448609E633bfF97'], ['AirdropPool'], [0]],
+        AccessFlags.REWARD_CONFIG_ADMIN
+      );
+    },
+
     setMeltdown: async () => {
       const pool = await getPermitFreezerRewardPool(await getNamedPoolAddr(ac, args[0]));
 
