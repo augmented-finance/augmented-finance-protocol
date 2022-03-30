@@ -12,6 +12,7 @@ export const AvalancheStableBaseRates = {
   USDC: stableRate(0.03),
   DAI: stableRate(0.03),
   MIM: stableRate(0.03),
+  UST: stableRate(0.03),
   WBTC: stableRate(0.03),
   JOE: stableRate(0.03),
   QI: stableRate(0.03),
@@ -59,6 +60,7 @@ export const AvalancheReserves = {
   DAI: assetReserve(strategies.S_90_0_4_100_2_100, 8000, 8500, 10500, 18, 500, true, false),
   USDC: assetReserve(strategies.S_90_0_4_100_2_100, 8000, 8500, 10500, 6, 500, true, false),
   MIM: assetReserve(strategies.S_90_0_4_100_2_100, 8000, 8500, 11000, 18, 500, true, false),
+  UST: assetReserve(strategies.S_90_0_4_100_2_100, 8000, 8500, 11000, 6, 500, true, false),
 
   LINK: assetReserve(strategies.S_70_0_15_300_15_300, 6000, 6500, 11000, 18, 500, true, false),
   AAVE: assetReserve(strategies.S_70_0_15_300_15_300, 6000, 6500, 11000, 18, 500, true, false),

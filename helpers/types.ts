@@ -316,6 +316,7 @@ export interface iAssetBase<T> {
   DODO: T;
   ALPHA: T;
   MIM: T;
+  UST: T;
   JOE: T;
   QI: T;
   SPELL: T;
@@ -376,6 +377,7 @@ const tokenSymbols: iAssetBase<string> = {
   DODO: '',
   ALPHA: '',
   MIM: '',
+  UST: '',
   JOE: '',
   QI: '',
   SPELL: '',
