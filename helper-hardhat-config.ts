@@ -47,6 +47,8 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [ePolygonNetwork.optimistic]: 'https://mainnet.optimism.io',
   [ePolygonNetwork.mumbai]: 'https://rpc-mumbai.maticvigil.com',
   [ePolygonNetwork.matic]: 'https://rpc-mainnet.matic.network',
+  [eOtherNetwork.gnosis]: 'https://rpc.xdaichain.com/',
+  // [eOtherNetwork.gnosis]: 'http://localhost:8545',
 };
 
 export const FORK_RPC_URL: iParamsPerNetworkOpt<string> = {
@@ -80,4 +82,5 @@ export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork<number | 'auto'> = {
   [ePolygonNetwork.optimistic]: 'auto',
   [ePolygonNetwork.mumbai]: gasPrice(1),
   [ePolygonNetwork.matic]: gasPrice(2),
+  [eOtherNetwork.gnosis]: gasPrice(2),
 };

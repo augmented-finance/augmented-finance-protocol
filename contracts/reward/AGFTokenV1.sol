@@ -10,7 +10,7 @@ contract AGFTokenV1 is RewardToken, VersionedInitializable, IInitializableReward
   string private constant SYMBOL = 'AGF';
 
   uint256 private constant TOKEN_REVISION = 1;
-  uint256 private constant TREASURY_MINT = 1000;
+  uint256 private constant TREASURY_MINT = 10000;
 
   constructor() ERC20BaseWithPermit(NAME, SYMBOL, DECIMALS) MarketAccessBitmask(IMarketAccessController(address(0))) {}
 

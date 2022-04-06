@@ -19,6 +19,7 @@ import { OptimisticReserves, OptimisticStableBaseRates } from './reservesConfigs
 import { MainnetReserves, MainnetStableBaseRates } from './reservesConfigs_main';
 import { PolygonReserves, PolygonStableBaseRates } from './reservesConfigs_polygon';
 import { ArbitrumReserves, ArbitrumStableBaseRates } from './reservesConfigs_arbitrum';
+import { GnosisReserves, GnosisStableBaseRates } from './reservesConfigs_gnosis';
 
 const emergencyAdmins = [
   '0x8331Bd35089090249675D023804FC52b7FD18184',
@@ -244,6 +245,55 @@ const rewardPoolsAvalancheMain: IRewardPools = {
   },
 };
 
+const rewardPoolsGnosisMain: IRewardPools = {
+  InitialRateWad: 0.0578703704,
+  TokenPools: {
+    WXDAI: tokenRewards(41, 5, 0),
+    USDC: tokenRewards(823, 103, 0),
+    GNO: tokenRewards(823, 103, 0),
+    WETH: tokenRewards(823, 103, 0),
+    WBTC: tokenRewards(165, 21, 0),
+    LINK: tokenRewards(165, 21, 0),
+    FOX: tokenRewards(82, 10, 0),
+    CRV: tokenRewards(82, 10, 0),
+    DPI: tokenRewards(41, 5, 0),
+    SUSHI: tokenRewards(41, 5, 0),
+    PERP: tokenRewards(25, 3, 0),
+    UNI: tokenRewards(25, 3, 0),
+    WBNB: tokenRewards(25, 3, 0),
+    YFI: tokenRewards(8, 1, 0),
+    AAVE: tokenRewards(8, 1, 0),
+    GRT: tokenRewards(8, 1, 0),
+    MKR: tokenRewards(8, 1, 0),
+    SNX: tokenRewards(8, 1, 0),
+  },
+  ReferralPool: {
+    BasePoints: 0,
+    BoostFactor: 0,
+  },
+  TreasuryPool: {
+    BasePoints: 2000,
+    BoostFactor: 0,
+  },
+  RetroPool: {
+    TotalWad: 10_000_000,
+    BoostFactor: 0,
+    MeltDownAt: new Date('2021-11-01'),
+    Providers: [],
+  },
+  TeamPool: {
+    BasePoints: 1000,
+    UnlockAt: new Date('2021-11-15'),
+    Manager: '0x9A48bCEB575Df540EE0038E01dB59DEFc343E514',
+    Members: {
+      '0x9029AdeFCdafcEce55a0bC0583B2F10E4F35D8f9': 500,
+      '0x1Fbdc311eb546a92b54fD8919Fa7058e41822FA6': 200,
+      '0x5B305dF32a3122b27dC5a424744D36fb8DDeEfDA': 15,
+      '0x99eD15dd09b62a12d64FD99B4e4EeCda9C1Ab34d': 15,
+    },
+  },
+};
+
 const rewardPoolsOptimisticMain: IRewardPools = {
   InitialRateWad: 0,
   TokenPools: {
@@ -321,6 +371,19 @@ const AGF_CONFIG_AVALANCHE = {
   },
 };
 
+const AGF_CONFIG_GNOSIS = {
+  DefaultPriceEth: 0.000000000039,
+  UniV2EthPair: {
+    Symbol: 'SushiXDAIAGF',
+    StakeToken: {
+      RewardShare: {
+        BasePoints: 2400,
+        BoostFactor: 30000, // 3x
+      },
+    },
+  },
+};
+
 const AGF_CONFIG_EMPTY = {
   DefaultPriceEth: 0,
   UniV2EthPair: {
@@ -338,6 +401,7 @@ const AGF_CONFIG_EMPTY = {
 // PROTOCOL GLOBAL PARAMS
 // ----------------
 
+// @ts-ignore
 export const CommonsConfig: ICommonConfiguration = {
   MarketId: 'Augmented genesis market',
   Names: DefaultTokenNames,
@@ -351,6 +415,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.fantom_testnet]: emergencyAdmins,
     [eOtherNetwork.avalanche_testnet]: emergencyAdmins,
     [eOtherNetwork.avalanche]: emergencyAdmins,
+    [eOtherNetwork.gnosis]: emergencyAdmins,
     [ePolygonNetwork.mumbai]: emergencyAdmins,
     [ePolygonNetwork.arbitrum_testnet]: emergencyAdmins,
     [ePolygonNetwork.optimistic_testnet]: emergencyAdmins,
@@ -381,6 +446,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.bsc]: USD_QUOTE,
     [eOtherNetwork.bsc_testnet]: USD_QUOTE,
     [eOtherNetwork.avalanche]: USD_QUOTE,
+    [eOtherNetwork.gnosis]: USD_QUOTE,
     [eOtherNetwork.avalanche_testnet]: USD_QUOTE,
     [eOtherNetwork.fantom]: USD_QUOTE,
     [eOtherNetwork.fantom_testnet]: USD_QUOTE,
@@ -402,7 +468,6 @@ export const CommonsConfig: ICommonConfiguration = {
       USDC: '0x64EaC61A2DFda2c3Fa04eED49AA33D021AeC8838',
       USDT: '0x0bF499444525a23E7Bb61997539725cA2e928138',
       WBTC: '0xF7904a295A029a3aBDFFB6F12755974a958C7C25',
-
       AAVE: '0xd04647B7CB523bb9f26730E9B6dE1174db7591Ad',
       BAT: '0x0e4fcEC26c9f85c3D714370c98f43C4E02Fc35Ae',
       BUSD: '0xbF7A18ea5DE0501f7559144e702b29c55b055CcB',
@@ -555,6 +620,26 @@ export const CommonsConfig: ICommonConfiguration = {
       LINK: '0x49ccd9ca821EfEab2b98c60dC60F518E765EDe9a',
       AAVE: '0x3CA13391E9fb38a75330fb28f8cc2eB3D9ceceED',
     },
+    [eOtherNetwork.gnosis]: {
+      WXDAI: '0x678df3415fc31947dA4324eC63212874be5a82f8',
+      USDC: '0x26C31ac71010aF62E6B486D1132E266D6298857D',
+      GNO: '0x22441d81416430A54336aB28765abd31a792Ad37',
+      WETH: '0xa767f745331D267c7751297D982b050c93985627',
+      WBTC: '0x6C1d7e76EF7304a40e8456ce883BC56d3dEA3F7d',
+      LINK: '0xed322A5ac55BAE091190dFf9066760b86751947B',
+      FOX: '0x3190f6D277Fea03A082Eba20B136f95f0DCCb3dD',
+      CRV: '0xC77B83ac3Dd2a761073bD0f281f7b880B2DDDe18',
+      DPI: '0x53B1b13E7a5C0DE9A2BeFa1085Ec364BB27e439f',
+      SUSHI: '0xC0a6Bf8d5D408B091D022C3C0653d4056D4B9c01',
+      PERP: '0x76e76F7E73F3BD42E3c2b4282B50b36E78130B4A',
+      UNI: '0xd98735d78266c62277Bb4dBf3e3bCdd3694782F4',
+      WBNB: '0x6D42cc26756C34F26BEcDD9b30a279cE9Ea8296E',
+      YFI: '0x14030d5a0C9e63D9606C6f2c8771Fc95b34b07e0',
+      AAVE: '0x2b481Dc923Aa050E009113Dca8dcb0daB4B68cDF',
+      GRT: '0xeBbd67a84e33791F1bcFde74CDc22a71e332e2F1',
+      MKR: '0x51e4024255d0cBd1F4C79AEe6BDB6565Df2C5d1b',
+      SNX: '0x3b84d6e6976D5826500572600eB44f9f1753827b',
+    },
     [eOtherNetwork.fantom_testnet]: {
       USDT: '0x9BB8A6dcD83E36726Cc230a97F1AF8a84ae5F128',
       WFTM: '0xe04676B9A9A2973BCb0D1478b5E1E9098BBB7f3D',
@@ -611,6 +696,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eEthereumNetwork.tenderlyMain]: false,
     [eOtherNetwork.bsc]: false,
     [eOtherNetwork.avalanche]: false,
+    [eOtherNetwork.gnosis]: false,
     [eOtherNetwork.fantom]: false,
     [ePolygonNetwork.arbitrum]: false,
     [ePolygonNetwork.optimistic]: false,
@@ -758,6 +844,26 @@ export const CommonsConfig: ICommonConfiguration = {
       WBTC: '0x89b7F5fCf00AA31E9e152bC39AbA6c1Ce120A0ED',
       USDT: '0x4C1b0c8721a49351DbB559B2D017ab0CE47280B3',
     },
+    [eOtherNetwork.gnosis]: {
+      WXDAI: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
+      USDC: '0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83',
+      GNO: '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb',
+      WETH: '0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1',
+      WBTC: '0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252',
+      LINK: '0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2',
+      FOX: '0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d',
+      CRV: '0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd',
+      DPI: '0xD3D47d5578e55C880505dC40648F7F9307C3e7A8',
+      SUSHI: '0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE',
+      PERP: '0x7ecF26cd9A36990b8ea477853663092333f59979',
+      UNI: '0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74',
+      WBNB: '0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04',
+      YFI: '0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd',
+      AAVE: '0xDF613aF6B44a31299E48131e9347F034347E2F00',
+      GRT: '0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7',
+      MKR: '0x5fd896D248fbfa54d26855C267859eb1b4DAEe72',
+      SNX: '0x3A00E08544d589E19a8e7D97D0294331341cdBF6',
+    },
 
     [ePolygonNetwork.arbitrum]: {},
     [ePolygonNetwork.arbitrum_testnet]: {
@@ -851,6 +957,12 @@ export const CommonsConfig: ICommonConfiguration = {
       AgfPair: 'WAVAX',
     },
 
+    [eOtherNetwork.gnosis]: {
+      WrappedNative: 'WXDAI',
+      AgfPair: 'WXDAI',
+      UniswapV2Router: '0x1b02da8cb0d097eb8d57a175b88c7d8b47997506',
+    },
+
     [ePolygonNetwork.arbitrum]: {
       WrappedNative: 'WETH',
       AgfPair: 'WETH',
@@ -893,6 +1005,8 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.avalanche]: AvalancheReserves,
     [eOtherNetwork.avalanche_testnet]: AvalancheReserves,
 
+    [eOtherNetwork.gnosis]: GnosisReserves,
+
     [ePolygonNetwork.arbitrum]: ArbitrumReserves,
     [ePolygonNetwork.arbitrum_testnet]: ArbitrumReserves,
     [ePolygonNetwork.optimistic]: OptimisticReserves,
@@ -918,6 +1032,8 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.avalanche]: AvalancheStableBaseRates,
     [eOtherNetwork.avalanche_testnet]: AvalancheStableBaseRates,
 
+    [eOtherNetwork.gnosis]: GnosisStableBaseRates,
+
     [ePolygonNetwork.arbitrum]: ArbitrumStableBaseRates,
     [ePolygonNetwork.arbitrum_testnet]: ArbitrumStableBaseRates,
     [ePolygonNetwork.optimistic]: OptimisticStableBaseRates,
@@ -941,6 +1057,8 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.avalanche]: [LPFeature.FLASHLOAN, LPFeature.FLASHLOAN_DEPOSIT, LPFeature.FLASHLOAN_BORROW],
     [eOtherNetwork.avalanche_testnet]: [],
 
+    [eOtherNetwork.gnosis]: [LPFeature.FLASHLOAN, LPFeature.FLASHLOAN_DEPOSIT, LPFeature.FLASHLOAN_BORROW],
+
     [ePolygonNetwork.arbitrum]: [LPFeature.FLASHLOAN, LPFeature.FLASHLOAN_DEPOSIT, LPFeature.FLASHLOAN_BORROW],
     [ePolygonNetwork.arbitrum_testnet]: [],
     [ePolygonNetwork.optimistic]: [LPFeature.FLASHLOAN, LPFeature.FLASHLOAN_DEPOSIT, LPFeature.FLASHLOAN_BORROW],
@@ -951,51 +1069,51 @@ export const CommonsConfig: ICommonConfiguration = {
 
   StakeParams: {
     MaxSlashBP: 3000, // 30%
-    CooldownPeriod: DAY,
-    UnstakePeriod: 7 * DAY,
+    CooldownPeriod: 1, // one second
+    UnstakePeriod: 30 * DAY,
     StakeToken: {
-      WBTC: StakeMode.stakeAg,
-      WETH: StakeMode.stakeAg,
-
-      WAVAX: StakeMode.stakeAg,
-      WFTM: StakeMode.stakeAg,
-      WMATIC: StakeMode.stakeAg,
-
-      WBNB: StakeMode.stakeAg,
-      BTCB: StakeMode.stakeAg,
-      BCH: StakeMode.stakeAg,
-      ETH: StakeMode.stakeAg,
-      BETH: StakeMode.stakeAg,
-      USDT: StakeMode.stakeAg,
-      BUSD: StakeMode.stakeAg,
-      USDC: StakeMode.stakeAg,
-      DAI: StakeMode.stakeAg,
-      TUSD: StakeMode.stakeAg,
-      DOT: StakeMode.stakeAg,
-      SXP: StakeMode.stakeAg,
-      XRP: StakeMode.stakeAg,
-      ADA: StakeMode.stakeAg,
-      TRX: StakeMode.stakeAg,
-      LINK: StakeMode.stakeAg,
-      LTC: StakeMode.stakeAg,
-      DOGE: StakeMode.stakeAg,
-      MATIC: StakeMode.stakeAg,
-      FIL: StakeMode.stakeAg,
-      INJ: StakeMode.stakeAg,
-      CHR: StakeMode.stakeAg,
-      REEF: StakeMode.stakeAg,
-      // TWT: StakeMode.stakeAg,
-      LINA: StakeMode.stakeAg,
-      CAKE: StakeMode.stakeAg,
-      XVS: StakeMode.stakeAg,
-      ALPACA: StakeMode.stakeAg,
-      UNI: StakeMode.stakeAg,
-      SUSHI: StakeMode.stakeAg,
-      AAVE: StakeMode.stakeAg,
-      BIFI: StakeMode.stakeAg,
-      AUTO: StakeMode.stakeAg,
-      DODO: StakeMode.stakeAg,
-      // ALPHA: StakeMode.stakeAg,
+      // WBTC: StakeMode.stakeAg,
+      // WETH: StakeMode.stakeAg,
+      //
+      // WAVAX: StakeMode.stakeAg,
+      // WFTM: StakeMode.stakeAg,
+      // WMATIC: StakeMode.stakeAg,
+      //
+      // WBNB: StakeMode.stakeAg,
+      // BTCB: StakeMode.stakeAg,
+      // BCH: StakeMode.stakeAg,
+      // ETH: StakeMode.stakeAg,
+      // BETH: StakeMode.stakeAg,
+      // USDT: StakeMode.stakeAg,
+      // BUSD: StakeMode.stakeAg,
+      // USDC: StakeMode.stakeAg,
+      // DAI: StakeMode.stakeAg,
+      // TUSD: StakeMode.stakeAg,
+      // DOT: StakeMode.stakeAg,
+      // SXP: StakeMode.stakeAg,
+      // XRP: StakeMode.stakeAg,
+      // ADA: StakeMode.stakeAg,
+      // TRX: StakeMode.stakeAg,
+      // LINK: StakeMode.stakeAg,
+      // LTC: StakeMode.stakeAg,
+      // DOGE: StakeMode.stakeAg,
+      // MATIC: StakeMode.stakeAg,
+      // FIL: StakeMode.stakeAg,
+      // INJ: StakeMode.stakeAg,
+      // CHR: StakeMode.stakeAg,
+      // REEF: StakeMode.stakeAg,
+      // // TWT: StakeMode.stakeAg,
+      // LINA: StakeMode.stakeAg,
+      // CAKE: StakeMode.stakeAg,
+      // XVS: StakeMode.stakeAg,
+      // ALPACA: StakeMode.stakeAg,
+      // UNI: StakeMode.stakeAg,
+      // SUSHI: StakeMode.stakeAg,
+      // AAVE: StakeMode.stakeAg,
+      // BIFI: StakeMode.stakeAg,
+      // AUTO: StakeMode.stakeAg,
+      // DODO: StakeMode.stakeAg,
+      // // ALPHA: StakeMode.stakeAg,
     },
   },
 
@@ -1013,6 +1131,7 @@ export const CommonsConfig: ICommonConfiguration = {
     [eOtherNetwork.fantom_testnet]: AGF_CONFIG_EMPTY,
     [eOtherNetwork.avalanche]: AGF_CONFIG_AVALANCHE,
     [eOtherNetwork.avalanche_testnet]: AGF_CONFIG_AVALANCHE,
+    [eOtherNetwork.gnosis]: AGF_CONFIG_GNOSIS,
 
     [ePolygonNetwork.arbitrum]: AGF_CONFIG_EMPTY,
     [ePolygonNetwork.arbitrum_testnet]: AGF_CONFIG_EMPTY,
@@ -1045,6 +1164,7 @@ export const CommonsConfig: ICommonConfiguration = {
         InitialRateWad: 1,
       },
       [eOtherNetwork.avalanche]: rewardPoolsAvalancheMain,
+      [eOtherNetwork.gnosis]: rewardPoolsGnosisMain,
       [eOtherNetwork.avalanche_testnet]: {
         ...rewardPoolsAvalancheMain,
         InitialRateWad: 1,
