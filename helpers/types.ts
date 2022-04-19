@@ -23,6 +23,7 @@ export enum eOtherNetwork {
   avalanche = 'avalanche',
   fantom_testnet = 'fantom_testnet',
   fantom = 'fantom',
+  gnosis = 'gnosis',
 }
 
 export enum ePolygonNetwork {
@@ -319,6 +320,16 @@ export interface iAssetBase<T> {
   JOE: T;
   QI: T;
   SPELL: T;
+  WXDAI: T;
+  GNO: T;
+  FOX: T;
+  CRV: T;
+  DPI: T;
+  PERP: T;
+  YFI: T;
+  GRT: T;
+  SNX: T;
+  MKR: T;
 }
 
 const tokenSymbols: iAssetBase<string> = {
@@ -379,6 +390,16 @@ const tokenSymbols: iAssetBase<string> = {
   JOE: '',
   QI: '',
   SPELL: '',
+  WXDAI: '',
+  GNO: '',
+  FOX: '',
+  CRV: '',
+  DPI: '',
+  PERP: '',
+  YFI: '',
+  GRT: '',
+  SNX: '',
+  MKR: '',
 };
 
 type testAssets = 'WETH' | 'DAI' | 'USDT' | 'USDC' | 'WBTC' | 'AAVE' | 'LINK';
@@ -494,6 +515,7 @@ export interface iParamsPerOtherNetwork<T> {
   [eOtherNetwork.avalanche_testnet]: T;
   [eOtherNetwork.fantom]: T;
   [eOtherNetwork.fantom_testnet]: T;
+  [eOtherNetwork.gnosis]: T;
 }
 
 export enum RateMode {

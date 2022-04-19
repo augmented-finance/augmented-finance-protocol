@@ -24,12 +24,13 @@
     "hardhat:main": "hardhat --network main",
     "hardhat:mumbai": "KEY_SEL=POL hardhat --network mumbai",
     "hardhat:matic": "KEY_SEL=POL hardhat --network matic",
+    "hardhat:gnosis": "KEY_SEL=GNOSIS hardhat --network gnosis",
     "hardhat:bsc-test": "KEY_SEL=BSC hardhat --network bsc_testnet",
     "hardhat:bsc": "KEY_SEL=BSC hardhat --network bsc",
     "hardhat:bsc:fork": "KEY_SEL=BSC_FORK hardhat --network bsc_fork",
     "hardhat:avalanche:fork": "KEY_SEL=AVALANCHE_FORK hardhat --network avalanche_fork",
     "hardhat:avalanche-test:fork": "KEY_SEL=AVALANCHE_TESTNET_FORK hardhat --network avalanche_testnet_fork",
-    
+
     "hardhat:avalanche": "KEY_SEL=AVA hardhat --network avalanche",
     "hardhat:ava-test": "KEY_SEL=AVA hardhat --network avalanche_testnet",
 
@@ -109,10 +110,12 @@
     "deploy:matic": "npm run compile && npm run hardhat:matic -- augmented:mainnet",
     "deploy:mumbai": "npm run compile && npm run hardhat:mumbai -- augmented:mainnet",
 
+    "deploy:gnosis": "npm run compile && npm run hardhat:gnosis -- augmented:mainnet",
+
     "verify:main": "npm run hardhat:main -- verify:verify-all-contracts",
     "verify:ropsten": "npm run hardhat:ropsten -- verify:verify-all-contracts",
     "verify:kovan": "npm run hardhat:kovan -- verify:verify-all-contracts",
-    
+
     "verify:rinkeby": "npm run hardhat:rinkeby -- verify:verify-all-contracts",
     "verify:bsc": "npm run hardhat:bsc -- verify:verify-all-contracts",
     "verify:bsc-test": "npm run hardhat:bsc-test -- verify:verify-all-contracts",

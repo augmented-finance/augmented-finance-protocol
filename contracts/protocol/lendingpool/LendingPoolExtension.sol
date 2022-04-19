@@ -64,7 +64,7 @@ contract LendingPoolExtension is LendingPoolBase, ILendingPoolExtension, ILendin
     address user,
     uint256 debtToCover,
     bool receiveDeposit
-  ) external override whenNotPaused {
+  ) external override whenNotPaused noReentry {
     require(_disabledFeatures & FEATURE_LIQUIDATION == 0, Errors.LP_RESTRICTED_FEATURE);
 
     DataTypes.ReserveData storage collateralReserve = _reserves[collateralAsset];
