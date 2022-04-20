@@ -47,7 +47,7 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [ePolygonNetwork.optimistic]: 'https://mainnet.optimism.io',
   [ePolygonNetwork.mumbai]: 'https://rpc-mumbai.maticvigil.com',
   [ePolygonNetwork.matic]: 'https://rpc-mainnet.matic.network',
-  [eOtherNetwork.gnosis]: 'https://rpc.xdaichain.com/',
+  [eOtherNetwork.gnosis]: 'https://gno.getblock.io/mainnet/?api_key=9568d8d8-f02f-4e6b-8cfc-b12f1ad8c01a',
   // [eOtherNetwork.gnosis]: 'http://localhost:8545',
 };
 

@@ -288,6 +288,7 @@ const parseCommand = async (
       const mintRate = prepareMintRate(args[0]);
 
       const [pools, values] = await preparePoolNamesAndShares(ac, args.slice(1));
+      console.log('preparePoolNamesAndShares', pools);
       const updPools: string[] = [];
       const updValues: number[] = [];
 
@@ -613,37 +614,48 @@ const _findToken = async (
 };
 
 const poolsByNames = new Map<string, tEthereumAddress>();
+const updatePools = async (ac: MarketAccessController) => {
+  const rc = await getRewardConfiguratorProxy(await ac.getAddress(AccessFlags.REWARD_CONFIGURATOR));
+
+  const list = await rc.list();
+  for (const value of list) {
+    if (falsyOrZeroAddress(value)) {
+      continue;
+    }
+    const pool = await getIManagedRewardPool(value);
+
+    const name = await pool.getPoolName();
+
+    let key = name.toLowerCase();
+    try {
+      const rev = await (await getIRevision(value)).REVISION();
+      key = key + '-' + rev.toString();
+
+      console.log('getIRevision', key);
+    } catch (error: any) {
+      console.log('ERROR getIRevision', key);
+
+      console.log(error);
+      if ((<string>error.message).indexOf('UNPREDICTABLE_GAS_LIMIT') < 0) {
+        // throw error;
+      }
+    }
+    const found = poolsByNames.get(key);
+    if (found === undefined) {
+      console.log('Found', key, value);
+      poolsByNames.set(key, value);
+      continue;
+    }
+    console.log('WARNING! Duplicate pool name: ', name, value, found);
+  }
+};
 
 const getRewardPoolByName = async (ac: MarketAccessController, name: string) => {
-  if (poolsByNames.size == 0) {
-    const rc = await getRewardConfiguratorProxy(await ac.getAddress(AccessFlags.REWARD_CONFIGURATOR));
+  // if (poolsByNames.size == 0) {
+  //
+  // }
 
-    const list = await rc.list();
-    await promiseAllBatch(
-      list.map(async (value) => {
-        if (falsyOrZeroAddress(value)) {
-          return;
-        }
-        const pool = await getIManagedRewardPool(value);
-        const name = await pool.callStatic.getPoolName();
-        let key = name.toLowerCase();
-        try {
-          const rev = await (await getIRevision(value)).callStatic.REVISION();
-          key = key + '-' + rev.toString();
-        } catch (error: any) {
-          if ((<string>error.message).indexOf('UNPREDICTABLE_GAS_LIMIT') < 0) {
-            throw error;
-          }
-        }
-        const found = poolsByNames.get(key);
-        if (found === undefined) {
-          poolsByNames.set(key, value);
-          return;
-        }
-        console.log('WARNING! Duplicate pool name: ', name, value, found);
-      })
-    );
-  }
+  console.log(poolsByNames);
   const addr = poolsByNames.get(name.toLowerCase());
   if (falsyOrZeroAddress(addr)) {
     console.log(poolsByNames);
@@ -667,13 +679,19 @@ const _preparePoolNamesAndValues = async <T>(
   args: any[],
   valueFn: (v: any) => T
 ): Promise<[pools: string[], values: T[]]> => {
-  const rc = await getRewardConfiguratorProxy(await ac.getAddress(AccessFlags.REWARD_CONFIGURATOR));
+  const rcAddress = await ac.getAddress(AccessFlags.REWARD_CONFIGURATOR);
+  console.log('rcAddress', rcAddress);
+  const rc = await getRewardConfiguratorProxy(rcAddress);
+  console.log('rc', rc.address);
+  await updatePools(ac);
+
   const pools: string[] = [];
   const values: T[] = [];
   for (let i = 0; i < args.length; i += 2) {
     let addr = args[i].toString();
     if (falsyOrZeroAddress(addr)) {
-      addr = await getRewardPoolByName(ac, addr);
+      addr = await getRewardPoolByName(ac, args[i].toString());
+      console.log('getRewardPoolByName', args[i]);
       if (falsyOrZeroAddress(addr)) {
         throw new Error('Unknown pool name: ' + args[i]);
       }

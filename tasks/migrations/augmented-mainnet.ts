@@ -79,7 +79,7 @@ task('augmented:mainnet', 'Deploy enviroment')
       console.log('\n======================================================================');
       console.log('96 Access test');
       console.log('======================================================================\n');
-      await DRE.run('full:access-test', { pool: POOL_NAME });
+      // await DRE.run('full:access-test', { pool: POOL_NAME });
 
       const balanceBeforePluck = await deployer.getBalance();
       if (isForkNetwork()) {

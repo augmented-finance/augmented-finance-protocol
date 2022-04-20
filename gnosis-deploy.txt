@@ -1,0 +1,1523 @@
+
+Deployment started
+
+
+======================================================================
+01 Deploy address provider and registry
+======================================================================
+
+*** AddressesProviderRegistry ***
+
+Network: gnosis
+tx: 0x428eebbfc7f4d1e802f36413f86d520b46b72a8aa86e47ec8242b99004fa93cc
+contract address: 0x7801eAd57B386eF703f42F7a599A9D40d87646F5
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 940236
+
+******
+
+Deployed registry: 0x7801eAd57B386eF703f42F7a599A9D40d87646F5
+Deploy MarketAccessController
+Deployed provider: 0xcb336c300D1FaE05B2071e73eFBc733648feE881
+
+=========================================================
+ERROR: HardhatError: HH109: Network connection timed out.
+Please check your internet connection and networks config
+    at HttpProvider._fetchJsonRpcResponse (/Users/scriptokittie/af/augmented-finance-protocol/node_modules/hardhat/src/internal/core/providers/http.ts:184:15)
+    at runMicrotasks (<anonymous>)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at HttpProvider.request (/Users/scriptokittie/af/augmented-finance-protocol/node_modules/hardhat/src/internal/core/providers/http.ts:55:29)
+    at EthersProviderWrapper.send (/Users/scriptokittie/af/augmented-finance-protocol/node_modules/@nomiclabs/hardhat-ethers/src/internal/ethers-provider-wrapper.ts:13:20)
+
+    Caused by: FetchError: network timeout at: https://rpc.xdaichain.com/
+        at Timeout.<anonymous> (/Users/scriptokittie/af/augmented-finance-protocol/node_modules/node-fetch/lib/index.js:1454:13)
+        at listOnTimeout (node:internal/timers:557:17)
+        at processTimers (node:internal/timers:500:7)
+
+======================================================================
+Deployer end balance:  9.87287
+Deploy expenses:  0.009472
+Deploy gas     :  4736003 @ 2  gwei
+======================================================================
+
+Deployment has failed
+➜  augmented-finance-protocol git:(feature/gnosischain) ✗
+➜  augmented-finance-protocol git:(feature/gnosischain) ✗
+➜  augmented-finance-protocol git:(feature/gnosischain) ✗ KEY_SEL=GNOSIS npx hardhat --network gnosis "augmented:mainnet" --incremental
+
+
+(node:55332) TimeoutOverflowWarning: 10000000000 does not fit into a 32-bit signed integer.
+Timeout duration was set to 1.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55332) TimeoutOverflowWarning: 10000000000 does not fit into a 32-bit signed integer.
+Timeout duration was set to 1.
+(node:55332) TimeoutOverflowWarning: 10000000000 does not fit into a 32-bit signed integer.
+Timeout duration was set to 1.
+Error HH109: Network connection timed out.
+Please check your internet connection and networks config
+
+For more info go to https://hardhat.org/HH109 or run Hardhat with --show-stack-traces
+➜  augmented-finance-protocol git:(feature/gnosischain) ✗
+➜  augmented-finance-protocol git:(feature/gnosischain) ✗
+➜  augmented-finance-protocol git:(feature/gnosischain) ✗ KEY_SEL=GNOSIS npx hardhat --network gnosis "augmented:mainnet" --incremental
+Deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+Deployer start balance:  9.87287
+======================================================================
+======================================================================
+====================    ATTN! INCREMENTAL MODE    ====================
+======================================================================
+=========== Delete 'deployed-contracts.json' to start anew ===========
+======================================================================
+======================================================================
+Deployment started
+
+
+======================================================================
+01 Deploy address provider and registry
+======================================================================
+
+*** AddressesProviderRegistry ***
+
+Network: gnosis
+tx: 0x4232a74e2da8e520825aef2b9b3593f6f89112ea19071f28cf2da60cb1463782
+contract address: 0xEB21bB9DA46dC5dF2f77dBDecD2abce786f1deBf
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 940236
+
+******
+
+Deployed registry: 0xEB21bB9DA46dC5dF2f77dBDecD2abce786f1deBf
+Deploy MarketAccessController
+Deployed provider: 0xD45FdA51fC7A58fa611D759187139ae412545c1f
+*** MarketAccessController ***
+
+Network: gnosis
+tx: 0xf24ea028bee3617d118f7e6b05b822aec68532dc5a8fb2866cc38421f2c8a629
+contract address: 0xD45FdA51fC7A58fa611D759187139ae412545c1f
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 3656764
+
+******
+
+Assign 3 emergency admin(s)
+        Granted EMERGENCY_ADMIN: 0x8331Bd35089090249675D023804FC52b7FD18184
+
+        Granted EMERGENCY_ADMIN: 0xE1FbbaBbd21764061734424d3F4f5e2C11101E96
+        Granted EMERGENCY_ADMIN: 0x511EfaE41B0eA33Da847d16e13655009d0aB3Ed7
+
+
+
+======================================================================
+02 Deploy oracles
+======================================================================
+
+{
+  WXDAI: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
+  USDC: '0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83',
+  GNO: '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb',
+  ETH: '0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863',
+  WBTC: '0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252',
+  LINK: '0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2',
+  FOX: '0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d',
+  CRV: '0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd',
+  DPI: '0xD3D47d5578e55C880505dC40648F7F9307C3e7A8',
+  SUSHI: '0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE',
+  PERP: '0x7ecF26cd9A36990b8ea477853663092333f59979',
+  UNI: '0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74',
+  WBNB: '0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04',
+  YFI: '0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd',
+  AAVE: '0xDF613aF6B44a31299E48131e9347F034347E2F00',
+  GRT: '0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7',
+  MKR: '0x5fd896D248fbfa54d26855C267859eb1b4DAEe72',
+  SNX: '0x3A00E08544d589E19a8e7D97D0294331341cdBF6',
+  USD: '0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96'
+}
+{
+  WXDAI: '0x678df3415fc31947dA4324eC63212874be5a82f8',
+  USDC: '0x26C31ac71010aF62E6B486D1132E266D6298857D',
+  GNO: '0x22441d81416430A54336aB28765abd31a792Ad37',
+  ETH: '0xa767f745331D267c7751297D982b050c93985627',
+  WBTC: '0x6C1d7e76EF7304a40e8456ce883BC56d3dEA3F7d',
+  LINK: '0xed322A5ac55BAE091190dFf9066760b86751947B',
+  FOX: '0x3190f6D277Fea03A082Eba20B136f95f0DCCb3dD',
+  CRV: '0xC77B83ac3Dd2a761073bD0f281f7b880B2DDDe18',
+  DPI: '0x53B1b13E7a5C0DE9A2BeFa1085Ec364BB27e439f',
+  SUSHI: '0xC0a6Bf8d5D408B091D022C3C0653d4056D4B9c01',
+  PERP: '0x76e76F7E73F3BD42E3c2b4282B50b36E78130B4A',
+  UNI: '0xd98735d78266c62277Bb4dBf3e3bCdd3694782F4',
+  WBNB: '0x6D42cc26756C34F26BEcDD9b30a279cE9Ea8296E',
+  YFI: '0x14030d5a0C9e63D9606C6f2c8771Fc95b34b07e0',
+  AAVE: '0x2b481Dc923Aa050E009113Dca8dcb0daB4B68cDF',
+  GRT: '0xeBbd67a84e33791F1bcFde74CDc22a71e332e2F1',
+  MKR: '0x51e4024255d0cBd1F4C79AEe6BDB6565Df2C5d1b',
+  SNX: '0x3b84d6e6976D5826500572600eB44f9f1753827b'
+}
+Deploying LendingRateOracle
+*** LendingRateOracle ***
+
+Network: gnosis
+tx: 0x5525e2faeedec2d677043c8e1eb532480cd8b1c3c208c0fe84a3f208d6eeace1
+contract address: 0xabe0685A4A232d65FaB34dCD73BF9bBb286C5905
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 389610
+
+******
+
+- Oracle borrow initalization in 0 txs
+LendingRateOracle: 0xabe0685A4A232d65FaB34dCD73BF9bBb286C5905
+Deploying StaticPriceOracle as fallback
+*** StaticPriceOracle ***
+
+Network: gnosis
+tx: 0xec358c7f786ecd7a8aa2a39b31b565507d9d1125c6114c71d70381e0fedb9995
+contract address: 0x6291c7fD7AA947863DB1E9a8bcF58FA132de3189
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 427813
+
+******
+
+Fallback oracle:  0x6291c7fD7AA947863DB1E9a8bcF58FA132de3189
+Checking price sources...
+        Got price from 0x678df3415fc31947dA4324eC63212874be5a82f8 for 0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d
+        Got price from 0x26C31ac71010aF62E6B486D1132E266D6298857D for 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83
+        Got price from 0x22441d81416430A54336aB28765abd31a792Ad37 for 0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb
+        Got price from 0xa767f745331D267c7751297D982b050c93985627 for 0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863
+        Got price from 0x6C1d7e76EF7304a40e8456ce883BC56d3dEA3F7d for 0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252
+        Got price from 0xed322A5ac55BAE091190dFf9066760b86751947B for 0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2
+        Got price from 0x3190f6D277Fea03A082Eba20B136f95f0DCCb3dD for 0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d
+        Got price from 0xC77B83ac3Dd2a761073bD0f281f7b880B2DDDe18 for 0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd
+        Got price from 0x53B1b13E7a5C0DE9A2BeFa1085Ec364BB27e439f for 0xD3D47d5578e55C880505dC40648F7F9307C3e7A8
+        Got price from 0xC0a6Bf8d5D408B091D022C3C0653d4056D4B9c01 for 0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE
+        Got price from 0x76e76F7E73F3BD42E3c2b4282B50b36E78130B4A for 0x7ecF26cd9A36990b8ea477853663092333f59979
+        Got price from 0xd98735d78266c62277Bb4dBf3e3bCdd3694782F4 for 0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74
+        Got price from 0x6D42cc26756C34F26BEcDD9b30a279cE9Ea8296E for 0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04
+        Got price from 0x14030d5a0C9e63D9606C6f2c8771Fc95b34b07e0 for 0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd
+        Got price from 0x2b481Dc923Aa050E009113Dca8dcb0daB4B68cDF for 0xDF613aF6B44a31299E48131e9347F034347E2F00
+        Got price from 0xeBbd67a84e33791F1bcFde74CDc22a71e332e2F1 for 0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7
+        Got price from 0x51e4024255d0cBd1F4C79AEe6BDB6565Df2C5d1b for 0x5fd896D248fbfa54d26855C267859eb1b4DAEe72
+        Got price from 0x3b84d6e6976D5826500572600eB44f9f1753827b for 0x3A00E08544d589E19a8e7D97D0294331341cdBF6
+Deploying PriceOracle
+        Price aggregators for tokens:  [
+  '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
+  '0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83',
+  '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb',
+  '0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863',
+  '0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252',
+  '0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2',
+  '0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d',
+  '0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd',
+  '0xD3D47d5578e55C880505dC40648F7F9307C3e7A8',
+  '0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE',
+  '0x7ecF26cd9A36990b8ea477853663092333f59979',
+  '0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74',
+  '0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04',
+  '0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd',
+  '0xDF613aF6B44a31299E48131e9347F034347E2F00',
+  '0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7',
+  '0x5fd896D248fbfa54d26855C267859eb1b4DAEe72',
+  '0x3A00E08544d589E19a8e7D97D0294331341cdBF6'
+]
+*** OracleRouter ***
+
+Network: gnosis
+tx: 0xd700ae442e9d73d004f7e7d764492bc917f7c5b095385e11488d82a2dcc62d14
+contract address: 0xef77346Ed56cDC0054f9a399Ab086d4e9dfa978D
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 1635649
+
+******
+
+PriceOracle:  0xef77346Ed56cDC0054f9a399Ab086d4e9dfa978D
+
+======================================================================
+03 Deploy lending pool
+======================================================================
+
+        Deploying lending pool...
+*** LendingPoolImpl ***
+
+Network: gnosis
+tx: 0xed038d3a94ba54e2f693c326c60531570cbc9faad594eb6e6c7b3a5614c481d6
+contract address: 0xa522ee8037e91e9e55Dc95B44e667Fb5e1a676d4
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 4843540
+
+******
+
+        Lending pool implementation: 0xa522ee8037e91e9e55Dc95B44e667Fb5e1a676d4
+Lending pool: 0x54F5A29b1DD10430407954971b298BC77278917d
+        Deploying lending pool extension...
+*** LendingPoolExtensionImpl ***
+
+Network: gnosis
+tx: 0xc822966ee7511c26869a2d904a98675fc0d017b62ab4dd61f9a2d3d545b1bb33
+contract address: 0x68888Abc352FD79F3B483773E8468d8ca564742D
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 4873539
+
+******
+
+Lending pool extension: 0x68888Abc352FD79F3B483773E8468d8ca564742D
+Disable lending pool features: 0x16 [FLASHLOAN, FLASHLOAN_DEPOSIT, FLASHLOAN_BORROW]
+        Deploying configurator...
+*** LendingPoolConfiguratorImpl ***
+
+Network: gnosis
+tx: 0x685c11722bd4fedf0e6effbc49e7120895fb911a6322a91246e3a65821262687
+contract address: 0x48729a6Df56d40B2bFBD343678CfC5a0539cE6c3
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 3252334
+
+******
+
+        Lending pool configurator implementation: 0x48729a6Df56d40B2bFBD343678CfC5a0539cE6c3
+Lending pool configurator: 0xBE0a17B9206e16C0Ed44B961224081eC4027Dc24
+
+======================================================================
+04 Deploy native currency gateway
+======================================================================
+
+Native currency wrapper: WXDAI 0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d
+*** WETHGateway ***
+
+Network: gnosis
+tx: 0xf4f5085478c30ef46b0500c00ebeaf4b94d47d540ba9cdfe59e446f62201139b
+contract address: 0x90c3B7c6f41d6D7b79bC472Db880Bd700029AA5C
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 1341734
+
+******
+
+Deployed gateway address 0x90c3B7c6f41d6D7b79bC472Db880Bd700029AA5C
+Native currency gateway: 0x90c3B7c6f41d6D7b79bC472Db880Bd700029AA5C WXDAI
+
+======================================================================
+05 Deploy auxiliary contracts
+======================================================================
+
+*** ProtocolDataProvider ***
+
+Network: gnosis
+tx: 0x878aca7ef78b6b6f8da9a6cc2ccc799e5db2b82ca6248ec8aadc7be8656989fd
+contract address: 0xa5BDe121B5826EeD60Da7f28665403Cc77b288A4
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 4788828
+
+******
+
+Data helper: 0xa5BDe121B5826EeD60Da7f28665403Cc77b288A4
+*** UniswapLiquiditySwapAdapter ***
+
+Network: gnosis
+tx: 0x13d604d94682e4b6da555839a333b874447f06b093087c11aaeba45f75ce7d83
+contract address: 0x6E00f60f7C60f8e253D1E9531460678364FdA1AA
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 3730263
+
+******
+
+Flashloan adapter deployed UniswapLiquiditySwapAdapter 0x6E00f60f7C60f8e253D1E9531460678364FdA1AA
+*** UniswapRepayAdapter ***
+
+Network: gnosis
+tx: 0x1bdbceab89474d3f944d023009c68c6b13d469472e5fa594cfd0156e27da4b4a
+contract address: 0x56B252a77f622a2641990A692cd7EBdF64627379
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 3522425
+
+******
+
+Flashloan adapter deployed UniswapRepayAdapter 0x56B252a77f622a2641990A692cd7EBdF64627379
+*** FlashLiquidationAdapter ***
+
+Network: gnosis
+tx: 0x3e726b3d4e1a4f5847ac28dd9778c2ce6ebfe9a8216ff682ff43984f304d5c0a
+contract address: 0xBa5a28C7AD4700a0dcF8c839B4f1B05ef797420b
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 2905506
+
+******
+
+Flashloan adapter deployed UniswapLiquidationAdapter 0xBa5a28C7AD4700a0dcF8c839B4f1B05ef797420b
+Flashloan adapter(s) registered:  [
+  'UniswapLiquiditySwapAdapter',
+  'UniswapRepayAdapter',
+  'UniswapLiquidationAdapter'
+]
+
+======================================================================
+06 Initialize lending pool and configure reserves
+======================================================================
+
+*** TreasuryImpl ***
+
+Network: gnosis
+tx: 0xb5e21a44bb286a2f59aad5b42a37442e4273e6b6258a8340c5394b27d571e963
+contract address: 0x09266Da43255cDf35D7f6d8489bc1464cCc4BE8c
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 831414
+
+******
+
+        Treasury implementation: 0x09266Da43255cDf35D7f6d8489bc1464cCc4BE8c
+        Treasury: 0xd5a2505D250c0Fe8B53Abe0f735f0A29EC6523eD
+ReserveAssets:  {
+  WXDAI: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
+  USDC: '0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83',
+  GNO: '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb',
+  ETH: '0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863',
+  WBTC: '0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252',
+  LINK: '0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2',
+  FOX: '0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d',
+  CRV: '0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd',
+  DPI: '0xD3D47d5578e55C880505dC40648F7F9307C3e7A8',
+  SUSHI: '0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE',
+  PERP: '0x7ecF26cd9A36990b8ea477853663092333f59979',
+  UNI: '0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74',
+  WBNB: '0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04',
+  YFI: '0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd',
+  AAVE: '0xDF613aF6B44a31299E48131e9347F034347E2F00',
+  GRT: '0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7',
+  MKR: '0x5fd896D248fbfa54d26855C267859eb1b4DAEe72',
+  SNX: '0x3A00E08544d589E19a8e7D97D0294331341cdBF6'
+}
+*** DefaultReserveInterestRateStrategy-S_90_0_4_100_2_100 ***
+
+Network: gnosis
+tx: 0x92b932fb1f40e514744e4e2d226cd302d596c3854e13a4732fb1cd049ba581ea
+contract address: 0x812f08C2f9337fEEa1B614591ae60183F1f7bbDf
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 857574
+
+******
+
+Strategy address for asset WXDAI: 0x812f08C2f9337fEEa1B614591ae60183F1f7bbDf
+---- generic deposit: WXDAI
+Strategy address for asset USDC: 0x812f08C2f9337fEEa1B614591ae60183F1f7bbDf
+---- generic deposit: USDC
+*** DefaultReserveInterestRateStrategy-S_80_0_8_200_10_200 ***
+
+Network: gnosis
+tx: 0x9bb8ae47203215281044e0a037141c6c829bd9ee301828b67b1c7d87c8ec360c
+contract address: 0x054e187f089C40021Bb9db40Ea691960C9E5b5Df
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 857550
+
+******
+
+Strategy address for asset GNO: 0x054e187f089C40021Bb9db40Ea691960C9E5b5Df
+---- generic deposit: GNO
+Strategy address for asset ETH: 0x054e187f089C40021Bb9db40Ea691960C9E5b5Df
+---- generic deposit: ETH
+Strategy address for asset WBTC: 0x054e187f089C40021Bb9db40Ea691960C9E5b5Df
+---- generic deposit: WBTC
+*** DefaultReserveInterestRateStrategy-S_70_0_15_300_15_300 ***
+
+Network: gnosis
+tx: 0x029c2ccf33bf248df31ac40d640e7494c8c5634fe1e7c1fb60e0ca6680c09fb6
+contract address: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 857574
+
+******
+
+Strategy address for asset LINK: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: LINK
+Strategy address for asset FOX: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: FOX
+Strategy address for asset CRV: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: CRV
+Strategy address for asset DPI: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: DPI
+Strategy address for asset SUSHI: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: SUSHI
+Strategy address for asset PERP: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: PERP
+Strategy address for asset UNI: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: UNI
+Strategy address for asset WBNB: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: WBNB
+Strategy address for asset YFI: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: YFI
+Strategy address for asset AAVE: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: AAVE
+Strategy address for asset GRT: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: GRT
+Strategy address for asset MKR: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: MKR
+Strategy address for asset SNX: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+---- generic deposit: SNX
+*** StableDebtTokenImpl ***
+
+Network: gnosis
+tx: 0x59ddc54c58d69813cbb773eb1c82a70e714584def1e894ed9df643815eafc0db
+contract address: 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 3087884
+
+******
+
+*** VariableDebtTokenImpl ***
+
+Network: gnosis
+tx: 0x684e84b81ff62da5e0ab38afa0f8d6fcf575e58f7a75d08457dd0d116695fde5
+contract address: 0x3688A725eD294657CF660F3C5216361841D019f9
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 2737181
+
+******
+
+*** DepositTokenImpl ***
+
+Network: gnosis
+tx: 0xc72f401dac069d9772e7bb1ac61f134f8c91151b54ee81081649ae50104b9cef
+contract address: 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 4913702
+
+******
+
+- Reserves initialization in 9 txs
+[
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0x812f08C2f9337fEEa1B614591ae60183F1f7bbDf',
+    underlyingAsset: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
+    depositTokenName: 'Augmented Deposit WXDAI',
+    depositTokenSymbol: 'agWXDAI',
+    variableDebtTokenName: 'Augmented Debt WXDAI',
+    variableDebtTokenSymbol: 'agvWXDAI',
+    stableDebtTokenName: 'Augmented Stable Debt WXDAI',
+    stableDebtTokenSymbol: 'agsWXDAI',
+    externalStrategy: false,
+    params: '0x10'
+  },
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0x812f08C2f9337fEEa1B614591ae60183F1f7bbDf',
+    underlyingAsset: '0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83',
+    depositTokenName: 'Augmented Deposit USDC',
+    depositTokenSymbol: 'agUSDC',
+    variableDebtTokenName: 'Augmented Debt USDC',
+    variableDebtTokenSymbol: 'agvUSDC',
+    stableDebtTokenName: 'Augmented Stable Debt USDC',
+    stableDebtTokenSymbol: 'agsUSDC',
+    externalStrategy: false,
+    params: '0x10'
+  }
+]
+  - Reserve ready for: WXDAI, USDC
+    * gasUsed 3851187
+[
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0x054e187f089C40021Bb9db40Ea691960C9E5b5Df',
+    underlyingAsset: '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb',
+    depositTokenName: 'Augmented Deposit GNO',
+    depositTokenSymbol: 'agGNO',
+    variableDebtTokenName: 'Augmented Debt GNO',
+    variableDebtTokenSymbol: 'agvGNO',
+    stableDebtTokenName: 'Augmented Stable Debt GNO',
+    stableDebtTokenSymbol: 'agsGNO',
+    externalStrategy: false,
+    params: '0x10'
+  },
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0x054e187f089C40021Bb9db40Ea691960C9E5b5Df',
+    underlyingAsset: '0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863',
+    depositTokenName: 'Augmented Deposit ETH',
+    depositTokenSymbol: 'agETH',
+    variableDebtTokenName: 'Augmented Debt ETH',
+    variableDebtTokenSymbol: 'agvETH',
+    stableDebtTokenName: 'Augmented Stable Debt ETH',
+    stableDebtTokenSymbol: 'agsETH',
+    externalStrategy: false,
+    params: '0x10'
+  }
+]
+  - Reserve ready for: GNO, ETH
+    * gasUsed 3852971
+[
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 8,
+    strategy: '0x054e187f089C40021Bb9db40Ea691960C9E5b5Df',
+    underlyingAsset: '0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252',
+    depositTokenName: 'Augmented Deposit WBTC',
+    depositTokenSymbol: 'agWBTC',
+    variableDebtTokenName: 'Augmented Debt WBTC',
+    variableDebtTokenSymbol: 'agvWBTC',
+    stableDebtTokenName: 'Augmented Stable Debt WBTC',
+    stableDebtTokenSymbol: 'agsWBTC',
+    externalStrategy: false,
+    params: '0x10'
+  },
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2',
+    depositTokenName: 'Augmented Deposit LINK',
+    depositTokenSymbol: 'agLINK',
+    variableDebtTokenName: 'Augmented Debt LINK',
+    variableDebtTokenSymbol: 'agvLINK',
+    stableDebtTokenName: 'Augmented Stable Debt LINK',
+    stableDebtTokenSymbol: 'agsLINK',
+    externalStrategy: false,
+    params: '0x10'
+  }
+]
+  - Reserve ready for: WBTC, LINK
+    * gasUsed 3853115
+[
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d',
+    depositTokenName: 'Augmented Deposit FOX',
+    depositTokenSymbol: 'agFOX',
+    variableDebtTokenName: 'Augmented Debt FOX',
+    variableDebtTokenSymbol: 'agvFOX',
+    stableDebtTokenName: 'Augmented Stable Debt FOX',
+    stableDebtTokenSymbol: 'agsFOX',
+    externalStrategy: false,
+    params: '0x10'
+  },
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd',
+    depositTokenName: 'Augmented Deposit CRV',
+    depositTokenSymbol: 'agCRV',
+    variableDebtTokenName: 'Augmented Debt CRV',
+    variableDebtTokenSymbol: 'agvCRV',
+    stableDebtTokenName: 'Augmented Stable Debt CRV',
+    stableDebtTokenSymbol: 'agsCRV',
+    externalStrategy: false,
+    params: '0x10'
+  }
+]
+  - Reserve ready for: FOX, CRV
+    * gasUsed 3852971
+[
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0xD3D47d5578e55C880505dC40648F7F9307C3e7A8',
+    depositTokenName: 'Augmented Deposit DPI',
+    depositTokenSymbol: 'agDPI',
+    variableDebtTokenName: 'Augmented Debt DPI',
+    variableDebtTokenSymbol: 'agvDPI',
+    stableDebtTokenName: 'Augmented Stable Debt DPI',
+    stableDebtTokenSymbol: 'agsDPI',
+    externalStrategy: false,
+    params: '0x10'
+  },
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE',
+    depositTokenName: 'Augmented Deposit SUSHI',
+    depositTokenSymbol: 'agSUSHI',
+    variableDebtTokenName: 'Augmented Debt SUSHI',
+    variableDebtTokenSymbol: 'agvSUSHI',
+    stableDebtTokenName: 'Augmented Stable Debt SUSHI',
+    stableDebtTokenSymbol: 'agsSUSHI',
+    externalStrategy: false,
+    params: '0x10'
+  }
+]
+  - Reserve ready for: DPI, SUSHI
+    * gasUsed 3853115
+[
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0x7ecF26cd9A36990b8ea477853663092333f59979',
+    depositTokenName: 'Augmented Deposit PERP',
+    depositTokenSymbol: 'agPERP',
+    variableDebtTokenName: 'Augmented Debt PERP',
+    variableDebtTokenSymbol: 'agvPERP',
+    stableDebtTokenName: 'Augmented Stable Debt PERP',
+    stableDebtTokenSymbol: 'agsPERP',
+    externalStrategy: false,
+    params: '0x10'
+  },
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74',
+    depositTokenName: 'Augmented Deposit UNI',
+    depositTokenSymbol: 'agUNI',
+    variableDebtTokenName: 'Augmented Debt UNI',
+    variableDebtTokenSymbol: 'agvUNI',
+    stableDebtTokenName: 'Augmented Stable Debt UNI',
+    stableDebtTokenSymbol: 'agsUNI',
+    externalStrategy: false,
+    params: '0x10'
+  }
+]
+  - Reserve ready for: PERP, UNI
+    * gasUsed 3853043
+[
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04',
+    depositTokenName: 'Augmented Deposit WBNB',
+    depositTokenSymbol: 'agWBNB',
+    variableDebtTokenName: 'Augmented Debt WBNB',
+    variableDebtTokenSymbol: 'agvWBNB',
+    stableDebtTokenName: 'Augmented Stable Debt WBNB',
+    stableDebtTokenSymbol: 'agsWBNB',
+    externalStrategy: false,
+    params: '0x10'
+  },
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd',
+    depositTokenName: 'Augmented Deposit YFI',
+    depositTokenSymbol: 'agYFI',
+    variableDebtTokenName: 'Augmented Debt YFI',
+    variableDebtTokenSymbol: 'agvYFI',
+    stableDebtTokenName: 'Augmented Stable Debt YFI',
+    stableDebtTokenSymbol: 'agsYFI',
+    externalStrategy: false,
+    params: '0x10'
+  }
+]
+  - Reserve ready for: WBNB, YFI
+    * gasUsed 3853043
+[
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0xDF613aF6B44a31299E48131e9347F034347E2F00',
+    depositTokenName: 'Augmented Deposit AAVE',
+    depositTokenSymbol: 'agAAVE',
+    variableDebtTokenName: 'Augmented Debt AAVE',
+    variableDebtTokenSymbol: 'agvAAVE',
+    stableDebtTokenName: 'Augmented Stable Debt AAVE',
+    stableDebtTokenSymbol: 'agsAAVE',
+    externalStrategy: false,
+    params: '0x10'
+  },
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7',
+    depositTokenName: 'Augmented Deposit GRT',
+    depositTokenSymbol: 'agGRT',
+    variableDebtTokenName: 'Augmented Debt GRT',
+    variableDebtTokenSymbol: 'agvGRT',
+    stableDebtTokenName: 'Augmented Stable Debt GRT',
+    stableDebtTokenSymbol: 'agsGRT',
+    externalStrategy: false,
+    params: '0x10'
+  }
+]
+  - Reserve ready for: AAVE, GRT
+    * gasUsed 3853031
+[
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0x5fd896D248fbfa54d26855C267859eb1b4DAEe72',
+    depositTokenName: 'Augmented Deposit MKR',
+    depositTokenSymbol: 'agMKR',
+    variableDebtTokenName: 'Augmented Debt MKR',
+    variableDebtTokenSymbol: 'agvMKR',
+    stableDebtTokenName: 'Augmented Stable Debt MKR',
+    stableDebtTokenSymbol: 'agsMKR',
+    externalStrategy: false,
+    params: '0x10'
+  },
+  {
+    depositTokenImpl: '0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2',
+    stableDebtTokenImpl: '0xbfCA949B154bE7B7D79025BbBea09dD305129ce4',
+    variableDebtTokenImpl: '0x3688A725eD294657CF660F3C5216361841D019f9',
+    underlyingAssetDecimals: 18,
+    strategy: '0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3',
+    underlyingAsset: '0x3A00E08544d589E19a8e7D97D0294331341cdBF6',
+    depositTokenName: 'Augmented Deposit SNX',
+    depositTokenSymbol: 'agSNX',
+    variableDebtTokenName: 'Augmented Debt SNX',
+    variableDebtTokenSymbol: 'agvSNX',
+    stableDebtTokenName: 'Augmented Stable Debt SNX',
+    stableDebtTokenSymbol: 'agsSNX',
+    externalStrategy: false,
+    params: '0x10'
+  }
+]
+  - Reserve ready for: MKR, SNX
+    * gasUsed 3852959
+Collecting verification data for pool tokens
+         agWXDAI 0xc3349561f9A07955c3f6e384A9166Fa18C68ff02 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvWXDAI 0x6eb570348083a07392ae3449aa546831f9Ad69B6 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsWXDAI 0x386173d91B5e74BA8B6e6903deeBbb05946FFbBf 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agUSDC 0x48a3161dBd19760bcaD30E2ef231A6e6367511E6 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvUSDC 0x63C73269d0a8Fa167909870805cE58cD3b604262 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsUSDC 0xC99b9Bb88533E8DB88152Ff598a8bB881E0F2c4A 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agGNO 0xF19C304CAD3F21299F457729432287A247ce9136 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvGNO 0x1543d0e9Df58B6974E59Ce19A52D509fD758875e 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsGNO 0xec05A5ee25E058B8606cE33a5D81f4342030a367 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agETH 0xd1Ddc579a5B8256422F956B9f3610Bb83e1e8696 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvETH 0x7A097Bac5f63DC8D17a0C1Ff455e9F107FeB6AB5 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsETH 0x6b810022756411c5725b76CD37C447370f565650 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agWBTC 0x691Ad3063Dc2C0E9D8337c3f90F89C92905834B9 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvWBTC 0x2acdeE454e528642e8237F4A3d5bb7Cea91b7903 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsWBTC 0xd1EaB4f9a68655Db874cC4588C847852123435ae 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agLINK 0xae25746D07E5221dCB7D76dC4aA6336b0F390bD1 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvLINK 0x2Af0f4fCA50D2df72BD5e04C76AFc974FDD5e8f2 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsLINK 0x92395f33158ab37F5d0A0D0Be7c2dc68dFad5c67 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agFOX 0xbE808328fcb9D47dcF99813c403771c693C8Add1 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvFOX 0x8eFd3D61e3f56E747c54431b261289cfD5d82008 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsFOX 0xF8E4f7B7917B140D46Fa41924473E381e486b825 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agCRV 0xE59db982Df5d419Be5dA2C9F3b7E1BbFaEa2f29F 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvCRV 0x9E1A73fbC68301415D5dfDA570D48dCe2bBAC68F 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsCRV 0xb9891aEc2f0251aF5e9694df6bF649E3E04Ed282 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agDPI 0x4198EC9E388b3fC9Cb38B30Fbb92812bCca5372c 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvDPI 0x1a19dcaED97798623447b17Ecced83Bc8AFE8509 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsDPI 0xd543E3693942751909E6B2c2431d73c7FCfB56db 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agSUSHI 0xB0cD53E8EaD849d17d30F262Af6039f44023aeAa 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvSUSHI 0x07ABb6996BFB214661B66F6b24F5263a81E9f73B 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsSUSHI 0x041709EE32D994049B287329582562D3e68E6005 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agPERP 0x5C78311BeFfAEfDb51bAd938Ec6e83FE601db4C9 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvPERP 0xB365D75FeD5331dEA37380147E7fd3699b7B02E5 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsPERP 0xF7fb956E35b31F0A8fBa1070D3bc2Ca28F6Ea897 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agUNI 0x433100dcd3B43bEeCdE9868d7B28e444524beC73 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvUNI 0x4372fFb562a6A31327b0A575BD88e4c290Fc2E8b 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsUNI 0x4670aa116828a17931E43BBd44FC840dc7F6dBE8 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agWBNB 0xa1B95970c8a423E27592F17bAe2c3CA61599F1a0 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvWBNB 0xA76c73d9df0e80C229E14962721Dcacf2555E75e 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsWBNB 0x67512f8893dF6cB7EA05c21833C97Ac99D313439 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agYFI 0x995Bf39fB547D1CB2FC3b63BA39c0Da4A4AF375b 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvYFI 0x542C5Bb779A8F2ae451F4b5733cA64E6ea9F9ac6 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsYFI 0xd827B17522eC9f2F48903e7e93D1f767e7448A0b 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agAAVE 0x9A7F12131F90FA4D05fA615aC588BDC5efc91a8A 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvAAVE 0x57BBD25ec75B0203bCdf2C4B65BF93139C784f7c 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsAAVE 0x4218B85c825c074FEa6e100D8328480ecd3fbf99 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agGRT 0x1370Ce26D4a4B929AB71368faFFA062f162aD6fa 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvGRT 0x3FB5BE84d3a2b31e3555a252384fEc9b7B8a53CE 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsGRT 0x5A9a6848812dFb3A95158aCD2069b47899764e52 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agMKR 0x5beE27EA365255411CC5a64313D30E42C71A91e2 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvMKR 0xf75260eB42A5f9FE026a23A7Db3528dDDdDfd66a 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsMKR 0x00f78bFa5bE5d8d161c3c903cd41709Caf55351c 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+         agSNX 0x971F7b5Bc8386046A3c2054d2A5a59387FB4f6Da 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+         agvSNX 0x7ef4a4B787a7EbF963bF351779fc3113Ad800053 0x3688A725eD294657CF660F3C5216361841D019f9
+         agsSNX 0x74B5686175812314a42EfFAF333d17ca881e3A69 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+- Configure reserves with 1 tx(s)
+  - Configured for: WXDAI, USDC, GNO, ETH, WBTC, LINK, FOX, CRV, DPI, SUSHI, PERP, UNI, WBNB, YFI, AAVE, GRT, MKR, SNX
+    * gasUsed 1121006
+
+======================================================================
+07 Deploy stake configurator
+======================================================================
+
+Deploy StakeConfigurator
+*** StakeConfiguratorImpl ***
+
+Network: gnosis
+tx: 0x7c9aa8fbd3ad7a7ab609f4515d7ec8bc0f90acff1485023ac7fa93a80fc6bc76
+contract address: 0x2395Fe4284ec79008158f0c34c723e349DBc3661
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 2036347
+
+******
+
+StakeConfigurator implementation: 0x2395Fe4284ec79008158f0c34c723e349DBc3661
+Check proxy admin
+StakeConfigurator: 0x75c04214c27ae87496827eFa734c8c3a6e4dCfCa
+
+======================================================================
+08 Deploy reward contracts, AGF and xAGF tokens
+======================================================================
+
+Deploying RewardConfigurator
+*** RewardConfiguratorImpl ***
+
+Network: gnosis
+tx: 0xab9a3fcc67019ebe75c13bbc80652e7952d642a9fad907411926fbf583d5ffd8
+contract address: 0xB93b2FAE52754E028D12d1798B505247478e4660
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 2973721
+
+******
+
+Deployed RewardConfigurator implementation: 0xB93b2FAE52754E028D12d1798B505247478e4660
+Check proxy admin
+Deploying AGF token
+*** AGFTokenImpl ***
+
+Network: gnosis
+tx: 0x20ca4fb581c0634a7683406cdbc6b85e6f450a0849b37a58ee3ef40025fad0ae
+contract address: 0x5197119732326F8b87e63744AF4fCE95Af1A06AD
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 1949316
+
+******
+
+Deployed AGF token implementation: 0x5197119732326F8b87e63744AF4fCE95Af1A06AD
+AGF token: 0x7Ce618aA1c923D460F93C54ed25dcbC710DB3697
+         Augmented Finance AGF 18
+Configuring default price feed for AGF
+AGF price configured: 3.9e-11 ethers ( 39000000 )
+Deploy Uniswap Pair ETH-AGF
+        Creating uniswap pair ETH-AGF
+Uniswap pair ETH-AGF:  0x1A2d2A8d9CBD1A5452C61e7c9dD47256DeD3Ef1a
+Deploying RewardBooster
+*** RewardBoosterImpl ***
+
+Network: gnosis
+tx: 0x55fb7234e307c1f514c46435bdc589df535aa0359f190a7b770c06abd77bbfcf
+contract address: 0x3342a01704e37460ee933FFEB9402CE1D19dedb2
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 4044031
+
+******
+
+Deployed RewardBooster implementation: 0x3342a01704e37460ee933FFEB9402CE1D19dedb2
+RewardBooster 0xA22b27404Fce01B9Bd9600E4fd3aD508Ec7cF099
+        Autolock default mode: prolongate for  4 week(s)
+        Min boost:  50 %
+Deploying xAGF
+*** XAGFTokenV1Impl ***
+
+Network: gnosis
+tx: 0xec5076fc9eb381440fdd55a9b5c198ac06655f3cbe2791e7c2ef6f416bd593c7
+contract address: 0x420F21762FeF9123fAF2286b427029b504417797
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 4544091
+
+******
+
+Deployed xAGF token implementation: 0x420F21762FeF9123fAF2286b427029b504417797
+xAGF token: 0x7cAc1ddaF0F1f7287b85f034b062827f2E61f090
+         Augmented Booster xAGF 18
+Boost pool:  0x7cAc1ddaF0F1f7287b85f034b062827f2E61f090
+
+======================================================================
+09 Deploy and initialize stake tokens
+======================================================================
+
+*** DepositStakeTokenImpl ***
+
+Network: gnosis
+tx: 0xe808d944cbe8b9eac515e635671fd3c2a2452420ce765d846736c57d247e31d9
+contract address: 0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 3932231
+
+******
+
+Deployed DepositStakeToken implementation: 0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613
+*** StakeTokenImpl ***
+
+Network: gnosis
+tx: 0x46d0cd86fc803ffeca578644348e5f1e16b0c84e4066e825f263841d6634907b
+contract address: 0xeF3fba840F1F080583086043ff7feBe5b0279dbD
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 4052466
+
+******
+
+Deployed StakeToken implementation: 0xeF3fba840F1F080583086043ff7feBe5b0279dbD
+- Stakes initialization with 3 txs
+[
+  {
+    stakeTokenImpl: '0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613',
+    stakedToken: '0x691Ad3063Dc2C0E9D8337c3f90F89C92905834B9',
+    strategy: '0x0000000000000000000000000000000000000000',
+    stkTokenName: 'Augmented Stake WBTC',
+    stkTokenSymbol: 'xagWBTC',
+    stkTokenDecimals: 8,
+    cooldownPeriod: 86400,
+    unstakePeriod: 604800,
+    maxSlashable: 3000,
+    depositStake: true
+  },
+  {
+    stakeTokenImpl: '0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613',
+    stakedToken: '0xa1B95970c8a423E27592F17bAe2c3CA61599F1a0',
+    strategy: '0x0000000000000000000000000000000000000000',
+    stkTokenName: 'Augmented Stake WBNB',
+    stkTokenSymbol: 'xagWBNB',
+    stkTokenDecimals: 18,
+    cooldownPeriod: 86400,
+    unstakePeriod: 604800,
+    maxSlashable: 3000,
+    depositStake: true
+  },
+  {
+    stakeTokenImpl: '0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613',
+    stakedToken: '0xd1Ddc579a5B8256422F956B9f3610Bb83e1e8696',
+    strategy: '0x0000000000000000000000000000000000000000',
+    stkTokenName: 'Augmented Stake ETH',
+    stkTokenSymbol: 'xagETH',
+    stkTokenDecimals: 18,
+    cooldownPeriod: 86400,
+    unstakePeriod: 604800,
+    maxSlashable: 3000,
+    depositStake: true
+  },
+  {
+    stakeTokenImpl: '0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613',
+    stakedToken: '0x48a3161dBd19760bcaD30E2ef231A6e6367511E6',
+    strategy: '0x0000000000000000000000000000000000000000',
+    stkTokenName: 'Augmented Stake USDC',
+    stkTokenSymbol: 'xagUSDC',
+    stkTokenDecimals: 18,
+    cooldownPeriod: 86400,
+    unstakePeriod: 604800,
+    maxSlashable: 3000,
+    depositStake: true
+  }
+]
+  - Stake(s) ready for: WBTC, WBNB, ETH, USDC
+    * gasUsed 2804133
+[
+  {
+    stakeTokenImpl: '0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613',
+    stakedToken: '0xae25746D07E5221dCB7D76dC4aA6336b0F390bD1',
+    strategy: '0x0000000000000000000000000000000000000000',
+    stkTokenName: 'Augmented Stake LINK',
+    stkTokenSymbol: 'xagLINK',
+    stkTokenDecimals: 18,
+    cooldownPeriod: 86400,
+    unstakePeriod: 604800,
+    maxSlashable: 3000,
+    depositStake: true
+  },
+  {
+    stakeTokenImpl: '0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613',
+    stakedToken: '0x433100dcd3B43bEeCdE9868d7B28e444524beC73',
+    strategy: '0x0000000000000000000000000000000000000000',
+    stkTokenName: 'Augmented Stake UNI',
+    stkTokenSymbol: 'xagUNI',
+    stkTokenDecimals: 18,
+    cooldownPeriod: 86400,
+    unstakePeriod: 604800,
+    maxSlashable: 3000,
+    depositStake: true
+  },
+  {
+    stakeTokenImpl: '0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613',
+    stakedToken: '0xB0cD53E8EaD849d17d30F262Af6039f44023aeAa',
+    strategy: '0x0000000000000000000000000000000000000000',
+    stkTokenName: 'Augmented Stake SUSHI',
+    stkTokenSymbol: 'xagSUSHI',
+    stkTokenDecimals: 18,
+    cooldownPeriod: 86400,
+    unstakePeriod: 604800,
+    maxSlashable: 3000,
+    depositStake: true
+  },
+  {
+    stakeTokenImpl: '0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613',
+    stakedToken: '0x9A7F12131F90FA4D05fA615aC588BDC5efc91a8A',
+    strategy: '0x0000000000000000000000000000000000000000',
+    stkTokenName: 'Augmented Stake AAVE',
+    stkTokenSymbol: 'xagAAVE',
+    stkTokenDecimals: 18,
+    cooldownPeriod: 86400,
+    unstakePeriod: 604800,
+    maxSlashable: 3000,
+    depositStake: true
+  }
+]
+  - Stake(s) ready for: LINK, UNI, SUSHI, AAVE
+    * gasUsed 2787045
+[
+  {
+    stakeTokenImpl: '0xeF3fba840F1F080583086043ff7feBe5b0279dbD',
+    stakedToken: '0x1A2d2A8d9CBD1A5452C61e7c9dD47256DeD3Ef1a',
+    strategy: '0x0000000000000000000000000000000000000000',
+    stkTokenName: 'Augmented Stake SushiXDAIAGF',
+    stkTokenSymbol: 'xagSushiXDAIAGF',
+    stkTokenDecimals: 18,
+    cooldownPeriod: 86400,
+    unstakePeriod: 604800,
+    maxSlashable: 3000,
+    depositStake: false
+  }
+]
+  - Stake(s) ready for: SushiXDAIAGF
+    * gasUsed 697051
+Check stake tokens and collect verification data
+         xagWBTC 0x9EC796DeC6179458B087f7D57d568f188DfBdaE7 0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613
+         xagWBNB 0xDa8Ea1B1654eF37B349b0737f4b08458574f6a24 0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613
+         xagETH 0x53AA2F2B3C512f6A912a3C9af717ddd3C085c582 0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613
+         xagUSDC 0x822f13e8bC236aDd968Ad9757D36B0099B47Db21 0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613
+         xagLINK 0xA86a4e619A6b4796adD324e7795eF99038022104 0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613
+         xagUNI 0x7Bc8211958e624f382495bBA3fDaeC0c937fBDC1 0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613
+         xagSUSHI 0x7c8C15c6710C10C2F3f60bB174569F151390892d 0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613
+         xagAAVE 0xdF9F9FBC6e817CDc13807b86028B70b8683B2E49 0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613
+         xagSushiXDAIAGF 0x9Def422D4563567B6364a797C90e36BBF16D60F7 0xeF3fba840F1F080583086043ff7feBe5b0279dbD
+Set price stubs for stake tokens:  [
+  'xagWBTC',
+  'xagWBNB',
+  'xagETH',
+  'xagUSDC',
+  'xagLINK',
+  'xagUNI',
+  'xagSUSHI',
+  'xagAAVE',
+  'xagSushiXDAIAGF'
+]
+        Price source by underlying:  xagWBTC 0x691Ad3063Dc2C0E9D8337c3f90F89C92905834B9 0x6C1d7e76EF7304a40e8456ce883BC56d3dEA3F7d
+        Price source by underlying:  xagWBNB 0xa1B95970c8a423E27592F17bAe2c3CA61599F1a0 0x6D42cc26756C34F26BEcDD9b30a279cE9Ea8296E
+        Price source by underlying:  xagETH 0xd1Ddc579a5B8256422F956B9f3610Bb83e1e8696 0xa767f745331D267c7751297D982b050c93985627
+        Price source by underlying:  xagUSDC 0x48a3161dBd19760bcaD30E2ef231A6e6367511E6 0x26C31ac71010aF62E6B486D1132E266D6298857D
+        Price source by underlying:  xagLINK 0xae25746D07E5221dCB7D76dC4aA6336b0F390bD1 0xed322A5ac55BAE091190dFf9066760b86751947B
+        Price source by underlying:  xagUNI 0x433100dcd3B43bEeCdE9868d7B28e444524beC73 0xd98735d78266c62277Bb4dBf3e3bCdd3694782F4
+        Price source by underlying:  xagSUSHI 0xB0cD53E8EaD849d17d30F262Af6039f44023aeAa 0xC0a6Bf8d5D408B091D022C3C0653d4056D4B9c01
+        Price source by underlying:  xagAAVE 0x9A7F12131F90FA4D05fA615aC588BDC5efc91a8A 0x2b481Dc923Aa050E009113Dca8dcb0daB4B68cDF
+*** PriceFeedUniEthPair-SushiXDAIAGF ***
+
+Network: gnosis
+tx: 0x1e3276187d1b21ee737d8a892178992daeca61fada2577f49e1ac7169babbe1a
+contract address: 0x4E90157dD607C1cbB72b9A656eCf76f6F2F1E858
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 383167
+
+******
+
+        Uni ETH-pair price feed: SushiXDAIAGF 0x4E90157dD607C1cbB72b9A656eCf76f6F2F1E858
+        Custom price source:  xagSushiXDAIAGF 0x1A2d2A8d9CBD1A5452C61e7c9dD47256DeD3Ef1a 0x4E90157dD607C1cbB72b9A656eCf76f6F2F1E858
+Apply 9 price source(s)
+
+======================================================================
+10 Deploy reward pools
+======================================================================
+
+*** TeamRewardPool ***
+
+Network: gnosis
+tx: 0x054c3171f7a67d2061a510f77ee3dc70736e605965817f059b9e48f7b5da5e5e
+contract address: 0xA599f1370ccb37c5dcD90d193a57CAD65AaA82d7
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 1849300
+
+******
+
+Deployed TeamPool: 0xA599f1370ccb37c5dcD90d193a57CAD65AaA82d7, allocation 7.3%, 4 member(s), unlocks at Mon Nov 15 2021 03:00:00 GMT+0300 (Moscow Standard Time) (1636934400)
+*** ReferralRewardPoolV1Impl ***
+
+Network: gnosis
+tx: 0x08650cb78f80af94ce7bf348fbde8516640a0518e4e1c15dc4a52dde3f4fd54d
+contract address: 0x4cC08358eBb197F9CCa8a1C1dd57F1e5a715AbA3
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 2480456
+
+******
+
+Deployed RefPool implementation:  0x4cC08358eBb197F9CCa8a1C1dd57F1e5a715AbA3
+Deployed RefPool:  0x9a6937C510910b6a2F6114B18D917634Ca3221ed
+*** TreasuryRewardPool ***
+
+Network: gnosis
+tx: 0x6c5d7272e633468ace554b04238756e4532a8bea7746b32e6aa06b05acb74b4b
+contract address: 0xf6F9d6F735dd70A9Dbd91c6a04014b333e9474e9
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 1040707
+
+******
+
+Deployed TreasuryPool:  0xf6F9d6F735dd70A9Dbd91c6a04014b333e9474e9
+*** PermitFreezerRewardPool-RetroPool ***
+
+Network: gnosis
+tx: 0x9907f9a48b557a2c2e6cd73160902d5e29dc1c352ca884573a5ca0f427c69551
+contract address: 0xEc5d0bb7FA3559D240822d65B2661D5BA6b4338a
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 1811395
+
+******
+
+Deployed RetroPool: 0xEc5d0bb7FA3559D240822d65B2661D5BA6b4338a, limit 10000000 wad, melts at Mon Nov 01 2021 03:00:00 GMT+0300 (Moscow Standard Time) (1635724800)
+Deployed RefPool, TreasuryPool, RetroPool: 0x9a6937C510910b6a2F6114B18D917634Ca3221ed,0xf6F9d6F735dd70A9Dbd91c6a04014b333e9474e9,0xEc5d0bb7FA3559D240822d65B2661D5BA6b4338a
+Total reward share: 91.01%
+- Reward pools initialization with 12 txs
+  - Pool(s) ready for: agWXDAI, agUSDC, agGNO, agETH
+    * gasUsed 471497
+  - Pool(s) ready for: agWBTC, agLINK, agFOX, agCRV
+    * gasUsed 471449
+  - Pool(s) ready for: agDPI, agSUSHI, agPERP, agUNI
+    * gasUsed 471449
+  - Pool(s) ready for: agWBNB, agYFI, agAAVE, agGRT
+    * gasUsed 471449
+  - Pool(s) ready for: agMKR, agSNX, agvWXDAI, agvUSDC
+    * gasUsed 473849
+  - Pool(s) ready for: agvGNO, agvETH, agvWBTC, agvLINK
+    * gasUsed 471225
+  - Pool(s) ready for: agvFOX, agvCRV, agvDPI, agvSUSHI
+    * gasUsed 471225
+  - Pool(s) ready for: agvPERP, agvUNI, agvWBNB, agvYFI
+    * gasUsed 471225
+  - Pool(s) ready for: agvAAVE, agvGRT, agvMKR, agvSNX
+    * gasUsed 471201
+  - Pool(s) ready for: xagUSDC, xagETH, xagWBTC, xagLINK
+    * gasUsed 464169
+  - Pool(s) ready for: xagSUSHI, xagUNI, xagWBNB, xagAAVE
+    * gasUsed 464181
+  - Pool(s) ready for: xagSushiXDAIAGF
+    * gasUsed 168613
+Collecting verification data for reward pools
+Reward pools initialized with total rate: 0.1929012346 wad/s
+Rates of 50 reward pools configured:
+        xAGF:   0.01734182 wad/s
+        TeamPool:       0.019290123 wad/s
+        RefPool:        0.001929012 wad/s
+        TreasuryPool:   0.038580246 wad/s
+        RetroPool:      0 wad/s
+        agWXDAI:        0.000790895 wad/s
+        agUSDC: 0.015875771 wad/s
+        agGNO:  0.015875771 wad/s
+        agETH:  0.015875771 wad/s
+        agWBTC: 0.00318287 wad/s
+        agLINK: 0.00318287 wad/s
+        agFOX:  0.00158179 wad/s
+        agCRV:  0.00158179 wad/s
+        agDPI:  0.000790895 wad/s
+        agSUSHI:        0.000790895 wad/s
+        agPERP: 0.000482253 wad/s
+        agUNI:  0.000482253 wad/s
+        agWBNB: 0.000482253 wad/s
+        agYFI:  0.00015432 wad/s
+        agAAVE: 0.00015432 wad/s
+        agGRT:  0.00015432 wad/s
+        agMKR:  0.00015432 wad/s
+        agSNX:  0.00015432 wad/s
+        agvWXDAI:       0.00009645 wad/s
+        agvUSDC:        0.001986882 wad/s
+        agvGNO: 0.001986882 wad/s
+        agvETH: 0.001986882 wad/s
+        agvWBTC:        0.000405092 wad/s
+        agvLINK:        0.000405092 wad/s
+        agvFOX: 0.000192901 wad/s
+        agvCRV: 0.000192901 wad/s
+        agvDPI: 0.00009645 wad/s
+        agvSUSHI:       0.00009645 wad/s
+        agvPERP:        0.00005787 wad/s
+        agvUNI: 0.00005787 wad/s
+        agvWBNB:        0.00005787 wad/s
+        agvYFI: 0.00001929 wad/s
+        agvAAVE:        0.00001929 wad/s
+        agvGRT: 0.00001929 wad/s
+        agvMKR: 0.00001929 wad/s
+        agvSNX: 0.00001929 wad/s
+        xagUSDC:        0 wad/s
+        xagETH: 0 wad/s
+        xagWBTC:        0 wad/s
+        xagLINK:        0 wad/s
+        xagSUSHI:       0 wad/s
+        xagUNI: 0 wad/s
+        xagWBNB:        0 wad/s
+        xagAAVE:        0 wad/s
+        xagSushiXDAIAGF:        0.046296296 wad/s
+Assigned reward rate: 0.192901234 wad/s
+Initial reward rate:  0.192901234 wad/s
+
+======================================================================
+11 Initialize derived feeds
+======================================================================
+
+*** PriceFeedUniEthToken-AGF-WXDAI ***
+
+Network: gnosis
+tx: 0x5910a1aaff3ade5fab42ac9a2b5685c9c8a52967985b0d80d9bb975007a25e75
+contract address: 0x5855f8022442b65FC238A795e68C01704998fa37
+deployer address: 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+gas price: 2000000000
+gas used: 454474
+
+******
+
+Price Feed UniV2WXDAIAGF 0x5855f8022442b65FC238A795e68C01704998fa37
+Checking for derived price feeds
+Found 0 asset(s) for derived price feeds
+
+======================================================================
+96 Access test
+======================================================================
+
+
+======================================================================
+98 Smoke tests
+======================================================================
+
+
+Check getReserveList
+Reserves:  [
+  '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
+  '0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83',
+  '0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb',
+  '0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863',
+  '0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252',
+  '0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2',
+  '0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d',
+  '0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd',
+  '0xD3D47d5578e55C880505dC40648F7F9307C3e7A8',
+  '0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE',
+  '0x7ecF26cd9A36990b8ea477853663092333f59979',
+  '0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74',
+  '0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04',
+  '0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd',
+  '0xDF613aF6B44a31299E48131e9347F034347E2F00',
+  '0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7',
+  '0x5fd896D248fbfa54d26855C267859eb1b4DAEe72',
+  '0x3A00E08544d589E19a8e7D97D0294331341cdBF6'
+]
+
+Check getAddresses
+
+Check getAllTokenDescriptions
+All tokens:
+ AGF (5 true 18):       0x7Ce618aA1c923D460F93C54ed25dcbC710DB3697 0x0000000000000000000000000000000000000000 0x7Ce618aA1c923D460F93C54ed25dcbC710DB3697
+ xAGF (6 true 18):      0x7cAc1ddaF0F1f7287b85f034b062827f2E61f090 0x7Ce618aA1c923D460F93C54ed25dcbC710DB3697 0x0000000000000000000000000000000000000000
+ WXDAI (0 true 18):     0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d 0x0000000000000000000000000000000000000000 0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d
+ agWXDAI (1 true 18):   0xc3349561f9A07955c3f6e384A9166Fa18C68ff02 0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d 0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d
+ agvWXDAI (2 true 18):  0x6eb570348083a07392ae3449aa546831f9Ad69B6 0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d 0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d
+ agsWXDAI (3 false 18): 0x386173d91B5e74BA8B6e6903deeBbb05946FFbBf 0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d 0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d
+ USDC (0 true 18):      0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83 0x0000000000000000000000000000000000000000 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83
+ agUSDC (1 true 18):    0x48a3161dBd19760bcaD30E2ef231A6e6367511E6 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83
+ agvUSDC (2 true 18):   0x63C73269d0a8Fa167909870805cE58cD3b604262 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83
+ agsUSDC (3 false 18):  0xC99b9Bb88533E8DB88152Ff598a8bB881E0F2c4A 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83
+ GNO (0 true 18):       0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb 0x0000000000000000000000000000000000000000 0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb
+ agGNO (1 true 18):     0xF19C304CAD3F21299F457729432287A247ce9136 0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb 0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb
+ agvGNO (2 true 18):    0x1543d0e9Df58B6974E59Ce19A52D509fD758875e 0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb 0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb
+ agsGNO (3 false 18):   0xec05A5ee25E058B8606cE33a5D81f4342030a367 0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb 0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb
+ ETH (0 true 18):       0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863 0x0000000000000000000000000000000000000000 0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863
+ agETH (1 true 18):     0xd1Ddc579a5B8256422F956B9f3610Bb83e1e8696 0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863 0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863
+ agvETH (2 true 18):    0x7A097Bac5f63DC8D17a0C1Ff455e9F107FeB6AB5 0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863 0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863
+ agsETH (3 false 18):   0x6b810022756411c5725b76CD37C447370f565650 0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863 0x095d7e110378DeF00b3e9c15ae4eB4d8D488F863
+ WBTC (0 true 8):       0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252 0x0000000000000000000000000000000000000000 0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252
+ agWBTC (1 true 8):     0x691Ad3063Dc2C0E9D8337c3f90F89C92905834B9 0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252 0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252
+ agvWBTC (2 true 8):    0x2acdeE454e528642e8237F4A3d5bb7Cea91b7903 0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252 0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252
+ agsWBTC (3 false 8):   0xd1EaB4f9a68655Db874cC4588C847852123435ae 0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252 0x8e5bBbb09Ed1ebdE8674Cda39A0c169401db4252
+ LINK (0 true 18):      0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2 0x0000000000000000000000000000000000000000 0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2
+ agLINK (1 true 18):    0xae25746D07E5221dCB7D76dC4aA6336b0F390bD1 0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2 0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2
+ agvLINK (2 true 18):   0x2Af0f4fCA50D2df72BD5e04C76AFc974FDD5e8f2 0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2 0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2
+ agsLINK (3 false 18):  0x92395f33158ab37F5d0A0D0Be7c2dc68dFad5c67 0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2 0xE2e73A1c69ecF83F464EFCE6A5be353a37cA09b2
+ FOX (0 true 18):       0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d 0x0000000000000000000000000000000000000000 0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d
+ agFOX (1 true 18):     0xbE808328fcb9D47dcF99813c403771c693C8Add1 0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d 0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d
+ agvFOX (2 true 18):    0x8eFd3D61e3f56E747c54431b261289cfD5d82008 0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d 0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d
+ agsFOX (3 false 18):   0xF8E4f7B7917B140D46Fa41924473E381e486b825 0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d 0x21a42669643f45Bc0e086b8Fc2ed70c23D67509d
+ CRV (0 true 18):       0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd 0x0000000000000000000000000000000000000000 0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd
+ agCRV (1 true 18):     0xE59db982Df5d419Be5dA2C9F3b7E1BbFaEa2f29F 0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd 0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd
+ agvCRV (2 true 18):    0x9E1A73fbC68301415D5dfDA570D48dCe2bBAC68F 0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd 0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd
+ agsCRV (3 false 18):   0xb9891aEc2f0251aF5e9694df6bF649E3E04Ed282 0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd 0x712b3d230F3C1c19db860d80619288b1F0BDd0Bd
+ DPI (0 true 18):       0xD3D47d5578e55C880505dC40648F7F9307C3e7A8 0x0000000000000000000000000000000000000000 0xD3D47d5578e55C880505dC40648F7F9307C3e7A8
+ agDPI (1 true 18):     0x4198EC9E388b3fC9Cb38B30Fbb92812bCca5372c 0xD3D47d5578e55C880505dC40648F7F9307C3e7A8 0xD3D47d5578e55C880505dC40648F7F9307C3e7A8
+ agvDPI (2 true 18):    0x1a19dcaED97798623447b17Ecced83Bc8AFE8509 0xD3D47d5578e55C880505dC40648F7F9307C3e7A8 0xD3D47d5578e55C880505dC40648F7F9307C3e7A8
+ agsDPI (3 false 18):   0xd543E3693942751909E6B2c2431d73c7FCfB56db 0xD3D47d5578e55C880505dC40648F7F9307C3e7A8 0xD3D47d5578e55C880505dC40648F7F9307C3e7A8
+ SUSHI (0 true 18):     0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE 0x0000000000000000000000000000000000000000 0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE
+ agSUSHI (1 true 18):   0xB0cD53E8EaD849d17d30F262Af6039f44023aeAa 0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE 0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE
+ agvSUSHI (2 true 18):  0x07ABb6996BFB214661B66F6b24F5263a81E9f73B 0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE 0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE
+ agsSUSHI (3 false 18): 0x041709EE32D994049B287329582562D3e68E6005 0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE 0x2995D1317DcD4f0aB89f4AE60F3f020A4F17C7CE
+ PERP (0 true 18):      0x7ecF26cd9A36990b8ea477853663092333f59979 0x0000000000000000000000000000000000000000 0x7ecF26cd9A36990b8ea477853663092333f59979
+ agPERP (1 true 18):    0x5C78311BeFfAEfDb51bAd938Ec6e83FE601db4C9 0x7ecF26cd9A36990b8ea477853663092333f59979 0x7ecF26cd9A36990b8ea477853663092333f59979
+ agvPERP (2 true 18):   0xB365D75FeD5331dEA37380147E7fd3699b7B02E5 0x7ecF26cd9A36990b8ea477853663092333f59979 0x7ecF26cd9A36990b8ea477853663092333f59979
+ agsPERP (3 false 18):  0xF7fb956E35b31F0A8fBa1070D3bc2Ca28F6Ea897 0x7ecF26cd9A36990b8ea477853663092333f59979 0x7ecF26cd9A36990b8ea477853663092333f59979
+ UNI (0 true 18):       0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74 0x0000000000000000000000000000000000000000 0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74
+ agUNI (1 true 18):     0x433100dcd3B43bEeCdE9868d7B28e444524beC73 0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74 0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74
+ agvUNI (2 true 18):    0x4372fFb562a6A31327b0A575BD88e4c290Fc2E8b 0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74 0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74
+ agsUNI (3 false 18):   0x4670aa116828a17931E43BBd44FC840dc7F6dBE8 0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74 0x4537e328Bf7e4eFA29D05CAeA260D7fE26af9D74
+ WBNB (0 true 18):      0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04 0x0000000000000000000000000000000000000000 0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04
+ agWBNB (1 true 18):    0xa1B95970c8a423E27592F17bAe2c3CA61599F1a0 0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04 0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04
+ agvWBNB (2 true 18):   0xA76c73d9df0e80C229E14962721Dcacf2555E75e 0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04 0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04
+ agsWBNB (3 false 18):  0x67512f8893dF6cB7EA05c21833C97Ac99D313439 0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04 0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04
+ YFI (0 true 18):       0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd 0x0000000000000000000000000000000000000000 0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd
+ agYFI (1 true 18):     0x995Bf39fB547D1CB2FC3b63BA39c0Da4A4AF375b 0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd 0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd
+ agvYFI (2 true 18):    0x542C5Bb779A8F2ae451F4b5733cA64E6ea9F9ac6 0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd 0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd
+ agsYFI (3 false 18):   0xd827B17522eC9f2F48903e7e93D1f767e7448A0b 0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd 0xbf65bfcb5da067446CeE6A706ba3Fe2fB1a9fdFd
+ AAVE (0 true 18):      0xDF613aF6B44a31299E48131e9347F034347E2F00 0x0000000000000000000000000000000000000000 0xDF613aF6B44a31299E48131e9347F034347E2F00
+ agAAVE (1 true 18):    0x9A7F12131F90FA4D05fA615aC588BDC5efc91a8A 0xDF613aF6B44a31299E48131e9347F034347E2F00 0xDF613aF6B44a31299E48131e9347F034347E2F00
+ agvAAVE (2 true 18):   0x57BBD25ec75B0203bCdf2C4B65BF93139C784f7c 0xDF613aF6B44a31299E48131e9347F034347E2F00 0xDF613aF6B44a31299E48131e9347F034347E2F00
+ agsAAVE (3 false 18):  0x4218B85c825c074FEa6e100D8328480ecd3fbf99 0xDF613aF6B44a31299E48131e9347F034347E2F00 0xDF613aF6B44a31299E48131e9347F034347E2F00
+ GRT (0 true 18):       0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7 0x0000000000000000000000000000000000000000 0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7
+ agGRT (1 true 18):     0x1370Ce26D4a4B929AB71368faFFA062f162aD6fa 0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7 0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7
+ agvGRT (2 true 18):    0x3FB5BE84d3a2b31e3555a252384fEc9b7B8a53CE 0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7 0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7
+ agsGRT (3 false 18):   0x5A9a6848812dFb3A95158aCD2069b47899764e52 0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7 0xFAdc59D012Ba3c110B08A15B7755A5cb7Cbe77D7
+ MKR (0 true 18):       0x5fd896D248fbfa54d26855C267859eb1b4DAEe72 0x0000000000000000000000000000000000000000 0x5fd896D248fbfa54d26855C267859eb1b4DAEe72
+ agMKR (1 true 18):     0x5beE27EA365255411CC5a64313D30E42C71A91e2 0x5fd896D248fbfa54d26855C267859eb1b4DAEe72 0x5fd896D248fbfa54d26855C267859eb1b4DAEe72
+ agvMKR (2 true 18):    0xf75260eB42A5f9FE026a23A7Db3528dDDdDfd66a 0x5fd896D248fbfa54d26855C267859eb1b4DAEe72 0x5fd896D248fbfa54d26855C267859eb1b4DAEe72
+ agsMKR (3 false 18):   0x00f78bFa5bE5d8d161c3c903cd41709Caf55351c 0x5fd896D248fbfa54d26855C267859eb1b4DAEe72 0x5fd896D248fbfa54d26855C267859eb1b4DAEe72
+ SNX (0 true 18):       0x3A00E08544d589E19a8e7D97D0294331341cdBF6 0x0000000000000000000000000000000000000000 0x3A00E08544d589E19a8e7D97D0294331341cdBF6
+ agSNX (1 true 18):     0x971F7b5Bc8386046A3c2054d2A5a59387FB4f6Da 0x3A00E08544d589E19a8e7D97D0294331341cdBF6 0x3A00E08544d589E19a8e7D97D0294331341cdBF6
+ agvSNX (2 true 18):    0x7ef4a4B787a7EbF963bF351779fc3113Ad800053 0x3A00E08544d589E19a8e7D97D0294331341cdBF6 0x3A00E08544d589E19a8e7D97D0294331341cdBF6
+ agsSNX (3 false 18):   0x74B5686175812314a42EfFAF333d17ca881e3A69 0x3A00E08544d589E19a8e7D97D0294331341cdBF6 0x3A00E08544d589E19a8e7D97D0294331341cdBF6
+ xagWBTC (4 true 8):    0x9EC796DeC6179458B087f7D57d568f188DfBdaE7 0x691Ad3063Dc2C0E9D8337c3f90F89C92905834B9 0x691Ad3063Dc2C0E9D8337c3f90F89C92905834B9
+ xagWBNB (4 true 18):   0xDa8Ea1B1654eF37B349b0737f4b08458574f6a24 0xa1B95970c8a423E27592F17bAe2c3CA61599F1a0 0xa1B95970c8a423E27592F17bAe2c3CA61599F1a0
+ xagETH (4 true 18):    0x53AA2F2B3C512f6A912a3C9af717ddd3C085c582 0xd1Ddc579a5B8256422F956B9f3610Bb83e1e8696 0xd1Ddc579a5B8256422F956B9f3610Bb83e1e8696
+ xagUSDC (4 true 18):   0x822f13e8bC236aDd968Ad9757D36B0099B47Db21 0x48a3161dBd19760bcaD30E2ef231A6e6367511E6 0x48a3161dBd19760bcaD30E2ef231A6e6367511E6
+ xagLINK (4 true 18):   0xA86a4e619A6b4796adD324e7795eF99038022104 0xae25746D07E5221dCB7D76dC4aA6336b0F390bD1 0xae25746D07E5221dCB7D76dC4aA6336b0F390bD1
+ xagUNI (4 true 18):    0x7Bc8211958e624f382495bBA3fDaeC0c937fBDC1 0x433100dcd3B43bEeCdE9868d7B28e444524beC73 0x433100dcd3B43bEeCdE9868d7B28e444524beC73
+ xagSUSHI (4 true 18):  0x7c8C15c6710C10C2F3f60bB174569F151390892d 0xB0cD53E8EaD849d17d30F262Af6039f44023aeAa 0xB0cD53E8EaD849d17d30F262Af6039f44023aeAa
+ xagAAVE (4 true 18):   0xdF9F9FBC6e817CDc13807b86028B70b8683B2E49 0x9A7F12131F90FA4D05fA615aC588BDC5efc91a8A 0x9A7F12131F90FA4D05fA615aC588BDC5efc91a8A
+ xagSushiXDAIAGF (4 true 18):   0x9Def422D4563567B6364a797C90e36BBF16D60F7 0x1A2d2A8d9CBD1A5452C61e7c9dD47256DeD3Ef1a 0x1A2d2A8d9CBD1A5452C61e7c9dD47256DeD3Ef1a
+
+Check getAllTokens
+
+Check batchBalanceOf
+
+Check  29 listed prices
+
+Check getReservesData
+
+Check getUserReserveData on reserve #0
+
+Check getReserveData on reserve #0
+
+Check getReserveConfigurationData on reserve #0
+
+Check getUserReserveData on reserve #17
+
+
+Contracts deployed at gnosis by 0xD2cC0921C56A6007e8D301eAccb7F602314Cb467
+---------------------------------
+        AddressesProviderRegistry: N=3
+        MarketAccessController: 0xD45FdA51fC7A58fa611D759187139ae412545c1f
+        LendingRateOracle: 0xabe0685A4A232d65FaB34dCD73BF9bBb286C5905
+        StaticPriceOracle: 0x6291c7fD7AA947863DB1E9a8bcF58FA132de3189
+        OracleRouter: 0xef77346Ed56cDC0054f9a399Ab086d4e9dfa978D
+        LendingPoolImpl: 0xa522ee8037e91e9e55Dc95B44e667Fb5e1a676d4
+        LendingPoolExtensionImpl: 0x68888Abc352FD79F3B483773E8468d8ca564742D
+        LendingPoolConfiguratorImpl: 0x48729a6Df56d40B2bFBD343678CfC5a0539cE6c3
+        WETHGateway: 0x90c3B7c6f41d6D7b79bC472Db880Bd700029AA5C
+        ProtocolDataProvider: 0xa5BDe121B5826EeD60Da7f28665403Cc77b288A4
+        UniswapLiquiditySwapAdapter: 0x6E00f60f7C60f8e253D1E9531460678364FdA1AA
+        UniswapRepayAdapter: 0x56B252a77f622a2641990A692cd7EBdF64627379
+        FlashLiquidationAdapter: 0xBa5a28C7AD4700a0dcF8c839B4f1B05ef797420b
+        TreasuryImpl: 0x09266Da43255cDf35D7f6d8489bc1464cCc4BE8c
+        DefaultReserveInterestRateStrategy-S_90_0_4_100_2_100: 0x812f08C2f9337fEEa1B614591ae60183F1f7bbDf
+        DefaultReserveInterestRateStrategy-S_80_0_8_200_10_200: 0x054e187f089C40021Bb9db40Ea691960C9E5b5Df
+        DefaultReserveInterestRateStrategy-S_70_0_15_300_15_300: 0xAB0F70AdCfb53d8D724D3d3D352D60a0c8c382D3
+        StableDebtTokenImpl: 0xbfCA949B154bE7B7D79025BbBea09dD305129ce4
+        VariableDebtTokenImpl: 0x3688A725eD294657CF660F3C5216361841D019f9
+        DepositTokenImpl: 0x9Cf1D2FfC82445e06F302bd18F0e5970E4672Ee2
+        StakeConfiguratorImpl: 0x2395Fe4284ec79008158f0c34c723e349DBc3661
+        ProxyAdmin-StakeConfiguratorImpl: 0xFB9d01562A5982065E77f292168b281d80D3F434
+        RewardConfiguratorImpl: 0xB93b2FAE52754E028D12d1798B505247478e4660
+        ProxyAdmin-RewardConfiguratorImpl: 0xFB74F77b3F45a165Ff3c9d04422203CA71dAD876
+        AGFTokenImpl: 0x5197119732326F8b87e63744AF4fCE95Af1A06AD
+        RewardBoosterImpl: 0x3342a01704e37460ee933FFEB9402CE1D19dedb2
+        XAGFTokenV1Impl: 0x420F21762FeF9123fAF2286b427029b504417797
+        DepositStakeTokenImpl: 0xe7d19BfE98EA434e252f1f7Dad2165daeB57a613
+        StakeTokenImpl: 0xeF3fba840F1F080583086043ff7feBe5b0279dbD
+        PriceFeedUniEthPair-SushiXDAIAGF: 0x4E90157dD607C1cbB72b9A656eCf76f6F2F1E858
+        TeamRewardPool: 0xA599f1370ccb37c5dcD90d193a57CAD65AaA82d7
+        ReferralRewardPoolV1Impl: 0x4cC08358eBb197F9CCa8a1C1dd57F1e5a715AbA3
+        TreasuryRewardPool: 0xf6F9d6F735dd70A9Dbd91c6a04014b333e9474e9
+        PermitFreezerRewardPool-RetroPool: 0xEc5d0bb7FA3559D240822d65B2661D5BA6b4338a
+        PriceFeedUniEthToken-AGF-WXDAI: 0x5855f8022442b65FC238A795e68C01704998fa37
+---------------------------------
+N# Contracts: 35 / 37
+WARNING: multi-deployed contract(s) detected
+
+======================================================================
+99. Finalize
+======================================================================
+
+Temporary admin permissions renounced
+Register provider with id:  1
+Pool Admin(s): []
+Emergency Admin(s): [
+  '0x8331Bd35089090249675D023804FC52b7FD18184',
+  '0xE1FbbaBbd21764061734424d3F4f5e2C11101E96',
+  '0x511EfaE41B0eA33Da847d16e13655009d0aB3Ed7'
+]
+======================================================================
+Deployer end balance:  9.588128
+Deploy expenses:  0.284741
+Deploy gas     :  142370992 @ 2  gwei
+======================================================================
+Write UI config
+
+Deployment has finished
+s
+

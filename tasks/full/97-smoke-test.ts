@@ -159,16 +159,16 @@ task('full:smoke-test', 'Does smoke tests of the deployed contracts')
       const treasury = await getTreasuryProxy(await addressProvider.getAddress(AccessFlags.TREASURY));
       const balance = await agf.balanceOf(treasury.address);
       console.log('Found', balance.div(1e15).toNumber() / 1e3, ' AGF in the treasury');
-      if (balance.gt(0) && isForkNetwork()) {
+      if (balance.gt(0) /* && isForkNetwork() */) {
         await waitTx(treasury.transferToken(agf.address, deployer.address, balance));
         console.log('Transferred from treasury to deployer: ', deployer.address);
 
-        const locker = await getDecayingTokenLockerProxy(
-          await addressProvider.getAddress(AccessFlags.REWARD_STAKE_TOKEN)
-        );
-        await waitTx(agf.approve(locker.address, balance.div(2)));
-        await waitTx(locker.lock(balance.div(2), ONE_YEAR, 0));
-        console.log('Locked half of AGF for 1 year');
+        // const locker = await getDecayingTokenLockerProxy(
+        //   await addressProvider.getAddress(AccessFlags.REWARD_STAKE_TOKEN)
+        // );
+        // await waitTx(agf.approve(locker.address, balance.div(2)));
+        // await waitTx(locker.lock(balance.div(2), ONE_YEAR, 0));
+        // console.log('Locked half of AGF for 1 year');
       }
     }
 

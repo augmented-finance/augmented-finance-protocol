@@ -25,7 +25,7 @@ const DEFAULT_BLOCK_GAS_LIMIT = 7000000;
 const DEFAULT_GAS_MUL = 2;
 const HARDFORK = 'istanbul';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
-const MNEMONIC = process.env.MNEMONIC || '';
+const MNEMONIC = 'urge refuse rough ginger hundred august endless order lyrics issue gaze dizzy'; // process.env.MNEMONIC || '';
 const BSC_FORK_URL = process.env.BSC_FORK_URL || '';
 const FORK = process.env.FORK;
 const IS_FORK = FORK ? true : false;
@@ -38,7 +38,7 @@ const keySelector = (keyName: string) => {
 
 const ETHERSCAN_KEY = keySelector('ETHERSCAN_KEY') || '';
 const COINMARKETCAP_KEY = keySelector('COINMARKETCAP_KEY') || '';
-const MNEMONIC_MAIN = IS_FORK ? MNEMONIC : keySelector('MNEMONIC_MAIN') || MNEMONIC;
+const MNEMONIC_MAIN = MNEMONIC; // IS_FORK ? MNEMONIC : keySelector('MNEMONIC_MAIN') || MNEMONIC;
 
 // Prevent to load scripts before compilation and typechain
 if (!SKIP_LOAD) {
@@ -59,6 +59,7 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number, mnemon
   hardfork: HARDFORK,
   blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
   gasMultiplier: DEFAULT_GAS_MUL,
+  timeout: 1000000000,
   gasPrice: NETWORKS_DEFAULT_GAS[networkName],
   chainId: networkId,
   accounts: {
@@ -183,7 +184,6 @@ const buidlerConfig: HardhatUserConfig = {
     bsc_fork: getForkConfig(eOtherNetwork.bsc),
     avalanche_fork: getForkConfig(eOtherNetwork.avalanche),
     avalanche_testnet_fork: getForkConfig(eOtherNetwork.avalanche_testnet),
-
     kovan: getCommonNetworkConfig(eEthereumNetwork.kovan, 42),
     ropsten: getCommonNetworkConfig(eEthereumNetwork.ropsten, 3),
     rinkeby: getCommonNetworkConfig(eEthereumNetwork.rinkeby, 4),
