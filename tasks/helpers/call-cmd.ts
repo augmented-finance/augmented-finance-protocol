@@ -320,6 +320,7 @@ const parseCommand = async (
     setBoostFactors: async () => {
       const [pools, values] = await preparePoolNamesAndFactors(ac, args);
       const rc = await getRewardBooster(await ac.getAddress(AccessFlags.REWARD_CONTROLLER));
+      await rc.autolockProlongate(1000000);
 
       await promiseAllBatch(
         pools.map(async (pool, index) => {

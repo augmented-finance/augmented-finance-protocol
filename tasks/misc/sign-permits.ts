@@ -20,6 +20,8 @@ import { buildRewardClaimPermitParams, encodeTypeHash } from '../../helpers/cont
 import { falsyOrZeroAddress } from '../../helpers/misc-utils';
 import { eNetwork } from '../../helpers/types';
 import { getDefaultMarketAddressController } from '../helpers/utils';
+import { ethers } from 'ethers';
+import { formatUnits } from '@ethersproject/units/src.ts/index';
 
 task('sign-reward-permits', 'Sign permits for reward pools')
   .addOptionalParam('ctl', 'Address of MarketAddressController', ZERO_ADDRESS, types.string)
@@ -73,6 +75,9 @@ task('sign-reward-permits', 'Sign permits for reward pools')
         };
 
         const pool = await getPermitFreezerRewardPool(poolAddr);
+        const availableReward = await pool.availableReward();
+        console.log('availableReward in pool:', ethers.utils.formatUnits(availableReward.toString(), 18));
+
         try {
           domainParams.name = await pool.getPoolName();
 
