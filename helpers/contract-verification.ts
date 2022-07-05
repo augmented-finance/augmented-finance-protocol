@@ -53,13 +53,15 @@ const _verifyContract = async (
     params.libraries = JSON.parse(libraries!);
   }
 
+  // return [false, 'AAAA'];
+
   try {
     await DRE.run('verify:verify', params);
   } catch (error: any) {
     if (error.message === 'Contract source code already verified') {
       return [true, ''];
     }
-    return [false, error.message];
+    return [false, params.constructorArguments.toString()];
   }
 
   return [true, ''];
@@ -76,8 +78,14 @@ export const verifyProxy = async (proxyAddr: string, implAddr: string): Promise<
 };
 
 const _verifyProxy = async (proxyAddr: string, implAddr: string) => {
-  const endpoints = await getEtherscanEndpoints(DRE.network.provider, DRE.network.name);
-  const apiKey = (<any>DRE.config).etherscan.apiKey!;
+  // const endpoints = await getEtherscanEndpoints(DRE.network.provider, DRE.network.name);
+  // const apiKey = (<any>DRE.config).etherscan.apiKey!;
+
+  const apiKey = '######';
+  const endpoints = {
+    apiURL: 'https://blockscout.com/xdai/mainnet/api/',
+    browserURL: 'https://blockscout.com/xdai/mainnet/',
+  };
   const baseUrl = `${endpoints.apiURL}?module=contract`;
 
   let guid: string;

@@ -1,0 +1,3023 @@
+{
+  "kovan": {
+    "instance": {
+      "0xfe94BcC1208f4Fe425B7528B2113E3BcB4C54Df7": {
+        "id": "AddressesProviderRegistry",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xeD250003A79CB8667E74c536D61D1d0193B39489": {
+        "id": "MarketAccessController",
+        "verify": {
+          "args": "[\"Augmented genesis market\"]"
+        }
+      },
+      "0xC3c252f1223E473e50D81ea03Dc3284861901d46": {
+        "id": "LendingPoolImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xF89A2C1bb2603E8B30e94991E174eE02ad552417": {
+        "id": "LendingPoolExtensionImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x54F29541992906679c4b98F50935a3F2457c8d63": {
+        "id": "LendingPoolConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xE97D3A47e8bB6ac0f0391b4F2b767077B1d82e07": {
+        "id": "LendingRateOracle",
+        "verify": {
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\"]"
+        }
+      },
+      "0xb839f2dF856776d2aB1f309de9B8c1BF0C190B2D": {
+        "id": "StaticPriceOracle",
+        "verify": {
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",[\"0xFf795577d9AC8bD7D90Ee22b6C1703490b6512FD\",\"0xe22da380ee6B445bb8273C81944ADEB6E8450422\",\"0x13512979ADE267AB5100878E2e0f485B568328a4\",\"0xD1B98B6607330172f1D991521145A22BCe793277\",\"0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96\",\"0xdcf0af9e59c002fa3aa091a46196b37530fd48a8\",\"0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad\",\"0x41b5844f4680a8c38fbb695b7f9cfd1f64474a72\"],[\"502285100000000\",\"502285100000000\",\"503147050000000\",\"16080000000000000000\",\"500000000000000\",\"502285100000000\",\"502285100000000\",\"1000000000000000000\"]]"
+        }
+      },
+      "0x03D08ef001143f1E460B0934b52bE1b9C72DdA79": {
+        "id": "OracleRouter",
+        "verify": {
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",[],[],\"0xb839f2dF856776d2aB1f309de9B8c1BF0C190B2D\",\"0xd0a1e359811322d97991e03f863a0c30c2cf029c\"]"
+        }
+      },
+      "0x4D5c67e054eb1E73d800B88103FebCA7a348e11B": {
+        "id": "ProtocolDataProvider",
+        "verify": {
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\"]"
+        }
+      },
+      "0x5360a37F623496C8a156ebfC0433ecDAE3599E64": {
+        "id": "WETHGateway",
+        "verify": {
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"0xd0a1e359811322d97991e03f863a0c30c2cf029c\"]"
+        }
+      },
+      "0xf8324018c7883BF4dC3B546Ae69403e76CEDEE53": {
+        "id": "TreasuryImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x6173344a23673694661cbBEACd677263663Dcb95": {
+        "id": "rateStrategyStableTwo",
+        "verify": {
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"800000000000000000000000000\",\"0\",\"40000000000000000000000000\",\"750000000000000000000000000\",\"20000000000000000000000000\",\"750000000000000000000000000\"]"
+        }
+      },
+      "0xB532b55975d5Bc756dFcE5969a63F776E4916545": {
+        "id": "rateStrategyStableThree",
+        "verify": {
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"900000000000000000000000000\",\"0\",\"40000000000000000000000000\",\"600000000000000000000000000\",\"20000000000000000000000000\",\"600000000000000000000000000\"]"
+        }
+      },
+      "0xb689D014D81Af2ca0F36e7993aE10F2Decd0d638": {
+        "id": "rateStrategyVolatileTwo",
+        "verify": {
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"650000000000000000000000000\",\"0\",\"80000000000000000000000000\",\"3000000000000000000000000000\",\"100000000000000000000000000\",\"3000000000000000000000000000\"]"
+        }
+      },
+      "0x78cf16f3878C535DC7Ccfd377A4Af24719A47368": {
+        "id": "rateStrategyWETH",
+        "verify": {
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"650000000000000000000000000\",\"0\",\"80000000000000000000000000\",\"1000000000000000000000000000\",\"100000000000000000000000000\",\"1000000000000000000000000000\"]"
+        }
+      },
+      "0x5f0E68FA226eF6c17CDd96b0791f3B2f96aeb9f3": {
+        "id": "DelegatedStrategyAave",
+        "verify": {
+          "args": "[\"externalReserveAAVE\"]"
+        }
+      },
+      "0x4DD9829A3Bb7D3a6C422e172E6bFbA3988a261D6": {
+        "id": "DelegatedStrategyCompoundErc20",
+        "verify": {
+          "args": "[\"externalReserveCOMP\"]"
+        }
+      },
+      "0x7807E3168f6a973dDfBA59AB048390F01647e49A": {
+        "id": "DelegatedStrategyCompoundEth",
+        "verify": {
+          "args": "[\"externalReserveCETH\",\"0xd0A1E359811322d97991E03f863a0C30C2cF029C\"]"
+        }
+      },
+      "0xdc92c1d7672Cb13586e70C2004f9BD2aB0803f92": {
+        "id": "StableDebtTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xDea594018Df3225D2a761276FD12c810C8d94C9A": {
+        "id": "VariableDebtTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xe1787248dde544b11cD8Ed2524a056451574b0a7": {
+        "id": "DepositTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x0F973E3CE0E7d77d035DdC3F69D5FDf70015C5aB": {
+        "id": "StakeConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x72A057Ead5A46A4D1F31b9E2C58C96A0EaB55aa6": {
+        "id": "StakeTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x9b057a1c22F0113EA0BBe532e96B6376Dc9262a5": {
+        "id": "RewardConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xA5f63acFf36f22be9106bb160514F7cCa10c847e": {
+        "id": "AGFTokenV1Impl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x05B2D1Ad00A9067b5bBc1E0299612EFbC1Cc2F6E": {
+        "id": "RewardBoosterImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x64A20695b09F68D26e5f741A2a3F684460012461": {
+        "id": "XAGFTokenV1Impl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x31E27A4a2d914D418Fc026a119E3b1Bb0c87415E": {
+        "id": "TokenWeightedRewardPoolImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x032F2F94897ccb2949C10DB34c72A3cD9c6ae6bA": {
+        "id": "TeamRewardPool",
+        "verify": {
+          "args": "[\"0xB878f93961aEb952Fa1D8cE2f50662Bd578fC6BB\",\"0\",\"1000\",\"0x0000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x7677c209250AD9b6A954EaDE991eA1102269deed": {
+        "id": "ReferralRewardPoolV1Impl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xe9D498C730297cD8d25D76E92EBB222bc5C5b302": {
+        "id": "TreasuryRewardPool",
+        "verify": {
+          "args": "[\"0xB878f93961aEb952Fa1D8cE2f50662Bd578fC6BB\",\"0\",\"1000\",\"0xCcB59ef0078D0b52f1c9b81B5aCa338D808aE08d\"]"
+        }
+      },
+      "0x7C64a94579285B62C02A286915003755522Cb294": {
+        "id": "BurnersPool",
+        "verify": {
+          "args": "[\"0xB878f93961aEb952Fa1D8cE2f50662Bd578fC6BB\",\"1000000000000000000000000\",\"1612137600\",\"BurnersPool\"]"
+        }
+      }
+    },
+    "named": {
+      "AddressesProviderRegistry": {
+        "address": "0xfe94BcC1208f4Fe425B7528B2113E3BcB4C54Df7",
+        "count": 1
+      },
+      "MarketAccessController": {
+        "address": "0xeD250003A79CB8667E74c536D61D1d0193B39489",
+        "count": 1
+      },
+      "LendingPoolImpl": {
+        "address": "0xC3c252f1223E473e50D81ea03Dc3284861901d46",
+        "count": 1
+      },
+      "LendingPoolExtensionImpl": {
+        "address": "0xF89A2C1bb2603E8B30e94991E174eE02ad552417",
+        "count": 1
+      },
+      "LendingPoolConfiguratorImpl": {
+        "address": "0x54F29541992906679c4b98F50935a3F2457c8d63",
+        "count": 1
+      },
+      "LendingRateOracle": {
+        "address": "0xE97D3A47e8bB6ac0f0391b4F2b767077B1d82e07",
+        "count": 1
+      },
+      "StaticPriceOracle": {
+        "address": "0xb839f2dF856776d2aB1f309de9B8c1BF0C190B2D",
+        "count": 1
+      },
+      "OracleRouter": {
+        "address": "0x03D08ef001143f1E460B0934b52bE1b9C72DdA79",
+        "count": 1
+      },
+      "ProtocolDataProvider": {
+        "address": "0x4D5c67e054eb1E73d800B88103FebCA7a348e11B",
+        "count": 1
+      },
+      "WETHGateway": {
+        "address": "0x5360a37F623496C8a156ebfC0433ecDAE3599E64",
+        "count": 1
+      },
+      "TreasuryImpl": {
+        "address": "0xf8324018c7883BF4dC3B546Ae69403e76CEDEE53",
+        "count": 1
+      },
+      "rateStrategyStableTwo": {
+        "address": "0x6173344a23673694661cbBEACd677263663Dcb95",
+        "count": 1
+      },
+      "rateStrategyStableThree": {
+        "address": "0xB532b55975d5Bc756dFcE5969a63F776E4916545",
+        "count": 1
+      },
+      "rateStrategyVolatileTwo": {
+        "address": "0xb689D014D81Af2ca0F36e7993aE10F2Decd0d638",
+        "count": 1
+      },
+      "rateStrategyWETH": {
+        "address": "0x78cf16f3878C535DC7Ccfd377A4Af24719A47368",
+        "count": 1
+      },
+      "DelegatedStrategyAave": {
+        "address": "0x5f0E68FA226eF6c17CDd96b0791f3B2f96aeb9f3",
+        "count": 1
+      },
+      "DelegatedStrategyCompoundErc20": {
+        "address": "0x4DD9829A3Bb7D3a6C422e172E6bFbA3988a261D6",
+        "count": 1
+      },
+      "DelegatedStrategyCompoundEth": {
+        "address": "0x7807E3168f6a973dDfBA59AB048390F01647e49A",
+        "count": 1
+      },
+      "StableDebtTokenImpl": {
+        "address": "0xdc92c1d7672Cb13586e70C2004f9BD2aB0803f92",
+        "count": 1
+      },
+      "VariableDebtTokenImpl": {
+        "address": "0xDea594018Df3225D2a761276FD12c810C8d94C9A",
+        "count": 1
+      },
+      "DepositTokenImpl": {
+        "address": "0xe1787248dde544b11cD8Ed2524a056451574b0a7",
+        "count": 1
+      },
+      "StakeConfiguratorImpl": {
+        "address": "0x0F973E3CE0E7d77d035DdC3F69D5FDf70015C5aB",
+        "count": 1
+      },
+      "StakeTokenImpl": {
+        "address": "0x72A057Ead5A46A4D1F31b9E2C58C96A0EaB55aa6",
+        "count": 1
+      },
+      "RewardConfiguratorImpl": {
+        "address": "0x9b057a1c22F0113EA0BBe532e96B6376Dc9262a5",
+        "count": 1
+      },
+      "AGFTokenV1Impl": {
+        "address": "0xA5f63acFf36f22be9106bb160514F7cCa10c847e",
+        "count": 1
+      },
+      "RewardBoosterImpl": {
+        "address": "0x05B2D1Ad00A9067b5bBc1E0299612EFbC1Cc2F6E",
+        "count": 1
+      },
+      "XAGFTokenV1Impl": {
+        "address": "0x64A20695b09F68D26e5f741A2a3F684460012461",
+        "count": 1
+      },
+      "TokenWeightedRewardPoolImpl": {
+        "address": "0x31E27A4a2d914D418Fc026a119E3b1Bb0c87415E",
+        "count": 1
+      },
+      "TeamRewardPool": {
+        "address": "0x032F2F94897ccb2949C10DB34c72A3cD9c6ae6bA",
+        "count": 1
+      },
+      "ReferralRewardPoolV1Impl": {
+        "address": "0x7677c209250AD9b6A954EaDE991eA1102269deed",
+        "count": 1
+      },
+      "TreasuryRewardPool": {
+        "address": "0xe9D498C730297cD8d25D76E92EBB222bc5C5b302",
+        "count": 1
+      },
+      "BurnersPool": {
+        "address": "0x7C64a94579285B62C02A286915003755522Cb294",
+        "count": 1
+      }
+    },
+    "external": {
+      "0x0DDc9594a8Bb5CAA7daE61188129d8A54f6193D6": {
+        "id": "LENDING_POOL",
+        "verify": {
+          "impl": "0xC3c252f1223E473e50D81ea03Dc3284861901d46",
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"0xC3c252f1223E473e50D81ea03Dc3284861901d46\",\"0xc4d66de8000000000000000000000000ed250003a79cb8667e74c536d61d1d0193b39489\"]"
+        }
+      },
+      "0xd8C49124dcb6E0E3827933b4a6b8a929444e9063": {
+        "id": "LENDING_POOL_CONFIGURATOR",
+        "verify": {
+          "impl": "0x54F29541992906679c4b98F50935a3F2457c8d63",
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"0x54F29541992906679c4b98F50935a3F2457c8d63\",\"0xc4d66de8000000000000000000000000ed250003a79cb8667e74c536d61d1d0193b39489\"]"
+        }
+      },
+      "0xCcB59ef0078D0b52f1c9b81B5aCa338D808aE08d": {
+        "id": "TREASURY",
+        "verify": {
+          "impl": "0xf8324018c7883BF4dC3B546Ae69403e76CEDEE53",
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"0xf8324018c7883BF4dC3B546Ae69403e76CEDEE53\",\"0xc4d66de8000000000000000000000000ed250003a79cb8667e74c536d61d1d0193b39489\"]"
+        }
+      },
+      "0xC862FAD053712F8693C288Bf1F164953328372bC": {
+        "id": "STAKE_CONFIGURATOR",
+        "verify": {
+          "impl": "0x0F973E3CE0E7d77d035DdC3F69D5FDf70015C5aB",
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"0x0F973E3CE0E7d77d035DdC3F69D5FDf70015C5aB\",\"0xc4d66de8000000000000000000000000ed250003a79cb8667e74c536d61d1d0193b39489\"]"
+        }
+      },
+      "0xB99D9d7BEc6c9880063F84fc6E69f17e31305a45": {
+        "id": "REWARD_CONFIGURATOR",
+        "verify": {
+          "impl": "0x9b057a1c22F0113EA0BBe532e96B6376Dc9262a5",
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"0x9b057a1c22F0113EA0BBe532e96B6376Dc9262a5\",\"0xc4d66de8000000000000000000000000ed250003a79cb8667e74c536d61d1d0193b39489\"]"
+        }
+      },
+      "0x9Bd8cD87Dbe2710999A925fdF469b8CcD6f3B974": {
+        "id": "REWARD_TOKEN",
+        "verify": {
+          "impl": "0xA5f63acFf36f22be9106bb160514F7cCa10c847e",
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"0xA5f63acFf36f22be9106bb160514F7cCa10c847e\",\"0xf39930fd0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000ed250003a79cb8667e74c536d61d1d0193b39489000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000104175676d656e746564207265776172640000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000034147460000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xB878f93961aEb952Fa1D8cE2f50662Bd578fC6BB": {
+        "id": "REWARD_CONTROLLER",
+        "verify": {
+          "impl": "0x05B2D1Ad00A9067b5bBc1E0299612EFbC1Cc2F6E",
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"0x05B2D1Ad00A9067b5bBc1E0299612EFbC1Cc2F6E\",\"0xc4d66de8000000000000000000000000ed250003a79cb8667e74c536d61d1d0193b39489\"]"
+        }
+      },
+      "0x31e282Ad96744985873210170aCa6012a3E72c27": {
+        "id": "REWARD_STAKE_TOKEN",
+        "verify": {
+          "impl": "0x64A20695b09F68D26e5f741A2a3F684460012461",
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"0x64A20695b09F68D26e5f741A2a3F684460012461\",\"0xf39930fd0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000ed250003a79cb8667e74c536d61d1d0193b39489000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000114175676d656e74656420626f6f7374657200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000047841474600000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x7B1A0491271F34C2b012dc21bEff9152836D8C03": {
+        "id": "REFERRAL_REGISTRY",
+        "verify": {
+          "impl": "0x7677c209250AD9b6A954EaDE991eA1102269deed",
+          "args": "[\"0xeD250003A79CB8667E74c536D61D1d0193B39489\",\"0x7677c209250AD9b6A954EaDE991eA1102269deed\",\"0xfe52c4e20000000000000000000000000000000000000000000000000000000000000020000000000000000000000000b878f93961aeb952fa1d8ce2f50662bd578fc6bb000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000007526566506f6f6c00000000000000000000000000000000000000000000000000\"]"
+        }
+      }
+    }
+  },
+  "hardhat": {
+    "instance": {
+      "0x7c2C195CD6D34B8F845992d380aADB2730bB9C6F": {
+        "id": "WETH"
+      },
+      "0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf": {
+        "id": "DAI"
+      },
+      "0xc4905364b78a742ccce7B890A89514061E47068D": {
+        "id": "AUSDC"
+      },
+      "0x8B5B7a6055E54a36fF574bbE40cf2eA68d5554b3": {
+        "id": "AWBTC"
+      },
+      "0xEcc0a6dbC0bb4D51E4F84A315a9e5B0438cAD4f0": {
+        "id": "AWETH"
+      },
+      "0x0078371BDeDE8aAc7DeBfFf451B74c5EDB385Af7": {
+        "id": "USDC"
+      },
+      "0xf4e77E5Da47AC3125140c470c71cBca77B5c638c": {
+        "id": "USDT"
+      },
+      "0xf784709d2317D872237C4bC22f867d1BAe2913AB": {
+        "id": "WBTC"
+      },
+      "0x3619DbE27d7c1e7E91aA738697Ae7Bc5FC3eACA5": {
+        "id": "USD"
+      },
+      "0x038B86d9d8FAFdd0a02ebd1A476432877b0107C8": {
+        "id": "AAVE"
+      },
+      "0x1A1FEe7EeD918BD762173e4dc5EfDB8a78C924A8": {
+        "id": "LINK"
+      },
+      "0x500D1d6A4c7D8Ae28240b47c8FCde034D827fD5e": {
+        "id": "ADAI"
+      },
+      "0xD6C850aeBFDC46D7F4c207e445cC0d6B0919BDBe": {
+        "id": "AUSDT"
+      },
+      "0x20Ce94F404343aD2752A2D01b43fa407db9E0D00": {
+        "id": "CDAI"
+      },
+      "0x1d80315fac6aBd3EfeEbE97dEc44461ba7556160": {
+        "id": "CUSDC"
+      },
+      "0x2D8553F9ddA85A9B3259F6Bf26911364B85556F5": {
+        "id": "CUSDT"
+      },
+      "0x52d3b94181f8654db2530b0fEe1B19173f519C52": {
+        "id": "CWBTC"
+      },
+      "0xd15468525c35BDBC1eD8F2e09A00F8a173437f2f": {
+        "id": "CETH"
+      },
+      "0x7e35Eaf7e8FBd7887ad538D4A38Df5BbD073814a": {
+        "id": "WBNB"
+      },
+      "0x5bcb88A0d20426e451332eE6C4324b0e663c50E0": {
+        "id": "WAVAX"
+      },
+      "0x3521eF8AaB0323004A6dD8b03CE890F4Ea3A13f5": {
+        "id": "WFTM"
+      },
+      "0x53369fd4680FfE3DfF39Fc6DDa9CfbfD43daeA2E": {
+        "id": "WMATIC"
+      },
+      "0xB00cC45B4a7d3e1FEE684cFc4417998A1c183e6d": {
+        "id": "BTCB"
+      },
+      "0x58F132FBB86E21545A4Bace3C19f1C05d86d7A22": {
+        "id": "BCH"
+      },
+      "0xa4bcDF64Cdd5451b6ac3743B414124A6299B65FF": {
+        "id": "ETH"
+      },
+      "0x22474D350EC2dA53D717E30b96e9a2B7628Ede5b": {
+        "id": "BETH"
+      },
+      "0x5A0773Ff307Bf7C71a832dBB5312237fD3437f9F": {
+        "id": "BUSD"
+      },
+      "0x18b9306737eaf6E8FC8e737F488a1AE077b18053": {
+        "id": "TUSD"
+      },
+      "0xFAe0fd738dAbc8a0426F47437322b6d026A9FD95": {
+        "id": "DOT"
+      },
+      "0x6082731fdAba4761277Fb31299ebC782AD3bCf24": {
+        "id": "SXP"
+      },
+      "0x8456161947DFc1fC159A0B26c025cD2b4bba0c3e": {
+        "id": "XRP"
+      },
+      "0x12080583C4F0211eC382d33a273E6D0f9fAb0F75": {
+        "id": "ADA"
+      },
+      "0x5F6CaC05CDF893f029b29F44d368eAeD40e573B6": {
+        "id": "TRX"
+      },
+      "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df": {
+        "id": "LTC"
+      },
+      "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259": {
+        "id": "DOGE"
+      },
+      "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E": {
+        "id": "MATIC"
+      },
+      "0x06bA8d8af0dF898D0712DffFb0f862cC51AF45c2": {
+        "id": "FIL"
+      },
+      "0xb682dEEf4f8e298d86bFc3e21f50c675151FB974": {
+        "id": "INJ"
+      },
+      "0x1750499D05Ed1674d822430FB960d5F6731fDf64": {
+        "id": "CHR"
+      },
+      "0xE4C10Db67595aF2Cb4166c8C274e0140f7E43059": {
+        "id": "REEF"
+      },
+      "0x099d9fF8F818290C8b5B7Db5bFca84CEebd2714c": {
+        "id": "TWT"
+      },
+      "0x85bdE212E66e2BAE510E44Ed59116c1eC712795b": {
+        "id": "LINA"
+      },
+      "0xe1B3b8F6b298b52bCd15357ED29e65e66a4045fF": {
+        "id": "CAKE"
+      },
+      "0x8731324a6C09a1745bD15009Dc8FcceF11c05F4a": {
+        "id": "XVS"
+      },
+      "0x00aD4926D7613c8e00cB6CFa61831D5668265724": {
+        "id": "ALPACA"
+      },
+      "0x79dC3dA279A2ADc72210BD00e10951AB9dC70ABc": {
+        "id": "UNI"
+      },
+      "0xF0B4ACda6D679ea22AC5C4fD1973D0d58eA10ec1": {
+        "id": "SUSHI"
+      },
+      "0xE78d9772cED3eD5C595d9E438a87602eD86bfE9b": {
+        "id": "BIFI"
+      },
+      "0xA17827A991EB72793fa437e580B084ceB25Ab0f9": {
+        "id": "AUTO"
+      },
+      "0x8565Fb7dfB5D36b2aA00086ffc920cfF20db4F2f": {
+        "id": "DODO"
+      },
+      "0x93C1e99C8dD990D77232821f9476c308FBad47f5": {
+        "id": "ALPHA"
+      },
+      "0x57965788BD1a93639CE738a58176e1A3d6F4d04f": {
+        "id": "MIM"
+      },
+      "0xBbC60A8fAf66552554e460d55Ac0563Fb9e76c01": {
+        "id": "JOE"
+      },
+      "0xdDD96662ea11dA6F289A5D00da41Ec5F3b67d2b4": {
+        "id": "QI"
+      },
+      "0xecE50C63d1Ae02Ba306c2b2E1579d0327220196e": {
+        "id": "SPELL"
+      },
+      "0x0D8448C0fBB84c30395838C8b3fD64722ea94532": {
+        "id": "WXDAI"
+      },
+      "0x053568617FFccEe2F75073975CC0e1549Ff9db71": {
+        "id": "GNO"
+      },
+      "0xD036a8F254ef782cb93af4F829A1568E992c3864": {
+        "id": "PERP"
+      },
+      "0xb81145Beaa1D00c6A99f8C342c6ce354019Ff737": {
+        "id": "GRT"
+      },
+      "0xA48096237053a0B74E15cEd6FA33F7c96A5acf50": {
+        "id": "MKR"
+      },
+      "0xc85759553AEE2D4125aFa8a9421AAf5397b96E6b": {
+        "id": "LendingPoolConfiguratorImpl"
+      },
+      "0xFDAAc0fDAEBbe00B8A3EBB119367B6CF84E0F39c": {
+        "id": "MockPriceOracle"
+      },
+      "0x7B6C3e5486D9e6959441ab554A889099eed76290": {
+        "id": "MockAggregator"
+      },
+      "0xAF6BA11790D1942625C0c2dA07da19AB63845cfF": {
+        "id": "MockAggregator"
+      },
+      "0xD83D2773a7873ae2b5f8Fb92097e20a8C64F691E": {
+        "id": "MockAggregator"
+      },
+      "0x474d9b0D5F1Bb1602711F9346743a7a7478d6f52": {
+        "id": "MockAggregator"
+      },
+      "0xf91aC1098F3b154671Ce83290114aaE45ac0225f": {
+        "id": "MockAggregator"
+      },
+      "0xFc01AF83D78742DfD42631a352e33f8098e7274B": {
+        "id": "MockAggregator"
+      },
+      "0xf4830d6b1D70C8595d3BD8A63f9ed9F636DB9ef2": {
+        "id": "MockAggregator"
+      },
+      "0xd5C35F41baD857A2D4F34D7554E78d0391BAcEDF": {
+        "id": "MockAggregator"
+      },
+      "0xc1cb554de746224c13c1f25478aD0f3fa9e64843": {
+        "id": "MockAggregator"
+      },
+      "0x30E34e984FE7537dD3B1F4eB8F0f9eC7AB1cEA05": {
+        "id": "MockAggregator"
+      },
+      "0x8Dd7f10813aC8fCB83ad7ad94e941D53b002fBc7": {
+        "id": "MockAggregator"
+      },
+      "0xfA9dbd706c674801F50169f4B5862cCe045408E6": {
+        "id": "MockAggregator"
+      },
+      "0xCeEa6148D75268b6E930AE41d7a31baE1CA318d8": {
+        "id": "MockAggregator"
+      },
+      "0xbFAD7C67855cc0272CC5ED00dAabeFDB31E7190a": {
+        "id": "MockAggregator"
+      },
+      "0x98B40aAC844674B2287556E75b3ef5530DfCfcB7": {
+        "id": "MockAggregator"
+      },
+      "0x0bcCE4611Bb4118422549f61e344dd38d65084cb": {
+        "id": "MockAggregator"
+      },
+      "0xB529E6C14E73e8618f8e073368FAbd914bf96222": {
+        "id": "MockAggregator"
+      },
+      "0x8358D5a3936ECe64208117E0639006FB24E40572": {
+        "id": "MockAggregator"
+      },
+      "0x93472C0e03215F9c33DA240Eb16703C8244eAa8c": {
+        "id": "MockAggregator"
+      },
+      "0x3392c115Ff2CE1A782B4a965fF770da61e69228E": {
+        "id": "MockAggregator"
+      },
+      "0x72358bcB1b8B60Ca2f30244e50Be20C3ecaC74B2": {
+        "id": "MockAggregator"
+      },
+      "0xBAdDA897176B5A94FD4A0eCb59678DDA29181963": {
+        "id": "MockAggregator"
+      },
+      "0x8D0206fEBEB380486729b64bB4cfEDC5b354a6D6": {
+        "id": "LendingRateOracle"
+      },
+      "0xfC88832bac6AbdF216BC5A67be68E9DE94aD5ba2": {
+        "id": "DefaultReserveInterestRateStrategy-rateStrategyAAVE"
+      },
+      "0x1256eBA4d0a7A38D10BaF4F61775ba491Ce7EE25": {
+        "id": "DefaultReserveInterestRateStrategy-rateStrategyVolatileOne"
+      },
+      "0x77B0b5636fEA30eA79BB65AeCCdb599997A849A8": {
+        "id": "DefaultReserveInterestRateStrategy-rateStrategyStableTwo"
+      },
+      "0x78Ee8Fb9fE5abD5e347Fc94c2fb85596d1f60e3c": {
+        "id": "DefaultReserveInterestRateStrategy-rateStrategyStableThree"
+      },
+      "0x920d847fE49E54C19047ba8bc236C45A8068Bca7": {
+        "id": "DefaultReserveInterestRateStrategy-rateStrategyVolatileTwo"
+      },
+      "0xA4765Ff72A9F3CfE73089bb2c3a41B838DF71574": {
+        "id": "ProtocolDataProvider"
+      },
+      "0x35c1419Da7cf0Ff885B8Ef8EA9242FEF6800c99b": {
+        "id": "StableDebtTokenImpl"
+      },
+      "0xe2607EabC87fd0A4856840bF23da8458cDF0434F": {
+        "id": "TreasuryImpl"
+      },
+      "0xE55aA921A1001f0a19241264a50063683D2e1179": {
+        "id": "DepositTokenImpl"
+      },
+      "0x8BFFF31B1757da579Bb5B118489568526F7fb6D4": {
+        "id": "DefaultReserveInterestRateStrategy-rateStrategyWETH"
+      },
+      "0x0459c841b02Aee8730730C737582c53B20a27288": {
+        "id": "StableDebtTokenImpl"
+      },
+      "0x2530ce07D254eA185E8e0bCC37a39e2FbA3bE548": {
+        "id": "VariableDebtTokenImpl"
+      },
+      "0x0Cf45557d25a4e4c0F1aC65EF6c48ae67c61a0E6": {
+        "id": "DepositTokenImpl"
+      },
+      "0x7fAeC7791277Ff512c41CA903c177B2Ed952dDAc": {
+        "id": "FlashLiquidationAdapter"
+      },
+      "0x2cBbbBE1B75Ad7848F0844215816F551f429c64f": {
+        "id": "LendingPoolImpl"
+      },
+      "0xbAc762e2000b6815268587b081Fd17aC25519aD5": {
+        "id": "MockMintableERC20"
+      },
+      "0x33958cC3535Fc328369EAC2B2Bebd120D67C7fa1": {
+        "id": "MarketAccessController"
+      },
+      "0xAa7BC1924711B77A0F3Aaebdd550BfeDDDbaf3cd": {
+        "id": "MockFlashLoanReceiver"
+      },
+      "0xadcD6f616fCEEbEd731B2B3F01B8bd51A08b5CbD": {
+        "id": "UniswapLiquiditySwapAdapter"
+      },
+      "0xFf130817Aa9863B3D809A2A11617c05646245d80": {
+        "id": "FlashLiquidationAdapter"
+      },
+      "0xAF4AC65bBdFfA029335436d85E1B57c77995C59B": {
+        "id": "MockRewardPoolAGFSeparate"
+      },
+      "0x4E43773D3A3aca08449fe18D3f26759CD43CBC2b": {
+        "id": "MockAgfToken"
+      },
+      "0x5D74e15E36492a9CC6fda503b3cFf0CA10d90a83": {
+        "id": "MockRewardFreezer"
+      },
+      "0x854161Fa77C3B0fF7A26e2AFcb72680d9eCB686E": {
+        "id": "MarketAccessController"
+      },
+      "0xB8054085AF605D93c32E6B829d3d7eA2A8C84F9A": {
+        "id": "MockDelegationAwareDepositToken"
+      },
+      "0x2dC17ABe95C889aA4c9474eD45Dd454Ed1Ec1ec1": {
+        "id": "MockAgfToken"
+      },
+      "0xCC5F3Be6e695bD0239dFd0efC8E9FFC6E969D29e": {
+        "id": "MockRewardPoolAGBoosted"
+      },
+      "0x2F224F22dE1D1adFece39B1939490d9DEAfBfF57": {
+        "id": "MockDecayingTokenLocker"
+      },
+      "0xb3a9b7B5728416227cB09d047fAE2Df36Df04819": {
+        "id": "MarketAccessController"
+      },
+      "0x84d1CE12E078B2901985804c603d343cA3a1c875": {
+        "id": "MockAgfToken"
+      },
+      "0xFe230c227D3724015d0dE3dBEc831825f1ed1f59": {
+        "id": "MockRewardFreezer"
+      },
+      "0xd44937448A9f229bfae84e7d256810Ba4C4a93cC": {
+        "id": "PermitFreezerRewardPool"
+      },
+      "0x96049b850bE3415b4d7DcFECA2e6eE02ee580488": {
+        "id": "MockRewardPoolAGFSeparate"
+      },
+      "0x70325F3D34D83391a3b6ffE77a9fB62c033e8e55": {
+        "id": "TeamRewardPool"
+      },
+      "0x828C9C41Fae6113C1DEA9056Dcd9C85A19002d52": {
+        "id": "MockTokenLocker"
+      },
+      "0xB660Fdd109a95718cB9d20E3A89EE6cE342aDcB6": {
+        "id": "MarketAccessController"
+      },
+      "0xE91bBe8ee03560E3dda2786f95335F5399813Ca0": {
+        "id": "MockAgfToken"
+      },
+      "0x4977FC58783ceBCC310311C800B786EcAf45F98f": {
+        "id": "MockRewardFreezer"
+      },
+      "0x20CbDcC1d471D4c41382eD6013d9561070C3eD48": {
+        "id": "PermitFreezerRewardPool"
+      },
+      "0xbC7Ab6F930D83CB7e80A207d4dD3DD80aA8a2153": {
+        "id": "MockRewardPoolAGFSeparate"
+      },
+      "0x2E5a2652BDB3da24249EaDf9028a6D75e20D86C5": {
+        "id": "TeamRewardPool"
+      },
+      "0x63b9792E7A95e3aa037255E8cAa0Dfd76f7383e7": {
+        "id": "MockTokenLocker"
+      },
+      "0x2dD8146Ad2138ac61F93E549f8F917927B47E28a": {
+        "id": "MarketAccessController"
+      },
+      "0xf4a603251E93fAc1DB29AdC48B9446E753e5A755": {
+        "id": "MockAgfToken"
+      },
+      "0x3E3366E60C621482E7214b6C6b3a34296FF57cB9": {
+        "id": "MockRewardFreezer"
+      },
+      "0x36372ca6a6b65B924ab1f88165F563189B638a6b": {
+        "id": "PermitFreezerRewardPool"
+      },
+      "0x9D2F6Ec881323E78f27d58b996b81EaBCEF8eC58": {
+        "id": "MockRewardPoolAGFSeparate"
+      },
+      "0x6Ac05758229c725A6d14F0ae7088985D9B251Fb2": {
+        "id": "TeamRewardPool"
+      },
+      "0xb2B548BE73010C188C083c510d255Aed74843b05": {
+        "id": "MockTokenLocker"
+      },
+      "0xd4e934C2749CA8C1618659D02E7B28B074bf4df7": {
+        "id": "MockReferralRewardPool"
+      },
+      "0x8280D40C9E9F04229D2435EAad6e0011309ce81B": {
+        "id": "MockTreasuryRewardPool"
+      },
+      "0x3b050AFb4ac4ACE646b31fF3639C1CD43aC31460": {
+        "id": "MarketAccessController"
+      },
+      "0xD4B5A49d5bA242572ec3f4A8E52B97a10AF2543a": {
+        "id": "MockAgfToken"
+      },
+      "0x40A939911b662656C0EE71c19B954DB1911Dc8e3": {
+        "id": "MockRewardFreezer"
+      },
+      "0x2A3D01c3eAB4d9133E0A33547706DC3e28f41275": {
+        "id": "PermitFreezerRewardPool"
+      },
+      "0x1bb3d8FA7bDa74Af0D64d348a2545E7570863fA8": {
+        "id": "MockRewardPoolAGFSeparate"
+      },
+      "0xC5f7aC6895DcB76877E71db756433fB0E0478FEB": {
+        "id": "TeamRewardPool"
+      },
+      "0x4b2c297ba5be42610994974b9543D56B864CA011": {
+        "id": "MockTokenLocker"
+      },
+      "0x1a432D97211e8b2CD53DF262c8Da0EfeBa6b6b3D": {
+        "id": "MarketAccessController"
+      },
+      "0xBE7fFcC01164C890e59D298FD755FcBE6B7941a9": {
+        "id": "MockAgfToken"
+      },
+      "0x7cFdBc7907cb4d1d27DcE75609be7dfe8a4F1340": {
+        "id": "MockRewardFreezer"
+      },
+      "0x03A6802eF9060a8E1f0e56Bafc9C9AB1A26a1f06": {
+        "id": "PermitFreezerRewardPool"
+      },
+      "0x22B37db37e9992728245A7dD0536892AF9bA1baB": {
+        "id": "MockRewardPoolAGFSeparate"
+      },
+      "0x850Fae11E1313e6C23Db7c2410Ec0985d9Ea325A": {
+        "id": "TeamRewardPool"
+      },
+      "0x6D3540a9F1a769bfd91A4A33169a8361aa82dC0F": {
+        "id": "MockTokenLocker"
+      },
+      "0x1203D1b97BF6E546c00C45Cda035D3010ACe1180": {
+        "id": "TreasuryImpl"
+      },
+      "0xB7b9568073C9e745acD84eEb30F1c32F74Ba4946": {
+        "id": "TreasuryRewardPool"
+      },
+      "0x64999a4272342C910FB8f6a71C2Ca50b878a8658": {
+        "id": "MockDepositToken"
+      },
+      "0x832D8fDeeE7Df842796582bC7F804802c2c666fd": {
+        "id": "SelfdestructTransfer"
+      },
+      "0x04C90bD686E03782737C3f4C6bDC88dc3C92bDec": {
+        "id": "MockVariableDebtToken"
+      },
+      "0xAe407A0bD891d02E495D3E79cE577C17BB61f366": {
+        "id": "LendingPoolImpl"
+      },
+      "0x48fc85A6fcD880e2421586f4F9116f14e854E109": {
+        "id": "AGFTokenImpl"
+      },
+      "0xB42D37cB0E78aaCC5980eC6B2EcB98CBeCeB9df7": {
+        "id": "MockAgfToken"
+      },
+      "0xe6688b6Cc79268D2e39f799C08673034a5350F13": {
+        "id": "StakeConfiguratorImpl"
+      },
+      "0x666D47050E77ADB0B04076fB35DDcb74e95D1d7C": {
+        "id": "StakeTokenImpl"
+      },
+      "0xE03C10626D77391a3EE15Fe9e4E859e5389b9aa0": {
+        "id": "MockStakeToken"
+      },
+      "0xA40A2298B02a8597321580fdAD8518A6d6601b6C": {
+        "id": "FOX"
+      },
+      "0x26d1E94963C8b382Ad66320826399E4B30347404": {
+        "id": "CRV"
+      },
+      "0xEC8Ec2A30c3E9Fb0cE7031ac4A52DbdFAD57a0D2": {
+        "id": "DPI"
+      },
+      "0x78dC73Dab92F57DA506F3538A68A2f163dB8c3A0": {
+        "id": "YFI"
+      },
+      "0xF1479810f495a5E1dc5Fe7bC567Ad2b69D4A8052": {
+        "id": "SNX"
+      },
+      "0x63870142f7D3030a5966bC031F0ae113F1CEB406": {
+        "id": "MarketAccessController"
+      },
+      "0xbaE65084Ad10E56012d5c61148f614DF85cbB31a": {
+        "id": "AddressesProviderRegistry"
+      },
+      "0x49eA5c5714B5F0504842d42DEDCe909ea924565E": {
+        "id": "LendingPoolImpl"
+      },
+      "0xa070BaE31a08efb8f9bB98Bb4aDf56fDa3537ceA": {
+        "id": "LendingPoolExtensionImpl"
+      },
+      "0xe04ed89798eb331e515E9D1D93604792b75c0463": {
+        "id": "LendingPoolConfiguratorImpl"
+      },
+      "0xE96680e011FE0Bb5c9646f5463Ba3587962Cd952": {
+        "id": "MockPriceOracle"
+      },
+      "0xe7536f450378748E1BD4645D3c77ec38e0F3ba28": {
+        "id": "MockAggregator"
+      },
+      "0xA13a6C2bD383EcBF8a7A6a6B3B7cfCff3C7C3407": {
+        "id": "MockAggregator"
+      },
+      "0x8dAEc17f8ec64117bA09A44aD1923900B5476A6C": {
+        "id": "MockAggregator"
+      },
+      "0x689d0586F88cDEa1E1003F838DD943415E4EB1e5": {
+        "id": "MockAggregator"
+      },
+      "0x3cE8165eA4300AF4306cA53c6dbf388aF7cC7e3E": {
+        "id": "MockAggregator"
+      },
+      "0x64Ea58f488aD445235A0afE9256B066572c6Abc8": {
+        "id": "OracleRouter"
+      },
+      "0x3c5408De7435Dfa3eB2aF2Edf5E39385f68F69b2": {
+        "id": "WETHGateway"
+      },
+      "0x6602fca48E95F5068506963E3A8930131108048A": {
+        "id": "DefaultReserveInterestRateStrategy-rateStrategyAAVE"
+      },
+      "0xf89AA2f1397e9A0622c8Fc99aB1947E28b5EF876": {
+        "id": "DefaultReserveInterestRateStrategy-rateStrategyVolatileOne"
+      },
+      "0x1a66D6103F8BBf9204E1618F095a80b3E4817C95": {
+        "id": "DefaultReserveInterestRateStrategy-rateStrategyStableTwo"
+      },
+      "0x0EBCa695959e5f138Af772FAa44ce1A9C7aEd921": {
+        "id": "DefaultReserveInterestRateStrategy-rateStrategyStableThree"
+      },
+      "0x417fc1038b2AF553D65F4fF2839efE9f93Ec1eac": {
+        "id": "DefaultReserveInterestRateStrategy-rateStrategyVolatileTwo"
+      },
+      "0xadc8f433eA2371bE71D986d9B131892122969CA6": {
+        "id": "MockUniswapV2Router02"
+      },
+      "0x603A373A1571783bD82b708C20a5A4b019BAB78F": {
+        "id": "UniswapRepayAdapter"
+      },
+      "0x987D8EE0F70EdC8e9651c9E6a1618B8Bc8B9FB61": {
+        "id": "MarketAccessController"
+      },
+      "0x314B40e9232177AB0B54E874A7d351c781eFe44d": {
+        "id": "MockRewardPoolAG"
+      },
+      "0x90b17b801434FB1c48a4f1888dd6C410d11Bda59": {
+        "id": "MockDepositStakeToken"
+      },
+      "0xA3Ab089388B0C1BA83B3496696242FcA3F8eb9D5": {
+        "id": "MockStakedAgfToken"
+      },
+      "0x8b949D7E587518A6ad727ef30C5815De4a16A0D7": {
+        "id": "MockRewardBooster"
+      },
+      "0x5A33C3341Aedf4C5f9bbCeDf52D619D12f76f7Fb": {
+        "id": "MockRewardPoolAGUSDCBoosted"
+      },
+      "0x63A9574f9370D2423bb21b11Bfc844D143A6b00A": {
+        "id": "MockRewardPoolAGFBoosted"
+      }
+    },
+    "named": {
+      "AddressesProviderRegistry": {
+        "address": "0xbaE65084Ad10E56012d5c61148f614DF85cbB31a",
+        "count": 6
+      },
+      "MarketAccessController": {
+        "address": "0x987D8EE0F70EdC8e9651c9E6a1618B8Bc8B9FB61",
+        "count": 16
+      },
+      "LendingRateOracle": {
+        "address": "0x8D0206fEBEB380486729b64bB4cfEDC5b354a6D6",
+        "count": 6
+      },
+      "StaticPriceOracle": {
+        "address": "0x8B5B7a6055E54a36fF574bbE40cf2eA68d5554b3",
+        "count": 1
+      },
+      "OracleRouter": {
+        "address": "0x64Ea58f488aD445235A0afE9256B066572c6Abc8",
+        "count": 6
+      },
+      "MockWETH": {
+        "address": "0x7c2C195CD6D34B8F845992d380aADB2730bB9C6F",
+        "count": 5
+      },
+      "WETH": {
+        "address": "0x7c2C195CD6D34B8F845992d380aADB2730bB9C6F",
+        "count": 5
+      },
+      "DAI": {
+        "address": "0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf",
+        "count": 5
+      },
+      "USDC": {
+        "address": "0x0078371BDeDE8aAc7DeBfFf451B74c5EDB385Af7",
+        "count": 5
+      },
+      "USDT": {
+        "address": "0xf4e77E5Da47AC3125140c470c71cBca77B5c638c",
+        "count": 5
+      },
+      "WBTC": {
+        "address": "0xf784709d2317D872237C4bC22f867d1BAe2913AB",
+        "count": 5
+      },
+      "USD": {
+        "address": "0x3619DbE27d7c1e7E91aA738697Ae7Bc5FC3eACA5",
+        "count": 5
+      },
+      "AAVE": {
+        "address": "0x038B86d9d8FAFdd0a02ebd1A476432877b0107C8",
+        "count": 5
+      },
+      "LINK": {
+        "address": "0x1A1FEe7EeD918BD762173e4dc5EfDB8a78C924A8",
+        "count": 5
+      },
+      "ADAI": {
+        "address": "0x500D1d6A4c7D8Ae28240b47c8FCde034D827fD5e",
+        "count": 5
+      },
+      "AUSDC": {
+        "address": "0xc4905364b78a742ccce7B890A89514061E47068D",
+        "count": 5
+      },
+      "AUSDT": {
+        "address": "0xD6C850aeBFDC46D7F4c207e445cC0d6B0919BDBe",
+        "count": 5
+      },
+      "AWBTC": {
+        "address": "0x8B5B7a6055E54a36fF574bbE40cf2eA68d5554b3",
+        "count": 5
+      },
+      "AWETH": {
+        "address": "0xEcc0a6dbC0bb4D51E4F84A315a9e5B0438cAD4f0",
+        "count": 5
+      },
+      "CDAI": {
+        "address": "0x20Ce94F404343aD2752A2D01b43fa407db9E0D00",
+        "count": 5
+      },
+      "CUSDC": {
+        "address": "0x1d80315fac6aBd3EfeEbE97dEc44461ba7556160",
+        "count": 5
+      },
+      "CUSDT": {
+        "address": "0x2D8553F9ddA85A9B3259F6Bf26911364B85556F5",
+        "count": 5
+      },
+      "CWBTC": {
+        "address": "0x52d3b94181f8654db2530b0fEe1B19173f519C52",
+        "count": 5
+      },
+      "CETH": {
+        "address": "0xd15468525c35BDBC1eD8F2e09A00F8a173437f2f",
+        "count": 5
+      },
+      "WBNB": {
+        "address": "0x7e35Eaf7e8FBd7887ad538D4A38Df5BbD073814a",
+        "count": 5
+      },
+      "WAVAX": {
+        "address": "0x5bcb88A0d20426e451332eE6C4324b0e663c50E0",
+        "count": 5
+      },
+      "WFTM": {
+        "address": "0x3521eF8AaB0323004A6dD8b03CE890F4Ea3A13f5",
+        "count": 5
+      },
+      "WMATIC": {
+        "address": "0x53369fd4680FfE3DfF39Fc6DDa9CfbfD43daeA2E",
+        "count": 5
+      },
+      "BTCB": {
+        "address": "0xB00cC45B4a7d3e1FEE684cFc4417998A1c183e6d",
+        "count": 5
+      },
+      "BCH": {
+        "address": "0x58F132FBB86E21545A4Bace3C19f1C05d86d7A22",
+        "count": 5
+      },
+      "ETH": {
+        "address": "0xa4bcDF64Cdd5451b6ac3743B414124A6299B65FF",
+        "count": 5
+      },
+      "BETH": {
+        "address": "0x22474D350EC2dA53D717E30b96e9a2B7628Ede5b",
+        "count": 5
+      },
+      "BUSD": {
+        "address": "0x5A0773Ff307Bf7C71a832dBB5312237fD3437f9F",
+        "count": 5
+      },
+      "TUSD": {
+        "address": "0x18b9306737eaf6E8FC8e737F488a1AE077b18053",
+        "count": 5
+      },
+      "DOT": {
+        "address": "0xFAe0fd738dAbc8a0426F47437322b6d026A9FD95",
+        "count": 5
+      },
+      "SXP": {
+        "address": "0x6082731fdAba4761277Fb31299ebC782AD3bCf24",
+        "count": 5
+      },
+      "XRP": {
+        "address": "0x8456161947DFc1fC159A0B26c025cD2b4bba0c3e",
+        "count": 5
+      },
+      "ADA": {
+        "address": "0x12080583C4F0211eC382d33a273E6D0f9fAb0F75",
+        "count": 5
+      },
+      "TRX": {
+        "address": "0x5F6CaC05CDF893f029b29F44d368eAeD40e573B6",
+        "count": 5
+      },
+      "LTC": {
+        "address": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+        "count": 5
+      },
+      "DOGE": {
+        "address": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+        "count": 5
+      },
+      "MATIC": {
+        "address": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+        "count": 5
+      },
+      "FIL": {
+        "address": "0x06bA8d8af0dF898D0712DffFb0f862cC51AF45c2",
+        "count": 5
+      },
+      "INJ": {
+        "address": "0xb682dEEf4f8e298d86bFc3e21f50c675151FB974",
+        "count": 5
+      },
+      "CHR": {
+        "address": "0x1750499D05Ed1674d822430FB960d5F6731fDf64",
+        "count": 5
+      },
+      "REEF": {
+        "address": "0xE4C10Db67595aF2Cb4166c8C274e0140f7E43059",
+        "count": 5
+      },
+      "TWT": {
+        "address": "0x099d9fF8F818290C8b5B7Db5bFca84CEebd2714c",
+        "count": 5
+      },
+      "LINA": {
+        "address": "0x85bdE212E66e2BAE510E44Ed59116c1eC712795b",
+        "count": 5
+      },
+      "CAKE": {
+        "address": "0xe1B3b8F6b298b52bCd15357ED29e65e66a4045fF",
+        "count": 5
+      },
+      "XVS": {
+        "address": "0x8731324a6C09a1745bD15009Dc8FcceF11c05F4a",
+        "count": 5
+      },
+      "ALPACA": {
+        "address": "0x00aD4926D7613c8e00cB6CFa61831D5668265724",
+        "count": 5
+      },
+      "UNI": {
+        "address": "0x79dC3dA279A2ADc72210BD00e10951AB9dC70ABc",
+        "count": 5
+      },
+      "SUSHI": {
+        "address": "0xF0B4ACda6D679ea22AC5C4fD1973D0d58eA10ec1",
+        "count": 5
+      },
+      "BIFI": {
+        "address": "0xE78d9772cED3eD5C595d9E438a87602eD86bfE9b",
+        "count": 5
+      },
+      "AUTO": {
+        "address": "0xA17827A991EB72793fa437e580B084ceB25Ab0f9",
+        "count": 5
+      },
+      "DODO": {
+        "address": "0x8565Fb7dfB5D36b2aA00086ffc920cfF20db4F2f",
+        "count": 5
+      },
+      "ALPHA": {
+        "address": "0x93C1e99C8dD990D77232821f9476c308FBad47f5",
+        "count": 5
+      },
+      "MIM": {
+        "address": "0x57965788BD1a93639CE738a58176e1A3d6F4d04f",
+        "count": 5
+      },
+      "UST": {
+        "address": "0xBbC60A8fAf66552554e460d55Ac0563Fb9e76c01",
+        "count": 1
+      },
+      "JOE": {
+        "address": "0xBbC60A8fAf66552554e460d55Ac0563Fb9e76c01",
+        "count": 5
+      },
+      "QI": {
+        "address": "0xdDD96662ea11dA6F289A5D00da41Ec5F3b67d2b4",
+        "count": 5
+      },
+      "SPELL": {
+        "address": "0xecE50C63d1Ae02Ba306c2b2E1579d0327220196e",
+        "count": 5
+      },
+      "LendingPoolImpl": {
+        "address": "0x49eA5c5714B5F0504842d42DEDCe909ea924565E",
+        "count": 7
+      },
+      "LendingPoolExtensionImpl": {
+        "address": "0xa070BaE31a08efb8f9bB98Bb4aDf56fDa3537ceA",
+        "count": 5
+      },
+      "LendingPoolConfiguratorImpl": {
+        "address": "0xe04ed89798eb331e515E9D1D93604792b75c0463",
+        "count": 5
+      },
+      "MockPriceOracle": {
+        "address": "0xE96680e011FE0Bb5c9646f5463Ba3587962Cd952",
+        "count": 5
+      },
+      "MockAggregator": {
+        "address": "0xBAdDA897176B5A94FD4A0eCb59678DDA29181963",
+        "count": 90
+      },
+      "WETHGateway": {
+        "address": "0x3c5408De7435Dfa3eB2aF2Edf5E39385f68F69b2",
+        "count": 5
+      },
+      "ProtocolDataProvider": {
+        "address": "0xA4765Ff72A9F3CfE73089bb2c3a41B838DF71574",
+        "count": 5
+      },
+      "TreasuryImpl": {
+        "address": "0xe2607EabC87fd0A4856840bF23da8458cDF0434F",
+        "count": 6
+      },
+      "DefaultReserveInterestRateStrategy-rateStrategyAAVE": {
+        "address": "0x6602fca48E95F5068506963E3A8930131108048A",
+        "count": 5
+      },
+      "DefaultReserveInterestRateStrategy-rateStrategyVolatileOne": {
+        "address": "0xf89AA2f1397e9A0622c8Fc99aB1947E28b5EF876",
+        "count": 5
+      },
+      "DefaultReserveInterestRateStrategy-rateStrategyStableTwo": {
+        "address": "0x1a66D6103F8BBf9204E1618F095a80b3E4817C95",
+        "count": 5
+      },
+      "DefaultReserveInterestRateStrategy-rateStrategyStableThree": {
+        "address": "0x0EBCa695959e5f138Af772FAa44ce1A9C7aEd921",
+        "count": 5
+      },
+      "DefaultReserveInterestRateStrategy-rateStrategyVolatileTwo": {
+        "address": "0x417fc1038b2AF553D65F4fF2839efE9f93Ec1eac",
+        "count": 5
+      },
+      "DefaultReserveInterestRateStrategy-rateStrategyWETH": {
+        "address": "0x8BFFF31B1757da579Bb5B118489568526F7fb6D4",
+        "count": 5
+      },
+      "StableDebtTokenImpl": {
+        "address": "0x0459c841b02Aee8730730C737582c53B20a27288",
+        "count": 5
+      },
+      "VariableDebtTokenImpl": {
+        "address": "0x2530ce07D254eA185E8e0bCC37a39e2FbA3bE548",
+        "count": 5
+      },
+      "DepositTokenImpl": {
+        "address": "0x0Cf45557d25a4e4c0F1aC65EF6c48ae67c61a0E6",
+        "count": 5
+      },
+      "MockFlashLoanReceiver": {
+        "address": "0xAa7BC1924711B77A0F3Aaebdd550BfeDDDbaf3cd",
+        "count": 5
+      },
+      "MockUniswapV2Router02": {
+        "address": "0xadc8f433eA2371bE71D986d9B131892122969CA6",
+        "count": 5
+      },
+      "UniswapLiquiditySwapAdapter": {
+        "address": "0xadcD6f616fCEEbEd731B2B3F01B8bd51A08b5CbD",
+        "count": 5
+      },
+      "UniswapRepayAdapter": {
+        "address": "0x603A373A1571783bD82b708C20a5A4b019BAB78F",
+        "count": 5
+      },
+      "FlashLiquidationAdapter": {
+        "address": "0xFf130817Aa9863B3D809A2A11617c05646245d80",
+        "count": 5
+      },
+      "MockAgfToken": {
+        "address": "0x4E43773D3A3aca08449fe18D3f26759CD43CBC2b",
+        "count": 11
+      },
+      "MockRewardFreezer": {
+        "address": "0x5D74e15E36492a9CC6fda503b3cFf0CA10d90a83",
+        "count": 9
+      },
+      "PermitFreezerRewardPool": {
+        "address": "0x500D1d6A4c7D8Ae28240b47c8FCde034D827fD5e",
+        "count": 7
+      },
+      "MockRewardPoolAGFSeparate": {
+        "address": "0xD6C850aeBFDC46D7F4c207e445cC0d6B0919BDBe",
+        "count": 7
+      },
+      "TeamRewardPool": {
+        "address": "0x20Ce94F404343aD2752A2D01b43fa407db9E0D00",
+        "count": 7
+      },
+      "MockTokenLocker": {
+        "address": "0x2D8553F9ddA85A9B3259F6Bf26911364B85556F5",
+        "count": 7
+      },
+      "MockRewardBooster": {
+        "address": "0x8b949D7E587518A6ad727ef30C5815De4a16A0D7",
+        "count": 3
+      },
+      "MockDecayingTokenLocker": {
+        "address": "0x2F224F22dE1D1adFece39B1939490d9DEAfBfF57",
+        "count": 1
+      },
+      "MockDefaultReserveInterestRateStrategy": {
+        "address": "0x2dD8146Ad2138ac61F93E549f8F917927B47E28a",
+        "count": 1
+      },
+      "MockReferralRewardPool": {
+        "address": "0xd4e934C2749CA8C1618659D02E7B28B074bf4df7",
+        "count": 1
+      },
+      "MockTreasuryRewardPool": {
+        "address": "0x8280D40C9E9F04229D2435EAad6e0011309ce81B",
+        "count": 1
+      },
+      "TreasuryRewardPool": {
+        "address": "0xB7b9568073C9e745acD84eEb30F1c32F74Ba4946",
+        "count": 1
+      },
+      "AGFTokenImpl": {
+        "address": "0x48fc85A6fcD880e2421586f4F9116f14e854E109",
+        "count": 1
+      },
+      "StakeConfiguratorImpl": {
+        "address": "0xe6688b6Cc79268D2e39f799C08673034a5350F13",
+        "count": 1
+      },
+      "StakeTokenImpl": {
+        "address": "0x666D47050E77ADB0B04076fB35DDcb74e95D1d7C",
+        "count": 1
+      },
+      "MockStakeToken": {
+        "address": "0xE03C10626D77391a3EE15Fe9e4E859e5389b9aa0",
+        "count": 1
+      },
+      "WXDAI": {
+        "address": "0x0D8448C0fBB84c30395838C8b3fD64722ea94532",
+        "count": 4
+      },
+      "GNO": {
+        "address": "0x053568617FFccEe2F75073975CC0e1549Ff9db71",
+        "count": 4
+      },
+      "FOX": {
+        "address": "0xA40A2298B02a8597321580fdAD8518A6d6601b6C",
+        "count": 4
+      },
+      "CRV": {
+        "address": "0x26d1E94963C8b382Ad66320826399E4B30347404",
+        "count": 4
+      },
+      "DPI": {
+        "address": "0xEC8Ec2A30c3E9Fb0cE7031ac4A52DbdFAD57a0D2",
+        "count": 4
+      },
+      "PERP": {
+        "address": "0xD036a8F254ef782cb93af4F829A1568E992c3864",
+        "count": 4
+      },
+      "YFI": {
+        "address": "0x78dC73Dab92F57DA506F3538A68A2f163dB8c3A0",
+        "count": 4
+      },
+      "GRT": {
+        "address": "0xb81145Beaa1D00c6A99f8C342c6ce354019Ff737",
+        "count": 4
+      },
+      "SNX": {
+        "address": "0xF1479810f495a5E1dc5Fe7bC567Ad2b69D4A8052",
+        "count": 4
+      },
+      "MKR": {
+        "address": "0xA48096237053a0B74E15cEd6FA33F7c96A5acf50",
+        "count": 4
+      },
+      "MockRewardPoolAG": {
+        "address": "0x314B40e9232177AB0B54E874A7d351c781eFe44d",
+        "count": 2
+      },
+      "MockDepositStakeToken": {
+        "address": "0x90b17b801434FB1c48a4f1888dd6C410d11Bda59",
+        "count": 2
+      },
+      "MockStakedAgfToken": {
+        "address": "0xA3Ab089388B0C1BA83B3496696242FcA3F8eb9D5",
+        "count": 2
+      },
+      "MockRewardPoolAGBoosted": {
+        "address": "0xCC5F3Be6e695bD0239dFd0efC8E9FFC6E969D29e",
+        "count": 2
+      },
+      "MockRewardPoolAGUSDCBoosted": {
+        "address": "0x5A33C3341Aedf4C5f9bbCeDf52D619D12f76f7Fb",
+        "count": 2
+      },
+      "MockRewardPoolAGFBoosted": {
+        "address": "0x63A9574f9370D2423bb21b11Bfc844D143A6b00A",
+        "count": 2
+      }
+    }
+  },
+  "dockerOrig": {
+    "instance": {
+      "0x7c2C195CD6D34B8F845992d380aADB2730bB9C6F": {
+        "id": "AddressesProviderRegistry",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf": {
+        "id": "MarketAccessController",
+        "verify": {
+          "args": "[\"Augmented genesis market\"]"
+        }
+      },
+      "0xc4905364b78a742ccce7B890A89514061E47068D": {
+        "id": "LendingRateOracle",
+        "verify": {
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\"]"
+        }
+      },
+      "0x8B5B7a6055E54a36fF574bbE40cf2eA68d5554b3": {
+        "id": "StaticPriceOracle",
+        "verify": {
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",[],[]]"
+        }
+      },
+      "0xEcc0a6dbC0bb4D51E4F84A315a9e5B0438cAD4f0": {
+        "id": "OracleRouter",
+        "verify": {
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",[\"0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab\",\"0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7\",\"0xc7198437980c041c805a1edcba50c1ce5db95118\",\"0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664\",\"0xd586e7f844cea2f87f50152665bcbc2c279d8d70\",\"0x130966628846BFd36ff31a822705796e8cb8C18D\",\"0x50b7545627a5162f82a992c33b87adc75187b218\",\"0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd\",\"0x8729438eb15e2c8b576fcc6aecda6a148776c0f5\",\"0xce1bffbd5374dac86a2893119683f4911a2f7814\",\"0x5947bb275c521040051d82396192181b413227a3\",\"0x63a72806098bd3d9520cc43356dd78afe5d386d9\"],[\"0x976B3D034E162d8bD72D6b9C989d545b839003b0\",\"0x0A77230d17318075983913bC2145DB16C7366156\",\"0xEBE676ee90Fe1112671f19b6B7459bC678B67e8a\",\"0xF096872672F44d6EBA71458D74fe67F9a77a23B9\",\"0x51D7180edA2260cc4F6e4EebB82FEF5c3c2B8300\",\"0x54EdAB30a7134A16a54218AE64C73e1DAf48a8Fb\",\"0x2779D32d5166BAaa2B2b658333bA7e6Ec0C65743\",\"0x02D35d3a8aC3e1626d3eE09A78Dd87286F5E8e3a\",\"0x36E039e6391A5E7A7267650979fdf613f659be5D\",\"0x4F3ddF9378a4865cf4f28BE51E10AECb83B7daeE\",\"0x49ccd9ca821EfEab2b98c60dC60F518E765EDe9a\",\"0x3CA13391E9fb38a75330fb28f8cc2eB3D9ceceED\"],\"0x8B5B7a6055E54a36fF574bbE40cf2eA68d5554b3\",\"0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96\",\"100000000\"]"
+        }
+      },
+      "0x1d80315fac6aBd3EfeEbE97dEc44461ba7556160": {
+        "id": "LendingPoolImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x52d3b94181f8654db2530b0fEe1B19173f519C52": {
+        "id": "LendingPoolExtensionImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x7e35Eaf7e8FBd7887ad538D4A38Df5BbD073814a": {
+        "id": "LendingPoolConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x3521eF8AaB0323004A6dD8b03CE890F4Ea3A13f5": {
+        "id": "WETHGateway",
+        "verify": {
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7\"]"
+        }
+      },
+      "0xB00cC45B4a7d3e1FEE684cFc4417998A1c183e6d": {
+        "id": "ProtocolDataProvider",
+        "verify": {
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\"]"
+        }
+      },
+      "0xa4bcDF64Cdd5451b6ac3743B414124A6299B65FF": {
+        "id": "UniswapLiquiditySwapAdapter",
+        "verify": {
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0x60aE616a2155Ee3d9A68541Ba4544862310933d4\"]"
+        }
+      },
+      "0x22474D350EC2dA53D717E30b96e9a2B7628Ede5b": {
+        "id": "UniswapRepayAdapter",
+        "verify": {
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0x60aE616a2155Ee3d9A68541Ba4544862310933d4\"]"
+        }
+      },
+      "0x5A0773Ff307Bf7C71a832dBB5312237fD3437f9F": {
+        "id": "FlashLiquidationAdapter",
+        "verify": {
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0x60aE616a2155Ee3d9A68541Ba4544862310933d4\"]"
+        }
+      },
+      "0xFAe0fd738dAbc8a0426F47437322b6d026A9FD95": {
+        "id": "TreasuryImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x8456161947DFc1fC159A0B26c025cD2b4bba0c3e": {
+        "id": "DefaultReserveInterestRateStrategy-S_80_0_8_200_10_200",
+        "verify": {
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"800000000000000000000000000\",\"0\",\"80000000000000000000000000\",\"2000000000000000000000000000\",\"100000000000000000000000000\",\"2000000000000000000000000000\"]"
+        }
+      },
+      "0x12080583C4F0211eC382d33a273E6D0f9fAb0F75": {
+        "id": "DefaultReserveInterestRateStrategy-S_90_0_4_100_2_100",
+        "verify": {
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"900000000000000000000000000\",\"0\",\"40000000000000000000000000\",\"1000000000000000000000000000\",\"20000000000000000000000000\",\"1000000000000000000000000000\"]"
+        }
+      },
+      "0x5F6CaC05CDF893f029b29F44d368eAeD40e573B6": {
+        "id": "DefaultReserveInterestRateStrategy-S_70_0_15_300_15_300",
+        "verify": {
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"700000000000000000000000000\",\"0\",\"150000000000000000000000000\",\"3000000000000000000000000000\",\"150000000000000000000000000\",\"3000000000000000000000000000\"]"
+        }
+      },
+      "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df": {
+        "id": "StableDebtTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259": {
+        "id": "VariableDebtTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E": {
+        "id": "DepositTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x8731324a6C09a1745bD15009Dc8FcceF11c05F4a": {
+        "id": "StakeConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x72b49bFe20362c3E1904236324Ac470e38351b9d": {
+        "id": "ProxyAdmin-StakeConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x79dC3dA279A2ADc72210BD00e10951AB9dC70ABc": {
+        "id": "RewardConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xc24bb1B014Ff8fb19774dC5a7254EF00ff4089D9": {
+        "id": "ProxyAdmin-RewardConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xE78d9772cED3eD5C595d9E438a87602eD86bfE9b": {
+        "id": "AGFTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x57965788BD1a93639CE738a58176e1A3d6F4d04f": {
+        "id": "RewardBoosterImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x0D8448C0fBB84c30395838C8b3fD64722ea94532": {
+        "id": "XAGFTokenV1Impl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x26d1E94963C8b382Ad66320826399E4B30347404": {
+        "id": "DepositStakeTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xEC8Ec2A30c3E9Fb0cE7031ac4A52DbdFAD57a0D2": {
+        "id": "StakeTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xF1479810f495a5E1dc5Fe7bC567Ad2b69D4A8052": {
+        "id": "PriceFeedUniEthPair-TraderJoeAVAXAGF",
+        "verify": {
+          "args": "[\"0xA9d253610315Cc0fEba544E8eD1a571aF2D4DA35\",\"0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7\"]"
+        }
+      },
+      "0xc85759553AEE2D4125aFa8a9421AAf5397b96E6b": {
+        "id": "TeamRewardPool",
+        "verify": {
+          "args": "[\"0x83864243Ee5C1E94A87f411F85abf0e16ad94AdB\",\"0\",\"1000\",\"0x9A48bCEB575Df540EE0038E01dB59DEFc343E514\"]"
+        }
+      },
+      "0xFDAAc0fDAEBbe00B8A3EBB119367B6CF84E0F39c": {
+        "id": "ReferralRewardPoolV1Impl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x0c6b39591433c4B3Ee0f8aE7Db3448ABE9f02109": {
+        "id": "TreasuryRewardPool",
+        "verify": {
+          "args": "[\"0x83864243Ee5C1E94A87f411F85abf0e16ad94AdB\",\"0\",\"2000\"]"
+        }
+      },
+      "0x49eA5c5714B5F0504842d42DEDCe909ea924565E": {
+        "id": "PermitFreezerRewardPool-RetroPool",
+        "verify": {
+          "args": "[\"0x83864243Ee5C1E94A87f411F85abf0e16ad94AdB\",\"10000000000000000000000000\",\"1635724800\",\"RetroPool\"]"
+        }
+      },
+      "0x6B22eee9Ae8aaE0893f465dDDD63Fbd394d9b4e4": {
+        "id": "PriceFeedUniEthToken-AGF-WAVAX",
+        "verify": {
+          "args": "[\"0xA9d253610315Cc0fEba544E8eD1a571aF2D4DA35\",\"0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7\",\"100000000\"]"
+        }
+      }
+    },
+    "named": {
+      "AddressesProviderRegistry": {
+        "address": "0x7c2C195CD6D34B8F845992d380aADB2730bB9C6F",
+        "count": 1
+      },
+      "MarketAccessController": {
+        "address": "0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf",
+        "count": 1
+      },
+      "LendingRateOracle": {
+        "address": "0xc4905364b78a742ccce7B890A89514061E47068D",
+        "count": 1
+      },
+      "StaticPriceOracle": {
+        "address": "0x8B5B7a6055E54a36fF574bbE40cf2eA68d5554b3",
+        "count": 1
+      },
+      "OracleRouter": {
+        "address": "0xEcc0a6dbC0bb4D51E4F84A315a9e5B0438cAD4f0",
+        "count": 1
+      },
+      "LendingPoolImpl": {
+        "address": "0x1d80315fac6aBd3EfeEbE97dEc44461ba7556160",
+        "count": 1
+      },
+      "LendingPoolExtensionImpl": {
+        "address": "0x52d3b94181f8654db2530b0fEe1B19173f519C52",
+        "count": 1
+      },
+      "LendingPoolConfiguratorImpl": {
+        "address": "0x7e35Eaf7e8FBd7887ad538D4A38Df5BbD073814a",
+        "count": 1
+      },
+      "WETHGateway": {
+        "address": "0x3521eF8AaB0323004A6dD8b03CE890F4Ea3A13f5",
+        "count": 1
+      },
+      "ProtocolDataProvider": {
+        "address": "0xB00cC45B4a7d3e1FEE684cFc4417998A1c183e6d",
+        "count": 1
+      },
+      "UniswapLiquiditySwapAdapter": {
+        "address": "0xa4bcDF64Cdd5451b6ac3743B414124A6299B65FF",
+        "count": 1
+      },
+      "UniswapRepayAdapter": {
+        "address": "0x22474D350EC2dA53D717E30b96e9a2B7628Ede5b",
+        "count": 1
+      },
+      "FlashLiquidationAdapter": {
+        "address": "0x5A0773Ff307Bf7C71a832dBB5312237fD3437f9F",
+        "count": 1
+      },
+      "TreasuryImpl": {
+        "address": "0xFAe0fd738dAbc8a0426F47437322b6d026A9FD95",
+        "count": 1
+      },
+      "DefaultReserveInterestRateStrategy-S_80_0_8_200_10_200": {
+        "address": "0x8456161947DFc1fC159A0B26c025cD2b4bba0c3e",
+        "count": 1
+      },
+      "DefaultReserveInterestRateStrategy-S_90_0_4_100_2_100": {
+        "address": "0x12080583C4F0211eC382d33a273E6D0f9fAb0F75",
+        "count": 1
+      },
+      "DefaultReserveInterestRateStrategy-S_70_0_15_300_15_300": {
+        "address": "0x5F6CaC05CDF893f029b29F44d368eAeD40e573B6",
+        "count": 1
+      },
+      "StableDebtTokenImpl": {
+        "address": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+        "count": 1
+      },
+      "VariableDebtTokenImpl": {
+        "address": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+        "count": 1
+      },
+      "DepositTokenImpl": {
+        "address": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+        "count": 1
+      },
+      "StakeConfiguratorImpl": {
+        "address": "0x8731324a6C09a1745bD15009Dc8FcceF11c05F4a",
+        "count": 1
+      },
+      "ProxyAdmin-StakeConfiguratorImpl": {
+        "address": "0x72b49bFe20362c3E1904236324Ac470e38351b9d",
+        "count": 1
+      },
+      "RewardConfiguratorImpl": {
+        "address": "0x79dC3dA279A2ADc72210BD00e10951AB9dC70ABc",
+        "count": 1
+      },
+      "ProxyAdmin-RewardConfiguratorImpl": {
+        "address": "0xc24bb1B014Ff8fb19774dC5a7254EF00ff4089D9",
+        "count": 1
+      },
+      "AGFTokenImpl": {
+        "address": "0xE78d9772cED3eD5C595d9E438a87602eD86bfE9b",
+        "count": 1
+      },
+      "RewardBoosterImpl": {
+        "address": "0x57965788BD1a93639CE738a58176e1A3d6F4d04f",
+        "count": 1
+      },
+      "XAGFTokenV1Impl": {
+        "address": "0x0D8448C0fBB84c30395838C8b3fD64722ea94532",
+        "count": 1
+      },
+      "DepositStakeTokenImpl": {
+        "address": "0x26d1E94963C8b382Ad66320826399E4B30347404",
+        "count": 1
+      },
+      "StakeTokenImpl": {
+        "address": "0xEC8Ec2A30c3E9Fb0cE7031ac4A52DbdFAD57a0D2",
+        "count": 1
+      },
+      "PriceFeedUniEthPair-TraderJoeAVAXAGF": {
+        "address": "0xF1479810f495a5E1dc5Fe7bC567Ad2b69D4A8052",
+        "count": 1
+      },
+      "TeamRewardPool": {
+        "address": "0xc85759553AEE2D4125aFa8a9421AAf5397b96E6b",
+        "count": 1
+      },
+      "ReferralRewardPoolV1Impl": {
+        "address": "0xFDAAc0fDAEBbe00B8A3EBB119367B6CF84E0F39c",
+        "count": 1
+      },
+      "TreasuryRewardPool": {
+        "address": "0x0c6b39591433c4B3Ee0f8aE7Db3448ABE9f02109",
+        "count": 1
+      },
+      "PermitFreezerRewardPool-RetroPool": {
+        "address": "0x49eA5c5714B5F0504842d42DEDCe909ea924565E",
+        "count": 1
+      },
+      "PriceFeedUniEthToken-AGF-WAVAX": {
+        "address": "0x6B22eee9Ae8aaE0893f465dDDD63Fbd394d9b4e4",
+        "count": 1
+      }
+    },
+    "external": {
+      "0x95b12A0c659fF8D3049c9bb3A7B5587C88E08111": {
+        "id": "LENDING_POOL",
+        "verify": {
+          "impl": "0x1d80315fac6aBd3EfeEbE97dEc44461ba7556160",
+          "subType": "core",
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0x1d80315fac6aBd3EfeEbE97dEc44461ba7556160\",\"0xc4d66de80000000000000000000000008858eeb3dfffa017d4bce9801d340d36cf895ccf\"]"
+        }
+      },
+      "0x8986F739F3C7A371CbF852dEEdDEd02160552164": {
+        "id": "LENDING_POOL_CONFIGURATOR",
+        "verify": {
+          "impl": "0x7e35Eaf7e8FBd7887ad538D4A38Df5BbD073814a",
+          "subType": "core",
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0x7e35Eaf7e8FBd7887ad538D4A38Df5BbD073814a\",\"0xc4d66de80000000000000000000000008858eeb3dfffa017d4bce9801d340d36cf895ccf\"]"
+        }
+      },
+      "0x778cb9d6E8d54f729C21f23440d7EA3A61A87026": {
+        "id": "TREASURY",
+        "verify": {
+          "impl": "0xFAe0fd738dAbc8a0426F47437322b6d026A9FD95",
+          "subType": "core",
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0xFAe0fd738dAbc8a0426F47437322b6d026A9FD95\",\"0xc4d66de80000000000000000000000008858eeb3dfffa017d4bce9801d340d36cf895ccf\"]"
+        }
+      },
+      "0x37855Bcf2d3125dca06D8A4E09e8A08D51Dc829c": {
+        "id": "POOL_TOKEN_agWAVAX",
+        "verify": {
+          "impl": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000b31f66aa3c1e785363f0875a1b74e27b85fd66c7000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000174175676d656e746564204465706f7369742057415641580000000000000000000000000000000000000000000000000000000000000000000000000000000007616757415641580000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x9617d574B43209FfEDcDFcBbE7E864E7bE63eE03": {
+        "id": "POOL_TOKEN_agvWAVAX",
+        "verify": {
+          "impl": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000b31f66aa3c1e785363f0875a1b74e27b85fd66c7000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e74656420446562742057415641580000000000000000000000000000000000000000000000000000000000000000000000000000000000000008616776574156415800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x7D4Ce861B2E51642c8Bd5440A0ddFaA0DF2B912c": {
+        "id": "POOL_TOKEN_agsWAVAX",
+        "verify": {
+          "impl": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000b31f66aa3c1e785363f0875a1b74e27b85fd66c7000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001b4175676d656e74656420537461626c65204465627420574156415800000000000000000000000000000000000000000000000000000000000000000000000008616773574156415800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xD06fdd3831a1F777863A3f18c00e05De3b1F70Ae": {
+        "id": "POOL_TOKEN_agWBTC",
+        "verify": {
+          "impl": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a8702600000000000000000000000050b7545627a5162f82a992c33b87adc75187b218000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000164175676d656e746564204465706f7369742057425443000000000000000000000000000000000000000000000000000000000000000000000000000000000006616757425443000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x6fD1194739897a5FBB0EB659835fEd562351bFCa": {
+        "id": "POOL_TOKEN_agvWBTC",
+        "verify": {
+          "impl": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a8702600000000000000000000000050b7545627a5162f82a992c33b87adc75187b218000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e74656420446562742057425443000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007616776574254430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xc414075Dc0D64b02FcbDB832a73De46b83541d9A": {
+        "id": "POOL_TOKEN_agsWBTC",
+        "verify": {
+          "impl": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a8702600000000000000000000000050b7545627a5162f82a992c33b87adc75187b218000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001a4175676d656e74656420537461626c65204465627420574254430000000000000000000000000000000000000000000000000000000000000000000000000007616773574254430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x8f33cf026d104D3E32D12E184412a71D57277961": {
+        "id": "POOL_TOKEN_agWETH",
+        "verify": {
+          "impl": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a8702600000000000000000000000049d5c2bdffac6ce2bfdb6640f4f80f226bc10bab000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000164175676d656e746564204465706f7369742057455448000000000000000000000000000000000000000000000000000000000000000000000000000000000006616757455448000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x9B260357c36257dC87dc8EC011A33C2E9E454268": {
+        "id": "POOL_TOKEN_agvWETH",
+        "verify": {
+          "impl": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a8702600000000000000000000000049d5c2bdffac6ce2bfdb6640f4f80f226bc10bab000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e74656420446562742057455448000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007616776574554480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x3d238Dd88f834E70f8265f5268f310a1C57a02C8": {
+        "id": "POOL_TOKEN_agsWETH",
+        "verify": {
+          "impl": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a8702600000000000000000000000049d5c2bdffac6ce2bfdb6640f4f80f226bc10bab000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001a4175676d656e74656420537461626c65204465627420574554480000000000000000000000000000000000000000000000000000000000000000000000000007616773574554480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x9d368DF833e504B27402aA9a4e88fb1BD5fe20E6": {
+        "id": "POOL_TOKEN_agUSDT",
+        "verify": {
+          "impl": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000c7198437980c041c805a1edcba50c1ce5db95118000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000164175676d656e746564204465706f7369742055534454000000000000000000000000000000000000000000000000000000000000000000000000000000000006616755534454000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xB0ecF12535e7daE8A781B0f816cE74cba2220751": {
+        "id": "POOL_TOKEN_agvUSDT",
+        "verify": {
+          "impl": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000c7198437980c041c805a1edcba50c1ce5db95118000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e74656420446562742055534454000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007616776555344540000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x1880edbdD1159BF5293EfDd7A33B3Ed699D8b446": {
+        "id": "POOL_TOKEN_agsUSDT",
+        "verify": {
+          "impl": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000c7198437980c041c805a1edcba50c1ce5db95118000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001a4175676d656e74656420537461626c65204465627420555344540000000000000000000000000000000000000000000000000000000000000000000000000007616773555344540000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xb81ab7181abE7C7eb3ac769F2ce5d6D4d2b43d35": {
+        "id": "POOL_TOKEN_agDAI",
+        "verify": {
+          "impl": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000d586e7f844cea2f87f50152665bcbc2c279d8d70000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000154175676d656e746564204465706f7369742044414900000000000000000000000000000000000000000000000000000000000000000000000000000000000005616744414900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x4EEF43eAC20031CAeA367eAEAbBB50313ea6cC57": {
+        "id": "POOL_TOKEN_agvDAI",
+        "verify": {
+          "impl": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000d586e7f844cea2f87f50152665bcbc2c279d8d70000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000124175676d656e74656420446562742044414900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006616776444149000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x2d17078741c3ABdE24E0bF0d558D3a84BE79D00d": {
+        "id": "POOL_TOKEN_agsDAI",
+        "verify": {
+          "impl": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000d586e7f844cea2f87f50152665bcbc2c279d8d70000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000194175676d656e74656420537461626c65204465627420444149000000000000000000000000000000000000000000000000000000000000000000000000000006616773444149000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xaD1F59840e11e70Ce38CB18bF2FD1f004D6b84bb": {
+        "id": "POOL_TOKEN_agUSDC",
+        "verify": {
+          "impl": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000a7d7079b0fead91f3e65f86e8915cb59c1a4c664000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000164175676d656e746564204465706f7369742055534443000000000000000000000000000000000000000000000000000000000000000000000000000000000006616755534443000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x2C3ae21960F508feC952096940F357C7e25f458b": {
+        "id": "POOL_TOKEN_agvUSDC",
+        "verify": {
+          "impl": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000a7d7079b0fead91f3e65f86e8915cb59c1a4c664000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e74656420446562742055534443000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007616776555344430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xd0B489F8e3db4B9c9b3C4fe30f3F0254C781448D": {
+        "id": "POOL_TOKEN_agsUSDC",
+        "verify": {
+          "impl": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000a7d7079b0fead91f3e65f86e8915cb59c1a4c664000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001a4175676d656e74656420537461626c65204465627420555344430000000000000000000000000000000000000000000000000000000000000000000000000007616773555344430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x529aBFf1386fEF14F6134d751105619F99De2CAa": {
+        "id": "POOL_TOKEN_agMIM",
+        "verify": {
+          "impl": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000130966628846bfd36ff31a822705796e8cb8c18d000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000154175676d656e746564204465706f736974204d494d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000561674d494d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xADd938b7Fe75a0F49c68c5eC55c79C778D785fd2": {
+        "id": "POOL_TOKEN_agvMIM",
+        "verify": {
+          "impl": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000130966628846bfd36ff31a822705796e8cb8c18d000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000124175676d656e7465642044656274204d494d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000066167764d494d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x9C25C6720C1eE371BC93E0750c895634520e6C63": {
+        "id": "POOL_TOKEN_agsMIM",
+        "verify": {
+          "impl": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000130966628846bfd36ff31a822705796e8cb8c18d000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000194175676d656e74656420537461626c652044656274204d494d0000000000000000000000000000000000000000000000000000000000000000000000000000066167734d494d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x5B001bbfA753B7FDAd504d7A9D8e9c496f68f6dd": {
+        "id": "POOL_TOKEN_agLINK",
+        "verify": {
+          "impl": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a870260000000000000000000000005947bb275c521040051d82396192181b413227a3000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000164175676d656e746564204465706f736974204c494e4b00000000000000000000000000000000000000000000000000000000000000000000000000000000000661674c494e4b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x8eBCA80f74d82b5289b57d99f8Acc08dbA54DCf4": {
+        "id": "POOL_TOKEN_agvLINK",
+        "verify": {
+          "impl": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a870260000000000000000000000005947bb275c521040051d82396192181b413227a3000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e7465642044656274204c494e4b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000076167764c494e4b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x2bA0fF1b18E5B52E3bb5408b21CC6E15EA6BB7eC": {
+        "id": "POOL_TOKEN_agsLINK",
+        "verify": {
+          "impl": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a870260000000000000000000000005947bb275c521040051d82396192181b413227a3000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001a4175676d656e74656420537461626c652044656274204c494e4b00000000000000000000000000000000000000000000000000000000000000000000000000076167734c494e4b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xb488A6e242F08C9a2B616D2df3Bc6a322de850Ec": {
+        "id": "POOL_TOKEN_agAAVE",
+        "verify": {
+          "impl": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a8702600000000000000000000000063a72806098bd3d9520cc43356dd78afe5d386d9000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000164175676d656e746564204465706f7369742041415645000000000000000000000000000000000000000000000000000000000000000000000000000000000006616741415645000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x329fcb5936E8FB856ec20E3E4eD80aC8DD6dDbFa": {
+        "id": "POOL_TOKEN_agvAAVE",
+        "verify": {
+          "impl": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a8702600000000000000000000000063a72806098bd3d9520cc43356dd78afe5d386d9000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e74656420446562742041415645000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007616776414156450000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x9202f7ee3a62ED26F0A9d55b41cc691710c6b063": {
+        "id": "POOL_TOKEN_agsAAVE",
+        "verify": {
+          "impl": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a8702600000000000000000000000063a72806098bd3d9520cc43356dd78afe5d386d9000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001a4175676d656e74656420537461626c65204465627420414156450000000000000000000000000000000000000000000000000000000000000000000000000007616773414156450000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x746b247e7193B770cbf7EfaE2185D0b3c8EE927C": {
+        "id": "POOL_TOKEN_agJOE",
+        "verify": {
+          "impl": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a870260000000000000000000000006e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000154175676d656e746564204465706f736974204a4f450000000000000000000000000000000000000000000000000000000000000000000000000000000000000561674a4f4500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xce89d0620275aDd167a6562828AA64F341A802E4": {
+        "id": "POOL_TOKEN_agvJOE",
+        "verify": {
+          "impl": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a870260000000000000000000000006e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000124175676d656e7465642044656274204a4f45000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000066167764a4f45000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x4cE5a6cFFfB06e2d29e76fc1BD0b2F3CA86e4280": {
+        "id": "POOL_TOKEN_agsJOE",
+        "verify": {
+          "impl": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a870260000000000000000000000006e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000194175676d656e74656420537461626c652044656274204a4f450000000000000000000000000000000000000000000000000000000000000000000000000000066167734a4f45000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x13931CB4dD24bBf11C317934dd82AA954Bf2Dc91": {
+        "id": "POOL_TOKEN_agQI",
+        "verify": {
+          "impl": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a870260000000000000000000000008729438eb15e2c8b576fcc6aecda6a148776c0f5000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564204465706f7369742051490000000000000000000000000000000000000000000000000000000000000000000000000000000000000004616751490000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xFD1C4d5c78780A1ED6f99640951343274e93f1B7": {
+        "id": "POOL_TOKEN_agvQI",
+        "verify": {
+          "impl": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a870260000000000000000000000008729438eb15e2c8b576fcc6aecda6a148776c0f5000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000114175676d656e74656420446562742051490000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005616776514900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x63436aCc3865E99d6310A48C640845F835d9516e": {
+        "id": "POOL_TOKEN_agsQI",
+        "verify": {
+          "impl": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a870260000000000000000000000008729438eb15e2c8b576fcc6aecda6a148776c0f5000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000184175676d656e74656420537461626c65204465627420514900000000000000000000000000000000000000000000000000000000000000000000000000000005616773514900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x133Bb574CA91Bb2F63D59369d0458AE115602308": {
+        "id": "POOL_TOKEN_agSPELL",
+        "verify": {
+          "impl": "0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x0C6c3C47A1f650809B0D1048FDf9603e09473D7E\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000ce1bffbd5374dac86a2893119683f4911a2f7814000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000174175676d656e746564204465706f736974205350454c4c000000000000000000000000000000000000000000000000000000000000000000000000000000000761675350454c4c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xd5020A129276167EFF7d74E4BeCAE1AfEDc2a29B": {
+        "id": "POOL_TOKEN_agvSPELL",
+        "verify": {
+          "impl": "0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x78Aeff0658Fa67735fBF99Ce7CDB01Fe5D520259\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000ce1bffbd5374dac86a2893119683f4911a2f7814000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e7465642044656274205350454c4c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000086167765350454c4c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x18520f7e146cAe32BBA65b901913fd94b194f188": {
+        "id": "POOL_TOKEN_agsSPELL",
+        "verify": {
+          "impl": "0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df",
+          "subType": "poolToken",
+          "args": "[\"0x8986F739F3C7A371CbF852dEEdDEd02160552164\",\"0x92cfBAB5A86631e9F1A6126b42E01A74eadA61Df\",\"0xe4ae9af700000000000000000000000095b12a0c659ff8d3049c9bb3a7b5587c88e08111000000000000000000000000778cb9d6e8d54f729c21f23440d7ea3a61a87026000000000000000000000000ce1bffbd5374dac86a2893119683f4911a2f7814000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001b4175676d656e74656420537461626c652044656274205350454c4c000000000000000000000000000000000000000000000000000000000000000000000000086167735350454c4c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x0096cd44035a2edfCec9fdd1808C5b32dF8c0368": {
+        "id": "STAKE_CONFIGURATOR",
+        "verify": {
+          "impl": "0x8731324a6C09a1745bD15009Dc8FcceF11c05F4a",
+          "subType": "core",
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0x8731324a6C09a1745bD15009Dc8FcceF11c05F4a\",\"0xc4d66de80000000000000000000000008858eeb3dfffa017d4bce9801d340d36cf895ccf\"]"
+        }
+      },
+      "0x8005e090C627040DFb772201f88Dcff853A037A4": {
+        "id": "REWARD_CONFIGURATOR",
+        "verify": {
+          "impl": "0x79dC3dA279A2ADc72210BD00e10951AB9dC70ABc",
+          "subType": "core",
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0x79dC3dA279A2ADc72210BD00e10951AB9dC70ABc\",\"0xc4d66de80000000000000000000000008858eeb3dfffa017d4bce9801d340d36cf895ccf\"]"
+        }
+      },
+      "0x6AB6e1EE84c906C8379D1906dBB95a9d956288e1": {
+        "id": "REWARD_TOKEN",
+        "verify": {
+          "impl": "0xE78d9772cED3eD5C595d9E438a87602eD86bfE9b",
+          "subType": "core",
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0xE78d9772cED3eD5C595d9E438a87602eD86bfE9b\",\"0x7e4cf20b00000000000000000000000000000000000000000000000000000000000000200000000000000000000000008858eeb3dfffa017d4bce9801d340d36cf895ccf000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000114175676d656e7465642046696e616e636500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000034147460000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x83864243Ee5C1E94A87f411F85abf0e16ad94AdB": {
+        "id": "REWARD_CONTROLLER",
+        "verify": {
+          "impl": "0x57965788BD1a93639CE738a58176e1A3d6F4d04f",
+          "subType": "core",
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0x57965788BD1a93639CE738a58176e1A3d6F4d04f\",\"0xc4d66de80000000000000000000000008858eeb3dfffa017d4bce9801d340d36cf895ccf\"]"
+        }
+      },
+      "0x19c5624041717cD566246EE3F8d4b2e20a34F629": {
+        "id": "REWARD_STAKE_TOKEN",
+        "verify": {
+          "impl": "0x0D8448C0fBB84c30395838C8b3fD64722ea94532",
+          "subType": "core",
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0x0D8448C0fBB84c30395838C8b3fD64722ea94532\",\"0x7e4cf20b00000000000000000000000000000000000000000000000000000000000000200000000000000000000000008858eeb3dfffa017d4bce9801d340d36cf895ccf000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000114175676d656e74656420426f6f7374657200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000047841474600000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xF9614f9dEA4Bc51cfE2Bf5A17BEd86289C007d2a": {
+        "id": "STAKE_TOKEN_xagWBTC",
+        "verify": {
+          "impl": "0x26d1E94963C8b382Ad66320826399E4B30347404",
+          "subType": "stakeToken",
+          "args": "[\"0x0096cd44035a2edfCec9fdd1808C5b32dF8c0368\",\"0x26d1E94963C8b382Ad66320826399E4B30347404\",\"0x14e613a80000000000000000000000000096cd44035a2edfcec9fdd1808c5b32df8c0368000000000000000000000000d06fdd3831a1f777863a3f18c00e05de3b1f70ae000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564205374616b65205742544300000000000000000000000000000000000000000000000000000000000000000000000000000000000000077861675742544300000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x56c74cFD83E0b0eB60D6662DAeFEc57bed1d4890": {
+        "id": "STAKE_TOKEN_xagWETH",
+        "verify": {
+          "impl": "0x26d1E94963C8b382Ad66320826399E4B30347404",
+          "subType": "stakeToken",
+          "args": "[\"0x0096cd44035a2edfCec9fdd1808C5b32dF8c0368\",\"0x26d1E94963C8b382Ad66320826399E4B30347404\",\"0x14e613a80000000000000000000000000096cd44035a2edfcec9fdd1808c5b32df8c03680000000000000000000000008f33cf026d104d3e32d12e184412a71d57277961000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564205374616b65205745544800000000000000000000000000000000000000000000000000000000000000000000000000000000000000077861675745544800000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x6AadD95B473460D55e2185e7bAEB7cB346a86361": {
+        "id": "STAKE_TOKEN_xagWAVAX",
+        "verify": {
+          "impl": "0x26d1E94963C8b382Ad66320826399E4B30347404",
+          "subType": "stakeToken",
+          "args": "[\"0x0096cd44035a2edfCec9fdd1808C5b32dF8c0368\",\"0x26d1E94963C8b382Ad66320826399E4B30347404\",\"0x14e613a80000000000000000000000000096cd44035a2edfcec9fdd1808c5b32df8c036800000000000000000000000037855bcf2d3125dca06d8a4e09e8a08d51dc829c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000154175676d656e746564205374616b65205741564158000000000000000000000000000000000000000000000000000000000000000000000000000000000000087861675741564158000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xaEFeB9D8659113776Ca7A08C0F487a73810bfE8d": {
+        "id": "STAKE_TOKEN_xagUSDT",
+        "verify": {
+          "impl": "0x26d1E94963C8b382Ad66320826399E4B30347404",
+          "subType": "stakeToken",
+          "args": "[\"0x0096cd44035a2edfCec9fdd1808C5b32dF8c0368\",\"0x26d1E94963C8b382Ad66320826399E4B30347404\",\"0x14e613a80000000000000000000000000096cd44035a2edfcec9fdd1808c5b32df8c03680000000000000000000000009d368df833e504b27402aa9a4e88fb1bd5fe20e6000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564205374616b65205553445400000000000000000000000000000000000000000000000000000000000000000000000000000000000000077861675553445400000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xFf2B21FDb9d4a120977D8a68901EC1bEBE710997": {
+        "id": "STAKE_TOKEN_xagUSDC",
+        "verify": {
+          "impl": "0x26d1E94963C8b382Ad66320826399E4B30347404",
+          "subType": "stakeToken",
+          "args": "[\"0x0096cd44035a2edfCec9fdd1808C5b32dF8c0368\",\"0x26d1E94963C8b382Ad66320826399E4B30347404\",\"0x14e613a80000000000000000000000000096cd44035a2edfcec9fdd1808c5b32df8c0368000000000000000000000000ad1f59840e11e70ce38cb18bf2fd1f004d6b84bb000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564205374616b65205553444300000000000000000000000000000000000000000000000000000000000000000000000000000000000000077861675553444300000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x4DA4bB254ffc1414130dD25FF883CFaC57D99DBB": {
+        "id": "STAKE_TOKEN_xagDAI",
+        "verify": {
+          "impl": "0x26d1E94963C8b382Ad66320826399E4B30347404",
+          "subType": "stakeToken",
+          "args": "[\"0x0096cd44035a2edfCec9fdd1808C5b32dF8c0368\",\"0x26d1E94963C8b382Ad66320826399E4B30347404\",\"0x14e613a80000000000000000000000000096cd44035a2edfcec9fdd1808c5b32df8c0368000000000000000000000000b81ab7181abe7c7eb3ac769f2ce5d6d4d2b43d35000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e746564205374616b65204441490000000000000000000000000000000000000000000000000000000000000000000000000000000000000000067861674441490000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xD50397c5682B94442584A3f68C2A82edBFc4f6d9": {
+        "id": "STAKE_TOKEN_xagLINK",
+        "verify": {
+          "impl": "0x26d1E94963C8b382Ad66320826399E4B30347404",
+          "subType": "stakeToken",
+          "args": "[\"0x0096cd44035a2edfCec9fdd1808C5b32dF8c0368\",\"0x26d1E94963C8b382Ad66320826399E4B30347404\",\"0x14e613a80000000000000000000000000096cd44035a2edfcec9fdd1808c5b32df8c03680000000000000000000000005b001bbfa753b7fdad504d7a9d8e9c496f68f6dd000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564205374616b65204c494e4b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000077861674c494e4b00000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xe87B9A978420de84Df59217CF14E872D6231A25A": {
+        "id": "STAKE_TOKEN_xagAAVE",
+        "verify": {
+          "impl": "0x26d1E94963C8b382Ad66320826399E4B30347404",
+          "subType": "stakeToken",
+          "args": "[\"0x0096cd44035a2edfCec9fdd1808C5b32dF8c0368\",\"0x26d1E94963C8b382Ad66320826399E4B30347404\",\"0x14e613a80000000000000000000000000096cd44035a2edfcec9fdd1808c5b32df8c0368000000000000000000000000b488a6e242f08c9a2b616d2df3bc6a322de850ec000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564205374616b65204141564500000000000000000000000000000000000000000000000000000000000000000000000000000000000000077861674141564500000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xABf1D76BF9943bd31A77f71976689Af795e8DEED": {
+        "id": "STAKE_TOKEN_xagTraderJoeAVAXAGF",
+        "verify": {
+          "impl": "0xEC8Ec2A30c3E9Fb0cE7031ac4A52DbdFAD57a0D2",
+          "subType": "stakeToken",
+          "args": "[\"0x0096cd44035a2edfCec9fdd1808C5b32dF8c0368\",\"0xEC8Ec2A30c3E9Fb0cE7031ac4A52DbdFAD57a0D2\",\"0x14e613a80000000000000000000000000096cd44035a2edfcec9fdd1808c5b32df8c0368000000000000000000000000a9d253610315cc0feba544e8ed1a571af2d4da35000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000204175676d656e746564205374616b65205472616465724a6f654156415841474600000000000000000000000000000000000000000000000000000000000000137861675472616465724a6f654156415841474600000000000000000000000000\"]"
+        }
+      },
+      "0x4d0A6887C4E4F3caDef81BadEb7eCeE8370Bfd1D": {
+        "id": "REFERRAL_REGISTRY",
+        "verify": {
+          "impl": "0xFDAAc0fDAEBbe00B8A3EBB119367B6CF84E0F39c",
+          "subType": "core",
+          "args": "[\"0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf\",\"0xFDAAc0fDAEBbe00B8A3EBB119367B6CF84E0F39c\",\"0x37a92626000000000000000000000000000000000000000000000000000000000000002000000000000000000000000083864243ee5c1e94a87f411f85abf0e16ad94adb000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000007526566506f6f6c00000000000000000000000000000000000000000000000000\"]"
+        }
+      }
+    }
+  },
+  "avalanche": {
+    "instance": {
+      "0x1cfDBe61a245e246D81bD51e9661A216f27d43AD": {
+        "id": "AddressesProviderRegistry",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe": {
+        "id": "MarketAccessController",
+        "verify": {
+          "args": "[\"Augmented genesis market\"]"
+        }
+      },
+      "0xDCFdCd52a84cFBFE41Db9e8fd71A55D92A99079c": {
+        "id": "LendingRateOracle",
+        "verify": {
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\"]"
+        }
+      },
+      "0xD6a8820A23e452186886140e6aAA4B556aDC641E": {
+        "id": "StaticPriceOracle",
+        "verify": {
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",[],[]]"
+        }
+      },
+      "0x5D878532ad42Bb23920a0bA39501AF40C66B5B0b": {
+        "id": "OracleRouter",
+        "verify": {
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",[\"0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab\",\"0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7\",\"0xc7198437980c041c805a1edcba50c1ce5db95118\",\"0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664\",\"0xd586e7f844cea2f87f50152665bcbc2c279d8d70\",\"0x130966628846BFd36ff31a822705796e8cb8C18D\",\"0x50b7545627a5162f82a992c33b87adc75187b218\",\"0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd\",\"0x8729438eb15e2c8b576fcc6aecda6a148776c0f5\",\"0xce1bffbd5374dac86a2893119683f4911a2f7814\",\"0x5947bb275c521040051d82396192181b413227a3\",\"0x63a72806098bd3d9520cc43356dd78afe5d386d9\"],[\"0x976B3D034E162d8bD72D6b9C989d545b839003b0\",\"0x0A77230d17318075983913bC2145DB16C7366156\",\"0xEBE676ee90Fe1112671f19b6B7459bC678B67e8a\",\"0xF096872672F44d6EBA71458D74fe67F9a77a23B9\",\"0x51D7180edA2260cc4F6e4EebB82FEF5c3c2B8300\",\"0x54EdAB30a7134A16a54218AE64C73e1DAf48a8Fb\",\"0x2779D32d5166BAaa2B2b658333bA7e6Ec0C65743\",\"0x02D35d3a8aC3e1626d3eE09A78Dd87286F5E8e3a\",\"0x36E039e6391A5E7A7267650979fdf613f659be5D\",\"0x4F3ddF9378a4865cf4f28BE51E10AECb83B7daeE\",\"0x49ccd9ca821EfEab2b98c60dC60F518E765EDe9a\",\"0x3CA13391E9fb38a75330fb28f8cc2eB3D9ceceED\"],\"0xD6a8820A23e452186886140e6aAA4B556aDC641E\",\"0x10F7Fc1F91Ba351f9C629c5947AD69bD03C05b96\",\"100000000\"]"
+        }
+      },
+      "0xB1bABa14d4AE8E7442549a99Cd022f9166752f21": {
+        "id": "LendingPoolImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x3EcfEE7DE1E1b85f610B244920767d321fd6B274": {
+        "id": "LendingPoolExtensionImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x5800f187eb529339c9e3aC78936ab2348211469A": {
+        "id": "LendingPoolConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x1b9a49CffC303d8f8D3b6956792fa7Cf6edc86c7": {
+        "id": "WETHGateway",
+        "verify": {
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7\"]"
+        }
+      },
+      "0x2913F087930ac75820e4832b450584ecd37D0F20": {
+        "id": "ProtocolDataProvider",
+        "verify": {
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\"]"
+        }
+      },
+      "0x2E4475365b80787a6388eF391a73a67821485f60": {
+        "id": "UniswapLiquiditySwapAdapter",
+        "verify": {
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0x60aE616a2155Ee3d9A68541Ba4544862310933d4\"]"
+        }
+      },
+      "0xBb85FbbCf5e0c09B7C02C7a94AE16A0df6eB9067": {
+        "id": "UniswapRepayAdapter",
+        "verify": {
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0x60aE616a2155Ee3d9A68541Ba4544862310933d4\"]"
+        }
+      },
+      "0x03D2DfbDEc247784cd280178D741518E65185a69": {
+        "id": "FlashLiquidationAdapter",
+        "verify": {
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0x60aE616a2155Ee3d9A68541Ba4544862310933d4\"]"
+        }
+      },
+      "0xbD8e8AEA59b46D4cd8ADB497010CEa5a39025518": {
+        "id": "TreasuryImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x854783B753e5768319630b6790bB2817c5fb1b9C": {
+        "id": "DefaultReserveInterestRateStrategy-S_80_0_8_200_10_200",
+        "verify": {
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"800000000000000000000000000\",\"0\",\"80000000000000000000000000\",\"2000000000000000000000000000\",\"100000000000000000000000000\",\"2000000000000000000000000000\"]"
+        }
+      },
+      "0xB94AEbF5aBB4Cf5E2238A432BFCf2B82946877BC": {
+        "id": "DefaultReserveInterestRateStrategy-S_90_0_4_100_2_100",
+        "verify": {
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"900000000000000000000000000\",\"0\",\"40000000000000000000000000\",\"1000000000000000000000000000\",\"20000000000000000000000000\",\"1000000000000000000000000000\"]"
+        }
+      },
+      "0x6C9862F860cDC557F7E8268ECB4a9C4f9004022f": {
+        "id": "DefaultReserveInterestRateStrategy-S_70_0_15_300_15_300",
+        "verify": {
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"700000000000000000000000000\",\"0\",\"150000000000000000000000000\",\"3000000000000000000000000000\",\"150000000000000000000000000\",\"3000000000000000000000000000\"]"
+        }
+      },
+      "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD": {
+        "id": "StableDebtTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xAab72d1DB870ebb758390E189351d6220822Dec3": {
+        "id": "VariableDebtTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xc480241d6fe88226beB7698b319E6015f28A34b9": {
+        "id": "DepositTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x8a4cae3a242Da1EaaFBdff175f7e5ba8aFE52C1c": {
+        "id": "StakeConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x15BF7D69dDe461E81A02a7f4db1583CAC750C270": {
+        "id": "ProxyAdmin-StakeConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xb8828B197257c83991c95F3331Fc0663FF6dd42E": {
+        "id": "RewardConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xB60BCb35bcaF37716c9F3fDB96aa8dA6b6044AfB": {
+        "id": "ProxyAdmin-RewardConfiguratorImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x946d5A6268E52DbDD6324d67bfDc92f57dF14Af3": {
+        "id": "AGFTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xa62c6e042d1c3CC641D7bFC0F36044aCF2731b33": {
+        "id": "RewardBoosterImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x10901BB4bF07ebbfb8A85EdA842f281976C85Eb9": {
+        "id": "XAGFTokenV1Impl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43": {
+        "id": "DepositStakeTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0x9753dbAB1BD60BB3AeA50234B9fd6713dacCd1CA": {
+        "id": "StakeTokenImpl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xdF883A48bA6B8CFCb5B32ee61084550B1df81570": {
+        "id": "PriceFeedUniEthPair-TraderJoeAVAXAGF",
+        "verify": {
+          "args": "[\"0xd1Fa632569508953d243644D5D8028c296607723\",\"0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7\"]"
+        }
+      },
+      "0x79D9875Fa925d9dEbEAd6e60Df3Bc67f6Fb58B40": {
+        "id": "TeamRewardPool",
+        "verify": {
+          "args": "[\"0x57A46BF8fbb045194C7eF4CDb0f7aCE525FcAaA6\",\"0\",\"1000\",\"0x9A48bCEB575Df540EE0038E01dB59DEFc343E514\"]"
+        }
+      },
+      "0x338c420F893E8D1CCA64B9b07cE7d87D5634851A": {
+        "id": "ReferralRewardPoolV1Impl",
+        "verify": {
+          "args": "[]"
+        }
+      },
+      "0xB4bdC6eB4d69d32a5668f47ADde76fAA89bDcc3C": {
+        "id": "TreasuryRewardPool",
+        "verify": {
+          "args": "[\"0x57A46BF8fbb045194C7eF4CDb0f7aCE525FcAaA6\",\"0\",\"2000\"]"
+        }
+      },
+      "0x5201Ccb2A9e7b4236efaa9D5271156f62F4615D2": {
+        "id": "PermitFreezerRewardPool-RetroPool",
+        "verify": {
+          "args": "[\"0x57A46BF8fbb045194C7eF4CDb0f7aCE525FcAaA6\",\"10000000000000000000000000\",\"1635724800\",\"RetroPool\"]"
+        }
+      },
+      "0xa92b142125C9bedEA0DBcd79a67b2764b119cddA": {
+        "id": "PriceFeedUniEthToken-AGF-WAVAX",
+        "verify": {
+          "args": "[\"0xd1Fa632569508953d243644D5D8028c296607723\",\"0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7\",\"100000000\"]"
+        }
+      }
+    },
+    "named": {
+      "AddressesProviderRegistry": {
+        "address": "0x1cfDBe61a245e246D81bD51e9661A216f27d43AD",
+        "count": 1
+      },
+      "MarketAccessController": {
+        "address": "0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe",
+        "count": 1
+      },
+      "LendingRateOracle": {
+        "address": "0xDCFdCd52a84cFBFE41Db9e8fd71A55D92A99079c",
+        "count": 1
+      },
+      "StaticPriceOracle": {
+        "address": "0xD6a8820A23e452186886140e6aAA4B556aDC641E",
+        "count": 1
+      },
+      "OracleRouter": {
+        "address": "0x5D878532ad42Bb23920a0bA39501AF40C66B5B0b",
+        "count": 1
+      },
+      "LendingPoolImpl": {
+        "address": "0xB1bABa14d4AE8E7442549a99Cd022f9166752f21",
+        "count": 1
+      },
+      "LendingPoolExtensionImpl": {
+        "address": "0x3EcfEE7DE1E1b85f610B244920767d321fd6B274",
+        "count": 1
+      },
+      "LendingPoolConfiguratorImpl": {
+        "address": "0x5800f187eb529339c9e3aC78936ab2348211469A",
+        "count": 1
+      },
+      "WETHGateway": {
+        "address": "0x1b9a49CffC303d8f8D3b6956792fa7Cf6edc86c7",
+        "count": 1
+      },
+      "ProtocolDataProvider": {
+        "address": "0x2913F087930ac75820e4832b450584ecd37D0F20",
+        "count": 1
+      },
+      "UniswapLiquiditySwapAdapter": {
+        "address": "0x2E4475365b80787a6388eF391a73a67821485f60",
+        "count": 1
+      },
+      "UniswapRepayAdapter": {
+        "address": "0xBb85FbbCf5e0c09B7C02C7a94AE16A0df6eB9067",
+        "count": 1
+      },
+      "FlashLiquidationAdapter": {
+        "address": "0x03D2DfbDEc247784cd280178D741518E65185a69",
+        "count": 1
+      },
+      "TreasuryImpl": {
+        "address": "0xbD8e8AEA59b46D4cd8ADB497010CEa5a39025518",
+        "count": 1
+      },
+      "DefaultReserveInterestRateStrategy-S_80_0_8_200_10_200": {
+        "address": "0x854783B753e5768319630b6790bB2817c5fb1b9C",
+        "count": 1
+      },
+      "DefaultReserveInterestRateStrategy-S_90_0_4_100_2_100": {
+        "address": "0xB94AEbF5aBB4Cf5E2238A432BFCf2B82946877BC",
+        "count": 1
+      },
+      "DefaultReserveInterestRateStrategy-S_70_0_15_300_15_300": {
+        "address": "0x6C9862F860cDC557F7E8268ECB4a9C4f9004022f",
+        "count": 1
+      },
+      "StableDebtTokenImpl": {
+        "address": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+        "count": 1
+      },
+      "VariableDebtTokenImpl": {
+        "address": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+        "count": 1
+      },
+      "DepositTokenImpl": {
+        "address": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+        "count": 1
+      },
+      "StakeConfiguratorImpl": {
+        "address": "0x8a4cae3a242Da1EaaFBdff175f7e5ba8aFE52C1c",
+        "count": 1
+      },
+      "ProxyAdmin-StakeConfiguratorImpl": {
+        "address": "0x15BF7D69dDe461E81A02a7f4db1583CAC750C270",
+        "count": 1
+      },
+      "RewardConfiguratorImpl": {
+        "address": "0xb8828B197257c83991c95F3331Fc0663FF6dd42E",
+        "count": 1
+      },
+      "ProxyAdmin-RewardConfiguratorImpl": {
+        "address": "0xB60BCb35bcaF37716c9F3fDB96aa8dA6b6044AfB",
+        "count": 1
+      },
+      "AGFTokenImpl": {
+        "address": "0x946d5A6268E52DbDD6324d67bfDc92f57dF14Af3",
+        "count": 1
+      },
+      "RewardBoosterImpl": {
+        "address": "0xa62c6e042d1c3CC641D7bFC0F36044aCF2731b33",
+        "count": 1
+      },
+      "XAGFTokenV1Impl": {
+        "address": "0x10901BB4bF07ebbfb8A85EdA842f281976C85Eb9",
+        "count": 1
+      },
+      "DepositStakeTokenImpl": {
+        "address": "0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43",
+        "count": 1
+      },
+      "StakeTokenImpl": {
+        "address": "0x9753dbAB1BD60BB3AeA50234B9fd6713dacCd1CA",
+        "count": 1
+      },
+      "PriceFeedUniEthPair-TraderJoeAVAXAGF": {
+        "address": "0xdF883A48bA6B8CFCb5B32ee61084550B1df81570",
+        "count": 1
+      },
+      "TeamRewardPool": {
+        "address": "0x79D9875Fa925d9dEbEAd6e60Df3Bc67f6Fb58B40",
+        "count": 1
+      },
+      "ReferralRewardPoolV1Impl": {
+        "address": "0x338c420F893E8D1CCA64B9b07cE7d87D5634851A",
+        "count": 1
+      },
+      "TreasuryRewardPool": {
+        "address": "0xB4bdC6eB4d69d32a5668f47ADde76fAA89bDcc3C",
+        "count": 1
+      },
+      "PermitFreezerRewardPool-RetroPool": {
+        "address": "0x5201Ccb2A9e7b4236efaa9D5271156f62F4615D2",
+        "count": 1
+      },
+      "PriceFeedUniEthToken-AGF-WAVAX": {
+        "address": "0xa92b142125C9bedEA0DBcd79a67b2764b119cddA",
+        "count": 1
+      }
+    },
+    "external": {
+      "0xAFf71D0A07eDDe7464945C4ca6fD3b6781E84498": {
+        "id": "LENDING_POOL",
+        "verify": {
+          "impl": "0xB1bABa14d4AE8E7442549a99Cd022f9166752f21",
+          "subType": "core",
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0xB1bABa14d4AE8E7442549a99Cd022f9166752f21\",\"0xc4d66de80000000000000000000000002268af30b72ef39670ea911cf183bb4fde597cfe\"]"
+        }
+      },
+      "0x9742f008e53604704E6D640872A5E66Dd006Ffc8": {
+        "id": "LENDING_POOL_CONFIGURATOR",
+        "verify": {
+          "impl": "0x5800f187eb529339c9e3aC78936ab2348211469A",
+          "subType": "core",
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0x5800f187eb529339c9e3aC78936ab2348211469A\",\"0xc4d66de80000000000000000000000002268af30b72ef39670ea911cf183bb4fde597cfe\"]"
+        }
+      },
+      "0xFB617191Dc27a7fBFDb0B2c2853baA614C742796": {
+        "id": "TREASURY",
+        "verify": {
+          "impl": "0xbD8e8AEA59b46D4cd8ADB497010CEa5a39025518",
+          "subType": "core",
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0xbD8e8AEA59b46D4cd8ADB497010CEa5a39025518\",\"0xc4d66de80000000000000000000000002268af30b72ef39670ea911cf183bb4fde597cfe\"]"
+        }
+      },
+      "0x41759C0CB43F38d82a8460dAeCb3c370EB472DeB": {
+        "id": "POOL_TOKEN_agWAVAX",
+        "verify": {
+          "impl": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xc480241d6fe88226beB7698b319E6015f28A34b9\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000b31f66aa3c1e785363f0875a1b74e27b85fd66c7000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000174175676d656e746564204465706f7369742057415641580000000000000000000000000000000000000000000000000000000000000000000000000000000007616757415641580000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xC819a8284678fb6901B35aE73f691F62f730bE19": {
+        "id": "POOL_TOKEN_agvWAVAX",
+        "verify": {
+          "impl": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xAab72d1DB870ebb758390E189351d6220822Dec3\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000b31f66aa3c1e785363f0875a1b74e27b85fd66c7000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e74656420446562742057415641580000000000000000000000000000000000000000000000000000000000000000000000000000000000000008616776574156415800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x88a9f1E1D6C56784fb1a09E748376ACb3d1C44F0": {
+        "id": "POOL_TOKEN_agsWAVAX",
+        "verify": {
+          "impl": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000b31f66aa3c1e785363f0875a1b74e27b85fd66c7000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001b4175676d656e74656420537461626c65204465627420574156415800000000000000000000000000000000000000000000000000000000000000000000000008616773574156415800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xc6C28e010f54cD48A421e8A23aB213Cdf3B621f6": {
+        "id": "POOL_TOKEN_agWBTC",
+        "verify": {
+          "impl": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xc480241d6fe88226beB7698b319E6015f28A34b9\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c74279600000000000000000000000050b7545627a5162f82a992c33b87adc75187b218000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000164175676d656e746564204465706f7369742057425443000000000000000000000000000000000000000000000000000000000000000000000000000000000006616757425443000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xbE6997DDD07e0719A29CfAf86e73E25dD8f7aaA3": {
+        "id": "POOL_TOKEN_agvWBTC",
+        "verify": {
+          "impl": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xAab72d1DB870ebb758390E189351d6220822Dec3\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c74279600000000000000000000000050b7545627a5162f82a992c33b87adc75187b218000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e74656420446562742057425443000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007616776574254430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x032645f1a68e95600d5c52D9e0227C7e94e29E8b": {
+        "id": "POOL_TOKEN_agsWBTC",
+        "verify": {
+          "impl": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c74279600000000000000000000000050b7545627a5162f82a992c33b87adc75187b218000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001a4175676d656e74656420537461626c65204465627420574254430000000000000000000000000000000000000000000000000000000000000000000000000007616773574254430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x23B1A772794f814209488e580AcaDcD106675C29": {
+        "id": "POOL_TOKEN_agWETH",
+        "verify": {
+          "impl": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xc480241d6fe88226beB7698b319E6015f28A34b9\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c74279600000000000000000000000049d5c2bdffac6ce2bfdb6640f4f80f226bc10bab000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000164175676d656e746564204465706f7369742057455448000000000000000000000000000000000000000000000000000000000000000000000000000000000006616757455448000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xD26623D4B6135705d1ACf4995E43D6BB3100841e": {
+        "id": "POOL_TOKEN_agvWETH",
+        "verify": {
+          "impl": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xAab72d1DB870ebb758390E189351d6220822Dec3\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c74279600000000000000000000000049d5c2bdffac6ce2bfdb6640f4f80f226bc10bab000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e74656420446562742057455448000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007616776574554480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x0C688D3a81cba9C74220606b861fDc85C7560AE4": {
+        "id": "POOL_TOKEN_agsWETH",
+        "verify": {
+          "impl": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c74279600000000000000000000000049d5c2bdffac6ce2bfdb6640f4f80f226bc10bab000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001a4175676d656e74656420537461626c65204465627420574554480000000000000000000000000000000000000000000000000000000000000000000000000007616773574554480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xBf91037a7c58C83264a6C862d29766Ba551DFb91": {
+        "id": "POOL_TOKEN_agUSDT",
+        "verify": {
+          "impl": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xc480241d6fe88226beB7698b319E6015f28A34b9\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000c7198437980c041c805a1edcba50c1ce5db95118000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000164175676d656e746564204465706f7369742055534454000000000000000000000000000000000000000000000000000000000000000000000000000000000006616755534454000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x6B20d55a537084e52a7bEF36910429bf66679c12": {
+        "id": "POOL_TOKEN_agvUSDT",
+        "verify": {
+          "impl": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xAab72d1DB870ebb758390E189351d6220822Dec3\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000c7198437980c041c805a1edcba50c1ce5db95118000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e74656420446562742055534454000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007616776555344540000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x5CfFD54cD529205090007994D2a12A88F6c5A22e": {
+        "id": "POOL_TOKEN_agsUSDT",
+        "verify": {
+          "impl": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000c7198437980c041c805a1edcba50c1ce5db95118000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001a4175676d656e74656420537461626c65204465627420555344540000000000000000000000000000000000000000000000000000000000000000000000000007616773555344540000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x9bD6507899E78F7F6A309393542fbf21c4b1b6b2": {
+        "id": "POOL_TOKEN_agDAI",
+        "verify": {
+          "impl": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xc480241d6fe88226beB7698b319E6015f28A34b9\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000d586e7f844cea2f87f50152665bcbc2c279d8d70000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000154175676d656e746564204465706f7369742044414900000000000000000000000000000000000000000000000000000000000000000000000000000000000005616744414900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xA9306247Da1C95D9F5795A7C9B13EfC420615E37": {
+        "id": "POOL_TOKEN_agvDAI",
+        "verify": {
+          "impl": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xAab72d1DB870ebb758390E189351d6220822Dec3\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000d586e7f844cea2f87f50152665bcbc2c279d8d70000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000124175676d656e74656420446562742044414900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006616776444149000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xAAA7770c931483738d7e41adF2AdB8e6FFDf61E5": {
+        "id": "POOL_TOKEN_agsDAI",
+        "verify": {
+          "impl": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000d586e7f844cea2f87f50152665bcbc2c279d8d70000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000194175676d656e74656420537461626c65204465627420444149000000000000000000000000000000000000000000000000000000000000000000000000000006616773444149000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x3AEA7716728405DBE014c923B0B926B36eb03dbd": {
+        "id": "POOL_TOKEN_agUSDC",
+        "verify": {
+          "impl": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xc480241d6fe88226beB7698b319E6015f28A34b9\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000a7d7079b0fead91f3e65f86e8915cb59c1a4c664000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000164175676d656e746564204465706f7369742055534443000000000000000000000000000000000000000000000000000000000000000000000000000000000006616755534443000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x0797812593c09Ba64F3Ef3fbEc360231f338315E": {
+        "id": "POOL_TOKEN_agvUSDC",
+        "verify": {
+          "impl": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xAab72d1DB870ebb758390E189351d6220822Dec3\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000a7d7079b0fead91f3e65f86e8915cb59c1a4c664000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e74656420446562742055534443000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007616776555344430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x776FAc00Bf65a0Ae558DbA0C22C30A6156825283": {
+        "id": "POOL_TOKEN_agsUSDC",
+        "verify": {
+          "impl": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000a7d7079b0fead91f3e65f86e8915cb59c1a4c664000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001a4175676d656e74656420537461626c65204465627420555344430000000000000000000000000000000000000000000000000000000000000000000000000007616773555344430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xdB101FcB2F56176410B17304814516d70B892e79": {
+        "id": "POOL_TOKEN_agMIM",
+        "verify": {
+          "impl": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xc480241d6fe88226beB7698b319E6015f28A34b9\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000130966628846bfd36ff31a822705796e8cb8c18d000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000154175676d656e746564204465706f736974204d494d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000561674d494d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x60E7d6956d436566696b28a7DF4E97B8A76888c8": {
+        "id": "POOL_TOKEN_agvMIM",
+        "verify": {
+          "impl": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xAab72d1DB870ebb758390E189351d6220822Dec3\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000130966628846bfd36ff31a822705796e8cb8c18d000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000124175676d656e7465642044656274204d494d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000066167764d494d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x08c13e8029b733746b45724031612E6848346d76": {
+        "id": "POOL_TOKEN_agsMIM",
+        "verify": {
+          "impl": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000130966628846bfd36ff31a822705796e8cb8c18d000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000194175676d656e74656420537461626c652044656274204d494d0000000000000000000000000000000000000000000000000000000000000000000000000000066167734d494d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xe96577dc50a84e8472BF4A26B29cf37A5a2EB30F": {
+        "id": "POOL_TOKEN_agLINK",
+        "verify": {
+          "impl": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xc480241d6fe88226beB7698b319E6015f28A34b9\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c7427960000000000000000000000005947bb275c521040051d82396192181b413227a3000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000164175676d656e746564204465706f736974204c494e4b00000000000000000000000000000000000000000000000000000000000000000000000000000000000661674c494e4b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xf62f2D9a1ACa033db51faB87182ae8A87ca172Ec": {
+        "id": "POOL_TOKEN_agvLINK",
+        "verify": {
+          "impl": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xAab72d1DB870ebb758390E189351d6220822Dec3\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c7427960000000000000000000000005947bb275c521040051d82396192181b413227a3000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e7465642044656274204c494e4b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000076167764c494e4b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xA3a3ACb1860d2B6e0DAE8275264e71D4A1A0B3f3": {
+        "id": "POOL_TOKEN_agsLINK",
+        "verify": {
+          "impl": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c7427960000000000000000000000005947bb275c521040051d82396192181b413227a3000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001a4175676d656e74656420537461626c652044656274204c494e4b00000000000000000000000000000000000000000000000000000000000000000000000000076167734c494e4b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x6386A987A1368012E172e1570B910a08c63A380A": {
+        "id": "POOL_TOKEN_agAAVE",
+        "verify": {
+          "impl": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xc480241d6fe88226beB7698b319E6015f28A34b9\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c74279600000000000000000000000063a72806098bd3d9520cc43356dd78afe5d386d9000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000164175676d656e746564204465706f7369742041415645000000000000000000000000000000000000000000000000000000000000000000000000000000000006616741415645000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x13A11e5b25A706810A658788Ba3815A258a61F07": {
+        "id": "POOL_TOKEN_agvAAVE",
+        "verify": {
+          "impl": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xAab72d1DB870ebb758390E189351d6220822Dec3\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c74279600000000000000000000000063a72806098bd3d9520cc43356dd78afe5d386d9000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e74656420446562742041415645000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007616776414156450000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x23efdB20D27E2539bF43B89ddFA7DEAAb3A0234b": {
+        "id": "POOL_TOKEN_agsAAVE",
+        "verify": {
+          "impl": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c74279600000000000000000000000063a72806098bd3d9520cc43356dd78afe5d386d9000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001a4175676d656e74656420537461626c65204465627420414156450000000000000000000000000000000000000000000000000000000000000000000000000007616773414156450000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x16A1ab39196FE417DD6c071D158DCcE49c1AEcc8": {
+        "id": "POOL_TOKEN_agJOE",
+        "verify": {
+          "impl": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xc480241d6fe88226beB7698b319E6015f28A34b9\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c7427960000000000000000000000006e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000154175676d656e746564204465706f736974204a4f450000000000000000000000000000000000000000000000000000000000000000000000000000000000000561674a4f4500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xde1cE3E226CE3dA00e229C46CbE5C7d3E279a283": {
+        "id": "POOL_TOKEN_agvJOE",
+        "verify": {
+          "impl": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xAab72d1DB870ebb758390E189351d6220822Dec3\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c7427960000000000000000000000006e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000124175676d656e7465642044656274204a4f45000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000066167764a4f45000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xE1aa007bc09e0af2518562A6aB6cB6B45fe90Ee7": {
+        "id": "POOL_TOKEN_agsJOE",
+        "verify": {
+          "impl": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c7427960000000000000000000000006e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000194175676d656e74656420537461626c652044656274204a4f450000000000000000000000000000000000000000000000000000000000000000000000000000066167734a4f45000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x5E2b144086e1F3132ec3D8e28081A88194FB0ab3": {
+        "id": "POOL_TOKEN_agQI",
+        "verify": {
+          "impl": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xc480241d6fe88226beB7698b319E6015f28A34b9\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c7427960000000000000000000000008729438eb15e2c8b576fcc6aecda6a148776c0f5000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564204465706f7369742051490000000000000000000000000000000000000000000000000000000000000000000000000000000000000004616751490000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xb2D4B2FE243974F3775dD718FAe5ec56f4036f63": {
+        "id": "POOL_TOKEN_agvQI",
+        "verify": {
+          "impl": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xAab72d1DB870ebb758390E189351d6220822Dec3\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c7427960000000000000000000000008729438eb15e2c8b576fcc6aecda6a148776c0f5000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000114175676d656e74656420446562742051490000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005616776514900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x23edB14E2120FE782a17b871B9Fb0aFBf2609695": {
+        "id": "POOL_TOKEN_agsQI",
+        "verify": {
+          "impl": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c7427960000000000000000000000008729438eb15e2c8b576fcc6aecda6a148776c0f5000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000184175676d656e74656420537461626c65204465627420514900000000000000000000000000000000000000000000000000000000000000000000000000000005616773514900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x7000a9624a23124678B9503A977216dD13bE00F4": {
+        "id": "POOL_TOKEN_agSPELL",
+        "verify": {
+          "impl": "0xc480241d6fe88226beB7698b319E6015f28A34b9",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xc480241d6fe88226beB7698b319E6015f28A34b9\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000ce1bffbd5374dac86a2893119683f4911a2f7814000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000174175676d656e746564204465706f736974205350454c4c000000000000000000000000000000000000000000000000000000000000000000000000000000000761675350454c4c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x585485c30dc61D9DB7EFe27067ef81010f799e47": {
+        "id": "POOL_TOKEN_agvSPELL",
+        "verify": {
+          "impl": "0xAab72d1DB870ebb758390E189351d6220822Dec3",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0xAab72d1DB870ebb758390E189351d6220822Dec3\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000ce1bffbd5374dac86a2893119683f4911a2f7814000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e7465642044656274205350454c4c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000086167765350454c4c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x38aE608ac799B9934420614054d193826183af84": {
+        "id": "POOL_TOKEN_agsSPELL",
+        "verify": {
+          "impl": "0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD",
+          "subType": "poolToken",
+          "args": "[\"0x9742f008e53604704E6D640872A5E66Dd006Ffc8\",\"0x44177bcF0F2d6b0E4ac49cE3CeB260848a376ECD\",\"0xe4ae9af7000000000000000000000000aff71d0a07edde7464945c4ca6fd3b6781e84498000000000000000000000000fb617191dc27a7fbfdb0b2c2853baa614c742796000000000000000000000000ce1bffbd5374dac86a2893119683f4911a2f7814000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000001b4175676d656e74656420537461626c652044656274205350454c4c000000000000000000000000000000000000000000000000000000000000000000000000086167735350454c4c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xCc701be97cA10A53cDa514e52EAf1D4C3FcAD787": {
+        "id": "STAKE_CONFIGURATOR",
+        "verify": {
+          "impl": "0x8a4cae3a242Da1EaaFBdff175f7e5ba8aFE52C1c",
+          "subType": "core",
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0x8a4cae3a242Da1EaaFBdff175f7e5ba8aFE52C1c\",\"0xc4d66de80000000000000000000000002268af30b72ef39670ea911cf183bb4fde597cfe\"]"
+        }
+      },
+      "0x2e8f8F30D247496229bcd7fbC17F238F62B1327E": {
+        "id": "REWARD_CONFIGURATOR",
+        "verify": {
+          "impl": "0xb8828B197257c83991c95F3331Fc0663FF6dd42E",
+          "subType": "core",
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0xb8828B197257c83991c95F3331Fc0663FF6dd42E\",\"0xc4d66de80000000000000000000000002268af30b72ef39670ea911cf183bb4fde597cfe\"]"
+        }
+      },
+      "0x12C6EAd3Caefd25439a732DbA721C404C2139d60": {
+        "id": "REWARD_TOKEN",
+        "verify": {
+          "impl": "0x946d5A6268E52DbDD6324d67bfDc92f57dF14Af3",
+          "subType": "core",
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0x946d5A6268E52DbDD6324d67bfDc92f57dF14Af3\",\"0x7e4cf20b00000000000000000000000000000000000000000000000000000000000000200000000000000000000000002268af30b72ef39670ea911cf183bb4fde597cfe000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000114175676d656e7465642046696e616e636500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000034147460000000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x57A46BF8fbb045194C7eF4CDb0f7aCE525FcAaA6": {
+        "id": "REWARD_CONTROLLER",
+        "verify": {
+          "impl": "0xa62c6e042d1c3CC641D7bFC0F36044aCF2731b33",
+          "subType": "core",
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0xa62c6e042d1c3CC641D7bFC0F36044aCF2731b33\",\"0xc4d66de80000000000000000000000002268af30b72ef39670ea911cf183bb4fde597cfe\"]"
+        }
+      },
+      "0xc084Cb907475A73F6193Cd7aad683B99f913096b": {
+        "id": "REWARD_STAKE_TOKEN",
+        "verify": {
+          "impl": "0x10901BB4bF07ebbfb8A85EdA842f281976C85Eb9",
+          "subType": "core",
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0x10901BB4bF07ebbfb8A85EdA842f281976C85Eb9\",\"0x7e4cf20b00000000000000000000000000000000000000000000000000000000000000200000000000000000000000002268af30b72ef39670ea911cf183bb4fde597cfe000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000114175676d656e74656420426f6f7374657200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000047841474600000000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x8C19B21a01b3885Da8760730944ab96dF178B8d6": {
+        "id": "STAKE_TOKEN_xagWBTC",
+        "verify": {
+          "impl": "0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43",
+          "subType": "stakeToken",
+          "args": "[\"0xCc701be97cA10A53cDa514e52EAf1D4C3FcAD787\",\"0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43\",\"0x14e613a8000000000000000000000000cc701be97ca10a53cda514e52eaf1d4c3fcad787000000000000000000000000c6c28e010f54cd48a421e8a23ab213cdf3b621f6000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564205374616b65205742544300000000000000000000000000000000000000000000000000000000000000000000000000000000000000077861675742544300000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x87681bB93615D543998BaF66fE7DE30065174eb4": {
+        "id": "STAKE_TOKEN_xagWETH",
+        "verify": {
+          "impl": "0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43",
+          "subType": "stakeToken",
+          "args": "[\"0xCc701be97cA10A53cDa514e52EAf1D4C3FcAD787\",\"0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43\",\"0x14e613a8000000000000000000000000cc701be97ca10a53cda514e52eaf1d4c3fcad78700000000000000000000000023b1a772794f814209488e580acadcd106675c29000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564205374616b65205745544800000000000000000000000000000000000000000000000000000000000000000000000000000000000000077861675745544800000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xD2890dbd5b377D05d414ff6d744203B3dE3ea6dD": {
+        "id": "STAKE_TOKEN_xagWAVAX",
+        "verify": {
+          "impl": "0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43",
+          "subType": "stakeToken",
+          "args": "[\"0xCc701be97cA10A53cDa514e52EAf1D4C3FcAD787\",\"0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43\",\"0x14e613a8000000000000000000000000cc701be97ca10a53cda514e52eaf1d4c3fcad78700000000000000000000000041759c0cb43f38d82a8460daecb3c370eb472deb000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000154175676d656e746564205374616b65205741564158000000000000000000000000000000000000000000000000000000000000000000000000000000000000087861675741564158000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xaAc3475bDd7DAe284d180F3a2E69C84C5665c018": {
+        "id": "STAKE_TOKEN_xagUSDT",
+        "verify": {
+          "impl": "0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43",
+          "subType": "stakeToken",
+          "args": "[\"0xCc701be97cA10A53cDa514e52EAf1D4C3FcAD787\",\"0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43\",\"0x14e613a8000000000000000000000000cc701be97ca10a53cda514e52eaf1d4c3fcad787000000000000000000000000bf91037a7c58c83264a6c862d29766ba551dfb91000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564205374616b65205553445400000000000000000000000000000000000000000000000000000000000000000000000000000000000000077861675553445400000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xdc82F5915C0a63711C2De4c1e501585d2f162dc9": {
+        "id": "STAKE_TOKEN_xagUSDC",
+        "verify": {
+          "impl": "0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43",
+          "subType": "stakeToken",
+          "args": "[\"0xCc701be97cA10A53cDa514e52EAf1D4C3FcAD787\",\"0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43\",\"0x14e613a8000000000000000000000000cc701be97ca10a53cda514e52eaf1d4c3fcad7870000000000000000000000003aea7716728405dbe014c923b0b926b36eb03dbd000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564205374616b65205553444300000000000000000000000000000000000000000000000000000000000000000000000000000000000000077861675553444300000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xD4a8876184d3Ff8395D1901526816C214556DA4e": {
+        "id": "STAKE_TOKEN_xagDAI",
+        "verify": {
+          "impl": "0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43",
+          "subType": "stakeToken",
+          "args": "[\"0xCc701be97cA10A53cDa514e52EAf1D4C3FcAD787\",\"0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43\",\"0x14e613a8000000000000000000000000cc701be97ca10a53cda514e52eaf1d4c3fcad7870000000000000000000000009bd6507899e78f7f6a309393542fbf21c4b1b6b2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000134175676d656e746564205374616b65204441490000000000000000000000000000000000000000000000000000000000000000000000000000000000000000067861674441490000000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0xAde4a2B030561e7A1B0cBBf25520b13B2Eb2D113": {
+        "id": "STAKE_TOKEN_xagLINK",
+        "verify": {
+          "impl": "0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43",
+          "subType": "stakeToken",
+          "args": "[\"0xCc701be97cA10A53cDa514e52EAf1D4C3FcAD787\",\"0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43\",\"0x14e613a8000000000000000000000000cc701be97ca10a53cda514e52eaf1d4c3fcad787000000000000000000000000e96577dc50a84e8472bf4a26b29cf37a5a2eb30f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564205374616b65204c494e4b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000077861674c494e4b00000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x86eF8Dc32732Fe97844Aaf4B663808C4636bbB99": {
+        "id": "STAKE_TOKEN_xagAAVE",
+        "verify": {
+          "impl": "0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43",
+          "subType": "stakeToken",
+          "args": "[\"0xCc701be97cA10A53cDa514e52EAf1D4C3FcAD787\",\"0x62ACD05928E7bB952DEa2EcCFd6f4D30412Bae43\",\"0x14e613a8000000000000000000000000cc701be97ca10a53cda514e52eaf1d4c3fcad7870000000000000000000000006386a987a1368012e172e1570b910a08c63a380a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000144175676d656e746564205374616b65204141564500000000000000000000000000000000000000000000000000000000000000000000000000000000000000077861674141564500000000000000000000000000000000000000000000000000\"]"
+        }
+      },
+      "0x2c644013e54E33E34cBba164d78dc13eFc91C90c": {
+        "id": "STAKE_TOKEN_xagTraderJoeAVAXAGF",
+        "verify": {
+          "impl": "0x9753dbAB1BD60BB3AeA50234B9fd6713dacCd1CA",
+          "subType": "stakeToken",
+          "args": "[\"0xCc701be97cA10A53cDa514e52EAf1D4C3FcAD787\",\"0x9753dbAB1BD60BB3AeA50234B9fd6713dacCd1CA\",\"0x14e613a8000000000000000000000000cc701be97ca10a53cda514e52eaf1d4c3fcad787000000000000000000000000d1fa632569508953d243644d5d8028c296607723000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000151800000000000000000000000000000000000000000000000000000000000093a800000000000000000000000000000000000000000000000000000000000000bb800000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000000204175676d656e746564205374616b65205472616465724a6f654156415841474600000000000000000000000000000000000000000000000000000000000000137861675472616465724a6f654156415841474600000000000000000000000000\"]"
+        }
+      },
+      "0xF7dADbDFbA70d92f85C7a60003f9Fb361cFEaAeF": {
+        "id": "REFERRAL_REGISTRY",
+        "verify": {
+          "impl": "0x338c420F893E8D1CCA64B9b07cE7d87D5634851A",
+          "subType": "core",
+          "args": "[\"0x2268aF30B72eF39670Ea911Cf183Bb4fDE597Cfe\",\"0x338c420F893E8D1CCA64B9b07cE7d87D5634851A\",\"0x37a92626000000000000000000000000000000000000000000000000000000000000002000000000000000000000000057a46bf8fbb045194c7ef4cdb0f7ace525fcaaa6000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000007526566506f6f6c00000000000000000000000000000000000000000000000000\"]"
+        }
+      }
+    }
+  },
+  "gnosis": {}
+}

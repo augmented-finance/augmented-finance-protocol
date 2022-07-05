@@ -25,18 +25,20 @@ const DEFAULT_BLOCK_GAS_LIMIT = 7000000;
 const DEFAULT_GAS_MUL = 2;
 const HARDFORK = 'istanbul';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
-const MNEMONIC = 'urge refuse rough ginger hundred august endless order lyrics issue gaze dizzy'; // process.env.MNEMONIC || '';
+const MNEMONIC = process.env.MNEMONIC || '';
 const BSC_FORK_URL = process.env.BSC_FORK_URL || '';
 const FORK = process.env.FORK;
 const IS_FORK = FORK ? true : false;
 
 const KEY_SEL = process.env.KEY_SEL || '';
 
+const BLOCKSCOUT_API_KEY = '######';
+
 const keySelector = (keyName: string) => {
   return (KEY_SEL != '' ? process.env[`${keyName}_${KEY_SEL}`] : undefined) || process.env[keyName];
 };
 
-const ETHERSCAN_KEY = keySelector('ETHERSCAN_KEY') || '';
+const ETHERSCAN_KEY = BLOCKSCOUT_API_KEY; // keySelector('ETHERSCAN_KEY') || '';
 const COINMARKETCAP_KEY = keySelector('COINMARKETCAP_KEY') || '';
 const MNEMONIC_MAIN = MNEMONIC; // IS_FORK ? MNEMONIC : keySelector('MNEMONIC_MAIN') || MNEMONIC;
 
@@ -167,6 +169,16 @@ const buidlerConfig: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: ETHERSCAN_KEY,
+    customChains: [
+      {
+        network: 'gnosis',
+        chainId: 100,
+        urls: {
+          apiURL: 'https://blockscout.com/xdai/mainnet/api',
+          browserURL: 'https://blockscout.com/xdai/mainnet',
+        },
+      },
+    ],
   },
   mocha: {
     timeout: 0,
